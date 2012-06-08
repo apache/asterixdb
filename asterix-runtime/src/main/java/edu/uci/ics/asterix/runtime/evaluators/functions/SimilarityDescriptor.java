@@ -85,21 +85,21 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                         inputVal.reset();
                         evalThreshold.evaluate(tuple);
                         float similarityThreshold = (float) ADoubleSerializerDeserializer.getDouble(
-                                inputVal.getBytes(), 1);
+                                inputVal.getByteArray(), 1);
 
                         // similarity name
                         inputVal.reset();
                         evalSimilarity.evaluate(tuple);
                         SimilarityFilters similarityFilters = similarityFiltersCache.get(similarityThreshold,
-                                inputVal.getBytes());
+                                inputVal.getByteArray());
 
                         inputVal.reset();
                         evalLen1.evaluate(tuple);
-                        int length1 = IntegerSerializerDeserializer.getInt(inputVal.getBytes(), 1);
+                        int length1 = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
                         inputVal.reset();
                         evalLen2.evaluate(tuple);
-                        int length2 = IntegerSerializerDeserializer.getInt(inputVal.getBytes(), 1);
+                        int length2 = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
                         float sim = 0;
 
@@ -114,7 +114,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                             inputVal.reset();
                             evalTokens1.evaluate(tuple);
 
-                            byte[] serList = inputVal.getBytes();
+                            byte[] serList = inputVal.getByteArray();
                             if (serList[0] != SER_ORDEREDLIST_TYPE_TAG && serList[0] != SER_UNORDEREDLIST_TYPE_TAG) {
                                 throw new AlgebricksException("Scan collection is not defined for values of type"
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[0]));
@@ -123,7 +123,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                             int lengthTokens1;
                             if (serList[0] == SER_ORDEREDLIST_TYPE_TAG) {
                                 lengthTokens1 = AOrderedListSerializerDeserializer
-                                        .getNumberOfItems(inputVal.getBytes());
+                                        .getNumberOfItems(inputVal.getByteArray());
                                 // read tokens
                                 for (i = 0; i < lengthTokens1; i++) {
                                     int itemOffset;
@@ -136,7 +136,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                                 }
                             } else {
                                 lengthTokens1 = AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal
-                                        .getBytes());
+                                        .getByteArray());
                                 // read tokens
                                 for (i = 0; i < lengthTokens1; i++) {
                                     int itemOffset;
@@ -158,7 +158,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                             inputVal.reset();
                             evalTokens2.evaluate(tuple);
 
-                            serList = inputVal.getBytes();
+                            serList = inputVal.getByteArray();
                             if (serList[0] != SER_ORDEREDLIST_TYPE_TAG && serList[0] != SER_UNORDEREDLIST_TYPE_TAG) {
                                 throw new AlgebricksException("Scan collection is not defined for values of type"
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[0]));
@@ -167,7 +167,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                             int lengthTokens2;
                             if (serList[0] == SER_ORDEREDLIST_TYPE_TAG) {
                                 lengthTokens2 = AOrderedListSerializerDeserializer
-                                        .getNumberOfItems(inputVal.getBytes());
+                                        .getNumberOfItems(inputVal.getByteArray());
                                 // read tokens
                                 for (i = 0; i < lengthTokens2; i++) {
                                     int itemOffset;
@@ -180,7 +180,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                                 }
                             } else {
                                 lengthTokens2 = AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal
-                                        .getBytes());
+                                        .getByteArray());
                                 // read tokens
                                 for (i = 0; i < lengthTokens2; i++) {
                                     int itemOffset;
@@ -200,7 +200,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                             // -- - token prefix - --
                             inputVal.reset();
                             evalTokenPrefix.evaluate(tuple);
-                            int tokenPrefix = IntegerSerializerDeserializer.getInt(inputVal.getBytes(), 1);
+                            int tokenPrefix = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
                             //
                             // -- - position filter - --

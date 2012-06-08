@@ -75,16 +75,16 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
                         try {
                             inputVal.reset();
                             evalStart.evaluate(tuple);
-                            posStart = IntegerSerializerDeserializer.getInt(inputVal.getBytes(), 1);
+                            posStart = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
                             inputVal.reset();
                             evalLen.evaluate(tuple);
-                            numItems = IntegerSerializerDeserializer.getInt(inputVal.getBytes(), 1);
+                            numItems = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
                             inputVal.reset();
                             evalList.evaluate(tuple);
 
-                            byte[] serList = inputVal.getBytes();
+                            byte[] serList = inputVal.getByteArray();
 
                             if (serList[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
@@ -113,7 +113,7 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
                     @Override
                     public boolean step() throws AlgebricksException {
                         if (posCrt < posStart + numItems && posCrt < numItemsMax) {
-                            byte[] serList = inputVal.getBytes();
+                            byte[] serList = inputVal.getByteArray();
                             int itemLength = 0;
                             try {
                                 int itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, posCrt);

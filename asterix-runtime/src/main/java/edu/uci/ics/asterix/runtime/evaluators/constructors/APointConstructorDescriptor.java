@@ -62,7 +62,7 @@ public class APointConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                         try {
                             outInput.reset();
                             eval.evaluate(tuple);
-                            byte[] serString = outInput.getBytes();
+                            byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
                                 String s = new String(serString, 3, outInput.getLength() - 3, "UTF-8");
                                 aPoint.setValue(Double.parseDouble(s.substring(0, s.indexOf(','))),

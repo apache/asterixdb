@@ -49,7 +49,7 @@ public class IsNullDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         argOut.reset();
                         eval.evaluate(tuple);
-                        boolean isNull = argOut.getBytes()[argOut.getStartIndex()] == SER_NULL_TYPE_TAG;
+                        boolean isNull = argOut.getByteArray()[argOut.getStartOffset()] == SER_NULL_TYPE_TAG;
                         ABoolean res = isNull ? ABoolean.TRUE : ABoolean.FALSE;
                         try {
                             AObjectSerializerDeserializer.INSTANCE.serialize(res, out);

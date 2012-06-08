@@ -43,7 +43,7 @@ public class WordTokensEvaluator implements IEvaluator {
     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
         argOut.reset();
         stringEval.evaluate(tuple);
-        byte[] bytes = argOut.getBytes();
+        byte[] bytes = argOut.getByteArray();
         tokenizer.reset(bytes, 0, argOut.getLength());
         tokenBuffer.reset();
 

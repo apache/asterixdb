@@ -751,20 +751,20 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
 
                         try {
                             boolean res = false;
-                            ATypeTag tag0 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0.getBytes()[0]);
-                            ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput1.getBytes()[0]);
+                            ATypeTag tag0 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0.getByteArray()[0]);
+                            ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput1.getByteArray()[0]);
 
                             switch (tag0) {
                                 case POINT:
                                     switch (tag1) {
                                         case POINT:
-                                            if (ascDoubleComp.compare(outInput0.getBytes(),
+                                            if (ascDoubleComp.compare(outInput0.getByteArray(),
                                                     APointSerializerDeserializer.getCoordinateOffset(Coordinate.X), 8,
-                                                    outInput1.getBytes(),
+                                                    outInput1.getByteArray(),
                                                     APointSerializerDeserializer.getCoordinateOffset(Coordinate.X), 8) == 0) {
-                                                if (ascDoubleComp.compare(outInput0.getBytes(),
+                                                if (ascDoubleComp.compare(outInput0.getByteArray(),
                                                         APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y),
-                                                        8, outInput1.getBytes(),
+                                                        8, outInput1.getByteArray(),
                                                         APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y),
                                                         8) == 0) {
                                                     res = true;
@@ -772,16 +772,16 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             }
                                             break;
                                         case LINE:
-                                            res = pointOnLine(outInput1.getBytes(), outInput0.getBytes());
+                                            res = pointOnLine(outInput1.getByteArray(), outInput0.getByteArray());
                                             break;
                                         case POLYGON:
-                                            res = pointInPolygon(outInput0.getBytes(), outInput1.getBytes());
+                                            res = pointInPolygon(outInput0.getByteArray(), outInput1.getByteArray());
                                             break;
                                         case CIRCLE:
-                                            res = pointInCircle(outInput0.getBytes(), outInput1.getBytes());
+                                            res = pointInCircle(outInput0.getByteArray(), outInput1.getByteArray());
                                             break;
                                         case RECTANGLE:
-                                            res = pointInRectangle(outInput0.getBytes(), outInput1.getBytes());
+                                            res = pointInRectangle(outInput0.getByteArray(), outInput1.getByteArray());
                                             break;
                                         case NULL:
                                             res = false;
@@ -796,45 +796,45 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                 case LINE:
                                     switch (tag1) {
                                         case POINT:
-                                            res = pointOnLine(outInput0.getBytes(), outInput1.getBytes());
+                                            res = pointOnLine(outInput0.getByteArray(), outInput1.getByteArray());
                                             break;
                                         case LINE:
                                             double startX1 = ADoubleSerializerDeserializer.getDouble(outInput0
-                                                    .getBytes(), ALineSerializerDeserializer
+                                                    .getByteArray(), ALineSerializerDeserializer
                                                     .getStartPointCoordinateOffset(Coordinate.X));
                                             double startY1 = ADoubleSerializerDeserializer.getDouble(outInput0
-                                                    .getBytes(), ALineSerializerDeserializer
+                                                    .getByteArray(), ALineSerializerDeserializer
                                                     .getStartPointCoordinateOffset(Coordinate.Y));
                                             double endX1 = ADoubleSerializerDeserializer.getDouble(
-                                                    outInput0.getBytes(), ALineSerializerDeserializer
+                                                    outInput0.getByteArray(), ALineSerializerDeserializer
                                                             .getEndPointCoordinateOffset(Coordinate.X));
                                             double endY1 = ADoubleSerializerDeserializer.getDouble(
-                                                    outInput0.getBytes(), ALineSerializerDeserializer
+                                                    outInput0.getByteArray(), ALineSerializerDeserializer
                                                             .getEndPointCoordinateOffset(Coordinate.Y));
 
                                             double startX2 = ADoubleSerializerDeserializer.getDouble(outInput1
-                                                    .getBytes(), ALineSerializerDeserializer
+                                                    .getByteArray(), ALineSerializerDeserializer
                                                     .getStartPointCoordinateOffset(Coordinate.X));
                                             double startY2 = ADoubleSerializerDeserializer.getDouble(outInput1
-                                                    .getBytes(), ALineSerializerDeserializer
+                                                    .getByteArray(), ALineSerializerDeserializer
                                                     .getStartPointCoordinateOffset(Coordinate.Y));
                                             double endX2 = ADoubleSerializerDeserializer.getDouble(
-                                                    outInput1.getBytes(), ALineSerializerDeserializer
+                                                    outInput1.getByteArray(), ALineSerializerDeserializer
                                                             .getEndPointCoordinateOffset(Coordinate.X));
                                             double endY2 = ADoubleSerializerDeserializer.getDouble(
-                                                    outInput1.getBytes(), ALineSerializerDeserializer
+                                                    outInput1.getByteArray(), ALineSerializerDeserializer
                                                             .getEndPointCoordinateOffset(Coordinate.Y));
                                             res = lineLineIntersection(startX1, startY1, endX1, endY1, startX2,
                                                     startY2, endX2, endY2);
                                             break;
                                         case POLYGON:
-                                            res = linePolygonIntersection(outInput0.getBytes(), outInput1.getBytes());
+                                            res = linePolygonIntersection(outInput0.getByteArray(), outInput1.getByteArray());
                                             break;
                                         case CIRCLE:
-                                            res = lineCircleIntersection(outInput0.getBytes(), outInput1.getBytes());
+                                            res = lineCircleIntersection(outInput0.getByteArray(), outInput1.getByteArray());
                                             break;
                                         case RECTANGLE:
-                                            res = lineRectangleIntersection(outInput0.getBytes(), outInput1.getBytes());
+                                            res = lineRectangleIntersection(outInput0.getByteArray(), outInput1.getByteArray());
                                             break;
                                         case NULL:
                                             res = false;
@@ -849,26 +849,26 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                 case POLYGON:
                                     switch (tag1) {
                                         case POINT:
-                                            res = pointInPolygon(outInput1.getBytes(), outInput0.getBytes());
+                                            res = pointInPolygon(outInput1.getByteArray(), outInput0.getByteArray());
                                             break;
                                         case LINE:
-                                            res = linePolygonIntersection(outInput1.getBytes(), outInput0.getBytes());
+                                            res = linePolygonIntersection(outInput1.getByteArray(), outInput0.getByteArray());
                                             break;
                                         case POLYGON:
                                             int numOfPoints0 = AInt16SerializerDeserializer.getShort(
-                                                    outInput0.getBytes(),
+                                                    outInput0.getByteArray(),
                                                     APolygonSerializerDeserializer.getNumberOfPointsOffset());
                                             int numOfPoints1 = AInt16SerializerDeserializer.getShort(
-                                                    outInput1.getBytes(),
+                                                    outInput1.getByteArray(),
                                                     APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
                                             if (numOfPoints0 < 3 || numOfPoints1 < 3) {
                                                 throw new AlgebricksException("Polygon must have at least 3 points.");
                                             }
 
-                                            getCounterClockWisePolygon(outInput0.getBytes(), pointsOffsets0,
+                                            getCounterClockWisePolygon(outInput0.getByteArray(), pointsOffsets0,
                                                     numOfPoints0);
-                                            getCounterClockWisePolygon(outInput1.getBytes(), pointsOffsets1,
+                                            getCounterClockWisePolygon(outInput1.getByteArray(), pointsOffsets1,
                                                     numOfPoints1);
                                             int nonSimplePolygonDetection0 = 2 * numOfPoints0;
                                             int nonSimplePolygonDetection1 = 2 * numOfPoints1;
@@ -880,7 +880,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             trianglesX1.reset();
                                             trianglesY1.reset();
                                             while (true) {
-                                                middleVertex1 = triangulatePolygon(outInput1.getBytes(), numOfPoints1,
+                                                middleVertex1 = triangulatePolygon(outInput1.getByteArray(), numOfPoints1,
                                                         pointsOffsets1, trianglesX1, trianglesY1, numOfTriangles1,
                                                         nonSimplePolygonDetection1, middleVertex1);
 
@@ -896,7 +896,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             trianglesX0.reset();
                                             trianglesY0.reset();
                                             while (true) {
-                                                middleVertex0 = triangulatePolygon(outInput0.getBytes(), numOfPoints0,
+                                                middleVertex0 = triangulatePolygon(outInput0.getByteArray(), numOfPoints0,
                                                         pointsOffsets0, trianglesX0, trianglesY0, numOfTriangles0,
                                                         nonSimplePolygonDetection0, middleVertex0);
 
@@ -929,11 +929,11 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             }
                                             break;
                                         case CIRCLE:
-                                            res = polygonCircleIntersection(outInput0.getBytes(), outInput1.getBytes());
+                                            res = polygonCircleIntersection(outInput0.getByteArray(), outInput1.getByteArray());
                                             break;
                                         case RECTANGLE:
-                                            res = rectanglePolygonIntersection(outInput1.getBytes(),
-                                                    outInput0.getBytes());
+                                            res = rectanglePolygonIntersection(outInput1.getByteArray(),
+                                                    outInput0.getByteArray());
                                             break;
                                         case NULL:
                                             res = false;
@@ -948,20 +948,20 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                 case CIRCLE:
                                     switch (tag1) {
                                         case POINT:
-                                            res = pointInCircle(outInput1.getBytes(), outInput0.getBytes());
+                                            res = pointInCircle(outInput1.getByteArray(), outInput0.getByteArray());
                                             break;
                                         case LINE:
-                                            res = lineCircleIntersection(outInput1.getBytes(), outInput0.getBytes());
+                                            res = lineCircleIntersection(outInput1.getByteArray(), outInput0.getByteArray());
                                             break;
                                         case POLYGON:
-                                            res = polygonCircleIntersection(outInput1.getBytes(), outInput0.getBytes());
+                                            res = polygonCircleIntersection(outInput1.getByteArray(), outInput0.getByteArray());
                                             break;
                                         case CIRCLE:
-                                            res = circleCircleIntersection(outInput0.getBytes(), outInput1.getBytes());
+                                            res = circleCircleIntersection(outInput0.getByteArray(), outInput1.getByteArray());
                                             break;
                                         case RECTANGLE:
-                                            res = rectangleCircleIntersection(outInput1.getBytes(),
-                                                    outInput0.getBytes());
+                                            res = rectangleCircleIntersection(outInput1.getByteArray(),
+                                                    outInput0.getByteArray());
                                             break;
                                         case NULL:
                                             res = false;
@@ -976,22 +976,22 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                 case RECTANGLE:
                                     switch (tag1) {
                                         case POINT:
-                                            res = pointInRectangle(outInput1.getBytes(), outInput0.getBytes());
+                                            res = pointInRectangle(outInput1.getByteArray(), outInput0.getByteArray());
                                             break;
                                         case LINE:
-                                            res = lineRectangleIntersection(outInput1.getBytes(), outInput0.getBytes());
+                                            res = lineRectangleIntersection(outInput1.getByteArray(), outInput0.getByteArray());
                                             break;
                                         case POLYGON:
-                                            res = rectanglePolygonIntersection(outInput0.getBytes(),
-                                                    outInput1.getBytes());
+                                            res = rectanglePolygonIntersection(outInput0.getByteArray(),
+                                                    outInput1.getByteArray());
                                             break;
                                         case CIRCLE:
-                                            res = rectangleCircleIntersection(outInput0.getBytes(),
-                                                    outInput1.getBytes());
+                                            res = rectangleCircleIntersection(outInput0.getByteArray(),
+                                                    outInput1.getByteArray());
                                             break;
                                         case RECTANGLE:
-                                            triangulateRectangle(outInput0.getBytes(), trianglesX0, trianglesY0);
-                                            triangulateRectangle(outInput1.getBytes(), trianglesX1, trianglesY1);
+                                            triangulateRectangle(outInput0.getByteArray(), trianglesX0, trianglesY0);
+                                            triangulateRectangle(outInput1.getByteArray(), trianglesX1, trianglesY1);
 
                                             boolean intersect = false;
                                             // 2 triangles in a rectangle

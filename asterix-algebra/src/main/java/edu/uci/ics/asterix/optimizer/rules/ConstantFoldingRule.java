@@ -184,7 +184,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             
             @SuppressWarnings("rawtypes")
             ISerializerDeserializer serde = _jobGenCtx.getSerializerDeserializerProvider().getSerializerDeserializer(t);
-            bbis.setByteBuffer(ByteBuffer.wrap(resStore.getBytes(), resStore.getStartIndex(), resStore.getLength()), 0);
+            bbis.setByteBuffer(ByteBuffer.wrap(resStore.getByteArray(), resStore.getStartOffset(), resStore.getLength()), 0);
             IAObject o;
             try {
                 o = (IAObject) serde.deserialize(dis);

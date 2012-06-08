@@ -74,7 +74,7 @@ public abstract class AbstractComparisonEvaluator implements IEvaluator {
         if (outLeft.getLength() == 0) {
             isLeftNull = true;
         } else {
-            typeTag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outLeft.getBytes()[0]);
+            typeTag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outLeft.getByteArray()[0]);
             if (typeTag1 == ATypeTag.NULL) {
                 isLeftNull = true;
             }
@@ -82,7 +82,7 @@ public abstract class AbstractComparisonEvaluator implements IEvaluator {
         if (outRight.getLength() == 0) {
             isRightNull = true;
         } else {
-            typeTag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outRight.getBytes()[0]);
+            typeTag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outRight.getByteArray()[0]);
             if (typeTag2 == ATypeTag.NULL) {
                 isRightNull = true;
             }
@@ -130,8 +130,8 @@ public abstract class AbstractComparisonEvaluator implements IEvaluator {
         if (typeTag2 == ATypeTag.NULL) {
             return ComparisonResult.GREATER_THAN;
         } else if (typeTag2 == ATypeTag.DATETIME) {
-            int result = dateTimeBinaryComp.compare(outLeft.getBytes(), 1, outLeft.getLength() - 1,
-                    outRight.getBytes(), 1, outRight.getLength() - 1);
+            int result = dateTimeBinaryComp.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1,
+                    outRight.getByteArray(), 1, outRight.getLength() - 1);
             if (result == 0)
                 return ComparisonResult.EQUAL;
             else if (result < 0)
@@ -144,8 +144,8 @@ public abstract class AbstractComparisonEvaluator implements IEvaluator {
 
     private ComparisonResult compareBooleanWithArg(ATypeTag typeTag2) throws AlgebricksException {
         if (typeTag2 == ATypeTag.BOOLEAN) {
-            byte b0 = outLeft.getBytes()[1];
-            byte b1 = outRight.getBytes()[1];
+            byte b0 = outLeft.getByteArray()[1];
+            byte b1 = outRight.getByteArray()[1];
             return compareByte(b0, b1);
         }
         throw new AlgebricksException("Comparison is undefined between types ABoolean and " + typeTag2 + " .");
@@ -153,7 +153,7 @@ public abstract class AbstractComparisonEvaluator implements IEvaluator {
 
     private ComparisonResult compareStringWithArg(ATypeTag typeTag2) throws AlgebricksException {
         if (typeTag2 == ATypeTag.STRING) {
-            int result = strBinaryComp.compare(outLeft.getBytes(), 1, outLeft.getLength() - 1, outRight.getBytes(), 1,
+            int result = strBinaryComp.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1, outRight.getByteArray(), 1,
                     outRight.getLength() - 1);
             if (result == 0)
                 return ComparisonResult.EQUAL;
@@ -166,30 +166,30 @@ public abstract class AbstractComparisonEvaluator implements IEvaluator {
     }
 
     private ComparisonResult compareDoubleWithArg(ATypeTag typeTag2) throws AlgebricksException {
-        double s = ADoubleSerializerDeserializer.getDouble(outLeft.getBytes(), 1);
+        double s = ADoubleSerializerDeserializer.getDouble(outLeft.getByteArray(), 1);
         switch (typeTag2) {
             case INT8: {
-                byte v2 = AInt8SerializerDeserializer.getByte(outRight.getBytes(), 1);
+                byte v2 = AInt8SerializerDeserializer.getByte(outRight.getByteArray(), 1);
                 return compareDouble(s, v2);
             }
             case INT16: {
-                short v2 = AInt16SerializerDeserializer.getShort(outRight.getBytes(), 1);
+                short v2 = AInt16SerializerDeserializer.getShort(outRight.getByteArray(), 1);
                 return compareDouble(s, v2);
             }
             case INT32: {
-                int v2 = AInt32SerializerDeserializer.getInt(outRight.getBytes(), 1);
+                int v2 = AInt32SerializerDeserializer.getInt(outRight.getByteArray(), 1);
                 return compareDouble(s, v2);
             }
             case INT64: {
-                long v2 = AInt64SerializerDeserializer.getLong(outRight.getBytes(), 1);
+                long v2 = AInt64SerializerDeserializer.getLong(outRight.getByteArray(), 1);
                 return compareDouble(s, v2);
             }
             case FLOAT: {
-                float v2 = AFloatSerializerDeserializer.getFloat(outRight.getBytes(), 1);
+                float v2 = AFloatSerializerDeserializer.getFloat(outRight.getByteArray(), 1);
                 return compareDouble(s, v2);
             }
             case DOUBLE: {
-                double v2 = ADoubleSerializerDeserializer.getDouble(outRight.getBytes(), 1);
+                double v2 = ADoubleSerializerDeserializer.getDouble(outRight.getByteArray(), 1);
                 return compareDouble(s, v2);
             }
             default: {
@@ -199,30 +199,30 @@ public abstract class AbstractComparisonEvaluator implements IEvaluator {
     }
 
     private ComparisonResult compareFloatWithArg(ATypeTag typeTag2) throws AlgebricksException {
-        float s = FloatSerializerDeserializer.getFloat(outLeft.getBytes(), 1);
+        float s = FloatSerializerDeserializer.getFloat(outLeft.getByteArray(), 1);
         switch (typeTag2) {
             case INT8: {
-                byte v2 = AInt8SerializerDeserializer.getByte(outRight.getBytes(), 1);
+                byte v2 = AInt8SerializerDeserializer.getByte(outRight.getByteArray(), 1);
                 return compareFloat(s, v2);
             }
             case INT16: {
-                short v2 = AInt16SerializerDeserializer.getShort(outRight.getBytes(), 1);
+                short v2 = AInt16SerializerDeserializer.getShort(outRight.getByteArray(), 1);
                 return compareFloat(s, v2);
             }
             case INT32: {
-                int v2 = AInt32SerializerDeserializer.getInt(outRight.getBytes(), 1);
+                int v2 = AInt32SerializerDeserializer.getInt(outRight.getByteArray(), 1);
                 return compareFloat(s, v2);
             }
             case INT64: {
-                long v2 = AInt64SerializerDeserializer.getLong(outRight.getBytes(), 1);
+                long v2 = AInt64SerializerDeserializer.getLong(outRight.getByteArray(), 1);
                 return compareFloat(s, v2);
             }
             case FLOAT: {
-                float v2 = AFloatSerializerDeserializer.getFloat(outRight.getBytes(), 1);
+                float v2 = AFloatSerializerDeserializer.getFloat(outRight.getByteArray(), 1);
                 return compareFloat(s, v2);
             }
             case DOUBLE: {
-                double v2 = ADoubleSerializerDeserializer.getDouble(outRight.getBytes(), 1);
+                double v2 = ADoubleSerializerDeserializer.getDouble(outRight.getByteArray(), 1);
                 return compareDouble(s, v2);
             }
             default: {
@@ -232,30 +232,30 @@ public abstract class AbstractComparisonEvaluator implements IEvaluator {
     }
 
     private ComparisonResult compareInt64WithArg(ATypeTag typeTag2) throws AlgebricksException {
-        long s = AInt64SerializerDeserializer.getLong(outLeft.getBytes(), 1);
+        long s = AInt64SerializerDeserializer.getLong(outLeft.getByteArray(), 1);
         switch (typeTag2) {
             case INT8: {
-                byte v2 = AInt8SerializerDeserializer.getByte(outRight.getBytes(), 1);
+                byte v2 = AInt8SerializerDeserializer.getByte(outRight.getByteArray(), 1);
                 return compareLong(s, v2);
             }
             case INT16: {
-                short v2 = AInt16SerializerDeserializer.getShort(outRight.getBytes(), 1);
+                short v2 = AInt16SerializerDeserializer.getShort(outRight.getByteArray(), 1);
                 return compareLong(s, v2);
             }
             case INT32: {
-                int v2 = AInt32SerializerDeserializer.getInt(outRight.getBytes(), 1);
+                int v2 = AInt32SerializerDeserializer.getInt(outRight.getByteArray(), 1);
                 return compareLong(s, v2);
             }
             case INT64: {
-                long v2 = AInt64SerializerDeserializer.getLong(outRight.getBytes(), 1);
+                long v2 = AInt64SerializerDeserializer.getLong(outRight.getByteArray(), 1);
                 return compareLong(s, v2);
             }
             case FLOAT: {
-                float v2 = AFloatSerializerDeserializer.getFloat(outRight.getBytes(), 1);
+                float v2 = AFloatSerializerDeserializer.getFloat(outRight.getByteArray(), 1);
                 return compareFloat(s, v2);
             }
             case DOUBLE: {
-                double v2 = ADoubleSerializerDeserializer.getDouble(outRight.getBytes(), 1);
+                double v2 = ADoubleSerializerDeserializer.getDouble(outRight.getByteArray(), 1);
                 return compareDouble(s, v2);
             }
             default: {
@@ -265,30 +265,30 @@ public abstract class AbstractComparisonEvaluator implements IEvaluator {
     }
 
     private ComparisonResult compareInt32WithArg(ATypeTag typeTag2) throws AlgebricksException {
-        int s = IntegerSerializerDeserializer.getInt(outLeft.getBytes(), 1);
+        int s = IntegerSerializerDeserializer.getInt(outLeft.getByteArray(), 1);
         switch (typeTag2) {
             case INT8: {
-                byte v2 = AInt8SerializerDeserializer.getByte(outRight.getBytes(), 1);
+                byte v2 = AInt8SerializerDeserializer.getByte(outRight.getByteArray(), 1);
                 return compareInt(s, v2);
             }
             case INT16: {
-                short v2 = AInt16SerializerDeserializer.getShort(outRight.getBytes(), 1);
+                short v2 = AInt16SerializerDeserializer.getShort(outRight.getByteArray(), 1);
                 return compareInt(s, v2);
             }
             case INT32: {
-                int v2 = AInt32SerializerDeserializer.getInt(outRight.getBytes(), 1);
+                int v2 = AInt32SerializerDeserializer.getInt(outRight.getByteArray(), 1);
                 return compareInt(s, v2);
             }
             case INT64: {
-                long v2 = AInt64SerializerDeserializer.getLong(outRight.getBytes(), 1);
+                long v2 = AInt64SerializerDeserializer.getLong(outRight.getByteArray(), 1);
                 return compareLong(s, v2);
             }
             case FLOAT: {
-                float v2 = AFloatSerializerDeserializer.getFloat(outRight.getBytes(), 1);
+                float v2 = AFloatSerializerDeserializer.getFloat(outRight.getByteArray(), 1);
                 return compareFloat(s, v2);
             }
             case DOUBLE: {
-                double v2 = ADoubleSerializerDeserializer.getDouble(outRight.getBytes(), 1);
+                double v2 = ADoubleSerializerDeserializer.getDouble(outRight.getByteArray(), 1);
                 return compareDouble(s, v2);
             }
             default: {
@@ -298,30 +298,30 @@ public abstract class AbstractComparisonEvaluator implements IEvaluator {
     }
 
     private ComparisonResult compareInt16WithArg(ATypeTag typeTag2) throws AlgebricksException {
-        short s = AInt16SerializerDeserializer.getShort(outLeft.getBytes(), 1);
+        short s = AInt16SerializerDeserializer.getShort(outLeft.getByteArray(), 1);
         switch (typeTag2) {
             case INT8: {
-                byte v2 = AInt8SerializerDeserializer.getByte(outRight.getBytes(), 1);
+                byte v2 = AInt8SerializerDeserializer.getByte(outRight.getByteArray(), 1);
                 return compareShort(s, v2);
             }
             case INT16: {
-                short v2 = AInt16SerializerDeserializer.getShort(outRight.getBytes(), 1);
+                short v2 = AInt16SerializerDeserializer.getShort(outRight.getByteArray(), 1);
                 return compareShort(s, v2);
             }
             case INT32: {
-                int v2 = AInt32SerializerDeserializer.getInt(outRight.getBytes(), 1);
+                int v2 = AInt32SerializerDeserializer.getInt(outRight.getByteArray(), 1);
                 return compareInt(s, v2);
             }
             case INT64: {
-                long v2 = AInt64SerializerDeserializer.getLong(outRight.getBytes(), 1);
+                long v2 = AInt64SerializerDeserializer.getLong(outRight.getByteArray(), 1);
                 return compareLong(s, v2);
             }
             case FLOAT: {
-                float v2 = AFloatSerializerDeserializer.getFloat(outRight.getBytes(), 1);
+                float v2 = AFloatSerializerDeserializer.getFloat(outRight.getByteArray(), 1);
                 return compareFloat(s, v2);
             }
             case DOUBLE: {
-                double v2 = ADoubleSerializerDeserializer.getDouble(outRight.getBytes(), 1);
+                double v2 = ADoubleSerializerDeserializer.getDouble(outRight.getByteArray(), 1);
                 return compareDouble(s, v2);
             }
             default: {
@@ -331,30 +331,30 @@ public abstract class AbstractComparisonEvaluator implements IEvaluator {
     }
 
     private ComparisonResult compareInt8WithArg(ATypeTag typeTag2) throws AlgebricksException {
-        byte s = AInt8SerializerDeserializer.getByte(outLeft.getBytes(), 1);
+        byte s = AInt8SerializerDeserializer.getByte(outLeft.getByteArray(), 1);
         switch (typeTag2) {
             case INT8: {
-                byte v2 = AInt8SerializerDeserializer.getByte(outRight.getBytes(), 1);
+                byte v2 = AInt8SerializerDeserializer.getByte(outRight.getByteArray(), 1);
                 return compareByte(s, v2);
             }
             case INT16: {
-                short v2 = AInt16SerializerDeserializer.getShort(outRight.getBytes(), 1);
+                short v2 = AInt16SerializerDeserializer.getShort(outRight.getByteArray(), 1);
                 return compareShort(s, v2);
             }
             case INT32: {
-                int v2 = AInt32SerializerDeserializer.getInt(outRight.getBytes(), 1);
+                int v2 = AInt32SerializerDeserializer.getInt(outRight.getByteArray(), 1);
                 return compareInt(s, v2);
             }
             case INT64: {
-                long v2 = AInt64SerializerDeserializer.getLong(outRight.getBytes(), 1);
+                long v2 = AInt64SerializerDeserializer.getLong(outRight.getByteArray(), 1);
                 return compareLong(s, v2);
             }
             case FLOAT: {
-                float v2 = AFloatSerializerDeserializer.getFloat(outRight.getBytes(), 1);
+                float v2 = AFloatSerializerDeserializer.getFloat(outRight.getByteArray(), 1);
                 return compareFloat(s, v2);
             }
             case DOUBLE: {
-                double v2 = ADoubleSerializerDeserializer.getDouble(outRight.getBytes(), 1);
+                double v2 = ADoubleSerializerDeserializer.getDouble(outRight.getByteArray(), 1);
                 return compareDouble(s, v2);
             }
             default: {

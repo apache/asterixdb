@@ -35,7 +35,7 @@ import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
-import edu.uci.ics.asterix.runtime.accessors.base.DefaultOpenFieldType;
+import edu.uci.ics.asterix.runtime.pointables.base.DefaultOpenFieldType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -169,10 +169,14 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
 
     /**
      * only called when funcExpr is record constructor
-     * @param funcExpr  record constructor function expression
-     * @param requiredListType  required record type
-     * @param inputRecordType 
-     * @param env   type environment
+     * 
+     * @param funcExpr
+     *            record constructor function expression
+     * @param requiredListType
+     *            required record type
+     * @param inputRecordType
+     * @param env
+     *            type environment
      * @throws AlgebricksException
      */
     private void rewriteRecordFuncExpr(ScalarFunctionCallExpression funcExpr, ARecordType requiredRecordType,
@@ -186,10 +190,14 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
 
     /**
      * only called when funcExpr is list constructor
-     * @param funcExpr  list constructor function expression
-     * @param requiredListType  required list type
-     * @param inputListType 
-     * @param env   type environment
+     * 
+     * @param funcExpr
+     *            list constructor function expression
+     * @param requiredListType
+     *            required list type
+     * @param inputListType
+     * @param env
+     *            type environment
      * @throws AlgebricksException
      */
     private void rewriteListFuncExpr(ScalarFunctionCallExpression funcExpr, AbstractCollectionType requiredListType,
@@ -229,7 +237,7 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
         int[] fieldPermutation = new int[reqFieldTypes.length];
         boolean[] nullFields = new boolean[reqFieldTypes.length];
         boolean[] openFields = new boolean[inputFieldTypes.length];
-        
+
         Arrays.fill(nullFields, false);
         Arrays.fill(openFields, true);
         Arrays.fill(fieldPermutation, -1);
@@ -295,7 +303,7 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
             }
             // the input has extra fields
             if (!matched && !reqType.isOpen())
-                throw new AlgebricksException("static type mismatch: including an extra closed field "  + fieldName);
+                throw new AlgebricksException("static type mismatch: including an extra closed field " + fieldName);
         }
 
         // backward match: match from required to actual

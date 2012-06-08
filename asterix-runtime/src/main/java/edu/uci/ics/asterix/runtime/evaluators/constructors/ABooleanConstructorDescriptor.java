@@ -66,7 +66,7 @@ public class ABooleanConstructorDescriptor extends AbstractScalarFunctionDynamic
                         try {
                             outInput.reset();
                             eval.evaluate(tuple);
-                            byte[] serString = outInput.getBytes();
+                            byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
                                 if (utf8BinaryComparator.compare(serString, 1, outInput.getLength(), TRUE, 0, 6) == 0) {
                                     booleanSerde.serialize(ABoolean.TRUE, out);

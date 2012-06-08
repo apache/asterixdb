@@ -67,7 +67,7 @@ public class ClosedRecordConstructorEvalFactory implements IEvaluatorFactory {
                 for (int i = 0; i < evalFields.length; i++) {
                     fieldValueBuffer.reset();
                     evalFields[i].evaluate(tuple);
-                    if (fieldValueBuffer.getBytes()[0] != SER_NULL_TYPE_TAG) {
+                    if (fieldValueBuffer.getByteArray()[0] != SER_NULL_TYPE_TAG) {
                         recBuilder.addField(i, fieldValueBuffer);
                     }
                 }

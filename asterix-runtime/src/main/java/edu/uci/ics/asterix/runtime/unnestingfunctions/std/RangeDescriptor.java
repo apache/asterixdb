@@ -65,10 +65,10 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
                     public void init(IFrameTupleReference tuple) throws AlgebricksException {
                         inputVal.reset();
                         eval0.evaluate(tuple);
-                        current = IntegerSerializerDeserializer.getInt(inputVal.getBytes(), 1);
+                        current = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
                         inputVal.reset();
                         eval1.evaluate(tuple);
-                        max = IntegerSerializerDeserializer.getInt(inputVal.getBytes(), 1);
+                        max = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
                     }
 
                     @SuppressWarnings("unchecked")

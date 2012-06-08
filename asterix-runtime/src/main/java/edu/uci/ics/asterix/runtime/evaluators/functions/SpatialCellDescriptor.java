@@ -75,20 +75,20 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                         eval3.evaluate(tuple);
 
                         try {
-                            ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0.getBytes()[0]);
+                            ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0.getByteArray()[0]);
                             if (tag == ATypeTag.POINT) {
-                                double xLoc = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                double xLoc = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                         APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
-                                double yLoc = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                double yLoc = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                         APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
 
-                                double xOrigin = ADoubleSerializerDeserializer.getDouble(outInput1.getBytes(),
+                                double xOrigin = ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(),
                                         APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
-                                double yOrigin = ADoubleSerializerDeserializer.getDouble(outInput1.getBytes(),
+                                double yOrigin = ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(),
                                         APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
 
-                                double xInc = ADoubleSerializerDeserializer.getDouble(outInput2.getBytes(), 1);
-                                double yInc = ADoubleSerializerDeserializer.getDouble(outInput3.getBytes(), 1);
+                                double xInc = ADoubleSerializerDeserializer.getDouble(outInput2.getByteArray(), 1);
+                                double yInc = ADoubleSerializerDeserializer.getDouble(outInput3.getByteArray(), 1);
 
                                 double x = xOrigin + (Math.floor((xLoc - xOrigin) / xInc)) * xInc;
                                 double y = yOrigin + (Math.floor((yLoc - yOrigin) / yInc)) * yInc;

@@ -13,24 +13,24 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.accessors;
+package edu.uci.ics.asterix.runtime.pointables;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
-import edu.uci.ics.asterix.runtime.accessors.visitor.IBinaryAccessorVisitor;
+import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
+import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
 import edu.uci.ics.asterix.runtime.util.container.IElementFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IValueReference;
+import edu.uci.ics.hyracks.data.std.api.IValueReference;
 
-public class AFlatValueAccessor extends AbstractBinaryAccessor {
+public class AFlatValuePointable extends AbstractVisitablePointable {
 
-    public static IElementFactory<IBinaryAccessor, IAType> FACTORY = new IElementFactory<IBinaryAccessor, IAType>() {
-        public AFlatValueAccessor createElement(IAType type) {
-            return new AFlatValueAccessor();
+    public static IElementFactory<IVisitablePointable, IAType> FACTORY = new IElementFactory<IVisitablePointable, IAType>() {
+        public AFlatValuePointable createElement(IAType type) {
+            return new AFlatValuePointable();
         }
     };
 
-    private AFlatValueAccessor() {
+    private AFlatValuePointable() {
 
     }
 
@@ -39,14 +39,14 @@ public class AFlatValueAccessor extends AbstractBinaryAccessor {
         if (!(o instanceof IValueReference))
             return false;
         IValueReference ivf = (IValueReference) o;
-        byte[] odata = ivf.getBytes();
-        int ostart = ivf.getStartIndex();
+        byte[] odata = ivf.getByteArray();
+        int ostart = ivf.getStartOffset();
         int olen = ivf.getLength();
 
-        byte[] data = getBytes();
-        int start = getStartIndex();
+        byte[] data = getByteArray();
+        int start = getStartOffset();
         int len = getLength();
-        if ( len!= olen)
+        if (len != olen)
             return false;
         for (int i = 0; i < len; i++) {
             if (data[start + i] != odata[ostart + i])
@@ -56,7 +56,7 @@ public class AFlatValueAccessor extends AbstractBinaryAccessor {
     }
 
     @Override
-    public <R, T> R accept(IBinaryAccessorVisitor<R, T> vistor, T tag) throws AsterixException {
+    public <R, T> R accept(IVisitablePointableVisitor<R, T> vistor, T tag) throws AsterixException {
         return vistor.visit(this, tag);
     }
 }

@@ -18,6 +18,12 @@ package edu.uci.ics.asterix.runtime.util.container;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * ListElementAllocator<E, T> is an element-reusable list or a element pool in other words, however 
+ * elements in the list should be exactly the same class, this is forced by IElementFactory<E, T> factory 
+ * as a parameter to the constructor once a ListElementAllocator is constructed, it can only store 
+ * objects of the same class
+ */
 public class ListElementAllocator<E, T> implements IElementAllocator<E, T> {
 
     private IElementFactory<E, T> factory;
@@ -28,6 +34,7 @@ public class ListElementAllocator<E, T> implements IElementAllocator<E, T> {
         this.factory = factory;
     }
 
+    @Override
     public E allocate(T arg) {
         cursor++;
         if (cursor < pool.size()) {
@@ -39,6 +46,7 @@ public class ListElementAllocator<E, T> implements IElementAllocator<E, T> {
         }
     }
 
+    @Override
     public void reset() {
         cursor = -1;
     }

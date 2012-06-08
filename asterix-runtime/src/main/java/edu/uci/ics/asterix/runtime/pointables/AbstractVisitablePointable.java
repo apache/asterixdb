@@ -13,18 +13,19 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.accessors;
+package edu.uci.ics.asterix.runtime.pointables;
 
-import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
+import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
+import edu.uci.ics.hyracks.data.std.api.IValueReference;
 
-public abstract class AbstractBinaryAccessor implements IBinaryAccessor {
+public abstract class AbstractVisitablePointable implements IVisitablePointable {
 
     private byte[] data;
     private int start;
     private int len;
     
     @Override
-    public byte[] getBytes() {
+    public byte[] getByteArray() {
         return data;
     }
 
@@ -34,15 +35,20 @@ public abstract class AbstractBinaryAccessor implements IBinaryAccessor {
     }
 
     @Override
-    public int getStartIndex() {
+    public int getStartOffset() {
         return start;
     }
 
     @Override
-    public void reset(byte[] b, int start, int len) {
+    public void set(byte[] b, int start, int len) {
         this.data = b;
         this.start = start;
         this.len = len;
+    }
+    
+    @Override
+    public void set(IValueReference ivf) {
+        set(ivf.getByteArray(), ivf.getStartOffset(), ivf.getLength());
     }
 
 }

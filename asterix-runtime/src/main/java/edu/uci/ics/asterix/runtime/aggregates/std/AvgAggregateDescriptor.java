@@ -120,35 +120,35 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
                         if (inputVal.getLength() > 0) {
                             ++count;
                             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                                    .deserialize(inputVal.getBytes()[0]);
+                                    .deserialize(inputVal.getByteArray()[0]);
                             switch (typeTag) {
                                 case INT8: {
-                                    byte val = AInt8SerializerDeserializer.getByte(inputVal.getBytes(), 1);
+                                    byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }
                                 case INT16: {
-                                    short val = AInt16SerializerDeserializer.getShort(inputVal.getBytes(), 1);
+                                    short val = AInt16SerializerDeserializer.getShort(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }
                                 case INT32: {
-                                    int val = AInt32SerializerDeserializer.getInt(inputVal.getBytes(), 1);
+                                    int val = AInt32SerializerDeserializer.getInt(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }
                                 case INT64: {
-                                    long val = AInt64SerializerDeserializer.getLong(inputVal.getBytes(), 1);
+                                    long val = AInt64SerializerDeserializer.getLong(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }
                                 case FLOAT: {
-                                    float val = AFloatSerializerDeserializer.getFloat(inputVal.getBytes(), 1);
+                                    float val = AFloatSerializerDeserializer.getFloat(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }
                                 case DOUBLE: {
-                                    double val = ADoubleSerializerDeserializer.getDouble(inputVal.getBytes(), 1);
+                                    double val = ADoubleSerializerDeserializer.getDouble(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }

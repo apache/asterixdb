@@ -64,13 +64,13 @@ public class CreateLineDescriptor extends AbstractScalarFunctionDynamicDescripto
                         eval1.evaluate(tuple);
 
                         try {
-                            aPoint[0].setValue(ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                            aPoint[0].setValue(ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                     APointSerializerDeserializer.getCoordinateOffset(Coordinate.X)),
-                                    ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                    ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                             APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y)));
-                            aPoint[1].setValue(ADoubleSerializerDeserializer.getDouble(outInput1.getBytes(),
+                            aPoint[1].setValue(ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(),
                                     APointSerializerDeserializer.getCoordinateOffset(Coordinate.X)),
-                                    ADoubleSerializerDeserializer.getDouble(outInput1.getBytes(),
+                                    ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(),
                                             APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y)));
                             aLine.setValue(aPoint[0], aPoint[1]);
                             lineSerde.serialize(aLine, out);

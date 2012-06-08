@@ -91,7 +91,7 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         try {
                             array0.reset();
                             evalPattern.evaluate(tuple);
-                            if (array0.getBytes()[0] == SER_NULL_TYPE_TAG) {
+                            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, dout);
                                 return;
                             }
@@ -100,7 +100,7 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                 first = false;
                                 newPattern = true;
                             } else {
-                                int c = strComp.compare(array0.getBytes(), array0.getStartIndex(), array0.getLength(),
+                                int c = strComp.compare(array0.getByteArray(), array0.getStartOffset(), array0.getLength(),
                                         lastPattern.getByteArray(), 0, lastPattern.size());
                                 if (c != 0) {
                                     newPattern = true;
@@ -108,7 +108,7 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             }
                             if (newPattern) {
                                 lastPattern.reset();
-                                lastPattern.write(array0.getBytes(), array0.getStartIndex(), array0.getLength());
+                                lastPattern.write(array0.getByteArray(), array0.getStartOffset(), array0.getLength());
                                 // ! object creation !
                                 DataInputStream di = new DataInputStream(new ByteArrayInputStream(
                                         lastPattern.getByteArray()));
@@ -118,7 +118,7 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             }
                             array0.reset();
                             evalString.evaluate(tuple);
-                            if (array0.getBytes()[0] == SER_NULL_TYPE_TAG) {
+                            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, dout);
                                 return;
                             }

@@ -17,32 +17,32 @@ package edu.uci.ics.asterix.runtime.util;
 
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.accessors.AFlatValueAccessor;
-import edu.uci.ics.asterix.runtime.accessors.AListAccessor;
-import edu.uci.ics.asterix.runtime.accessors.ARecordAccessor;
-import edu.uci.ics.asterix.runtime.accessors.base.DefaultOpenFieldType;
-import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
+import edu.uci.ics.asterix.runtime.pointables.AFlatValuePointable;
+import edu.uci.ics.asterix.runtime.pointables.AListPointable;
+import edu.uci.ics.asterix.runtime.pointables.ARecordPointable;
+import edu.uci.ics.asterix.runtime.pointables.base.DefaultOpenFieldType;
+import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.runtime.util.container.IElementAllocator;
 import edu.uci.ics.asterix.runtime.util.container.ListElementAllocator;
 
-public class AccessorAllocator {
+public class PointableAllocator {
 
-    private IElementAllocator<IBinaryAccessor, IAType> flatArtifactAllocator = new ListElementAllocator<IBinaryAccessor, IAType>(
-            AFlatValueAccessor.FACTORY);
-    private IElementAllocator<IBinaryAccessor, IAType> nestedRecValueAllocator = new ListElementAllocator<IBinaryAccessor, IAType>(
-            ARecordAccessor.FACTORY);
-    private IElementAllocator<IBinaryAccessor, IAType> nestedListValueAllocator = new ListElementAllocator<IBinaryAccessor, IAType>(
-            AListAccessor.FACTORY);
+    private IElementAllocator<IVisitablePointable, IAType> flatArtifactAllocator = new ListElementAllocator<IVisitablePointable, IAType>(
+            AFlatValuePointable.FACTORY);
+    private IElementAllocator<IVisitablePointable, IAType> nestedRecValueAllocator = new ListElementAllocator<IVisitablePointable, IAType>(
+            ARecordPointable.FACTORY);
+    private IElementAllocator<IVisitablePointable, IAType> nestedListValueAllocator = new ListElementAllocator<IVisitablePointable, IAType>(
+            AListPointable.FACTORY);
 
-    public IBinaryAccessor allocateFieldName() {
+    public IVisitablePointable allocateFieldName() {
         return flatArtifactAllocator.allocate(null);
     }
 
-    public IBinaryAccessor allocateFieldType() {
+    public IVisitablePointable allocateFieldType() {
         return flatArtifactAllocator.allocate(null);
     }
 
-    public IBinaryAccessor allocateFieldValue(IAType type) {
+    public IVisitablePointable allocateFieldValue(IAType type) {
         if(type == null)
             return flatArtifactAllocator.allocate(null);
         else if (type.getTypeTag().equals(ATypeTag.RECORD))
@@ -53,7 +53,7 @@ public class AccessorAllocator {
             return flatArtifactAllocator.allocate(null);
     }
     
-    public IBinaryAccessor allocateFieldValue(ATypeTag typeTag) {
+    public IVisitablePointable allocateFieldValue(ATypeTag typeTag) {
         if(typeTag == null)
             return flatArtifactAllocator.allocate(null);
         else if (typeTag.equals(ATypeTag.RECORD))
@@ -66,7 +66,7 @@ public class AccessorAllocator {
             return flatArtifactAllocator.allocate(null);
     }
 
-    public IBinaryAccessor allocateNestedListValue(IAType type) {
+    public IVisitablePointable allocateNestedListValue(IAType type) {
         return nestedListValueAllocator.allocate(type);
     }
 

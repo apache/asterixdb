@@ -88,36 +88,36 @@ public class NumericMultiplyDescriptor extends AbstractScalarFunctionDynamicDesc
                                     evalLeft.evaluate(tuple);
                                 else
                                     evalRight.evaluate(tuple);
-                                typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getBytes()[0]);
+                                typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]);
                                 switch (typeTag) {
                                     case INT8: {
                                         metInt8 = true;
-                                        operands[i] = AInt8SerializerDeserializer.getByte(argOut.getBytes(), 1);
+                                        operands[i] = AInt8SerializerDeserializer.getByte(argOut.getByteArray(), 1);
                                         break;
                                     }
                                     case INT16: {
                                         metInt16 = true;
-                                        operands[i] = AInt16SerializerDeserializer.getShort(argOut.getBytes(), 1);
+                                        operands[i] = AInt16SerializerDeserializer.getShort(argOut.getByteArray(), 1);
                                         break;
                                     }
                                     case INT32: {
                                         metInt32 = true;
-                                        operands[i] = AInt32SerializerDeserializer.getInt(argOut.getBytes(), 1);
+                                        operands[i] = AInt32SerializerDeserializer.getInt(argOut.getByteArray(), 1);
                                         break;
                                     }
                                     case INT64: {
                                         metInt64 = true;
-                                        operands[i] = AInt64SerializerDeserializer.getLong(argOut.getBytes(), 1);
+                                        operands[i] = AInt64SerializerDeserializer.getLong(argOut.getByteArray(), 1);
                                         break;
                                     }
                                     case FLOAT: {
                                         metFloat = true;
-                                        operands[i] = AFloatSerializerDeserializer.getFloat(argOut.getBytes(), 1);
+                                        operands[i] = AFloatSerializerDeserializer.getFloat(argOut.getByteArray(), 1);
                                         break;
                                     }
                                     case DOUBLE: {
                                         metDouble = true;
-                                        operands[i] = ADoubleSerializerDeserializer.getDouble(argOut.getBytes(), 1);
+                                        operands[i] = ADoubleSerializerDeserializer.getDouble(argOut.getByteArray(), 1);
                                         break;
                                     }
                                     case NULL: {
@@ -131,7 +131,7 @@ public class NumericMultiplyDescriptor extends AbstractScalarFunctionDynamicDesc
                                                 : "Right"
                                                         + " Operand of Multiplication can not be "
                                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
-                                                                .getBytes()[0]));
+                                                                .getByteArray()[0]));
                                     }
                                 }
                             }

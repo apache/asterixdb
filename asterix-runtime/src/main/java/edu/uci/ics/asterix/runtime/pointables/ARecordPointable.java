@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.accessors;
+package edu.uci.ics.asterix.runtime.pointables;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -29,28 +29,28 @@ import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
-import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
-import edu.uci.ics.asterix.runtime.accessors.visitor.IBinaryAccessorVisitor;
-import edu.uci.ics.asterix.runtime.util.AccessorAllocator;
+import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
+import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
+import edu.uci.ics.asterix.runtime.util.PointableAllocator;
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.asterix.runtime.util.container.IElementFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 
-public class ARecordAccessor extends AbstractBinaryAccessor {
+public class ARecordPointable extends AbstractVisitablePointable {
 
-    public static IElementFactory<IBinaryAccessor, IAType> FACTORY = new IElementFactory<IBinaryAccessor, IAType>() {
-        public IBinaryAccessor createElement(IAType type) {
-            return new ARecordAccessor((ARecordType) type);
+    public static IElementFactory<IVisitablePointable, IAType> FACTORY = new IElementFactory<IVisitablePointable, IAType>() {
+        public IVisitablePointable createElement(IAType type) {
+            return new ARecordPointable((ARecordType) type);
         }
     };
 
     // access results: field names, field types, and field values
-    private List<IBinaryAccessor> fieldNames = new ArrayList<IBinaryAccessor>();
-    private List<IBinaryAccessor> fieldTypeTags = new ArrayList<IBinaryAccessor>();
-    private List<IBinaryAccessor> fieldValues = new ArrayList<IBinaryAccessor>();
+    private List<IVisitablePointable> fieldNames = new ArrayList<IVisitablePointable>();
+    private List<IVisitablePointable> fieldTypeTags = new ArrayList<IVisitablePointable>();
+    private List<IVisitablePointable> fieldValues = new ArrayList<IVisitablePointable>();
 
     // accessor allocator
-    AccessorAllocator allocator = new AccessorAllocator();
+    private PointableAllocator allocator = new PointableAllocator();
 
     private byte[] typeBuffer = new byte[32768];
     private ResettableByteArrayOutputStream typeBos = new ResettableByteArrayOutputStream();
@@ -67,9 +67,9 @@ public class ARecordAccessor extends AbstractBinaryAccessor {
     private int offsetArrayOffset;
     private int[] fieldOffsets;
     private ATypeTag typeTag;
-    private IBinaryAccessor nullReference = AFlatValueAccessor.FACTORY.createElement(null);
+    private IVisitablePointable nullReference = AFlatValuePointable.FACTORY.createElement(null);
 
-    public ARecordAccessor(ARecordType inputType) {
+    public ARecordPointable(ARecordType inputType) {
         this.inputRecType = inputType;
         IAType[] fieldTypes = inputType.getFieldTypes();
         String[] fieldNameStrs = inputType.getFieldNames();
@@ -92,8 +92,8 @@ public class ARecordAccessor extends AbstractBinaryAccessor {
                 int tagStart = typeBos.size();
                 typeDos.writeByte(ftypeTag.serialize());
                 int tagEnd = typeBos.size();
-                IBinaryAccessor typeTagReference = AFlatValueAccessor.FACTORY.createElement(null);
-                typeTagReference.reset(typeBuffer, tagStart, tagEnd - tagStart);
+                IVisitablePointable typeTagReference = AFlatValuePointable.FACTORY.createElement(null);
+                typeTagReference.set(typeBuffer, tagStart, tagEnd - tagStart);
                 fieldTypeTags.add(typeTagReference);
 
                 // add type name Reference (including a astring type tag)
@@ -101,8 +101,8 @@ public class ARecordAccessor extends AbstractBinaryAccessor {
                 typeDos.writeByte(ATypeTag.STRING.serialize());
                 typeDos.writeUTF(fieldNameStrs[i]);
                 int nameEnd = typeBos.size();
-                IBinaryAccessor typeNameReference = AFlatValueAccessor.FACTORY.createElement(null);
-                typeNameReference.reset(typeBuffer, nameStart, nameEnd - nameStart);
+                IVisitablePointable typeNameReference = AFlatValuePointable.FACTORY.createElement(null);
+                typeNameReference.set(typeBuffer, nameStart, nameEnd - nameStart);
                 fieldNames.add(typeNameReference);
             }
 
@@ -111,7 +111,7 @@ public class ARecordAccessor extends AbstractBinaryAccessor {
             INullWriter nullWriter = AqlNullWriterFactory.INSTANCE.createNullWriter();
             nullWriter.writeNull(typeDos);
             int nullFieldEnd = typeBos.size();
-            nullReference.reset(typeBuffer, nullFieldStart, nullFieldEnd - nullFieldStart);
+            nullReference.set(typeBuffer, nullFieldStart, nullFieldEnd - nullFieldStart);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
@@ -133,10 +133,11 @@ public class ARecordAccessor extends AbstractBinaryAccessor {
         fieldValues.clear();
     }
 
-    public void reset(byte[] b, int start, int len) {
+    @Override
+    public void set(byte[] b, int start, int len) {
         // clear the previous states
         reset();
-        super.reset(b, start, len);
+        super.set(b, start, len);
 
         boolean isExpanded = false;
         int openPartOffset = 0;
@@ -206,8 +207,8 @@ public class ARecordAccessor extends AbstractBinaryAccessor {
                     dataDos.writeByte(typeTag.serialize());
                     dataDos.write(b, fieldOffsets[fieldNumber], fieldValueLength);
                     int fend = dataBos.size();
-                    IBinaryAccessor fieldValue = allocator.allocateFieldValue(fieldType);
-                    fieldValue.reset(dataBuffer, fstart, fend - fstart);
+                    IVisitablePointable fieldValue = allocator.allocateFieldValue(fieldType);
+                    fieldValue.set(dataBuffer, fstart, fend - fstart);
                     fieldValues.add(fieldValue);
                 }
             }
@@ -223,14 +224,14 @@ public class ARecordAccessor extends AbstractBinaryAccessor {
                     dataDos.writeByte(ATypeTag.STRING.serialize());
                     dataDos.write(b, fieldOffset, fieldValueLength);
                     int fnend = dataBos.size();
-                    IBinaryAccessor fieldName = allocator.allocateFieldName();
-                    fieldName.reset(dataBuffer, fnstart, fnend - fnstart);
+                    IVisitablePointable fieldName = allocator.allocateFieldName();
+                    fieldName.set(dataBuffer, fnstart, fnend - fnstart);
                     fieldNames.add(fieldName);
                     fieldOffset += fieldValueLength;
 
                     // set the field type tag
-                    IBinaryAccessor fieldTypeTag = allocator.allocateFieldType();
-                    fieldTypeTag.reset(b, fieldOffset, 1);
+                    IVisitablePointable fieldTypeTag = allocator.allocateFieldType();
+                    fieldTypeTag.set(b, fieldOffset, 1);
                     fieldTypeTags.add(fieldTypeTag);
                     typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[fieldOffset]);
 
@@ -238,8 +239,8 @@ public class ARecordAccessor extends AbstractBinaryAccessor {
                     fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffset, typeTag, true) + 1;
 
                     // allocate
-                    IBinaryAccessor fieldValueAccessor = allocator.allocateFieldValue(typeTag);
-                    fieldValueAccessor.reset(b, fieldOffset, fieldValueLength);
+                    IVisitablePointable fieldValueAccessor = allocator.allocateFieldValue(typeTag);
+                    fieldValueAccessor.set(b, fieldOffset, fieldValueLength);
                     fieldValues.add(fieldValueAccessor);
                     fieldOffset += fieldValueLength;
                 }
@@ -249,20 +250,20 @@ public class ARecordAccessor extends AbstractBinaryAccessor {
         }
     }
 
-    public List<IBinaryAccessor> getFieldNames() {
+    public List<IVisitablePointable> getFieldNames() {
         return fieldNames;
     }
 
-    public List<IBinaryAccessor> getFieldTypeTags() {
+    public List<IVisitablePointable> getFieldTypeTags() {
         return fieldTypeTags;
     }
 
-    public List<IBinaryAccessor> getFieldValues() {
+    public List<IVisitablePointable> getFieldValues() {
         return fieldValues;
     }
 
     @Override
-    public <R, T> R accept(IBinaryAccessorVisitor<R, T> vistor, T tag) throws AsterixException {
+    public <R, T> R accept(IVisitablePointableVisitor<R, T> vistor, T tag) throws AsterixException {
         return vistor.visit(this, tag);
     }
 

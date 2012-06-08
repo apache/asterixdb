@@ -468,14 +468,14 @@ public class AdmTupleParser extends AbstractTupleParser  {
 				this.admFromLexerStream(token, fieldType,
 						fieldValueBuffer.getDataOutput(), false);
 				if (openRecordField) {
-					if (fieldValueBuffer.getBytes()[0] != ATypeTag.NULL
+					if (fieldValueBuffer.getByteArray()[0] != ATypeTag.NULL
 							.serialize())
 						recBuilder.addField(fieldNameBuffer, fieldValueBuffer);
 				} else if (recType.getFieldTypes()[fieldId].getTypeTag() == ATypeTag.UNION) {
 					if (NonTaggedFormatUtil
 							.isOptionalField((AUnionType) recType
 									.getFieldTypes()[fieldId])) {
-						if (fieldValueBuffer.getBytes()[0] != ATypeTag.NULL
+						if (fieldValueBuffer.getByteArray()[0] != ATypeTag.NULL
 								.serialize()) {
 							recBuilder.addField(fieldId, fieldValueBuffer);
 						}

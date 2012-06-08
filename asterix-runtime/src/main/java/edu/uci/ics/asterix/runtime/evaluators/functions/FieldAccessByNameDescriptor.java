@@ -85,7 +85,7 @@ public class FieldAccessByNameDescriptor extends AbstractScalarFunctionDynamicDe
                         eval0.evaluate(tuple);
                         outInput1.reset();
                         eval1.evaluate(tuple);
-                        byte[] serRecord = outInput0.getBytes();
+                        byte[] serRecord = outInput0.getByteArray();
 
                         if (serRecord[0] == SER_NULL_TYPE_TAG) {
                             nullSerde.serialize(ANull.NULL, out);
@@ -97,7 +97,7 @@ public class FieldAccessByNameDescriptor extends AbstractScalarFunctionDynamicDe
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[0]));
                         }
 
-                        byte[] serFldName = outInput1.getBytes();
+                        byte[] serFldName = outInput1.getByteArray();
                         fieldValueOffset = ARecordSerializerDeserializer.getFieldOffsetByName(serRecord, serFldName);
                         if (fieldValueOffset < 0) {
                             out.writeByte(ATypeTag.NULL.serialize());

@@ -15,6 +15,9 @@
 
 package edu.uci.ics.asterix.runtime.util.container;
 
+/**
+ * A reusable object pool interface
+ */
 public interface IElementAllocator<E, T> {
 
     public E allocate(T arg);

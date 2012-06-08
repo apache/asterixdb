@@ -65,7 +65,7 @@ public class AInt8ConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                         try {
                             outInput.reset();
                             eval.evaluate(tuple);
-                            byte[] serString = outInput.getBytes();
+                            byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
                                 offset = 3;
                                 value = 0;

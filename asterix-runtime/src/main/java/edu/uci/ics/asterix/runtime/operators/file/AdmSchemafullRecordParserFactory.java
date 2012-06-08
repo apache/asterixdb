@@ -25,8 +25,8 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserial
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ALineSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APoint3DSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
@@ -793,11 +793,11 @@ public class AdmSchemafullRecordParserFactory implements ITupleParserFactory {
                             token = nextToken();
                             this.admFromLexerStream(token, fieldType, fieldValueBuffer.getDataOutput(), false);
                             if (openRecordField) {
-                                if (fieldValueBuffer.getBytes()[0] != ATypeTag.NULL.serialize())
+                                if (fieldValueBuffer.getByteArray()[0] != ATypeTag.NULL.serialize())
                                     recBuilder.addField(fieldNameBuffer, fieldValueBuffer);
                             } else if (recType.getFieldTypes()[fieldId].getTypeTag() == ATypeTag.UNION) {
                                 if (NonTaggedFormatUtil.isOptionalField((AUnionType) recType.getFieldTypes()[fieldId])) {
-                                    if (fieldValueBuffer.getBytes()[0] != ATypeTag.NULL.serialize()) {
+                                    if (fieldValueBuffer.getByteArray()[0] != ATypeTag.NULL.serialize()) {
                                         recBuilder.addField(fieldId, fieldValueBuffer);
                                     }
                                 }
