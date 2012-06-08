@@ -16,9 +16,8 @@
 package edu.uci.ics.asterix.runtime.util.container;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
-
-import org.apache.hadoop.io.BooleanWritable;
 
 /**
  * Object pool backed by a list.
@@ -44,12 +43,7 @@ public class ListObjectPool<E, T> implements IObjectPool<E, T> {
     /**
      * bits indicating which element is in use
      */
-    private List<BooleanWritable> usedBits = new ArrayList<BooleanWritable>();
-
-    /**
-     * the start index for searching
-     */
-    private int minStartIndex = 0;
+    private BitSet usedBits = new BitSet();
 
     public ListObjectPool(IElementFactory<E, T> factory) {
         this.factory = factory;
@@ -57,29 +51,19 @@ public class ListObjectPool<E, T> implements IObjectPool<E, T> {
 
     @Override
     public E allocate(T arg) {
-        boolean continuous = true;
-        for (int i = minStartIndex; i < pool.size(); i++) {
-            if (!usedBits.get(i).get()) {
-                // the two cases where an element in the pool is a match
-                if ((arg == null && args.get(i) == null)
-                        || (arg != null && args.get(i) != null && arg.equals(args.get(i)))) {
-                    // the element is not used and the arg is the same as
-                    // input arg
-                    if (continuous) {
-                        minStartIndex++;
-                    }
-                    usedBits.get(i).set(true);
-                    return pool.get(i);
-                } else {
-                    // a unmatched element blocked
-                    // free slots are not continuous from the beginning free
-                    // slot
-                    continuous = false;
-                }
-            } else {
-                if (continuous) {
-                    minStartIndex++;
-                }
+        int freeSlot = -1;
+        while (freeSlot + 1 < pool.size()) {
+            freeSlot = usedBits.nextClearBit(freeSlot + 1);
+            if (freeSlot >= pool.size())
+                break;
+
+            // the two cases where an element in the pool is a match
+            if ((arg == null && args.get(freeSlot) == null)
+                    || (arg != null && args.get(freeSlot) != null && arg.equals(args.get(freeSlot)))) {
+                // the element is not used and the arg is the same as
+                // input arg
+                usedBits.set(freeSlot);
+                return pool.get(freeSlot);
             }
         }
 
@@ -87,14 +71,12 @@ public class ListObjectPool<E, T> implements IObjectPool<E, T> {
         E element = factory.createElement(arg);
         pool.add(element);
         args.add(arg);
-        usedBits.add(new BooleanWritable(true));
+        usedBits.set(pool.size() - 1);
         return element;
     }
 
     @Override
     public void reset() {
-        for (int i = 0; i < usedBits.size(); i++)
-            usedBits.get(i).set(false);
-        minStartIndex = 0;
+        usedBits.clear();
     }
 }
