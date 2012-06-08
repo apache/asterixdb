@@ -44,8 +44,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.Va
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
- * dynamically cast a variable from its type to a specified required type, in a
- * recursive way it enables: 1. bag-based fields in a record, 2. bidirectional
+ * Dynamically cast a variable from its type to a specified required type, in a
+ * recursive way. It enables: 1. bag-based fields in a record, 2. bidirectional
  * cast of a open field and a matched closed field, and 3. put in null fields
  * when necessary
  * 
@@ -56,7 +56,8 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * 
  * However, if input record is a variable, then we don't know its exact field
  * layout at compile time, for example, records confirming the same type can
- * different field ordering, different open part.
+ * different field ordering, different open part. That's why we need dynamic
+ * type casting.
  * 
  * Note that as we can see in the example, the ordering of fields of a record is
  * not required. Since the open/close part of a record has completely different

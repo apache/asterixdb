@@ -81,7 +81,6 @@ public class ARecordPointable extends AbstractVisitablePointable {
      * private constructor, to prevent constructing it arbitrarily
      * 
      * @param inputType
-     *            , the input type
      */
     private ARecordPointable(ARecordType inputType) {
         this.inputRecType = inputType;

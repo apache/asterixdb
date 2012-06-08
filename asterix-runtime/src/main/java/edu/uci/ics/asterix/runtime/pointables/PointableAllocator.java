@@ -19,8 +19,8 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.runtime.pointables.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
-import edu.uci.ics.asterix.runtime.util.container.IElementAllocator;
-import edu.uci.ics.asterix.runtime.util.container.ListElementAllocator;
+import edu.uci.ics.asterix.runtime.util.container.IObjectPool;
+import edu.uci.ics.asterix.runtime.util.container.ListObjectPool;
 
 /**
  * This class is the ONLY place to create IVisitablePointable object instances,
@@ -29,11 +29,11 @@ import edu.uci.ics.asterix.runtime.util.container.ListElementAllocator;
  */
 public class PointableAllocator {
 
-    private IElementAllocator<IVisitablePointable, IAType> flatValueAllocator = new ListElementAllocator<IVisitablePointable, IAType>(
+    private IObjectPool<IVisitablePointable, IAType> flatValueAllocator = new ListObjectPool<IVisitablePointable, IAType>(
             AFlatValuePointable.FACTORY);
-    private IElementAllocator<IVisitablePointable, IAType> recordValueAllocator = new ListElementAllocator<IVisitablePointable, IAType>(
+    private IObjectPool<IVisitablePointable, IAType> recordValueAllocator = new ListObjectPool<IVisitablePointable, IAType>(
             ARecordPointable.FACTORY);
-    private IElementAllocator<IVisitablePointable, IAType> listValueAllocator = new ListElementAllocator<IVisitablePointable, IAType>(
+    private IObjectPool<IVisitablePointable, IAType> listValueAllocator = new ListObjectPool<IVisitablePointable, IAType>(
             AListPointable.FACTORY);
 
     public IVisitablePointable allocateEmpty() {
