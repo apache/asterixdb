@@ -74,7 +74,7 @@ public class SimilarityJaccardPrefixEvaluator implements IEvaluator {
         sim = 0;
         inputVal.reset();
         evalThreshold.evaluate(tuple);
-        float similarityThreshold = AFloatSerializerDeserializer.getFloat(inputVal.getBytes(), 1);
+        float similarityThreshold = AFloatSerializerDeserializer.getFloat(inputVal.getByteArray(), 1);
 
         if (similarityThreshold != similarityThresholdCache || similarityFilters == null) {
             similarityFilters = new SimilarityFiltersJaccard(similarityThreshold);
@@ -83,11 +83,11 @@ public class SimilarityJaccardPrefixEvaluator implements IEvaluator {
 
         inputVal.reset();
         evalLen1.evaluate(tuple);
-        int length1 = IntegerSerializerDeserializer.getInt(inputVal.getBytes(), 1);
+        int length1 = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
         inputVal.reset();
         evalLen2.evaluate(tuple);
-        int length2 = IntegerSerializerDeserializer.getInt(inputVal.getBytes(), 1);
+        int length2 = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
         //
         // -- - length filter - --
@@ -100,7 +100,7 @@ public class SimilarityJaccardPrefixEvaluator implements IEvaluator {
             inputVal.reset();
             evalTokens1.evaluate(tuple);
 
-            byte[] serList = inputVal.getBytes();
+            byte[] serList = inputVal.getByteArray();
             if (serList[0] != SER_ORDEREDLIST_TYPE_TAG && serList[0] != SER_UNORDEREDLIST_TYPE_TAG) {
                 throw new AlgebricksException("Scan collection is not defined for values of type"
                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[0]));
@@ -108,7 +108,7 @@ public class SimilarityJaccardPrefixEvaluator implements IEvaluator {
 
             int lengthTokens1;
             if (serList[0] == SER_ORDEREDLIST_TYPE_TAG) {
-                lengthTokens1 = AOrderedListSerializerDeserializer.getNumberOfItems(inputVal.getBytes());
+                lengthTokens1 = AOrderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray());
                 // read tokens
                 for (i = 0; i < lengthTokens1; i++) {
                     int itemOffset;
@@ -120,7 +120,7 @@ public class SimilarityJaccardPrefixEvaluator implements IEvaluator {
                     tokens1.add(IntegerSerializerDeserializer.getInt(serList, itemOffset));
                 }
             } else {
-                lengthTokens1 = AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal.getBytes());
+                lengthTokens1 = AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray());
                 // read tokens
                 for (i = 0; i < lengthTokens1; i++) {
                     int itemOffset;
@@ -142,7 +142,7 @@ public class SimilarityJaccardPrefixEvaluator implements IEvaluator {
             inputVal.reset();
             evalTokens2.evaluate(tuple);
 
-            serList = inputVal.getBytes();
+            serList = inputVal.getByteArray();
             if (serList[0] != SER_ORDEREDLIST_TYPE_TAG && serList[0] != SER_UNORDEREDLIST_TYPE_TAG) {
                 throw new AlgebricksException("Scan collection is not defined for values of type"
                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[0]));
@@ -150,7 +150,7 @@ public class SimilarityJaccardPrefixEvaluator implements IEvaluator {
 
             int lengthTokens2;
             if (serList[0] == SER_ORDEREDLIST_TYPE_TAG) {
-                lengthTokens2 = AOrderedListSerializerDeserializer.getNumberOfItems(inputVal.getBytes());
+                lengthTokens2 = AOrderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray());
                 // read tokens
                 for (i = 0; i < lengthTokens2; i++) {
                     int itemOffset;
@@ -162,7 +162,7 @@ public class SimilarityJaccardPrefixEvaluator implements IEvaluator {
                     tokens2.add(IntegerSerializerDeserializer.getInt(serList, itemOffset));
                 }
             } else {
-                lengthTokens2 = AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal.getBytes());
+                lengthTokens2 = AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray());
                 // read tokens
                 for (i = 0; i < lengthTokens2; i++) {
                     int itemOffset;
@@ -182,7 +182,7 @@ public class SimilarityJaccardPrefixEvaluator implements IEvaluator {
             // -- - token prefix - --
             inputVal.reset();
             evalTokenPrefix.evaluate(tuple);
-            int tokenPrefix = IntegerSerializerDeserializer.getInt(inputVal.getBytes(), 1);
+            int tokenPrefix = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
             //
             // -- - position filter - --

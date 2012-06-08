@@ -13,15 +13,18 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.accessors.base;
+package edu.uci.ics.asterix.runtime.pointables.visitor;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.runtime.accessors.visitor.IBinaryAccessorVisitor;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IValueReference;
+import edu.uci.ics.asterix.runtime.pointables.AFlatValuePointable;
+import edu.uci.ics.asterix.runtime.pointables.AListPointable;
+import edu.uci.ics.asterix.runtime.pointables.ARecordPointable;
 
-public interface IBinaryAccessor extends IValueReference {
+public interface IVisitablePointableVisitor<R, T> {
 
-    public void reset(byte[] b, int start, int len);
+    public R visit(AListPointable accessor, T arg) throws AsterixException;
 
-    public <R, T> R accept(IBinaryAccessorVisitor<R, T> vistor, T tag) throws AsterixException;
+    public R visit(ARecordPointable accessor, T arg) throws AsterixException;
+
+    public R visit(AFlatValuePointable accessor, T arg) throws AsterixException;
 }

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.accessors.cast;
+package edu.uci.ics.asterix.runtime.pointables.cast;
 
 import java.io.DataOutput;
 import java.io.DataOutputStream;
@@ -29,50 +29,57 @@ import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.accessors.AFlatValueAccessor;
-import edu.uci.ics.asterix.runtime.accessors.AListAccessor;
-import edu.uci.ics.asterix.runtime.accessors.base.DefaultOpenFieldType;
-import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
+import edu.uci.ics.asterix.runtime.pointables.AListPointable;
+import edu.uci.ics.asterix.runtime.pointables.PointableAllocator;
+import edu.uci.ics.asterix.runtime.pointables.base.DefaultOpenFieldType;
+import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 
+/**
+ * This class is to do the runtime type cast for a list. It is ONLY visible to
+ * ACastVisitor, so that no other client places can call into that caster and
+ * unnecessary bugs could be prevented.
+ */
 class AListCaster {
+    // pointable allocator
+    private final PointableAllocator allocator = new PointableAllocator();
 
-    private IAType reqItemType;
-    private IBinaryAccessor itemTempReference = AFlatValueAccessor.FACTORY.createElement(null);
-    private Triple<IBinaryAccessor, IAType, Boolean> itemVisitorArg = new Triple<IBinaryAccessor, IAType, Boolean>(
+    // for storing the cast result
+    private final IVisitablePointable itemTempReference = allocator.allocateEmpty();
+    private final Triple<IVisitablePointable, IAType, Boolean> itemVisitorArg = new Triple<IVisitablePointable, IAType, Boolean>(
             itemTempReference, null, null);
 
-    private UnorderedListBuilder unOrderedListBuilder = new UnorderedListBuilder();
-    private OrderedListBuilder orderedListBuilder = new OrderedListBuilder();
+    private final UnorderedListBuilder unOrderedListBuilder = new UnorderedListBuilder();
+    private final OrderedListBuilder orderedListBuilder = new OrderedListBuilder();
 
-    private byte[] dataBuffer = new byte[32768];
-    private ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
-    private DataOutput dataDos = new DataOutputStream(dataBos);
+    private final ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
+    private final DataOutput dataDos = new DataOutputStream(dataBos);
+    private IAType reqItemType;
 
     public AListCaster() {
 
     }
 
-    public void castList(AListAccessor listAccessor, IBinaryAccessor resultAccessor, AbstractCollectionType reqType,
-            ACastVisitor visitor) throws IOException, AsterixException {
+    public void castList(AListPointable listAccessor, IVisitablePointable resultAccessor,
+            AbstractCollectionType reqType, ACastVisitor visitor) throws IOException, AsterixException {
         if (reqType.getTypeTag().equals(ATypeTag.UNORDEREDLIST)) {
             unOrderedListBuilder.reset((AUnorderedListType) reqType);
         }
         if (reqType.getTypeTag().equals(ATypeTag.ORDEREDLIST)) {
             orderedListBuilder.reset((AOrderedListType) reqType);
         }
-        dataBos.setByteArray(dataBuffer, 0);
+        dataBos.reset();
 
-        List<IBinaryAccessor> itemTags = listAccessor.getItemTags();
-        List<IBinaryAccessor> items = listAccessor.getItems();
+        List<IVisitablePointable> itemTags = listAccessor.getItemTags();
+        List<IVisitablePointable> items = listAccessor.getItems();
 
         int start = dataBos.size();
         for (int i = 0; i < items.size(); i++) {
-            IBinaryAccessor itemTypeTag = itemTags.get(i);
-            IBinaryAccessor item = items.get(i);
-            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getBytes()[itemTypeTag
-                    .getStartIndex()]);
+            IVisitablePointable itemTypeTag = itemTags.get(i);
+            IVisitablePointable item = items.get(i);
+            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
+                    .getStartOffset()]);
             if (reqItemType == null || reqItemType.getTypeTag().equals(ATypeTag.ANY)) {
                 itemVisitorArg.second = DefaultOpenFieldType.getDefaultOpenFieldType(typeTag);
                 item.accept(visitor, itemVisitorArg);
@@ -96,6 +103,6 @@ class AListCaster {
             unOrderedListBuilder.write(dataDos, true);
         }
         int end = dataBos.size();
-        resultAccessor.reset(dataBuffer, start, end - start);
+        resultAccessor.set(dataBos.getByteArray(), start, end - start);
     }
 }

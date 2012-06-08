@@ -15,9 +15,24 @@
 
 package edu.uci.ics.asterix.runtime.util.container;
 
+/**
+ * A reusable object pool interface
+ */
 public interface IElementAllocator<E, T> {
 
+    /**
+     * Give client an E instance
+     * 
+     * @param arg
+     *            , the argument to create E
+     * @return a E instance
+     */
     public E allocate(T arg);
 
+    /**
+     * Clean all the used(assigned) instances in the pool. Then all instances in
+     * the pool are marked as "unused" and can be returned to next bunch of
+     * allocate call from a client
+     */
     public void reset();
 }

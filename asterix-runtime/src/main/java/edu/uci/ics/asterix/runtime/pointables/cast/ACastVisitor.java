@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.accessors.cast;
+package edu.uci.ics.asterix.runtime.pointables.cast;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,20 +22,34 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.accessors.AFlatValueAccessor;
-import edu.uci.ics.asterix.runtime.accessors.AListAccessor;
-import edu.uci.ics.asterix.runtime.accessors.ARecordAccessor;
-import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
-import edu.uci.ics.asterix.runtime.accessors.visitor.IBinaryAccessorVisitor;
+import edu.uci.ics.asterix.runtime.pointables.AFlatValuePointable;
+import edu.uci.ics.asterix.runtime.pointables.AListPointable;
+import edu.uci.ics.asterix.runtime.pointables.ARecordPointable;
+import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
+import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 
-public class ACastVisitor implements IBinaryAccessorVisitor<Void, Triple<IBinaryAccessor, IAType, Boolean>> {
+/**
+ * This class is a IVisitablePointableVisitor implementation which recursively
+ * visit a given record, list or flat value of a given type, and recursively
+ * cast it to a specified type For example,
+ * 
+ * A record { "hobby": {{"music", "coding"}}, "id": "001", "name":
+ * "Person Three"} which confirms to closed type ( id: string, name: string,
+ * hobby: {{string}}? ) can be casted to a open type (id: string )
+ * 
+ * Since the open/close part of a record has completely different underlying
+ * memory/storage layout, the visitor will change the layout as specified at
+ * runtime.
+ */
+public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVisitablePointable, IAType, Boolean>> {
 
-    private Map<IBinaryAccessor, ARecordCaster> raccessorToCaster = new HashMap<IBinaryAccessor, ARecordCaster>();
-    private Map<IBinaryAccessor, AListCaster> laccessorToCaster = new HashMap<IBinaryAccessor, AListCaster>();
+    private final Map<IVisitablePointable, ARecordCaster> raccessorToCaster = new HashMap<IVisitablePointable, ARecordCaster>();
+    private final Map<IVisitablePointable, AListCaster> laccessorToCaster = new HashMap<IVisitablePointable, AListCaster>();
 
     @Override
-    public Void visit(AListAccessor accessor, Triple<IBinaryAccessor, IAType, Boolean> arg) throws AsterixException {
+    public Void visit(AListPointable accessor, Triple<IVisitablePointable, IAType, Boolean> arg)
+            throws AsterixException {
         AListCaster caster = laccessorToCaster.get(accessor);
         if (caster == null) {
             caster = new AListCaster();
@@ -50,7 +64,8 @@ public class ACastVisitor implements IBinaryAccessorVisitor<Void, Triple<IBinary
     }
 
     @Override
-    public Void visit(ARecordAccessor accessor, Triple<IBinaryAccessor, IAType, Boolean> arg) throws AsterixException {
+    public Void visit(ARecordPointable accessor, Triple<IVisitablePointable, IAType, Boolean> arg)
+            throws AsterixException {
         ARecordCaster caster = raccessorToCaster.get(accessor);
         if (caster == null) {
             caster = new ARecordCaster();
@@ -65,9 +80,9 @@ public class ACastVisitor implements IBinaryAccessorVisitor<Void, Triple<IBinary
     }
 
     @Override
-    public Void visit(AFlatValueAccessor accessor, Triple<IBinaryAccessor, IAType, Boolean> arg) {
+    public Void visit(AFlatValuePointable accessor, Triple<IVisitablePointable, IAType, Boolean> arg) {
         // set the pointer for result
-        arg.first.reset(accessor.getBytes(), accessor.getStartIndex(), accessor.getLength());
+        arg.first.set(accessor);
         return null;
     }
 

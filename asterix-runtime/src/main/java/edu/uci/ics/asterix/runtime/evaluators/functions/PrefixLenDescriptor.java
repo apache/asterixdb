@@ -65,19 +65,19 @@ public class PrefixLenDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         // length
                         inputVal.reset();
                         evalLen.evaluate(tuple);
-                        int length = IntegerSerializerDeserializer.getInt(inputVal.getBytes(), 1);
+                        int length = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
                         // similarity threshold
                         inputVal.reset();
                         evalThreshold.evaluate(tuple);
                         float similarityThreshold = (float) ADoubleSerializerDeserializer.getDouble(
-                                inputVal.getBytes(), 1);
+                                inputVal.getByteArray(), 1);
 
                         // similarity name
                         inputVal.reset();
                         evalSimilarity.evaluate(tuple);
                         SimilarityFilters similarityFilters = similarityFiltersCache.get(similarityThreshold,
-                                inputVal.getBytes());
+                                inputVal.getByteArray());
 
                         int prefixLength = similarityFilters.getPrefixLength(length);
                         res.setValue(prefixLength);

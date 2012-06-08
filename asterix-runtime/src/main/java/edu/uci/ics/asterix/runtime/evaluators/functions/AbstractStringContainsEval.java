@@ -39,8 +39,8 @@ public abstract class AbstractStringContainsEval implements IEvaluator {
         evalPattern.evaluate(tuple);
         array0.reset();
         evalString.evaluate(tuple);
-        byte[] b1 = array0.getBytes();
-        byte[] b2 = array1.getBytes();
+        byte[] b1 = array0.getByteArray();
+        byte[] b2 = array1.getByteArray();
         ABoolean res = findMatch(b1, b2) ? ABoolean.TRUE : ABoolean.FALSE;
         try {
             boolSerde.serialize(res, dout);

@@ -63,7 +63,7 @@ public class SimilarityJaccardEvaluator implements IEvaluator {
         runArgEvals(tuple);
         if (!checkArgTypes(firstTypeTag, secondTypeTag))
             return;
-        jaccSim = computeResult(argOut.getBytes(), firstStart, secondStart, firstTypeTag);
+        jaccSim = computeResult(argOut.getByteArray(), firstStart, secondStart, firstTypeTag);
         try {
             writeResult(jaccSim);
         } catch (IOException e) {
@@ -79,8 +79,8 @@ public class SimilarityJaccardEvaluator implements IEvaluator {
         secondStart = argOut.getLength();
         secondOrdListEval.evaluate(tuple);
 
-        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getBytes()[firstStart]);
-        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getBytes()[secondStart]);
+        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[firstStart]);
+        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[secondStart]);
     }
 
     protected float computeResult(byte[] bytes, int firstStart, int secondStart, ATypeTag argType)

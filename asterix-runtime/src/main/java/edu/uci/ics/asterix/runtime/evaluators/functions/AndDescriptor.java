@@ -70,11 +70,11 @@ public class AndDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             for (int i = 0; i < n; i++) {
                                 argOut.reset();
                                 evals[i].evaluate(tuple);
-                                if (argOut.getBytes()[0] == SER_NULL_TYPE_TAG) {
+                                if (argOut.getByteArray()[0] == SER_NULL_TYPE_TAG) {
                                     metNull = true;
                                     continue;
                                 }
-                                boolean argResult = ABooleanSerializerDeserializer.getBoolean(argOut.getBytes(), 1);
+                                boolean argResult = ABooleanSerializerDeserializer.getBoolean(argOut.getByteArray(), 1);
                                 res = res && argResult;
                             }
                             if (metNull) {

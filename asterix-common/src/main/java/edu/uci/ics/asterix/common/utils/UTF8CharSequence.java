@@ -1,7 +1,7 @@
 package edu.uci.ics.asterix.common.utils;
 
+import edu.uci.ics.hyracks.data.std.api.IValueReference;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IValueReference;
 import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
 
 public class UTF8CharSequence implements CharSequence {
@@ -48,7 +48,7 @@ public class UTF8CharSequence implements CharSequence {
         int sStart = start + 2;
         int c = 0;
         int i = 0;
-        byte[] bytes = valueRef.getBytes();
+        byte[] bytes = valueRef.getByteArray();
         while (c < len) {
             buf[i++] = UTF8StringPointable.charAt(bytes, sStart + c);
             c += UTF8StringPointable.charSize(bytes, sStart + c);
@@ -57,7 +57,7 @@ public class UTF8CharSequence implements CharSequence {
     }
 
     private void resetLength(IValueReference valueRef) {
-        this.len = UTF8StringPointable.getUTFLen(valueRef.getBytes(), start);
+        this.len = UTF8StringPointable.getUTFLen(valueRef.getByteArray(), start);
     }
 
 }

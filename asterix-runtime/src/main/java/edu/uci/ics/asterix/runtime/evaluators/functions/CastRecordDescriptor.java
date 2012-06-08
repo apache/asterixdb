@@ -7,10 +7,10 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.accessors.ARecordAccessor;
-import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
-import edu.uci.ics.asterix.runtime.accessors.cast.ACastVisitor;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import edu.uci.ics.asterix.runtime.pointables.PointableAllocator;
+import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
+import edu.uci.ics.asterix.runtime.pointables.cast.ACastVisitor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -58,10 +58,12 @@ public class CastRecordDescriptor extends AbstractScalarFunctionDynamicDescripto
                 final IEvaluator recEvaluator = recordEvalFactory.createEvaluator(recordBuffer);
 
                 return new IEvaluator() {
-                    final ARecordAccessor recAccessor = new ARecordAccessor(inputType);
-                    final ARecordAccessor resultAccessor = new ARecordAccessor(reqType);
+                    // pointable allocator
+                    private PointableAllocator allocator = new PointableAllocator();
+                    final IVisitablePointable recAccessor = allocator.allocateRecordValue(inputType);
+                    final IVisitablePointable resultAccessor = allocator.allocateRecordValue(reqType);
                     final ACastVisitor castVisitor = new ACastVisitor();
-                    final Triple<IBinaryAccessor, IAType, Boolean> arg = new Triple<IBinaryAccessor, IAType, Boolean>(
+                    final Triple<IVisitablePointable, IAType, Boolean> arg = new Triple<IVisitablePointable, IAType, Boolean>(
                             resultAccessor, reqType, Boolean.FALSE);
 
                     @Override
@@ -69,10 +71,9 @@ public class CastRecordDescriptor extends AbstractScalarFunctionDynamicDescripto
                         try {
                             recordBuffer.reset();
                             recEvaluator.evaluate(tuple);
-                            recAccessor.reset(recordBuffer.getBytes(), recordBuffer.getStartIndex(),
-                                    recordBuffer.getLength());
+                            recAccessor.set(recordBuffer);
                             recAccessor.accept(castVisitor, arg);
-                            out.write(resultAccessor.getBytes(), resultAccessor.getStartIndex(),
+                            out.write(resultAccessor.getByteArray(), resultAccessor.getStartOffset(),
                                     resultAccessor.getLength());
                         } catch (Exception ioe) {
                             throw new AlgebricksException(ioe);

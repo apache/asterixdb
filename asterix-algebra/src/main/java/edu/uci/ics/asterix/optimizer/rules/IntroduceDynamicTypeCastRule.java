@@ -44,13 +44,27 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.Va
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
- * dynamically cast a constant from its type produced by the originated
- * expression to its required type, in a recursive way
- * it enables:
- * 1. bag-based fields in a record
- * 2. bidirectional cast of a open field and a matched closed field
- * 3. put in null fields when necessary
- * since we have open records, so dynamic cast is needed
+ * dynamically cast a variable from its type to a specified required type, in a
+ * recursive way it enables: 1. bag-based fields in a record, 2. bidirectional
+ * cast of a open field and a matched closed field, and 3. put in null fields
+ * when necessary
+ * 
+ * Here is example: A record { "hobby": {{"music", "coding"}}, "id": "001",
+ * "name": "Person Three"} which confirms to closed type ( id: string, name:
+ * string, hobby: {{string}}? ) can be casted to a open type (id: string ), or
+ * vice versa.
+ * 
+ * However, if input record is a variable, then we don't know its exact field
+ * layout at compile time, for example, records confirming the same type can
+ * different field ordering, different open part.
+ * 
+ * Note that as we can see in the example, the ordering of fields of a record is
+ * not required. Since the open/close part of a record has completely different
+ * underlying memory/storage layout, a cast-record function will change the
+ * layout as specified at runtime.
+ * 
+ * Implementation wise, this rule checks the target dataset type and the input
+ * record type, if the types are different, then enforce a cast function.
  */
 public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
 

@@ -67,7 +67,7 @@ public class LenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         inputVal.reset();
                         evalList.evaluate(tuple);
 
-                        byte[] serList = inputVal.getBytes();
+                        byte[] serList = inputVal.getByteArray();
 
                         if (serList[0] == SER_NULL_TYPE_TAG) {
                             try {

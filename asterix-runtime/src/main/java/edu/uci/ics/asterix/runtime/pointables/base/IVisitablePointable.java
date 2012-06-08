@@ -13,18 +13,17 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.accessors.visitor;
+package edu.uci.ics.asterix.runtime.pointables.base;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.runtime.accessors.AFlatValueAccessor;
-import edu.uci.ics.asterix.runtime.accessors.AListAccessor;
-import edu.uci.ics.asterix.runtime.accessors.ARecordAccessor;
+import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
 
-public interface IBinaryAccessorVisitor<R, T> {
+/**
+ * This interface extends IPointable with a visitor interface in order to ease
+ * programming for recursive record structures
+ */
+public interface IVisitablePointable extends IPointable {
 
-    public R visit(AListAccessor accessor, T arg) throws AsterixException;
-
-    public R visit(ARecordAccessor accessor, T arg) throws AsterixException;
-
-    public R visit(AFlatValueAccessor accessor, T arg) throws AsterixException;
+    public <R, T> R accept(IVisitablePointableVisitor<R, T> vistor, T tag) throws AsterixException;
 }

@@ -18,28 +18,92 @@ package edu.uci.ics.asterix.runtime.util.container;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.io.BooleanWritable;
+
+/**
+ * ListElementAllocator<E, T> is an element-reusable list or a element pool in
+ * other words, however elements in the list should be exactly the same class,
+ * this is forced by IElementFactory<E, T> factory as a parameter to the
+ * constructor once a ListElementAllocator is constructed, it can only store
+ * objects of the same class.
+ * 
+ * The argument for creating E instances could be different. This class also
+ * considers arguments in object reusing, e.g., reuse an E instances ONLY when
+ * the construction argument is "equal".
+ */
 public class ListElementAllocator<E, T> implements IElementAllocator<E, T> {
 
     private IElementFactory<E, T> factory;
+
+    /**
+     * element reusable object pool
+     */
     private List<E> pool = new ArrayList<E>();
-    private int cursor = -1;
+
+    /**
+     * args that are used to create each element in the pool
+     */
+    private List<T> args = new ArrayList<T>();
+
+    /**
+     * bits indicating which element is in use
+     */
+    private List<BooleanWritable> usedBits = new ArrayList<BooleanWritable>();
+
+    /**
+     * the start index for searching
+     */
+    private int minStartIndex = 0;
 
     public ListElementAllocator(IElementFactory<E, T> factory) {
         this.factory = factory;
     }
 
+    @Override
     public E allocate(T arg) {
-        cursor++;
-        if (cursor < pool.size()) {
-            return pool.get(cursor);
-        } else {
-            E element = factory.createElement(arg);
-            pool.add(element);
-            return element;
+        boolean continuous = true;
+        for (int i = minStartIndex; i < pool.size(); i++) {
+            if (!usedBits.get(i).get()) {
+                boolean match = false;
+
+                // the two cases where an element in the pool is a match
+                if ((arg == null && args.get(i) == null)
+                        || (arg != null && args.get(i) != null && arg.equals(args.get(i))))
+                    match = true;
+
+                if (match) {
+                    // the element is not used and the arg is the same as input
+                    // arg
+                    if (continuous) {
+                        minStartIndex++;
+                    }
+                    usedBits.get(i).set(true);
+                    return pool.get(i);
+                } else {
+                    // a unmatched element blocked
+                    // free slots are not continuous from the beginning free
+                    // slot
+                    continuous = false;
+                }
+            } else {
+                if (continuous) {
+                    minStartIndex++;
+                }
+            }
         }
+
+        // if not find a reusable object, allocate a new element
+        E element = factory.createElement(arg);
+        pool.add(element);
+        args.add(arg);
+        usedBits.add(new BooleanWritable(true));
+        return element;
     }
 
+    @Override
     public void reset() {
-        cursor = -1;
+        for (int i = 0; i < usedBits.size(); i++)
+            usedBits.get(i).set(false);
+        minStartIndex = 0;
     }
 }

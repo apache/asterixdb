@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.accessors;
+package edu.uci.ics.asterix.runtime.pointables;
 
 import java.io.DataOutputStream;
 import java.util.ArrayList;
@@ -26,33 +26,47 @@ import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
-import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
-import edu.uci.ics.asterix.runtime.accessors.visitor.IBinaryAccessorVisitor;
-import edu.uci.ics.asterix.runtime.util.AccessorAllocator;
+import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
+import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.asterix.runtime.util.container.IElementFactory;
 
-public class AListAccessor extends AbstractBinaryAccessor {
+/**
+ * This class is to interpret the binary data representation of a list, one can
+ * call getItems and getItemTags to get pointable objects for items and item
+ * type tags
+ * 
+ */
+public class AListPointable extends AbstractVisitablePointable {
 
-    public static IElementFactory<IBinaryAccessor, IAType> FACTORY = new IElementFactory<IBinaryAccessor, IAType>() {
-        public IBinaryAccessor createElement(IAType type) {
-            return new AListAccessor((AbstractCollectionType) type);
+    /**
+     * DO NOT allow to create AListPointable object arbitrarily, force to use
+     * object pool based allocator, in order to have object reuse
+     */
+    static IElementFactory<IVisitablePointable, IAType> FACTORY = new IElementFactory<IVisitablePointable, IAType>() {
+        public IVisitablePointable createElement(IAType type) {
+            return new AListPointable((AbstractCollectionType) type);
         }
     };
+
+    private final List<IVisitablePointable> items = new ArrayList<IVisitablePointable>();
+    private final List<IVisitablePointable> itemTags = new ArrayList<IVisitablePointable>();
+    private final PointableAllocator allocator = new PointableAllocator();
+
+    private final ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
+    private final DataOutputStream dataDos = new DataOutputStream(dataBos);
 
     private IAType itemType;
     private ATypeTag itemTag;
     private boolean typedItemList = false;
 
-    private List<IBinaryAccessor> items = new ArrayList<IBinaryAccessor>();
-    private List<IBinaryAccessor> itemTags = new ArrayList<IBinaryAccessor>();
-    private AccessorAllocator allocator = new AccessorAllocator();
-
-    private byte[] dataBuffer = new byte[32768];
-    private ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
-    private DataOutputStream dataDos = new DataOutputStream(dataBos);
-
-    private AListAccessor(AbstractCollectionType inputType) {
+    /**
+     * private constructor, to prevent constructing it arbitrarily
+     * 
+     * @param inputType
+     *            , the input type
+     */
+    private AListPointable(AbstractCollectionType inputType) {
         if (inputType != null && inputType.getItemType() != null) {
             itemType = inputType.getItemType();
             if (itemType.getTypeTag() == ATypeTag.ANY) {
@@ -70,11 +84,11 @@ public class AListAccessor extends AbstractBinaryAccessor {
         allocator.reset();
         items.clear();
         itemTags.clear();
-        dataBos.setByteArray(dataBuffer, 0);
+        dataBos.reset();
     }
 
     @Override
-    public void reset(byte[] b, int s, int len) {
+    public void set(byte[] b, int s, int len) {
         reset();
 
         int numberOfitems = AInt32SerializerDeserializer.getInt(b, s + 6);
@@ -91,29 +105,30 @@ public class AListAccessor extends AbstractBinaryAccessor {
                 default:
                     itemOffset = s + 10;
             }
-        } else
+        } else {
             itemOffset = s + 10 + (numberOfitems * 4);
+        }
         int itemLength = 0;
         try {
             if (typedItemList) {
                 for (int i = 0; i < numberOfitems; i++) {
                     itemLength = NonTaggedFormatUtil.getFieldValueLength(b, itemOffset, itemTag, false);
-                    IBinaryAccessor tag = allocator.allocateFieldType();
-                    IBinaryAccessor item = allocator.allocateFieldValue(itemType);
+                    IVisitablePointable tag = allocator.allocateEmpty();
+                    IVisitablePointable item = allocator.allocateFieldValue(itemType);
 
                     // set item type tag
                     int start = dataBos.size();
                     dataDos.writeByte(itemTag.serialize());
                     int end = dataBos.size();
-                    tag.reset(dataBuffer, start, end - start);
+                    tag.set(dataBos.getByteArray(), start, end - start);
                     itemTags.add(tag);
-                    
+
                     // set item value
                     start = dataBos.size();
                     dataDos.writeByte(itemTag.serialize());
                     dataDos.write(b, itemOffset, itemLength);
                     end = dataBos.size();
-                    item.reset(dataBuffer, start, end - start);
+                    item.set(dataBos.getByteArray(), start, end - start);
                     itemOffset += itemLength;
                     items.add(item);
                 }
@@ -121,18 +136,18 @@ public class AListAccessor extends AbstractBinaryAccessor {
                 for (int i = 0; i < numberOfitems; i++) {
                     itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[itemOffset]);
                     itemLength = NonTaggedFormatUtil.getFieldValueLength(b, itemOffset, itemTag, true) + 1;
-                    IBinaryAccessor tag = allocator.allocateFieldType();
-                    IBinaryAccessor item = allocator.allocateFieldValue(itemType);
+                    IVisitablePointable tag = allocator.allocateEmpty();
+                    IVisitablePointable item = allocator.allocateFieldValue(itemType);
 
                     // set item type tag
                     int start = dataBos.size();
                     dataDos.writeByte(itemTag.serialize());
                     int end = dataBos.size();
-                    tag.reset(dataBuffer, start, end - start);
+                    tag.set(dataBos.getByteArray(), start, end - start);
                     itemTags.add(tag);
 
                     // open part field already include the type tag
-                    item.reset(b, itemOffset, itemLength);
+                    item.set(b, itemOffset, itemLength);
                     itemOffset += itemLength;
                     items.add(item);
                 }
@@ -143,15 +158,15 @@ public class AListAccessor extends AbstractBinaryAccessor {
     }
 
     @Override
-    public <R, T> R accept(IBinaryAccessorVisitor<R, T> vistor, T tag) throws AsterixException {
+    public <R, T> R accept(IVisitablePointableVisitor<R, T> vistor, T tag) throws AsterixException {
         return vistor.visit(this, tag);
     }
 
-    public List<IBinaryAccessor> getItems() {
+    public List<IVisitablePointable> getItems() {
         return items;
     }
 
-    public List<IBinaryAccessor> getItemTags() {
+    public List<IVisitablePointable> getItemTags() {
         return itemTags;
     }
 }

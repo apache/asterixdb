@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.accessors.cast;
+package edu.uci.ics.asterix.runtime.pointables.cast;
 
 import java.io.DataOutput;
 import java.io.DataOutputStream;
@@ -30,19 +30,51 @@ import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
-import edu.uci.ics.asterix.runtime.accessors.AFlatValueAccessor;
-import edu.uci.ics.asterix.runtime.accessors.ARecordAccessor;
-import edu.uci.ics.asterix.runtime.accessors.base.DefaultOpenFieldType;
-import edu.uci.ics.asterix.runtime.accessors.base.IBinaryAccessor;
+import edu.uci.ics.asterix.runtime.pointables.ARecordPointable;
+import edu.uci.ics.asterix.runtime.pointables.PointableAllocator;
+import edu.uci.ics.asterix.runtime.pointables.base.DefaultOpenFieldType;
+import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.api.IValueReference;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IValueReference;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
 
+/**
+ * This class is to do the runtime type cast for a record. It is ONLY visible to
+ * ACastVisitor, so that no other client places can call into that caster and
+ * unnecessary bugs could be prevented.
+ */
 class ARecordCaster {
+
+    // pointable allocator
+    private final PointableAllocator allocator = new PointableAllocator();
+
+    private final List<IVisitablePointable> reqFieldNames = new ArrayList<IVisitablePointable>();
+    private final List<IVisitablePointable> reqFieldTypeTags = new ArrayList<IVisitablePointable>();
+    private ARecordType cachedReqType = null;
+
+    private final ResettableByteArrayOutputStream bos = new ResettableByteArrayOutputStream();
+    private final DataOutputStream dos = new DataOutputStream(bos);
+
+    private final RecordBuilder recBuilder = new RecordBuilder();
+    private final IVisitablePointable nullReference = allocator.allocateEmpty();
+    private final IVisitablePointable nullTypeTag = allocator.allocateEmpty();
+
+    private final IBinaryComparator fieldNameComparator = PointableBinaryComparatorFactory.of(
+            UTF8StringPointable.FACTORY).createBinaryComparator();
+
+    private final ByteArrayAccessibleOutputStream outputBos = new ByteArrayAccessibleOutputStream();
+    private final DataOutputStream outputDos = new DataOutputStream(outputBos);
+
+    private final IVisitablePointable fieldTempReference = allocator.allocateEmpty();
+    private final Triple<IVisitablePointable, IAType, Boolean> nestedVisitorArg = new Triple<IVisitablePointable, IAType, Boolean>(
+            fieldTempReference, null, null);
+
+    private int numInputFields = 0;
 
     // describe closed fields in the required type
     private int[] fieldPermutation;
@@ -51,54 +83,30 @@ class ARecordCaster {
     // describe fields (open or not) in the input records
     private boolean[] openFields;
     private int[] fieldNamesSortedIndex;
-
-    private List<IBinaryAccessor> reqFieldNames = new ArrayList<IBinaryAccessor>();
     private int[] reqFieldNamesSortedIndex;
-    private List<IBinaryAccessor> reqFieldTypeTags = new ArrayList<IBinaryAccessor>();
-    private ARecordType cachedReqType = null;
-
-    private byte[] buffer = new byte[32768];
-    private ResettableByteArrayOutputStream bos = new ResettableByteArrayOutputStream();
-    private DataOutputStream dos = new DataOutputStream(bos);
-
-    private RecordBuilder recBuilder = new RecordBuilder();
-    private IBinaryAccessor nullReference = AFlatValueAccessor.FACTORY.createElement(null);
-    private IBinaryAccessor nullTypeTag = AFlatValueAccessor.FACTORY.createElement(null);
-
-    private int numInputFields = 0;
-    private IBinaryComparator fieldNameComparator = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY)
-            .createBinaryComparator();
-
-    private byte[] outputBuffer = new byte[32768];
-    private ResettableByteArrayOutputStream outputBos = new ResettableByteArrayOutputStream();
-    private DataOutputStream outputDos = new DataOutputStream(outputBos);
-
-    private IBinaryAccessor fieldTempReference = AFlatValueAccessor.FACTORY.createElement(null);
-    private Triple<IBinaryAccessor, IAType, Boolean> nestedVisitorArg = new Triple<IBinaryAccessor, IAType, Boolean>(
-            fieldTempReference, null, null);
 
     public ARecordCaster() {
         try {
-            bos.setByteArray(buffer, 0);
+            bos.reset();
             int start = bos.size();
             INullWriter nullWriter = AqlNullWriterFactory.INSTANCE.createNullWriter();
             nullWriter.writeNull(dos);
             int end = bos.size();
-            nullReference.reset(buffer, start, end - start);
+            nullReference.set(bos.getByteArray(), start, end - start);
             start = bos.size();
             dos.write(ATypeTag.NULL.serialize());
             end = bos.size();
-            nullTypeTag.reset(buffer, start, end);
+            nullTypeTag.set(bos.getByteArray(), start, end);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
     }
 
-    public void castRecord(ARecordAccessor recordAccessor, IBinaryAccessor resultAccessor, ARecordType reqType,
+    public void castRecord(ARecordPointable recordAccessor, IVisitablePointable resultAccessor, ARecordType reqType,
             ACastVisitor visitor) throws IOException, AsterixException {
-        List<IBinaryAccessor> fieldNames = recordAccessor.getFieldNames();
-        List<IBinaryAccessor> fieldTypeTags = recordAccessor.getFieldTypeTags();
-        List<IBinaryAccessor> fieldValues = recordAccessor.getFieldValues();
+        List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
+        List<IVisitablePointable> fieldTypeTags = recordAccessor.getFieldTypeTags();
+        List<IVisitablePointable> fieldValues = recordAccessor.getFieldValues();
         numInputFields = fieldNames.size();
 
         if (openFields == null || numInputFields > openFields.length) {
@@ -113,7 +121,7 @@ class ARecordCaster {
         reset();
         matchClosedPart(fieldNames, fieldTypeTags, fieldValues);
         writeOutput(fieldNames, fieldTypeTags, fieldValues, outputDos, visitor);
-        resultAccessor.reset(outputBuffer, 0, outputBos.size());
+        resultAccessor.set(outputBos.getByteArray(), 0, outputBos.size());
     }
 
     private void reset() {
@@ -123,7 +131,7 @@ class ARecordCaster {
             fieldPermutation[i] = -1;
         for (int i = 0; i < numInputFields; i++)
             fieldNamesSortedIndex[i] = i;
-        outputBos.setByteArray(outputBuffer, 0);
+        outputBos.reset();
     }
 
     private void loadRequiredType(ARecordType reqType) throws IOException {
@@ -139,7 +147,7 @@ class ARecordCaster {
         for (int i = 0; i < optionalFields.length; i++)
             optionalFields[i] = false;
 
-        bos.setByteArray(buffer, nullReference.getStartIndex() + nullReference.getLength());
+        bos.reset(nullReference.getStartOffset() + nullReference.getLength());
         for (int i = 0; i < numSchemaFields; i++) {
             ATypeTag ftypeTag = fieldTypes[i].getTypeTag();
             String fname = fieldNames[i];
@@ -155,8 +163,8 @@ class ARecordCaster {
             int tagStart = bos.size();
             dos.writeByte(ftypeTag.serialize());
             int tagEnd = bos.size();
-            IBinaryAccessor typeTagPointable = AFlatValueAccessor.FACTORY.createElement(null);
-            typeTagPointable.reset(buffer, tagStart, tagEnd - tagStart);
+            IVisitablePointable typeTagPointable = allocator.allocateEmpty();
+            typeTagPointable.set(bos.getByteArray(), tagStart, tagEnd - tagStart);
             reqFieldTypeTags.add(typeTagPointable);
 
             // add type name pointable (including a string type tag)
@@ -164,8 +172,8 @@ class ARecordCaster {
             dos.write(ATypeTag.STRING.serialize());
             dos.writeUTF(fname);
             int nameEnd = bos.size();
-            IBinaryAccessor typeNamePointable = AFlatValueAccessor.FACTORY.createElement(null);
-            typeNamePointable.reset(buffer, nameStart, nameEnd - nameStart);
+            IVisitablePointable typeNamePointable = allocator.allocateEmpty();
+            typeNamePointable.set(bos.getByteArray(), nameStart, nameEnd - nameStart);
             reqFieldNames.add(typeNamePointable);
         }
 
@@ -176,8 +184,8 @@ class ARecordCaster {
         quickSort(reqFieldNamesSortedIndex, reqFieldNames, 0, reqFieldNamesSortedIndex.length - 1);
     }
 
-    private void matchClosedPart(List<IBinaryAccessor> fieldNames, List<IBinaryAccessor> fieldTypeTags,
-            List<IBinaryAccessor> fieldValues) {
+    private void matchClosedPart(List<IVisitablePointable> fieldNames, List<IVisitablePointable> fieldTypeTags,
+            List<IVisitablePointable> fieldValues) {
         // sort-merge based match
         quickSort(fieldNamesSortedIndex, fieldNames, 0, numInputFields - 1);
         int fnStart = 0;
@@ -187,8 +195,8 @@ class ARecordCaster {
             int reqFnPos = reqFieldNamesSortedIndex[reqFnStart];
             int c = compare(fieldNames.get(fnPos), reqFieldNames.get(reqFnPos));
             if (c == 0) {
-                IBinaryAccessor fieldTypeTag = fieldTypeTags.get(fnPos);
-                IBinaryAccessor reqFieldTypeTag = reqFieldTypeTags.get(reqFnPos);
+                IVisitablePointable fieldTypeTag = fieldTypeTags.get(fnPos);
+                IVisitablePointable reqFieldTypeTag = reqFieldTypeTags.get(reqFnPos);
                 if (fieldTypeTag.equals(reqFieldTypeTag) || (
                 // match the null type of optional field
                         optionalFields[reqFnPos] && fieldTypeTag.equals(nullTypeTag))) {
@@ -222,8 +230,8 @@ class ARecordCaster {
         }
     }
 
-    private void writeOutput(List<IBinaryAccessor> fieldNames, List<IBinaryAccessor> fieldTypeTags,
-            List<IBinaryAccessor> fieldValues, DataOutput output, ACastVisitor visitor) throws IOException,
+    private void writeOutput(List<IVisitablePointable> fieldNames, List<IVisitablePointable> fieldTypeTags,
+            List<IVisitablePointable> fieldValues, DataOutput output, ACastVisitor visitor) throws IOException,
             AsterixException {
         // reset the states of the record builder
         recBuilder.reset(cachedReqType);
@@ -232,7 +240,7 @@ class ARecordCaster {
         // write the closed part
         for (int i = 0; i < fieldPermutation.length; i++) {
             int pos = fieldPermutation[i];
-            IBinaryAccessor field;
+            IVisitablePointable field;
             if (pos >= 0) {
                 field = fieldValues.get(pos);
             } else {
@@ -254,12 +262,12 @@ class ARecordCaster {
         // write the open part
         for (int i = 0; i < numInputFields; i++) {
             if (openFields[i]) {
-                IBinaryAccessor name = fieldNames.get(i);
-                IBinaryAccessor field = fieldValues.get(i);
-                IBinaryAccessor fieldTypeTag = fieldTypeTags.get(i);
+                IVisitablePointable name = fieldNames.get(i);
+                IVisitablePointable field = fieldValues.get(i);
+                IVisitablePointable fieldTypeTag = fieldTypeTags.get(i);
 
                 ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                        .deserialize(fieldTypeTag.getBytes()[fieldTypeTag.getStartIndex()]);
+                        .deserialize(fieldTypeTag.getByteArray()[fieldTypeTag.getStartOffset()]);
                 nestedVisitorArg.second = DefaultOpenFieldType.getDefaultOpenFieldType(typeTag);
                 field.accept(visitor, nestedVisitorArg);
                 recBuilder.addField(name, nestedVisitorArg.first);
@@ -268,7 +276,7 @@ class ARecordCaster {
         recBuilder.write(output, true);
     }
 
-    private void quickSort(int[] index, List<IBinaryAccessor> names, int start, int end) {
+    private void quickSort(int[] index, List<IVisitablePointable> names, int start, int end) {
         if (end <= start)
             return;
         int i = partition(index, names, start, end);
@@ -276,7 +284,7 @@ class ARecordCaster {
         quickSort(index, names, i + 1, end);
     }
 
-    private int partition(int[] index, List<IBinaryAccessor> names, int left, int right) {
+    private int partition(int[] index, List<IVisitablePointable> names, int left, int right) {
         int i = left - 1;
         int j = right;
         while (true) {
@@ -305,7 +313,7 @@ class ARecordCaster {
 
     private int compare(IValueReference a, IValueReference b) {
         // start+1 and len-1 due to the type tag
-        return fieldNameComparator.compare(a.getBytes(), a.getStartIndex() + 1, a.getLength() - 1, b.getBytes(),
-                b.getStartIndex() + 1, b.getLength() - 1);
+        return fieldNameComparator.compare(a.getByteArray(), a.getStartOffset() + 1, a.getLength() - 1,
+                b.getByteArray(), b.getStartOffset() + 1, b.getLength() - 1);
     }
 }

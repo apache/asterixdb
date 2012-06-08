@@ -87,7 +87,7 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                     try {
                         inputVal.reset();
                         argEval.evaluate(tuple);
-                        byte[] serList = inputVal.getBytes();
+                        byte[] serList = inputVal.getByteArray();
 
                         if (serList[0] == SER_NULL_TYPE_TAG) {
                             nullSerde.serialize(ANull.NULL, out);
@@ -99,12 +99,12 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[0]));
                         }
 
-                        serListTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getBytes()[0])
+                        serListTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0])
                                 .serialize();
                         if (serListTag == SER_ORDEREDLIST_TYPE_TAG)
-                            numItems = AOrderedListSerializerDeserializer.getNumberOfItems(inputVal.getBytes());
+                            numItems = AOrderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray());
                         else
-                            numItems = AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal.getBytes());
+                            numItems = AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray());
 
                         itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[1]);
                         if (itemTag == ATypeTag.ANY)
@@ -123,7 +123,7 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
 
                     try {
                         if (pos < numItems) {
-                            byte[] serList = inputVal.getBytes();
+                            byte[] serList = inputVal.getByteArray();
 
                             try {
                                 if (serListTag == SER_ORDEREDLIST_TYPE_TAG) {
