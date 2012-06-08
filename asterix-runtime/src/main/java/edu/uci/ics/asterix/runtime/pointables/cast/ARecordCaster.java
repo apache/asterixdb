@@ -30,8 +30,8 @@ import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
-import edu.uci.ics.asterix.runtime.pointables.AFlatValuePointable;
 import edu.uci.ics.asterix.runtime.pointables.ARecordPointable;
+import edu.uci.ics.asterix.runtime.pointables.PointableAllocator;
 import edu.uci.ics.asterix.runtime.pointables.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
@@ -43,6 +43,9 @@ import edu.uci.ics.hyracks.data.std.api.IValueReference;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
 class ARecordCaster {
+
+    // pointable allocator
+    private PointableAllocator allocator = new PointableAllocator();
 
     // describe closed fields in the required type
     private int[] fieldPermutation;
@@ -62,8 +65,8 @@ class ARecordCaster {
     private DataOutputStream dos = new DataOutputStream(bos);
 
     private RecordBuilder recBuilder = new RecordBuilder();
-    private IVisitablePointable nullReference = AFlatValuePointable.FACTORY.createElement(null);
-    private IVisitablePointable nullTypeTag = AFlatValuePointable.FACTORY.createElement(null);
+    private IVisitablePointable nullReference = allocator.allocateEmpty();
+    private IVisitablePointable nullTypeTag = allocator.allocateEmpty();
 
     private int numInputFields = 0;
     private IBinaryComparator fieldNameComparator = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY)
@@ -73,7 +76,7 @@ class ARecordCaster {
     private ResettableByteArrayOutputStream outputBos = new ResettableByteArrayOutputStream();
     private DataOutputStream outputDos = new DataOutputStream(outputBos);
 
-    private IVisitablePointable fieldTempReference = AFlatValuePointable.FACTORY.createElement(null);
+    private IVisitablePointable fieldTempReference = allocator.allocateEmpty();
     private Triple<IVisitablePointable, IAType, Boolean> nestedVisitorArg = new Triple<IVisitablePointable, IAType, Boolean>(
             fieldTempReference, null, null);
 
@@ -155,7 +158,7 @@ class ARecordCaster {
             int tagStart = bos.size();
             dos.writeByte(ftypeTag.serialize());
             int tagEnd = bos.size();
-            IVisitablePointable typeTagPointable = AFlatValuePointable.FACTORY.createElement(null);
+            IVisitablePointable typeTagPointable = allocator.allocateEmpty();
             typeTagPointable.set(buffer, tagStart, tagEnd - tagStart);
             reqFieldTypeTags.add(typeTagPointable);
 
@@ -164,7 +167,7 @@ class ARecordCaster {
             dos.write(ATypeTag.STRING.serialize());
             dos.writeUTF(fname);
             int nameEnd = bos.size();
-            IVisitablePointable typeNamePointable = AFlatValuePointable.FACTORY.createElement(null);
+            IVisitablePointable typeNamePointable = allocator.allocateEmpty();
             typeNamePointable.set(buffer, nameStart, nameEnd - nameStart);
             reqFieldNames.add(typeNamePointable);
         }

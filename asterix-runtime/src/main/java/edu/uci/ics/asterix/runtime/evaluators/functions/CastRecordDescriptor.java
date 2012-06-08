@@ -8,7 +8,7 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import edu.uci.ics.asterix.runtime.pointables.ARecordPointable;
+import edu.uci.ics.asterix.runtime.pointables.PointableAllocator;
 import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.runtime.pointables.cast.ACastVisitor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -58,8 +58,10 @@ public class CastRecordDescriptor extends AbstractScalarFunctionDynamicDescripto
                 final IEvaluator recEvaluator = recordEvalFactory.createEvaluator(recordBuffer);
 
                 return new IEvaluator() {
-                    final ARecordPointable recAccessor = new ARecordPointable(inputType);
-                    final ARecordPointable resultAccessor = new ARecordPointable(reqType);
+                    // pointable allocator
+                    private PointableAllocator allocator = new PointableAllocator();
+                    final IVisitablePointable recAccessor = allocator.allocateRecordValue(inputType);
+                    final IVisitablePointable resultAccessor = allocator.allocateRecordValue(reqType);
                     final ACastVisitor castVisitor = new ACastVisitor();
                     final Triple<IVisitablePointable, IAType, Boolean> arg = new Triple<IVisitablePointable, IAType, Boolean>(
                             resultAccessor, reqType, Boolean.FALSE);

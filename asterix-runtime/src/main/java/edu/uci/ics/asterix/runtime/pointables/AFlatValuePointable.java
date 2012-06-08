@@ -24,12 +24,19 @@ import edu.uci.ics.hyracks.data.std.api.IValueReference;
 
 public class AFlatValuePointable extends AbstractVisitablePointable {
 
-    public static IElementFactory<IVisitablePointable, IAType> FACTORY = new IElementFactory<IVisitablePointable, IAType>() {
+    /**
+     * DO NOT allow to create AFlatValuePointable object arbitrarily, force to
+     * use object pool based allocator
+     */
+    static IElementFactory<IVisitablePointable, IAType> FACTORY = new IElementFactory<IVisitablePointable, IAType>() {
         public AFlatValuePointable createElement(IAType type) {
             return new AFlatValuePointable();
         }
     };
 
+    /**
+     * private constructor, to prevent arbitrary creation
+     */
     private AFlatValuePointable() {
 
     }
@@ -38,16 +45,23 @@ public class AFlatValuePointable extends AbstractVisitablePointable {
     public boolean equals(Object o) {
         if (!(o instanceof IValueReference))
             return false;
+
+        // get right raw data
         IValueReference ivf = (IValueReference) o;
         byte[] odata = ivf.getByteArray();
         int ostart = ivf.getStartOffset();
         int olen = ivf.getLength();
 
+        // get left raw data
         byte[] data = getByteArray();
         int start = getStartOffset();
         int len = getLength();
+
+        // bytes length should be equal
         if (len != olen)
             return false;
+
+        // check each byte
         for (int i = 0; i < len; i++) {
             if (data[start + i] != odata[ostart + i])
                 return false;

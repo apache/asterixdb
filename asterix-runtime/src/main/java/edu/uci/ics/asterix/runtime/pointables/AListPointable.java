@@ -28,13 +28,16 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
-import edu.uci.ics.asterix.runtime.util.PointableAllocator;
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.asterix.runtime.util.container.IElementFactory;
 
 public class AListPointable extends AbstractVisitablePointable {
 
-    public static IElementFactory<IVisitablePointable, IAType> FACTORY = new IElementFactory<IVisitablePointable, IAType>() {
+    /**
+     * DO NOT allow to create AListPointable object arbitrarily, force to use
+     * object pool based allocator, in order to have object reuse
+     */
+    static IElementFactory<IVisitablePointable, IAType> FACTORY = new IElementFactory<IVisitablePointable, IAType>() {
         public IVisitablePointable createElement(IAType type) {
             return new AListPointable((AbstractCollectionType) type);
         }
@@ -52,6 +55,12 @@ public class AListPointable extends AbstractVisitablePointable {
     private final ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
     private final DataOutputStream dataDos = new DataOutputStream(dataBos);
 
+    /**
+     * private constructor, to prevent constructing it
+     * 
+     * @param inputType
+     *            , the input type
+     */
     private AListPointable(AbstractCollectionType inputType) {
         if (inputType != null && inputType.getItemType() != null) {
             itemType = inputType.getItemType();
@@ -98,7 +107,7 @@ public class AListPointable extends AbstractVisitablePointable {
             if (typedItemList) {
                 for (int i = 0; i < numberOfitems; i++) {
                     itemLength = NonTaggedFormatUtil.getFieldValueLength(b, itemOffset, itemTag, false);
-                    IVisitablePointable tag = allocator.allocateFieldType();
+                    IVisitablePointable tag = allocator.allocateEmpty();
                     IVisitablePointable item = allocator.allocateFieldValue(itemType);
 
                     // set item type tag
@@ -121,7 +130,7 @@ public class AListPointable extends AbstractVisitablePointable {
                 for (int i = 0; i < numberOfitems; i++) {
                     itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[itemOffset]);
                     itemLength = NonTaggedFormatUtil.getFieldValueLength(b, itemOffset, itemTag, true) + 1;
-                    IVisitablePointable tag = allocator.allocateFieldType();
+                    IVisitablePointable tag = allocator.allocateEmpty();
                     IVisitablePointable item = allocator.allocateFieldValue(itemType);
 
                     // set item type tag

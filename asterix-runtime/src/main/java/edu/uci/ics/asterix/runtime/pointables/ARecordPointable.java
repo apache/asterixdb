@@ -31,14 +31,17 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
-import edu.uci.ics.asterix.runtime.util.PointableAllocator;
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.asterix.runtime.util.container.IElementFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 
 public class ARecordPointable extends AbstractVisitablePointable {
 
-    public static IElementFactory<IVisitablePointable, IAType> FACTORY = new IElementFactory<IVisitablePointable, IAType>() {
+    /**
+     * DO NOT allow to create ARecordPointable object arbitrarily, force to use
+     * object pool based allocator, in order to have object reuse
+     */
+    static IElementFactory<IVisitablePointable, IAType> FACTORY = new IElementFactory<IVisitablePointable, IAType>() {
         public IVisitablePointable createElement(IAType type) {
             return new ARecordPointable((ARecordType) type);
         }
@@ -49,7 +52,7 @@ public class ARecordPointable extends AbstractVisitablePointable {
     private List<IVisitablePointable> fieldTypeTags = new ArrayList<IVisitablePointable>();
     private List<IVisitablePointable> fieldValues = new ArrayList<IVisitablePointable>();
 
-    // accessor allocator
+    // pointable allocator
     private PointableAllocator allocator = new PointableAllocator();
 
     private byte[] typeBuffer = new byte[32768];
@@ -69,7 +72,13 @@ public class ARecordPointable extends AbstractVisitablePointable {
     private ATypeTag typeTag;
     private IVisitablePointable nullReference = AFlatValuePointable.FACTORY.createElement(null);
 
-    public ARecordPointable(ARecordType inputType) {
+    /**
+     * private constructor, to prevent constructing it
+     * 
+     * @param inputType
+     *            , the input type
+     */
+    private ARecordPointable(ARecordType inputType) {
         this.inputRecType = inputType;
         IAType[] fieldTypes = inputType.getFieldTypes();
         String[] fieldNameStrs = inputType.getFieldNames();
@@ -224,13 +233,13 @@ public class ARecordPointable extends AbstractVisitablePointable {
                     dataDos.writeByte(ATypeTag.STRING.serialize());
                     dataDos.write(b, fieldOffset, fieldValueLength);
                     int fnend = dataBos.size();
-                    IVisitablePointable fieldName = allocator.allocateFieldName();
+                    IVisitablePointable fieldName = allocator.allocateEmpty();
                     fieldName.set(dataBuffer, fnstart, fnend - fnstart);
                     fieldNames.add(fieldName);
                     fieldOffset += fieldValueLength;
 
                     // set the field type tag
-                    IVisitablePointable fieldTypeTag = allocator.allocateFieldType();
+                    IVisitablePointable fieldTypeTag = allocator.allocateEmpty();
                     fieldTypeTag.set(b, fieldOffset, 1);
                     fieldTypeTags.add(fieldTypeTag);
                     typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[fieldOffset]);
