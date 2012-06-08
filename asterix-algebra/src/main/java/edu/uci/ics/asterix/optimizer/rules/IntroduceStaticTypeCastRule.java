@@ -56,12 +56,28 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 /**
  * statically cast a constant from its type produced by the originated
  * expression to its required type, in a recursive way it enables: 1. bag-based
- * fields in a record 2. bidirectional cast of a open field and a matched closed
- * field 3. put in null fields when necessary It should be fired before the
- * constant folding rule
+ * fields in a record, 2. bidirectional cast of a open field and a matched
+ * closed field, and 3. put in null fields when necessary. It should be fired
+ * before the constant folding rule.
  * 
- * This rule is not responsible for type casting between primitive types Tests
- * open-closed/open-closed-15 and after are not to test this rule
+ * This rule is not responsible for type casting between primitive types.
+ * 
+ * Here is example: A record { "hobby": {{"music", "coding"}}, "id": "001",
+ * "name": "Person Three"} which confirms to closed type ( id: string, name:
+ * string, hobby: {{string}}? ) can be casted to a open type (id: string ), or
+ * vice versa.
+ * 
+ * If the record is a constant, the situation that we are going into insert the
+ * record into a dataset with a different type can be capatured at the compile
+ * time, and type cast is done in the rule.
+ * 
+ * Implementation wise: first, we match the record's type and its target dataset
+ * type to see if it is cast-able; second, if the types are cast-able, we embed the require type to the
+ * original producer expression. If the types are not cast-able, we throw
+ * compile time exceptions.
+ * 
+ * Then, at runtime, the constructors know what to do by checking the required
+ * output type.
  */
 public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
 

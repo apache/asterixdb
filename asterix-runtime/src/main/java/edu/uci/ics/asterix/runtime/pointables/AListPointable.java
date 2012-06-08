@@ -53,7 +53,6 @@ public class AListPointable extends AbstractVisitablePointable {
     private final List<IVisitablePointable> itemTags = new ArrayList<IVisitablePointable>();
     private final PointableAllocator allocator = new PointableAllocator();
 
-    private final byte[] dataBuffer = new byte[32768];
     private final ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
     private final DataOutputStream dataDos = new DataOutputStream(dataBos);
 
@@ -85,7 +84,7 @@ public class AListPointable extends AbstractVisitablePointable {
         allocator.reset();
         items.clear();
         itemTags.clear();
-        dataBos.setByteArray(dataBuffer, 0);
+        dataBos.reset();
     }
 
     @Override
@@ -106,8 +105,9 @@ public class AListPointable extends AbstractVisitablePointable {
                 default:
                     itemOffset = s + 10;
             }
-        } else
+        } else {
             itemOffset = s + 10 + (numberOfitems * 4);
+        }
         int itemLength = 0;
         try {
             if (typedItemList) {
@@ -120,7 +120,7 @@ public class AListPointable extends AbstractVisitablePointable {
                     int start = dataBos.size();
                     dataDos.writeByte(itemTag.serialize());
                     int end = dataBos.size();
-                    tag.set(dataBuffer, start, end - start);
+                    tag.set(dataBos.getByteArray(), start, end - start);
                     itemTags.add(tag);
 
                     // set item value
@@ -128,7 +128,7 @@ public class AListPointable extends AbstractVisitablePointable {
                     dataDos.writeByte(itemTag.serialize());
                     dataDos.write(b, itemOffset, itemLength);
                     end = dataBos.size();
-                    item.set(dataBuffer, start, end - start);
+                    item.set(dataBos.getByteArray(), start, end - start);
                     itemOffset += itemLength;
                     items.add(item);
                 }
@@ -143,7 +143,7 @@ public class AListPointable extends AbstractVisitablePointable {
                     int start = dataBos.size();
                     dataDos.writeByte(itemTag.serialize());
                     int end = dataBos.size();
-                    tag.set(dataBuffer, start, end - start);
+                    tag.set(dataBos.getByteArray(), start, end - start);
                     itemTags.add(tag);
 
                     // open part field already include the type tag

@@ -38,7 +38,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 /**
  * This class is to interpret the binary data representation of a record, one
  * can call getFieldNames, getFieldTypeTags and getFieldValues to get pointable
- * objects for field names, field type tags, and field values
+ * objects for field names, field type tags, and field values.
  * 
  */
 public class ARecordPointable extends AbstractVisitablePointable {
@@ -61,11 +61,9 @@ public class ARecordPointable extends AbstractVisitablePointable {
     // pointable allocator
     private final PointableAllocator allocator = new PointableAllocator();
 
-    private final byte[] typeBuffer = new byte[32768];
     private final ResettableByteArrayOutputStream typeBos = new ResettableByteArrayOutputStream();
     private final DataOutputStream typeDos = new DataOutputStream(typeBos);
 
-    private final byte[] dataBuffer = new byte[32768];
     private final ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
     private final DataOutputStream dataDos = new DataOutputStream(dataBos);
 
@@ -93,7 +91,7 @@ public class ARecordPointable extends AbstractVisitablePointable {
 
         // initialize the buffer for closed parts(fieldName bytes+ type bytes) +
         // constant(null bytes)
-        typeBos.setByteArray(typeBuffer, 0);
+        typeBos.reset();
         try {
             for (int i = 0; i < numberOfSchemaFields; i++) {
                 ATypeTag ftypeTag = fieldTypes[i].getTypeTag();
@@ -109,7 +107,7 @@ public class ARecordPointable extends AbstractVisitablePointable {
                 typeDos.writeByte(ftypeTag.serialize());
                 int tagEnd = typeBos.size();
                 IVisitablePointable typeTagReference = AFlatValuePointable.FACTORY.createElement(null);
-                typeTagReference.set(typeBuffer, tagStart, tagEnd - tagStart);
+                typeTagReference.set(typeBos.getByteArray(), tagStart, tagEnd - tagStart);
                 fieldTypeTags.add(typeTagReference);
 
                 // add type name Reference (including a astring type tag)
@@ -118,7 +116,7 @@ public class ARecordPointable extends AbstractVisitablePointable {
                 typeDos.writeUTF(fieldNameStrs[i]);
                 int nameEnd = typeBos.size();
                 IVisitablePointable typeNameReference = AFlatValuePointable.FACTORY.createElement(null);
-                typeNameReference.set(typeBuffer, nameStart, nameEnd - nameStart);
+                typeNameReference.set(typeBos.getByteArray(), nameStart, nameEnd - nameStart);
                 fieldNames.add(typeNameReference);
             }
 
@@ -127,7 +125,7 @@ public class ARecordPointable extends AbstractVisitablePointable {
             INullWriter nullWriter = AqlNullWriterFactory.INSTANCE.createNullWriter();
             nullWriter.writeNull(typeDos);
             int nullFieldEnd = typeBos.size();
-            nullReference.set(typeBuffer, nullFieldStart, nullFieldEnd - nullFieldStart);
+            nullReference.set(typeBos.getByteArray(), nullFieldStart, nullFieldEnd - nullFieldStart);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
@@ -136,8 +134,8 @@ public class ARecordPointable extends AbstractVisitablePointable {
     }
 
     private void reset() {
-        typeBos.setByteArray(typeBuffer, closedPartTypeInfoSize);
-        dataBos.setByteArray(dataBuffer, 0);
+        typeBos.reset(closedPartTypeInfoSize);
+        dataBos.reset(0);
         // reset the allocator
         allocator.reset();
 
@@ -169,10 +167,12 @@ public class ARecordPointable extends AbstractVisitablePointable {
                 if (isExpanded) {
                     openPartOffset = s + AInt32SerializerDeserializer.getInt(b, s + 6);
                     s += 10;
-                } else
+                } else {
                     s += 6;
-            } else
+                }
+            } else {
                 s += 5;
+            }
         }
         try {
             if (numberOfSchemaFields > 0) {
@@ -224,7 +224,7 @@ public class ARecordPointable extends AbstractVisitablePointable {
                     dataDos.write(b, fieldOffsets[fieldNumber], fieldValueLength);
                     int fend = dataBos.size();
                     IVisitablePointable fieldValue = allocator.allocateFieldValue(fieldType);
-                    fieldValue.set(dataBuffer, fstart, fend - fstart);
+                    fieldValue.set(dataBos.getByteArray(), fstart, fend - fstart);
                     fieldValues.add(fieldValue);
                 }
             }
@@ -241,7 +241,7 @@ public class ARecordPointable extends AbstractVisitablePointable {
                     dataDos.write(b, fieldOffset, fieldValueLength);
                     int fnend = dataBos.size();
                     IVisitablePointable fieldName = allocator.allocateEmpty();
-                    fieldName.set(dataBuffer, fnstart, fnend - fnstart);
+                    fieldName.set(dataBos.getByteArray(), fnstart, fnend - fnstart);
                     fieldNames.add(fieldName);
                     fieldOffset += fieldValueLength;
 

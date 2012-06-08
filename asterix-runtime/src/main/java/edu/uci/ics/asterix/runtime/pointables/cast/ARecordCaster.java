@@ -57,7 +57,6 @@ class ARecordCaster {
     private final List<IVisitablePointable> reqFieldTypeTags = new ArrayList<IVisitablePointable>();
     private ARecordType cachedReqType = null;
 
-    private final byte[] buffer = new byte[32768];
     private final ResettableByteArrayOutputStream bos = new ResettableByteArrayOutputStream();
     private final DataOutputStream dos = new DataOutputStream(bos);
 
@@ -88,16 +87,16 @@ class ARecordCaster {
 
     public ARecordCaster() {
         try {
-            bos.setByteArray(buffer, 0);
+            bos.reset();
             int start = bos.size();
             INullWriter nullWriter = AqlNullWriterFactory.INSTANCE.createNullWriter();
             nullWriter.writeNull(dos);
             int end = bos.size();
-            nullReference.set(buffer, start, end - start);
+            nullReference.set(bos.getByteArray(), start, end - start);
             start = bos.size();
             dos.write(ATypeTag.NULL.serialize());
             end = bos.size();
-            nullTypeTag.set(buffer, start, end);
+            nullTypeTag.set(bos.getByteArray(), start, end);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
@@ -148,7 +147,7 @@ class ARecordCaster {
         for (int i = 0; i < optionalFields.length; i++)
             optionalFields[i] = false;
 
-        bos.setByteArray(buffer, nullReference.getStartOffset() + nullReference.getLength());
+        bos.reset(nullReference.getStartOffset() + nullReference.getLength());
         for (int i = 0; i < numSchemaFields; i++) {
             ATypeTag ftypeTag = fieldTypes[i].getTypeTag();
             String fname = fieldNames[i];
@@ -165,7 +164,7 @@ class ARecordCaster {
             dos.writeByte(ftypeTag.serialize());
             int tagEnd = bos.size();
             IVisitablePointable typeTagPointable = allocator.allocateEmpty();
-            typeTagPointable.set(buffer, tagStart, tagEnd - tagStart);
+            typeTagPointable.set(bos.getByteArray(), tagStart, tagEnd - tagStart);
             reqFieldTypeTags.add(typeTagPointable);
 
             // add type name pointable (including a string type tag)
@@ -174,7 +173,7 @@ class ARecordCaster {
             dos.writeUTF(fname);
             int nameEnd = bos.size();
             IVisitablePointable typeNamePointable = allocator.allocateEmpty();
-            typeNamePointable.set(buffer, nameStart, nameEnd - nameStart);
+            typeNamePointable.set(bos.getByteArray(), nameStart, nameEnd - nameStart);
             reqFieldNames.add(typeNamePointable);
         }
 

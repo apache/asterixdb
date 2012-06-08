@@ -74,9 +74,9 @@ public class ListElementAllocator<E, T> implements IElementAllocator<E, T> {
                 if (match) {
                     // the element is not used and the arg is the same as input
                     // arg
-                    if (continuous)
+                    if (continuous) {
                         minStartIndex++;
-
+                    }
                     usedBits.get(i).set(true);
                     return pool.get(i);
                 } else {
@@ -86,8 +86,9 @@ public class ListElementAllocator<E, T> implements IElementAllocator<E, T> {
                     continuous = false;
                 }
             } else {
-                if (continuous)
+                if (continuous) {
                     minStartIndex++;
+                }
             }
         }
 

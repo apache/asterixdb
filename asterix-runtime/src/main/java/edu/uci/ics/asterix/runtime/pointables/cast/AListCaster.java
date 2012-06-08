@@ -55,7 +55,6 @@ class AListCaster {
 
     private final ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
     private final DataOutput dataDos = new DataOutputStream(dataBos);
-    private final byte[] dataBuffer = new byte[32768];
     private IAType reqItemType;
 
     public AListCaster() {
@@ -70,7 +69,7 @@ class AListCaster {
         if (reqType.getTypeTag().equals(ATypeTag.ORDEREDLIST)) {
             orderedListBuilder.reset((AOrderedListType) reqType);
         }
-        dataBos.setByteArray(dataBuffer, 0);
+        dataBos.reset();
 
         List<IVisitablePointable> itemTags = listAccessor.getItemTags();
         List<IVisitablePointable> items = listAccessor.getItems();
@@ -104,6 +103,6 @@ class AListCaster {
             unOrderedListBuilder.write(dataDos, true);
         }
         int end = dataBos.size();
-        resultAccessor.set(dataBuffer, start, end - start);
+        resultAccessor.set(dataBos.getByteArray(), start, end - start);
     }
 }
