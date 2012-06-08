@@ -21,17 +21,13 @@ import java.util.List;
 import org.apache.hadoop.io.BooleanWritable;
 
 /**
- * ListElementAllocator<E, T> is an element-reusable list or a element pool in
- * other words, however elements in the list should be exactly the same class,
- * this is forced by IElementFactory<E, T> factory as a parameter to the
- * constructor once a ListElementAllocator is constructed, it can only store
- * objects of the same class.
+ * Object pool backed by a list.
  * 
  * The argument for creating E instances could be different. This class also
- * considers arguments in object reusing, e.g., reuse an E instances ONLY when
- * the construction argument is "equal".
+ * considers arguments in object reusing, e.g., it reuses an E instances ONLY
+ * when the construction argument is "equal".
  */
-public class ListElementAllocator<E, T> implements IElementAllocator<E, T> {
+public class ListObjectPool<E, T> implements IObjectPool<E, T> {
 
     private IElementFactory<E, T> factory;
 
@@ -55,7 +51,7 @@ public class ListElementAllocator<E, T> implements IElementAllocator<E, T> {
      */
     private int minStartIndex = 0;
 
-    public ListElementAllocator(IElementFactory<E, T> factory) {
+    public ListObjectPool(IElementFactory<E, T> factory) {
         this.factory = factory;
     }
 
@@ -64,16 +60,11 @@ public class ListElementAllocator<E, T> implements IElementAllocator<E, T> {
         boolean continuous = true;
         for (int i = minStartIndex; i < pool.size(); i++) {
             if (!usedBits.get(i).get()) {
-                boolean match = false;
-
                 // the two cases where an element in the pool is a match
                 if ((arg == null && args.get(i) == null)
-                        || (arg != null && args.get(i) != null && arg.equals(args.get(i))))
-                    match = true;
-
-                if (match) {
-                    // the element is not used and the arg is the same as input
-                    // arg
+                        || (arg != null && args.get(i) != null && arg.equals(args.get(i)))) {
+                    // the element is not used and the arg is the same as
+                    // input arg
                     if (continuous) {
                         minStartIndex++;
                     }
@@ -92,7 +83,7 @@ public class ListElementAllocator<E, T> implements IElementAllocator<E, T> {
             }
         }
 
-        // if not find a reusable object, allocate a new element
+        // if we do not find a reusable object, allocate a new one
         E element = factory.createElement(arg);
         pool.add(element);
         args.add(arg);
