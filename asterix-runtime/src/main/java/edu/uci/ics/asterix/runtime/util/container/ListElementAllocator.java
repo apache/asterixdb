@@ -25,7 +25,11 @@ import org.apache.hadoop.io.BooleanWritable;
  * other words, however elements in the list should be exactly the same class,
  * this is forced by IElementFactory<E, T> factory as a parameter to the
  * constructor once a ListElementAllocator is constructed, it can only store
- * objects of the same class
+ * objects of the same class.
+ * 
+ * The argument for creating E instances could be different. This class also
+ * considers arguments in object reusing, e.g., reuse an E instances ONLY when
+ * the construction argument is "equal".
  */
 public class ListElementAllocator<E, T> implements IElementAllocator<E, T> {
 

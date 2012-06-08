@@ -22,11 +22,16 @@ import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor
 import edu.uci.ics.asterix.runtime.util.container.IElementFactory;
 import edu.uci.ics.hyracks.data.std.api.IValueReference;
 
+/**
+ * This class is to represent a flat field, e.g., int field, string field, and
+ * so on, based on an binary representation
+ */
 public class AFlatValuePointable extends AbstractVisitablePointable {
 
     /**
      * DO NOT allow to create AFlatValuePointable object arbitrarily, force to
-     * use object pool based allocator
+     * use object pool based allocator. The factory is not public so that it
+     * cannot called in other places than PointableAllocator.
      */
     static IElementFactory<IVisitablePointable, IAType> FACTORY = new IElementFactory<IVisitablePointable, IAType>() {
         public AFlatValuePointable createElement(IAType type) {

@@ -18,12 +18,17 @@ package edu.uci.ics.asterix.runtime.pointables;
 import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
 import edu.uci.ics.hyracks.data.std.api.IValueReference;
 
+/**
+ * This class implements several "routine" methods in IVisitablePointable
+ * interface, so that subclasses do not need to repeat the same code
+ * 
+ */
 public abstract class AbstractVisitablePointable implements IVisitablePointable {
 
     private byte[] data;
     private int start;
     private int len;
-    
+
     @Override
     public byte[] getByteArray() {
         return data;
@@ -45,7 +50,7 @@ public abstract class AbstractVisitablePointable implements IVisitablePointable 
         this.start = start;
         this.len = len;
     }
-    
+
     @Override
     public void set(IValueReference ivf) {
         set(ivf.getByteArray(), ivf.getStartOffset(), ivf.getLength());

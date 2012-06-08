@@ -22,6 +22,11 @@ import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.runtime.util.container.IElementAllocator;
 import edu.uci.ics.asterix.runtime.util.container.ListElementAllocator;
 
+/**
+ * This class is the ONLY place to create IVisitablePointable object instances,
+ * so that all the client code are forced to have object reuse for those
+ * IVisitablePointable objects
+ */
 public class PointableAllocator {
 
     private IElementAllocator<IVisitablePointable, IAType> flatValueAllocator = new ListElementAllocator<IVisitablePointable, IAType>(

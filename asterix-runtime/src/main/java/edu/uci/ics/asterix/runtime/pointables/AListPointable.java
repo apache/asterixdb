@@ -31,6 +31,12 @@ import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.asterix.runtime.util.container.IElementFactory;
 
+/**
+ * This class is to interpret the binary data representation of a list, one can
+ * call getItems and getItemTags to get pointable objects for items and item
+ * type tags
+ * 
+ */
 public class AListPointable extends AbstractVisitablePointable {
 
     /**
@@ -43,10 +49,6 @@ public class AListPointable extends AbstractVisitablePointable {
         }
     };
 
-    private IAType itemType;
-    private ATypeTag itemTag;
-    private boolean typedItemList = false;
-
     private final List<IVisitablePointable> items = new ArrayList<IVisitablePointable>();
     private final List<IVisitablePointable> itemTags = new ArrayList<IVisitablePointable>();
     private final PointableAllocator allocator = new PointableAllocator();
@@ -55,8 +57,12 @@ public class AListPointable extends AbstractVisitablePointable {
     private final ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
     private final DataOutputStream dataDos = new DataOutputStream(dataBos);
 
+    private IAType itemType;
+    private ATypeTag itemTag;
+    private boolean typedItemList = false;
+
     /**
-     * private constructor, to prevent constructing it
+     * private constructor, to prevent constructing it arbitrarily
      * 
      * @param inputType
      *            , the input type

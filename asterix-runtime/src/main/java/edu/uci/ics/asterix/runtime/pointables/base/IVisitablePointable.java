@@ -19,6 +19,10 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 
+/**
+ * This interface extends IPointable with a visitor interface in order to ease
+ * programming for recursive record structures
+ */
 public interface IVisitablePointable extends IPointable {
 
     public <R, T> R accept(IVisitablePointableVisitor<R, T> vistor, T tag) throws AsterixException;

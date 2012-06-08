@@ -36,23 +36,27 @@ import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 
+/**
+ * This class is to do the runtime type cast for a list. It is ONLY visible to
+ * ACastVisitor, so that no other client places can call into that caster and
+ * unnecessary bugs could be prevented.
+ */
 class AListCaster {
-
-    private IAType reqItemType;
     // pointable allocator
-    private PointableAllocator allocator = new PointableAllocator();
+    private final PointableAllocator allocator = new PointableAllocator();
 
     // for storing the cast result
-    private IVisitablePointable itemTempReference = allocator.allocateEmpty();
-    private Triple<IVisitablePointable, IAType, Boolean> itemVisitorArg = new Triple<IVisitablePointable, IAType, Boolean>(
+    private final IVisitablePointable itemTempReference = allocator.allocateEmpty();
+    private final Triple<IVisitablePointable, IAType, Boolean> itemVisitorArg = new Triple<IVisitablePointable, IAType, Boolean>(
             itemTempReference, null, null);
 
-    private UnorderedListBuilder unOrderedListBuilder = new UnorderedListBuilder();
-    private OrderedListBuilder orderedListBuilder = new OrderedListBuilder();
+    private final UnorderedListBuilder unOrderedListBuilder = new UnorderedListBuilder();
+    private final OrderedListBuilder orderedListBuilder = new OrderedListBuilder();
 
-    private byte[] dataBuffer = new byte[32768];
-    private ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
-    private DataOutput dataDos = new DataOutputStream(dataBos);
+    private final ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
+    private final DataOutput dataDos = new DataOutputStream(dataBos);
+    private final byte[] dataBuffer = new byte[32768];
+    private IAType reqItemType;
 
     public AListCaster() {
 

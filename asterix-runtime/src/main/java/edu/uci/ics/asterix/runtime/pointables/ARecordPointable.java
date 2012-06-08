@@ -35,6 +35,12 @@ import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.asterix.runtime.util.container.IElementFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 
+/**
+ * This class is to interpret the binary data representation of a record, one
+ * can call getFieldNames, getFieldTypeTags and getFieldValues to get pointable
+ * objects for field names, field type tags, and field values
+ * 
+ */
 public class ARecordPointable extends AbstractVisitablePointable {
 
     /**
@@ -48,32 +54,33 @@ public class ARecordPointable extends AbstractVisitablePointable {
     };
 
     // access results: field names, field types, and field values
-    private List<IVisitablePointable> fieldNames = new ArrayList<IVisitablePointable>();
-    private List<IVisitablePointable> fieldTypeTags = new ArrayList<IVisitablePointable>();
-    private List<IVisitablePointable> fieldValues = new ArrayList<IVisitablePointable>();
+    private final List<IVisitablePointable> fieldNames = new ArrayList<IVisitablePointable>();
+    private final List<IVisitablePointable> fieldTypeTags = new ArrayList<IVisitablePointable>();
+    private final List<IVisitablePointable> fieldValues = new ArrayList<IVisitablePointable>();
 
     // pointable allocator
-    private PointableAllocator allocator = new PointableAllocator();
+    private final PointableAllocator allocator = new PointableAllocator();
 
-    private byte[] typeBuffer = new byte[32768];
-    private ResettableByteArrayOutputStream typeBos = new ResettableByteArrayOutputStream();
-    private DataOutputStream typeDos = new DataOutputStream(typeBos);
+    private final byte[] typeBuffer = new byte[32768];
+    private final ResettableByteArrayOutputStream typeBos = new ResettableByteArrayOutputStream();
+    private final DataOutputStream typeDos = new DataOutputStream(typeBos);
 
-    private byte[] dataBuffer = new byte[32768];
-    private ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
-    private DataOutputStream dataDos = new DataOutputStream(dataBos);
+    private final byte[] dataBuffer = new byte[32768];
+    private final ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
+    private final DataOutputStream dataDos = new DataOutputStream(dataBos);
+
+    private final ARecordType inputRecType;
+
+    private final int numberOfSchemaFields;
+    private final int[] fieldOffsets;
+    private final IVisitablePointable nullReference = AFlatValuePointable.FACTORY.createElement(null);
 
     private int closedPartTypeInfoSize = 0;
-    private ARecordType inputRecType;
-
-    private int numberOfSchemaFields;
     private int offsetArrayOffset;
-    private int[] fieldOffsets;
     private ATypeTag typeTag;
-    private IVisitablePointable nullReference = AFlatValuePointable.FACTORY.createElement(null);
 
     /**
-     * private constructor, to prevent constructing it
+     * private constructor, to prevent constructing it arbitrarily
      * 
      * @param inputType
      *            , the input type

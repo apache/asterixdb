@@ -41,11 +41,41 @@ import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.api.IValueReference;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
 
+/**
+ * This class is to do the runtime type cast for a record. It is ONLY visible to
+ * ACastVisitor, so that no other client places can call into that caster and
+ * unnecessary bugs could be prevented.
+ */
 class ARecordCaster {
 
     // pointable allocator
-    private PointableAllocator allocator = new PointableAllocator();
+    private final PointableAllocator allocator = new PointableAllocator();
+
+    private final List<IVisitablePointable> reqFieldNames = new ArrayList<IVisitablePointable>();
+    private final List<IVisitablePointable> reqFieldTypeTags = new ArrayList<IVisitablePointable>();
+    private ARecordType cachedReqType = null;
+
+    private final byte[] buffer = new byte[32768];
+    private final ResettableByteArrayOutputStream bos = new ResettableByteArrayOutputStream();
+    private final DataOutputStream dos = new DataOutputStream(bos);
+
+    private final RecordBuilder recBuilder = new RecordBuilder();
+    private final IVisitablePointable nullReference = allocator.allocateEmpty();
+    private final IVisitablePointable nullTypeTag = allocator.allocateEmpty();
+
+    private final IBinaryComparator fieldNameComparator = PointableBinaryComparatorFactory.of(
+            UTF8StringPointable.FACTORY).createBinaryComparator();
+
+    private final ByteArrayAccessibleOutputStream outputBos = new ByteArrayAccessibleOutputStream();
+    private final DataOutputStream outputDos = new DataOutputStream(outputBos);
+
+    private final IVisitablePointable fieldTempReference = allocator.allocateEmpty();
+    private final Triple<IVisitablePointable, IAType, Boolean> nestedVisitorArg = new Triple<IVisitablePointable, IAType, Boolean>(
+            fieldTempReference, null, null);
+
+    private int numInputFields = 0;
 
     // describe closed fields in the required type
     private int[] fieldPermutation;
@@ -54,31 +84,7 @@ class ARecordCaster {
     // describe fields (open or not) in the input records
     private boolean[] openFields;
     private int[] fieldNamesSortedIndex;
-
-    private List<IVisitablePointable> reqFieldNames = new ArrayList<IVisitablePointable>();
     private int[] reqFieldNamesSortedIndex;
-    private List<IVisitablePointable> reqFieldTypeTags = new ArrayList<IVisitablePointable>();
-    private ARecordType cachedReqType = null;
-
-    private byte[] buffer = new byte[32768];
-    private ResettableByteArrayOutputStream bos = new ResettableByteArrayOutputStream();
-    private DataOutputStream dos = new DataOutputStream(bos);
-
-    private RecordBuilder recBuilder = new RecordBuilder();
-    private IVisitablePointable nullReference = allocator.allocateEmpty();
-    private IVisitablePointable nullTypeTag = allocator.allocateEmpty();
-
-    private int numInputFields = 0;
-    private IBinaryComparator fieldNameComparator = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY)
-            .createBinaryComparator();
-
-    private byte[] outputBuffer = new byte[32768];
-    private ResettableByteArrayOutputStream outputBos = new ResettableByteArrayOutputStream();
-    private DataOutputStream outputDos = new DataOutputStream(outputBos);
-
-    private IVisitablePointable fieldTempReference = allocator.allocateEmpty();
-    private Triple<IVisitablePointable, IAType, Boolean> nestedVisitorArg = new Triple<IVisitablePointable, IAType, Boolean>(
-            fieldTempReference, null, null);
 
     public ARecordCaster() {
         try {
@@ -116,7 +122,7 @@ class ARecordCaster {
         reset();
         matchClosedPart(fieldNames, fieldTypeTags, fieldValues);
         writeOutput(fieldNames, fieldTypeTags, fieldValues, outputDos, visitor);
-        resultAccessor.set(outputBuffer, 0, outputBos.size());
+        resultAccessor.set(outputBos.getByteArray(), 0, outputBos.size());
     }
 
     private void reset() {
@@ -126,7 +132,7 @@ class ARecordCaster {
             fieldPermutation[i] = -1;
         for (int i = 0; i < numInputFields; i++)
             fieldNamesSortedIndex[i] = i;
-        outputBos.setByteArray(outputBuffer, 0);
+        outputBos.reset();
     }
 
     private void loadRequiredType(ARecordType reqType) throws IOException {
