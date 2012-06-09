@@ -24,8 +24,7 @@ import edu.uci.ics.asterix.runtime.util.container.ListObjectPool;
 
 /**
  * This class is the ONLY place to create IVisitablePointable object instances,
- * so that all the client code are forced to have object reuse for those
- * IVisitablePointable objects
+ * to enforce use of an object pool.
  */
 public class PointableAllocator {
 

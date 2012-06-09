@@ -23,10 +23,10 @@ import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 
 /**
- * This class serves as the repository for default record type and list type
+ * This class serves as the repository for the default record type and list type
  * fields in the open part, e.g., a "record" (nested) field in the open part is
  * always a fully open one, and a "list" field in the open part is always a list
- * of "ANY"
+ * of "ANY".
  * 
  */
 public class DefaultOpenFieldType {

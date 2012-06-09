@@ -45,8 +45,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStre
 
 /**
  * This class is to do the runtime type cast for a record. It is ONLY visible to
- * ACastVisitor, so that no other client places can call into that caster and
- * unnecessary bugs could be prevented.
+ * ACastVisitor.
  */
 class ARecordCaster {
 

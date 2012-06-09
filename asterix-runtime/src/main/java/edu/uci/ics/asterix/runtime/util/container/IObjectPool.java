@@ -16,7 +16,7 @@
 package edu.uci.ics.asterix.runtime.util.container;
 
 /**
- * A reusable object pool interface
+ * A reusable object pool interface.
  */
 public interface IObjectPool<E, T> {
 

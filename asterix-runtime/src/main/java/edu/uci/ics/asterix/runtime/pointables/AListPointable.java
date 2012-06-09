@@ -29,22 +29,22 @@ import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
-import edu.uci.ics.asterix.runtime.util.container.IElementFactory;
+import edu.uci.ics.asterix.runtime.util.container.IObjectFactory;
 
 /**
- * This class is to interpret the binary data representation of a list, one can
+ * This class interprets the binary data representation of a list, one can
  * call getItems and getItemTags to get pointable objects for items and item
- * type tags
+ * type tags.
  * 
  */
 public class AListPointable extends AbstractVisitablePointable {
 
     /**
      * DO NOT allow to create AListPointable object arbitrarily, force to use
-     * object pool based allocator, in order to have object reuse
+     * object pool based allocator, in order to have object reuse.
      */
-    static IElementFactory<IVisitablePointable, IAType> FACTORY = new IElementFactory<IVisitablePointable, IAType>() {
-        public IVisitablePointable createElement(IAType type) {
+    static IObjectFactory<IVisitablePointable, IAType> FACTORY = new IObjectFactory<IVisitablePointable, IAType>() {
+        public IVisitablePointable create(IAType type) {
             return new AListPointable((AbstractCollectionType) type);
         }
     };
@@ -64,7 +64,6 @@ public class AListPointable extends AbstractVisitablePointable {
      * private constructor, to prevent constructing it arbitrarily
      * 
      * @param inputType
-     *            , the input type
      */
     private AListPointable(AbstractCollectionType inputType) {
         if (inputType != null && inputType.getItemType() != null) {

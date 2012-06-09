@@ -20,7 +20,7 @@ import edu.uci.ics.hyracks.data.std.api.IValueReference;
 
 /**
  * This class implements several "routine" methods in IVisitablePointable
- * interface, so that subclasses do not need to repeat the same code
+ * interface, so that subclasses do not need to repeat the same code.
  * 
  */
 public abstract class AbstractVisitablePointable implements IVisitablePointable {
