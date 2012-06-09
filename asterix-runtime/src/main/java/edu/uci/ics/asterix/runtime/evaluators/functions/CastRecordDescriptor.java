@@ -1,16 +1,18 @@
 package edu.uci.ics.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
-import java.io.IOException;
 
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import edu.uci.ics.asterix.runtime.util.ARecordAccessor;
-import edu.uci.ics.asterix.runtime.util.ARecordCaster;
+import edu.uci.ics.asterix.runtime.pointables.PointableAllocator;
+import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
+import edu.uci.ics.asterix.runtime.pointables.cast.ACastVisitor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
@@ -56,18 +58,24 @@ public class CastRecordDescriptor extends AbstractScalarFunctionDynamicDescripto
                 final IEvaluator recEvaluator = recordEvalFactory.createEvaluator(recordBuffer);
 
                 return new IEvaluator() {
-                    final ARecordAccessor recAccessor = new ARecordAccessor(inputType);
-                    final ARecordCaster caster = new ARecordCaster();
+                    // pointable allocator
+                    private PointableAllocator allocator = new PointableAllocator();
+                    final IVisitablePointable recAccessor = allocator.allocateRecordValue(inputType);
+                    final IVisitablePointable resultAccessor = allocator.allocateRecordValue(reqType);
+                    final ACastVisitor castVisitor = new ACastVisitor();
+                    final Triple<IVisitablePointable, IAType, Boolean> arg = new Triple<IVisitablePointable, IAType, Boolean>(
+                            resultAccessor, reqType, Boolean.FALSE);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         try {
                             recordBuffer.reset();
                             recEvaluator.evaluate(tuple);
-                            recAccessor.reset(recordBuffer.getBytes(), recordBuffer.getStartIndex(),
-                                    recordBuffer.getLength());
-                            caster.castRecord(recAccessor, reqType, out);
-                        } catch (IOException ioe) {
+                            recAccessor.set(recordBuffer);
+                            recAccessor.accept(castVisitor, arg);
+                            out.write(resultAccessor.getByteArray(), resultAccessor.getStartOffset(),
+                                    resultAccessor.getLength());
+                        } catch (Exception ioe) {
                             throw new AlgebricksException(ioe);
                         }
                     }

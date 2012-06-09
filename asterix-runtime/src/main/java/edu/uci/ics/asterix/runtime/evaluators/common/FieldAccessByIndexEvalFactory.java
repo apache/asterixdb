@@ -73,7 +73,7 @@ public class FieldAccessByIndexEvalFactory implements IEvaluatorFactory {
                     eval0.evaluate(tuple);
                     outInput1.reset();
                     eval1.evaluate(tuple);
-                    byte[] serRecord = outInput0.getBytes();
+                    byte[] serRecord = outInput0.getByteArray();
 
                     if (serRecord[0] == SER_NULL_TYPE_TAG) {
                         nullSerde.serialize(ANull.NULL, out);
@@ -85,7 +85,7 @@ public class FieldAccessByIndexEvalFactory implements IEvaluatorFactory {
                                 + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[0]));
                     }
 
-                    fieldIndex = IntegerSerializerDeserializer.getInt(outInput1.getBytes(), 1);
+                    fieldIndex = IntegerSerializerDeserializer.getInt(outInput1.getByteArray(), 1);
                     fieldValueOffset = ARecordSerializerDeserializer.getFieldOffsetById(serRecord, fieldIndex,
                             nullBitmapSize, recordType.isOpen());
 

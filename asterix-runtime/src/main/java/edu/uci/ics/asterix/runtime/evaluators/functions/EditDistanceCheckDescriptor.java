@@ -75,7 +75,7 @@ public class EditDistanceCheckDescriptor extends AbstractScalarFunctionDynamicDe
             super.runArgEvals(tuple);
             int edThreshStart = argOut.getLength();
             edThreshEval.evaluate(tuple);
-            edThresh = IntegerSerializerDeserializer.getInt(argOut.getBytes(), edThreshStart + typeIndicatorSize);
+            edThresh = IntegerSerializerDeserializer.getInt(argOut.getByteArray(), edThreshStart + typeIndicatorSize);
         }
 
         @Override

@@ -87,7 +87,7 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         evalList.evaluate(tuple);
                         outInputIdx.reset();
                         evalIdx.evaluate(tuple);
-                        byte[] serOrderedList = outInputList.getBytes();
+                        byte[] serOrderedList = outInputList.getByteArray();
 
                         if (serOrderedList[0] == SER_NULL_TYPE_TAG) {
                             nullSerde.serialize(ANull.NULL, out);
@@ -99,7 +99,7 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[0]));
                         }
 
-                        itemIndex = IntegerSerializerDeserializer.getInt(outInputIdx.getBytes(), 1);
+                        itemIndex = IntegerSerializerDeserializer.getInt(outInputIdx.getByteArray(), 1);
                         if (itemIndex >= AOrderedListSerializerDeserializer.getNumberOfItems(serOrderedList)) {
                             out.writeByte(SER_NULL_TYPE_TAG);
                             return;

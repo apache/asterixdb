@@ -60,8 +60,8 @@ public class CreatePointDescriptor extends AbstractScalarFunctionDynamicDescript
                         eval1.evaluate(tuple);
 
                         try {
-                            aPoint.setValue(ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(), 1),
-                                    ADoubleSerializerDeserializer.getDouble(outInput1.getBytes(), 1));
+                            aPoint.setValue(ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(), 1),
+                                    ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(), 1));
                             pointSerde.serialize(aPoint, out);
 
                         } catch (IOException e1) {

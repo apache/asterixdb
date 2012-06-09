@@ -47,5 +47,6 @@ insert into dataset employee({"id":221,"name":"Mariam","age":25,"sex":"F","dob":
 
 insert into dataset dtst01({for $l in dataset('employee') return $l});
 
+write output to nc1:"rttest/open-closed_open-closed-19.adm";
 for $l in dataset('dtst01')
 retunr $l 

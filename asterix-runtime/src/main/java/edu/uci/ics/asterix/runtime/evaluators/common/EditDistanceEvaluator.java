@@ -56,15 +56,15 @@ public class EditDistanceEvaluator implements IEvaluator {
         if (!checkArgTypes(firstTypeTag, secondTypeTag))
             return;
 
-        itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getBytes()[firstStart + 1]);
+        itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[firstStart + 1]);
         if (itemTypeTag == ATypeTag.ANY)
             throw new AlgebricksException("\n Edit Distance can only be called on homogenous lists");
 
-        itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getBytes()[secondStart + 1]);
+        itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[secondStart + 1]);
         if (itemTypeTag == ATypeTag.ANY)
             throw new AlgebricksException("\n Edit Distance can only be called on homogenous lists");
 
-        editDistance = computeResult(argOut.getBytes(), firstStart, secondStart, firstTypeTag);
+        editDistance = computeResult(argOut.getByteArray(), firstStart, secondStart, firstTypeTag);
 
         try {
             writeResult(editDistance);
@@ -81,8 +81,8 @@ public class EditDistanceEvaluator implements IEvaluator {
         secondStart = argOut.getLength();
         secondStringEval.evaluate(tuple);
 
-        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getBytes()[firstStart]);
-        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getBytes()[secondStart]);
+        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[firstStart]);
+        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[secondStart]);
     }
 
     protected int computeResult(byte[] bytes, int firstStart, int secondStart, ATypeTag argType)

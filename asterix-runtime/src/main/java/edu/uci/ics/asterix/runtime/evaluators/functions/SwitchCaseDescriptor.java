@@ -71,7 +71,7 @@ public class SwitchCaseDescriptor extends AbstractScalarFunctionDynamicDescripto
                                 if (equals(condOut, caseOut)) {
                                     argOut.reset();
                                     evals[i + 1].evaluate(tuple);
-                                    output.getDataOutput().write(argOut.getBytes(), argOut.getStartIndex(),
+                                    output.getDataOutput().write(argOut.getByteArray(), argOut.getStartOffset(),
                                             argOut.getLength());
                                     return;
                                 }
@@ -79,7 +79,7 @@ public class SwitchCaseDescriptor extends AbstractScalarFunctionDynamicDescripto
                             // the default case
                             argOut.reset();
                             evals[n - 1].evaluate(tuple);
-                            output.getDataOutput().write(argOut.getBytes(), argOut.getStartIndex(), argOut.getLength());
+                            output.getDataOutput().write(argOut.getByteArray(), argOut.getStartOffset(), argOut.getLength());
                         } catch (HyracksDataException hde) {
                             throw new AlgebricksException(hde);
                         } catch (IOException ioe) {
@@ -88,11 +88,11 @@ public class SwitchCaseDescriptor extends AbstractScalarFunctionDynamicDescripto
                     }
 
                     private boolean equals(ArrayBackedValueStorage out1, ArrayBackedValueStorage out2) {
-                        if (out1.getStartIndex() != out2.getStartIndex() || out1.getLength() != out2.getLength())
+                        if (out1.getStartOffset() != out2.getStartOffset() || out1.getLength() != out2.getLength())
                             return false;
-                        byte[] data1 = out1.getBytes();
-                        byte[] data2 = out2.getBytes();
-                        for (int i = out1.getStartIndex(); i < out1.getLength(); i++) {
+                        byte[] data1 = out1.getByteArray();
+                        byte[] data2 = out2.getByteArray();
+                        for (int i = out1.getStartOffset(); i < out1.getLength(); i++) {
                             if (data1[i] != data2[i]) {
                                 return false;
                             }

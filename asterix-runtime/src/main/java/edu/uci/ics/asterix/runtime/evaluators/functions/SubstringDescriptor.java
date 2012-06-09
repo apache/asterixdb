@@ -49,14 +49,14 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         argOut.reset();
                         evalStart.evaluate(tuple);
-                        int start = IntegerSerializerDeserializer.getInt(argOut.getBytes(), 1) - 1;
+                        int start = IntegerSerializerDeserializer.getInt(argOut.getByteArray(), 1) - 1;
                         argOut.reset();
                         evalLen.evaluate(tuple);
-                        int len = IntegerSerializerDeserializer.getInt(argOut.getBytes(), 1);
+                        int len = IntegerSerializerDeserializer.getInt(argOut.getByteArray(), 1);
                         argOut.reset();
                         evalString.evaluate(tuple);
 
-                        byte[] bytes = argOut.getBytes();
+                        byte[] bytes = argOut.getByteArray();
                         int utflen = UTF8StringPointable.getUTFLen(bytes, 1);
                         int sStart = 3;
                         int c = 0;

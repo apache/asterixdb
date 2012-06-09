@@ -43,5 +43,6 @@ return {
 }
 );
 
+write output to nc1:"rttest/open-closed_open-closed-17.adm";
 for $l in dataset('tdtst')
 return $l

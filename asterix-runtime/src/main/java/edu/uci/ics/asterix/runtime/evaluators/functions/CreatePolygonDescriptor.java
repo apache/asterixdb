@@ -62,7 +62,7 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
                             outInput.reset();
                             argEvals[i].evaluate(tuple);
                             try {
-                                out.write(outInput.getBytes(), outInput.getStartIndex() + 1, outInput.getLength() - 1);
+                                out.write(outInput.getByteArray(), outInput.getStartOffset() + 1, outInput.getLength() - 1);
                             } catch (IOException e) {
                                 throw new AlgebricksException(e);
                             }

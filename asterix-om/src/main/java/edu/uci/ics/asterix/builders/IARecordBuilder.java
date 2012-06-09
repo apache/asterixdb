@@ -19,7 +19,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IValueReference;
+import edu.uci.ics.hyracks.data.std.api.IValueReference;
 
 /**
  * A record builder helps to construct Asterix Records in a serialized format.

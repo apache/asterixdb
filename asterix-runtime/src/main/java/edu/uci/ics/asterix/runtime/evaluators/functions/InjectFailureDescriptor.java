@@ -55,9 +55,9 @@ public class InjectFailureDescriptor extends AbstractScalarFunctionDynamicDescri
                             // evaluator the failure condition
                             argOut.reset();
                             evals[1].evaluate(tuple);
-                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getBytes()[0]);
+                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]);
                             if (typeTag == ATypeTag.BOOLEAN) {
-                                boolean argResult = ABooleanSerializerDeserializer.getBoolean(argOut.getBytes(), 1);
+                                boolean argResult = ABooleanSerializerDeserializer.getBoolean(argOut.getByteArray(), 1);
                                 if (argResult)
                                     throw new AlgebricksException("Injecting a intended failure");
                             }
@@ -65,7 +65,7 @@ public class InjectFailureDescriptor extends AbstractScalarFunctionDynamicDescri
                             // evaluate the real evaluator
                             argOut.reset();
                             evals[0].evaluate(tuple);
-                            output.getDataOutput().write(argOut.getBytes(), argOut.getStartIndex(), argOut.getLength());
+                            output.getDataOutput().write(argOut.getByteArray(), argOut.getStartOffset(), argOut.getLength());
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
                         }

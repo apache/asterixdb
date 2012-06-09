@@ -1,0 +1,39 @@
+/*
+ * Test case Name : heterog-list01.aql
+ * Description    : To test insertion of an array of objects into internal dataset. 
+ *                : Heterogenous list construction.
+ * Success        : Yes
+ * Date           : 14th April 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type BatterType as {
+id:int32,
+descrpt:string
+}
+
+create type TestType as closed {
+id:int32,
+description:string,
+name:string,
+batters:[[BatterType]]
+}
+
+create dataset T1(TestType) partitioned by key id;
+
+insert into dataset T1({
+"id":1234,
+"description":"donut",
+"name":"Cake",
+"batters":[[ {"id":345,"descrpt":"Regular"},{"id":445,"descrpt":"Chocolate"} ]] }
+);
+
+write output to nc1:"rttest/open-closed_heterog-list-ordered01.adm";
+
+for $d in dataset("T1") 
+order by $d.id
+return $d
+

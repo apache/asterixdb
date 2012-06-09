@@ -72,7 +72,7 @@ public class YearDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         try {
                             out1.reset();
                             eval1.evaluate(tuple);
-                            byte[] dateArray = out1.getBytes();
+                            byte[] dateArray = out1.getByteArray();
 
                             if (dateArray[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);

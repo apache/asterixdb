@@ -56,20 +56,20 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
                         eval1.evaluate(tuple);
 
                         try {
-                            byte[] bytes0 = outInput0.getBytes();
-                            byte[] bytes1 = outInput1.getBytes();
+                            byte[] bytes0 = outInput0.getByteArray();
+                            byte[] bytes1 = outInput1.getByteArray();
                             ATypeTag tag0 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[0]);
                             ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[0]);
                             double distance = 0.0;
                             if (tag0 == ATypeTag.POINT) {
                                 if (tag1 == ATypeTag.POINT) {
-                                    double x1 = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                    double x1 = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                             APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
-                                    double y1 = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                    double y1 = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                             APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
-                                    double x2 = ADoubleSerializerDeserializer.getDouble(outInput1.getBytes(),
+                                    double x2 = ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(),
                                             APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
-                                    double y2 = ADoubleSerializerDeserializer.getDouble(outInput1.getBytes(),
+                                    double y2 = ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(),
                                             APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
                                     distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
                                 } else {

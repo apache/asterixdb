@@ -81,7 +81,7 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
                     try {
                         outInputList.reset();
                         evalList.evaluate(tuple);
-                        byte[] serList = outInputList.getBytes();
+                        byte[] serList = outInputList.getByteArray();
 
                         if (serList[0] == SER_NULL_TYPE_TAG) {
                             nullSerde.serialize(ANull.NULL, out);

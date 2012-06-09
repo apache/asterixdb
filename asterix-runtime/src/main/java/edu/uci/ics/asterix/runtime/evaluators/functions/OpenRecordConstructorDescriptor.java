@@ -81,7 +81,7 @@ public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynam
                                     evalNames[i].evaluate(tuple);
                                     recBuilder.addField(fieldNameBuffer, fieldValueBuffer);
                                 } else {
-                                    if (fieldValueBuffer.getBytes()[0] != ATypeTag.NULL.serialize()) {
+                                    if (fieldValueBuffer.getByteArray()[0] != ATypeTag.NULL.serialize()) {
                                         recBuilder.addField(closedFieldId, fieldValueBuffer);
                                     }
                                     closedFieldId++;

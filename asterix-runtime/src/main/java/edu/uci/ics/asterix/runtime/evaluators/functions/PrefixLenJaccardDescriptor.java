@@ -64,12 +64,12 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
                         // length
                         inputVal.reset();
                         evalLen.evaluate(tuple);
-                        int length = IntegerSerializerDeserializer.getInt(inputVal.getBytes(), 1);
+                        int length = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
                         // similarity threshold
                         inputVal.reset();
                         evalThreshold.evaluate(tuple);
-                        float similarityThreshold = (float) AFloatSerializerDeserializer.getFloat(inputVal.getBytes(),
+                        float similarityThreshold = (float) AFloatSerializerDeserializer.getFloat(inputVal.getByteArray(),
                                 1);
 
                         if (similarityThreshold != similarityThresholdCache || similarityFilters == null) {

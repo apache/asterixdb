@@ -56,9 +56,9 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
                         try {
                             outInput.reset();
                             eval.evaluate(tuple);
-                            byte[] serString = outInput.getBytes();
+                            byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
-                                out.write(outInput.getBytes(), outInput.getStartIndex(), outInput.getLength());
+                                out.write(outInput.getByteArray(), outInput.getStartOffset(), outInput.getLength());
                             } else if (serString[0] == SER_NULL_TYPE_TAG)
                                 nullSerde.serialize(ANull.NULL, out);
                             else

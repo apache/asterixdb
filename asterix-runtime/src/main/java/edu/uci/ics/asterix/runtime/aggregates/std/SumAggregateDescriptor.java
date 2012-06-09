@@ -98,41 +98,41 @@ public class SumAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
                         eval.evaluate(tuple);
                         if (inputVal.getLength() > 0) {
                             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                                    .deserialize(inputVal.getBytes()[0]);
+                                    .deserialize(inputVal.getByteArray()[0]);
                             switch (typeTag) {
                                 case INT8: {
                                     metInt8s = true;
-                                    byte val = AInt8SerializerDeserializer.getByte(inputVal.getBytes(), 1);
+                                    byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }
                                 case INT16: {
                                     metInt16s = true;
-                                    short val = AInt16SerializerDeserializer.getShort(inputVal.getBytes(), 1);
+                                    short val = AInt16SerializerDeserializer.getShort(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }
                                 case INT32: {
                                     metInt32s = true;
-                                    int val = AInt32SerializerDeserializer.getInt(inputVal.getBytes(), 1);
+                                    int val = AInt32SerializerDeserializer.getInt(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }
                                 case INT64: {
                                     metInt64s = true;
-                                    long val = AInt64SerializerDeserializer.getLong(inputVal.getBytes(), 1);
+                                    long val = AInt64SerializerDeserializer.getLong(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }
                                 case FLOAT: {
                                     metFloats = true;
-                                    float val = AFloatSerializerDeserializer.getFloat(inputVal.getBytes(), 1);
+                                    float val = AFloatSerializerDeserializer.getFloat(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }
                                 case DOUBLE: {
                                     metDoubles = true;
-                                    double val = ADoubleSerializerDeserializer.getDouble(inputVal.getBytes(), 1);
+                                    double val = ADoubleSerializerDeserializer.getDouble(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }

@@ -59,7 +59,7 @@ public class GramTokensEvaluator implements IEvaluator {
         int prePostOff = argOut.getLength();
         prePostEval.evaluate(tuple);
 
-        byte[] bytes = argOut.getBytes();
+        byte[] bytes = argOut.getByteArray();
         int gramLength = IntegerSerializerDeserializer.getInt(bytes, gramLengthOff + typeIndicatorSize);
         tokenizer.setGramlength(gramLength);
         boolean prePost = BooleanSerializerDeserializer.getBoolean(bytes, prePostOff + typeIndicatorSize);

@@ -80,44 +80,44 @@ public class NumericUnaryMinusDescriptor extends AbstractScalarFunctionDynamicDe
                         argOut.reset();
                         eval.evaluate(tuple);
                         try {
-                            if (argOut.getBytes()[0] == serNullTypeTag) {
+                            if (argOut.getByteArray()[0] == serNullTypeTag) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.ANULL);
                                 serde.serialize(ANull.NULL, out);
                                 return;
-                            } else if (argOut.getBytes()[0] == serInt8TypeTag) {
+                            } else if (argOut.getByteArray()[0] == serInt8TypeTag) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT8);
-                                aInt8.setValue((byte) -AInt8SerializerDeserializer.getByte(argOut.getBytes(), 1));
+                                aInt8.setValue((byte) -AInt8SerializerDeserializer.getByte(argOut.getByteArray(), 1));
                                 serde.serialize(aInt8, out);
-                            } else if (argOut.getBytes()[0] == serInt16TypeTag) {
+                            } else if (argOut.getByteArray()[0] == serInt16TypeTag) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT16);
-                                aInt16.setValue((short) -AInt16SerializerDeserializer.getShort(argOut.getBytes(), 1));
+                                aInt16.setValue((short) -AInt16SerializerDeserializer.getShort(argOut.getByteArray(), 1));
                                 serde.serialize(aInt16, out);
-                            } else if (argOut.getBytes()[0] == serInt32TypeTag) {
+                            } else if (argOut.getByteArray()[0] == serInt32TypeTag) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT32);
-                                aInt32.setValue(-AInt32SerializerDeserializer.getInt(argOut.getBytes(), 1));
+                                aInt32.setValue(-AInt32SerializerDeserializer.getInt(argOut.getByteArray(), 1));
                                 serde.serialize(aInt32, out);
-                            } else if (argOut.getBytes()[0] == serInt64TypeTag) {
+                            } else if (argOut.getByteArray()[0] == serInt64TypeTag) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT64);
-                                aInt64.setValue(-AInt64SerializerDeserializer.getLong(argOut.getBytes(), 1));
+                                aInt64.setValue(-AInt64SerializerDeserializer.getLong(argOut.getByteArray(), 1));
                                 serde.serialize(aInt64, out);
-                            } else if (argOut.getBytes()[0] == serFloatTypeTag) {
+                            } else if (argOut.getByteArray()[0] == serFloatTypeTag) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AFLOAT);
-                                aFloat.setValue(-AFloatSerializerDeserializer.getFloat(argOut.getBytes(), 1));
+                                aFloat.setValue(-AFloatSerializerDeserializer.getFloat(argOut.getByteArray(), 1));
                                 serde.serialize(aFloat, out);
-                            } else if (argOut.getBytes()[0] == serDoubleTypeTag) {
+                            } else if (argOut.getByteArray()[0] == serDoubleTypeTag) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.ADOUBLE);
-                                aDouble.setValue(-ADoubleSerializerDeserializer.getDouble(argOut.getBytes(), 1));
+                                aDouble.setValue(-ADoubleSerializerDeserializer.getDouble(argOut.getByteArray(), 1));
                                 serde.serialize(aDouble, out);
                             } else {
                                 throw new NotImplementedException("Unary minus is not implemented for "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getBytes()[0]));
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
                             }
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);

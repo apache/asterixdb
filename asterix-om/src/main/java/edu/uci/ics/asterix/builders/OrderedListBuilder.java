@@ -10,7 +10,7 @@ import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IValueReference;
+import edu.uci.ics.hyracks.data.std.api.IValueReference;
 
 public class OrderedListBuilder implements IAOrderedListBuilder {
 
@@ -60,10 +60,10 @@ public class OrderedListBuilder implements IAOrderedListBuilder {
             this.offsets.add((short) outputStream.size());
         if (itemTypeTag == ATypeTag.ANY) {
             this.numberOfItems++;
-            this.outputStream.write(item.getBytes(), item.getStartIndex(), item.getLength());
-        } else if (item.getBytes()[0] != serNullTypeTag) {
+            this.outputStream.write(item.getByteArray(), item.getStartOffset(), item.getLength());
+        } else if (item.getByteArray()[0] != serNullTypeTag) {
             this.numberOfItems++;
-            this.outputStream.write(item.getBytes(), item.getStartIndex() + 1, item.getLength() - 1);
+            this.outputStream.write(item.getByteArray(), item.getStartOffset() + 1, item.getLength() - 1);
         }
     }
 

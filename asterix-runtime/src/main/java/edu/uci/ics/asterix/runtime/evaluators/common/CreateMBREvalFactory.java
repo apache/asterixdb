@@ -63,11 +63,11 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
 
                 try {
 
-                    int dimension = AInt32SerializerDeserializer.getInt(outInput1.getBytes(), 1);
-                    int coordinate = AInt32SerializerDeserializer.getInt(outInput2.getBytes(), 1);
+                    int dimension = AInt32SerializerDeserializer.getInt(outInput1.getByteArray(), 1);
+                    int coordinate = AInt32SerializerDeserializer.getInt(outInput2.getByteArray(), 1);
                     double value;
                     if (dimension == 2) {
-                        ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0.getBytes()[0]);
+                        ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0.getByteArray()[0]);
                         switch (tag) {
                             case POINT:
                                 switch (coordinate) {
@@ -75,7 +75,7 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
                                             // for
                                             // max x, and 3 for max y
                                     case 2: {
-                                        double x = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        double x = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
 
                                         value = x;
@@ -83,7 +83,7 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
                                         break;
                                     case 1:
                                     case 3: {
-                                        double y = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        double y = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
 
                                         value = y;
@@ -101,9 +101,9 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
                                     case 0: {
                                         value = Double.MAX_VALUE;
                                         double startX = ADoubleSerializerDeserializer
-                                                .getDouble(outInput0.getBytes(), ALineSerializerDeserializer
+                                                .getDouble(outInput0.getByteArray(), ALineSerializerDeserializer
                                                         .getStartPointCoordinateOffset(Coordinate.X));
-                                        double endX = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        double endX = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ALineSerializerDeserializer.getEndPointCoordinateOffset(Coordinate.X));
 
                                         value = Math.min(Math.min(startX, endX), value);
@@ -112,9 +112,9 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
                                     case 1: {
                                         value = Double.MAX_VALUE;
                                         double startY = ADoubleSerializerDeserializer
-                                                .getDouble(outInput0.getBytes(), ALineSerializerDeserializer
+                                                .getDouble(outInput0.getByteArray(), ALineSerializerDeserializer
                                                         .getStartPointCoordinateOffset(Coordinate.Y));
-                                        double endY = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        double endY = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ALineSerializerDeserializer.getEndPointCoordinateOffset(Coordinate.Y));
 
                                         value = Math.min(Math.min(startY, endY), value);
@@ -123,9 +123,9 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
                                     case 2: {
                                         value = Double.MIN_VALUE;
                                         double startX = ADoubleSerializerDeserializer
-                                                .getDouble(outInput0.getBytes(), ALineSerializerDeserializer
+                                                .getDouble(outInput0.getByteArray(), ALineSerializerDeserializer
                                                         .getStartPointCoordinateOffset(Coordinate.X));
-                                        double endX = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        double endX = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ALineSerializerDeserializer.getEndPointCoordinateOffset(Coordinate.X));
 
                                         value = Math.max(Math.min(startX, endX), value);
@@ -134,9 +134,9 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
                                     case 3: {
                                         value = Double.MIN_VALUE;
                                         double startY = ADoubleSerializerDeserializer
-                                                .getDouble(outInput0.getBytes(), ALineSerializerDeserializer
+                                                .getDouble(outInput0.getByteArray(), ALineSerializerDeserializer
                                                         .getStartPointCoordinateOffset(Coordinate.Y));
-                                        double endY = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        double endY = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ALineSerializerDeserializer.getEndPointCoordinateOffset(Coordinate.Y));
 
                                         value = Math.max(Math.min(startY, endY), value);
@@ -149,14 +149,14 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
                                 }
                                 break;
                             case POLYGON:
-                                int numOfPoints = AInt16SerializerDeserializer.getShort(outInput0.getBytes(),
+                                int numOfPoints = AInt16SerializerDeserializer.getShort(outInput0.getByteArray(),
                                         APolygonSerializerDeserializer.getNumberOfPointsOffset());
                                 switch (coordinate) {
                                     case 0: {
                                         value = Double.MAX_VALUE;
                                         for (int i = 0; i < numOfPoints; i++) {
                                             double x = ADoubleSerializerDeserializer
-                                                    .getDouble(outInput0.getBytes(), APolygonSerializerDeserializer
+                                                    .getDouble(outInput0.getByteArray(), APolygonSerializerDeserializer
                                                             .getCoordinateOffset(i, Coordinate.X));
                                             value = Math.min(x, value);
                                         }
@@ -166,7 +166,7 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
                                         value = Double.MAX_VALUE;
                                         for (int i = 0; i < numOfPoints; i++) {
                                             double y = ADoubleSerializerDeserializer
-                                                    .getDouble(outInput0.getBytes(), APolygonSerializerDeserializer
+                                                    .getDouble(outInput0.getByteArray(), APolygonSerializerDeserializer
                                                             .getCoordinateOffset(i, Coordinate.Y));
                                             value = Math.min(y, value);
                                         }
@@ -176,7 +176,7 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
                                         value = Double.MIN_VALUE;
                                         for (int i = 0; i < numOfPoints; i++) {
                                             double x = ADoubleSerializerDeserializer
-                                                    .getDouble(outInput0.getBytes(), APolygonSerializerDeserializer
+                                                    .getDouble(outInput0.getByteArray(), APolygonSerializerDeserializer
                                                             .getCoordinateOffset(i, Coordinate.X));
                                             value = Math.max(x, value);
                                         }
@@ -186,7 +186,7 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
                                         value = Double.MIN_VALUE;
                                         for (int i = 0; i < numOfPoints; i++) {
                                             double y = ADoubleSerializerDeserializer
-                                                    .getDouble(outInput0.getBytes(), APolygonSerializerDeserializer
+                                                    .getDouble(outInput0.getByteArray(), APolygonSerializerDeserializer
                                                             .getCoordinateOffset(i, Coordinate.Y));
                                             value = Math.max(y, value);
                                         }
@@ -201,10 +201,10 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
                             case CIRCLE:
                                 switch (coordinate) {
                                     case 0: {
-                                        double x = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        double x = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ACircleSerializerDeserializer
                                                         .getCenterPointCoordinateOffset(Coordinate.X));
-                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ACircleSerializerDeserializer
                                                         .getCenterPointCoordinateOffset(Coordinate.X));
 
@@ -212,10 +212,10 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
                                     }
                                         break;
                                     case 1: {
-                                        double y = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        double y = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ACircleSerializerDeserializer
                                                         .getCenterPointCoordinateOffset(Coordinate.Y));
-                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ACircleSerializerDeserializer
                                                         .getCenterPointCoordinateOffset(Coordinate.Y));
 
@@ -223,10 +223,10 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
                                     }
                                         break;
                                     case 2: {
-                                        double x = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        double x = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ACircleSerializerDeserializer
                                                         .getCenterPointCoordinateOffset(Coordinate.X));
-                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ACircleSerializerDeserializer
                                                         .getCenterPointCoordinateOffset(Coordinate.X));
 
@@ -234,10 +234,10 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
                                     }
                                         break;
                                     case 3: {
-                                        double y = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        double y = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ACircleSerializerDeserializer
                                                         .getCenterPointCoordinateOffset(Coordinate.Y));
-                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ACircleSerializerDeserializer
                                                         .getCenterPointCoordinateOffset(Coordinate.Y));
 
@@ -254,25 +254,25 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
                                 value = Double.MAX_VALUE;
                                 switch (coordinate) {
                                     case 0: {
-                                        value = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        value = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ARectangleSerializerDeserializer
                                                         .getBottomLeftCoordinateOffset(Coordinate.X));
                                     }
                                         break;
                                     case 1: {
-                                        value = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        value = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ARectangleSerializerDeserializer
                                                         .getBottomLeftCoordinateOffset(Coordinate.Y));
                                     }
                                         break;
                                     case 2: {
-                                        value = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        value = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ARectangleSerializerDeserializer
                                                         .getUpperRightCoordinateOffset(Coordinate.X));
                                     }
                                         break;
                                     case 3: {
-                                        value = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                        value = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ARectangleSerializerDeserializer
                                                         .getUpperRightCoordinateOffset(Coordinate.Y));
                                     }

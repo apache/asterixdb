@@ -1,0 +1,4 @@
+{ "name": "Person One", "id": "001", "address": { "street": "3019 DBH", "city": "Irvine", "zip": 92697 }, "department": {{ { "name": "CS", "id": 299, "review": 5 }, { "name": "EE", "id": 399 } }} }
+{ "name": "Person Two", "id": "002", "address": null, "department": null }
+{ "name": "Person Three", "id": "003", "address": { "street": "2019 DBH", "city": "Irvine" }, "department": null }
+{ "name": "Person Four", "id": "004", "address": { "street": "1019 DBH", "city": "irvine", "property": { "zip": 92697, "review": "positive" } }, "department": null }

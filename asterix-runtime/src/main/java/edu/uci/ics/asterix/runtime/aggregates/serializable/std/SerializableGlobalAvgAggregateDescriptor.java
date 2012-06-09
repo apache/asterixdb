@@ -118,7 +118,7 @@ public class SerializableGlobalAvgAggregateDescriptor extends AbstractSerializab
 
                         inputVal.reset();
                         eval.evaluate(tuple);
-                        byte[] serBytes = inputVal.getBytes();
+                        byte[] serBytes = inputVal.getByteArray();
                         if (serBytes[0] == SER_NULL_TYPE_TAG)
                             metNull = true;
                         if (serBytes[0] != SER_RECORD_TYPE_TAG) {

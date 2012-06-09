@@ -68,11 +68,11 @@ public class NotDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         argOut.reset();
                         eval.evaluate(tuple);
                         try {
-                            if (argOut.getBytes()[0] == SER_BOOLEAN_TYPE_TAG) {
-                                boolean argRes = ABooleanSerializerDeserializer.getBoolean(argOut.getBytes(), 1);
+                            if (argOut.getByteArray()[0] == SER_BOOLEAN_TYPE_TAG) {
+                                boolean argRes = ABooleanSerializerDeserializer.getBoolean(argOut.getByteArray(), 1);
                                 ABoolean aResult = argRes ? (ABoolean.FALSE) : (ABoolean.TRUE);
                                 booleanSerde.serialize(aResult, out);
-                            } else if (argOut.getBytes()[0] == SER_NULL_TYPE_TAG)
+                            } else if (argOut.getByteArray()[0] == SER_NULL_TYPE_TAG)
                                 nullSerde.serialize(ANull.NULL, out);
                             else
                                 throw new AlgebricksException(errorMessage);

@@ -39,6 +39,6 @@ public class AsterixTupleFilter implements ITupleFilter {
 	public boolean accept(IFrameTupleReference tuple) throws Exception {
 		evalOut.reset();
 		eval.evaluate(tuple);
-		return boolInspector.getBooleanValue(evalOut.getBytes(), 0, 2);
+		return boolInspector.getBooleanValue(evalOut.getByteArray(), 0, 2);
 	}
 }
