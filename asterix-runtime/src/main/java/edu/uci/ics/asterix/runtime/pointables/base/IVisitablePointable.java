@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.data.std.api.IPointable;
 
 /**
  * This interface extends IPointable with a visitor interface in order to ease
- * programming for recursive record structures
+ * programming for recursive record structures.
  */
 public interface IVisitablePointable extends IPointable {
 

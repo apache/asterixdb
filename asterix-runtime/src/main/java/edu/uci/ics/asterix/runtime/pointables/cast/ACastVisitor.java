@@ -31,14 +31,14 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 
 /**
  * This class is a IVisitablePointableVisitor implementation which recursively
- * visit a given record, list or flat value of a given type, and recursively
- * cast it to a specified type For example,
+ * visit a given record, list or flat value of a given type, and cast it to a
+ * specified type. For example:
  * 
  * A record { "hobby": {{"music", "coding"}}, "id": "001", "name":
  * "Person Three"} which confirms to closed type ( id: string, name: string,
  * hobby: {{string}}? ) can be casted to a open type (id: string )
  * 
- * Since the open/close part of a record has completely different underlying
+ * Since the open/closed part of a record has a completely different underlying
  * memory/storage layout, the visitor will change the layout as specified at
  * runtime.
  */

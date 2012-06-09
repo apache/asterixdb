@@ -28,10 +28,10 @@ import java.util.List;
  */
 public class ListObjectPool<E, T> implements IObjectPool<E, T> {
 
-    private IElementFactory<E, T> factory;
+    private IObjectFactory<E, T> factory;
 
     /**
-     * element reusable object pool
+     * cache of objects
      */
     private List<E> pool = new ArrayList<E>();
 
@@ -45,7 +45,7 @@ public class ListObjectPool<E, T> implements IObjectPool<E, T> {
      */
     private BitSet usedBits = new BitSet();
 
-    public ListObjectPool(IElementFactory<E, T> factory) {
+    public ListObjectPool(IObjectFactory<E, T> factory) {
         this.factory = factory;
     }
 
@@ -68,7 +68,7 @@ public class ListObjectPool<E, T> implements IObjectPool<E, T> {
         }
 
         // if we do not find a reusable object, allocate a new one
-        E element = factory.createElement(arg);
+        E element = factory.create(arg);
         pool.add(element);
         args.add(arg);
         usedBits.set(pool.size() - 1);

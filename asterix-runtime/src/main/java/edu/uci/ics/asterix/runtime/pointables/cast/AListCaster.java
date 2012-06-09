@@ -38,8 +38,7 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 
 /**
  * This class is to do the runtime type cast for a list. It is ONLY visible to
- * ACastVisitor, so that no other client places can call into that caster and
- * unnecessary bugs could be prevented.
+ * ACastVisitor.
  */
 class AListCaster {
     // pointable allocator

@@ -32,12 +32,12 @@ import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
 import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
-import edu.uci.ics.asterix.runtime.util.container.IElementFactory;
+import edu.uci.ics.asterix.runtime.util.container.IObjectFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 
 /**
- * This class is to interpret the binary data representation of a record, one
- * can call getFieldNames, getFieldTypeTags and getFieldValues to get pointable
+ * This class interprets the binary data representation of a record. One can
+ * call getFieldNames, getFieldTypeTags and getFieldValues to get pointable
  * objects for field names, field type tags, and field values.
  * 
  */
@@ -47,8 +47,8 @@ public class ARecordPointable extends AbstractVisitablePointable {
      * DO NOT allow to create ARecordPointable object arbitrarily, force to use
      * object pool based allocator, in order to have object reuse
      */
-    static IElementFactory<IVisitablePointable, IAType> FACTORY = new IElementFactory<IVisitablePointable, IAType>() {
-        public IVisitablePointable createElement(IAType type) {
+    static IObjectFactory<IVisitablePointable, IAType> FACTORY = new IObjectFactory<IVisitablePointable, IAType>() {
+        public IVisitablePointable create(IAType type) {
             return new ARecordPointable((ARecordType) type);
         }
     };
@@ -71,7 +71,7 @@ public class ARecordPointable extends AbstractVisitablePointable {
 
     private final int numberOfSchemaFields;
     private final int[] fieldOffsets;
-    private final IVisitablePointable nullReference = AFlatValuePointable.FACTORY.createElement(null);
+    private final IVisitablePointable nullReference = AFlatValuePointable.FACTORY.create(null);
 
     private int closedPartTypeInfoSize = 0;
     private int offsetArrayOffset;
@@ -105,7 +105,7 @@ public class ARecordPointable extends AbstractVisitablePointable {
                 int tagStart = typeBos.size();
                 typeDos.writeByte(ftypeTag.serialize());
                 int tagEnd = typeBos.size();
-                IVisitablePointable typeTagReference = AFlatValuePointable.FACTORY.createElement(null);
+                IVisitablePointable typeTagReference = AFlatValuePointable.FACTORY.create(null);
                 typeTagReference.set(typeBos.getByteArray(), tagStart, tagEnd - tagStart);
                 fieldTypeTags.add(typeTagReference);
 
@@ -114,7 +114,7 @@ public class ARecordPointable extends AbstractVisitablePointable {
                 typeDos.writeByte(ATypeTag.STRING.serialize());
                 typeDos.writeUTF(fieldNameStrs[i]);
                 int nameEnd = typeBos.size();
-                IVisitablePointable typeNameReference = AFlatValuePointable.FACTORY.createElement(null);
+                IVisitablePointable typeNameReference = AFlatValuePointable.FACTORY.create(null);
                 typeNameReference.set(typeBos.getByteArray(), nameStart, nameEnd - nameStart);
                 fieldNames.add(typeNameReference);
             }

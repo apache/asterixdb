@@ -54,30 +54,30 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.Va
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
- * Statically cast a constant from its type produced by the originated
- * expression to its required type, in a recursive way it enables: 1. bag-based
- * fields in a record, 2. bidirectional cast of a open field and a matched
- * closed field, and 3. put in null fields when necessary. It should be fired
- * before the constant folding rule.
+ * Statically cast a constant from its type to a specified required type, in a
+ * recursive way. It enables: 1. bag-based fields in a record, 2. bidirectional
+ * cast of a open field and a matched closed field, and 3. put in null fields
+ * when necessary. It should be fired before the constant folding rule.
  * 
  * This rule is not responsible for type casting between primitive types.
  * 
- * Here is example: A record { "hobby": {{"music", "coding"}}, "id": "001",
+ * Here is an example: A record { "hobby": {{"music", "coding"}}, "id": "001",
  * "name": "Person Three"} which confirms to closed type ( id: string, name:
- * string, hobby: {{string}}? ) can be casted to a open type (id: string ), or
+ * string, hobby: {{string}}? ) can be cast to an open type (id: string ), or
  * vice versa.
- * 
- * If the record is a constant, the situation that we are going into insert the
- * record into a dataset with a different type can be captured at the compile
- * time, and type cast is done in the rule.
  * 
  * Implementation wise: first, we match the record's type and its target dataset
  * type to see if it is "cast-able"; second, if the types are cast-able, we
- * embed the require type to the original producer expression. If the types are
- * not cast-able, we throw compile time exceptions.
+ * embed the required type into the original producer expression. If the types
+ * are not cast-able, we throw a compile time exception.
  * 
- * Then, at runtime (not in that rule), the constructors know what to do by
- * checking the required output type.
+ * Then, at runtime (not in this rule), the corresponding record/list
+ * constructors know what to do by checking the required output type.
+ * 
+ * TODO: right now record/list constructor of the cast result is not done in the
+ * ConstantFoldingRule and has to go to the runtime, because the
+ * ConstantFoldingRule uses ARecordSerializerDeserializer which seems to have
+ * some problem.
  */
 public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
 

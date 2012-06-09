@@ -20,6 +20,11 @@ import edu.uci.ics.asterix.runtime.pointables.AFlatValuePointable;
 import edu.uci.ics.asterix.runtime.pointables.AListPointable;
 import edu.uci.ics.asterix.runtime.pointables.ARecordPointable;
 
+/**
+ * This interface is a visitor for all the three different IVisitablePointable
+ * (Note that right now we have three pointable implementations for type
+ * casting) implementations.
+ */
 public interface IVisitablePointableVisitor<R, T> {
 
     public R visit(AListPointable accessor, T arg) throws AsterixException;

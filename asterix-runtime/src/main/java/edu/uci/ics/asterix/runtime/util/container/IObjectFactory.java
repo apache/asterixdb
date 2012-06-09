@@ -16,17 +16,15 @@
 package edu.uci.ics.asterix.runtime.util.container;
 
 /**
- * A factory interface to create elements. Elements in a reusable pool/container
- * can ONLY be instantiated from the corresponding factory
+ * A factory interface to create objects.
  */
-public interface IElementFactory<E, T> {
+public interface IObjectFactory<E, T> {
 
     /**
      * create an element of type E
      * 
      * @param arg
-     *            of type T
      * @return an E element
      */
-    public E createElement(T arg);
+    public E create(T arg);
 }
