@@ -99,7 +99,7 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregato
                 for (int i = 0; i < agg.length; i++) {
                     try {
                         agg[i].finish();
-                        tupleBuilder.addField(aggOutput[i].getBytes(), aggOutput[i].getStartIndex(),
+                        tupleBuilder.addField(aggOutput[i].getByteArray(), aggOutput[i].getStartOffset(),
                                 aggOutput[i].getLength());
                     } catch (AlgebricksException e) {
                         throw new HyracksDataException(e);

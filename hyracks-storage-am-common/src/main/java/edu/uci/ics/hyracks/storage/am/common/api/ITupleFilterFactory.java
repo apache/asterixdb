@@ -13,16 +13,10 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.dataflow;
+package edu.uci.ics.hyracks.storage.am.common.api;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
+import java.io.Serializable;
 
-public interface ITreeIndexOperatorDescriptor extends IIndexOperatorDescriptor {
-	public IBinaryComparatorFactory[] getTreeIndexComparatorFactories();
-	
-	public ITypeTraits[] getTreeIndexTypeTraits();
-	
-	public ITupleFilterFactory getTupleFilterFactory();
+public interface ITupleFilterFactory extends Serializable {
+	public ITupleFilter createTupleFilter() throws Exception;
 }

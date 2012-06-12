@@ -52,10 +52,10 @@ public class IntegerAddEvalFactory implements IEvaluatorFactory {
             public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                 argOut.reset();
                 evalLeft.evaluate(tuple);
-                int v1 = IntegerSerializerDeserializer.INSTANCE.getInt(argOut.getBytes(), 0);
+                int v1 = IntegerSerializerDeserializer.INSTANCE.getInt(argOut.getByteArray(), 0);
                 argOut.reset();
                 evalRight.evaluate(tuple);
-                int v2 = IntegerSerializerDeserializer.INSTANCE.getInt(argOut.getBytes(), 0);
+                int v2 = IntegerSerializerDeserializer.INSTANCE.getInt(argOut.getByteArray(), 0);
                 try {
                     out.writeInt(v1 + v2);
                 } catch (IOException e) {

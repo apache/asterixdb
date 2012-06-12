@@ -4,14 +4,18 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -35,14 +39,20 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public class IndexInsertDeletePOperator extends AbstractPhysicalOperator {
 
-    private List<LogicalVariable> primaryKeys;
-    private List<LogicalVariable> secondaryKeys;
-    private IDataSourceIndex<?, ?> dataSourceIndex;
+    private final List<LogicalVariable> primaryKeys;
+    private final List<LogicalVariable> secondaryKeys;
+    private final ILogicalExpression filterExpr;
+    private final IDataSourceIndex<?, ?> dataSourceIndex;
 
     public IndexInsertDeletePOperator(List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
-            IDataSourceIndex<?, ?> dataSourceIndex) {
+    		Mutable<ILogicalExpression> filterExpr, IDataSourceIndex<?, ?> dataSourceIndex) {
         this.primaryKeys = primaryKeys;
         this.secondaryKeys = secondaryKeys;
+        if (filterExpr != null) {
+        	this.filterExpr = filterExpr.getValue();
+        } else {
+        	this.filterExpr = null;
+        }
         this.dataSourceIndex = dataSourceIndex;
     }
 
@@ -54,7 +64,7 @@ public class IndexInsertDeletePOperator extends AbstractPhysicalOperator {
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
-        deliveredProperties = (StructuralPropertiesVector) op2.getDeliveredPhysicalProperties().clone();
+        deliveredProperties = (StructuralPropertiesVector) op2.getDeliveredPhysicalProperties().clone();        
     }
 
     @Override
@@ -87,13 +97,14 @@ public class IndexInsertDeletePOperator extends AbstractPhysicalOperator {
                 context);
 
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints = null;
-        if (insertDeleteOp.getOperation() == Kind.INSERT)
-            runtimeAndConstraints = mp.getIndexInsertRuntime(dataSourceIndex, propagatedSchema, primaryKeys,
-                    secondaryKeys, inputDesc, context, spec);
-        else
-            runtimeAndConstraints = mp.getIndexDeleteRuntime(dataSourceIndex, propagatedSchema, primaryKeys,
-                    secondaryKeys, inputDesc, context, spec);
-
+        IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(insertDeleteOp);
+        if (insertDeleteOp.getOperation() == Kind.INSERT) {
+            runtimeAndConstraints = mp.getIndexInsertRuntime(dataSourceIndex, propagatedSchema, inputSchemas, typeEnv,
+                    primaryKeys, secondaryKeys, filterExpr, inputDesc, context, spec);
+        } else {
+            runtimeAndConstraints = mp.getIndexDeleteRuntime(dataSourceIndex, propagatedSchema, inputSchemas, typeEnv,
+                    primaryKeys, secondaryKeys, filterExpr, inputDesc, context, spec);
+        }
         builder.contributeHyracksOperator(insertDeleteOp, runtimeAndConstraints.first);
         builder.contributeAlgebricksPartitionConstraint(runtimeAndConstraints.first, runtimeAndConstraints.second);
         ILogicalOperator src = insertDeleteOp.getInputs().get(0).getValue();

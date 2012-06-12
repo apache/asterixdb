@@ -41,7 +41,6 @@ import edu.uci.ics.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeser
  * Controller.
  * 
  * @author vinayakb
- * 
  */
 public final class HyracksConnection implements IHyracksClientConnection {
     private final String ccHost;

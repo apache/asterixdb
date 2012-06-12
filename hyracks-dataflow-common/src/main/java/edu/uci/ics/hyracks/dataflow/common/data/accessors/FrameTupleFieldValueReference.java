@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.dataflow.common.data.accessors;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.data.std.api.IValueReference;
 
 public class FrameTupleFieldValueReference implements IValueReference {
     private IFrameTupleAccessor fta;
@@ -31,12 +32,12 @@ public class FrameTupleFieldValueReference implements IValueReference {
     }
 
     @Override
-    public byte[] getBytes() {
+    public byte[] getByteArray() {
         return fta.getBuffer().array();
     }
 
     @Override
-    public int getStartIndex() {
+    public int getStartOffset() {
         return fta.getFieldStartOffset(tupleIndex, fieldIndex);
     }
 

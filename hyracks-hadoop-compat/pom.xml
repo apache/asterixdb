@@ -29,7 +29,7 @@
             <configuration>
               <programs>
                 <program>
-                  <mainClass>edu.uci.ics.hyracks.hadoop.compat.CompatibilityLayer</mainClass>
+                  <mainClass>edu.uci.ics.hyracks.hadoop.compat.driver.CompatibilityLayer</mainClass>
                   <name>hadoop-compat</name>
                 </program>
               </programs>

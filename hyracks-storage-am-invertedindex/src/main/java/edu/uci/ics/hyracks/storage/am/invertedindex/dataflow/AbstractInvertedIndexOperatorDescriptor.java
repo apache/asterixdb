@@ -26,6 +26,7 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
@@ -152,4 +153,9 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     public IOperationCallbackProvider getOpCallbackProvider() {
     	return opCallbackProvider;
     }
+    
+    @Override
+	public ITupleFilterFactory getTupleFilterFactory() {
+		return null;
+	}
 }

@@ -125,7 +125,7 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
                 } catch (AlgebricksException ae) {
                     throw new HyracksDataException(ae);
                 }
-                int lim = binaryIntegerInspector.getIntegerValue(evalOutput.getBytes(), 0, evalOutput.getLength());
+                int lim = binaryIntegerInspector.getIntegerValue(evalOutput.getByteArray(), 0, evalOutput.getLength());
                 return lim;
             }
 

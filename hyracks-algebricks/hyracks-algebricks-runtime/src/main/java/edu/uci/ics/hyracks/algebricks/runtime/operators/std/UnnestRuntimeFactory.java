@@ -102,7 +102,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                                     for (int f = 0; f < outColPos; f++) {
                                         tupleBuilder.addField(tAccess, t, f);
                                     }
-                                    tupleBuilder.addField(evalOutput.getBytes(), evalOutput.getStartIndex(),
+                                    tupleBuilder.addField(evalOutput.getByteArray(), evalOutput.getStartOffset(),
                                             evalOutput.getLength());
                                     for (int f = outColPos + 1; f < projectionList.length; f++) {
                                         tupleBuilder.addField(tAccess, t, f);

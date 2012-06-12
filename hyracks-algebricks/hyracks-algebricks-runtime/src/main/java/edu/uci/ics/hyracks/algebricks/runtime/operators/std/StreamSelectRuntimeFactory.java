@@ -84,7 +84,7 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
                     } catch (AlgebricksException ae) {
                         throw new HyracksDataException(ae);
                     }
-                    if (binaryBooleanInspector.getBooleanValue(evalOutput.getBytes(), 0, evalOutput.getLength())) {
+                    if (binaryBooleanInspector.getBooleanValue(evalOutput.getByteArray(), 0, evalOutput.getLength())) {
                         if (projectionList != null) {
                             appendProjectionToFrame(t, projectionList);
                         } else {

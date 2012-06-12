@@ -33,6 +33,7 @@ import java.util.StringTokenizer;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -100,7 +101,7 @@ public class NodeControllerService extends AbstractRemoteService {
 
     private final Map<JobId, Joblet> jobletMap;
 
-    private final Executor executor;
+    private final ExecutorService executor;
 
     private NodeParameters nodeParameters;
 
@@ -214,6 +215,7 @@ public class NodeControllerService extends AbstractRemoteService {
     @Override
     public void stop() throws Exception {
         LOGGER.log(Level.INFO, "Stopping NodeControllerService");
+        executor.shutdownNow();
         partitionManager.close();
         heartbeatTask.cancel();
         netManager.stop();

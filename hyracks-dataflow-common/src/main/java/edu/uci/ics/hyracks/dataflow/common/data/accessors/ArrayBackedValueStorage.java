@@ -3,6 +3,7 @@ package edu.uci.ics.hyracks.dataflow.common.data.accessors;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 
+import edu.uci.ics.hyracks.data.std.api.IValueReference;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
 
 public class ArrayBackedValueStorage implements IValueReference, IDataOutputProvider {
@@ -24,12 +25,12 @@ public class ArrayBackedValueStorage implements IValueReference, IDataOutputProv
     }
 
     @Override
-    public byte[] getBytes() {
+    public byte[] getByteArray() {
         return baaos.getByteArray();
     }
 
     @Override
-    public int getStartIndex() {
+    public int getStartOffset() {
         return 0;
     }
 

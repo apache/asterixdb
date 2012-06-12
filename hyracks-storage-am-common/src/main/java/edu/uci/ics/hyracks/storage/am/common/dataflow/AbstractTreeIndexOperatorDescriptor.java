@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public abstract class AbstractTreeIndexOperatorDescriptor extends
@@ -39,7 +40,8 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 
 	protected final ITypeTraits[] typeTraits;
 	protected final IIndexDataflowHelperFactory dataflowHelperFactory;
-
+	protected final ITupleFilterFactory tupleFilterFactory;
+	
     protected final IOperationCallbackProvider opCallbackProvider;
 
 	public AbstractTreeIndexOperatorDescriptor(IOperatorDescriptorRegistry spec,
@@ -49,7 +51,8 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 			IFileSplitProvider fileSplitProvider,
 			ITypeTraits[] typeTraits,
 			IBinaryComparatorFactory[] comparatorFactories,
-			IIndexDataflowHelperFactory dataflowHelperFactory, 
+			IIndexDataflowHelperFactory dataflowHelperFactory,
+			ITupleFilterFactory tupleFilterFactory,
 			IOperationCallbackProvider opCallbackProvider) {
 		super(spec, inputArity, outputArity);
 		this.fileSplitProvider = fileSplitProvider;
@@ -58,6 +61,7 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 		this.typeTraits = typeTraits;
 		this.comparatorFactories = comparatorFactories;
 		this.dataflowHelperFactory = dataflowHelperFactory;
+		this.tupleFilterFactory = tupleFilterFactory;
         this.opCallbackProvider = opCallbackProvider;
 		if (outputArity > 0) {
 			recordDescriptors[0] = recDesc;
@@ -102,5 +106,10 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 	@Override
 	public IOperationCallbackProvider getOpCallbackProvider() {
 	    return opCallbackProvider;
+	}
+	
+	@Override
+	public ITupleFilterFactory getTupleFilterFactory() {
+		return tupleFilterFactory;
 	}
 }

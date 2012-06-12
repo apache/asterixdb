@@ -135,12 +135,12 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         }
 
         @Override
-        public void setStateObject(IStateObject taskState) {
+        public synchronized void setStateObject(IStateObject taskState) {
             stateObjectMap.put(taskState.getId(), taskState);
         }
 
         @Override
-        public IStateObject getStateObject(Object id) {
+        public synchronized IStateObject getStateObject(Object id) {
             return stateObjectMap.get(id);
         }
     }

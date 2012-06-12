@@ -92,6 +92,7 @@ public class TCPEndpoint {
 
         public IOThread() throws IOException {
             super("TCPEndpoint IO Thread");
+            setDaemon(true);
             setPriority(MAX_PRIORITY);
             this.pendingConnections = new ArrayList<InetSocketAddress>();
             this.workingPendingConnections = new ArrayList<InetSocketAddress>();

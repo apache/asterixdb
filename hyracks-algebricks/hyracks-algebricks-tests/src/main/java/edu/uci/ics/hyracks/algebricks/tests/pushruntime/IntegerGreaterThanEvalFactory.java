@@ -51,8 +51,8 @@ public class IntegerGreaterThanEvalFactory implements IEvaluatorFactory {
                 eval1.evaluate(tuple);
                 out2.reset();
                 eval2.evaluate(tuple);
-                int v1 = IntegerSerializerDeserializer.getInt(out1.getBytes(), 0);
-                int v2 = IntegerSerializerDeserializer.getInt(out2.getBytes(), 0);
+                int v1 = IntegerSerializerDeserializer.getInt(out1.getByteArray(), 0);
+                int v2 = IntegerSerializerDeserializer.getInt(out2.getByteArray(), 0);
                 boolean r = v1 > v2;
                 try {
                     dataout.writeBoolean(r);

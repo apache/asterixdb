@@ -128,7 +128,7 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
                         } catch (AlgebricksException e) {
                             throw new HyracksDataException(e);
                         }
-                        tb.addField(evalOutput.getBytes(), evalOutput.getStartIndex(), evalOutput.getLength());
+                        tb.addField(evalOutput.getByteArray(), evalOutput.getStartOffset(), evalOutput.getLength());
                     } else {
                         tb.addField(accessor, tIndex, projectionList[f]);
                     }

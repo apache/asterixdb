@@ -12,17 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package edu.uci.ics.hyracks.data.std.api;
 
-package edu.uci.ics.hyracks.storage.am.common.dataflow;
+public interface IValueReference {
+    public byte[] getByteArray();
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
+    public int getStartOffset();
 
-public interface ITreeIndexOperatorDescriptor extends IIndexOperatorDescriptor {
-	public IBinaryComparatorFactory[] getTreeIndexComparatorFactories();
-	
-	public ITypeTraits[] getTreeIndexTypeTraits();
-	
-	public ITupleFilterFactory getTupleFilterFactory();
+    public int getLength();
 }

@@ -60,7 +60,7 @@ public class IntegerConstantEvalFactory implements IEvaluatorFactory {
                 }
 
                 try {
-                    out.write(buf.getBytes(), 0, buf.getLength());
+                    out.write(buf.getByteArray(), 0, buf.getLength());
                 } catch (IOException e) {
                     throw new AlgebricksException(e);
                 }

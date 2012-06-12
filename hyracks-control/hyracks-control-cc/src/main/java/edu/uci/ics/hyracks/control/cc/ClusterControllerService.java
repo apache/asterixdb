@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -100,7 +101,7 @@ public class ClusterControllerService extends AbstractRemoteService {
 
     private final WorkQueue workQueue;
 
-    private final Executor executor;
+    private final ExecutorService executor;
 
     private final Timer timer;
 
@@ -170,6 +171,7 @@ public class ClusterControllerService extends AbstractRemoteService {
     @Override
     public void stop() throws Exception {
         LOGGER.log(Level.INFO, "Stopping ClusterControllerService");
+        executor.shutdownNow();
         webServer.stop();
         sweeper.cancel();
         workQueue.stop();

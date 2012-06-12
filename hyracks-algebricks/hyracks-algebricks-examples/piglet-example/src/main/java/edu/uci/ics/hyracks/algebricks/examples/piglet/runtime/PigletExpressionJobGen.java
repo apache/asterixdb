@@ -65,7 +65,7 @@ public class PigletExpressionJobGen implements ILogicalExpressionJobGen {
                     default:
                         throw new UnsupportedOperationException("Unsupported constant type: " + type.getTag());
                 }
-                return new ConstantEvalFactory(Arrays.copyOf(abvs.getBytes(), abvs.getLength()));
+                return new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(), abvs.getLength()));
             }
 
             case FUNCTION_CALL: {

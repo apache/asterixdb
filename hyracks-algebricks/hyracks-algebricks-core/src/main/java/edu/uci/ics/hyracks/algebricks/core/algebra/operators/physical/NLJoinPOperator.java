@@ -201,7 +201,7 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
             } catch (AlgebricksException ae) {
                 throw new HyracksDataException(ae);
             }
-            boolean result = binaryBooleanInspector.getBooleanValue(evalOutput.getBytes(), 0, evalOutput.getLength());
+            boolean result = binaryBooleanInspector.getBooleanValue(evalOutput.getByteArray(), 0, evalOutput.getLength());
             evalOutput.reset();
             if (result)
                 return 0;

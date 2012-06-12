@@ -262,13 +262,13 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     break;
                 }
                 case INDEX_INSERT_DELETE: {
-                    IndexInsertDeleteOperator opLoad = (IndexInsertDeleteOperator) op;
+                    IndexInsertDeleteOperator opInsDel = (IndexInsertDeleteOperator) op;
                     List<LogicalVariable> primaryKeys = new ArrayList<LogicalVariable>();
                     List<LogicalVariable> secondaryKeys = new ArrayList<LogicalVariable>();
-                    getKeys(opLoad.getPrimaryKeyExpressions(), primaryKeys);
-                    getKeys(opLoad.getSecondaryKeyExpressions(), secondaryKeys);
-                    op.setPhysicalOperator(new IndexInsertDeletePOperator(primaryKeys, secondaryKeys, opLoad
-                            .getDataSourceIndex()));
+                    getKeys(opInsDel.getPrimaryKeyExpressions(), primaryKeys);
+                    getKeys(opInsDel.getSecondaryKeyExpressions(), secondaryKeys);
+                    op.setPhysicalOperator(new IndexInsertDeletePOperator(primaryKeys, secondaryKeys, 
+                    		opInsDel.getFilterExpression(), opInsDel.getDataSourceIndex()));
                     break;
                 }
                 case SINK: {

@@ -12,12 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.common.data.accessors;
 
-public interface IValueReference {
-    public byte[] getBytes();
+package edu.uci.ics.hyracks.storage.am.common.api;
 
-    public int getStartIndex();
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-    public int getLength();
+public interface ITupleFilter {
+	public boolean accept(IFrameTupleReference tuple) throws Exception;
 }

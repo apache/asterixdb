@@ -14,14 +14,17 @@
  */
 package edu.uci.ics.hyracks.data.std.api;
 
-public interface IPointable {
+public interface IPointable extends IValueReference {
     public void set(byte[] bytes, int start, int length);
 
-    public void set(IPointable pointer);
+    public void set(IValueReference pointer);
 
+    @Override
     public byte[] getByteArray();
 
+    @Override
     public int getStartOffset();
 
+    @Override
     public int getLength();
 }

@@ -27,7 +27,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -80,25 +79,10 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
         }
 
         RecordDescriptor internalRecordDescriptor = outRecordDescriptor;
-        final FrameTupleAccessor storedKeysAccessor1;
-        final FrameTupleAccessor storedKeysAccessor2;
-        if (keyFields.length >= outRecordDescriptor.getFields().length) {
-            // for the case of zero-aggregations
-            ISerializerDeserializer<?>[] fields = outRecordDescriptor.getFields();
-            ITypeTraits[] types = outRecordDescriptor.getTypeTraits();
-            ISerializerDeserializer<?>[] newFields = new ISerializerDeserializer[fields.length + 1];
-            for (int i = 0; i < fields.length; i++)
-                newFields[i] = fields[i];
-            ITypeTraits[] newTypes = null;
-            if (types != null) {
-                newTypes = new ITypeTraits[types.length + 1];
-                for (int i = 0; i < types.length; i++)
-                    newTypes[i] = types[i];
-            }
-            internalRecordDescriptor = new RecordDescriptor(newFields, newTypes);
-        }
-        storedKeysAccessor1 = new FrameTupleAccessor(ctx.getFrameSize(), internalRecordDescriptor);
-        storedKeysAccessor2 = new FrameTupleAccessor(ctx.getFrameSize(), internalRecordDescriptor);
+        final FrameTupleAccessor storedKeysAccessor1 = new FrameTupleAccessor(ctx.getFrameSize(),
+                internalRecordDescriptor);
+        final FrameTupleAccessor storedKeysAccessor2 = new FrameTupleAccessor(ctx.getFrameSize(),
+                internalRecordDescriptor);
 
         final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
         for (int i = 0; i < comparatorFactories.length; ++i) {
@@ -225,7 +209,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                     for (int k = 0; k < keyFields.length; k++) {
                         stateTupleBuilder.addField(accessor, tIndex, keyFields[k]);
                     }
-                    
+
                     aggregator.init(stateTupleBuilder, accessor, tIndex, aggregateState);
                     if (!stateAppender.appendSkipEmptyField(stateTupleBuilder.getFieldEndOffsets(),
                             stateTupleBuilder.getByteArray(), 0, stateTupleBuilder.getSize())) {

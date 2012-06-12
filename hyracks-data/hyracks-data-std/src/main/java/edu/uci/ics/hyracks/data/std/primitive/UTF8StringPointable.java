@@ -50,6 +50,18 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         }
     };
 
+    /**
+     * Returns the character at the given byte offset. The caller is responsible for making sure that
+     * the provided offset is within bounds and points to the beginning of a valid UTF8 character.
+     * 
+     * @param offset
+     *            - Byte offset
+     * @return Character at the given offset.
+     */
+    public char charAt(int offset) {
+        return charAt(bytes, start + offset);
+    }
+
     public static char charAt(byte[] b, int s) {
         int c = b[s] & 0xff;
         switch (c >> 4) {
@@ -117,6 +129,10 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
             pos += charSize(b, pos);
         }
         return charCount;
+    }
+
+    public int getUTFLen() {
+        return getUTFLen(bytes, start);
     }
 
     public static int getUTFLen(byte[] b, int s) {
