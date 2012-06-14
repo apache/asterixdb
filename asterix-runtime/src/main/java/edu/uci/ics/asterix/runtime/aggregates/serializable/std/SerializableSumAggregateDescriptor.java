@@ -30,8 +30,8 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ISerializableAggregateFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ISerializableAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunction;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -53,15 +53,15 @@ public class SerializableSumAggregateDescriptor extends AbstractSerializableAggr
     }
 
     @Override
-    public ISerializableAggregateFunctionFactory createAggregateFunctionFactory(final ICopyEvaluatorFactory[] args)
+    public ICopySerializableAggregateFunctionFactory createAggregateFunctionFactory(final ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
-        return new ISerializableAggregateFunctionFactory() {
+        return new ICopySerializableAggregateFunctionFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ISerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
+            public ICopySerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
 
-                return new ISerializableAggregateFunction() {
+                return new ICopySerializableAggregateFunction() {
 
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(inputVal);

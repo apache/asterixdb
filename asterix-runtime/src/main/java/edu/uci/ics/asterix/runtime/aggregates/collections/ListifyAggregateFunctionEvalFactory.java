@@ -6,8 +6,8 @@ import java.io.IOException;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -15,7 +15,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorag
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class ListifyAggregateFunctionEvalFactory implements IAggregateFunctionFactory {
+public class ListifyAggregateFunctionEvalFactory implements ICopyAggregateFunctionFactory {
 
     private static final long serialVersionUID = 1L;
     private ICopyEvaluatorFactory[] args;
@@ -27,9 +27,9 @@ public class ListifyAggregateFunctionEvalFactory implements IAggregateFunctionFa
     }
 
     @Override
-    public IAggregateFunction createAggregateFunction(final IDataOutputProvider provider) throws AlgebricksException {
+    public ICopyAggregateFunction createAggregateFunction(final IDataOutputProvider provider) throws AlgebricksException {
 
-        return new IAggregateFunction() {
+        return new ICopyAggregateFunction() {
 
             private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
             private ICopyEvaluator eval = args[0].createEvaluator(inputVal);

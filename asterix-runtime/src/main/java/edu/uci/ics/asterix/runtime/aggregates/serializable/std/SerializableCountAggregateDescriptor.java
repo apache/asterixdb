@@ -14,8 +14,8 @@ import edu.uci.ics.asterix.runtime.aggregates.base.AbstractSerializableAggregate
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ISerializableAggregateFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ISerializableAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunction;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -39,15 +39,15 @@ public class SerializableCountAggregateDescriptor extends AbstractSerializableAg
     }
 
     @Override
-    public ISerializableAggregateFunctionFactory createAggregateFunctionFactory(final ICopyEvaluatorFactory[] args)
+    public ICopySerializableAggregateFunctionFactory createAggregateFunctionFactory(final ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
-        return new ISerializableAggregateFunctionFactory() {
+        return new ICopySerializableAggregateFunctionFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ISerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
+            public ICopySerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
 
-                return new ISerializableAggregateFunction() {
+                return new ICopySerializableAggregateFunction() {
                     private AMutableInt32 result = new AMutableInt32(-1);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AInt32> int32Serde = AqlSerializerDeserializerProvider.INSTANCE

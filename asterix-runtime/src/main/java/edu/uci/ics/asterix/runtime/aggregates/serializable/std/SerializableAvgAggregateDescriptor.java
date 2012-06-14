@@ -26,8 +26,8 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ISerializableAggregateFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ISerializableAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunction;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -49,15 +49,15 @@ public class SerializableAvgAggregateDescriptor extends AbstractSerializableAggr
     }
 
     @Override
-    public ISerializableAggregateFunctionFactory createAggregateFunctionFactory(ICopyEvaluatorFactory[] args)
+    public ICopySerializableAggregateFunctionFactory createAggregateFunctionFactory(ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
         final ICopyEvaluatorFactory[] evals = args;
 
-        return new ISerializableAggregateFunctionFactory() {
+        return new ICopySerializableAggregateFunctionFactory() {
             private static final long serialVersionUID = 1L;
 
-            public ISerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
-                return new ISerializableAggregateFunction() {
+            public ICopySerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
+                return new ICopySerializableAggregateFunction() {
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = evals[0].createEvaluator(inputVal);
 

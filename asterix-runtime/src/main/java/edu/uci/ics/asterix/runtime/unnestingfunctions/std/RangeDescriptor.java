@@ -13,8 +13,8 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunction;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
@@ -39,16 +39,16 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
     }
 
     @Override
-    public IUnnestingFunctionFactory createUnnestingFunctionFactory(final ICopyEvaluatorFactory[] args)
+    public ICopyUnnestingFunctionFactory createUnnestingFunctionFactory(final ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
-        return new IUnnestingFunctionFactory() {
+        return new ICopyUnnestingFunctionFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IUnnestingFunction createUnnestingFunction(final IDataOutputProvider provider)
+            public ICopyUnnestingFunction createUnnestingFunction(final IDataOutputProvider provider)
                     throws AlgebricksException {
-                return new IUnnestingFunction() {
+                return new ICopyUnnestingFunction() {
 
                     private DataOutput out = provider.getDataOutput();
                     @SuppressWarnings("rawtypes")
