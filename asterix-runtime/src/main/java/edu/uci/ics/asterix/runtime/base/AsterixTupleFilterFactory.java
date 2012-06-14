@@ -17,7 +17,7 @@ package edu.uci.ics.asterix.runtime.base;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspector;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilter;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 
@@ -26,9 +26,9 @@ public class AsterixTupleFilterFactory implements ITupleFilterFactory {
     private static final long serialVersionUID = 1L;
     
     private final IBinaryBooleanInspector boolInspector;
-    private final IEvaluatorFactory evalFactory;
+    private final ICopyEvaluatorFactory evalFactory;
     
-    public AsterixTupleFilterFactory(IEvaluatorFactory evalFactory,
+    public AsterixTupleFilterFactory(ICopyEvaluatorFactory evalFactory,
             IBinaryBooleanInspector boolInspector) throws AlgebricksException {
         this.evalFactory = evalFactory;
         this.boolInspector = boolInspector;

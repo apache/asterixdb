@@ -11,8 +11,8 @@ import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingFunction;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -39,7 +39,7 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
     }
 
     @Override
-    public IUnnestingFunctionFactory createUnnestingFunctionFactory(final IEvaluatorFactory[] args)
+    public IUnnestingFunctionFactory createUnnestingFunctionFactory(final ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
         return new IUnnestingFunctionFactory() {
 
@@ -55,8 +55,8 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
                     private ISerializerDeserializer serde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT32);
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-                    private IEvaluator eval0 = args[0].createEvaluator(inputVal);
-                    private IEvaluator eval1 = args[1].createEvaluator(inputVal);
+                    private ICopyEvaluator eval0 = args[0].createEvaluator(inputVal);
+                    private ICopyEvaluator eval1 = args[1].createEvaluator(inputVal);
                     private AMutableInt32 aInt32 = new AMutableInt32(0);
                     private int current;
                     private int max;

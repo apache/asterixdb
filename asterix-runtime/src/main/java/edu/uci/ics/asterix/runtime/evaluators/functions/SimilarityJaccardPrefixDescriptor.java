@@ -7,8 +7,8 @@ import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamic
 import edu.uci.ics.asterix.runtime.evaluators.common.SimilarityJaccardPrefixEvaluator;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 
 public class SimilarityJaccardPrefixDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -23,12 +23,12 @@ public class SimilarityJaccardPrefixDescriptor extends AbstractScalarFunctionDyn
     };
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) throws AlgebricksException {
-        return new IEvaluatorFactory() {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
+        return new ICopyEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new SimilarityJaccardPrefixEvaluator(args, output);
             }
         };

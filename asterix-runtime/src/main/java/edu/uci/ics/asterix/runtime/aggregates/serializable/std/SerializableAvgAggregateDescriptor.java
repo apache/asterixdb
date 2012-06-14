@@ -24,8 +24,8 @@ import edu.uci.ics.asterix.runtime.aggregates.base.AbstractSerializableAggregate
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ISerializableAggregateFunction;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ISerializableAggregateFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -49,9 +49,9 @@ public class SerializableAvgAggregateDescriptor extends AbstractSerializableAggr
     }
 
     @Override
-    public ISerializableAggregateFunctionFactory createAggregateFunctionFactory(IEvaluatorFactory[] args)
+    public ISerializableAggregateFunctionFactory createAggregateFunctionFactory(ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
-        final IEvaluatorFactory[] evals = args;
+        final ICopyEvaluatorFactory[] evals = args;
 
         return new ISerializableAggregateFunctionFactory() {
             private static final long serialVersionUID = 1L;
@@ -59,7 +59,7 @@ public class SerializableAvgAggregateDescriptor extends AbstractSerializableAggr
             public ISerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
                 return new ISerializableAggregateFunction() {
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-                    private IEvaluator eval = evals[0].createEvaluator(inputVal);
+                    private ICopyEvaluator eval = evals[0].createEvaluator(inputVal);
 
                     private AMutableDouble aDouble = new AMutableDouble(0);
                     @SuppressWarnings("unchecked")

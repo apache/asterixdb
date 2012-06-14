@@ -12,24 +12,24 @@ import edu.uci.ics.fuzzyjoin.tokenizer.IBinaryTokenizer;
 import edu.uci.ics.fuzzyjoin.tokenizer.IToken;
 import edu.uci.ics.fuzzyjoin.tokenizer.NGramUTF8StringBinaryTokenizer;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.BooleanSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
-public class GramTokensEvaluator implements IEvaluator {
+public class GramTokensEvaluator implements ICopyEvaluator {
 
     // assuming type indicator in serde format
     private final int typeIndicatorSize = 1;
 
     protected final DataOutput out;
     protected final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-    protected final IEvaluator stringEval;
-    protected final IEvaluator gramLengthEval;
-    protected final IEvaluator prePostEval;
+    protected final ICopyEvaluator stringEval;
+    protected final ICopyEvaluator gramLengthEval;
+    protected final ICopyEvaluator prePostEval;
 
     private final NGramUTF8StringBinaryTokenizer tokenizer;
 
@@ -40,7 +40,7 @@ public class GramTokensEvaluator implements IEvaluator {
     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
     private BuiltinType itemType;
 
-    public GramTokensEvaluator(IEvaluatorFactory[] args, IDataOutputProvider output, IBinaryTokenizer tokenizer,
+    public GramTokensEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output, IBinaryTokenizer tokenizer,
             BuiltinType itemType) throws AlgebricksException {
         out = output.getDataOutput();
         stringEval = args[0].createEvaluator(argOut);

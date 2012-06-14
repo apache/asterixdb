@@ -159,7 +159,7 @@ import edu.uci.ics.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import edu.uci.ics.hyracks.algebricks.data.ITypeTraitProvider;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.evaluators.ColumnAccessEvalFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.evaluators.ConstantEvalFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
@@ -350,13 +350,13 @@ public class NonTaggedDataFormat implements IDataFormat {
 
     @SuppressWarnings("unchecked")
     @Override
-    public IEvaluatorFactory getFieldAccessEvaluatorFactory(ARecordType recType, String fldName, int recordColumn)
+    public ICopyEvaluatorFactory getFieldAccessEvaluatorFactory(ARecordType recType, String fldName, int recordColumn)
             throws AlgebricksException {
         String[] names = recType.getFieldNames();
         int n = names.length;
         for (int i = 0; i < n; i++) {
             if (names[i].equals(fldName)) {
-                IEvaluatorFactory recordEvalFactory = new ColumnAccessEvalFactory(recordColumn);
+                ICopyEvaluatorFactory recordEvalFactory = new ColumnAccessEvalFactory(recordColumn);
                 ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
                 DataOutput dos = abvs.getDataOutput();
                 try {
@@ -366,9 +366,9 @@ public class NonTaggedDataFormat implements IDataFormat {
                 } catch (HyracksDataException e) {
                     throw new AlgebricksException(e);
                 }
-                IEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(),
+                ICopyEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(),
                         abvs.getLength()));
-                IEvaluatorFactory evalFactory = new FieldAccessByIndexEvalFactory(recordEvalFactory,
+                ICopyEvaluatorFactory evalFactory = new FieldAccessByIndexEvalFactory(recordEvalFactory,
                         fldIndexEvalFactory, recType);
                 return evalFactory;
             }
@@ -378,11 +378,11 @@ public class NonTaggedDataFormat implements IDataFormat {
 
     @SuppressWarnings("unchecked")
     @Override
-    public IEvaluatorFactory[] createMBRFactory(ARecordType recType, String fldName, int recordColumn, int dimension)
+    public ICopyEvaluatorFactory[] createMBRFactory(ARecordType recType, String fldName, int recordColumn, int dimension)
             throws AlgebricksException {
-        IEvaluatorFactory evalFactory = getFieldAccessEvaluatorFactory(recType, fldName, recordColumn);
+        ICopyEvaluatorFactory evalFactory = getFieldAccessEvaluatorFactory(recType, fldName, recordColumn);
         int numOfFields = dimension * 2;
-        IEvaluatorFactory[] evalFactories = new IEvaluatorFactory[numOfFields];
+        ICopyEvaluatorFactory[] evalFactories = new ICopyEvaluatorFactory[numOfFields];
 
         ArrayBackedValueStorage abvs1 = new ArrayBackedValueStorage();
         DataOutput dos1 = abvs1.getDataOutput();
@@ -392,7 +392,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
-        IEvaluatorFactory dimensionEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs1.getByteArray(),
+        ICopyEvaluatorFactory dimensionEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs1.getByteArray(),
                 abvs1.getLength()));
 
         for (int i = 0; i < numOfFields; i++) {
@@ -404,7 +404,7 @@ public class NonTaggedDataFormat implements IDataFormat {
             } catch (HyracksDataException e) {
                 throw new AlgebricksException(e);
             }
-            IEvaluatorFactory coordinateEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs2.getByteArray(),
+            ICopyEvaluatorFactory coordinateEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs2.getByteArray(),
                     abvs2.getLength()));
 
             evalFactories[i] = new CreateMBREvalFactory(evalFactory, dimensionEvalFactory, coordinateEvalFactory);
@@ -414,13 +414,13 @@ public class NonTaggedDataFormat implements IDataFormat {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> partitioningEvaluatorFactory(
+    public Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> partitioningEvaluatorFactory(
             ARecordType recType, String fldName) throws AlgebricksException {
         String[] names = recType.getFieldNames();
         int n = names.length;
         for (int i = 0; i < n; i++) {
             if (names[i].equals(fldName)) {
-                IEvaluatorFactory recordEvalFactory = new ColumnAccessEvalFactory(
+                ICopyEvaluatorFactory recordEvalFactory = new ColumnAccessEvalFactory(
                         GlobalConfig.DEFAULT_INPUT_DATA_COLUMN);
                 ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
                 DataOutput dos = abvs.getDataOutput();
@@ -431,9 +431,9 @@ public class NonTaggedDataFormat implements IDataFormat {
                 } catch (HyracksDataException e) {
                     throw new AlgebricksException(e);
                 }
-                IEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(),
+                ICopyEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(),
                         abvs.getLength()));
-                IEvaluatorFactory evalFactory = new FieldAccessByIndexEvalFactory(recordEvalFactory,
+                ICopyEvaluatorFactory evalFactory = new FieldAccessByIndexEvalFactory(recordEvalFactory,
                         fldIndexEvalFactory, recType);
                 IFunctionInfo finfoAccess = AsterixBuiltinFunctions
                         .getAsterixFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX);
@@ -442,7 +442,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                         new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
                         new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
                                 new AInt32(i)))));
-                return new Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>(evalFactory, partitionFun,
+                return new Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>(evalFactory, partitionFun,
                         recType.getFieldTypes()[i]);
             }
         }
@@ -550,7 +550,7 @@ public class NonTaggedDataFormat implements IDataFormat {
 
     @SuppressWarnings("unchecked")
     @Override
-    public IEvaluatorFactory getConstantEvalFactory(IAlgebricksConstantValue value) throws AlgebricksException {
+    public ICopyEvaluatorFactory getConstantEvalFactory(IAlgebricksConstantValue value) throws AlgebricksException {
         IAObject obj = null;
         if (value.isNull()) {
             obj = ANull.NULL;

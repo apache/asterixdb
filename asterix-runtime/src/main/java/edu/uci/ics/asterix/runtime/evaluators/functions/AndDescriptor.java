@@ -12,8 +12,8 @@ import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamic
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
@@ -39,21 +39,21 @@ public class AndDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     }
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) throws AlgebricksException {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
 
-        return new IEvaluatorFactory() {
+        return new ICopyEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 // one temp. buffer re-used by all children
                 final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                final IEvaluator[] evals = new IEvaluator[args.length];
+                final ICopyEvaluator[] evals = new ICopyEvaluator[args.length];
                 for (int i = 0; i < evals.length; i++) {
                     evals[i] = args[i].createEvaluator(argOut);
                 }
 
-                return new IEvaluator() {
+                return new ICopyEvaluator() {
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ABOOLEAN);

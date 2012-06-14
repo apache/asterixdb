@@ -28,8 +28,8 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateFunction;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateFunctionFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
@@ -53,7 +53,7 @@ public class MaxAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
 
     @SuppressWarnings("unchecked")
     @Override
-    public IAggregateFunctionFactory createAggregateFunctionFactory(final IEvaluatorFactory[] args)
+    public IAggregateFunctionFactory createAggregateFunctionFactory(final ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
         return new IAggregateFunctionFactory() {
             private static final long serialVersionUID = 1L;
@@ -66,7 +66,7 @@ public class MaxAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
 
                     private DataOutput out = provider.getDataOutput();
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-                    private IEvaluator eval = args[0].createEvaluator(inputVal);
+                    private ICopyEvaluator eval = args[0].createEvaluator(inputVal);
                     private boolean metInt8s, metInt16s, metInt32s, metInt64s, metFloats, metDoubles, metNull;
 
                     private short shortVal = Short.MIN_VALUE;

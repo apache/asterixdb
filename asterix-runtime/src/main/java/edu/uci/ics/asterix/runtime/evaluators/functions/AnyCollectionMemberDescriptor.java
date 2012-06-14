@@ -18,8 +18,8 @@ import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
@@ -37,7 +37,7 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
     };
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
         return new AnyCollectionMemberEvalFactory(args[0]);
     }
 
@@ -46,11 +46,11 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
         return FID;
     }
 
-    private static class AnyCollectionMemberEvalFactory implements IEvaluatorFactory {
+    private static class AnyCollectionMemberEvalFactory implements ICopyEvaluatorFactory {
 
         private static final long serialVersionUID = 1L;
 
-        private IEvaluatorFactory listEvalFactory;
+        private ICopyEvaluatorFactory listEvalFactory;
         private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
         private final static byte SER_UNORDEREDLIST_TYPE_TAG = ATypeTag.UNORDEREDLIST.serialize();
         private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
@@ -58,17 +58,17 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
         private ATypeTag itemTag;
         private boolean selfDescList = false;
 
-        public AnyCollectionMemberEvalFactory(IEvaluatorFactory arg) {
+        public AnyCollectionMemberEvalFactory(ICopyEvaluatorFactory arg) {
             this.listEvalFactory = arg;
         }
 
         @Override
-        public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-            return new IEvaluator() {
+        public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            return new ICopyEvaluator() {
 
                 private DataOutput out = output.getDataOutput();
                 private ArrayBackedValueStorage outInputList = new ArrayBackedValueStorage();
-                private IEvaluator evalList = listEvalFactory.createEvaluator(outInputList);
+                private ICopyEvaluator evalList = listEvalFactory.createEvaluator(outInputList);
                 @SuppressWarnings("unchecked")
                 private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                         .getSerializerDeserializer(BuiltinType.ANULL);

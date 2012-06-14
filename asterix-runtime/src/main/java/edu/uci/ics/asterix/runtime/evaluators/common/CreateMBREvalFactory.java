@@ -16,31 +16,31 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class CreateMBREvalFactory implements IEvaluatorFactory {
+public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private IEvaluatorFactory recordEvalFactory;
-    private IEvaluatorFactory dimensionEvalFactory;
-    private IEvaluatorFactory coordinateEvalFactory;
+    private ICopyEvaluatorFactory recordEvalFactory;
+    private ICopyEvaluatorFactory dimensionEvalFactory;
+    private ICopyEvaluatorFactory coordinateEvalFactory;
 
-    public CreateMBREvalFactory(IEvaluatorFactory recordEvalFactory, IEvaluatorFactory dimensionEvalFactory,
-            IEvaluatorFactory coordinateEvalFactory) {
+    public CreateMBREvalFactory(ICopyEvaluatorFactory recordEvalFactory, ICopyEvaluatorFactory dimensionEvalFactory,
+            ICopyEvaluatorFactory coordinateEvalFactory) {
         this.recordEvalFactory = recordEvalFactory;
         this.dimensionEvalFactory = dimensionEvalFactory;
         this.coordinateEvalFactory = coordinateEvalFactory;
     }
 
     @Override
-    public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-        return new IEvaluator() {
+    public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+        return new ICopyEvaluator() {
 
             private DataOutput out = output.getDataOutput();
 
@@ -48,9 +48,9 @@ public class CreateMBREvalFactory implements IEvaluatorFactory {
             private ArrayBackedValueStorage outInput1 = new ArrayBackedValueStorage();
             private ArrayBackedValueStorage outInput2 = new ArrayBackedValueStorage();
 
-            private IEvaluator eval0 = recordEvalFactory.createEvaluator(outInput0);
-            private IEvaluator eval1 = dimensionEvalFactory.createEvaluator(outInput1);
-            private IEvaluator eval2 = coordinateEvalFactory.createEvaluator(outInput2);
+            private ICopyEvaluator eval0 = recordEvalFactory.createEvaluator(outInput0);
+            private ICopyEvaluator eval1 = dimensionEvalFactory.createEvaluator(outInput1);
+            private ICopyEvaluator eval2 = coordinateEvalFactory.createEvaluator(outInput2);
 
             @Override
             public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {

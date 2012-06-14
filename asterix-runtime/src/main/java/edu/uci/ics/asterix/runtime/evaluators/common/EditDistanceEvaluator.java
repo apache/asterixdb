@@ -11,22 +11,22 @@ import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.fuzzyjoin.similarity.SimilarityMetricEditDistance;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class EditDistanceEvaluator implements IEvaluator {
+public class EditDistanceEvaluator implements ICopyEvaluator {
 
     // assuming type indicator in serde format
     protected final int typeIndicatorSize = 1;
 
     protected final DataOutput out;
     protected final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-    protected final IEvaluator firstStringEval;
-    protected final IEvaluator secondStringEval;
+    protected final ICopyEvaluator firstStringEval;
+    protected final ICopyEvaluator secondStringEval;
     protected final SimilarityMetricEditDistance ed = new SimilarityMetricEditDistance();
     protected final AsterixOrderedListIterator firstOrdListIter = new AsterixOrderedListIterator();
     protected final AsterixOrderedListIterator secondOrdListIter = new AsterixOrderedListIterator();
@@ -42,7 +42,7 @@ public class EditDistanceEvaluator implements IEvaluator {
     protected ATypeTag firstTypeTag;
     protected ATypeTag secondTypeTag;
 
-    public EditDistanceEvaluator(IEvaluatorFactory[] args, IDataOutputProvider output) throws AlgebricksException {
+    public EditDistanceEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output) throws AlgebricksException {
         out = output.getDataOutput();
         firstStringEval = args[0].createEvaluator(argOut);
         secondStringEval = args[1].createEvaluator(argOut);

@@ -12,8 +12,8 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -41,20 +41,20 @@ public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDyna
     }
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
         return new OrderedListConstructorEvaluatorFactory(args, oltype);
     }
 
-    private static class OrderedListConstructorEvaluatorFactory implements IEvaluatorFactory {
+    private static class OrderedListConstructorEvaluatorFactory implements ICopyEvaluatorFactory {
 
         private static final long serialVersionUID = 1L;
-        private IEvaluatorFactory[] args;
+        private ICopyEvaluatorFactory[] args;
 
         private boolean selfDescList = false;
 
         private AOrderedListType orderedlistType;
 
-        public OrderedListConstructorEvaluatorFactory(IEvaluatorFactory[] args, AOrderedListType type) {
+        public OrderedListConstructorEvaluatorFactory(ICopyEvaluatorFactory[] args, AOrderedListType type) {
             this.args = args;
 
             this.orderedlistType = type;
@@ -64,15 +64,15 @@ public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDyna
         }
 
         @Override
-        public IEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
+        public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
             final DataOutput out = output.getDataOutput();
             final ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-            final IEvaluator[] argEvals = new IEvaluator[args.length];
+            final ICopyEvaluator[] argEvals = new ICopyEvaluator[args.length];
             for (int i = 0; i < args.length; i++) {
                 argEvals[i] = args[i].createEvaluator(inputVal);
             }
 
-            return new IEvaluator() {
+            return new ICopyEvaluator() {
 
                 private OrderedListBuilder builder = new OrderedListBuilder();
 

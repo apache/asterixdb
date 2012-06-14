@@ -38,7 +38,7 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -126,13 +126,13 @@ public class FeedOperations {
     }
 
     private static AssignRuntimeFactory makeAssignRuntimeFactory(AqlCompiledDatasetDecl compiledDatasetDecl) {
-        List<Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
+        List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
                 .getPartitioningFunctions(compiledDatasetDecl);
         int numKeys = partitioningFunctions.size();
-        IEvaluatorFactory[] evalFactories = new IEvaluatorFactory[numKeys];
+        ICopyEvaluatorFactory[] evalFactories = new ICopyEvaluatorFactory[numKeys];
 
         int index = 0;
-        for (Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : partitioningFunctions) {
+        for (Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : partitioningFunctions) {
             evalFactories[index++] = evalFactoryAndType.first;
         }
 
@@ -151,13 +151,13 @@ public class FeedOperations {
     private static RecordDescriptor computePayloadKeyRecordDescriptor(AqlCompiledDatasetDecl compiledDatasetDecl,
             ISerializerDeserializer payloadSerde, IDataFormat dataFormat) throws AlgebricksException {
 
-        List<Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
+        List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
                 .getPartitioningFunctions(compiledDatasetDecl);
         int numKeys = partitioningFunctions.size();
         ISerializerDeserializer[] recordFields = new ISerializerDeserializer[1 + numKeys];
         recordFields[0] = payloadSerde;
         int index = 0;
-        for (Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : partitioningFunctions) {
+        for (Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : partitioningFunctions) {
             IAType keyType = evalFactoryAndType.third;
             ISerializerDeserializer keySerde = dataFormat.getSerdeProvider().getSerializerDeserializer(keyType);
             recordFields[index + 1] = keySerde;

@@ -17,8 +17,8 @@ import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamic
 import edu.uci.ics.asterix.runtime.evaluators.common.SimilarityJaccardEvaluator;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
@@ -38,12 +38,12 @@ public class SimilarityJaccardCheckDescriptor extends AbstractScalarFunctionDyna
     };
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) throws AlgebricksException {
-        return new IEvaluatorFactory() {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
+        return new ICopyEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
+            public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
                 return new SimilarityJaccardCheckEvaluator(args, output);
             }
         };
@@ -56,7 +56,7 @@ public class SimilarityJaccardCheckDescriptor extends AbstractScalarFunctionDyna
 
     private static class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator {
 
-        private final IEvaluator jaccThreshEval;
+        private final ICopyEvaluator jaccThreshEval;
         private float jaccThresh = -1f;
 
         private IAOrderedListBuilder listBuilder;
@@ -66,7 +66,7 @@ public class SimilarityJaccardCheckDescriptor extends AbstractScalarFunctionDyna
                 .getSerializerDeserializer(BuiltinType.ABOOLEAN);
         private final AOrderedListType listType = new AOrderedListType(BuiltinType.ANY, "list");
 
-        public SimilarityJaccardCheckEvaluator(IEvaluatorFactory[] args, IDataOutputProvider output)
+        public SimilarityJaccardCheckEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
                 throws AlgebricksException {
             super(args, output);
             jaccThreshEval = args[2].createEvaluator(argOut);

@@ -14,7 +14,7 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
@@ -25,12 +25,12 @@ public class DatasetUtils {
             throws AlgebricksException {
         if (compiledDatasetDecl.getDatasetType() == DatasetType.EXTERNAL)
             throw new AlgebricksException("not implemented");
-        List<Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions;
+        List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions;
         partitioningFunctions = getPartitioningFunctions(compiledDatasetDecl);
         int numKeys = partitioningFunctions.size();
         IBinaryComparatorFactory[] bcfs = new IBinaryComparatorFactory[numKeys];
         for (int i = 0; i < numKeys; i++) {
-            Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType = partitioningFunctions
+            Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType = partitioningFunctions
                     .get(i);
             IAType keyType = evalFactoryAndType.third;
             bcfs[i] = comparatorFactoryProvider.getBinaryComparatorFactory(keyType, true);
@@ -43,13 +43,13 @@ public class DatasetUtils {
             throws AlgebricksException {
         if (compiledDatasetDecl.getDatasetType() == DatasetType.EXTERNAL)
             throw new AlgebricksException("not implemented");
-        List<Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions;
+        List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions;
         partitioningFunctions = ((AqlCompiledInternalDatasetDetails) compiledDatasetDecl.getAqlCompiledDatasetDetails())
                 .getPartitioningFunctions();
         int numKeys = partitioningFunctions.size();
         IBinaryHashFunctionFactory[] bhffs = new IBinaryHashFunctionFactory[numKeys];
         for (int i = 0; i < numKeys; i++) {
-            Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType = partitioningFunctions
+            Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType = partitioningFunctions
                     .get(i);
             IAType keyType = evalFactoryAndType.third;
             bhffs[i] = hashFunProvider.getBinaryHashFunctionFactory(keyType);
@@ -61,13 +61,13 @@ public class DatasetUtils {
             AqlCompiledMetadataDeclarations datasetDecls) throws AlgebricksException {
         if (compiledDatasetDecl.getDatasetType() == DatasetType.EXTERNAL)
             throw new AlgebricksException("not implemented");
-        List<Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions;
+        List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions;
         partitioningFunctions = ((AqlCompiledInternalDatasetDetails) compiledDatasetDecl.getAqlCompiledDatasetDetails())
                 .getPartitioningFunctions();
         int numKeys = partitioningFunctions.size();
         ITypeTraits[] typeTraits = new ITypeTraits[numKeys + 1];
         for (int i = 0; i < numKeys; i++) {
-            Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType = partitioningFunctions
+            Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType = partitioningFunctions
                     .get(i);
             IAType keyType = evalFactoryAndType.third;
             typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
@@ -77,7 +77,7 @@ public class DatasetUtils {
         return typeTraits;
     }
 
-    public static List<Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>> getPartitioningFunctions(
+    public static List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> getPartitioningFunctions(
             AqlCompiledDatasetDecl decl) {
         return ((AqlCompiledInternalDatasetDetails) decl.getAqlCompiledDatasetDetails()).getPartitioningFunctions();
     }

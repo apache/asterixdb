@@ -15,8 +15,8 @@ import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamic
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
@@ -34,19 +34,19 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
     };
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) throws AlgebricksException {
-        return new IEvaluatorFactory() {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
+        return new ICopyEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new IEvaluator() {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+                return new ICopyEvaluator() {
 
                     private DataOutput out = output.getDataOutput();
                     private ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
                     private ArrayBackedValueStorage outInput1 = new ArrayBackedValueStorage();
-                    private IEvaluator eval0 = args[0].createEvaluator(outInput0);
-                    private IEvaluator eval1 = args[1].createEvaluator(outInput1);
+                    private ICopyEvaluator eval0 = args[0].createEvaluator(outInput0);
+                    private ICopyEvaluator eval1 = args[1].createEvaluator(outInput1);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {

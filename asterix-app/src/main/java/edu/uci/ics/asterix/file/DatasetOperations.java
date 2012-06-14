@@ -45,7 +45,7 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
@@ -208,7 +208,7 @@ public class DatasetOperations {
 
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, asterixOp, scannerPc);
 
-        List<Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
+        List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
                 .getPartitioningFunctions(compiledDatasetDecl);
         int numKeys = partitioningFunctions.size();
         int[] keys = new int[numKeys];
@@ -269,12 +269,12 @@ public class DatasetOperations {
     }
 
     private static AssignRuntimeFactory makeAssignRuntimeFactory(AqlCompiledDatasetDecl compiledDatasetDecl) {
-        List<Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
+        List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
                 .getPartitioningFunctions(compiledDatasetDecl);
         int numKeys = partitioningFunctions.size();
-        IEvaluatorFactory[] evalFactories = new IEvaluatorFactory[numKeys];
+        ICopyEvaluatorFactory[] evalFactories = new ICopyEvaluatorFactory[numKeys];
         for (int i = 0; i < numKeys; i++) {
-            Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType = partitioningFunctions
+            Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType = partitioningFunctions
                     .get(i);
             evalFactories[i] = evalFactoryAndType.first;
         }
@@ -291,13 +291,13 @@ public class DatasetOperations {
 
     private static RecordDescriptor computePayloadKeyRecordDescriptor(AqlCompiledDatasetDecl compiledDatasetDecl,
             ISerializerDeserializer payloadSerde, IDataFormat dataFormat) throws AlgebricksException {
-        List<Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
+        List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
                 .getPartitioningFunctions(compiledDatasetDecl);
         int numKeys = partitioningFunctions.size();
         ISerializerDeserializer[] recordFields = new ISerializerDeserializer[1 + numKeys];
         recordFields[0] = payloadSerde;
         for (int i = 0; i < numKeys; i++) {
-            Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType = partitioningFunctions
+            Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType = partitioningFunctions
                     .get(i);
             IAType keyType = evalFactoryAndType.third;
             ISerializerDeserializer keySerde = dataFormat.getSerdeProvider().getSerializerDeserializer(keyType);

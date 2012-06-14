@@ -18,8 +18,8 @@ import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingFunction;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -45,7 +45,7 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
     };
 
     @Override
-    public IUnnestingFunctionFactory createUnnestingFunctionFactory(final IEvaluatorFactory[] args)
+    public IUnnestingFunctionFactory createUnnestingFunctionFactory(final ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
         return new IUnnestingFunctionFactory() {
             private static final long serialVersionUID = 1L;
@@ -60,9 +60,9 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-                    private IEvaluator evalList = args[0].createEvaluator(inputVal);
-                    private IEvaluator evalStart = args[1].createEvaluator(inputVal);
-                    private IEvaluator evalLen = args[2].createEvaluator(inputVal);
+                    private ICopyEvaluator evalList = args[0].createEvaluator(inputVal);
+                    private ICopyEvaluator evalStart = args[1].createEvaluator(inputVal);
+                    private ICopyEvaluator evalLen = args[2].createEvaluator(inputVal);
                     private int numItems;
                     private int numItemsMax;
                     private int posStart;

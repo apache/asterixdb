@@ -15,7 +15,7 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateFunction;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateFunctionFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -40,7 +40,7 @@ public class CountAggregateDescriptor extends AbstractAggregateFunctionDynamicDe
     }
 
     @Override
-    public IAggregateFunctionFactory createAggregateFunctionFactory(final IEvaluatorFactory[] args)
+    public IAggregateFunctionFactory createAggregateFunctionFactory(final ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
         return new IAggregateFunctionFactory() {
 

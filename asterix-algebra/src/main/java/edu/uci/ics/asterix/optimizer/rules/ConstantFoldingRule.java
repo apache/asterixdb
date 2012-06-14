@@ -59,8 +59,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionRe
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
@@ -175,9 +175,9 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                     return new Pair<Boolean, ILogicalExpression>(changed, expr);
                 }
             }
-            IEvaluatorFactory fact = _jobGenCtx.getExpressionJobGen().createEvaluatorFactory(expr, _emptyTypeEnv,
+            ICopyEvaluatorFactory fact = _jobGenCtx.getExpressionJobGen().createEvaluatorFactory(expr, _emptyTypeEnv,
                     _emptySchemas, _jobGenCtx);
-            IEvaluator eval = fact.createEvaluator(resStore);
+            ICopyEvaluator eval = fact.createEvaluator(resStore);
             resStore.reset();
             eval.evaluate(null);
             Object t = _emptyTypeEnv.getType(expr);

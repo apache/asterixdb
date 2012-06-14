@@ -17,8 +17,8 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
@@ -26,7 +26,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
-public abstract class AbstractComparisonEvaluator implements IEvaluator {
+public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
 
     protected enum ComparisonResult {
         LESS_THAN,
@@ -38,8 +38,8 @@ public abstract class AbstractComparisonEvaluator implements IEvaluator {
     protected DataOutput out;
     protected ArrayBackedValueStorage outLeft = new ArrayBackedValueStorage();
     protected ArrayBackedValueStorage outRight = new ArrayBackedValueStorage();
-    protected IEvaluator evalLeft;
-    protected IEvaluator evalRight;
+    protected ICopyEvaluator evalLeft;
+    protected ICopyEvaluator evalRight;
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<ABoolean> serde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
@@ -51,8 +51,8 @@ public abstract class AbstractComparisonEvaluator implements IEvaluator {
     protected IBinaryComparator dateTimeBinaryComp = ADateTimeAscBinaryComparatorFactory.INSTANCE
             .createBinaryComparator();
 
-    public AbstractComparisonEvaluator(DataOutput out, IEvaluatorFactory evalLeftFactory,
-            IEvaluatorFactory evalRightFactory) throws AlgebricksException {
+    public AbstractComparisonEvaluator(DataOutput out, ICopyEvaluatorFactory evalLeftFactory,
+            ICopyEvaluatorFactory evalRightFactory) throws AlgebricksException {
         this.out = out;
         this.evalLeft = evalLeftFactory.createEvaluator(outLeft);
         this.evalRight = evalRightFactory.createEvaluator(outRight);

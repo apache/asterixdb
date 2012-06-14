@@ -12,7 +12,7 @@ import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.runtime.runningaggregates.base.AbstractRunningAggregateFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IRunningAggregateFunction;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IRunningAggregateFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -31,7 +31,7 @@ public class TidRunningAggregateDescriptor extends AbstractRunningAggregateFunct
     };
     
     @Override
-    public IRunningAggregateFunctionFactory createRunningAggregateFunctionFactory(IEvaluatorFactory[] args)
+    public IRunningAggregateFunctionFactory createRunningAggregateFunctionFactory(ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
 
         return new IRunningAggregateFunctionFactory() {

@@ -11,16 +11,16 @@ import edu.uci.ics.fuzzyjoin.IntArray;
 import edu.uci.ics.fuzzyjoin.tokenizer.IBinaryTokenizer;
 import edu.uci.ics.fuzzyjoin.tokenizer.IToken;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class WordTokensEvaluator implements IEvaluator {
+public class WordTokensEvaluator implements ICopyEvaluator {
     protected final DataOutput out;
     protected final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-    protected final IEvaluator stringEval;
+    protected final ICopyEvaluator stringEval;
 
     protected final IBinaryTokenizer tokenizer;
 
@@ -31,7 +31,7 @@ public class WordTokensEvaluator implements IEvaluator {
     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
     private BuiltinType itemType;
 
-    public WordTokensEvaluator(IEvaluatorFactory[] args, IDataOutputProvider output, IBinaryTokenizer tokenizer,
+    public WordTokensEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output, IBinaryTokenizer tokenizer,
             BuiltinType itemType) throws AlgebricksException {
         out = output.getDataOutput();
         stringEval = args[0].createEvaluator(argOut);

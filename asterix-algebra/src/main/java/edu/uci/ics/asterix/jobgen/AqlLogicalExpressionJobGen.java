@@ -35,7 +35,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateFunctionFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IRunningAggregateFunctionFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ISerializableAggregateFunctionFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingFunctionFactory;
@@ -52,7 +52,7 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
     public IAggregateFunctionFactory createAggregateFunctionFactory(AggregateFunctionCallExpression expr,
             IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
             throws AlgebricksException {
-        IEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
+        ICopyEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
         IFunctionDescriptor fd;
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
         AqlCompiledMetadataDeclarations compiledDecls = mp.getMetadataDeclarations();
@@ -95,7 +95,7 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
     public IRunningAggregateFunctionFactory createRunningAggregateFunctionFactory(StatefulFunctionCallExpression expr,
             IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
             throws AlgebricksException {
-        IEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
+        ICopyEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
         IFunctionDescriptor fd;
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
         AqlCompiledMetadataDeclarations compiledDecls = mp.getMetadataDeclarations();
@@ -132,7 +132,7 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
     public IUnnestingFunctionFactory createUnnestingFunctionFactory(UnnestingFunctionCallExpression expr,
             IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
             throws AlgebricksException {
-        IEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
+        ICopyEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
         IFunctionDescriptor fd;
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
         AqlCompiledMetadataDeclarations compiledDecls = mp.getMetadataDeclarations();
@@ -154,7 +154,7 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
     }
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(ILogicalExpression expr, IVariableTypeEnvironment env,
+    public ICopyEvaluatorFactory createEvaluatorFactory(ILogicalExpression expr, IVariableTypeEnvironment env,
             IOperatorSchema[] inputSchemas, JobGenContext context) throws AlgebricksException {
         switch (expr.getExpressionTag()) {
             case VARIABLE: {
@@ -181,7 +181,7 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
         }
     }
 
-    private IEvaluatorFactory createVariableEvaluatorFactory(VariableReferenceExpression expr,
+    private ICopyEvaluatorFactory createVariableEvaluatorFactory(VariableReferenceExpression expr,
             IOperatorSchema[] inputSchemas, JobGenContext context) throws AlgebricksException {
         LogicalVariable variable = expr.getVariableReference();
         for (IOperatorSchema scm : inputSchemas) {
@@ -193,10 +193,10 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
         throw new AlgebricksException("Variable " + variable + " could not be found in any input schema.");
     }
 
-    private IEvaluatorFactory createScalarFunctionEvaluatorFactory(AbstractFunctionCallExpression expr,
+    private ICopyEvaluatorFactory createScalarFunctionEvaluatorFactory(AbstractFunctionCallExpression expr,
             IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
             throws AlgebricksException {
-        IEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
+        ICopyEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
         FunctionIdentifier fi = expr.getFunctionIdentifier();
         ComparisonKind ck = AlgebricksBuiltinFunctions.getComparisonType(fi);
         if (ck != null) {
@@ -226,18 +226,18 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
 
     }
 
-    private IEvaluatorFactory createConstantEvaluatorFactory(ConstantExpression expr, IOperatorSchema[] inputSchemas,
+    private ICopyEvaluatorFactory createConstantEvaluatorFactory(ConstantExpression expr, IOperatorSchema[] inputSchemas,
             JobGenContext context) throws AlgebricksException {
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
         IDataFormat format = mp == null ? FormatUtils.getDefaultFormat() : mp.getMetadataDeclarations().getFormat();
         return format.getConstantEvalFactory(expr.getValue());
     }
 
-    private IEvaluatorFactory[] codegenArguments(AbstractFunctionCallExpression expr, IVariableTypeEnvironment env,
+    private ICopyEvaluatorFactory[] codegenArguments(AbstractFunctionCallExpression expr, IVariableTypeEnvironment env,
             IOperatorSchema[] inputSchemas, JobGenContext context) throws AlgebricksException {
         List<Mutable<ILogicalExpression>> arguments = expr.getArguments();
         int n = arguments.size();
-        IEvaluatorFactory[] args = new IEvaluatorFactory[n];
+        ICopyEvaluatorFactory[] args = new ICopyEvaluatorFactory[n];
         int i = 0;
         for (Mutable<ILogicalExpression> a : arguments) {
             args[i++] = createEvaluatorFactory(a.getValue(), env, inputSchemas, context);
@@ -249,7 +249,7 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
     public ISerializableAggregateFunctionFactory createSerializableAggregateFunctionFactory(
             AggregateFunctionCallExpression expr, IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas,
             JobGenContext context) throws AlgebricksException {
-        IEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
+        ICopyEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
         IFunctionDescriptor fd;
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
         AqlCompiledMetadataDeclarations compiledDecls = mp.getMetadataDeclarations();

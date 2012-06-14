@@ -30,7 +30,7 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import edu.uci.ics.hyracks.algebricks.data.ISerializerDeserializerProvider;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.evaluators.ColumnAccessEvalFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
@@ -78,7 +78,7 @@ public abstract class SecondaryIndexCreator {
     protected RecordDescriptor primaryRecDesc;
     protected IBinaryComparatorFactory[] secondaryComparatorFactories;
     protected RecordDescriptor secondaryRecDesc;
-    protected IEvaluatorFactory[] evalFactories;
+    protected ICopyEvaluatorFactory[] evalFactories;
     
     // Prevent public construction. Should be created via createIndexCreator().
     protected SecondaryIndexCreator(PhysicalOptimizationConfig physOptConf) {
@@ -147,10 +147,10 @@ public abstract class SecondaryIndexCreator {
         ITypeTraits[] primaryTypeTraits = new ITypeTraits[numPrimaryKeys + 1];
         primaryComparatorFactories = new IBinaryComparatorFactory[numPrimaryKeys];
         ISerializerDeserializerProvider serdeProvider = metadata.getFormat().getSerdeProvider();
-        List<Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
+        List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
                 .getPartitioningFunctions(datasetDecl);
         int i = 0;
-        for (Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : partitioningFunctions) {
+        for (Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : partitioningFunctions) {
             IAType keyType = evalFactoryAndType.third;
             ISerializerDeserializer keySerde = serdeProvider.getSerializerDeserializer(keyType);
             primaryRecFields[i] = keySerde;
@@ -165,7 +165,7 @@ public abstract class SecondaryIndexCreator {
     }
     
     protected void setSecondaryRecDescAndComparators(List<String> secondaryKeyFields) throws AlgebricksException, AsterixException {
-        evalFactories = new IEvaluatorFactory[numSecondaryKeys];
+        evalFactories = new ICopyEvaluatorFactory[numSecondaryKeys];
         secondaryComparatorFactories = new IBinaryComparatorFactory[numSecondaryKeys + numPrimaryKeys];
         ISerializerDeserializer[] secondaryRecFields = new ISerializerDeserializer[numPrimaryKeys + numSecondaryKeys];
         ITypeTraits[] secondaryTypeTraits = new ITypeTraits[numSecondaryKeys + numPrimaryKeys];
@@ -284,17 +284,17 @@ public abstract class SecondaryIndexCreator {
     }
     
     public AlgebricksMetaOperatorDescriptor createFilterNullsSelectOp(JobSpecification spec, int numSecondaryKeyFields) throws AlgebricksException {
-        IEvaluatorFactory[] andArgsEvalFactories = new IEvaluatorFactory[numSecondaryKeyFields];
+        ICopyEvaluatorFactory[] andArgsEvalFactories = new ICopyEvaluatorFactory[numSecondaryKeyFields];
         NotDescriptor notDesc = new NotDescriptor();
         IsNullDescriptor isNullDesc = new IsNullDescriptor();
         for (int i = 0; i < numSecondaryKeyFields; i++) {
             // Access column i, and apply 'is not null'.
             ColumnAccessEvalFactory columnAccessEvalFactory = new ColumnAccessEvalFactory(i);
-            IEvaluatorFactory isNullEvalFactory = isNullDesc.createEvaluatorFactory(new IEvaluatorFactory[] { columnAccessEvalFactory });
-            IEvaluatorFactory notEvalFactory = notDesc.createEvaluatorFactory(new IEvaluatorFactory[] { isNullEvalFactory });
+            ICopyEvaluatorFactory isNullEvalFactory = isNullDesc.createEvaluatorFactory(new ICopyEvaluatorFactory[] { columnAccessEvalFactory });
+            ICopyEvaluatorFactory notEvalFactory = notDesc.createEvaluatorFactory(new ICopyEvaluatorFactory[] { isNullEvalFactory });
             andArgsEvalFactories[i] = notEvalFactory;
         }
-        IEvaluatorFactory selectCond = null;
+        ICopyEvaluatorFactory selectCond = null;
         if (numSecondaryKeyFields > 1) {
             // Create conjunctive condition where all secondary index keys must satisfy 'is not null'.
             AndDescriptor andDesc = new AndDescriptor();

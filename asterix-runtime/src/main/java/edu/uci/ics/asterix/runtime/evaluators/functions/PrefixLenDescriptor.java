@@ -16,8 +16,8 @@ import edu.uci.ics.asterix.runtime.evaluators.common.SimilarityFiltersCache;
 import edu.uci.ics.fuzzyjoin.similarity.SimilarityFilters;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
@@ -36,21 +36,21 @@ public class PrefixLenDescriptor extends AbstractScalarFunctionDynamicDescriptor
     };
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) throws AlgebricksException {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
 
-        return new IEvaluatorFactory() {
+        return new ICopyEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
 
-                return new IEvaluator() {
+                return new ICopyEvaluator() {
 
                     private final DataOutput out = output.getDataOutput();
                     private final ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-                    private final IEvaluator evalLen = args[0].createEvaluator(inputVal);
-                    private final IEvaluator evalSimilarity = args[1].createEvaluator(inputVal);
-                    private final IEvaluator evalThreshold = args[2].createEvaluator(inputVal);
+                    private final ICopyEvaluator evalLen = args[0].createEvaluator(inputVal);
+                    private final ICopyEvaluator evalSimilarity = args[1].createEvaluator(inputVal);
+                    private final ICopyEvaluator evalThreshold = args[2].createEvaluator(inputVal);
 
                     private final SimilarityFiltersCache similarityFiltersCache = new SimilarityFiltersCache();
 

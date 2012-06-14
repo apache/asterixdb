@@ -52,7 +52,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperat
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 
 public class IntroduceBTreeIndexSearchRule extends IntroduceTreeIndexSearchRule {
 
@@ -624,7 +624,7 @@ public class IntroduceBTreeIndexSearchRule extends IntroduceTreeIndexSearchRule 
             Pair<IAType, Boolean> keyPair = AqlCompiledIndexDecl.getNonNullableKeyFieldType(sk, itemType);
             types.add(keyPair.first);
         }
-        for (Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> t : DatasetUtils
+        for (Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> t : DatasetUtils
                 .getPartitioningFunctions(ddecl)) {
             types.add(t.third);
         }

@@ -49,7 +49,7 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.data.IAWriterFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
@@ -187,7 +187,7 @@ public class AqlCompiledMetadataDeclarations {
                     String typeName = datasetRecord.getDatatypeName();
                     InternalDatasetDetails id = (InternalDatasetDetails) datasetRecord.getDatasetDetails();
                     ARecordType recType = (ARecordType) findType(typeName);
-                    List<Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningEvalFactories = computePartitioningEvaluatorFactories(
+                    List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningEvalFactories = computePartitioningEvaluatorFactories(
                             id.getPartitioningKey(), recType);
                     List<Index> indexRecord = this.metadataManager.getDatasetIndexes(mdTxnCtx, dataverseName,
                             datasetName);
@@ -239,12 +239,12 @@ public class AqlCompiledMetadataDeclarations {
         this.outputFile = outputFile;
     }
 
-    public List<Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>> computePartitioningEvaluatorFactories(
+    public List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> computePartitioningEvaluatorFactories(
             List<String> partitioningExprs, ARecordType recType) {
-        List<Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>> evalFactories = new ArrayList<Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>>(
+        List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> evalFactories = new ArrayList<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>>(
                 partitioningExprs.size());
         for (String expr : partitioningExprs) {
-            Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFact = null;
+            Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFact = null;
             try {
                 evalFact = format.partitioningEvaluatorFactory(recType, expr);
             } catch (AlgebricksException e) {

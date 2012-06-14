@@ -17,8 +17,8 @@ import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
@@ -41,35 +41,35 @@ public class FieldAccessByNameDescriptor extends AbstractScalarFunctionDynamicDe
     }
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(IEvaluatorFactory[] args) {
+    public ICopyEvaluatorFactory createEvaluatorFactory(ICopyEvaluatorFactory[] args) {
         return new FieldAccessByNameEvalFactory(args[0], args[1]);
     }
 
-    private static class FieldAccessByNameEvalFactory implements IEvaluatorFactory {
+    private static class FieldAccessByNameEvalFactory implements ICopyEvaluatorFactory {
 
         private static final long serialVersionUID = 1L;
 
-        private IEvaluatorFactory recordEvalFactory;
-        private IEvaluatorFactory fldNameEvalFactory;
+        private ICopyEvaluatorFactory recordEvalFactory;
+        private ICopyEvaluatorFactory fldNameEvalFactory;
 
         private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
         private final static byte SER_RECORD_TYPE_TAG = ATypeTag.RECORD.serialize();
 
-        public FieldAccessByNameEvalFactory(IEvaluatorFactory recordEvalFactory, IEvaluatorFactory fldNameEvalFactory) {
+        public FieldAccessByNameEvalFactory(ICopyEvaluatorFactory recordEvalFactory, ICopyEvaluatorFactory fldNameEvalFactory) {
             this.recordEvalFactory = recordEvalFactory;
             this.fldNameEvalFactory = fldNameEvalFactory;
         }
 
         @Override
-        public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-            return new IEvaluator() {
+        public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            return new ICopyEvaluator() {
 
                 private DataOutput out = output.getDataOutput();
 
                 private ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
                 private ArrayBackedValueStorage outInput1 = new ArrayBackedValueStorage();
-                private IEvaluator eval0 = recordEvalFactory.createEvaluator(outInput0);
-                private IEvaluator eval1 = fldNameEvalFactory.createEvaluator(outInput1);
+                private ICopyEvaluator eval0 = recordEvalFactory.createEvaluator(outInput0);
+                private ICopyEvaluator eval1 = fldNameEvalFactory.createEvaluator(outInput1);
                 @SuppressWarnings("unchecked")
                 private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                         .getSerializerDeserializer(BuiltinType.ANULL);
