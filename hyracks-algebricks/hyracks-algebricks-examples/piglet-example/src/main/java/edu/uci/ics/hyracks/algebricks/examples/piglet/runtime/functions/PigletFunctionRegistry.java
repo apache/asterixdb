@@ -7,7 +7,7 @@ import java.util.Map;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.examples.piglet.exceptions.PigletException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 
 public class PigletFunctionRegistry {
     private static final Map<FunctionIdentifier, IPigletFunctionEvaluatorFactoryBuilder> builderMap;
@@ -17,7 +17,7 @@ public class PigletFunctionRegistry {
 
         temp.put(AlgebricksBuiltinFunctions.EQ, new IPigletFunctionEvaluatorFactoryBuilder() {
             @Override
-            public IEvaluatorFactory buildEvaluatorFactory(FunctionIdentifier fid, IEvaluatorFactory[] arguments) {
+            public ICopyEvaluatorFactory buildEvaluatorFactory(FunctionIdentifier fid, ICopyEvaluatorFactory[] arguments) {
                 return new IntegerEqFunctionEvaluatorFactory(arguments[0], arguments[1]);
             }
         });
@@ -25,7 +25,7 @@ public class PigletFunctionRegistry {
         builderMap = Collections.unmodifiableMap(temp);
     }
 
-    public static IEvaluatorFactory createFunctionEvaluatorFactory(FunctionIdentifier fid, IEvaluatorFactory[] args)
+    public static ICopyEvaluatorFactory createFunctionEvaluatorFactory(FunctionIdentifier fid, ICopyEvaluatorFactory[] args)
             throws PigletException {
         IPigletFunctionEvaluatorFactoryBuilder builder = builderMap.get(fid);
         if (builder == null) {

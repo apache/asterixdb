@@ -18,34 +18,34 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
-public class IntegerAddEvalFactory implements IEvaluatorFactory {
+public class IntegerAddEvalFactory implements ICopyEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private IEvaluatorFactory evalLeftFactory;
-    private IEvaluatorFactory evalRightFactory;
+    private ICopyEvaluatorFactory evalLeftFactory;
+    private ICopyEvaluatorFactory evalRightFactory;
 
-    public IntegerAddEvalFactory(IEvaluatorFactory evalLeftFactory, IEvaluatorFactory evalRightFactory) {
+    public IntegerAddEvalFactory(ICopyEvaluatorFactory evalLeftFactory, ICopyEvaluatorFactory evalRightFactory) {
         this.evalLeftFactory = evalLeftFactory;
         this.evalRightFactory = evalRightFactory;
     }
 
     @Override
-    public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-        return new IEvaluator() {
+    public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+        return new ICopyEvaluator() {
 
             private DataOutput out = output.getDataOutput();
             private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
 
-            private IEvaluator evalLeft = evalLeftFactory.createEvaluator(argOut);
-            private IEvaluator evalRight = evalRightFactory.createEvaluator(argOut);
+            private ICopyEvaluator evalLeft = evalLeftFactory.createEvaluator(argOut);
+            private ICopyEvaluator evalRight = evalRightFactory.createEvaluator(argOut);
 
             @SuppressWarnings("static-access")
             @Override

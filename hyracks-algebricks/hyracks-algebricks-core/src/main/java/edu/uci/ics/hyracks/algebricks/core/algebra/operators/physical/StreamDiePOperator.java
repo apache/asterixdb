@@ -29,7 +29,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequiremen
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.StreamDieRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
@@ -69,7 +69,7 @@ public class StreamDiePOperator extends AbstractPhysicalOperator {
         DieOperator die = (DieOperator) op;
         ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
         IVariableTypeEnvironment env = context.getTypeEnvironment(op);
-        IEvaluatorFactory afterObjectsFact = exprJobGen.createEvaluatorFactory(die.getAfterObjects().getValue(), env,
+        ICopyEvaluatorFactory afterObjectsFact = exprJobGen.createEvaluatorFactory(die.getAfterObjects().getValue(), env,
                 inputSchemas, context);
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, propagatedSchema, context);
         StreamDieRuntimeFactory runtime = new StreamDieRuntimeFactory(afterObjectsFact, null,

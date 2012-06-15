@@ -12,10 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.data.std.api;
+package edu.uci.ics.hyracks.algebricks.runtime.base;
 
-public interface IPointable extends IValueReference {
-    public void set(byte[] bytes, int start, int length);
+import java.io.Serializable;
 
-    public void set(IValueReference pointer);
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+
+public interface IScalarEvaluatorFactory extends Serializable {
+    public IScalarEvaluator createScalarEvaluator() throws AlgebricksException;
 }

@@ -31,7 +31,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequiremen
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.StreamLimitRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
@@ -78,10 +78,10 @@ public class StreamLimitPOperator extends AbstractPhysicalOperator {
         LimitOperator limit = (LimitOperator) op;
         ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
         IVariableTypeEnvironment env = context.getTypeEnvironment(op);
-        IEvaluatorFactory maxObjectsFact = exprJobGen.createEvaluatorFactory(limit.getMaxObjects().getValue(), env,
+        ICopyEvaluatorFactory maxObjectsFact = exprJobGen.createEvaluatorFactory(limit.getMaxObjects().getValue(), env,
                 inputSchemas, context);
         ILogicalExpression offsetExpr = limit.getOffset().getValue();
-        IEvaluatorFactory offsetFact = (offsetExpr == null) ? null : exprJobGen.createEvaluatorFactory(offsetExpr, env,
+        ICopyEvaluatorFactory offsetFact = (offsetExpr == null) ? null : exprJobGen.createEvaluatorFactory(offsetExpr, env,
                 inputSchemas, context);
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, propagatedSchema, context);
         StreamLimitRuntimeFactory runtime = new StreamLimitRuntimeFactory(maxObjectsFact, offsetFact, null,

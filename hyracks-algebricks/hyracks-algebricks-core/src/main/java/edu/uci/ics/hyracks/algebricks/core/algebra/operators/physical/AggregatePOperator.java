@@ -37,7 +37,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequiremen
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.aggreg.AggregateRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
@@ -76,7 +76,7 @@ public class AggregatePOperator extends AbstractPhysicalOperator {
         for (int i = 0; i < outColumns.length; i++) {
             outColumns[i] = opSchema.findVariable(variables.get(i));
         }
-        IAggregateFunctionFactory[] aggFactories = new IAggregateFunctionFactory[expressions.size()];
+        ICopyAggregateFunctionFactory[] aggFactories = new ICopyAggregateFunctionFactory[expressions.size()];
         ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
         for (int i = 0; i < aggFactories.length; i++) {
             AggregateFunctionCallExpression aggFun = (AggregateFunctionCallExpression) expressions.get(i).getValue();

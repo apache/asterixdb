@@ -26,7 +26,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPhysicalPropertie
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.StreamSelectRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
@@ -60,7 +60,7 @@ public class StreamSelectPOperator extends AbstractPhysicalOperator {
             throws AlgebricksException {
         SelectOperator select = (SelectOperator) op;
         ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
-        IEvaluatorFactory cond = exprJobGen.createEvaluatorFactory(select.getCondition().getValue(),
+        ICopyEvaluatorFactory cond = exprJobGen.createEvaluatorFactory(select.getCondition().getValue(),
                 context.getTypeEnvironment(op), inputSchemas, context);
         StreamSelectRuntimeFactory runtime = new StreamSelectRuntimeFactory(cond, null,
                 context.getBinaryBooleanInspector());

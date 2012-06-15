@@ -18,12 +18,12 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunction;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class IntArrayUnnester implements IUnnestingFunctionFactory {
+public class IntArrayUnnester implements ICopyUnnestingFunctionFactory {
 
     private int[] x;
 
@@ -34,11 +34,11 @@ public class IntArrayUnnester implements IUnnestingFunctionFactory {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IUnnestingFunction createUnnestingFunction(IDataOutputProvider provider) throws AlgebricksException {
+    public ICopyUnnestingFunction createUnnestingFunction(IDataOutputProvider provider) throws AlgebricksException {
 
         final DataOutput out = provider.getDataOutput();
 
-        return new IUnnestingFunction() {
+        return new ICopyUnnestingFunction() {
 
             private int pos;
 

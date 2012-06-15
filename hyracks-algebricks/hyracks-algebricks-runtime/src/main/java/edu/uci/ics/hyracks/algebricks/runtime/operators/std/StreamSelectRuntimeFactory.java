@@ -18,8 +18,8 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspector;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
@@ -30,7 +30,7 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
 
     private static final long serialVersionUID = 1L;
 
-    private IEvaluatorFactory cond;
+    private ICopyEvaluatorFactory cond;
 
     private IBinaryBooleanInspector binaryBooleanInspector;
 
@@ -39,7 +39,7 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
      * @param projectionList
      *            if projectionList is null, then no projection is performed
      */
-    public StreamSelectRuntimeFactory(IEvaluatorFactory cond, int[] projectionList,
+    public StreamSelectRuntimeFactory(ICopyEvaluatorFactory cond, int[] projectionList,
             IBinaryBooleanInspector binaryBooleanInspector) {
         super(projectionList);
         this.cond = cond;
@@ -55,7 +55,7 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final RuntimeContext context) {
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
 
-            private IEvaluator eval;
+            private ICopyEvaluator eval;
             private ArrayBackedValueStorage evalOutput;
 
             @Override

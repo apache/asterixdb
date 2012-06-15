@@ -18,12 +18,12 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class ColumnAccessEvalFactory implements IEvaluatorFactory {
+public class ColumnAccessEvalFactory implements ICopyEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
 
@@ -39,8 +39,8 @@ public class ColumnAccessEvalFactory implements IEvaluatorFactory {
     }
 
     @Override
-    public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-        return new IEvaluator() {
+    public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+        return new ICopyEvaluator() {
 
             private DataOutput out = output.getDataOutput();
 

@@ -4,20 +4,20 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class TupleCountAggregateFunctionFactory implements IAggregateFunctionFactory {
+public class TupleCountAggregateFunctionFactory implements ICopyAggregateFunctionFactory {
 
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IAggregateFunction createAggregateFunction(IDataOutputProvider provider) throws AlgebricksException {
+    public ICopyAggregateFunction createAggregateFunction(IDataOutputProvider provider) throws AlgebricksException {
 
         final DataOutput out = provider.getDataOutput();
-        return new IAggregateFunction() {
+        return new ICopyAggregateFunction() {
 
             int cnt;
 

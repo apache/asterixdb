@@ -18,32 +18,32 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
-public class IntegerGreaterThanEvalFactory implements IEvaluatorFactory {
+public class IntegerGreaterThanEvalFactory implements ICopyEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private IEvaluatorFactory evalFact1, evalFact2;
+    private ICopyEvaluatorFactory evalFact1, evalFact2;
 
-    public IntegerGreaterThanEvalFactory(IEvaluatorFactory evalFact1, IEvaluatorFactory evalFact2) {
+    public IntegerGreaterThanEvalFactory(ICopyEvaluatorFactory evalFact1, ICopyEvaluatorFactory evalFact2) {
         this.evalFact1 = evalFact1;
         this.evalFact2 = evalFact2;
     }
 
     @Override
-    public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-        return new IEvaluator() {
+    public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+        return new ICopyEvaluator() {
             private DataOutput dataout = output.getDataOutput();
             private ArrayBackedValueStorage out1 = new ArrayBackedValueStorage();
             private ArrayBackedValueStorage out2 = new ArrayBackedValueStorage();
-            private IEvaluator eval1 = evalFact1.createEvaluator(out1);
-            private IEvaluator eval2 = evalFact2.createEvaluator(out2);
+            private ICopyEvaluator eval1 = evalFact1.createEvaluator(out1);
+            private ICopyEvaluator eval2 = evalFact2.createEvaluator(out2);
 
             @Override
             public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {

@@ -20,11 +20,11 @@ import edu.uci.ics.hyracks.algebricks.data.impl.UTF8StringPrinterFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.aggregators.TupleCountAggregateFunctionFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.aggregators.TupleCountRunningAggregateFunctionFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.AlgebricksPipeline;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateFunctionFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IRunningAggregateFunctionFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyRunningAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.evaluators.ColumnAccessEvalFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.aggreg.AggregateRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.aggreg.NestedPlansAccumulatingAggregatorFactory;
@@ -115,7 +115,7 @@ public class PushRuntimeTest {
 
         EmptyTupleSourceRuntimeFactory ets = new EmptyTupleSourceRuntimeFactory();
         RecordDescriptor etsDesc = new RecordDescriptor(new ISerializerDeserializer[] {});
-        AssignRuntimeFactory assign = new AssignRuntimeFactory(new int[] { 0, 1 }, new IEvaluatorFactory[] { const1,
+        AssignRuntimeFactory assign = new AssignRuntimeFactory(new int[] { 0, 1 }, new ICopyEvaluatorFactory[] { const1,
                 const2 }, new int[] { 0, 1 });
         RecordDescriptor assignDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
@@ -139,7 +139,7 @@ public class PushRuntimeTest {
 
         EmptyTupleSourceRuntimeFactory ets = new EmptyTupleSourceRuntimeFactory();
         RecordDescriptor etsDesc = new RecordDescriptor(new ISerializerDeserializer[] {});
-        AssignRuntimeFactory assign = new AssignRuntimeFactory(new int[] { 0, 1 }, new IEvaluatorFactory[] { const1,
+        AssignRuntimeFactory assign = new AssignRuntimeFactory(new int[] { 0, 1 }, new ICopyEvaluatorFactory[] { const1,
                 const2 }, new int[] { 0, 1 });
         RecordDescriptor assignDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
@@ -179,7 +179,7 @@ public class PushRuntimeTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, intScanner, DEFAULT_NODES);
 
         // the algebricks op.
-        IEvaluatorFactory cond = new IntegerGreaterThanEvalFactory(new IntegerConstantEvalFactory(2),
+        ICopyEvaluatorFactory cond = new IntegerGreaterThanEvalFactory(new IntegerConstantEvalFactory(2),
                 new ColumnAccessEvalFactory(0));
         StreamSelectRuntimeFactory select = new StreamSelectRuntimeFactory(cond, new int[] { 0 },
                 BinaryBooleanInspectorImpl.INSTANCE);
@@ -216,7 +216,7 @@ public class PushRuntimeTest {
 
         EmptyTupleSourceRuntimeFactory ets = new EmptyTupleSourceRuntimeFactory();
         RecordDescriptor etsDesc = new RecordDescriptor(new ISerializerDeserializer[] {});
-        AssignRuntimeFactory assign = new AssignRuntimeFactory(new int[] { 0, 1 }, new IEvaluatorFactory[] { const1,
+        AssignRuntimeFactory assign = new AssignRuntimeFactory(new int[] { 0, 1 }, new ICopyEvaluatorFactory[] { const1,
                 const2 }, new int[] { 0, 1 });
         RecordDescriptor assignDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
@@ -302,7 +302,7 @@ public class PushRuntimeTest {
 
         EmptyTupleSourceRuntimeFactory ets = new EmptyTupleSourceRuntimeFactory();
         RecordDescriptor etsDesc = new RecordDescriptor(new ISerializerDeserializer[] {});
-        IUnnestingFunctionFactory aggregFactory = new IntArrayUnnester(new int[] { 100, 200, 300 });
+        ICopyUnnestingFunctionFactory aggregFactory = new IntArrayUnnester(new int[] { 100, 200, 300 });
         UnnestRuntimeFactory unnest = new UnnestRuntimeFactory(0, aggregFactory, new int[] { 0 });
         RecordDescriptor unnestDesc = new RecordDescriptor(
                 new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
@@ -352,7 +352,7 @@ public class PushRuntimeTest {
 
         // the algebricks op.
         AggregateRuntimeFactory agg = new AggregateRuntimeFactory(
-                new IAggregateFunctionFactory[] { new TupleCountAggregateFunctionFactory() });
+                new ICopyAggregateFunctionFactory[] { new TupleCountAggregateFunctionFactory() });
         RecordDescriptor aggDesc = new RecordDescriptor(
                 new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
 
@@ -415,7 +415,7 @@ public class PushRuntimeTest {
         NestedTupleSourceRuntimeFactory nts = new NestedTupleSourceRuntimeFactory();
         RecordDescriptor ntsDesc = sortDesc;
         AggregateRuntimeFactory agg = new AggregateRuntimeFactory(
-                new IAggregateFunctionFactory[] { new TupleCountAggregateFunctionFactory() });
+                new ICopyAggregateFunctionFactory[] { new TupleCountAggregateFunctionFactory() });
         RecordDescriptor aggDesc = new RecordDescriptor(
                 new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
         AlgebricksPipeline pipeline = new AlgebricksPipeline(new IPushRuntimeFactory[] { nts, agg },
@@ -432,7 +432,7 @@ public class PushRuntimeTest {
                 new String[] { AlgebricksHyracksIntegrationUtil.NC1_ID });
 
         // the algebricks op.
-        IEvaluatorFactory cond = new IntegerEqualsEvalFactory(new IntegerConstantEvalFactory(3),
+        ICopyEvaluatorFactory cond = new IntegerEqualsEvalFactory(new IntegerConstantEvalFactory(3),
                 new ColumnAccessEvalFactory(0)); // Canadian customers
         StreamSelectRuntimeFactory select = new StreamSelectRuntimeFactory(cond, new int[] { 1 },
                 BinaryBooleanInspectorImpl.INSTANCE);
@@ -491,7 +491,7 @@ public class PushRuntimeTest {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
         ITuplePartitionComputerFactory tpcf = new FieldHashPartitionComputerFactory(new int[] { 3 },
                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(IntegerPointable.FACTORY) });
-        IAggregateFunctionFactory[] aggFuns = new IAggregateFunctionFactory[] { new TupleCountAggregateFunctionFactory() };
+        ICopyAggregateFunctionFactory[] aggFuns = new ICopyAggregateFunctionFactory[] { new TupleCountAggregateFunctionFactory() };
         IAggregatorDescriptorFactory aggFactory = new SimpleAlgebricksAccumulatingAggregatorFactory(aggFuns,
                 new int[] { 3 }, new int[] {});
         HashGroupOperatorDescriptor gby = new HashGroupOperatorDescriptor(spec, new int[] { 3 }, tpcf,
@@ -502,7 +502,7 @@ public class PushRuntimeTest {
                 new String[] { AlgebricksHyracksIntegrationUtil.NC1_ID });
 
         // the algebricks op.
-        IEvaluatorFactory cond = new IntegerEqualsEvalFactory(new IntegerConstantEvalFactory(3),
+        ICopyEvaluatorFactory cond = new IntegerEqualsEvalFactory(new IntegerConstantEvalFactory(3),
                 new ColumnAccessEvalFactory(0)); // Canadian customers
         StreamSelectRuntimeFactory select = new StreamSelectRuntimeFactory(cond, new int[] { 1 },
                 BinaryBooleanInspectorImpl.INSTANCE);
@@ -538,13 +538,13 @@ public class PushRuntimeTest {
 
         EmptyTupleSourceRuntimeFactory ets = new EmptyTupleSourceRuntimeFactory();
         RecordDescriptor etsDesc = new RecordDescriptor(new ISerializerDeserializer[] {});
-        IUnnestingFunctionFactory aggregFactory = new IntArrayUnnester(new int[] { 100, 200, 300 });
+        ICopyUnnestingFunctionFactory aggregFactory = new IntArrayUnnester(new int[] { 100, 200, 300 });
         UnnestRuntimeFactory unnest = new UnnestRuntimeFactory(0, aggregFactory, new int[] { 0 });
         RecordDescriptor unnestDesc = new RecordDescriptor(
                 new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
 
         RunningAggregateRuntimeFactory ragg = new RunningAggregateRuntimeFactory(new int[] { 1 },
-                new IRunningAggregateFunctionFactory[] { new TupleCountRunningAggregateFunctionFactory() }, new int[] {
+                new ICopyRunningAggregateFunctionFactory[] { new TupleCountRunningAggregateFunctionFactory() }, new int[] {
                         0, 1 });
         RecordDescriptor raggDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
@@ -579,7 +579,7 @@ public class PushRuntimeTest {
 
         EmptyTupleSourceRuntimeFactory ets = new EmptyTupleSourceRuntimeFactory();
         RecordDescriptor etsDesc = new RecordDescriptor(new ISerializerDeserializer[] {});
-        AssignRuntimeFactory assign = new AssignRuntimeFactory(new int[] { 0, 1 }, new IEvaluatorFactory[] { const1,
+        AssignRuntimeFactory assign = new AssignRuntimeFactory(new int[] { 0, 1 }, new ICopyEvaluatorFactory[] { const1,
                 const2 }, new int[] { 0, 1 });
         RecordDescriptor assignDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
@@ -737,7 +737,7 @@ public class PushRuntimeTest {
         EmptyTupleSourceRuntimeFactory ets = new EmptyTupleSourceRuntimeFactory();
         RecordDescriptor etsDesc = new RecordDescriptor(new ISerializerDeserializer[] {});
 
-        AssignRuntimeFactory assign1 = new AssignRuntimeFactory(new int[] { 0 }, new IEvaluatorFactory[] { const1 },
+        AssignRuntimeFactory assign1 = new AssignRuntimeFactory(new int[] { 0 }, new ICopyEvaluatorFactory[] { const1 },
                 new int[] { 0 });
         RecordDescriptor assign1Desc = new RecordDescriptor(
                 new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
@@ -745,7 +745,7 @@ public class PushRuntimeTest {
         NestedTupleSourceRuntimeFactory nts = new NestedTupleSourceRuntimeFactory();
 
         AssignRuntimeFactory assign2 = new AssignRuntimeFactory(new int[] { 1 },
-                new IEvaluatorFactory[] { new IntegerAddEvalFactory(new ColumnAccessEvalFactory(0), const2) },
+                new ICopyEvaluatorFactory[] { new IntegerAddEvalFactory(new ColumnAccessEvalFactory(0), const2) },
                 new int[] { 0, 1 });
         RecordDescriptor assign2Desc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
@@ -821,7 +821,7 @@ public class PushRuntimeTest {
         NestedTupleSourceRuntimeFactory nts = new NestedTupleSourceRuntimeFactory();
         RecordDescriptor ntsDesc = sortDesc;
         AggregateRuntimeFactory agg = new AggregateRuntimeFactory(
-                new IAggregateFunctionFactory[] { new TupleCountAggregateFunctionFactory() });
+                new ICopyAggregateFunctionFactory[] { new TupleCountAggregateFunctionFactory() });
         RecordDescriptor aggDesc = new RecordDescriptor(
                 new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
         AlgebricksPipeline pipeline = new AlgebricksPipeline(new IPushRuntimeFactory[] { nts, agg },
@@ -835,7 +835,7 @@ public class PushRuntimeTest {
                 npaaf, sortDesc, gbyDesc, null);
 
         // the algebricks op.
-        IEvaluatorFactory cond = new IntegerEqualsEvalFactory(new IntegerConstantEvalFactory(3),
+        ICopyEvaluatorFactory cond = new IntegerEqualsEvalFactory(new IntegerConstantEvalFactory(3),
                 new ColumnAccessEvalFactory(0)); // Canadian customers
         StreamSelectRuntimeFactory select = new StreamSelectRuntimeFactory(cond, new int[] { 1 },
                 BinaryBooleanInspectorImpl.INSTANCE);

@@ -4,8 +4,8 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspector;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
@@ -16,10 +16,10 @@ public class StreamDieRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
 
     private static final long serialVersionUID = 1L;
 
-    private IEvaluatorFactory aftterObjectsEvalFactory;
+    private ICopyEvaluatorFactory aftterObjectsEvalFactory;
     private IBinaryIntegerInspector binaryIntegerInspector;
 
-    public StreamDieRuntimeFactory(IEvaluatorFactory maxObjectsEvalFactory, int[] projectionList,
+    public StreamDieRuntimeFactory(ICopyEvaluatorFactory maxObjectsEvalFactory, int[] projectionList,
             IBinaryIntegerInspector binaryIntegerInspector) {
         super(projectionList);
         this.aftterObjectsEvalFactory = maxObjectsEvalFactory;
@@ -36,7 +36,7 @@ public class StreamDieRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final RuntimeContext context) {
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
 
-            private IEvaluator evalAfterObjects;
+            private ICopyEvaluator evalAfterObjects;
             private ArrayBackedValueStorage evalOutput;
             private int toWrite = -1;
 
@@ -80,7 +80,7 @@ public class StreamDieRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
                 super.close();
             }
 
-            private int evaluateInteger(IEvaluator eval, int tIdx) throws HyracksDataException {
+            private int evaluateInteger(ICopyEvaluator eval, int tIdx) throws HyracksDataException {
                 tRef.reset(tAccess, tIdx);
                 evalOutput.reset();
                 try {

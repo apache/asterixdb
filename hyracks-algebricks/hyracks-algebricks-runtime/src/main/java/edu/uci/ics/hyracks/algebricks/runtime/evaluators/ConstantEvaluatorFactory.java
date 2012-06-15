@@ -14,21 +14,18 @@
  */
 package edu.uci.ics.hyracks.algebricks.runtime.evaluators;
 
-import java.io.DataOutput;
-import java.io.IOException;
-
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class ConstantEvalFactory implements ICopyEvaluatorFactory {
+public class ConstantEvaluatorFactory implements IScalarEvaluatorFactory {
     private static final long serialVersionUID = 1L;
 
     private byte[] value;
 
-    public ConstantEvalFactory(byte[] value) {
+    public ConstantEvaluatorFactory(byte[] value) {
         this.value = value;
     }
 
@@ -38,18 +35,11 @@ public class ConstantEvalFactory implements ICopyEvaluatorFactory {
     }
 
     @Override
-    public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-        return new ICopyEvaluator() {
-
-            private DataOutput out = output.getDataOutput();
-
+    public IScalarEvaluator createScalarEvaluator() throws AlgebricksException {
+        return new IScalarEvaluator() {
             @Override
-            public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                try {
-                    out.write(value, 0, value.length);
-                } catch (IOException ioe) {
-                    throw new AlgebricksException(ioe);
-                }
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                result.set(value, 0, value.length);
             }
         };
     }

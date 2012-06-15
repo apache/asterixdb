@@ -32,7 +32,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPhysicalPropertie
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
@@ -66,7 +66,7 @@ public class AssignPOperator extends AbstractPhysicalOperator {
         for (int i = 0; i < outColumns.length; i++) {
             outColumns[i] = opSchema.findVariable(variables.get(i));
         }
-        IEvaluatorFactory[] evalFactories = new IEvaluatorFactory[expressions.size()];
+        ICopyEvaluatorFactory[] evalFactories = new ICopyEvaluatorFactory[expressions.size()];
         ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
         for (int i = 0; i < evalFactories.length; i++) {
             evalFactories[i] = exprJobGen.createEvaluatorFactory(expressions.get(i).getValue(),

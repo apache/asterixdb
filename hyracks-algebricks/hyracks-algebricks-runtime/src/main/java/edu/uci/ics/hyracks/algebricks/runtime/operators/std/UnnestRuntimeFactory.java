@@ -17,8 +17,8 @@ package edu.uci.ics.hyracks.algebricks.runtime.operators.std;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunction;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
@@ -31,7 +31,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
     private static final long serialVersionUID = 1L;
 
     private final int outCol;
-    private final IUnnestingFunctionFactory unnestingFactory;
+    private final ICopyUnnestingFunctionFactory unnestingFactory;
     private int outColPos;
     private final boolean outColIsProjected;
 
@@ -40,7 +40,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
     // By convention, if the aggregate function writes nothing, it means it
     // produced the last value.
 
-    public UnnestRuntimeFactory(int outCol, IUnnestingFunctionFactory unnestingFactory, int[] projectionList) {
+    public UnnestRuntimeFactory(int outCol, ICopyUnnestingFunctionFactory unnestingFactory, int[] projectionList) {
         super(projectionList);
         this.outCol = outCol;
         this.unnestingFactory = unnestingFactory;
@@ -65,7 +65,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
 
             private ArrayBackedValueStorage evalOutput;
-            private IUnnestingFunction agg;
+            private ICopyUnnestingFunction agg;
             private ArrayTupleBuilder tupleBuilder;
 
             @Override

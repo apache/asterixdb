@@ -30,7 +30,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSc
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.UnnestRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
@@ -77,7 +77,7 @@ public class UnnestPOperator extends AbstractScanPOperator {
             throw new AlgebricksException("Unnest expression " + unnestExpr + " is not an unnesting function call.");
         }
         UnnestingFunctionCallExpression agg = (UnnestingFunctionCallExpression) unnestExpr;
-        IUnnestingFunctionFactory unnestingFactory = exprJobGen.createUnnestingFunctionFactory(agg,
+        ICopyUnnestingFunctionFactory unnestingFactory = exprJobGen.createUnnestingFunctionFactory(agg,
                 context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas, context);
         int[] projectionList = JobGenHelper.projectAllVariables(opSchema);
         UnnestRuntimeFactory unnestRuntime = new UnnestRuntimeFactory(outCol, unnestingFactory, projectionList);

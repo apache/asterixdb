@@ -3,8 +3,8 @@ package edu.uci.ics.hyracks.algebricks.runtime.operators.aggreg;
 import java.io.DataOutput;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ISerializableAggregateFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ISerializableAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunction;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunctionFactory;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -17,9 +17,9 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
 public class SerializableAggregatorDescriptorFactory implements IAggregatorDescriptorFactory {
     private static final long serialVersionUID = 1L;
-    private ISerializableAggregateFunctionFactory[] aggFactories;
+    private ICopySerializableAggregateFunctionFactory[] aggFactories;
 
-    public SerializableAggregatorDescriptorFactory(ISerializableAggregateFunctionFactory[] aggFactories) {
+    public SerializableAggregatorDescriptorFactory(ICopySerializableAggregateFunctionFactory[] aggFactories) {
         this.aggFactories = aggFactories;
     }
 
@@ -34,7 +34,7 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
          */
         return new IAggregatorDescriptor() {
             private FrameTupleReference ftr = new FrameTupleReference();
-            private ISerializableAggregateFunction[] aggs = new ISerializableAggregateFunction[aggFactories.length];
+            private ICopySerializableAggregateFunction[] aggs = new ICopySerializableAggregateFunction[aggFactories.length];
             private int offsetFieldIndex = keys.length;
             private int stateFieldLength[] = new int[aggFactories.length];
 

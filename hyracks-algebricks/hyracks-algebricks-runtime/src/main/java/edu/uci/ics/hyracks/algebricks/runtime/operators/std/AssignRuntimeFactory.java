@@ -18,8 +18,8 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
@@ -34,7 +34,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
     private static final long serialVersionUID = 1L;
 
     private int[] outColumns;
-    private IEvaluatorFactory[] evalFactories;
+    private ICopyEvaluatorFactory[] evalFactories;
 
     /**
      * @param outColumns
@@ -44,7 +44,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
      *            an array of columns to be projected
      */
 
-    public AssignRuntimeFactory(int[] outColumns, IEvaluatorFactory[] evalFactories, int[] projectionList) {
+    public AssignRuntimeFactory(int[] outColumns, ICopyEvaluatorFactory[] evalFactories, int[] projectionList) {
         super(projectionList);
         this.outColumns = outColumns;
         this.evalFactories = evalFactories;
@@ -82,7 +82,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
 
             private ArrayBackedValueStorage evalOutput = new ArrayBackedValueStorage();
-            private IEvaluator[] eval = new IEvaluator[evalFactories.length];
+            private ICopyEvaluator[] eval = new ICopyEvaluator[evalFactories.length];
             private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(projectionList.length);
             private boolean first = true;
 

@@ -14,9 +14,11 @@
  */
 package edu.uci.ics.hyracks.algebricks.runtime.base;
 
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import java.io.Serializable;
 
-public interface IEvaluator {
-    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
+
+public interface ICopyAggregateFunctionFactory extends Serializable {
+    public ICopyAggregateFunction createAggregateFunction(IDataOutputProvider provider) throws AlgebricksException;
 }

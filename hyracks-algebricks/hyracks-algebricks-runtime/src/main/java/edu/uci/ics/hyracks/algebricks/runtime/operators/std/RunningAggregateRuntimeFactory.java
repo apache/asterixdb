@@ -18,8 +18,8 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IRunningAggregateFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IRunningAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyRunningAggregateFunction;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyRunningAggregateFunctionFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
@@ -34,7 +34,7 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
     private static final long serialVersionUID = 1L;
 
     private int[] outColumns;
-    private IRunningAggregateFunctionFactory[] runningAggregates;
+    private ICopyRunningAggregateFunctionFactory[] runningAggregates;
 
     /**
      * @param outColumns
@@ -44,7 +44,7 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
      *            an array of columns to be projected
      */
 
-    public RunningAggregateRuntimeFactory(int[] outColumns, IRunningAggregateFunctionFactory[] runningAggregates,
+    public RunningAggregateRuntimeFactory(int[] outColumns, ICopyRunningAggregateFunctionFactory[] runningAggregates,
             int[] projectionList) {
         super(projectionList);
         this.outColumns = outColumns;
@@ -83,7 +83,7 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
 
             private ArrayBackedValueStorage evalOutput = new ArrayBackedValueStorage();
-            private IRunningAggregateFunction[] raggs = new IRunningAggregateFunction[runningAggregates.length];
+            private ICopyRunningAggregateFunction[] raggs = new ICopyRunningAggregateFunction[runningAggregates.length];
             private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(projectionList.length);
             private boolean first = true;
 

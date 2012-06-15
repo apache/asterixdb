@@ -18,22 +18,22 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IRunningAggregateFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IRunningAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyRunningAggregateFunction;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyRunningAggregateFunctionFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class TupleCountRunningAggregateFunctionFactory implements IRunningAggregateFunctionFactory {
+public class TupleCountRunningAggregateFunctionFactory implements ICopyRunningAggregateFunctionFactory {
 
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IRunningAggregateFunction createRunningAggregateFunction(IDataOutputProvider provider)
+    public ICopyRunningAggregateFunction createRunningAggregateFunction(IDataOutputProvider provider)
             throws AlgebricksException {
 
         final DataOutput out = provider.getDataOutput();
 
-        return new IRunningAggregateFunction() {
+        return new ICopyRunningAggregateFunction() {
 
             int cnt;
 

@@ -14,11 +14,10 @@
  */
 package edu.uci.ics.hyracks.algebricks.runtime.base;
 
+import java.io.Serializable;
+
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public interface IRunningAggregateFunction {
-    public void init() throws AlgebricksException;
-
-    public void step(IFrameTupleReference tuple) throws AlgebricksException;
+public interface IUnnestingEvaluatorFactory extends Serializable {
+    public IUnnestingEvaluator createUnnestingEvaluator() throws AlgebricksException;
 }

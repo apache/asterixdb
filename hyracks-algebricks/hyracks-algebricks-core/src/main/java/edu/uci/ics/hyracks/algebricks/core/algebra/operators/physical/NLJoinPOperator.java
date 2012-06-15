@@ -38,8 +38,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralProperti
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspector;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparator;
@@ -123,7 +123,7 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
         IOperatorSchema[] conditionInputSchemas = new IOperatorSchema[1];
         conditionInputSchemas[0] = propagatedSchema;
         ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
-        IEvaluatorFactory cond = exprJobGen.createEvaluatorFactory(join.getCondition().getValue(),
+        ICopyEvaluatorFactory cond = exprJobGen.createEvaluatorFactory(join.getCondition().getValue(),
                 context.getTypeEnvironment(op), conditionInputSchemas, context);
         ITuplePairComparatorFactory comparatorFactory = new TuplePairEvaluatorFactory(cond,
                 context.getBinaryBooleanInspector());
@@ -151,10 +151,10 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
     public static class TuplePairEvaluatorFactory implements ITuplePairComparatorFactory {
 
         private static final long serialVersionUID = 1L;
-        private final IEvaluatorFactory cond;
+        private final ICopyEvaluatorFactory cond;
         private final IBinaryBooleanInspector binaryBooleanInspector;
 
-        public TuplePairEvaluatorFactory(IEvaluatorFactory cond, IBinaryBooleanInspector binaryBooleanInspector) {
+        public TuplePairEvaluatorFactory(ICopyEvaluatorFactory cond, IBinaryBooleanInspector binaryBooleanInspector) {
             this.cond = cond;
             this.binaryBooleanInspector = binaryBooleanInspector;
         }
@@ -168,15 +168,15 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
 
     public static class TuplePairEvaluator implements ITuplePairComparator {
 
-        private IEvaluator condEvaluator;
-        private final IEvaluatorFactory condFactory;
+        private ICopyEvaluator condEvaluator;
+        private final ICopyEvaluatorFactory condFactory;
         private final CompositeFrameTupleReference compositeTupleRef;
         private final FrameTupleReference leftRef;
         private final FrameTupleReference rightRef;
         private final ArrayBackedValueStorage evalOutput;
         private final IBinaryBooleanInspector binaryBooleanInspector;
 
-        public TuplePairEvaluator(IEvaluatorFactory condFactory, IBinaryBooleanInspector binaryBooleanInspector) {
+        public TuplePairEvaluator(ICopyEvaluatorFactory condFactory, IBinaryBooleanInspector binaryBooleanInspector) {
             this.condFactory = condFactory;
             this.binaryBooleanInspector = binaryBooleanInspector;
             this.evalOutput = new ArrayBackedValueStorage();

@@ -5,7 +5,7 @@ import java.io.DataOutput;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public interface ISerializableAggregateFunction {
+public interface ICopySerializableAggregateFunction {
     /**
      * initialize the space occupied by internal state
      * 

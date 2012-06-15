@@ -16,8 +16,8 @@ package edu.uci.ics.hyracks.algebricks.runtime.operators.aggreg;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -32,9 +32,9 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregatorDescriptorFactory {
 
     private static final long serialVersionUID = 1L;
-    private IAggregateFunctionFactory[] aggFactories;
+    private ICopyAggregateFunctionFactory[] aggFactories;
 
-    public SimpleAlgebricksAccumulatingAggregatorFactory(IAggregateFunctionFactory[] aggFactories, int[] keys,
+    public SimpleAlgebricksAccumulatingAggregatorFactory(ICopyAggregateFunctionFactory[] aggFactories, int[] keys,
             int[] fdColumns) {
         this.aggFactories = aggFactories;
     }
@@ -51,9 +51,9 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregato
             @Override
             public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-                Pair<ArrayBackedValueStorage[], IAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], IAggregateFunction[]>) state.state;
+                Pair<ArrayBackedValueStorage[], ICopyAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], ICopyAggregateFunction[]>) state.state;
                 ArrayBackedValueStorage[] aggOutput = aggState.first;
-                IAggregateFunction[] agg = aggState.second;
+                ICopyAggregateFunction[] agg = aggState.second;
 
                 // initialize aggregate functions
                 for (int i = 0; i < agg.length; i++) {
@@ -78,8 +78,8 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregato
             @Override
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
-                Pair<ArrayBackedValueStorage[], IAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], IAggregateFunction[]>) state.state;
-                IAggregateFunction[] agg = aggState.second;
+                Pair<ArrayBackedValueStorage[], ICopyAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], ICopyAggregateFunction[]>) state.state;
+                ICopyAggregateFunction[] agg = aggState.second;
                 ftr.reset(accessor, tIndex);
                 for (int i = 0; i < agg.length; i++) {
                     try {
@@ -93,9 +93,9 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregato
             @Override
             public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-                Pair<ArrayBackedValueStorage[], IAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], IAggregateFunction[]>) state.state;
+                Pair<ArrayBackedValueStorage[], ICopyAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], ICopyAggregateFunction[]>) state.state;
                 ArrayBackedValueStorage[] aggOutput = aggState.first;
-                IAggregateFunction[] agg = aggState.second;
+                ICopyAggregateFunction[] agg = aggState.second;
                 for (int i = 0; i < agg.length; i++) {
                     try {
                         agg[i].finish();
@@ -109,7 +109,7 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregato
 
             @Override
             public AggregateState createAggregateStates() {
-                IAggregateFunction[] agg = new IAggregateFunction[aggFactories.length];
+                ICopyAggregateFunction[] agg = new ICopyAggregateFunction[aggFactories.length];
                 ArrayBackedValueStorage[] aggOutput = new ArrayBackedValueStorage[aggFactories.length];
                 for (int i = 0; i < agg.length; i++) {
                     aggOutput[i] = new ArrayBackedValueStorage();
@@ -119,7 +119,7 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregato
                         throw new IllegalStateException(e);
                     }
                 }
-                return new AggregateState(new Pair<ArrayBackedValueStorage[], IAggregateFunction[]>(aggOutput, agg));
+                return new AggregateState(new Pair<ArrayBackedValueStorage[], ICopyAggregateFunction[]>(aggOutput, agg));
             }
 
             @Override

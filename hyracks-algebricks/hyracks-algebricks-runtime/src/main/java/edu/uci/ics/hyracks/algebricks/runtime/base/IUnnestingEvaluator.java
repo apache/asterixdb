@@ -12,10 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.data.std.api;
+package edu.uci.ics.hyracks.algebricks.runtime.base;
 
-public interface IPointable extends IValueReference {
-    public void set(byte[] bytes, int start, int length);
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-    public void set(IValueReference pointer);
+public interface IUnnestingEvaluator {
+    public void init(IFrameTupleReference tuple) throws AlgebricksException;
+
+    public boolean step(IPointable result) throws AlgebricksException;
 }
