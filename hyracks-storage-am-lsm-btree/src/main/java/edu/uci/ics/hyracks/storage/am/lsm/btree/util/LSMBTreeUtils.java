@@ -34,6 +34,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SequentialFlushPolicy;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
@@ -62,7 +63,7 @@ public class LSMBTreeUtils {
         ILSMFileManager fileNameManager = new LSMTreeFileManager(ioManager, diskFileMapProvider, onDiskDir);
         LSMBTree lsmTree = new LSMBTree(memBufferCache, memOpCallback, memFreePageManager, interiorFrameFactory,
                 insertLeafFrameFactory, deleteLeafFrameFactory, fileNameManager, diskBTreeFactory,
-                bulkLoadBTreeFactory, diskFileMapProvider, typeTraits.length, cmpFactories);
+                bulkLoadBTreeFactory, diskFileMapProvider, typeTraits.length, cmpFactories, SequentialFlushPolicy.INSTANCE);
         return lsmTree;
     }
 }

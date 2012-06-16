@@ -47,6 +47,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushPolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
@@ -123,7 +124,7 @@ public class LSMRTree implements ILSMIndex, ITreeIndex {
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
             ILSMFileManager fileManager, RTreeFactory diskRTreeFactory, BTreeFactory diskBTreeFactory,
             IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] rtreeCmpFactories,
-            IBinaryComparatorFactory[] btreeCmpFactories) {
+            IBinaryComparatorFactory[] btreeCmpFactories, ILSMFlushPolicy flushPolicy) {
         RTree memRTree = new RTree(memBufferCache, fieldCount, rtreeCmpFactories, memFreePageManager,
                 rtreeInteriorFrameFactory, rtreeLeafFrameFactory);
         // TODO: Do we need another operation callback here?
@@ -142,7 +143,7 @@ public class LSMRTree implements ILSMIndex, ITreeIndex {
         this.diskRTreeFactory = diskRTreeFactory;
         this.btreeCmpFactories = btreeCmpFactories;
         this.rtreeCmpFactories = rtreeCmpFactories;
-        this.lsmHarness = new LSMHarness(this);
+        this.lsmHarness = new LSMHarness(this, flushPolicy);
         componentFinalizer = new LSMRTreeComponentFinalizer(diskFileMapProvider);
     }
 

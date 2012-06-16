@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushPolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
 /**
@@ -64,9 +65,13 @@ public class LSMHarness {
     // We alternate between searcherRefCountA and searcherRefCountB.
     private AtomicInteger searcherRefCount = searcherRefCountA;
 
-    public LSMHarness(ILSMIndex lsmIndex) {
+    // Flush and Merge Policies
+    private final ILSMFlushPolicy flushPolicy;
+
+    public LSMHarness(ILSMIndex lsmIndex, ILSMFlushPolicy flushPolicy) {
         this.lsmIndex = lsmIndex;
         this.threadRefCount = 0;
+        this.flushPolicy = flushPolicy;
         this.flushFlag = false;
     }
 
@@ -85,8 +90,7 @@ public class LSMHarness {
 
             // Flush will only be handled by last exiting thread.
             if (flushFlag && threadRefCount == 0) {
-                flush();
-                flushFlag = false;
+                flushPolicy.shouldFlush(lsmIndex);
             }
         }
     }
@@ -139,6 +143,9 @@ public class LSMHarness {
         synchronized (diskComponentsSync) {
             lsmIndex.addFlushedComponent(newComponent);
         }
+
+        // Unblock entering threads waiting for the flush
+        flushFlag = false;
     }
 
     public List<Object> search(IIndexCursor cursor, ISearchPredicate pred, IIndexOpContext ctx,

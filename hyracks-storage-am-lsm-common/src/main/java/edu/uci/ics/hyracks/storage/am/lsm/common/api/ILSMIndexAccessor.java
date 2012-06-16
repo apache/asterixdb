@@ -23,7 +23,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 
 /**
  * Client handle for performing operations
- * (insert/delete/update/search/diskorderscan/merge/flush) on an {@link ILSMIndex}.
+ * (insert/delete/update/search/diskorderscan/merge/flush) on an {@link ILSMHarness}.
  * An {@link ILSMIndexAccessor} is not thread safe, but different {@link ILSMIndexAccessor}s
  * can concurrently operate on the same {@link ILSMIndex} (i.e., the {@link ILSMIndex} must allow
  * concurrent operations).
