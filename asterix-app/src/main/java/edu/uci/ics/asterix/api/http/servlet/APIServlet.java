@@ -119,7 +119,7 @@ public class APIServlet extends HttpServlet {
         response.setContentType("text/html");
         final String form = "<form method=\"post\">"
                 + "<center><textarea cols=\"80\" rows=\"25\" name=\"query\" ></textarea><br/>"
-                + "IP Address: <input type = \"text\" name = \"hyracks-ip\" size=\"15\" maxlength=\"35\" value=\"locahost\" /><br/>"
+                + "IP Address: <input type = \"text\" name = \"hyracks-ip\" size=\"15\" maxlength=\"35\" value=\"localhost\" /><br/>"
                 + "Port: <input type = \"text\" name = \"hyracks-port\" size=\"5\" maxlength=\"5\" value=\"1098\" /><br/>"
                 + "<input type = \"checkbox\" name = \"print-expr-tree\" value=\"true\" />print parsed expressions<P>"
                 + "<input type = \"checkbox\" name = \"print-rewritten-expr-tree\" value=\"true\" />print rewritten expressions<P>"
