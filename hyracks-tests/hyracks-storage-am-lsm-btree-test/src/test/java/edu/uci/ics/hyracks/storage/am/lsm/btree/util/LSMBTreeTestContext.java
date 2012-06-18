@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SequentialFlushPolicy;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
@@ -67,7 +68,7 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
         LSMBTree lsmTree = LSMBTreeUtils.createLSMTree(memBufferCache, NoOpOperationCallback.INSTANCE,
                 memFreePageManager, ioManager, onDiskDir, diskBufferCache, diskFileMapProvider, typeTraits,
-                cmpFactories);
+                cmpFactories, SequentialFlushPolicy.INSTANCE);
         lsmTree.create(fileId);
         lsmTree.open(fileId);
         LSMBTreeTestContext testCtx = new LSMBTreeTestContext(fieldSerdes, lsmTree);

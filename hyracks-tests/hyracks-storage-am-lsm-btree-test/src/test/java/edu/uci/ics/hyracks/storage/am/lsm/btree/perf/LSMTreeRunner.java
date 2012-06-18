@@ -34,6 +34,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SequentialFlushPolicy;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -44,50 +45,54 @@ public class LSMTreeRunner implements IExperimentRunner {
 
     private static final int MAX_OPEN_FILES = 10000;
     private static final int HYRACKS_FRAME_SIZE = 128;
-    
-    protected IHyracksTaskContext ctx; 
+
+    protected IHyracksTaskContext ctx;
     protected IOManager ioManager;
     protected IBufferCache bufferCache;
     protected int lsmtreeFileId;
-    
+
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final static String sep = System.getProperty("file.separator");
     protected final static String classDir = "/lsmtree/";
     protected String onDiskDir;
-    
+
     protected final int numBatches;
     protected final LSMBTree lsmtree;
     protected IBufferCache memBufferCache;
     private final int onDiskPageSize;
     private final int onDiskNumPages;
-    
-    public LSMTreeRunner(int numBatches, int inMemPageSize, int inMemNumPages, int onDiskPageSize, int onDiskNumPages, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws BTreeException, HyracksException {
+
+    public LSMTreeRunner(int numBatches, int inMemPageSize, int inMemNumPages, int onDiskPageSize, int onDiskNumPages,
+            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws BTreeException, HyracksException {
         this.numBatches = numBatches;
-        
+
         this.onDiskPageSize = onDiskPageSize;
         this.onDiskNumPages = onDiskNumPages;
-        
+
         onDiskDir = classDir + sep + simpleDateFormat.format(new Date()) + sep;
         ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
-        
+
         TestStorageManagerComponentHolder.init(this.onDiskPageSize, this.onDiskNumPages, MAX_OPEN_FILES);
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        
-        InMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), inMemPageSize, inMemNumPages);
-        InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(inMemNumPages, new LIFOMetaDataFrameFactory());
-        
-        lsmtree = LSMBTreeUtils.createLSMTree(memBufferCache, NoOpOperationCallback.INSTANCE, memFreePageManager,
-                ioManager, onDiskDir, bufferCache, fmp, typeTraits, cmpFactories);
-    }
-	@Override
-	public void init() throws Exception {
-	}
 
-	@Override
-	public long runExperiment(DataGenThread dataGen, int numThreads) throws Exception {
-	    LSMTreeThread[] threads = new LSMTreeThread[numThreads];
+        InMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), inMemPageSize,
+                inMemNumPages);
+        InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(inMemNumPages,
+                new LIFOMetaDataFrameFactory());
+
+        lsmtree = LSMBTreeUtils.createLSMTree(memBufferCache, NoOpOperationCallback.INSTANCE, memFreePageManager,
+                ioManager, onDiskDir, bufferCache, fmp, typeTraits, cmpFactories, SequentialFlushPolicy.INSTANCE);
+    }
+
+    @Override
+    public void init() throws Exception {
+    }
+
+    @Override
+    public long runExperiment(DataGenThread dataGen, int numThreads) throws Exception {
+        LSMTreeThread[] threads = new LSMTreeThread[numThreads];
         int threadNumBatches = numBatches / numThreads;
         for (int i = 0; i < numThreads; i++) {
             threads[i] = new LSMTreeThread(dataGen, lsmtree, threadNumBatches);
@@ -107,33 +112,32 @@ public class LSMTreeRunner implements IExperimentRunner {
         long end = System.currentTimeMillis();
         long time = end - start;
         return time;
-	}
+    }
 
-	@Override
-	public void reset() throws Exception {
-	    lsmtree.create(lsmtreeFileId);
-	}
-	
-	@Override
-	public void deinit() throws Exception {
+    @Override
+    public void reset() throws Exception {
+        lsmtree.create(lsmtreeFileId);
+    }
+
+    @Override
+    public void deinit() throws Exception {
         bufferCache.closeFile(lsmtreeFileId);
         bufferCache.close();
         memBufferCache.closeFile(lsmtreeFileId);
         memBufferCache.close();
-	}
+    }
 
-	public class LSMTreeThread extends Thread {
+    public class LSMTreeThread extends Thread {
         private final DataGenThread dataGen;
-        private final LSMBTree lsmTree;
         private final int numBatches;
         private final IIndexAccessor lsmTreeAccessor;
+
         public LSMTreeThread(DataGenThread dataGen, LSMBTree lsmTree, int numBatches) {
             this.dataGen = dataGen;
-            this.lsmTree = lsmTree;
             this.numBatches = numBatches;
             lsmTreeAccessor = lsmTree.createAccessor();
         }
-        
+
         @Override
         public void run() {
             try {
@@ -151,5 +155,5 @@ public class LSMTreeRunner implements IExperimentRunner {
             }
         }
     }
-	
+
 }

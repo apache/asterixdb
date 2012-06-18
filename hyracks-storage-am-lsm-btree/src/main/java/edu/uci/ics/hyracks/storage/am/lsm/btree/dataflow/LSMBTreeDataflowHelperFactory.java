@@ -19,14 +19,21 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushPolicyProvider;
 
 public class LSMBTreeDataflowHelperFactory implements IIndexDataflowHelperFactory {
 
     private static final long serialVersionUID = 1L;
 
+    private final ILSMFlushPolicyProvider flushPolicyProvider;
+
+    public LSMBTreeDataflowHelperFactory(ILSMFlushPolicyProvider flushPolicyProvider) {
+        this.flushPolicyProvider = flushPolicyProvider;
+    }
+
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
-        return new LSMBTreeDataflowHelper(opDesc, ctx, partition);
+        return new LSMBTreeDataflowHelper(opDesc, ctx, partition, flushPolicyProvider.getFlushPolicy());
     }
 }

@@ -27,24 +27,26 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SequentialFlushPolicy;
 
 public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
-	private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();
-	
+    private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();
+
     @Override
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
             throws TreeIndexException {
         return LSMBTreeUtils.createLSMTree(harness.getMemBufferCache(), harness.getMemOpCallback(),
                 harness.getMemFreePageManager(), harness.getIOManager(), harness.getOnDiskDir(),
-                harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits, cmpFactories);
+                harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits, cmpFactories,
+                SequentialFlushPolicy.INSTANCE);
     }
 
-	@Override
-	protected int getIndexFileId() {
-		return harness.getFileId();
-	}
+    @Override
+    protected int getIndexFileId() {
+        return harness.getFileId();
+    }
 
-	@Before
+    @Before
     public void setUp() throws HyracksException {
         harness.setUp();
     }

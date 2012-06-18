@@ -22,11 +22,12 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestWorkerFactory;
-import edu.uci.ics.hyracks.storage.am.common.TestWorkloadConf;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
+import edu.uci.ics.hyracks.storage.am.common.TestWorkloadConf;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SequentialFlushPolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
 import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeMultiThreadTest;
@@ -54,7 +55,7 @@ public class LSMRTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
         return LSMRTreeUtils.createLSMTree(harness.getMemBufferCache(), harness.getMemFreePageManager(),
                 harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskBufferCache(),
                 harness.getDiskFileMapProvider(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories);
+                valueProviderFactories, SequentialFlushPolicy.INSTANCE);
 
     }
 
