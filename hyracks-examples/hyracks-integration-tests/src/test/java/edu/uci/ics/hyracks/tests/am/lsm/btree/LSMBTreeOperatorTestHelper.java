@@ -19,7 +19,8 @@ import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyProvider;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SequentialFlushPolicyProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateFlushPolicyProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SequentialSchedulerProvider;
 import edu.uci.ics.hyracks.tests.am.common.LSMTreeOperatorTestHelper;
 
 public class LSMBTreeOperatorTestHelper extends LSMTreeOperatorTestHelper {
@@ -31,8 +32,9 @@ public class LSMBTreeOperatorTestHelper extends LSMTreeOperatorTestHelper {
     }
 
     public IIndexDataflowHelperFactory createDataFlowHelperFactory() {
-        return new LSMBTreeDataflowHelperFactory(new SequentialFlushPolicyProvider(), new ConstantMergePolicyProvider(
-                MERGE_THRESHOLD));
+        return new LSMBTreeDataflowHelperFactory(
+                new ImmediateFlushPolicyProvider(SequentialSchedulerProvider.INSTANCE),
+                new ConstantMergePolicyProvider(SequentialSchedulerProvider.INSTANCE, MERGE_THRESHOLD));
     }
 
 }

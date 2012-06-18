@@ -28,8 +28,10 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SequentialScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -63,6 +65,7 @@ public class LSMRTreeTestHarness {
     protected LSMRTreeInMemoryBufferCache memBufferCache;
     protected LSMRTreeInMemoryFreePageManager memFreePageManager;
     protected IHyracksTaskContext ctx;
+    protected ILSMIOScheduler ioScheduler;
 
     protected final Random rnd = new Random();
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
@@ -70,12 +73,8 @@ public class LSMRTreeTestHarness {
     protected String onDiskDir;
 
     public LSMRTreeTestHarness() {
-        this.diskPageSize = DEFAULT_DISK_PAGE_SIZE;
-        this.diskNumPages = DEFAULT_DISK_NUM_PAGES;
-        this.diskMaxOpenFiles = DEFAULT_DISK_MAX_OPEN_FILES;
-        this.memPageSize = DEFAULT_MEM_PAGE_SIZE;
-        this.memNumPages = DEFAULT_MEM_NUM_PAGES;
-        this.hyracksFrameSize = DEFAULT_HYRACKS_FRAME_SIZE;
+        this(DEFAULT_DISK_PAGE_SIZE, DEFAULT_DISK_NUM_PAGES, DEFAULT_DISK_MAX_OPEN_FILES, DEFAULT_MEM_PAGE_SIZE,
+                DEFAULT_MEM_NUM_PAGES, DEFAULT_HYRACKS_FRAME_SIZE);
     }
 
     public LSMRTreeTestHarness(int diskPageSize, int diskNumPages, int diskMaxOpenFiles, int memPageSize,
@@ -86,6 +85,7 @@ public class LSMRTreeTestHarness {
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
         this.hyracksFrameSize = hyracksFrameSize;
+        this.ioScheduler = SequentialScheduler.INSTANCE;
     }
 
     public void setUp() throws HyracksException {
@@ -178,5 +178,9 @@ public class LSMRTreeTestHarness {
 
     public Random getRandom() {
         return rnd;
+    }
+
+    public ILSMIOScheduler getIOScheduler() {
+        return ioScheduler;
     }
 }

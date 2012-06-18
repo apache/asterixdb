@@ -7,7 +7,7 @@ public enum NoMergePolicy implements ILSMMergePolicy {
     INSTANCE;
 
     @Override
-    public void componentAdded(ILSMIndex index, int totalNumDiskComponents, boolean mergeInProgress) {
+    public void diskComponentAdded(ILSMIndex index, int totalNumDiskComponents) {
         // Do nothing
     }
 

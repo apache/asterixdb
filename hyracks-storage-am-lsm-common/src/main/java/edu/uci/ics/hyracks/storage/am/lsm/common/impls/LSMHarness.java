@@ -93,7 +93,7 @@ public class LSMHarness {
 
             // Flush will only be handled by last exiting thread.
             if (flushFlag && threadRefCount == 0) {
-                flushPolicy.memoryComponentFull(lsmIndex);
+                flushPolicy.memoryComponentExceededThreshold(lsmIndex);
             }
         }
     }
@@ -145,7 +145,7 @@ public class LSMHarness {
         lsmIndex.resetInMemoryComponent();
         synchronized (diskComponentsSync) {
             lsmIndex.addFlushedComponent(newComponent);
-            mergePolicy.componentAdded(lsmIndex, lsmIndex.getDiskComponents().size(), isMerging.get());
+            mergePolicy.diskComponentAdded(lsmIndex, lsmIndex.getDiskComponents().size());
         }
 
         // Unblock entering threads waiting for the flush
@@ -279,7 +279,7 @@ public class LSMHarness {
         lsmIndex.getComponentFinalizer().finalize(index);
         synchronized (diskComponentsSync) {
             lsmIndex.addFlushedComponent(index);
-            mergePolicy.componentAdded(lsmIndex, lsmIndex.getDiskComponents().size(), isMerging.get());
+            mergePolicy.diskComponentAdded(lsmIndex, lsmIndex.getDiskComponents().size());
         }
     }
 }

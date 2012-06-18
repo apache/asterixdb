@@ -34,8 +34,9 @@ import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateFlushPolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SequentialFlushPolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SequentialScheduler;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -84,8 +85,8 @@ public class LSMTreeRunner implements IExperimentRunner {
                 new LIFOMetaDataFrameFactory());
 
         lsmtree = LSMBTreeUtils.createLSMTree(memBufferCache, NoOpOperationCallback.INSTANCE, memFreePageManager,
-                ioManager, onDiskDir, bufferCache, fmp, typeTraits, cmpFactories, SequentialFlushPolicy.INSTANCE,
-                NoMergePolicy.INSTANCE);
+                ioManager, onDiskDir, bufferCache, fmp, typeTraits, cmpFactories, new ImmediateFlushPolicy(
+                        SequentialScheduler.INSTANCE), NoMergePolicy.INSTANCE);
     }
 
     @Override
