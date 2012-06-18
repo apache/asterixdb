@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SequentialFlushPolicy;
@@ -65,7 +66,8 @@ public final class LSMRTreeTestContext extends AbstractRTreeTestContext {
     public static LSMRTreeTestContext create(InMemoryBufferCache memBufferCache,
             InMemoryFreePageManager memFreePageManager, IOManager ioManager, String onDiskDir,
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ISerializerDeserializer[] fieldSerdes,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeyFields, int fileId) throws Exception {
+            IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeyFields, int fileId,
+            ILSMMergePolicy mergePolicy) throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] rtreeCmpFactories = SerdeUtils
                 .serdesToComparatorFactories(fieldSerdes, numKeyFields);
@@ -73,7 +75,7 @@ public final class LSMRTreeTestContext extends AbstractRTreeTestContext {
                 fieldSerdes.length);
         LSMRTree lsmTree = LSMRTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, onDiskDir,
                 diskBufferCache, diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, SequentialFlushPolicy.INSTANCE);
+                valueProviderFactories, SequentialFlushPolicy.INSTANCE, mergePolicy);
         lsmTree.create(fileId);
         lsmTree.open(fileId);
         LSMRTreeTestContext testCtx = new LSMRTreeTestContext(fieldSerdes, lsmTree);

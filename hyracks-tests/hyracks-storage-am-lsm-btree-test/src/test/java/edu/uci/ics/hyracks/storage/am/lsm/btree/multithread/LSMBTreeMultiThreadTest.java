@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SequentialFlushPolicy;
 
 public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
@@ -53,7 +54,7 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
         return LSMBTreeUtils.createLSMTree(harness.getMemBufferCache(), harness.getMemOpCallback(),
                 harness.getMemFreePageManager(), harness.getIOManager(), harness.getOnDiskDir(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits, cmpFactories,
-                SequentialFlushPolicy.INSTANCE);
+                SequentialFlushPolicy.INSTANCE, NoMergePolicy.INSTANCE);
     }
 
     @Override

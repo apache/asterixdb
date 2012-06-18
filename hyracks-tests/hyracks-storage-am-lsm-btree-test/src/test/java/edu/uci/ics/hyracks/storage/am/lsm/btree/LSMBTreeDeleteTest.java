@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 
 @SuppressWarnings("rawtypes")
 public class LSMBTreeDeleteTest extends OrderedIndexDeleteTest {
@@ -52,8 +53,8 @@ public class LSMBTreeDeleteTest extends OrderedIndexDeleteTest {
     protected OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
             BTreeLeafFrameType leafType) throws Exception {
         return LSMBTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
-                harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes,
-                numKeys, harness.getFileId());
+                harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskBufferCache(),
+                harness.getDiskFileMapProvider(), fieldSerdes, numKeys, harness.getFileId(), NoMergePolicy.INSTANCE);
     }
 
     @Override

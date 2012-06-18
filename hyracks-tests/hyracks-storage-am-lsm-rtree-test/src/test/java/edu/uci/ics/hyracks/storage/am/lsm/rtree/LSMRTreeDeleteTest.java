@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeDeleteTest;
@@ -48,8 +49,9 @@ public class LSMRTreeDeleteTest extends AbstractRTreeDeleteTest {
     protected AbstractRTreeTestContext createTestContext(ISerializerDeserializer[] fieldSerdes,
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys) throws Exception {
         return LSMRTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
-                harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes,
-                valueProviderFactories, numKeys, harness.getFileId());
+                harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskBufferCache(),
+                harness.getDiskFileMapProvider(), fieldSerdes, valueProviderFactories, numKeys, harness.getFileId(),
+                NoMergePolicy.INSTANCE);
 
     }
 

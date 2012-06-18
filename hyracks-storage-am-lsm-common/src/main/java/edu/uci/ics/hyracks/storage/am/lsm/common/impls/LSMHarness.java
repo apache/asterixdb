@@ -30,6 +30,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushPolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 
 /**
  * Common code for synchronizing LSM operations like
@@ -67,11 +68,13 @@ public class LSMHarness {
 
     // Flush and Merge Policies
     private final ILSMFlushPolicy flushPolicy;
+    private final ILSMMergePolicy mergePolicy;
 
-    public LSMHarness(ILSMIndex lsmIndex, ILSMFlushPolicy flushPolicy) {
+    public LSMHarness(ILSMIndex lsmIndex, ILSMFlushPolicy flushPolicy, ILSMMergePolicy mergePolicy) {
         this.lsmIndex = lsmIndex;
         this.threadRefCount = 0;
         this.flushPolicy = flushPolicy;
+        this.mergePolicy = mergePolicy;
         this.flushFlag = false;
     }
 
@@ -90,7 +93,7 @@ public class LSMHarness {
 
             // Flush will only be handled by last exiting thread.
             if (flushFlag && threadRefCount == 0) {
-                flushPolicy.shouldFlush(lsmIndex);
+                flushPolicy.memoryComponentFull(lsmIndex);
             }
         }
     }
@@ -142,6 +145,7 @@ public class LSMHarness {
         lsmIndex.resetInMemoryComponent();
         synchronized (diskComponentsSync) {
             lsmIndex.addFlushedComponent(newComponent);
+            mergePolicy.componentAdded(lsmIndex, lsmIndex.getDiskComponents().size(), isMerging.get());
         }
 
         // Unblock entering threads waiting for the flush
@@ -275,6 +279,7 @@ public class LSMHarness {
         lsmIndex.getComponentFinalizer().finalize(index);
         synchronized (diskComponentsSync) {
             lsmIndex.addFlushedComponent(index);
+            mergePolicy.componentAdded(lsmIndex, lsmIndex.getDiskComponents().size(), isMerging.get());
         }
     }
 }

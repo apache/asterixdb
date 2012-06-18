@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SequentialFlushPolicy;
@@ -63,12 +64,12 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
     public static LSMBTreeTestContext create(InMemoryBufferCache memBufferCache,
             InMemoryFreePageManager memFreePageManager, IOManager ioManager, String onDiskDir,
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ISerializerDeserializer[] fieldSerdes,
-            int numKeyFields, int fileId) throws Exception {
+            int numKeyFields, int fileId, ILSMMergePolicy mergePolicy) throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
         LSMBTree lsmTree = LSMBTreeUtils.createLSMTree(memBufferCache, NoOpOperationCallback.INSTANCE,
                 memFreePageManager, ioManager, onDiskDir, diskBufferCache, diskFileMapProvider, typeTraits,
-                cmpFactories, SequentialFlushPolicy.INSTANCE);
+                cmpFactories, SequentialFlushPolicy.INSTANCE, mergePolicy);
         lsmTree.create(fileId);
         lsmTree.open(fileId);
         LSMBTreeTestContext testCtx = new LSMBTreeTestContext(fieldSerdes, lsmTree);

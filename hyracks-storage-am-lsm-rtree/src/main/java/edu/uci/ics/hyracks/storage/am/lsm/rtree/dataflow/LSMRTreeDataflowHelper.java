@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushPolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeInMemoryBufferCache;
@@ -44,23 +45,27 @@ public class LSMRTreeDataflowHelper extends TreeIndexDataflowHelper {
     private final IBinaryComparatorFactory[] btreeComparatorFactories;
     private final IPrimitiveValueProviderFactory[] valueProviderFactories;
     private final ILSMFlushPolicy flushPolicy;
+    private final ILSMMergePolicy mergePolicy;
 
     public LSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             IBinaryComparatorFactory[] btreeComparatorFactories,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, ILSMFlushPolicy flushPolicy) {
+            IPrimitiveValueProviderFactory[] valueProviderFactories, ILSMFlushPolicy flushPolicy,
+            ILSMMergePolicy mergePolicy) {
         this(opDesc, ctx, partition, DEFAULT_MEM_PAGE_SIZE, DEFAULT_MEM_NUM_PAGES, btreeComparatorFactories,
-                valueProviderFactories, flushPolicy);
+                valueProviderFactories, flushPolicy, mergePolicy);
     }
 
     public LSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             int memPageSize, int memNumPages, IBinaryComparatorFactory[] btreeComparatorFactories,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, ILSMFlushPolicy flushPolicy) {
+            IPrimitiveValueProviderFactory[] valueProviderFactories, ILSMFlushPolicy flushPolicy,
+            ILSMMergePolicy mergePolicy) {
         super(opDesc, ctx, partition);
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
         this.btreeComparatorFactories = btreeComparatorFactories;
         this.valueProviderFactories = valueProviderFactories;
         this.flushPolicy = flushPolicy;
+        this.mergePolicy = mergePolicy;
     }
 
     @Override
@@ -78,6 +83,7 @@ public class LSMRTreeDataflowHelper extends TreeIndexDataflowHelper {
         return LSMRTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ctx.getIOManager(), file.getFile()
                 .getPath(), opDesc.getStorageManager().getBufferCache(ctx), opDesc.getStorageManager()
                 .getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
-                .getTreeIndexComparatorFactories(), btreeComparatorFactories, valueProviderFactories, flushPolicy);
+                .getTreeIndexComparatorFactories(), btreeComparatorFactories, valueProviderFactories, flushPolicy,
+                mergePolicy);
     }
 }

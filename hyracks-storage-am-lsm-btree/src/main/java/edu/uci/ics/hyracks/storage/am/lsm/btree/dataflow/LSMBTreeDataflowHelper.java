@@ -26,6 +26,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushPolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -38,18 +39,20 @@ public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
     private final int memNumPages;
 
     private final ILSMFlushPolicy flushPolicy;
+    private final ILSMMergePolicy mergePolicy;
 
     public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            ILSMFlushPolicy flushPolicy) {
-        this(opDesc, ctx, partition, DEFAULT_MEM_PAGE_SIZE, DEFAULT_MEM_NUM_PAGES, flushPolicy);
+            ILSMFlushPolicy flushPolicy, ILSMMergePolicy mergePolicy) {
+        this(opDesc, ctx, partition, DEFAULT_MEM_PAGE_SIZE, DEFAULT_MEM_NUM_PAGES, flushPolicy, mergePolicy);
     }
 
     public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            int memPageSize, int memNumPages, ILSMFlushPolicy flushPolicy) {
+            int memPageSize, int memNumPages, ILSMFlushPolicy flushPolicy, ILSMMergePolicy mergePolicy) {
         super(opDesc, ctx, partition);
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
         this.flushPolicy = flushPolicy;
+        this.mergePolicy = mergePolicy;
     }
 
     @Override
@@ -66,6 +69,7 @@ public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
         return LSMBTreeUtils.createLSMTree(memBufferCache, opDesc.getOpCallbackProvider().getOperationCallback(),
                 memFreePageManager, ctx.getIOManager(), file.getFile().getPath(), opDesc.getStorageManager()
                         .getBufferCache(ctx), opDesc.getStorageManager().getFileMapProvider(ctx), treeOpDesc
-                        .getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories(), flushPolicy);
+                        .getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories(), flushPolicy,
+                mergePolicy);
     }
 }

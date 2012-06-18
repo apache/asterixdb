@@ -31,6 +31,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeCopyTupleWriterFa
 import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushPolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
@@ -42,7 +43,7 @@ public class LSMBTreeUtils {
     public static LSMBTree createLSMTree(InMemoryBufferCache memBufferCache, IOperationCallback memOpCallback,
             InMemoryFreePageManager memFreePageManager, IIOManager ioManager, String onDiskDir,
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] cmpFactories, ILSMFlushPolicy flushPolicy) {
+            IBinaryComparatorFactory[] cmpFactories, ILSMFlushPolicy flushPolicy, ILSMMergePolicy mergePolicy) {
         LSMBTreeTupleWriterFactory insertTupleWriterFactory = new LSMBTreeTupleWriterFactory(typeTraits,
                 cmpFactories.length, false);
         LSMBTreeTupleWriterFactory deleteTupleWriterFactory = new LSMBTreeTupleWriterFactory(typeTraits,
@@ -64,7 +65,7 @@ public class LSMBTreeUtils {
         ILSMFileManager fileNameManager = new LSMTreeFileManager(ioManager, diskFileMapProvider, onDiskDir);
         LSMBTree lsmTree = new LSMBTree(memBufferCache, memOpCallback, memFreePageManager, interiorFrameFactory,
                 insertLeafFrameFactory, deleteLeafFrameFactory, fileNameManager, diskBTreeFactory,
-                bulkLoadBTreeFactory, diskFileMapProvider, typeTraits.length, cmpFactories, flushPolicy);
+                bulkLoadBTreeFactory, diskFileMapProvider, typeTraits.length, cmpFactories, flushPolicy, mergePolicy);
         return lsmTree;
     }
 }

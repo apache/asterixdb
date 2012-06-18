@@ -48,6 +48,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushPolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
@@ -91,7 +92,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
             ITreeIndexFrameFactory insertLeafFrameFactory, ITreeIndexFrameFactory deleteLeafFrameFactory,
             ILSMFileManager fileNameManager, BTreeFactory diskBTreeFactory, BTreeFactory bulkLoadBTreeFactory,
             IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
-            ILSMFlushPolicy flushPolicy) {
+            ILSMFlushPolicy flushPolicy, ILSMMergePolicy mergePolicy) {
         memBTree = new BTree(memBufferCache, memOpCallback, fieldCount, cmpFactories, memFreePageManager,
                 interiorFrameFactory, insertLeafFrameFactory);
         this.memFreePageManager = memFreePageManager;
@@ -104,7 +105,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         this.cmpFactories = cmpFactories;
         this.diskBTrees = new LinkedList<Object>();
         this.fileManager = fileNameManager;
-        lsmHarness = new LSMHarness(this, flushPolicy);
+        lsmHarness = new LSMHarness(this, flushPolicy, mergePolicy);
         componentFinalizer = new TreeIndexComponentFinalizer(diskFileMapProvider);
     }
 

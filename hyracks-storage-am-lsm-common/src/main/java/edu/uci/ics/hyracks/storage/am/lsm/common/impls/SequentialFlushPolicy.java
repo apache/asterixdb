@@ -22,7 +22,7 @@ public enum SequentialFlushPolicy implements ILSMFlushPolicy {
     }
 
     @Override
-    public void shouldFlush(final ILSMIndex index) {
+    public void memoryComponentFull(final ILSMIndex index) {
         executor.submit(new Runnable() {
             public void run() {
                 try {
