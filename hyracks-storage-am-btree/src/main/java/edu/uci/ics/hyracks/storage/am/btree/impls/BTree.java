@@ -124,6 +124,7 @@ public class BTree implements ITreeIndex {
             cursor.setCurrentPageId(currentPageId);
             cursor.setMaxPageId(maxPageId);
             ctx.cursorInitialState.setPage(page);
+            ctx.cursorInitialState.setSearchOperationCallback(ctx.searchCallback);
             cursor.open(ctx.cursorInitialState, diskOrderScanPred);
         } catch (Exception e) {
             page.releaseReadLatch();
@@ -254,8 +255,8 @@ public class BTree implements ITreeIndex {
             unsetSmPages(ctx);
             repeatOp = false;
         }
-        
-        if(ctx.opRestarts >= MAX_RESTARTS) {
+
+        if (ctx.opRestarts >= MAX_RESTARTS) {
             throw new BTreeException("Operation exceeded the maximum number of restarts");
         }
     }
@@ -349,7 +350,7 @@ public class BTree implements ITreeIndex {
 
             // Perform an update (delete + insert) if the updateTupleIndex != -1
             if (updateTupleIndex != -1) {
-                ITupleReference beforeTuple = ctx.leafFrame.getUpsertBeforeTuple(tuple, updateTupleIndex);
+                ITupleReference beforeTuple = ctx.leafFrame.getBeforeTuple(tuple, updateTupleIndex);
                 ctx.modificationCallback.found(beforeTuple);
                 ctx.leafFrame.delete(tuple, updateTupleIndex);
             } else {
@@ -386,7 +387,7 @@ public class BTree implements ITreeIndex {
     private boolean updateLeaf(ITupleReference tuple, int oldTupleIndex, int pageId, BTreeOpContext ctx)
             throws Exception {
         FrameOpSpaceStatus spaceStatus = ctx.leafFrame.hasSpaceUpdate(tuple, oldTupleIndex);
-        ITupleReference beforeTuple = ctx.leafFrame.getUpsertBeforeTuple(tuple, oldTupleIndex);
+        ITupleReference beforeTuple = ctx.leafFrame.getBeforeTuple(tuple, oldTupleIndex);
         boolean restartOp = false;
         switch (spaceStatus) {
             case SUFFICIENT_INPLACE_SPACE: {
@@ -422,7 +423,7 @@ public class BTree implements ITreeIndex {
     private boolean upsertLeaf(ITupleReference tuple, int targetTupleIndex, int pageId, BTreeOpContext ctx)
             throws Exception {
         boolean restartOp = false;
-        ITupleReference beforeTuple = ctx.leafFrame.getUpsertBeforeTuple(tuple, targetTupleIndex);
+        ITupleReference beforeTuple = ctx.leafFrame.getBeforeTuple(tuple, targetTupleIndex);
         if (beforeTuple == null) {
             restartOp = insertLeaf(tuple, targetTupleIndex, pageId, ctx);
         } else {
@@ -494,7 +495,7 @@ public class BTree implements ITreeIndex {
             throw new BTreeNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
         }
         int tupleIndex = ctx.leafFrame.findDeleteTupleIndex(tuple);
-        ITupleReference beforeTuple = ctx.leafFrame.getUpsertBeforeTuple(tuple, tupleIndex);
+        ITupleReference beforeTuple = ctx.leafFrame.getBeforeTuple(tuple, tupleIndex);
         ctx.modificationCallback.found(beforeTuple);
         ctx.leafFrame.delete(tuple, tupleIndex);
         return false;
@@ -667,6 +668,7 @@ public class BTree implements ITreeIndex {
                         break;
                     }
                     case SEARCH: {
+                        ctx.cursorInitialState.setSearchOperationCallback(ctx.searchCallback);
                         ctx.cursorInitialState.setPage(node);
                         ctx.cursor.open(ctx.cursorInitialState, ctx.pred);
                         break;

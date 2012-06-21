@@ -19,6 +19,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
@@ -54,6 +55,8 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     private MultiComparator highKeyCmp;
     private ITupleReference lowKey;
     private ITupleReference highKey;
+
+    private ISearchOperationCallback searchCallback;
 
     public BTreeRangeSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes) {
         this.frame = frame;
@@ -125,7 +128,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
             return false;
         }
     }
-    
+
     @Override
     public void next() throws HyracksDataException {
         tupleIndex += tupleIndexInc;
@@ -154,8 +157,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         if (pred.highKeyInclusive) {
             if (index < 0) {
                 index = frame.getTupleCount() - 1;
-            }
-            else {
+            } else {
                 index--;
             }
         }
@@ -173,8 +175,8 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
             }
             bufferCache.unpin(page);
         }
-
-        page = ((BTreeCursorInitialState) initialState).getPage();
+        searchCallback = initialState.getSearchOperationCallback();
+        page = initialState.getPage();
         frame.setPage(page);
 
         pred = (RangePredicate) searchPred;
@@ -198,7 +200,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         } else {
             highKeyFtp = FindTupleNoExactMatchPolicy.LOWER_KEY;
         }
-        
+
         tupleIndex = getLowKeyIndex();
         stopTupleIndex = getHighKeyIndex();
         tupleIndexInc = 1;

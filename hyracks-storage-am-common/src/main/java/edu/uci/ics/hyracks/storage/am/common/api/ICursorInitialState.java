@@ -18,6 +18,11 @@ package edu.uci.ics.hyracks.storage.am.common.api;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ICursorInitialState {
-	public ICachedPage getPage();
-	public void setPage(ICachedPage page);
+    public ICachedPage getPage();
+
+    public void setPage(ICachedPage page);
+
+    public ISearchOperationCallback getSearchOperationCallback();
+
+    public void setSearchOperationCallback(ISearchOperationCallback searchCallback);
 }

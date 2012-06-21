@@ -387,7 +387,7 @@ public class LSMRTree implements ILSMIndex, ITreeIndex {
         LSMRTreeSearchCursor lsmRTreeCursor = (LSMRTreeSearchCursor) cursor;
         LSMRTreeCursorInitialState initialState = new LSMRTreeCursorInitialState(numTrees, rtreeLeafFrameFactory,
                 rtreeInteriorFrameFactory, btreeLeafFrameFactory, ctx.getBTreeMultiComparator(), rTreeAccessors,
-                bTreeAccessors, searcherRefCount, includeMemComponent, lsmHarness);
+                bTreeAccessors, searcherRefCount, includeMemComponent, lsmHarness, ctx.searchCallback);
         lsmRTreeCursor.open(initialState, pred);
     }
 
@@ -564,7 +564,7 @@ public class LSMRTree implements ILSMIndex, ITreeIndex {
                         .getMetaDataFrameFactory().createFrame(), 8, (BTree.BTreeAccessor) memComponent.getBTree()
                         .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE),
                 btreeLeafFrameFactory, btreeInteriorFrameFactory, memFreePageManager.getMetaDataFrameFactory()
-                        .createFrame(), rtreeCmpFactories, btreeCmpFactories);
+                        .createFrame(), rtreeCmpFactories, btreeCmpFactories, null, null);
     }
 
     @Override

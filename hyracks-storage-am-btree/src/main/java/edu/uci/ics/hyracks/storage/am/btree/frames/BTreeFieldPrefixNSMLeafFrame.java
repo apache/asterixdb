@@ -380,7 +380,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public ITupleReference getUpsertBeforeTuple(ITupleReference tuple, int targetTupleIndex) throws TreeIndexException {
+    public ITupleReference getBeforeTuple(ITupleReference tuple, int targetTupleIndex) throws TreeIndexException {
         int tupleIndex = slotManager.decodeSecondSlotField(targetTupleIndex);
         // Examine the tuple index to determine whether it is valid or not.
         if (tupleIndex != slotManager.getGreatestKeyIndicator()) {

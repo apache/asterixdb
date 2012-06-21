@@ -85,7 +85,7 @@ public class BTreeOpContext implements IIndexOpContext {
     public void reset(IndexOp newOp) {
         if (newOp == IndexOp.SEARCH || newOp == IndexOp.DISKORDERSCAN) {
             if (cursorInitialState == null) {
-                cursorInitialState = new BTreeCursorInitialState(null);
+                cursorInitialState = new BTreeCursorInitialState(null, searchCallback);
             }
         } else {
             // Insert, delete, update or upsert operation.

@@ -96,4 +96,19 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
     public int getFieldCount() {
         return frameTuple.getFieldCount();
     }
+
+    public ITupleReference getBeforeTuple(ITupleReference tuple, int targetTupleIndex, MultiComparator cmp) {
+        // Examine the tuple index to determine whether it is valid or not.
+        if (targetTupleIndex != slotManager.getGreatestKeyIndicator()) {
+            // We need to check the key to determine whether it's an insert or an update.
+            frameTuple.resetByTupleIndex(this, targetTupleIndex);
+            if (cmp.compare(tuple, frameTuple) == 0) {
+                // The keys match, it's an update.
+                return frameTuple;
+            }
+        }
+        // Either the tuple index is a special indicator, or the keys don't match.
+        // In those cases, we are definitely dealing with an insert.
+        return null;
+    }
 }

@@ -258,7 +258,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         int numDiskBTrees = diskComponents.size();
         int numBTrees = (includeMemComponent) ? numDiskBTrees + 1 : numDiskBTrees;
         LSMBTreeCursorInitialState initialState = new LSMBTreeCursorInitialState(numBTrees, insertLeafFrameFactory,
-                ctx.cmp, includeMemComponent, searcherRefCount, lsmHarness);
+                ctx.cmp, includeMemComponent, searcherRefCount, lsmHarness, null);
         lsmTreeCursor.open(initialState, pred);
 
         int cursorIx;

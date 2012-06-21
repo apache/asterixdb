@@ -32,5 +32,5 @@ public interface IBTreeLeafFrame extends IBTreeFrame {
             FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) throws HyracksDataException;
     
     public int findUpsertTupleIndex(ITupleReference tuple) throws TreeIndexException;
-    public ITupleReference getUpsertBeforeTuple(ITupleReference tuple, int targetTupleIndex) throws TreeIndexException;
+    public ITupleReference getBeforeTuple(ITupleReference tuple, int targetTupleIndex) throws TreeIndexException;
 }

@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.rtree.impls;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
@@ -50,6 +51,8 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
 
     private ITreeIndexTupleReference frameTuple;
     private boolean readLatched = false;
+
+    private ISearchOperationCallback searchCallback;
 
     public RTreeSearchCursor(IRTreeInteriorFrame interiorFrame, IRTreeLeafFrame leafFrame) {
         this.interiorFrame = interiorFrame;
@@ -203,6 +206,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
             pathList.clear();
         }
 
+        searchCallback = initialState.getSearchOperationCallback();
         pathList = ((RTreeCursorInitialState) initialState).getPathList();
         rootPage = ((RTreeCursorInitialState) initialState).getRootPage();
 
