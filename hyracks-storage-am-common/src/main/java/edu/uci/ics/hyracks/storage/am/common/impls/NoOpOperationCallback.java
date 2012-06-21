@@ -16,26 +16,39 @@
 package edu.uci.ics.hyracks.storage.am.common.impls;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 
 /**
  * Dummy operation callback that simply does nothing. Mainly, intended to be
  * used in non-transaction access method testing.
  */
-public class NoOpOperationCallback implements IOperationCallback {
+public enum NoOpOperationCallback implements IModificationOperationCallback, ISearchOperationCallback {
+    INSTANCE;
 
-    public static IOperationCallback INSTANCE = new NoOpOperationCallback();
-    
-    private NoOpOperationCallback() {
-    }
-    
     @Override
-    public void pre(ITupleReference tuple) {
+    public boolean proceed(ITupleReference tuple) {
+        // Always proceed.
+        return true;
+    }
+
+    @Override
+    public void reconcile(ITupleReference tuple) {
         // Do nothing.
     }
 
     @Override
-    public void post(ITupleReference tuple) {
-        // Do nothing.
+    public void before(ITupleReference tuple) {
+        // Do nothing.        
+    }
+
+    @Override
+    public void commence(ITupleReference tuple) {
+        // Do nothing.        
+    }
+
+    @Override
+    public void found(ITupleReference tuple) {
+        // Do nothing.        
     }
 }

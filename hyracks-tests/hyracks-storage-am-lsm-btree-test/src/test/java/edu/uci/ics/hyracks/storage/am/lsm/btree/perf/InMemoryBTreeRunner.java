@@ -44,21 +44,22 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
     protected IBufferCache bufferCache;
     protected int btreeFileId;
-    
+
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final static String tmpDir = System.getProperty("java.io.tmpdir");
     protected final static String sep = System.getProperty("file.separator");
     protected String fileName;
-    
+
     protected final int numBatches;
-    protected BTree btree;    
-    
-    public InMemoryBTreeRunner(int numBatches, int pageSize, int numPages, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws HyracksDataException, BTreeException {
+    protected BTree btree;
+
+    public InMemoryBTreeRunner(int numBatches, int pageSize, int numPages, ITypeTraits[] typeTraits,
+            IBinaryComparatorFactory[] cmpFactories) throws HyracksDataException, BTreeException {
         this.numBatches = numBatches;
         fileName = tmpDir + sep + simpleDateFormat.format(new Date());
         init(pageSize, numPages, typeTraits, cmpFactories);
     }
-    
+
     protected void init(int pageSize, int numPages, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
             throws HyracksDataException, BTreeException {
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
@@ -70,30 +71,30 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         IFreePageManager freePageManager = new InMemoryFreePageManager(bufferCache.getNumPages(), metaFrameFactory);
-        btree = new BTree(bufferCache, NoOpOperationCallback.INSTANCE, typeTraits.length, cmpFactories,
-                freePageManager, interiorFrameFactory, leafFrameFactory);
+        btree = new BTree(bufferCache, typeTraits.length, cmpFactories, freePageManager, interiorFrameFactory,
+                leafFrameFactory);
     }
 
     @Override
-    public long runExperiment(DataGenThread dataGen, int numThreads) throws Exception {        
+    public long runExperiment(DataGenThread dataGen, int numThreads) throws Exception {
         BTreeThread[] threads = new BTreeThread[numThreads];
         int threadNumBatches = numBatches / numThreads;
-    	for (int i = 0; i < numThreads; i++) {
-    		threads[i] = new BTreeThread(dataGen, btree, threadNumBatches);
-    	}
-    	// Wait until the tupleBatchQueue is completely full.
+        for (int i = 0; i < numThreads; i++) {
+            threads[i] = new BTreeThread(dataGen, btree, threadNumBatches);
+        }
+        // Wait until the tupleBatchQueue is completely full.
         while (dataGen.tupleBatchQueue.remainingCapacity() != 0) {
             Thread.sleep(10);
         }
 
-    	long start = System.currentTimeMillis();
-    	for (int i = 0; i < numThreads; i++) {
-    		threads[i].start();
-    	}
-    	for (int i = 0; i < numThreads; i++) {
-    		threads[i].join();
-    	}
-    	long end = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < numThreads; i++) {
+            threads[i].start();
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads[i].join();
+        }
+        long end = System.currentTimeMillis();
         long time = end - start;
         return time;
     }
@@ -108,21 +109,22 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
         bufferCache.close();
     }
 
-	@Override
-	public void reset() throws Exception {
-		btree.create(btreeFileId);		
-	}
-	
-	public class BTreeThread extends Thread {
-    	private final DataGenThread dataGen;
-    	private final int numBatches;
-    	private final ITreeIndexAccessor indexAccessor;
-    	public BTreeThread(DataGenThread dataGen, BTree btree, int numBatches) {
-    		this.dataGen = dataGen;
-    		this.numBatches = numBatches;
-    		indexAccessor = btree.createAccessor();
-    	}
-    	
+    @Override
+    public void reset() throws Exception {
+        btree.create(btreeFileId);
+    }
+
+    public class BTreeThread extends Thread {
+        private final DataGenThread dataGen;
+        private final int numBatches;
+        private final ITreeIndexAccessor indexAccessor;
+
+        public BTreeThread(DataGenThread dataGen, BTree btree, int numBatches) {
+            this.dataGen = dataGen;
+            this.numBatches = numBatches;
+            indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        }
+
         @Override
         public void run() {
             try {
@@ -130,7 +132,7 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
                     TupleBatch batch = dataGen.tupleBatchQueue.take();
                     for (int j = 0; j < batch.size(); j++) {
                         try {
-                        	indexAccessor.insert(batch.get(j));
+                            indexAccessor.insert(batch.get(j));
                         } catch (TreeIndexException e) {
                         }
                     }

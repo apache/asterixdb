@@ -100,14 +100,14 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
 
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
-        BTree btree = new BTree(bufferCache, NoOpOperationCallback.INSTANCE, fieldCount, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
+        BTree btree = new BTree(bufferCache, fieldCount, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
         btree.create(btreeFileId);
         btree.open(btreeFileId);
 
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-        ITreeIndexAccessor indexAccessor = btree.createAccessor();
+        ITreeIndexAccessor indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
 
         // generate keys
         int numKeys = 50;
@@ -173,14 +173,14 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
 
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
-        BTree btree = new BTree(bufferCache, NoOpOperationCallback.INSTANCE, fieldCount, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
+        BTree btree = new BTree(bufferCache, fieldCount, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
         btree.create(btreeFileId);
         btree.open(btreeFileId);
 
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-        ITreeIndexAccessor indexAccessor = btree.createAccessor();
+        ITreeIndexAccessor indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
 
         // generate keys
         int numKeys = 50;
@@ -243,14 +243,14 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
 
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
-        BTree btree = new BTree(bufferCache, NoOpOperationCallback.INSTANCE, fieldCount, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
+        BTree btree = new BTree(bufferCache, fieldCount, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
         btree.create(btreeFileId);
         btree.open(btreeFileId);
 
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-        ITreeIndexAccessor indexAccessor = btree.createAccessor();
+        ITreeIndexAccessor indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
 
         // generate keys
         int numKeys = 50;
@@ -347,7 +347,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
                 ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame, false);
                 RangePredicate rangePred = createRangePredicate(lowKey, highKey, lowKeyInclusive,
                         highKeyInclusive);
-                ITreeIndexAccessor indexAccessor = btree.createAccessor();
+                ITreeIndexAccessor indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
                 indexAccessor.search(rangeCursor, rangePred);
 
                 try {

@@ -33,6 +33,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializer
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex.InvertedIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndexSearchPredicate;
@@ -46,263 +47,256 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.UTF8NGramTokenFac
 
 public class SearchTest extends AbstractInvIndexSearchTest {
 
-	protected List<String> dataStrings = new ArrayList<String>();
-	protected List<String> firstNames = new ArrayList<String>();
-	protected List<String> lastNames = new ArrayList<String>();
+    protected List<String> dataStrings = new ArrayList<String>();
+    protected List<String> firstNames = new ArrayList<String>();
+    protected List<String> lastNames = new ArrayList<String>();
 
-	protected IBinaryComparator[] btreeBinCmps;
-	
-	@Override
-	protected void setTokenizer() {
-		tokenFactory = new UTF8NGramTokenFactory();
-		tokenizer = new NGramUTF8StringBinaryTokenizer(3, false, true, false,
-				tokenFactory);
-	}
-	
-	@Before
-	public void start() throws Exception {
-		super.start();
-		btreeBinCmps = new IBinaryComparator[btreeCmpFactories.length];
-		for (int i = 0; i < btreeCmpFactories.length; i++) {
-			btreeBinCmps[i] = btreeCmpFactories[i].createBinaryComparator();
-		}
-		generateDataStrings();
-		loadData();
-	}
+    protected IBinaryComparator[] btreeBinCmps;
 
-	public void generateDataStrings() {
-		firstNames.add("Kathrin");
-		firstNames.add("Cathrin");
-		firstNames.add("Kathryn");
-		firstNames.add("Cathryn");
-		firstNames.add("Kathrine");
-		firstNames.add("Cathrine");
-		firstNames.add("Kathryne");
-		firstNames.add("Cathryne");
-		firstNames.add("Katherin");
-		firstNames.add("Catherin");
-		firstNames.add("Katheryn");
-		firstNames.add("Catheryn");
-		firstNames.add("Katherine");
-		firstNames.add("Catherine");
-		firstNames.add("Katheryne");
-		firstNames.add("Catheryne");
-		firstNames.add("John");
-		firstNames.add("Jack");
-		firstNames.add("Jonathan");
-		firstNames.add("Nathan");
+    @Override
+    protected void setTokenizer() {
+        tokenFactory = new UTF8NGramTokenFactory();
+        tokenizer = new NGramUTF8StringBinaryTokenizer(3, false, true, false, tokenFactory);
+    }
 
-		lastNames.add("Miller");
-		lastNames.add("Myller");
-		lastNames.add("Keller");
-		lastNames.add("Ketler");
-		lastNames.add("Muller");
-		lastNames.add("Fuller");
-		lastNames.add("Smith");
-		lastNames.add("Smyth");
-		lastNames.add("Smithe");
-		lastNames.add("Smythe");
+    @Before
+    public void start() throws Exception {
+        super.start();
+        btreeBinCmps = new IBinaryComparator[btreeCmpFactories.length];
+        for (int i = 0; i < btreeCmpFactories.length; i++) {
+            btreeBinCmps[i] = btreeCmpFactories[i].createBinaryComparator();
+        }
+        generateDataStrings();
+        loadData();
+    }
 
-		// Generate all 'firstName lastName' combinations as data strings
-		for (String f : firstNames) {
-			for (String l : lastNames) {
-				dataStrings.add(f + " " + l);
-			}
-		}
-	}
+    public void generateDataStrings() {
+        firstNames.add("Kathrin");
+        firstNames.add("Cathrin");
+        firstNames.add("Kathryn");
+        firstNames.add("Cathryn");
+        firstNames.add("Kathrine");
+        firstNames.add("Cathrine");
+        firstNames.add("Kathryne");
+        firstNames.add("Cathryne");
+        firstNames.add("Katherin");
+        firstNames.add("Catherin");
+        firstNames.add("Katheryn");
+        firstNames.add("Catheryn");
+        firstNames.add("Katherine");
+        firstNames.add("Catherine");
+        firstNames.add("Katheryne");
+        firstNames.add("Catheryne");
+        firstNames.add("John");
+        firstNames.add("Jack");
+        firstNames.add("Jonathan");
+        firstNames.add("Nathan");
 
-	private class TokenIdPair implements Comparable<TokenIdPair> {
-		public ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
-		public DataOutputStream dos = new DataOutputStream(baaos);
-		public int id;
+        lastNames.add("Miller");
+        lastNames.add("Myller");
+        lastNames.add("Keller");
+        lastNames.add("Ketler");
+        lastNames.add("Muller");
+        lastNames.add("Fuller");
+        lastNames.add("Smith");
+        lastNames.add("Smyth");
+        lastNames.add("Smithe");
+        lastNames.add("Smythe");
 
-		TokenIdPair(IToken token, int id) throws IOException {
-			token.serializeToken(dos);
-			this.id = id;
-		}
+        // Generate all 'firstName lastName' combinations as data strings
+        for (String f : firstNames) {
+            for (String l : lastNames) {
+                dataStrings.add(f + " " + l);
+            }
+        }
+    }
 
-		@Override
-		public int compareTo(TokenIdPair o) {
-			int cmp = btreeBinCmps[0].compare(baaos.getByteArray(), 0,
-					baaos.getByteArray().length, o.baaos.getByteArray(), 0,
-					o.baaos.getByteArray().length);
-			if (cmp == 0) {
-				return id - o.id;
-			} else {
-				return cmp;
-			}
-		}
-	}
+    private class TokenIdPair implements Comparable<TokenIdPair> {
+        public ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
+        public DataOutputStream dos = new DataOutputStream(baaos);
+        public int id;
 
-	public void loadData() throws IOException, TreeIndexException {
-		List<TokenIdPair> pairs = new ArrayList<TokenIdPair>();
-		// generate pairs for subsequent sorting and bulk-loading
-		int id = 0;
-		for (String s : dataStrings) {
-			ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
-			DataOutputStream dos = new DataOutputStream(baaos);
-			UTF8StringSerializerDeserializer.INSTANCE.serialize(s, dos);
-			tokenizer.reset(baaos.getByteArray(), 0, baaos.size());
-			while (tokenizer.hasNext()) {
-				tokenizer.next();
-				IToken token = tokenizer.getToken();
-				pairs.add(new TokenIdPair(token, id));
-			}
-			++id;
-		}
-		Collections.sort(pairs);
+        TokenIdPair(IToken token, int id) throws IOException {
+            token.serializeToken(dos);
+            this.id = id;
+        }
 
-		// bulk load index
-		IIndexBulkLoadContext ctx = invIndex.beginBulkLoad(BTree.DEFAULT_FILL_FACTOR);
+        @Override
+        public int compareTo(TokenIdPair o) {
+            int cmp = btreeBinCmps[0].compare(baaos.getByteArray(), 0, baaos.getByteArray().length,
+                    o.baaos.getByteArray(), 0, o.baaos.getByteArray().length);
+            if (cmp == 0) {
+                return id - o.id;
+            } else {
+                return cmp;
+            }
+        }
+    }
 
-		for (TokenIdPair t : pairs) {
-			tb.reset();
-			tb.addField(t.baaos.getByteArray(), 0,
-					t.baaos.getByteArray().length);
-			IntegerSerializerDeserializer.INSTANCE.serialize(t.id, tb.getDataOutput());
-			tb.addFieldEndOffset();
-			tuple.reset(tb.getFieldEndOffsets(), tb.getByteArray());
+    public void loadData() throws IOException, TreeIndexException {
+        List<TokenIdPair> pairs = new ArrayList<TokenIdPair>();
+        // generate pairs for subsequent sorting and bulk-loading
+        int id = 0;
+        for (String s : dataStrings) {
+            ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
+            DataOutputStream dos = new DataOutputStream(baaos);
+            UTF8StringSerializerDeserializer.INSTANCE.serialize(s, dos);
+            tokenizer.reset(baaos.getByteArray(), 0, baaos.size());
+            while (tokenizer.hasNext()) {
+                tokenizer.next();
+                IToken token = tokenizer.getToken();
+                pairs.add(new TokenIdPair(token, id));
+            }
+            ++id;
+        }
+        Collections.sort(pairs);
 
-			try {
-				invIndex.bulkLoadAddTuple(tuple, ctx);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		invIndex.endBulkLoad(ctx);
-	}
+        // bulk load index
+        IIndexBulkLoadContext ctx = invIndex.beginBulkLoad(BTree.DEFAULT_FILL_FACTOR);
 
-	/**
-	 * Runs a specified number of randomly picked strings from dataStrings as
-	 * queries. We run each query, measure it's time, and print it's results.
-	 * 
-	 */
-	private void runQueries(IInvertedIndexSearchModifier searchModifier,
-			int numQueries) throws Exception {
+        for (TokenIdPair t : pairs) {
+            tb.reset();
+            tb.addField(t.baaos.getByteArray(), 0, t.baaos.getByteArray().length);
+            IntegerSerializerDeserializer.INSTANCE.serialize(t.id, tb.getDataOutput());
+            tb.addFieldEndOffset();
+            tuple.reset(tb.getFieldEndOffsets(), tb.getByteArray());
 
-		rnd.setSeed(50);
+            try {
+                invIndex.bulkLoadAddTuple(tuple, ctx);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        invIndex.endBulkLoad(ctx);
+    }
 
-		InvertedIndexAccessor accessor = (InvertedIndexAccessor) invIndex.createAccessor();
-		InvertedIndexSearchPredicate searchPred = new InvertedIndexSearchPredicate(searchModifier);
-		
-		for (int i = 0; i < numQueries; i++) {
+    /**
+     * Runs a specified number of randomly picked strings from dataStrings as
+     * queries. We run each query, measure it's time, and print it's results.
+     * 
+     */
+    private void runQueries(IInvertedIndexSearchModifier searchModifier, int numQueries) throws Exception {
 
-			int queryIndex = Math.abs(rnd.nextInt() % dataStrings.size());
-			String queryString = dataStrings.get(queryIndex);
+        rnd.setSeed(50);
 
-			// Serialize query.
-			queryTb.reset();
-			UTF8StringSerializerDeserializer.INSTANCE.serialize(queryString,
-					queryTb.getDataOutput());
-			queryTb.addFieldEndOffset();
-			queryTuple.reset(queryTb.getFieldEndOffsets(), queryTb.getByteArray());
+        InvertedIndexAccessor accessor = (InvertedIndexAccessor) invIndex.createAccessor(
+                NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        InvertedIndexSearchPredicate searchPred = new InvertedIndexSearchPredicate(searchModifier);
 
-			// Set query tuple in search predicate.
-			searchPred.setQueryTuple(queryTuple);
-			searchPred.setQueryFieldIndex(0);
-			
-			resultCursor = accessor.createSearchCursor();
-			
-			int repeats = 1;
-			double totalTime = 0;
-			for (int j = 0; j < repeats; j++) {
-				long timeStart = System.currentTimeMillis();
-				try {
-					resultCursor.reset();
-					accessor.search(resultCursor, searchPred);
-				} catch (OccurrenceThresholdPanicException e) {
-					// ignore panic queries
-				}
-				long timeEnd = System.currentTimeMillis();
-				totalTime += timeEnd - timeStart;
-			}
-			double avgTime = totalTime / (double) repeats;
-			StringBuilder strBuilder = new StringBuilder();
-			strBuilder.append(i + ": " + "\"" + queryString + "\": " + avgTime
-					+ "ms" + "\n");
-			strBuilder.append("CANDIDATE RESULTS:\n");
-			while (resultCursor.hasNext()) {
-				resultCursor.next();
-				ITupleReference resultTuple = resultCursor.getTuple();
-				int id = IntegerSerializerDeserializer.getInt(
-						resultTuple.getFieldData(0),
-						resultTuple.getFieldStart(0));
-				strBuilder.append(id + " " + dataStrings.get(id));
-				strBuilder.append('\n');
-			}
-			// remove trailing newline
-			strBuilder.deleteCharAt(strBuilder.length() - 1);
-			if (LOGGER.isLoggable(Level.INFO)) {
-				LOGGER.info(strBuilder.toString());
-			}
-		}
-	}
+        for (int i = 0; i < numQueries; i++) {
 
-	/**
-	 * Runs 5 random conjunctive search queries to test the
-	 * ConjunctiveSearchModifier.
-	 * 
-	 */
-	@Test
-	public void conjunctiveQueryTest() throws Exception {
-		IInvertedIndexSearchModifier searchModifier = new ConjunctiveSearchModifier();
-		runQueries(searchModifier, 5);
-	}
+            int queryIndex = Math.abs(rnd.nextInt() % dataStrings.size());
+            String queryString = dataStrings.get(queryIndex);
 
-	/**
-	 * Runs 5 random jaccard-based search queries with thresholds 0.9, 0.8, 0.7.
-	 * Tests the JaccardSearchModifier.
-	 * 
-	 */
-	@Test
-	public void jaccardQueryTest() throws Exception {
-		JaccardSearchModifier searchModifier = new JaccardSearchModifier(1.0f);
+            // Serialize query.
+            queryTb.reset();
+            UTF8StringSerializerDeserializer.INSTANCE.serialize(queryString, queryTb.getDataOutput());
+            queryTb.addFieldEndOffset();
+            queryTuple.reset(queryTb.getFieldEndOffsets(), queryTb.getByteArray());
 
-		if (LOGGER.isLoggable(Level.INFO)) {
-			LOGGER.info("JACCARD: " + 0.9f);
-		}
-		searchModifier.setJaccThresh(0.9f);
-		runQueries(searchModifier, 5);
+            // Set query tuple in search predicate.
+            searchPred.setQueryTuple(queryTuple);
+            searchPred.setQueryFieldIndex(0);
 
-		if (LOGGER.isLoggable(Level.INFO)) {
-			LOGGER.info("JACCARD: " + 0.8f);
-		}
-		searchModifier.setJaccThresh(0.8f);
-		runQueries(searchModifier, 5);
+            resultCursor = accessor.createSearchCursor();
 
-		if (LOGGER.isLoggable(Level.INFO)) {
-			LOGGER.info("JACCARD: " + 0.7f);
-		}
-		searchModifier.setJaccThresh(0.7f);
-		runQueries(searchModifier, 5);
-	}
+            int repeats = 1;
+            double totalTime = 0;
+            for (int j = 0; j < repeats; j++) {
+                long timeStart = System.currentTimeMillis();
+                try {
+                    resultCursor.reset();
+                    accessor.search(resultCursor, searchPred);
+                } catch (OccurrenceThresholdPanicException e) {
+                    // ignore panic queries
+                }
+                long timeEnd = System.currentTimeMillis();
+                totalTime += timeEnd - timeStart;
+            }
+            double avgTime = totalTime / (double) repeats;
+            StringBuilder strBuilder = new StringBuilder();
+            strBuilder.append(i + ": " + "\"" + queryString + "\": " + avgTime + "ms" + "\n");
+            strBuilder.append("CANDIDATE RESULTS:\n");
+            while (resultCursor.hasNext()) {
+                resultCursor.next();
+                ITupleReference resultTuple = resultCursor.getTuple();
+                int id = IntegerSerializerDeserializer
+                        .getInt(resultTuple.getFieldData(0), resultTuple.getFieldStart(0));
+                strBuilder.append(id + " " + dataStrings.get(id));
+                strBuilder.append('\n');
+            }
+            // remove trailing newline
+            strBuilder.deleteCharAt(strBuilder.length() - 1);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info(strBuilder.toString());
+            }
+        }
+    }
 
-	/**
-	 * Runs 5 random edit-distance based search queries with thresholds 1, 2, 3.
-	 * Tests the EditDistanceSearchModifier.
-	 * 
-	 */
-	@Test
-	public void editDistanceQueryTest() throws Exception {
-		EditDistanceSearchModifier searchModifier = new EditDistanceSearchModifier(
-				3, 0);
+    /**
+     * Runs 5 random conjunctive search queries to test the
+     * ConjunctiveSearchModifier.
+     * 
+     */
+    @Test
+    public void conjunctiveQueryTest() throws Exception {
+        IInvertedIndexSearchModifier searchModifier = new ConjunctiveSearchModifier();
+        runQueries(searchModifier, 5);
+    }
 
-		if (LOGGER.isLoggable(Level.INFO)) {
-			LOGGER.info("EDIT DISTANCE: " + 1);
-		}
-		searchModifier.setEdThresh(1);
-		runQueries(searchModifier, 5);
+    /**
+     * Runs 5 random jaccard-based search queries with thresholds 0.9, 0.8, 0.7.
+     * Tests the JaccardSearchModifier.
+     * 
+     */
+    @Test
+    public void jaccardQueryTest() throws Exception {
+        JaccardSearchModifier searchModifier = new JaccardSearchModifier(1.0f);
 
-		if (LOGGER.isLoggable(Level.INFO)) {
-			LOGGER.info("EDIT DISTANCE: " + 2);
-		}
-		searchModifier.setEdThresh(2);
-		runQueries(searchModifier, 5);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("JACCARD: " + 0.9f);
+        }
+        searchModifier.setJaccThresh(0.9f);
+        runQueries(searchModifier, 5);
 
-		if (LOGGER.isLoggable(Level.INFO)) {
-			LOGGER.info("EDIT DISTANCE: " + 3);
-		}
-		searchModifier.setEdThresh(3);
-		runQueries(searchModifier, 5);
-	}
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("JACCARD: " + 0.8f);
+        }
+        searchModifier.setJaccThresh(0.8f);
+        runQueries(searchModifier, 5);
+
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("JACCARD: " + 0.7f);
+        }
+        searchModifier.setJaccThresh(0.7f);
+        runQueries(searchModifier, 5);
+    }
+
+    /**
+     * Runs 5 random edit-distance based search queries with thresholds 1, 2, 3.
+     * Tests the EditDistanceSearchModifier.
+     * 
+     */
+    @Test
+    public void editDistanceQueryTest() throws Exception {
+        EditDistanceSearchModifier searchModifier = new EditDistanceSearchModifier(3, 0);
+
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("EDIT DISTANCE: " + 1);
+        }
+        searchModifier.setEdThresh(1);
+        runQueries(searchModifier, 5);
+
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("EDIT DISTANCE: " + 2);
+        }
+        searchModifier.setEdThresh(2);
+        runQueries(searchModifier, 5);
+
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("EDIT DISTANCE: " + 3);
+        }
+        searchModifier.setEdThresh(3);
+        runQueries(searchModifier, 5);
+    }
 }

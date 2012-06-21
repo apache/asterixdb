@@ -87,7 +87,8 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
-        BTree btree = new BTree(bufferCache, NoOpOperationCallback.INSTANCE, fieldCount, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
+        BTree btree = new BTree(bufferCache, fieldCount, cmpFactories, freePageManager, interiorFrameFactory,
+                leafFrameFactory);
         btree.create(fileId);
         btree.open(fileId);
 
@@ -112,7 +113,8 @@ public class BTreeStatsTest extends AbstractBTreeTest {
         accessor.reset(frame);
         FrameTupleReference tuple = new FrameTupleReference();
 
-        ITreeIndexAccessor indexAccessor = btree.createAccessor();
+        ITreeIndexAccessor indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         // 10000
         for (int i = 0; i < 100000; i++) {
 

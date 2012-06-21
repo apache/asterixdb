@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
@@ -32,11 +33,13 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
     private final TreeIndexDataflowHelper treeIndexHelper;
     private ITreeIndex treeIndex;
+    private final IOperationCallbackProvider callbackProvider;
 
     public TreeIndexDiskOrderScanOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition) {
         treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
                 opDesc, ctx, partition);
+        this.callbackProvider = opDesc.getOpCallbackProvider();
     }
 
     @Override
@@ -46,7 +49,8 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
             treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
             ITreeIndexFrame cursorFrame = treeIndex.getLeafFrameFactory().createFrame();
             ITreeIndexCursor cursor = treeIndexHelper.createDiskOrderScanCursor(cursorFrame);
-            ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor();
+            ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor(
+                    callbackProvider.getModificationOperationCallback(), callbackProvider.getSearchOperationCallback());
             writer.open();
             try {
                 indexAccessor.diskOrderScan(cursor);

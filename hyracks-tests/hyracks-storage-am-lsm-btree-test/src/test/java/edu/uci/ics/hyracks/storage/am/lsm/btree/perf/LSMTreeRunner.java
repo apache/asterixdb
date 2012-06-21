@@ -84,9 +84,9 @@ public class LSMTreeRunner implements IExperimentRunner {
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(inMemNumPages,
                 new LIFOMetaDataFrameFactory());
 
-        lsmtree = LSMBTreeUtils.createLSMTree(memBufferCache, NoOpOperationCallback.INSTANCE, memFreePageManager,
-                ioManager, onDiskDir, bufferCache, fmp, typeTraits, cmpFactories, new ImmediateFlushPolicy(
-                        SequentialScheduler.INSTANCE), NoMergePolicy.INSTANCE);
+        lsmtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, onDiskDir, bufferCache,
+                fmp, typeTraits, cmpFactories, new ImmediateFlushPolicy(SequentialScheduler.INSTANCE),
+                NoMergePolicy.INSTANCE);
     }
 
     @Override
@@ -138,7 +138,7 @@ public class LSMTreeRunner implements IExperimentRunner {
         public LSMTreeThread(DataGenThread dataGen, LSMBTree lsmTree, int numBatches) {
             this.dataGen = dataGen;
             this.numBatches = numBatches;
-            lsmTreeAccessor = lsmTree.createAccessor();
+            lsmTreeAccessor = lsmTree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         }
 
         @Override

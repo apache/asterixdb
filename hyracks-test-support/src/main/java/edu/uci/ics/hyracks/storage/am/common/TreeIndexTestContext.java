@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 
 @SuppressWarnings("rawtypes")
 public abstract class TreeIndexTestContext<T extends CheckTuple> implements ITreeIndexTestContext<T> {
@@ -34,7 +35,7 @@ public abstract class TreeIndexTestContext<T extends CheckTuple> implements ITre
     public TreeIndexTestContext(ISerializerDeserializer[] fieldSerdes, ITreeIndex treeIndex) {
         this.fieldSerdes = fieldSerdes;
         this.treeIndex = treeIndex;
-        this.indexAccessor = (IIndexAccessor) treeIndex.createAccessor();
+        this.indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         this.tupleBuilder = new ArrayTupleBuilder(fieldSerdes.length);
     }
 

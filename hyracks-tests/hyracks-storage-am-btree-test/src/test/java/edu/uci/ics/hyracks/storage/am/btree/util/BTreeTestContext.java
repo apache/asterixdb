@@ -23,7 +23,6 @@ import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 @SuppressWarnings("rawtypes")
@@ -48,7 +47,7 @@ public class BTreeTestContext extends OrderedIndexTestContext {
     public static BTreeTestContext create(IBufferCache bufferCache, int btreeFileId, ISerializerDeserializer[] fieldSerdes, int numKeyFields, BTreeLeafFrameType leafType) throws Exception {        
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
-        BTree btree = BTreeUtils.createBTree(bufferCache, NoOpOperationCallback.INSTANCE, typeTraits, cmpFactories, leafType);
+        BTree btree = BTreeUtils.createBTree(bufferCache, typeTraits, cmpFactories, leafType);
         btree.create(btreeFileId);
         btree.open(btreeFileId);
         BTreeTestContext testCtx = new BTreeTestContext(fieldSerdes, btree);

@@ -123,8 +123,8 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
-        BTree btree = new BTree(bufferCache, NoOpOperationCallback.INSTANCE, btreeTypeTraits.length, cmpFactories,
-                freePageManager, interiorFrameFactory, leafFrameFactory);
+        BTree btree = new BTree(bufferCache, btreeTypeTraits.length, cmpFactories, freePageManager,
+                interiorFrameFactory, leafFrameFactory);
         btree.create(btreeFileId);
         btree.open(btreeFileId);
 
@@ -137,7 +137,8 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         invListCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
-        InvertedIndex invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories, invListBuilder, null);
+        InvertedIndex invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories,
+                invListBuilder, null);
         invIndex.open(invListsFileId);
 
         Random rnd = new Random();
@@ -224,7 +225,8 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         IFrameTupleAccessor tokenAccessor = new FrameTupleAccessor(stageletCtx.getFrameSize(), tokenRecDesc);
         tokenAccessor.reset(frame);
 
-        ITreeIndexAccessor btreeAccessor = invIndex.getBTree().createAccessor();
+        ITreeIndexAccessor btreeAccessor = invIndex.getBTree().createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
 
         // verify created inverted lists one-by-one
         for (int i = 0; i < tokens.size(); i++) {

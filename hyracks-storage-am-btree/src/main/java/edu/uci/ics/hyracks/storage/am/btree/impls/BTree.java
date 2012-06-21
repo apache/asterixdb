@@ -33,7 +33,8 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
@@ -63,7 +64,6 @@ public class BTree implements ITreeIndex {
 
     private final IFreePageManager freePageManager;
     private final IBufferCache bufferCache;
-    private final IOperationCallback opCallback;
     private final ITreeIndexFrameFactory interiorFrameFactory;
     private final ITreeIndexFrameFactory leafFrameFactory;
     private final int fieldCount;
@@ -71,11 +71,10 @@ public class BTree implements ITreeIndex {
     private final ReadWriteLock treeLatch;
     private int fileId;
 
-    public BTree(IBufferCache bufferCache, IOperationCallback opCallback, int fieldCount,
-            IBinaryComparatorFactory[] cmpFactories, IFreePageManager freePageManager,
-            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory) {
+    public BTree(IBufferCache bufferCache, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
+            IFreePageManager freePageManager, ITreeIndexFrameFactory interiorFrameFactory,
+            ITreeIndexFrameFactory leafFrameFactory) {
         this.bufferCache = bufferCache;
-        this.opCallback = opCallback;
         this.fieldCount = fieldCount;
         this.cmpFactories = cmpFactories;
         this.interiorFrameFactory = interiorFrameFactory;
@@ -406,13 +405,10 @@ public class BTree implements ITreeIndex {
         boolean restartOp = false;
         ITupleReference beforeTuple = ctx.leafFrame.getUpsertBeforeTuple(tuple, targetTupleIndex);
         if (beforeTuple == null) {
-            opCallback.pre(null);
             restartOp = insertLeaf(tuple, targetTupleIndex, pageId, ctx);
         } else {
-            opCallback.pre(beforeTuple);
             restartOp = updateLeaf(tuple, targetTupleIndex, pageId, ctx);
         }
-        opCallback.post(tuple);
         return restartOp;
     }
 
@@ -1011,7 +1007,7 @@ public class BTree implements ITreeIndex {
     }
 
     @Override
-    public ITreeIndexAccessor createAccessor() {
+    public ITreeIndexAccessor createAccessor(IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback) {
         return new BTreeAccessor(this);
     }
 

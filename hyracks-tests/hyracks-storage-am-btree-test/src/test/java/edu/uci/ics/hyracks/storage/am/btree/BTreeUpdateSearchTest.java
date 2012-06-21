@@ -42,7 +42,7 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
     public void test01() throws Exception {
         IBufferCache bufferCache = harness.getBufferCache();
         int btreeFileId = harness.getBTreeFileId();
-        
+
         // declare fields
         int fieldCount = 2;
         ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
@@ -65,7 +65,8 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
         IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
 
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
-        BTree btree = new BTree(bufferCache, NoOpOperationCallback.INSTANCE, fieldCount, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
+        BTree btree = new BTree(bufferCache, fieldCount, cmpFactories, freePageManager, interiorFrameFactory,
+                leafFrameFactory);
         btree.create(btreeFileId);
         btree.open(btreeFileId);
 
@@ -80,7 +81,8 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference insertTuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = btree.createAccessor();
+        ITreeIndexAccessor indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
 
         int numInserts = 10000;
         for (int i = 0; i < numInserts; i++) {

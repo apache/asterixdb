@@ -32,6 +32,7 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperat
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndexSearchPredicate;
@@ -106,7 +107,7 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
         appender = new FrameTupleAppender(btreeDataflowHelper.getHyracksTaskContext().getFrameSize());
         appender.reset(writeBuffer, true);
 
-        indexAccessor = invIndex.createAccessor();
+        indexAccessor = invIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         resultCursor = indexAccessor.createSearchCursor();
         writer.open();
     }

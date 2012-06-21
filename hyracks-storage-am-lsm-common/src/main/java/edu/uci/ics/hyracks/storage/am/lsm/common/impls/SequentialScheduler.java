@@ -5,6 +5,7 @@ import java.util.concurrent.Executors;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
@@ -21,7 +22,8 @@ public enum SequentialScheduler implements ILSMIOScheduler {
             @Override
             public void run() {
                 try {
-                    ((ILSMIndexAccessor) index.createAccessor()).flush();
+                    ((ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
+                            NoOpOperationCallback.INSTANCE)).flush();
                 } catch (HyracksDataException e) {
                     e.printStackTrace();
                 } catch (IndexException e) {
@@ -38,7 +40,8 @@ public enum SequentialScheduler implements ILSMIOScheduler {
             @Override
             public void run() {
                 try {
-                    ((ILSMIndexAccessor) index.createAccessor()).merge();
+                    ((ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
+                            NoOpOperationCallback.INSTANCE)).merge();
                 } catch (LSMMergeInProgressException e) {
                     // Ignore!
                 } catch (HyracksDataException e) {

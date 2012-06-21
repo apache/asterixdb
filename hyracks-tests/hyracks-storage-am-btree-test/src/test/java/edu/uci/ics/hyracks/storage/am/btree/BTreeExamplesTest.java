@@ -42,8 +42,7 @@ public class BTreeExamplesTest extends OrderedIndexExamplesTest {
     }
     
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws TreeIndexException {
-        return BTreeUtils.createBTree(harness.getBufferCache(), harness.getOpCallback(), typeTraits, cmpFactories,
-                BTreeLeafFrameType.REGULAR_NSM);
+        return BTreeUtils.createBTree(harness.getBufferCache(), typeTraits, cmpFactories, BTreeLeafFrameType.REGULAR_NSM);
     }
     
     protected int getIndexFileId() {

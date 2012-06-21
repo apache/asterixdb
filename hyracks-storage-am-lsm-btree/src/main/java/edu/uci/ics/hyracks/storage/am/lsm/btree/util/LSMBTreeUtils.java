@@ -20,12 +20,10 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerFactory;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeCopyTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleWriterFactory;
@@ -40,10 +38,10 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMBTreeUtils {
-    public static LSMBTree createLSMTree(InMemoryBufferCache memBufferCache, IOperationCallback memOpCallback,
-            InMemoryFreePageManager memFreePageManager, IIOManager ioManager, String onDiskDir,
-            IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] cmpFactories, ILSMFlushPolicy flushPolicy, ILSMMergePolicy mergePolicy) {
+    public static LSMBTree createLSMTree(InMemoryBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
+            IIOManager ioManager, String onDiskDir, IBufferCache diskBufferCache,
+            IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
+            ILSMFlushPolicy flushPolicy, ILSMMergePolicy mergePolicy) {
         LSMBTreeTupleWriterFactory insertTupleWriterFactory = new LSMBTreeTupleWriterFactory(typeTraits,
                 cmpFactories.length, false);
         LSMBTreeTupleWriterFactory deleteTupleWriterFactory = new LSMBTreeTupleWriterFactory(typeTraits,
@@ -57,15 +55,14 @@ public class LSMBTreeUtils {
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         LinkedListFreePageManagerFactory freePageManagerFactory = new LinkedListFreePageManagerFactory(diskBufferCache,
                 metaFrameFactory);
-        BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, NoOpOperationCallback.INSTANCE,
-                freePageManagerFactory, cmpFactories, typeTraits.length, interiorFrameFactory,
-                copyTupleLeafFrameFactory);
-        BTreeFactory bulkLoadBTreeFactory = new BTreeFactory(diskBufferCache, NoOpOperationCallback.INSTANCE,
-                freePageManagerFactory, cmpFactories, typeTraits.length, interiorFrameFactory, insertLeafFrameFactory);
+        BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory,
+                cmpFactories, typeTraits.length, interiorFrameFactory, copyTupleLeafFrameFactory);
+        BTreeFactory bulkLoadBTreeFactory = new BTreeFactory(diskBufferCache, freePageManagerFactory,
+                cmpFactories, typeTraits.length, interiorFrameFactory, insertLeafFrameFactory);
         ILSMFileManager fileNameManager = new LSMTreeFileManager(ioManager, diskFileMapProvider, onDiskDir);
-        LSMBTree lsmTree = new LSMBTree(memBufferCache, memOpCallback, memFreePageManager, interiorFrameFactory,
-                insertLeafFrameFactory, deleteLeafFrameFactory, fileNameManager, diskBTreeFactory,
-                bulkLoadBTreeFactory, diskFileMapProvider, typeTraits.length, cmpFactories, flushPolicy, mergePolicy);
+        LSMBTree lsmTree = new LSMBTree(memBufferCache, memFreePageManager, interiorFrameFactory, insertLeafFrameFactory,
+                deleteLeafFrameFactory, fileNameManager, diskBTreeFactory, bulkLoadBTreeFactory,
+                diskFileMapProvider, typeTraits.length, cmpFactories, flushPolicy, mergePolicy);
         return lsmTree;
     }
 }

@@ -19,6 +19,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -60,8 +62,11 @@ public interface IIndex {
      * on the same IIndex
      * 
      * @returns IIndexAccessor An accessor for this tree.
+     * @param modificationCallback TODO
+     * @param searchCallback TODO
      */
-    public IIndexAccessor createAccessor();
+    public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback);
 
     /**
      * Prepares the index for bulk loading, returning a bulk load context. The

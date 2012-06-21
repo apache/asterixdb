@@ -34,6 +34,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
@@ -129,8 +131,8 @@ public class LSMRTree implements ILSMIndex, ITreeIndex {
         RTree memRTree = new RTree(memBufferCache, fieldCount, rtreeCmpFactories, memFreePageManager,
                 rtreeInteriorFrameFactory, rtreeLeafFrameFactory);
         // TODO: Do we need another operation callback here?
-        BTree memBTree = new BTree(memBufferCache, NoOpOperationCallback.INSTANCE, fieldCount, btreeCmpFactories,
-                memFreePageManager, btreeInteriorFrameFactory, btreeLeafFrameFactory);
+        BTree memBTree = new BTree(memBufferCache, fieldCount, btreeCmpFactories, memFreePageManager,
+                btreeInteriorFrameFactory, btreeLeafFrameFactory);
         memComponent = new LSMRTreeComponent(memRTree, memBTree);
         this.memFreePageManager = memFreePageManager;
         this.diskBufferCache = diskBTreeFactory.getBufferCache();
@@ -375,8 +377,10 @@ public class LSMRTree implements ILSMIndex, ITreeIndex {
             LSMRTreeComponent component = (LSMRTreeComponent) diskTreesIter.next();
             RTree diskRTree = component.getRTree();
             BTree diskBTree = component.getBTree();
-            rTreeAccessors[diskTreeIx] = diskRTree.createAccessor();
-            bTreeAccessors[diskTreeIx] = diskBTree.createAccessor();
+            rTreeAccessors[diskTreeIx] = diskRTree.createAccessor(NoOpOperationCallback.INSTANCE,
+                    NoOpOperationCallback.INSTANCE);
+            bTreeAccessors[diskTreeIx] = diskBTree.createAccessor(NoOpOperationCallback.INSTANCE,
+                    NoOpOperationCallback.INSTANCE);
             diskTreeIx++;
         }
 
@@ -394,7 +398,8 @@ public class LSMRTree implements ILSMIndex, ITreeIndex {
         // The RTree should be renamed before the BTree.
 
         // scan the memory RTree
-        ITreeIndexAccessor memRTreeAccessor = memComponent.getRTree().createAccessor();
+        ITreeIndexAccessor memRTreeAccessor = memComponent.getRTree().createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         RTreeSearchCursor rtreeScanCursor = (RTreeSearchCursor) memRTreeAccessor.createSearchCursor();
         SearchPredicate rtreeNullPredicate = new SearchPredicate(null, null);
         memRTreeAccessor.search(rtreeScanCursor, rtreeNullPredicate);
@@ -435,7 +440,8 @@ public class LSMRTree implements ILSMIndex, ITreeIndex {
         diskRTree.endBulkLoad(rtreeBulkLoadCtx);
 
         // scan the memory BTree
-        ITreeIndexAccessor memBTreeAccessor = memComponent.getBTree().createAccessor();
+        ITreeIndexAccessor memBTreeAccessor = memComponent.getBTree().createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         IIndexCursor btreeScanCursor = memBTreeAccessor.createSearchCursor();
         RangePredicate btreeNullPredicate = new RangePredicate(null, null, true, true, null, null);
         memBTreeAccessor.search(btreeScanCursor, btreeNullPredicate);
@@ -551,16 +557,19 @@ public class LSMRTree implements ILSMIndex, ITreeIndex {
     }
 
     protected LSMRTreeOpContext createOpContext() {
-        return new LSMRTreeOpContext((RTree.RTreeAccessor) memComponent.getRTree().createAccessor(),
+        return new LSMRTreeOpContext((RTree.RTreeAccessor) memComponent.getRTree().createAccessor(
+                NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE),
                 (IRTreeLeafFrame) rtreeLeafFrameFactory.createFrame(),
                 (IRTreeInteriorFrame) rtreeInteriorFrameFactory.createFrame(), memFreePageManager
                         .getMetaDataFrameFactory().createFrame(), 8, (BTree.BTreeAccessor) memComponent.getBTree()
-                        .createAccessor(), btreeLeafFrameFactory, btreeInteriorFrameFactory, memFreePageManager
-                        .getMetaDataFrameFactory().createFrame(), rtreeCmpFactories, btreeCmpFactories);
+                        .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE),
+                btreeLeafFrameFactory, btreeInteriorFrameFactory, memFreePageManager.getMetaDataFrameFactory()
+                        .createFrame(), rtreeCmpFactories, btreeCmpFactories);
     }
 
     @Override
-    public IIndexAccessor createAccessor() {
+    public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback) {
         return new LSMRTreeAccessor(lsmHarness, createOpContext());
     }
 

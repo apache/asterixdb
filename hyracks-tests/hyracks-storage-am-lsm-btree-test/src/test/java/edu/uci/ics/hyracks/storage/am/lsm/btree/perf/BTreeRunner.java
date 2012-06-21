@@ -25,7 +25,6 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
@@ -49,7 +48,6 @@ public class BTreeRunner extends InMemoryBTreeRunner {
         bufferCache.createFile(file);
         btreeFileId = fmp.lookupFileId(file);
         bufferCache.openFile(btreeFileId);
-        btree = BTreeUtils.createBTree(bufferCache, NoOpOperationCallback.INSTANCE, typeTraits, cmpFactories,
-                BTreeLeafFrameType.REGULAR_NSM);
+        btree = BTreeUtils.createBTree(bufferCache, typeTraits, cmpFactories, BTreeLeafFrameType.REGULAR_NSM);
     }
 }

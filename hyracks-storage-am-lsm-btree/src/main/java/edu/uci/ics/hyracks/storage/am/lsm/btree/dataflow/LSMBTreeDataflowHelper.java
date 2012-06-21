@@ -66,10 +66,9 @@ public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
             file.delete();
         }
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(memNumPages, metaDataFrameFactory);
-        return LSMBTreeUtils.createLSMTree(memBufferCache, opDesc.getOpCallbackProvider().getOperationCallback(),
-                memFreePageManager, ctx.getIOManager(), file.getFile().getPath(), opDesc.getStorageManager()
+        return LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager,
+                ctx.getIOManager(), file.getFile().getPath(), opDesc.getStorageManager()
                         .getBufferCache(ctx), opDesc.getStorageManager().getFileMapProvider(ctx), treeOpDesc
-                        .getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories(), flushPolicy,
-                mergePolicy);
+                        .getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories(), flushPolicy, mergePolicy);
     }
 }

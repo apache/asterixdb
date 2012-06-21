@@ -33,7 +33,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
@@ -42,6 +43,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
@@ -87,14 +89,14 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
 
     private boolean isOpen = false;
 
-    public LSMBTree(IBufferCache memBufferCache, IOperationCallback memOpCallback,
-            InMemoryFreePageManager memFreePageManager, ITreeIndexFrameFactory interiorFrameFactory,
-            ITreeIndexFrameFactory insertLeafFrameFactory, ITreeIndexFrameFactory deleteLeafFrameFactory,
-            ILSMFileManager fileNameManager, BTreeFactory diskBTreeFactory, BTreeFactory bulkLoadBTreeFactory,
-            IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
-            ILSMFlushPolicy flushPolicy, ILSMMergePolicy mergePolicy) {
-        memBTree = new BTree(memBufferCache, memOpCallback, fieldCount, cmpFactories, memFreePageManager,
-                interiorFrameFactory, insertLeafFrameFactory);
+    public LSMBTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
+            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
+            ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMFileManager fileNameManager,
+            BTreeFactory diskBTreeFactory, BTreeFactory bulkLoadBTreeFactory, IFileMapProvider diskFileMapProvider,
+            int fieldCount, IBinaryComparatorFactory[] cmpFactories, ILSMFlushPolicy flushPolicy,
+            ILSMMergePolicy mergePolicy) {
+        memBTree = new BTree(memBufferCache, fieldCount, cmpFactories, memFreePageManager, interiorFrameFactory,
+                insertLeafFrameFactory);
         this.memFreePageManager = memFreePageManager;
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
@@ -179,7 +181,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     public ITreeIndex flush() throws HyracksDataException, IndexException {
         // Bulk load a new on-disk BTree from the in-memory BTree.        
         RangePredicate nullPred = new RangePredicate(null, null, true, true, null, null);
-        ITreeIndexAccessor memBTreeAccessor = memBTree.createAccessor();
+        ITreeIndexAccessor memBTreeAccessor = memBTree.createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         IIndexCursor scanCursor = memBTreeAccessor.createSearchCursor();
         memBTreeAccessor.search(scanCursor, nullPred);
         BTree diskBTree = createFlushTarget();
@@ -274,7 +277,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         ListIterator<Object> diskBTreesIter = diskComponents.listIterator();
         while (diskBTreesIter.hasNext()) {
             BTree diskBTree = (BTree) diskBTreesIter.next();
-            diskBTreeAccessors[diskBTreeIx] = diskBTree.createAccessor();
+            diskBTreeAccessors[diskBTreeIx] = diskBTree.createAccessor(NoOpOperationCallback.INSTANCE,
+                    NoOpOperationCallback.INSTANCE);
             diskBTreeAccessors[diskBTreeIx].search(lsmTreeCursor.getCursor(cursorIx), pred);
             cursorIx++;
             diskBTreeIx++;
@@ -428,7 +432,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     }
 
     @Override
-    public IIndexAccessor createAccessor() {
+    public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback) {
         return new LSMBTreeIndexAccessor(lsmHarness, createOpContext());
     }
 

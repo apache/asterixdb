@@ -42,7 +42,7 @@ public class BTreePrimaryIndexScanOperatorTest extends AbstractBTreeOperatorTest
     @Before
     public void setup() throws Exception {
         super.setup();
-	createPrimaryIndex();
+        createPrimaryIndex();
         loadPrimaryIndex();
     }
 

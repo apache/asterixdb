@@ -28,9 +28,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
@@ -181,10 +179,6 @@ public class LSMBTreeTestHarness {
 
     public Random getRandom() {
         return rnd;
-    }
-
-    public IOperationCallback getMemOpCallback() {
-        return NoOpOperationCallback.INSTANCE;
     }
 
     public ILSMIOScheduler getIOScheduler() {

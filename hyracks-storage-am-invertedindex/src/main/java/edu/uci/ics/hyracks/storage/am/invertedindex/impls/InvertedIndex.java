@@ -32,6 +32,8 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
@@ -340,7 +342,7 @@ public class InvertedIndex implements IIndex {
     }
     
     @Override
-    public IIndexAccessor createAccessor() {
+    public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback) {
         return new InvertedIndexAccessor(this);
     }
 
