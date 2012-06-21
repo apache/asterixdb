@@ -19,6 +19,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
@@ -39,15 +41,18 @@ public class BTreeOpContext implements IIndexOpContext {
     public ITreeIndexCursor cursor;
     public BTreeCursorInitialState cursorInitialState;
     public RangePredicate pred;
-    public BTreeSplitKey splitKey;    
+    public BTreeSplitKey splitKey;
     public LongArrayList pageLsns;
     public IntArrayList smPages;
     public IntArrayList freePages;
     public int opRestarts = 0;
     public boolean exceptionHandled;
-    
+    public IModificationOperationCallback modificationCallback;
+    public ISearchOperationCallback searchCallback;
+
     public BTreeOpContext(ITreeIndexFrameFactory leafFrameFactory, ITreeIndexFrameFactory interiorFrameFactory,
-            ITreeIndexMetaDataFrame metaFrame, IBinaryComparatorFactory[] cmpFactories) {
+            ITreeIndexMetaDataFrame metaFrame, IBinaryComparatorFactory[] cmpFactories,
+            IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback) {
         this.cmp = MultiComparator.create(cmpFactories);
         this.leafFrameFactory = leafFrameFactory;
         this.leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
@@ -61,6 +66,8 @@ public class BTreeOpContext implements IIndexOpContext {
         }
         this.metaFrame = metaFrame;
         this.pageLsns = new LongArrayList(INIT_ARRAYLIST_SIZE, INIT_ARRAYLIST_SIZE);
+        this.modificationCallback = modificationCallback;
+        this.searchCallback = searchCallback;
     }
 
     public void reset() {

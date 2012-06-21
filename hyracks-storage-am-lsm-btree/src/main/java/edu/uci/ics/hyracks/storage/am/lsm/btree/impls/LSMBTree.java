@@ -287,7 +287,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     }
 
     public ITreeIndex merge(List<Object> mergedComponents) throws HyracksDataException, IndexException {
-        LSMBTreeOpContext ctx = createOpContext();
+        LSMBTreeOpContext ctx = createOpContext(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         ITreeIndexCursor cursor = new LSMBTreeRangeSearchCursor();
         RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
         // Ordered scan, ignoring the in-memory BTree.
@@ -427,14 +427,16 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         return cmpFactories;
     }
 
-    public LSMBTreeOpContext createOpContext() {
-        return new LSMBTreeOpContext(memBTree, insertLeafFrameFactory, deleteLeafFrameFactory);
+    public LSMBTreeOpContext createOpContext(IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback) {
+        return new LSMBTreeOpContext(memBTree, insertLeafFrameFactory, deleteLeafFrameFactory, modificationCallback,
+                searchCallback);
     }
 
     @Override
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
-        return new LSMBTreeIndexAccessor(lsmHarness, createOpContext());
+        return new LSMBTreeIndexAccessor(lsmHarness, createOpContext(modificationCallback, searchCallback));
     }
 
     public class LSMBTreeIndexAccessor extends LSMTreeIndexAccessor {

@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
@@ -35,7 +36,7 @@ public final class LSMRTreeOpContext implements IIndexOpContext {
     public final RTree.RTreeAccessor memRTreeAccessor;
     public final BTree.BTreeAccessor memBTreeAccessor;
     private IndexOp op;
-    
+
     public LSMRTreeOpContext(RTree.RTreeAccessor memRtreeAccessor, IRTreeLeafFrame rtreeLeafFrame,
             IRTreeInteriorFrame rtreeInteriorFrame, ITreeIndexMetaDataFrame rtreeMetaFrame, int rTreeHeightHint,
             BTree.BTreeAccessor memBtreeAccessor, ITreeIndexFrameFactory btreeLeafFrameFactory,
@@ -43,9 +44,10 @@ public final class LSMRTreeOpContext implements IIndexOpContext {
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories) {
         this.memRTreeAccessor = memRtreeAccessor;
         this.memBTreeAccessor = memBtreeAccessor;
-        this.rtreeOpContext = new RTreeOpContext(rtreeLeafFrame, rtreeInteriorFrame, rtreeMetaFrame, rtreeCmpFactories, rTreeHeightHint);
+        this.rtreeOpContext = new RTreeOpContext(rtreeLeafFrame, rtreeInteriorFrame, rtreeMetaFrame, rtreeCmpFactories,
+                rTreeHeightHint);
         this.btreeOpContext = new BTreeOpContext(btreeLeafFrameFactory, btreeInteriorFrameFactory, btreeMetaFrame,
-        		btreeCmpFactories);
+                btreeCmpFactories, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
     }
 
     public void reset(IndexOp newOp) {
@@ -63,10 +65,10 @@ public final class LSMRTreeOpContext implements IIndexOpContext {
     }
 
     public IndexOp getIndexOp() {
-    	return op;
+        return op;
     }
-    
+
     public MultiComparator getBTreeMultiComparator() {
-    	return btreeOpContext.cmp;
+        return btreeOpContext.cmp;
     }
 }

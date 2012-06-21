@@ -257,10 +257,12 @@ public class BTree implements ITreeIndex {
     }
 
     private void insert(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+        ctx.modificationCallback.commence(tuple);
         insertUpdateOrDelete(tuple, ctx);
     }
 
     private void upsert(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+        ctx.modificationCallback.commence(tuple);
         insertUpdateOrDelete(tuple, ctx);
     }
 
@@ -271,10 +273,12 @@ public class BTree implements ITreeIndex {
         if (fieldCount == ctx.cmp.getKeyFieldCount()) {
             throw new BTreeNotUpdateableException("Cannot perform updates when the entire tuple forms the key.");
         }
+        ctx.modificationCallback.commence(tuple);
         insertUpdateOrDelete(tuple, ctx);
     }
 
     private void delete(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+        ctx.modificationCallback.commence(tuple);
         insertUpdateOrDelete(tuple, ctx);
     }
 
@@ -284,6 +288,7 @@ public class BTree implements ITreeIndex {
         FrameOpSpaceStatus spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple);
         switch (spaceStatus) {
             case SUFFICIENT_CONTIGUOUS_SPACE: {
+                ctx.modificationCallback.found(null);
                 ctx.leafFrame.insert(tuple, targetTupleIndex);
                 ctx.splitKey.reset();
                 break;
@@ -293,6 +298,7 @@ public class BTree implements ITreeIndex {
                 if (slotsChanged) {
                     targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple);
                 }
+                ctx.modificationCallback.found(null);
                 ctx.leafFrame.insert(tuple, targetTupleIndex);
                 ctx.splitKey.reset();
                 break;
@@ -306,6 +312,7 @@ public class BTree implements ITreeIndex {
                     spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple);
                 }
                 if (spaceStatus == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
+                    ctx.modificationCallback.found(null);
                     ctx.leafFrame.insert(tuple, targetTupleIndex);
                     ctx.splitKey.reset();
                 } else {
@@ -338,7 +345,11 @@ public class BTree implements ITreeIndex {
 
             // Perform an update (delete + insert) if the updateTupleIndex != -1
             if (updateTupleIndex != -1) {
+                ITupleReference beforeTuple = ctx.leafFrame.getUpsertBeforeTuple(tuple, updateTupleIndex);
+                ctx.modificationCallback.found(beforeTuple);
                 ctx.leafFrame.delete(tuple, updateTupleIndex);
+            } else {
+                ctx.modificationCallback.found(null);
             }
             ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey);
 
@@ -371,20 +382,24 @@ public class BTree implements ITreeIndex {
     private boolean updateLeaf(ITupleReference tuple, int oldTupleIndex, int pageId, BTreeOpContext ctx)
             throws Exception {
         FrameOpSpaceStatus spaceStatus = ctx.leafFrame.hasSpaceUpdate(tuple, oldTupleIndex);
+        ITupleReference beforeTuple = ctx.leafFrame.getUpsertBeforeTuple(tuple, oldTupleIndex);
         boolean restartOp = false;
         switch (spaceStatus) {
             case SUFFICIENT_INPLACE_SPACE: {
+                ctx.modificationCallback.found(beforeTuple);
                 ctx.leafFrame.update(tuple, oldTupleIndex, true);
                 ctx.splitKey.reset();
                 break;
             }
             case SUFFICIENT_CONTIGUOUS_SPACE: {
+                ctx.modificationCallback.found(beforeTuple);
                 ctx.leafFrame.update(tuple, oldTupleIndex, false);
                 ctx.splitKey.reset();
                 break;
             }
             case SUFFICIENT_SPACE: {
                 // Delete the old tuple, compact the frame, and insert the new tuple.
+                ctx.modificationCallback.found(beforeTuple);
                 ctx.leafFrame.delete(tuple, oldTupleIndex);
                 ctx.leafFrame.compact();
                 int targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple);
@@ -475,6 +490,8 @@ public class BTree implements ITreeIndex {
             throw new BTreeNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
         }
         int tupleIndex = ctx.leafFrame.findDeleteTupleIndex(tuple);
+        ITupleReference beforeTuple = ctx.leafFrame.getUpsertBeforeTuple(tuple, tupleIndex);
+        ctx.modificationCallback.found(beforeTuple);
         ctx.leafFrame.delete(tuple, tupleIndex);
         return false;
     }
@@ -878,9 +895,10 @@ public class BTree implements ITreeIndex {
         }
     }
 
-    private BTreeOpContext createOpContext() {
+    private BTreeOpContext createOpContext(IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback) {
         return new BTreeOpContext(leafFrameFactory, interiorFrameFactory, freePageManager.getMetaDataFrameFactory()
-                .createFrame(), cmpFactories);
+                .createFrame(), cmpFactories, modificationCallback, searchCallback);
     }
 
     public ITreeIndexFrameFactory getInteriorFrameFactory() {
@@ -1007,8 +1025,9 @@ public class BTree implements ITreeIndex {
     }
 
     @Override
-    public ITreeIndexAccessor createAccessor(IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback) {
-        return new BTreeAccessor(this);
+    public ITreeIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback) {
+        return new BTreeAccessor(this, modificationCallback, searchCallback);
     }
 
     // TODO: Class should be private. But currently we need to expose the
@@ -1017,9 +1036,10 @@ public class BTree implements ITreeIndex {
         private BTree btree;
         private BTreeOpContext ctx;
 
-        public BTreeAccessor(BTree btree) {
+        public BTreeAccessor(BTree btree, IModificationOperationCallback modificationCalback,
+                ISearchOperationCallback searchCallback) {
             this.btree = btree;
-            this.ctx = btree.createOpContext();
+            this.ctx = btree.createOpContext(modificationCalback, searchCallback);
         }
 
         @Override

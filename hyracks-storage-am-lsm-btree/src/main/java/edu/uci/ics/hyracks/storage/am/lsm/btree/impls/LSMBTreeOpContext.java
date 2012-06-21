@@ -19,8 +19,9 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
@@ -35,9 +36,12 @@ public final class LSMBTreeOpContext implements IIndexOpContext {
     public BTreeOpContext memBTreeOpCtx;
     public IndexOp op;
     public final MultiComparator cmp;
+    public final IModificationOperationCallback modificationCallback;
+    public final ISearchOperationCallback searchCallback;
 
     public LSMBTreeOpContext(BTree memBTree, ITreeIndexFrameFactory insertLeafFrameFactory,
-            ITreeIndexFrameFactory deleteLeafFrameFactory) {
+            ITreeIndexFrameFactory deleteLeafFrameFactory, IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback) {
         this.cmp = MultiComparator.create(memBTree.getComparatorFactories());
         this.memBTree = memBTree;
         this.insertLeafFrameFactory = insertLeafFrameFactory;
@@ -50,6 +54,8 @@ public final class LSMBTreeOpContext implements IIndexOpContext {
         if (deleteLeafFrame != null) {
             deleteLeafFrame.setMultiComparator(cmp);
         }
+        this.modificationCallback = modificationCallback;
+        this.searchCallback = searchCallback;
     }
 
     @Override
@@ -81,8 +87,7 @@ public final class LSMBTreeOpContext implements IIndexOpContext {
 
     private void setMemBTreeAccessor() {
         if (memBTreeAccessor == null) {
-            memBTreeAccessor = (BTree.BTreeAccessor) memBTree.createAccessor(NoOpOperationCallback.INSTANCE,
-                    NoOpOperationCallback.INSTANCE);
+            memBTreeAccessor = (BTree.BTreeAccessor) memBTree.createAccessor(modificationCallback, searchCallback);
             memBTreeOpCtx = memBTreeAccessor.getOpContext();
         }
     }
