@@ -254,6 +254,10 @@ public class BTree implements ITreeIndex {
             unsetSmPages(ctx);
             repeatOp = false;
         }
+        
+        if(ctx.opRestarts >= MAX_RESTARTS) {
+            throw new BTreeException("Operation exceeded the maximum number of restarts");
+        }
     }
 
     private void insert(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
