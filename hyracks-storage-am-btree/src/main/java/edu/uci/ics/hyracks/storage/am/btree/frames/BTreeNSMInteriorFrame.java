@@ -59,7 +59,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
     }
-    
+
     @Override
     public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple) {
         // Tuple bytes + child pointer + slot.
@@ -103,7 +103,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
             }
         }
     }
-    
+
     @Override
     public int findDeleteTupleIndex(ITupleReference tuple) throws TreeIndexException {
         return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
@@ -135,7 +135,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         buf.putInt(totalFreeSpaceOff,
                 buf.getInt(totalFreeSpaceOff) + keySize + childPtrSize + slotManager.getSlotSize());
     }
-    
+
     @Override
     public void deleteGreatest() {
         int slotOff = slotManager.getSlotEndOff();
@@ -152,12 +152,12 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
             buf.putInt(freeSpace, freeSpace - (keySize + childPtrSize));
         }
     }
-    
+
     @Override
     public FrameOpSpaceStatus hasSpaceUpdate(ITupleReference tuple, int oldTupleIndex) {
         throw new UnsupportedOperationException("Cannot update tuples in interior node.");
     }
-    
+
     @Override
     public int findUpdateTupleIndex(ITupleReference tuple) throws TreeIndexException {
         throw new UnsupportedOperationException("Cannot update tuples in interior node.");
@@ -179,10 +179,10 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     }
 
     @Override
-    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) throws TreeIndexException {
+    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) {
         ByteBuffer right = rightFrame.getBuffer();
         int tupleCount = getTupleCount();
-        
+
         // Find split point, and determine into which frame the new tuple should be inserted into.
         int tuplesToLeft = (tupleCount / 2) + (tupleCount % 2);
         ITreeIndexFrame targetFrame = null;
@@ -232,8 +232,13 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         compact();
 
         // Insert the saved split key.
-        int targetTupleIndex = ((BTreeNSMInteriorFrame) targetFrame)
-                .findInsertTupleIndex(savedSplitKey.getTuple());
+        int targetTupleIndex;
+        // it's safe to catch this exception since it will have been caught before reaching here
+        try {
+            targetTupleIndex = ((BTreeNSMInteriorFrame) targetFrame).findInsertTupleIndex(savedSplitKey.getTuple());
+        } catch (TreeIndexException e) {
+            throw new IllegalStateException(e);
+        }
         targetFrame.insert(savedSplitKey.getTuple(), targetTupleIndex);
     }
 
@@ -378,14 +383,14 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         cmpFrameTuple.setFieldCount(cmp.getKeyFieldCount());
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
     }
-    
+
     @Override
     public ITreeIndexTupleReference createTupleReference() {
         ITreeIndexTupleReference tuple = tupleWriter.createTupleReference();
         tuple.setFieldCount(cmp.getKeyFieldCount());
         return tuple;
     }
-    
+
     // For debugging.
     public ArrayList<Integer> getChildren(MultiComparator cmp) {
         ArrayList<Integer> ret = new ArrayList<Integer>();

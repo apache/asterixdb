@@ -34,7 +34,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFrame {
     protected static final int nextLeafOff = smFlagOff + 1;
     private MultiComparator cmp;
-    
+
     public BTreeNSMLeafFrame(ITreeIndexTupleWriter tupleWriter) {
         super(tupleWriter, new OrderedSlotManager());
     }
@@ -65,7 +65,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         }
         return tupleIndex;
     }
-    
+
     @Override
     public int findUpdateTupleIndex(ITupleReference tuple) throws TreeIndexException {
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.EXACT,
@@ -73,10 +73,10 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         // Error indicator is set if there is no exact match.
         if (tupleIndex == slotManager.getErrorIndicator() || tupleIndex == slotManager.getGreatestKeyIndicator()) {
             throw new BTreeNonExistentKeyException("Trying to update a tuple with a nonexistent key in leaf node.");
-        }        
+        }
         return tupleIndex;
     }
-    
+
     @Override
     public int findUpsertTupleIndex(ITupleReference tuple) throws TreeIndexException {
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
@@ -84,7 +84,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         // Just return the found tupleIndex. The caller will make the final decision whether to insert or update.
         return tupleIndex;
     }
-    
+
     @Override
     public ITupleReference getUpsertBeforeTuple(ITupleReference tuple, int targetTupleIndex) throws TreeIndexException {
         // Examine the tuple index to determine whether it is valid or not.
@@ -100,7 +100,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         // In those cases, we are definitely dealing with an insert.
         return null;
     }
-    
+
     @Override
     public int findDeleteTupleIndex(ITupleReference tuple) throws TreeIndexException {
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.EXACT,
@@ -108,7 +108,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         // Error indicator is set if there is no exact match.
         if (tupleIndex == slotManager.getErrorIndicator() || tupleIndex == slotManager.getGreatestKeyIndicator()) {
             throw new BTreeNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
-        }        
+        }
         return tupleIndex;
     }
 
@@ -128,10 +128,10 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
 
     @Override
-    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) throws TreeIndexException {
-    	ByteBuffer right = rightFrame.getBuffer();
-        int tupleCount = getTupleCount();        
-        
+    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) {
+        ByteBuffer right = rightFrame.getBuffer();
+        int tupleCount = getTupleCount();
+
         // Find split point, and determine into which frame the new tuple should be inserted into.
         int tuplesToLeft;
         int mid = tupleCount / 2;
@@ -166,7 +166,13 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         compact();
 
         // Insert the new tuple.
-        int targetTupleIndex = ((BTreeNSMLeafFrame)targetFrame).findInsertTupleIndex(tuple);
+        int targetTupleIndex;
+        // it's safe to catch this exception since it will have been caught before reaching here
+        try {
+            targetTupleIndex = ((BTreeNSMLeafFrame) targetFrame).findInsertTupleIndex(tuple);
+        } catch (TreeIndexException e) {
+            throw new IllegalStateException(e);
+        }
         targetFrame.insert(tuple, targetTupleIndex);
 
         // Set the split key to be highest key in the left page.
@@ -213,9 +219,9 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
             buf.put(smFlagOff, (byte) 0);
         }
     }
-    
-	@Override
-	public void setMultiComparator(MultiComparator cmp) {
-		this.cmp = cmp;
-	}
+
+    @Override
+    public void setMultiComparator(MultiComparator cmp) {
+        this.cmp = cmp;
+    }
 }
