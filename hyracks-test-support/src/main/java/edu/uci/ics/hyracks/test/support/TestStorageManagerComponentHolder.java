@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexArtifactMap;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
@@ -40,6 +41,7 @@ public class TestStorageManagerComponentHolder {
     private static IFileMapProvider fileMapProvider;
     private static IndexRegistry<IIndex> indexRegistry;
     private static IOManager ioManager;
+    private static IIndexArtifactMap indexArtifactMap;
     
     private static int pageSize;
     private static int numPages;
@@ -52,6 +54,7 @@ public class TestStorageManagerComponentHolder {
         bufferCache = null;
         fileMapProvider = null;
         indexRegistry = null;
+        indexArtifactMap = null;
     }
 
     public synchronized static IBufferCache getBufferCache(IHyracksTaskContext ctx) {
@@ -86,5 +89,12 @@ public class TestStorageManagerComponentHolder {
     		ioManager = new IOManager(devices, Executors.newCachedThreadPool());
     	}
     	return ioManager;
+    }
+    
+    public synchronized static IIndexArtifactMap getIndexArtifactMap(IHyracksTaskContext ctx) {
+        if (indexArtifactMap == null) {
+            indexArtifactMap = new TestIndexArtifactMap();
+        }
+        return indexArtifactMap;
     }
 }

@@ -84,7 +84,7 @@ public class RTreeSecondaryIndexInsertOperatorTest extends AbstractRTreeOperator
         RTreeSearchOperatorDescriptor secondarySearchOp = new RTreeSearchOperatorDescriptor(spec, secondaryRecDesc,
                 storageManager, indexRegistryProvider, secondarySplitProvider, secondaryTypeTraits,
                 secondaryComparatorFactories, keyFields, rtreeDataflowHelperFactory,
-                NoOpOperationCallbackProvider.INSTANCE);
+                NoOpOperationCallbackProvider.INSTANCE, indexArtifactMapProvider);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondarySearchOp, NC1_ID);
 
         // fifth field from the tuples coming from secondary index
@@ -96,7 +96,7 @@ public class RTreeSecondaryIndexInsertOperatorTest extends AbstractRTreeOperator
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, indexRegistryProvider, primarySplitProvider, primaryTypeTraits,
                 primaryComparatorFactories, primaryLowKeyFields, primaryHighKeyFields, true, true,
-                btreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+                btreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE, indexArtifactMapProvider);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primarySearchOp, NC1_ID);
 
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,

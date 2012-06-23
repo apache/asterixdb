@@ -36,9 +36,10 @@ public class TreeIndexBulkLoadOperatorDescriptor extends AbstractTreeIndexOperat
             IIndexRegistryProvider<IIndex> indexRegistryProvider, IFileSplitProvider fileSplitProvider,
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation,
             float fillFactor, IIndexDataflowHelperFactory dataflowHelperFactory,
-            IOperationCallbackProvider opCallbackProvider) {
+            IOperationCallbackProvider opCallbackProvider,
+            IIndexArtifactMapProvider indexArtifactMapProvider) {
         super(spec, 1, 0, null, storageManager, indexRegistryProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, dataflowHelperFactory, null, opCallbackProvider);
+                comparatorFactories, dataflowHelperFactory, null, opCallbackProvider, indexArtifactMapProvider);
         this.fieldPermutation = fieldPermutation;
         this.fillFactor = fillFactor;
     }

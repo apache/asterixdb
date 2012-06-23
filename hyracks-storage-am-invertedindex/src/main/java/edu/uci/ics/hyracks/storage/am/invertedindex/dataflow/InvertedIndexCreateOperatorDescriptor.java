@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexArtifactMapProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizerFactory;
@@ -39,10 +40,11 @@ public class InvertedIndexCreateOperatorDescriptor extends AbstractInvertedIndex
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenComparatorFactories,
             ITypeTraits[] invListsTypeTraits, IBinaryComparatorFactory[] invListComparatorFactories,
             IBinaryTokenizerFactory tokenizerFactory, IIndexDataflowHelperFactory btreeDataflowHelperFactory,
-            IOperationCallbackProvider opCallbackProvider) {
+            IOperationCallbackProvider opCallbackProvider, IIndexArtifactMapProvider indexArtifactMapProvider) {
         super(spec, 0, 0, null, storageManager, btreeFileSplitProvider, invListsFileSplitProvider,
                 indexRegistryProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
-                invListComparatorFactories, tokenizerFactory, btreeDataflowHelperFactory, opCallbackProvider);
+                invListComparatorFactories, tokenizerFactory, btreeDataflowHelperFactory, opCallbackProvider,
+                indexArtifactMapProvider);
     }
 
     @Override

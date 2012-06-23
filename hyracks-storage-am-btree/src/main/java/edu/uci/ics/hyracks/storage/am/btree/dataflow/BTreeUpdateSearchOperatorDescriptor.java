@@ -26,6 +26,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleUpdaterFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexArtifactMapProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
@@ -41,10 +42,11 @@ public class BTreeUpdateSearchOperatorDescriptor extends BTreeSearchOperatorDesc
             IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] comparatorFactories, int[] lowKeyFields, int[] highKeyFields,
             boolean lowKeyInclusive, boolean highKeyInclusive, IIndexDataflowHelperFactory dataflowHelperFactory,
-            IOperationCallbackProvider opCallbackProvider, ITupleUpdaterFactory tupleUpdaterFactory) {
+            IOperationCallbackProvider opCallbackProvider, ITupleUpdaterFactory tupleUpdaterFactory,
+            IIndexArtifactMapProvider indexArtifactMapProvider) {
         super(spec, recDesc, storageManager, indexRegistryProvider, fileSplitProvider, typeTraits, comparatorFactories,
                 lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive, dataflowHelperFactory,
-                opCallbackProvider);
+                opCallbackProvider, indexArtifactMapProvider);
         this.tupleUpdaterFactory = tupleUpdaterFactory;
     }
 

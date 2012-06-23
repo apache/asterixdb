@@ -15,9 +15,13 @@
 
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
+import java.util.List;
+
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.io.IIOManager;
+import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -61,6 +65,15 @@ public abstract class IndexDataflowHelper {
     			throw e;
     		}
     	}
+    	/*
+    	//check whether the requested index instance already exists
+    	//To do so, checking the index directory of the first ioDevice is sufficient.
+    	IIOManager ioManager = ctx.getIOManager();
+    	List<IODeviceHandle> ioDevices = ioManager.getIODevices();
+    	
+    	getIndexArtifactMapProvider().getIndexArtifactMap(ctx).get()
+    	*/
+    	
     	// Only set indexFileId member after openFile() succeeds.
     	indexFileId = fileId;    	
     	// Create new index instance and register it.
@@ -115,5 +128,9 @@ public abstract class IndexDataflowHelper {
 
     public IOperationCallbackProvider getOpCallbackProvider() {
         return opDesc.getOpCallbackProvider();
+    }
+    
+    public IIndexArtifactMapProvider getIndexArtifactMapProvider() {
+        return opDesc.getIndexArtifactMapProvider();
     }
 }
