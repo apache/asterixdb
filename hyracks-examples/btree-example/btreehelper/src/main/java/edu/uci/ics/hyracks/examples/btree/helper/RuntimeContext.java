@@ -27,19 +27,22 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
+import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
 import edu.uci.ics.hyracks.storage.common.smi.TransientFileMapManager;
 
 public class RuntimeContext {
     private IndexRegistry<IIndex> indexRegistry;
     private IBufferCache bufferCache;
     private IFileMapManager fileMapManager;
-
+    private IIndexArtifactMap indexArtifactMap;
+    
     public RuntimeContext(INCApplicationContext appCtx) {
         fileMapManager = new TransientFileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
         bufferCache = new BufferCache(appCtx.getRootContext().getIOManager(), allocator, prs, fileMapManager, 32768, 50, 100);
         indexRegistry = new IndexRegistry<IIndex>();
+        indexArtifactMap = new TransientIndexArtifactMap();
     }
 
     public void close() {
@@ -60,5 +63,9 @@ public class RuntimeContext {
     
     public static RuntimeContext get(IHyracksTaskContext ctx) {
         return (RuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
+    }
+    
+    public IIndexArtifactMap getIndexArtifactMap() {
+        return indexArtifactMap;
     }
 }

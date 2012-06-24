@@ -18,6 +18,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
+import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
 
 public class TestStorageManagerInterface implements IStorageManagerInterface {
     private static final long serialVersionUID = 1L;
@@ -30,5 +31,10 @@ public class TestStorageManagerInterface implements IStorageManagerInterface {
     @Override
     public IFileMapProvider getFileMapProvider(IHyracksTaskContext ctx) {
         return TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+    }
+
+    @Override
+    public IIndexArtifactMap getIndexArtifactMap(IHyracksTaskContext ctx) {
+        return TestStorageManagerComponentHolder.getIndexArtifactMap(ctx);
     }
 }

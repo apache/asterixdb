@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,11 +24,14 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.io.IIOManager;
+import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
+import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
 
 public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePushable {
     private static final Logger LOGGER = Logger.getLogger(TreeIndexDropOperatorNodePushable.class.getName());
@@ -68,8 +72,29 @@ public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePusha
             IndexRegistry<IIndex> treeIndexRegistry = treeIndexRegistryProvider.getRegistry(ctx);
             IBufferCache bufferCache = storageManager.getBufferCache(ctx);
             IFileMapProvider fileMapProvider = storageManager.getFileMapProvider(ctx);
-            
+            IIndexArtifactMap indexArtifactMap = storageManager.getIndexArtifactMap(ctx);
+
             FileReference f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
+
+            //check whether the requested index instance already exists by retrieving indexRegistry with resourceId
+            //To do so, checking the index directory in the first ioDevice is sufficient.
+
+            //create a fullDir(= IODeviceDir + baseDir) for the requested index
+            IIOManager ioManager = ctx.getIOManager();
+            List<IODeviceHandle> ioDeviceHandles = ioManager.getIODevices();
+            String fullDir = ioDeviceHandles.get(0).getPath().toString();
+            if (!fullDir.endsWith(System.getProperty("file.separator"))) {
+                fullDir += System.getProperty("file.separator");
+            }
+            String baseDir = f.getFile().getPath();
+            if (!baseDir.endsWith(System.getProperty("file.separator"))) {
+                baseDir += System.getProperty("file.separator");
+            }
+            fullDir += baseDir;
+
+            //get the corresponding resourceId with the fullDir
+            long resourceId = indexArtifactMap.get(fullDir);
+
             int indexFileId = -1;
             synchronized (fileMapProvider) {
                 boolean fileIsMapped = fileMapProvider.isMapped(f);
@@ -81,7 +106,8 @@ public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePusha
             }
             // Unregister tree instance.
             synchronized (treeIndexRegistry) {
-                treeIndexRegistry.unregister(indexFileId);
+                treeIndexRegistry.unregister(resourceId);
+                indexArtifactMap.delete(baseDir, ioDeviceHandles);
             }
 
             // remove name to id mapping

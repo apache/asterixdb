@@ -19,9 +19,12 @@ import java.io.Serializable;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
+import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
 
 public interface IStorageManagerInterface extends Serializable {
-    public IBufferCache getBufferCache(IHyracksTaskContext ctx);
+	public IBufferCache getBufferCache(IHyracksTaskContext ctx);
 
-    public IFileMapProvider getFileMapProvider(IHyracksTaskContext ctx);
+	public IFileMapProvider getFileMapProvider(IHyracksTaskContext ctx);
+
+	public IIndexArtifactMap getIndexArtifactMap(IHyracksTaskContext ctx);
 }

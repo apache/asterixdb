@@ -19,17 +19,17 @@ import java.util.HashMap;
 
 public class IndexRegistry<IndexType> {
 
-    private HashMap<Integer, IndexType> map = new HashMap<Integer, IndexType>();
+    private HashMap<Long, IndexType> map = new HashMap<Long, IndexType>();
 
-    public IndexType get(int indexId) {
+    public IndexType get(long indexId) {
         return map.get(indexId);
     }
 
-    public void register(int indexId, IndexType index) {
+    public void register(long indexId, IndexType index) {
         map.put(indexId, index);
     }
 
-    public void unregister(int indexId) {
+    public void unregister(long indexId) {
         map.remove(indexId);
     }
 

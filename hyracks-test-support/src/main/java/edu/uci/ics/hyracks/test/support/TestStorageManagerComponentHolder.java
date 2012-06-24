@@ -33,6 +33,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
+import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
 import edu.uci.ics.hyracks.storage.common.smi.TransientFileMapManager;
 
 public class TestStorageManagerComponentHolder {
@@ -40,7 +41,8 @@ public class TestStorageManagerComponentHolder {
     private static IFileMapProvider fileMapProvider;
     private static IndexRegistry<IIndex> indexRegistry;
     private static IOManager ioManager;
-    
+    private static IIndexArtifactMap indexArtifactMap;
+
     private static int pageSize;
     private static int numPages;
     private static int maxOpenFiles;
@@ -52,6 +54,7 @@ public class TestStorageManagerComponentHolder {
         bufferCache = null;
         fileMapProvider = null;
         indexRegistry = null;
+        indexArtifactMap = null;
     }
 
     public synchronized static IBufferCache getBufferCache(IHyracksTaskContext ctx) {
@@ -78,13 +81,20 @@ public class TestStorageManagerComponentHolder {
         }
         return indexRegistry;
     }
-    
+
     public synchronized static IOManager getIOManager() throws HyracksException {
-    	if (ioManager == null) {
-    		List<IODeviceHandle> devices = new ArrayList<IODeviceHandle>();
-    		devices.add(new IODeviceHandle(new File(System.getProperty("java.io.tmpdir")), "iodev_test_wa"));
-    		ioManager = new IOManager(devices, Executors.newCachedThreadPool());
-    	}
-    	return ioManager;
+        if (ioManager == null) {
+            List<IODeviceHandle> devices = new ArrayList<IODeviceHandle>();
+            devices.add(new IODeviceHandle(new File(System.getProperty("java.io.tmpdir")), "iodev_test_wa"));
+            ioManager = new IOManager(devices, Executors.newCachedThreadPool());
+        }
+        return ioManager;
+    }
+
+    public synchronized static IIndexArtifactMap getIndexArtifactMap(IHyracksTaskContext ctx) {
+        if (indexArtifactMap == null) {
+            indexArtifactMap = new TestIndexArtifactMap();
+        }
+        return indexArtifactMap;
     }
 }
