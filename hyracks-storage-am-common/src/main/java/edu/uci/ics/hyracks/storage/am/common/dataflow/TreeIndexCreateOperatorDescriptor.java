@@ -32,10 +32,9 @@ public class TreeIndexCreateOperatorDescriptor extends AbstractTreeIndexOperator
     public TreeIndexCreateOperatorDescriptor(IOperatorDescriptorRegistry spec, IStorageManagerInterface storageManager,
             IIndexRegistryProvider<IIndex> indexRegistryProvider, IFileSplitProvider fileSplitProvider,
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories,
-            IIndexDataflowHelperFactory dataflowHelperFactory, IOperationCallbackProvider opCallbackProvider,
-            IIndexArtifactMapProvider indexArtifactMapProvider) {
+            IIndexDataflowHelperFactory dataflowHelperFactory, IOperationCallbackProvider opCallbackProvider) {
         super(spec, 0, 0, null, storageManager, indexRegistryProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, dataflowHelperFactory, null, opCallbackProvider, indexArtifactMapProvider);
+                comparatorFactories, dataflowHelperFactory, null, opCallbackProvider);
     }
 
     @Override

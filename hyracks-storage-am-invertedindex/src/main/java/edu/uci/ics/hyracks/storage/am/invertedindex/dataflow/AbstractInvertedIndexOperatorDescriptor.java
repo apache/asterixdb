@@ -28,7 +28,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexArtifactMapProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
@@ -46,7 +45,6 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     protected final IStorageManagerInterface storageManager;
     protected final IIndexRegistryProvider<IIndex> indexRegistryProvider;
     protected final IOperationCallbackProvider opCallbackProvider;
-    protected final IIndexArtifactMapProvider indexArtifactMapProvider;
     
     // Btree.
     protected final ITreeIndexFrameFactory btreeInteriorFrameFactory;
@@ -68,15 +66,13 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
             IIndexRegistryProvider<IIndex> indexRegistryProvider, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTraits[] invListsTypeTraits,
             IBinaryComparatorFactory[] invListComparatorFactories, IBinaryTokenizerFactory tokenizerFactory,
-            IIndexDataflowHelperFactory btreeDataflowHelperFactory, IOperationCallbackProvider opCallbackProvider,
-            IIndexArtifactMapProvider indexArtifactMapProvider) {
+            IIndexDataflowHelperFactory btreeDataflowHelperFactory, IOperationCallbackProvider opCallbackProvider) {
         super(spec, inputArity, outputArity);
 
         // General.
         this.storageManager = storageManager;
         this.indexRegistryProvider = indexRegistryProvider;
         this.opCallbackProvider = opCallbackProvider;
-        this.indexArtifactMapProvider = indexArtifactMapProvider;
         
         // Btree.
         this.btreeTypeTraits = InvertedIndexUtils.getBTreeTypeTraits(tokenTypeTraits);
@@ -162,9 +158,4 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
 	public ITupleFilterFactory getTupleFilterFactory() {
 		return null;
 	}
-    
-    @Override
-    public IIndexArtifactMapProvider getIndexArtifactMapProvider() {
-        return indexArtifactMapProvider;
-    }
 }

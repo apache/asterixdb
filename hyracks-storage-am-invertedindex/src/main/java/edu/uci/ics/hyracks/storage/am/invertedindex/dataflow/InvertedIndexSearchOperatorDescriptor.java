@@ -26,7 +26,6 @@ import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexArtifactMapProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
@@ -47,11 +46,10 @@ public class InvertedIndexSearchOperatorDescriptor extends AbstractInvertedIndex
             ITypeTraits[] invListsTypeTraits, IBinaryComparatorFactory[] invListComparatorFactories,
             IIndexDataflowHelperFactory btreeDataflowHelperFactory, IBinaryTokenizerFactory queryTokenizerFactory,
             IInvertedIndexSearchModifierFactory searchModifierFactory, RecordDescriptor recDesc,
-            IOperationCallbackProvider opCallbackProvider, IIndexArtifactMapProvider indexArtifactMapProvider) {
+            IOperationCallbackProvider opCallbackProvider) {
         super(spec, 1, 1, recDesc, storageManager, btreeFileSplitProvider, invListsFileSplitProvider,
                 indexRegistryProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
-                invListComparatorFactories, queryTokenizerFactory, btreeDataflowHelperFactory, opCallbackProvider,
-                indexArtifactMapProvider);
+                invListComparatorFactories, queryTokenizerFactory, btreeDataflowHelperFactory, opCallbackProvider);
         this.queryField = queryField;
         this.searchModifierFactory = searchModifierFactory;
     }

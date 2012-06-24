@@ -53,7 +53,6 @@ import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexArtifactMapProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
@@ -70,7 +69,6 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizerF
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.ITokenFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.UTF8WordTokenFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
-import edu.uci.ics.hyracks.test.support.TestIndexArtifactMapProvider;
 import edu.uci.ics.hyracks.test.support.TestIndexRegistryProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerInterface;
@@ -84,7 +82,6 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     private IStorageManagerInterface storageManager = new TestStorageManagerInterface();
     private IIndexRegistryProvider<IIndex> indexRegistryProvider = new TestIndexRegistryProvider();
     private IIndexDataflowHelperFactory btreeDataflowHelperFactory = new BTreeDataflowHelperFactory();
-    private IIndexArtifactMapProvider indexArtifactMapProvider = TestIndexArtifactMapProvider.INSTANCE;
 
     private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     private final static String sep = System.getProperty("file.separator");
@@ -141,10 +138,10 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
         invListsTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
         invListsComparatorFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        createPrimaryIndex();
+	createPrimaryIndex();
         loadPrimaryIndex();
         printPrimaryIndex();
-        createInvertedIndex();
+	createInvertedIndex();
         loadInvertedIndex();
     }
 
@@ -152,7 +149,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
         JobSpecification spec = new JobSpecification();
         TreeIndexCreateOperatorDescriptor primaryCreateOp = new TreeIndexCreateOperatorDescriptor(spec, storageManager,
                 indexRegistryProvider, primaryFileSplitProvider, primaryTypeTraits, primaryComparatorFactories,
-                btreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE, indexArtifactMapProvider);
+                btreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryCreateOp, NC1_ID);
         spec.addRoot(primaryCreateOp);
         runTest(spec);
@@ -161,10 +158,10 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     public void createInvertedIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         InvertedIndexCreateOperatorDescriptor invIndexCreateOp = new InvertedIndexCreateOperatorDescriptor(spec,
-                storageManager, btreeFileSplitProvider, invListsFileSplitProvider, indexRegistryProvider,
-                tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories,
-                tokenizerFactory, btreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE,
-                indexArtifactMapProvider);
+                storageManager, btreeFileSplitProvider, invListsFileSplitProvider,
+                indexRegistryProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
+                invListsComparatorFactories, tokenizerFactory, btreeDataflowHelperFactory,
+                NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, invIndexCreateOp, NC1_ID);
         spec.addRoot(invIndexCreateOp);
         runTest(spec);
@@ -196,7 +193,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
         TreeIndexBulkLoadOperatorDescriptor primaryBtreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
                 storageManager, indexRegistryProvider, primaryFileSplitProvider, primaryTypeTraits,
                 primaryComparatorFactories, fieldPermutation, 0.7f, btreeDataflowHelperFactory,
-                NoOpOperationCallbackProvider.INSTANCE, indexArtifactMapProvider);
+                NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeBulkLoad, NC1_ID);
         return primaryBtreeBulkLoad;
     }
@@ -223,7 +220,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, indexRegistryProvider, primaryFileSplitProvider, primaryTypeTraits,
                 primaryComparatorFactories, lowKeyFields, highKeyFields, true, true, btreeDataflowHelperFactory,
-                NoOpOperationCallbackProvider.INSTANCE, indexArtifactMapProvider);
+                NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
         return primaryBtreeSearchOp;
     }
@@ -273,7 +270,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
                 fieldPermutation, storageManager, btreeFileSplitProvider, invListsFileSplitProvider,
                 indexRegistryProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
                 invListsComparatorFactories, tokenizerFactory, btreeDataflowHelperFactory,
-                NoOpOperationCallbackProvider.INSTANCE, indexArtifactMapProvider);
+                NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, invIndexBulkLoadOp, NC1_ID);
         return invIndexBulkLoadOp;
     }
@@ -319,7 +316,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
                 storageManager, btreeFileSplitProvider, invListsFileSplitProvider, indexRegistryProvider,
                 tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories,
                 btreeDataflowHelperFactory, tokenizerFactory, searchModifierFactory, invListsRecDesc,
-                NoOpOperationCallbackProvider.INSTANCE, indexArtifactMapProvider);
+                NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, invIndexSearchOp, NC1_ID);
         return invIndexSearchOp;
     }
