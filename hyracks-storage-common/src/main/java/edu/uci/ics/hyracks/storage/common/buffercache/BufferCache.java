@@ -146,21 +146,11 @@ public class BufferCache implements IBufferCacheInternal {
                     + BufferedFileHandle.getPageId(dpid) + " because all pages are pinned.");
         }
         if (!newPage) {
-            if (!cPage.valid) {
-                /*
-                 * We got a buffer and we have pinned it. But its invalid. If
-                 * its a new page, we just mark it as valid and return. Or else,
-                 * while we hold the page lock, we get a write latch on the data
-                 * and start a read.
-                 */
-                cPage.acquireWriteLatch(false);
-                try {
-                    if (!cPage.valid) {
-                        read(cPage);
-                    }
+            // Resolve race of multiple threads trying to read the page from disk.
+            synchronized (cPage) {
+                if (!cPage.valid) {
+                    read(cPage);
                     cPage.valid = true;
-                } finally {
-                    cPage.releaseWriteLatch();
                 }
             }
         } else {
