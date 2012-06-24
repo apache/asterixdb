@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
@@ -32,19 +33,21 @@ public class LSMRTreeCursorInitialState implements ICursorInitialState {
     private ITreeIndexFrameFactory rtreeLeafFrameFactory;
     private ITreeIndexFrameFactory btreeLeafFrameFactory;
     private MultiComparator btreeCmp;
+    private MultiComparator hilbertCmp;
     private ITreeIndexAccessor[] rTreeAccessors;
     private ITreeIndexAccessor[] bTreeAccessors;
     private AtomicInteger searcherRefCount;
     private final boolean includeMemRTree;
     private final LSMHarness lsmHarness;
+    private final int[] comparatorFields;
 
     private ISearchOperationCallback searchCallback;
 
     public LSMRTreeCursorInitialState(int numberOfTrees, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
             MultiComparator btreeCmp, ITreeIndexAccessor[] rTreeAccessors, ITreeIndexAccessor[] bTreeAccessors,
-            AtomicInteger searcherRefCount, boolean includeMemRTree, LSMHarness lsmHarness,
-            ISearchOperationCallback searchCallback) {
+            AtomicInteger searcherRefCount, boolean includeMemRTree, LSMHarness lsmHarness, int[] comparatorFields,
+            IBinaryComparatorFactory[] linearizerArray, ISearchOperationCallback searchCallback) {
         this.numberOfTrees = numberOfTrees;
         this.rtreeLeafFrameFactory = rtreeLeafFrameFactory;
         this.rtreeInteriorFrameFactory = rtreeInteriorFrameFactory;
@@ -55,7 +58,17 @@ public class LSMRTreeCursorInitialState implements ICursorInitialState {
         this.searcherRefCount = searcherRefCount;
         this.includeMemRTree = includeMemRTree;
         this.lsmHarness = lsmHarness;
+        this.comparatorFields = comparatorFields;
+        this.hilbertCmp = MultiComparator.create(linearizerArray);
         this.searchCallback = searchCallback;
+    }
+
+    public MultiComparator getHilbertCmp() {
+        return hilbertCmp;
+    }
+
+    public int[] getComparatorFields() {
+        return comparatorFields;
     }
 
     public int getNumberOfTrees() {
@@ -95,7 +108,7 @@ public class LSMRTreeCursorInitialState implements ICursorInitialState {
         return bTreeAccessors;
     }
 
-    public boolean getIncludeMemRTree() {
+    public boolean getIncludeMemComponent() {
         return includeMemRTree;
     }
 

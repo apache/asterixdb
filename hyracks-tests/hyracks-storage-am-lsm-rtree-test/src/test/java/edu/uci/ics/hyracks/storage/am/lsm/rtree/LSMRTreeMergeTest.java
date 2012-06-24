@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeTestContext;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 @SuppressWarnings("rawtypes")
 public class LSMRTreeMergeTest extends LSMRTreeMergeTestDriver {
@@ -46,11 +47,12 @@ public class LSMRTreeMergeTest extends LSMRTreeMergeTestDriver {
 
     @Override
     protected AbstractRTreeTestContext createTestContext(ISerializerDeserializer[] fieldSerdes,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys) throws Exception {
+            IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, RTreePolicyType rtreePolicyType)
+            throws Exception {
         return LSMRTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
                 harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskBufferCache(),
-                harness.getDiskFileMapProvider(), fieldSerdes, valueProviderFactories, numKeys, harness.getFileId(),
-                NoMergePolicy.INSTANCE);
+                harness.getDiskFileMapProvider(), fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType,
+                harness.getFileId(), NoMergePolicy.INSTANCE);
     }
 
     @Override

@@ -31,7 +31,6 @@ import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.SlotOffTupleOff;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.EntriesOrder;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.PathList;
 
 public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteriorFrame {
@@ -41,109 +40,16 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
             .createBinaryComparator();
     private final int keyFieldCount;
 
-    public RTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter, IPrimitiveValueProvider[] keyValueProviders) {
-        super(tupleWriter, keyValueProviders);
+    public RTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter, IPrimitiveValueProvider[] keyValueProviders,
+            RTreePolicyType rtreePolicyType) {
+        super(tupleWriter, keyValueProviders, rtreePolicyType);
         keyFieldCount = keyValueProviders.length;
         frameTuple.setFieldCount(keyFieldCount);
     }
 
     @Override
     public boolean findBestChild(ITupleReference tuple, MultiComparator cmp) {
-        cmpFrameTuple.setFieldCount(cmp.getKeyFieldCount());
-        frameTuple.setFieldCount(cmp.getKeyFieldCount());
-
-        int bestChild = 0;
-        double minEnlargedArea = Double.MAX_VALUE;
-
-        // the children pointers in the node point to leaves
-        if (getLevel() == 1) {
-            // find least overlap enlargement, use minimum enlarged area to
-            // break tie, if tie still exists use minimum area to break it
-            for (int i = 0; i < getTupleCount(); ++i) {
-                frameTuple.resetByTupleIndex(this, i);
-                double enlargedArea = enlargedArea(frameTuple, tuple, cmp);
-                tupleEntries1.add(i, enlargedArea);
-                if (enlargedArea < minEnlargedArea) {
-                    minEnlargedArea = enlargedArea;
-                    bestChild = i;
-                }
-            }
-            if (minEnlargedArea < RTreeNSMFrame.doubleEpsilon() || minEnlargedArea > RTreeNSMFrame.doubleEpsilon()) {
-                minEnlargedArea = Double.MAX_VALUE;
-                int k;
-                if (getTupleCount() > nearMinimumOverlapFactor) {
-                    // sort the entries based on their area enlargement needed
-                    // to include the object
-                    tupleEntries1.sort(EntriesOrder.ASCENDING, getTupleCount());
-                    k = nearMinimumOverlapFactor;
-                } else {
-                    k = getTupleCount();
-                }
-
-                double minOverlap = Double.MAX_VALUE;
-                int id = 0;
-                for (int i = 0; i < k; ++i) {
-                    double difference = 0.0;
-                    for (int j = 0; j < getTupleCount(); ++j) {
-                        frameTuple.resetByTupleIndex(this, j);
-                        cmpFrameTuple.resetByTupleIndex(this, tupleEntries1.get(i).getTupleIndex());
-
-                        int c = pointerCmp(frameTuple, cmpFrameTuple, cmp);
-                        if (c != 0) {
-                            double intersection = overlappedArea(frameTuple, tuple, cmpFrameTuple, cmp);
-                            if (intersection != 0.0) {
-                                difference += intersection - overlappedArea(frameTuple, null, cmpFrameTuple, cmp);
-                            }
-                        } else {
-                            id = j;
-                        }
-                    }
-
-                    double enlargedArea = enlargedArea(cmpFrameTuple, tuple, cmp);
-                    if (difference < minOverlap) {
-                        minOverlap = difference;
-                        minEnlargedArea = enlargedArea;
-                        bestChild = id;
-                    } else if (difference == minOverlap) {
-                        if (enlargedArea < minEnlargedArea) {
-                            minEnlargedArea = enlargedArea;
-                            bestChild = id;
-                        } else if (enlargedArea == minEnlargedArea) {
-                            double area = area(cmpFrameTuple, cmp);
-                            frameTuple.resetByTupleIndex(this, bestChild);
-                            double minArea = area(frameTuple, cmp);
-                            if (area < minArea) {
-                                bestChild = id;
-                            }
-                        }
-                    }
-                }
-            }
-        } else { // find minimum enlarged area, use minimum area to break tie
-            for (int i = 0; i < getTupleCount(); i++) {
-                frameTuple.resetByTupleIndex(this, i);
-                double enlargedArea = enlargedArea(frameTuple, tuple, cmp);
-                if (enlargedArea < minEnlargedArea) {
-                    minEnlargedArea = enlargedArea;
-                    bestChild = i;
-                } else if (enlargedArea == minEnlargedArea) {
-                    double area = area(frameTuple, cmp);
-                    frameTuple.resetByTupleIndex(this, bestChild);
-                    double minArea = area(frameTuple, cmp);
-                    if (area < minArea) {
-                        bestChild = i;
-                    }
-                }
-            }
-        }
-        tupleEntries1.clear();
-
-        frameTuple.resetByTupleIndex(this, bestChild);
-        if (minEnlargedArea > 0.0) {
-            return true;
-        } else {
-            return false;
-        }
+        return rtreePolicy.findBestChild(this, tuple, frameTuple, cmp);
     }
 
     @Override
@@ -279,7 +185,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
 
     }
 
-    private int pointerCmp(ITupleReference tupleA, ITupleReference tupleB, MultiComparator cmp) {
+    protected int pointerCmp(ITupleReference tupleA, ITupleReference tupleB, MultiComparator cmp) {
         return childPtrCmp
                 .compare(tupleA.getFieldData(cmp.getKeyFieldCount() - 1), getChildPointerOff(tupleA), childPtrSize,
                         tupleB.getFieldData(cmp.getKeyFieldCount() - 1), getChildPointerOff(tupleB), childPtrSize);
@@ -354,97 +260,6 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
         return false;
     }
 
-    private double overlappedArea(ITupleReference tuple1, ITupleReference tupleToBeInserted, ITupleReference tuple2,
-            MultiComparator cmp) {
-        double area = 1.0;
-        double f1, f2;
-
-        int maxFieldPos = cmp.getKeyFieldCount() / 2;
-        for (int i = 0; i < maxFieldPos; i++) {
-            int j = maxFieldPos + i;
-            double pHigh1, pLow1;
-            if (tupleToBeInserted != null) {
-                int c = cmp.getComparators()[i].compare(tuple1.getFieldData(i), tuple1.getFieldStart(i),
-                        tuple1.getFieldLength(i), tupleToBeInserted.getFieldData(i),
-                        tupleToBeInserted.getFieldStart(i), tupleToBeInserted.getFieldLength(i));
-                if (c < 0) {
-                    pLow1 = keyValueProviders[i].getValue(tuple1.getFieldData(i), tuple1.getFieldStart(i));
-                } else {
-                    pLow1 = keyValueProviders[i].getValue(tupleToBeInserted.getFieldData(i),
-                            tupleToBeInserted.getFieldStart(i));
-                }
-
-                c = cmp.getComparators()[j].compare(tuple1.getFieldData(j), tuple1.getFieldStart(j),
-                        tuple1.getFieldLength(j), tupleToBeInserted.getFieldData(j),
-                        tupleToBeInserted.getFieldStart(j), tupleToBeInserted.getFieldLength(j));
-                if (c > 0) {
-                    pHigh1 = keyValueProviders[j].getValue(tuple1.getFieldData(j), tuple1.getFieldStart(j));
-                } else {
-                    pHigh1 = keyValueProviders[j].getValue(tupleToBeInserted.getFieldData(j),
-                            tupleToBeInserted.getFieldStart(j));
-                }
-            } else {
-                pLow1 = keyValueProviders[i].getValue(tuple1.getFieldData(i), tuple1.getFieldStart(i));
-                pHigh1 = keyValueProviders[j].getValue(tuple1.getFieldData(j), tuple1.getFieldStart(j));
-            }
-
-            double pLow2 = keyValueProviders[i].getValue(tuple2.getFieldData(i), tuple2.getFieldStart(i));
-            double pHigh2 = keyValueProviders[j].getValue(tuple2.getFieldData(j), tuple2.getFieldStart(j));
-
-            if (pLow1 > pHigh2 || pHigh1 < pLow2) {
-                return 0.0;
-            }
-
-            f1 = Math.max(pLow1, pLow2);
-            f2 = Math.min(pHigh1, pHigh2);
-            area *= f2 - f1;
-        }
-        return area;
-    }
-
-    private double enlargedArea(ITupleReference tuple, ITupleReference tupleToBeInserted, MultiComparator cmp) {
-        double areaBeforeEnlarge = area(tuple, cmp);
-        double areaAfterEnlarge = 1.0;
-
-        int maxFieldPos = cmp.getKeyFieldCount() / 2;
-        for (int i = 0; i < maxFieldPos; i++) {
-            int j = maxFieldPos + i;
-            double pHigh, pLow;
-            int c = cmp.getComparators()[i].compare(tuple.getFieldData(i), tuple.getFieldStart(i),
-                    tuple.getFieldLength(i), tupleToBeInserted.getFieldData(i), tupleToBeInserted.getFieldStart(i),
-                    tupleToBeInserted.getFieldLength(i));
-            if (c < 0) {
-                pLow = keyValueProviders[i].getValue(tuple.getFieldData(i), tuple.getFieldStart(i));
-            } else {
-                pLow = keyValueProviders[i].getValue(tupleToBeInserted.getFieldData(i),
-                        tupleToBeInserted.getFieldStart(i));
-            }
-
-            c = cmp.getComparators()[j].compare(tuple.getFieldData(j), tuple.getFieldStart(j), tuple.getFieldLength(j),
-                    tupleToBeInserted.getFieldData(j), tupleToBeInserted.getFieldStart(j),
-                    tupleToBeInserted.getFieldLength(j));
-            if (c > 0) {
-                pHigh = keyValueProviders[j].getValue(tuple.getFieldData(j), tuple.getFieldStart(j));
-            } else {
-                pHigh = keyValueProviders[j].getValue(tupleToBeInserted.getFieldData(j),
-                        tupleToBeInserted.getFieldStart(j));
-            }
-            areaAfterEnlarge *= pHigh - pLow;
-        }
-        return areaAfterEnlarge - areaBeforeEnlarge;
-    }
-
-    private double area(ITupleReference tuple, MultiComparator cmp) {
-        double area = 1.0;
-        int maxFieldPos = cmp.getKeyFieldCount() / 2;
-        for (int i = 0; i < maxFieldPos; i++) {
-            int j = maxFieldPos + i;
-            area *= keyValueProviders[j].getValue(tuple.getFieldData(j), tuple.getFieldStart(j))
-                    - keyValueProviders[i].getValue(tuple.getFieldData(i), tuple.getFieldStart(i));
-        }
-        return area;
-    }
-
     @Override
     public boolean checkEnlargement(ITupleReference tuple, MultiComparator cmp) {
         int maxFieldPos = cmp.getKeyFieldCount() / 2;
@@ -508,5 +323,9 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     @Override
     public int getFieldCount() {
         return keyValueProviders.length;
+    }
+
+    public int getChildPointerSize() {
+        return childPtrSize;
     }
 }

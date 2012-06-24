@@ -15,33 +15,32 @@
 
 package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.impls.AbstractTreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.impls.NodeFrontier;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -49,55 +48,27 @@ import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexUtils;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrame;
+import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
-public class RTree implements ITreeIndex {
-
-    private final int rootPage = 1;
+public class RTree extends AbstractTreeIndex {
 
     // Global node sequence number used for the concurrency control protocol
     private final AtomicLong globalNsn;
-    private final ReadWriteLock treeLatch;
-
-    private final IFreePageManager freePageManager;
-    private final IBufferCache bufferCache;
-    private int fileId;
-
-    private final ITreeIndexFrameFactory interiorFrameFactory;
-    private final ITreeIndexFrameFactory leafFrameFactory;
-    private final int fieldCount;
-    private final IBinaryComparatorFactory[] cmpFactories;
 
     public RTree(IBufferCache bufferCache, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
             IFreePageManager freePageManager, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory leafFrameFactory) {
-        this.bufferCache = bufferCache;
-        this.fieldCount = fieldCount;
-        this.cmpFactories = cmpFactories;
-        this.freePageManager = freePageManager;
-        this.interiorFrameFactory = interiorFrameFactory;
-        this.leafFrameFactory = leafFrameFactory;
+        super(bufferCache, fieldCount, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
         globalNsn = new AtomicLong();
-        this.treeLatch = new ReentrantReadWriteLock(true);
     }
 
     private long incrementGlobalNsn() {
         return globalNsn.incrementAndGet();
-    }
-
-    public byte getTreeHeight(IRTreeLeafFrame leafFrame) throws HyracksDataException {
-        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), false);
-        rootNode.acquireReadLatch();
-        try {
-            leafFrame.setPage(rootNode);
-            return leafFrame.getLevel();
-        } finally {
-            rootNode.releaseReadLatch();
-            bufferCache.unpin(rootNode);
-        }
     }
 
     @SuppressWarnings("rawtypes")
@@ -188,28 +159,6 @@ public class RTree implements ITreeIndex {
         } finally {
             treeLatch.writeLock().unlock();
         }
-    }
-
-    @Override
-    public void open(int fileId) {
-        this.fileId = fileId;
-        freePageManager.open(fileId);
-    }
-
-    @Override
-    public void close() {
-        fileId = -1;
-        freePageManager.close();
-    }
-
-    @Override
-    public int getFileId() {
-        return fileId;
-    }
-
-    @Override
-    public IBufferCache getBufferCache() {
-        return bufferCache;
     }
 
     private RTreeOpContext createOpContext(IModificationOperationCallback modificationCallback,
@@ -820,80 +769,8 @@ public class RTree implements ITreeIndex {
         ctx.cursor.open(ctx.cursorInitialState, (SearchPredicate) searchPred);
     }
 
-    @Override
-    public ITreeIndexFrameFactory getInteriorFrameFactory() {
-        return interiorFrameFactory;
-    }
-
-    @Override
-    public ITreeIndexFrameFactory getLeafFrameFactory() {
-        return leafFrameFactory;
-    }
-
-    @Override
-    public IBinaryComparatorFactory[] getComparatorFactories() {
-        return cmpFactories;
-    }
-
-    @Override
-    public IFreePageManager getFreePageManager() {
-        return freePageManager;
-    }
-
     private void update(ITupleReference tuple, RTreeOpContext ctx) {
         throw new UnsupportedOperationException("RTree Update not implemented.");
-    }
-
-    public boolean isEmptyTree(IRTreeLeafFrame leafFrame) throws HyracksDataException {
-        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), false);
-        rootNode.acquireReadLatch();
-        try {
-            leafFrame.setPage(rootNode);
-            if (leafFrame.getLevel() == 0 && leafFrame.getTupleCount() == 0) {
-                return true;
-            } else {
-                return false;
-            }
-        } finally {
-            rootNode.releaseReadLatch();
-            bufferCache.unpin(rootNode);
-        }
-    }
-
-    public final class BulkLoadContext implements IIndexBulkLoadContext {
-
-        public ITreeIndexAccessor indexAccessor;
-
-        public BulkLoadContext(float fillFactor, IRTreeFrame leafFrame, IRTreeFrame interiorFrame,
-                ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
-            indexAccessor = createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-        }
-    }
-
-    @Override
-    public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws HyracksDataException {
-        IRTreeLeafFrame leafFrame = (IRTreeLeafFrame) leafFrameFactory.createFrame();
-        if (!isEmptyTree(leafFrame)) {
-            throw new HyracksDataException("Trying to Bulk-load a non-empty RTree.");
-        }
-
-        BulkLoadContext ctx = new BulkLoadContext(fillFactor, (IRTreeFrame) leafFrameFactory.createFrame(),
-                (IRTreeFrame) interiorFrameFactory.createFrame(), freePageManager.getMetaDataFrameFactory()
-                        .createFrame());
-        return ctx;
-    }
-
-    @Override
-    public void bulkLoadAddTuple(ITupleReference tuple, IIndexBulkLoadContext ictx) throws HyracksDataException {
-        try {
-            ((BulkLoadContext) ictx).indexAccessor.insert(tuple);
-        } catch (Exception e) {
-            throw new HyracksDataException("BulkLoad Error", e);
-        }
-    }
-
-    @Override
-    public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException {
     }
 
     private void diskOrderScan(ITreeIndexCursor icursor, RTreeOpContext ctx) throws HyracksDataException {
@@ -903,7 +780,7 @@ public class RTree implements ITreeIndex {
         MultiComparator cmp = MultiComparator.create(cmpFactories);
         SearchPredicate searchPred = new SearchPredicate(null, cmp);
 
-        int currentPageId = rootPage + 1;
+        int currentPageId = rootPage;
         int maxPageId = freePageManager.getMaxPage(ctx.metaFrame);
 
         ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false);
@@ -921,16 +798,6 @@ public class RTree implements ITreeIndex {
             bufferCache.unpin(page);
             throw new HyracksDataException(e);
         }
-    }
-
-    @Override
-    public int getRootPageId() {
-        return rootPage;
-    }
-
-    @Override
-    public int getFieldCount() {
-        return fieldCount;
     }
 
     @Override
@@ -1004,6 +871,123 @@ public class RTree implements ITreeIndex {
         public void upsert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
             throw new UnsupportedOperationException(
                     "The RTree does not support the notion of keys, therefore upsert does not make sense.");
+        }
+    }
+
+    @Override
+    public AbstractTreeIndexBulkLoader createBulkLoader(float fillFactor) throws TreeIndexException {
+        try {
+            return new RTreeBulkLoader(fillFactor);
+        } catch (HyracksDataException e) {
+            throw new TreeIndexException(e);
+        }
+    }
+
+    public class RTreeBulkLoader extends AbstractTreeIndex.AbstractTreeIndexBulkLoader {
+        ITreeIndexFrame lowerFrame, prevInteriorFrame;
+        RTreeTypeAwareTupleWriter tupleWriter = ((RTreeTypeAwareTupleWriter) interiorFrame.getTupleWriter());
+        ITreeIndexTupleReference mbrTuple = interiorFrame.createTupleReference();
+        ByteBuffer mbr;
+
+        public RTreeBulkLoader(float fillFactor) throws TreeIndexException, HyracksDataException {
+            super(fillFactor);
+            prevInteriorFrame = interiorFrameFactory.createFrame();
+        }
+
+        @Override
+        public void add(ITupleReference tuple) throws HyracksDataException {
+            NodeFrontier leafFrontier = nodeFrontiers.get(0);
+
+            int spaceNeeded = tupleWriter.bytesRequired(tuple) + slotSize;
+            int spaceUsed = leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace();
+
+            // try to free space by compression
+            if (spaceUsed + spaceNeeded > leafMaxBytes) {
+                leafFrame.compress();
+                spaceUsed = leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace();
+            }
+
+            if (spaceUsed + spaceNeeded > leafMaxBytes) {
+                propagateBulk(1, false);
+
+                leafFrontier.pageId = freePageManager.getFreePage(metaFrame);
+
+                leafFrontier.page.releaseWriteLatch();
+                bufferCache.unpin(leafFrontier.page);
+
+                leafFrontier.page = bufferCache
+                        .pin(BufferedFileHandle.getDiskPageId(fileId, leafFrontier.pageId), true);
+                leafFrontier.page.acquireWriteLatch();
+                leafFrame.setPage(leafFrontier.page);
+                leafFrame.initBuffer((byte) 0);
+            }
+
+            leafFrame.setPage(leafFrontier.page);
+            leafFrame.insert(tuple, -1);
+        }
+
+        public void end() throws HyracksDataException {
+            propagateBulk(1, true);
+
+            super.end();
+        }
+
+        protected void propagateBulk(int level, boolean toRoot) throws HyracksDataException {
+            boolean propagated = false;
+
+            if (level == 1)
+                lowerFrame = leafFrame;
+
+            if (lowerFrame.getTupleCount() == 0)
+                return;
+
+            if (level >= nodeFrontiers.size())
+                addLevel();
+
+            ((RTreeNSMFrame) lowerFrame).adjustMBR();
+
+            if (mbr == null) {
+                int bytesRequired = tupleWriter.bytesRequired(((RTreeNSMFrame) lowerFrame).getTuples()[0], 0,
+                        cmp.getKeyFieldCount())
+                        + ((RTreeNSMInteriorFrame) interiorFrame).getChildPointerSize();
+                mbr = ByteBuffer.allocate(bytesRequired);
+            }
+            tupleWriter.writeTupleFields(((RTreeNSMFrame) lowerFrame).getTuples(), 0, mbr, 0);
+            mbrTuple.resetByTupleOffset(mbr, 0);
+
+            NodeFrontier frontier = nodeFrontiers.get(level);
+            interiorFrame.setPage(frontier.page);
+
+            interiorFrame.insert(mbrTuple, -1);
+
+            interiorFrame.getBuffer().putInt(
+                    interiorFrame.getTupleOffset(interiorFrame.getTupleCount() - 1) + mbrTuple.getTupleSize(),
+                    nodeFrontiers.get(level - 1).pageId);
+
+            if (interiorFrame.hasSpaceInsert(mbrTuple) != FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE && !toRoot) {
+                lowerFrame = prevInteriorFrame;
+                lowerFrame.setPage(frontier.page);
+
+                propagateBulk(level + 1, toRoot);
+                propagated = true;
+
+                frontier.page.releaseWriteLatch();
+                bufferCache.unpin(frontier.page);
+                frontier.pageId = freePageManager.getFreePage(metaFrame);
+
+                frontier.page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, frontier.pageId), true);
+                frontier.page.acquireWriteLatch();
+                interiorFrame.setPage(frontier.page);
+                interiorFrame.initBuffer((byte) level);
+            }
+
+            if (toRoot && !propagated && level < nodeFrontiers.size() - 1) {
+                lowerFrame = prevInteriorFrame;
+                lowerFrame.setPage(frontier.page);
+                propagateBulk(level + 1, true);
+            }
+
+            leafFrame.setPage(nodeFrontiers.get(0).page);
         }
     }
 }

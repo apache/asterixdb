@@ -21,49 +21,57 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class MultiComparator {
 
-	private final IBinaryComparator[] cmps;
+    private final IBinaryComparator[] cmps;
 
-	public MultiComparator(IBinaryComparator[] cmps) {
-		this.cmps = cmps;
-	}
+    public MultiComparator(IBinaryComparator[] cmps) {
+        this.cmps = cmps;
+    }
 
-	public int compare(ITupleReference tupleA, ITupleReference tupleB) {
-		for (int i = 0; i < cmps.length; i++) {
-			int cmp = cmps[i].compare(tupleA.getFieldData(i),
-					tupleA.getFieldStart(i), tupleA.getFieldLength(i),
-					tupleB.getFieldData(i), tupleB.getFieldStart(i),
-					tupleB.getFieldLength(i));
-			if (cmp < 0)
-				return -1;
-			else if (cmp > 0)
-				return 1;
-		}
-		return 0;
-	}
+    public int compare(ITupleReference tupleA, ITupleReference tupleB) {
+        for (int i = 0; i < cmps.length; i++) {
+            int cmp = cmps[i].compare(tupleA.getFieldData(i), tupleA.getFieldStart(i), tupleA.getFieldLength(i),
+                    tupleB.getFieldData(i), tupleB.getFieldStart(i), tupleB.getFieldLength(i));
+            if (cmp < 0)
+                return -1;
+            else if (cmp > 0)
+                return 1;
+        }
+        return 0;
+    }
 
-	public int fieldRangeCompare(ITupleReference tupleA,
-			ITupleReference tupleB, int startFieldIndex, int numFields) {
-		for (int i = startFieldIndex; i < startFieldIndex + numFields; i++) {
-			int cmp = cmps[i].compare(tupleA.getFieldData(i),
-					tupleA.getFieldStart(i), tupleA.getFieldLength(i),
-					tupleB.getFieldData(i), tupleB.getFieldStart(i),
-					tupleB.getFieldLength(i));
-			if (cmp < 0)
-				return -1;
-			else if (cmp > 0)
-				return 1;
-		}
-		return 0;
-	}
+    public int selectiveFieldCompare(ITupleReference tupleA, ITupleReference tupleB, int[] fields) {
+        for (int j = 0; j < cmps.length; j++) {
+            int i = fields[j];
+            int cmp = cmps[j].compare(tupleA.getFieldData(i), tupleA.getFieldStart(i), tupleA.getFieldLength(i),
+                    tupleB.getFieldData(i), tupleB.getFieldStart(i), tupleB.getFieldLength(i));
+            if (cmp < 0)
+                return -1;
+            else if (cmp > 0)
+                return 1;
+        }
+        return 0;
+    }
 
-	public IBinaryComparator[] getComparators() {
-		return cmps;
-	}
+    public int fieldRangeCompare(ITupleReference tupleA, ITupleReference tupleB, int startFieldIndex, int numFields) {
+        for (int i = startFieldIndex; i < startFieldIndex + numFields; i++) {
+            int cmp = cmps[i].compare(tupleA.getFieldData(i), tupleA.getFieldStart(i), tupleA.getFieldLength(i),
+                    tupleB.getFieldData(i), tupleB.getFieldStart(i), tupleB.getFieldLength(i));
+            if (cmp < 0)
+                return -1;
+            else if (cmp > 0)
+                return 1;
+        }
+        return 0;
+    }
+
+    public IBinaryComparator[] getComparators() {
+        return cmps;
+    }
 
     public int getKeyFieldCount() {
-		return cmps.length;
-	}
-    
+        return cmps.length;
+    }
+
     public static MultiComparator create(IBinaryComparatorFactory[] cmpFactories) {
         IBinaryComparator[] cmps = new IBinaryComparator[cmpFactories.length];
         for (int i = 0; i < cmpFactories.length; i++) {

@@ -20,8 +20,9 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
 
-public class LSMBTreeTupleReference extends TypeAwareTupleReference implements ILSMBTreeTupleReference {
+public class LSMBTreeTupleReference extends TypeAwareTupleReference implements ILSMTreeTupleReference {
 
     // Indicates whether the last call to setFieldCount() was initiated by
     // by the outside or whether it was called internally to set up an

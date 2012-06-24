@@ -21,22 +21,25 @@ import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 
 public class RTreeDataflowHelper extends TreeIndexDataflowHelper {
 
     private final IPrimitiveValueProviderFactory[] valueProviderFactories;
+    private final RTreePolicyType rtreePolicyType;
 
     public RTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            IPrimitiveValueProviderFactory[] valueProviderFactories) {
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType) {
         super(opDesc, ctx, partition);
         this.valueProviderFactories = valueProviderFactories;
+        this.rtreePolicyType = rtreePolicyType;
     }
 
     @Override
     public ITreeIndex createIndexInstance() throws HyracksDataException {
         return RTreeUtils.createRTree(treeOpDesc.getStorageManager().getBufferCache(ctx),
                 treeOpDesc.getTreeIndexTypeTraits(), valueProviderFactories,
-                treeOpDesc.getTreeIndexComparatorFactories());
+                treeOpDesc.getTreeIndexComparatorFactories(), rtreePolicyType);
     }
 }

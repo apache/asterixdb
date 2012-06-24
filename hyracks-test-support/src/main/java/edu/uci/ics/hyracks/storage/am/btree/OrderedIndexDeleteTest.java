@@ -20,6 +20,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
+import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
 
 @SuppressWarnings("rawtypes")
 public abstract class OrderedIndexDeleteTest extends OrderedIndexTestDriver {
@@ -31,8 +32,8 @@ public abstract class OrderedIndexDeleteTest extends OrderedIndexTestDriver {
         this.orderedIndexTestUtils = new OrderedIndexTestUtils();
     }
 
-    private static final int numInsertRounds = 3;
-    private static final int numDeleteRounds = 3;
+    private static final int numInsertRounds = AccessMethodTestsConfig.BTREE_NUM_INSERT_ROUNDS;
+    private static final int numDeleteRounds = AccessMethodTestsConfig.BTREE_NUM_DELETE_ROUNDS;
 
     @Override
     protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType,

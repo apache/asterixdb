@@ -50,6 +50,7 @@ import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexArtifactMapProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
@@ -59,6 +60,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDes
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexInsertUpdateDeleteOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.test.support.TestIndexArtifactMapProvider;
@@ -167,13 +169,13 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
                 .createPrimitiveValueProviderFactories(secondaryComparatorFactories.length, DoublePointable.FACTORY);
 
         rtreeDataflowHelperFactory = createDataFlowHelperFactory(secondaryValueProviderFactories,
-                btreeComparatorFactories);
+                RTreePolicyType.RSTARTREE, btreeComparatorFactories);
 
     }
 
     protected abstract IIndexDataflowHelperFactory createDataFlowHelperFactory(
-            IPrimitiveValueProviderFactory[] secondaryValueProviderFactories,
-            IBinaryComparatorFactory[] btreeComparatorFactories);
+            IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
+            IBinaryComparatorFactory[] btreeComparatorFactories) throws TreeIndexException;
 
     protected void createPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();

@@ -23,6 +23,7 @@ import java.util.Random;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
@@ -31,10 +32,6 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 public class RTreeTestHarness {
 
     private static final long RANDOM_SEED = 50;
-    private static final int DEFAULT_PAGE_SIZE = 256;
-    private static final int DEFAULT_NUM_PAGES = 1000;
-    private static final int DEFAULT_MAX_OPEN_FILES = 10;
-    private static final int DEFAULT_HYRACKS_FRAME_SIZE = 128;
 
     protected final int pageSize;
     protected final int numPages;
@@ -52,10 +49,10 @@ public class RTreeTestHarness {
     protected String fileName;
 
     public RTreeTestHarness() {
-        this.pageSize = DEFAULT_PAGE_SIZE;
-        this.numPages = DEFAULT_NUM_PAGES;
-        this.maxOpenFiles = DEFAULT_MAX_OPEN_FILES;
-        this.hyracksFrameSize = DEFAULT_HYRACKS_FRAME_SIZE;
+        this.pageSize = AccessMethodTestsConfig.RTREE_PAGE_SIZE;
+        this.numPages =  AccessMethodTestsConfig.RTREE_NUM_PAGES;
+        this.maxOpenFiles = AccessMethodTestsConfig.RTREE_MAX_OPEN_FILES;
+        this.hyracksFrameSize = AccessMethodTestsConfig.RTREE_HYRACKS_FRAME_SIZE;
     }
 
     public RTreeTestHarness(int pageSize, int numPages, int maxOpenFiles, int hyracksFrameSize) {

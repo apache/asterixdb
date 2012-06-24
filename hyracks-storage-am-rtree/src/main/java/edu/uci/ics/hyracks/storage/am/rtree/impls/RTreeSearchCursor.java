@@ -40,14 +40,14 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     private SearchPredicate pred;
     private PathList pathList;
     private int rootPage;
-    private ITupleReference searchKey;
+    protected ITupleReference searchKey;
 
     private int tupleIndex = 0;
     private int tupleIndexInc = 0;
     private int currentTupleIndex = 0;
     private int pageId = -1;
 
-    private MultiComparator cmp;
+    protected MultiComparator cmp;
 
     private ITreeIndexTupleReference frameTuple;
     private boolean readLatched = false;
@@ -73,6 +73,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
         pathList = null;
     }
 
+    @Override
     public ITupleReference getTuple() {
         return frameTuple;
     }
@@ -120,15 +121,18 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
                 }
 
                 if (!isLeaf) {
+                    // We do DFS so that we get the tuples ordered (for disk
+                    // RTrees only) in the case we we are using total order
+                    // (such as Hilbert order)
                     if (searchKey != null) {
-                        for (int i = 0; i < interiorFrame.getTupleCount(); i++) {
+                        for (int i = interiorFrame.getTupleCount() - 1; i >= 0; i--) {
                             int childPageId = interiorFrame.getChildPageIdIfIntersect(searchKey, i, cmp);
                             if (childPageId != -1) {
                                 pathList.add(childPageId, pageLsn, -1);
                             }
                         }
                     } else {
-                        for (int i = 0; i < interiorFrame.getTupleCount(); i++) {
+                        for (int i = interiorFrame.getTupleCount() - 1; i >= 0; i--) {
                             int childPageId = interiorFrame.getChildPageId(i);
                             pathList.add(childPageId, pageLsn, -1);
                         }

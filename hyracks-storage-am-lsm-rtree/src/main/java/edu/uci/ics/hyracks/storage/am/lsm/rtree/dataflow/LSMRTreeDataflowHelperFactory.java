@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushPolicyProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyProvider;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 public class LSMRTreeDataflowHelperFactory implements IIndexDataflowHelperFactory {
 
@@ -30,14 +31,17 @@ public class LSMRTreeDataflowHelperFactory implements IIndexDataflowHelperFactor
 
     private final IBinaryComparatorFactory[] btreeComparatorFactories;
     private final IPrimitiveValueProviderFactory[] valueProviderFactories;
+    private final RTreePolicyType rtreePolicyType;
     private final ILSMFlushPolicyProvider flushPolicyProvider;
     private final ILSMMergePolicyProvider mergePolicyProvider;
 
     public LSMRTreeDataflowHelperFactory(IPrimitiveValueProviderFactory[] valueProviderFactories,
-            IBinaryComparatorFactory[] btreeComparatorFactories, ILSMFlushPolicyProvider flushPolicyProvider,
+            RTreePolicyType rtreePolicyType, IBinaryComparatorFactory[] btreeComparatorFactories,
+            ILSMFlushPolicyProvider flushPolicyProvider,
             ILSMMergePolicyProvider mergePolicyProvider) {
         this.btreeComparatorFactories = btreeComparatorFactories;
         this.valueProviderFactories = valueProviderFactories;
+        this.rtreePolicyType = rtreePolicyType;
         this.flushPolicyProvider = flushPolicyProvider;
         this.mergePolicyProvider = mergePolicyProvider;
     }
@@ -46,6 +50,6 @@ public class LSMRTreeDataflowHelperFactory implements IIndexDataflowHelperFactor
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
         return new LSMRTreeDataflowHelper(opDesc, ctx, partition, btreeComparatorFactories, valueProviderFactories,
-                flushPolicyProvider.getFlushPolicy(), mergePolicyProvider.getMergePolicy());
+                rtreePolicyType, flushPolicyProvider.getFlushPolicy(), mergePolicyProvider.getMergePolicy());
     }
 }

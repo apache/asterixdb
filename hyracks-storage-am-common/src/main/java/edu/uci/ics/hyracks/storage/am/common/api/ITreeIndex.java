@@ -59,4 +59,11 @@ public interface ITreeIndex extends IIndex {
      * @return Comparator factories.
      */
     public IBinaryComparatorFactory[] getComparatorFactories();
+
+ 	/**
+	 * @param fillFactor
+ 	 * @throws TreeIndexException if the user tries to instantiate a second bulk
+	 * loader
+ 	 */
+	public ITreeIndexBulkLoader createBulkLoader(float fillFactor) throws TreeIndexException;
 }

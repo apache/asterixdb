@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyProvid
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateFlushPolicyProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SequentialSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.dataflow.LSMRTreeDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import edu.uci.ics.hyracks.tests.am.common.LSMTreeOperatorTestHelper;
 
 public class LSMRTreeOperatorTestHelper extends LSMTreeOperatorTestHelper {
@@ -34,8 +35,9 @@ public class LSMRTreeOperatorTestHelper extends LSMTreeOperatorTestHelper {
     }
 
     public IIndexDataflowHelperFactory createDataFlowHelperFactory(
-            IPrimitiveValueProviderFactory[] valueProviderFactories, IBinaryComparatorFactory[] btreeComparatorFactories) {
-        return new LSMRTreeDataflowHelperFactory(valueProviderFactories, btreeComparatorFactories,
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
+            IBinaryComparatorFactory[] btreeComparatorFactories) {
+        return new LSMRTreeDataflowHelperFactory(valueProviderFactories, rtreePolicyType, btreeComparatorFactories,
                 new ImmediateFlushPolicyProvider(SequentialSchedulerProvider.INSTANCE),
                 new ConstantMergePolicyProvider(SequentialSchedulerProvider.INSTANCE, MERGE_THRESHOLD));
     }

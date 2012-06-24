@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeTestContext;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -47,11 +48,11 @@ public class RTreeTestContext extends AbstractRTreeTestContext {
 
     public static RTreeTestContext create(IBufferCache bufferCache, int rtreeFileId,
             ISerializerDeserializer[] fieldSerdes, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            int numKeyFields) throws Exception {
+            int numKeyFields, RTreePolicyType rtreePolicyType) throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
-        RTree rtree = RTreeUtils
-                .createRTree(bufferCache, typeTraits, valueProviderFactories, cmpFactories);
+        RTree rtree = RTreeUtils.createRTree(bufferCache, typeTraits, valueProviderFactories, cmpFactories,
+                rtreePolicyType);
         rtree.create(rtreeFileId);
         rtree.open(rtreeFileId);
         RTreeTestContext testCtx = new RTreeTestContext(fieldSerdes, rtree);

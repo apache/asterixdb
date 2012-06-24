@@ -32,7 +32,6 @@ public class DataGenUtils {
         } else if (serde instanceof UTF8StringSerializerDeserializer) {
             return new StringFieldValueGenerator(20, rnd);
         }
-        System.out.println("NULL");
         return null;
     }
     

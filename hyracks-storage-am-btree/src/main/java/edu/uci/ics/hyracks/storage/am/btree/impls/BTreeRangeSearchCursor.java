@@ -56,6 +56,11 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     private ITupleReference lowKey;
     private ITupleReference highKey;
 
+    // This is only used by the LSM-RTree
+    private int pageId = -1;
+    // TODO(ALEX): How this is different tupleIndex? Why do we need it?
+    private int currentTupleIndex = 0;
+
     private ISearchOperationCallback searchCallback;
 
     public BTreeRangeSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes) {
@@ -88,6 +93,14 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         return page;
     }
 
+    public int getTupleOffset() {
+        return frame.getTupleOffset(currentTupleIndex);
+    }
+
+    public int getPageId() {
+        return pageId;
+    }
+
     private void fetchNextLeafPage(int nextLeafPage) throws HyracksDataException {
         do {
             ICachedPage nextLeaf = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeafPage), false);
@@ -101,6 +114,10 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
             bufferCache.unpin(page);
             page = nextLeaf;
             frame.setPage(page);
+
+            // This is only needed for the LSMRTree flush operation
+            pageId = nextLeafPage;
+
             nextLeafPage = frame.getNextLeaf();
         } while (frame.getTupleCount() == 0 && nextLeafPage > 0);
     }
@@ -122,6 +139,10 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         }
 
         frameTuple.resetByTupleIndex(frame, tupleIndex);
+
+        // This is only needed for the LSMRTree flush operation
+        currentTupleIndex = tupleIndex;
+
         if (highKey == null || tupleIndex <= stopTupleIndex) {
             return true;
         } else {
@@ -178,6 +199,8 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         searchCallback = initialState.getSearchOperationCallback();
         page = initialState.getPage();
         frame.setPage(page);
+
+        pageId = ((BTreeCursorInitialState) initialState).getPageId();
 
         pred = (RangePredicate) searchPred;
         lowKeyCmp = pred.getLowKeyComparator();

@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ITreeIndexFrame {
@@ -89,4 +90,7 @@ public interface ITreeIndexFrame {
     public int getPageHeaderSize();
 
     public ITreeIndexTupleReference createTupleReference();
+    
+    public void setMultiComparator(MultiComparator cmp);
+
 }

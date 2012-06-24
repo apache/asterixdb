@@ -27,5 +27,4 @@ public interface IBTreeFrame extends ITreeIndexFrame {
 	public void insertSorted(ITupleReference tuple);
     public boolean getSmFlag();
     public void setSmFlag(boolean smFlag);
-    public void setMultiComparator(MultiComparator cmp);
 }

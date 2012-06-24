@@ -19,13 +19,15 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import edu.uci.ics.hyracks.tests.am.common.TreeOperatorTestHelper;
 
 public class RTreeOperatorTestHelper extends TreeOperatorTestHelper {
 
     public IIndexDataflowHelperFactory createDataFlowHelperFactory(
-            IPrimitiveValueProviderFactory[] valueProviderFactories, IBinaryComparatorFactory[] btreeComparatorFactories) {
-        return new RTreeDataflowHelperFactory(valueProviderFactories);
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
+            IBinaryComparatorFactory[] btreeComparatorFactories) {
+        return new RTreeDataflowHelperFactory(valueProviderFactories, rtreePolicyType);
     }
 
 }

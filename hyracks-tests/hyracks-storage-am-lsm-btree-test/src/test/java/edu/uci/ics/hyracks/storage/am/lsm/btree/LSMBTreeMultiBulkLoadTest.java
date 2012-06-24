@@ -26,6 +26,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexBulkLoadTest;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
+import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
@@ -34,7 +35,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 public class LSMBTreeMultiBulkLoadTest extends OrderedIndexBulkLoadTest {
     public LSMBTreeMultiBulkLoadTest() {
         // Using 5 bulk load rounds.
-        super(LSMBTreeTestHarness.LEAF_FRAMES_TO_TEST, 5);
+        super(LSMBTreeTestHarness.LEAF_FRAMES_TO_TEST, AccessMethodTestsConfig.LSM_RTREE_BULKLOAD_ROUNDS);
     }
 
     private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();

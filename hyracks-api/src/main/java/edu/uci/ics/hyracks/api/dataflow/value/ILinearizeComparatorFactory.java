@@ -12,11 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package edu.uci.ics.hyracks.api.dataflow.value;
 
-package edu.uci.ics.hyracks.storage.am.lsm.btree.tuples;
+import java.io.Serializable;
 
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
-
-public interface ILSMBTreeTupleReference extends ITreeIndexTupleReference {
-	public boolean isAntimatter();
+public interface ILinearizeComparatorFactory extends IBinaryComparatorFactory {
+    public ILinearizeComparator createBinaryComparator();
 }

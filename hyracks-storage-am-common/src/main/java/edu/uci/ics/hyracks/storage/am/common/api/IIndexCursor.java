@@ -28,7 +28,7 @@ public interface IIndexCursor {
 
     public void close() throws HyracksDataException;
 
-    public void reset();
+    public void reset() throws HyracksDataException;
 
     public ITupleReference getTuple();
 }

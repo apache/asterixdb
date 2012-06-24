@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestDriver;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
+import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 
 @SuppressWarnings("rawtypes")
@@ -50,7 +51,7 @@ public abstract class LSMBTreeMergeTestDriver extends OrderedIndexTestDriver {
             orderedIndexTestUtils.bulkLoadStringTuples(ctx, numTuplesToInsert, getRandom());
         }
 
-        int maxTreesToMerge = 10;
+        int maxTreesToMerge = AccessMethodTestsConfig.LSM_BTREE_MAX_TREES_TO_MERGE;
         for (int i = 0; i < maxTreesToMerge; i++) {
             for (int j = 0; j < i; j++) {
                 if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
