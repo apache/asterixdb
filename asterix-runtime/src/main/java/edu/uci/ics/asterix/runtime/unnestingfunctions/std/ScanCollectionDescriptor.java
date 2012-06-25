@@ -18,10 +18,10 @@ import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunction;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
@@ -44,15 +44,15 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
     }
 
     @Override
-    public IUnnestingFunctionFactory createUnnestingFunctionFactory(final IEvaluatorFactory[] args) {
+    public ICopyUnnestingFunctionFactory createUnnestingFunctionFactory(final ICopyEvaluatorFactory[] args) {
         return new ScanCollectionUnnestingFunctionFactory(args[0]);
     }
 
-    private static class ScanCollectionUnnestingFunctionFactory implements IUnnestingFunctionFactory {
+    private static class ScanCollectionUnnestingFunctionFactory implements ICopyUnnestingFunctionFactory {
 
         private static final long serialVersionUID = 1L;
 
-        private IEvaluatorFactory listEvalFactory;
+        private ICopyEvaluatorFactory listEvalFactory;
         private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
         private final static byte SER_UNORDEREDLIST_TYPE_TAG = ATypeTag.UNORDEREDLIST.serialize();
         private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
@@ -60,19 +60,19 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
         private byte serItemTypeTag;
         private boolean selfDescList = false;
 
-        public ScanCollectionUnnestingFunctionFactory(IEvaluatorFactory arg) {
+        public ScanCollectionUnnestingFunctionFactory(ICopyEvaluatorFactory arg) {
             this.listEvalFactory = arg;
         }
 
         @Override
-        public IUnnestingFunction createUnnestingFunction(IDataOutputProvider provider) throws AlgebricksException {
+        public ICopyUnnestingFunction createUnnestingFunction(IDataOutputProvider provider) throws AlgebricksException {
 
             final DataOutput out = provider.getDataOutput();
 
-            return new IUnnestingFunction() {
+            return new ICopyUnnestingFunction() {
 
                 private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-                private IEvaluator argEval = listEvalFactory.createEvaluator(inputVal);
+                private ICopyEvaluator argEval = listEvalFactory.createEvaluator(inputVal);
                 @SuppressWarnings("unchecked")
                 private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                         .getSerializerDeserializer(BuiltinType.ANULL);
@@ -87,7 +87,7 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                     try {
                         inputVal.reset();
                         argEval.evaluate(tuple);
-                        byte[] serList = inputVal.getBytes();
+                        byte[] serList = inputVal.getByteArray();
 
                         if (serList[0] == SER_NULL_TYPE_TAG) {
                             nullSerde.serialize(ANull.NULL, out);
@@ -99,12 +99,12 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[0]));
                         }
 
-                        serListTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getBytes()[0])
+                        serListTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0])
                                 .serialize();
                         if (serListTag == SER_ORDEREDLIST_TYPE_TAG)
-                            numItems = AOrderedListSerializerDeserializer.getNumberOfItems(inputVal.getBytes());
+                            numItems = AOrderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray());
                         else
-                            numItems = AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal.getBytes());
+                            numItems = AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray());
 
                         itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[1]);
                         if (itemTag == ATypeTag.ANY)
@@ -123,7 +123,7 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
 
                     try {
                         if (pos < numItems) {
-                            byte[] serList = inputVal.getBytes();
+                            byte[] serList = inputVal.getByteArray();
 
                             try {
                                 if (serListTag == SER_ORDEREDLIST_TYPE_TAG) {

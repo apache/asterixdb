@@ -1,0 +1,4 @@
+{ "name": "Person One", "id": "001", "address": { "street": "3019 DBH", "city": "Irvine", "zip": 92697 } }
+{ "name": "Person Two", "id": "002", "address": null }
+{ "name": "Person Three", "id": "003", "address": { "street": "2019 DBH", "city": "Irvine" } }
+{ "name": "Person Four", "id": "004", "address": null, "home": { "street": "2019 DBH", "city": { "name": "Irvine", "zip": 92697 } } }

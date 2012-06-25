@@ -16,26 +16,26 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
-public class FieldAccessByIndexEvalFactory implements IEvaluatorFactory {
+public class FieldAccessByIndexEvalFactory implements ICopyEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private IEvaluatorFactory recordEvalFactory;
-    private IEvaluatorFactory fieldIndexEvalFactory;
+    private ICopyEvaluatorFactory recordEvalFactory;
+    private ICopyEvaluatorFactory fieldIndexEvalFactory;
     private int nullBitmapSize;
     private ARecordType recordType;
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private final static byte SER_RECORD_TYPE_TAG = ATypeTag.RECORD.serialize();
 
-    public FieldAccessByIndexEvalFactory(IEvaluatorFactory recordEvalFactory, IEvaluatorFactory fieldIndexEvalFactory,
+    public FieldAccessByIndexEvalFactory(ICopyEvaluatorFactory recordEvalFactory, ICopyEvaluatorFactory fieldIndexEvalFactory,
             ARecordType recordType) {
         this.recordEvalFactory = recordEvalFactory;
         this.fieldIndexEvalFactory = fieldIndexEvalFactory;
@@ -48,15 +48,15 @@ public class FieldAccessByIndexEvalFactory implements IEvaluatorFactory {
     }
 
     @Override
-    public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-        return new IEvaluator() {
+    public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+        return new ICopyEvaluator() {
 
             private DataOutput out = output.getDataOutput();
 
             private ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
             private ArrayBackedValueStorage outInput1 = new ArrayBackedValueStorage();
-            private IEvaluator eval0 = recordEvalFactory.createEvaluator(outInput0);
-            private IEvaluator eval1 = fieldIndexEvalFactory.createEvaluator(outInput1);
+            private ICopyEvaluator eval0 = recordEvalFactory.createEvaluator(outInput0);
+            private ICopyEvaluator eval1 = fieldIndexEvalFactory.createEvaluator(outInput1);
             @SuppressWarnings("unchecked")
             private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(BuiltinType.ANULL);
@@ -73,7 +73,7 @@ public class FieldAccessByIndexEvalFactory implements IEvaluatorFactory {
                     eval0.evaluate(tuple);
                     outInput1.reset();
                     eval1.evaluate(tuple);
-                    byte[] serRecord = outInput0.getBytes();
+                    byte[] serRecord = outInput0.getByteArray();
 
                     if (serRecord[0] == SER_NULL_TYPE_TAG) {
                         nullSerde.serialize(ANull.NULL, out);
@@ -85,7 +85,7 @@ public class FieldAccessByIndexEvalFactory implements IEvaluatorFactory {
                                 + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[0]));
                     }
 
-                    fieldIndex = IntegerSerializerDeserializer.getInt(outInput1.getBytes(), 1);
+                    fieldIndex = IntegerSerializerDeserializer.getInt(outInput1.getByteArray(), 1);
                     fieldValueOffset = ARecordSerializerDeserializer.getFieldOffsetById(serRecord, fieldIndex,
                             nullBitmapSize, recordType.isOpen());
 

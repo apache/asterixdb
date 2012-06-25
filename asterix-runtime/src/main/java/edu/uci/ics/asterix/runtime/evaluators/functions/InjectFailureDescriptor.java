@@ -11,8 +11,8 @@ import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -34,20 +34,20 @@ public class InjectFailureDescriptor extends AbstractScalarFunctionDynamicDescri
     }
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) throws AlgebricksException {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
 
-        return new IEvaluatorFactory() {
+        return new ICopyEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
 
                 final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                final IEvaluator[] evals = new IEvaluator[args.length];
+                final ICopyEvaluator[] evals = new ICopyEvaluator[args.length];
                 evals[0] = args[0].createEvaluator(argOut);
                 evals[1] = args[1].createEvaluator(argOut);
 
-                return new IEvaluator() {
+                return new ICopyEvaluator() {
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -55,9 +55,9 @@ public class InjectFailureDescriptor extends AbstractScalarFunctionDynamicDescri
                             // evaluator the failure condition
                             argOut.reset();
                             evals[1].evaluate(tuple);
-                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getBytes()[0]);
+                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]);
                             if (typeTag == ATypeTag.BOOLEAN) {
-                                boolean argResult = ABooleanSerializerDeserializer.getBoolean(argOut.getBytes(), 1);
+                                boolean argResult = ABooleanSerializerDeserializer.getBoolean(argOut.getByteArray(), 1);
                                 if (argResult)
                                     throw new AlgebricksException("Injecting a intended failure");
                             }
@@ -65,7 +65,7 @@ public class InjectFailureDescriptor extends AbstractScalarFunctionDynamicDescri
                             // evaluate the real evaluator
                             argOut.reset();
                             evals[0].evaluate(tuple);
-                            output.getDataOutput().write(argOut.getBytes(), argOut.getStartIndex(), argOut.getLength());
+                            output.getDataOutput().write(argOut.getByteArray(), argOut.getStartOffset(), argOut.getLength());
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
                         }

@@ -141,7 +141,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOpe
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 
 /**
  * 
@@ -265,7 +265,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator imp
             ArrayList<LogicalVariable> vars = new ArrayList<LogicalVariable>();
             ArrayList<Mutable<ILogicalExpression>> exprs = new ArrayList<Mutable<ILogicalExpression>>();
             List<Mutable<ILogicalExpression>> varRefsForLoading = new ArrayList<Mutable<ILogicalExpression>>();
-            for (Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> partitioner : DatasetUtils
+            for (Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> partitioner : DatasetUtils
                     .getPartitioningFunctions(adecl)) {
                 AbstractFunctionCallExpression f = partitioner.second.cloneExpression();
                 f.substituteVar(METADATA_DUMMY_VAR, resVar);

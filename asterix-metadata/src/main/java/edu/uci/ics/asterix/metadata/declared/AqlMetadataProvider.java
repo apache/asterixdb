@@ -50,7 +50,7 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ILogicalExpressionJobGen;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -62,8 +62,9 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.SinkWriterRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -359,7 +360,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             typeTraits[numPrimaryKeys] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(itemType);
         }
 
-        for (Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : DatasetUtils
+        for (Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : DatasetUtils
                 .getPartitioningFunctions(ddecl)) {
             IAType keyType = evalFactoryAndType.third;
             ISerializerDeserializer keySerde = metadata.getFormat().getSerdeProvider()
@@ -468,7 +469,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             throw new AlgebricksException("R-tree can only be used as a secondary index");
         }
 
-        for (Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : DatasetUtils
+        for (Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : DatasetUtils
                 .getPartitioningFunctions(ddecl)) {
             IAType keyType = evalFactoryAndType.third;
             ISerializerDeserializer keySerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -756,9 +757,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         if (filterExpr == null) {
             return null;
         }
-        ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
-        IEvaluatorFactory filterEvalFactory = exprJobGen.createEvaluatorFactory(filterExpr, typeEnv, inputSchemas,
-                context);
+        IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
+        IScalarEvaluatorFactory filterEvalFactory = expressionRuntimeProvider.createEvaluatorFactory(filterExpr,
+                typeEnv, inputSchemas, context);
         return new AsterixTupleFilterFactory(filterEvalFactory, context.getBinaryBooleanInspector());
     }
 
@@ -809,7 +810,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     true);
             typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
         }
-        for (Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : DatasetUtils
+        for (Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : DatasetUtils
                 .getPartitioningFunctions(compiledDatasetDecl)) {
             IAType keyType = evalFactoryAndType.third;
             comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,
@@ -883,7 +884,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(nestedKeyType);
             valueProviderFactories[i] = AqlPrimitiveValueProviderFactory.INSTANCE;
         }
-        for (Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : DatasetUtils
+        for (Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : DatasetUtils
                 .getPartitioningFunctions(compiledDatasetDecl)) {
             IAType keyType = evalFactoryAndType.third;
             comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,

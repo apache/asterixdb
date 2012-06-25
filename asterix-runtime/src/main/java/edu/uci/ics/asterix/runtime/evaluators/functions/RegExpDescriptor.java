@@ -20,8 +20,8 @@ import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -53,22 +53,22 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     }
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) throws AlgebricksException {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
 
-        return new IEvaluatorFactory() {
+        return new ICopyEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
+            public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
 
                 final DataOutput dout = output.getDataOutput();
 
-                return new IEvaluator() {
+                return new ICopyEvaluator() {
 
                     private boolean first = true;
                     private ArrayBackedValueStorage array0 = new ArrayBackedValueStorage();
-                    private IEvaluator evalString = args[0].createEvaluator(array0);
-                    private IEvaluator evalPattern = args[1].createEvaluator(array0);
+                    private ICopyEvaluator evalString = args[0].createEvaluator(array0);
+                    private ICopyEvaluator evalPattern = args[1].createEvaluator(array0);
                     private ByteArrayAccessibleOutputStream lastPattern = new ByteArrayAccessibleOutputStream();
                     private UTF8CharSequence carSeq = new UTF8CharSequence();
                     private IBinaryComparator strComp = AqlBinaryComparatorFactoryProvider.INSTANCE
@@ -91,7 +91,7 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         try {
                             array0.reset();
                             evalPattern.evaluate(tuple);
-                            if (array0.getBytes()[0] == SER_NULL_TYPE_TAG) {
+                            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, dout);
                                 return;
                             }
@@ -100,7 +100,7 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                 first = false;
                                 newPattern = true;
                             } else {
-                                int c = strComp.compare(array0.getBytes(), array0.getStartIndex(), array0.getLength(),
+                                int c = strComp.compare(array0.getByteArray(), array0.getStartOffset(), array0.getLength(),
                                         lastPattern.getByteArray(), 0, lastPattern.size());
                                 if (c != 0) {
                                     newPattern = true;
@@ -108,7 +108,7 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             }
                             if (newPattern) {
                                 lastPattern.reset();
-                                lastPattern.write(array0.getBytes(), array0.getStartIndex(), array0.getLength());
+                                lastPattern.write(array0.getByteArray(), array0.getStartOffset(), array0.getLength());
                                 // ! object creation !
                                 DataInputStream di = new DataInputStream(new ByteArrayInputStream(
                                         lastPattern.getByteArray()));
@@ -118,7 +118,7 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             }
                             array0.reset();
                             evalString.evaluate(tuple);
-                            if (array0.getBytes()[0] == SER_NULL_TYPE_TAG) {
+                            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, dout);
                                 return;
                             }

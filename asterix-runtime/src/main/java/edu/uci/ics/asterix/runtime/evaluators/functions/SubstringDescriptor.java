@@ -10,8 +10,8 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
@@ -30,34 +30,34 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
     };
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) throws AlgebricksException {
-        return new IEvaluatorFactory() {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
+        return new ICopyEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new IEvaluator() {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+                return new ICopyEvaluator() {
 
                     private DataOutput out = output.getDataOutput();
                     private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private IEvaluator evalString = args[0].createEvaluator(argOut);
-                    private IEvaluator evalStart = args[1].createEvaluator(argOut);
-                    private IEvaluator evalLen = args[2].createEvaluator(argOut);
+                    private ICopyEvaluator evalString = args[0].createEvaluator(argOut);
+                    private ICopyEvaluator evalStart = args[1].createEvaluator(argOut);
+                    private ICopyEvaluator evalLen = args[2].createEvaluator(argOut);
                     private final byte stt = ATypeTag.STRING.serialize();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         argOut.reset();
                         evalStart.evaluate(tuple);
-                        int start = IntegerSerializerDeserializer.getInt(argOut.getBytes(), 1) - 1;
+                        int start = IntegerSerializerDeserializer.getInt(argOut.getByteArray(), 1) - 1;
                         argOut.reset();
                         evalLen.evaluate(tuple);
-                        int len = IntegerSerializerDeserializer.getInt(argOut.getBytes(), 1);
+                        int len = IntegerSerializerDeserializer.getInt(argOut.getByteArray(), 1);
                         argOut.reset();
                         evalString.evaluate(tuple);
 
-                        byte[] bytes = argOut.getBytes();
-                        int utflen = UTF8StringPointable.getUTFLen(bytes, 1);
+                        byte[] bytes = argOut.getByteArray();
+                        int utflen = UTF8StringPointable.getUTFLength(bytes, 1);
                         int sStart = 3;
                         int c = 0;
                         int idxPos1 = 0;

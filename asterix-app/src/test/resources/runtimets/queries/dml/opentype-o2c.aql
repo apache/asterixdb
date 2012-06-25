@@ -16,7 +16,7 @@ create type testtype as open {
 }
 
 create type testtype2 as closed {
-  hobby: string?,
+  hobby: {{string}}?,
   id: string,
   name: string
 }
@@ -26,19 +26,19 @@ create dataset testds(testtype) partitioned by key id;
 create dataset testds2(testtype2) partitioned by key id; 
  
 insert into dataset testds (
-{ "id": "001",  "hobby": "music", "name": "Person Three"}
+{ "id": "001",  "hobby": {{"music"}}, "name": "Person Three"}
 );
 
 insert into dataset testds (
-{ "id": "002", "name": "Person Three", "hobby": "football"}
+{ "id": "002", "name": "Person Three", "hobby": {{"football"}}}
 );
 
 insert into dataset testds (
-{ "id": "003", "name": "Person Three", "hobby": "movie"}
+{ "id": "003", "name": "Person Three", "hobby": {{"movie", "coding", "debugging"}}}
 );
 
 insert into dataset testds (
-{ "name": "Person Three", "hobby": "swimming", "id": "004"}
+{ "name": "Person Three", "hobby": {{"swimming", "music"}}, "id": "004"}
 );
 
 insert into dataset testds (

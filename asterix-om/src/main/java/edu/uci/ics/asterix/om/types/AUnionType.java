@@ -27,7 +27,7 @@ public class AUnionType extends AbstractComplexType {
     }
 
     public boolean isNullableType() {
-        return unionList.size() == 2 && unionList.get(0).equals(BuiltinType.ANULL);
+    	return unionList.size() == 2 && unionList.get(0).equals(BuiltinType.ANULL);
     }
 
     @Override

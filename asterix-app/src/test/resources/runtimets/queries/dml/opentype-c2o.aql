@@ -12,7 +12,7 @@ use dataverse testdv2;
 create type testtype as closed {
   id: string,
   name: string,
-  hobby: string?
+  hobby: {{string}}?
 }
 
 /*
@@ -28,19 +28,19 @@ create dataset testds(testtype) partitioned by key id;
 create dataset testds2(testtype2) partitioned by key id;
  
 insert into dataset testds (
-{ "hobby": "music", "id": "001", "name": "Person Three"}
+{ "hobby": {{"music", "coding"}}, "id": "001", "name": "Person Three"}
 );
 
 insert into dataset testds (
-{ "name": "Person One", "id": "002", "hobby": "sports"}
+{ "name": "Person One", "id": "002", "hobby": {{"sports"}} }
 );
 
 insert into dataset testds (
-{ "id": "003", "hobby": "movie", "name": "Person Two"}
+{ "id": "003", "hobby": {{"movie", "sports"}}, "name": "Person Two"}
 );
 
 insert into dataset testds (
-{ "id": "004", "name": "Person Four", "hobby": "swimming"}
+{ "id": "004", "name": "Person Four", "hobby": {{"swimming"}} }
 );
  
 insert into dataset testds (

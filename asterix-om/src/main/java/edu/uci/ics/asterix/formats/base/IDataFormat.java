@@ -20,7 +20,7 @@ import edu.uci.ics.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import edu.uci.ics.hyracks.algebricks.data.ITypeTraitProvider;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
@@ -43,10 +43,10 @@ public interface IDataFormat {
 
     public INullWriterFactory getNullWriterFactory();
 
-    public Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> partitioningEvaluatorFactory(
+    public Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> partitioningEvaluatorFactory(
             ARecordType recType, String fldName) throws AlgebricksException;
 
-    public IEvaluatorFactory getFieldAccessEvaluatorFactory(ARecordType recType, String fldName, int recordColumn)
+    public ICopyEvaluatorFactory getFieldAccessEvaluatorFactory(ARecordType recType, String fldName, int recordColumn)
             throws AlgebricksException;
 
     public ITupleParserFactory createTupleParser(ARecordType recType, IParseFileSplitsDecl decl);
@@ -56,9 +56,9 @@ public interface IDataFormat {
     public IFunctionDescriptor resolveFunction(ILogicalExpression expr, IVariableTypeEnvironment typeEnvironment)
             throws AlgebricksException;
 
-    public IEvaluatorFactory getConstantEvalFactory(IAlgebricksConstantValue value) throws AlgebricksException;
+    public ICopyEvaluatorFactory getConstantEvalFactory(IAlgebricksConstantValue value) throws AlgebricksException;
 
-    public IEvaluatorFactory[] createMBRFactory(ARecordType recType, String fldName, int recordColumn, int dimension)
+    public ICopyEvaluatorFactory[] createMBRFactory(ARecordType recType, String fldName, int recordColumn, int dimension)
             throws AlgebricksException;
 
     public IExpressionEvalSizeComputer getExpressionEvalSizeComputer();

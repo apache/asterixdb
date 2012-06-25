@@ -38,7 +38,7 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
 
     protected IPrimitiveValueProviderFactory[] valueProviderFactories;
     protected int numNestedSecondaryKeyFields;
-    
+
     protected SecondaryRTreeCreator(PhysicalOptimizationConfig physOptConf) {
         super(physOptConf);
     }
@@ -56,7 +56,7 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
         spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
         return spec;
     }
-    
+
     @Override
     protected void setSecondaryRecDescAndComparators(List<String> secondaryKeyFields) throws AlgebricksException,
             AsterixException {
@@ -67,7 +67,8 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
                             + numSecondaryKeys
                             + " fields as a key for the R-tree index. There can be only one field as a key for the R-tree index.");
         }
-        Pair<IAType, Boolean> spatialTypePair = AqlCompiledIndexDecl.getNonNullableKeyFieldType(secondaryKeyFields.get(0), itemType);
+        Pair<IAType, Boolean> spatialTypePair = AqlCompiledIndexDecl.getNonNullableKeyFieldType(
+                secondaryKeyFields.get(0), itemType);
         IAType spatialType = spatialTypePair.first;
         anySecondaryKeyIsNullable = spatialTypePair.second;
         if (spatialType == null) {
@@ -87,8 +88,8 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
             ISerializerDeserializer keySerde = AqlSerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(nestedKeyType);
             secondaryRecFields[i] = keySerde;
-			secondaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE
-					.getBinaryComparatorFactory(nestedKeyType, true);
+            secondaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(
+                    nestedKeyType, true);
             secondaryTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(nestedKeyType);
             valueProviderFactories[i] = AqlPrimitiveValueProviderFactory.INSTANCE;
         }
@@ -99,26 +100,27 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
         }
         secondaryRecDesc = new RecordDescriptor(secondaryRecFields, secondaryTypeTraits);
     }
-    
+
     @Override
     public JobSpecification buildLoadingJobSpec() throws AsterixException, AlgebricksException {
         JobSpecification spec = new JobSpecification();
-        
+
         // Create dummy key provider for feeding the primary index scan. 
         AbstractOperatorDescriptor keyProviderOp = createDummyKeyProviderOp(spec);
-        
+
         // Create primary index scan op.
         BTreeSearchOperatorDescriptor primaryScanOp = createPrimaryIndexScanOp(spec);
 
         // Assign op.
-        AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, primaryScanOp, numNestedSecondaryKeyFields);
+        AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, primaryScanOp,
+                numNestedSecondaryKeyFields);
 
         // If any of the secondary fields are nullable, then add a select op that filters nulls.
         AlgebricksMetaOperatorDescriptor selectOp = null;
         if (anySecondaryKeyIsNullable) {
             selectOp = createFilterNullsSelectOp(spec, numNestedSecondaryKeyFields);
         }
-        
+
         // Create secondary RTree bulk load op.
         TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(spec,
                 numNestedSecondaryKeyFields, new RTreeDataflowHelperFactory(valueProviderFactories),

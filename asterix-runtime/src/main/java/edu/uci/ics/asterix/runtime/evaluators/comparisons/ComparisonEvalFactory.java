@@ -6,21 +6,21 @@ import edu.uci.ics.asterix.om.base.ABoolean;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions.ComparisonKind;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class ComparisonEvalFactory implements IEvaluatorFactory {
+public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private IEvaluatorFactory evalLeftFactory;
-    private IEvaluatorFactory evalRightFactory;
+    private ICopyEvaluatorFactory evalLeftFactory;
+    private ICopyEvaluatorFactory evalRightFactory;
     private ComparisonKind comparisonKind;
 
-    public ComparisonEvalFactory(IEvaluatorFactory evalLeftFactory, IEvaluatorFactory evalRightFactory,
+    public ComparisonEvalFactory(ICopyEvaluatorFactory evalLeftFactory, ICopyEvaluatorFactory evalRightFactory,
             ComparisonKind comparisonKind) {
         this.evalLeftFactory = evalLeftFactory;
         this.evalRightFactory = evalRightFactory;
@@ -28,7 +28,7 @@ public class ComparisonEvalFactory implements IEvaluatorFactory {
     }
 
     @Override
-    public IEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
+    public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
         DataOutput out = output.getDataOutput();
         switch (comparisonKind) {
             // Should we do any normalization?
@@ -57,8 +57,8 @@ public class ComparisonEvalFactory implements IEvaluatorFactory {
     }
 
     static class EqualityComparisonEvaluator extends AbstractComparisonEvaluator {
-        public EqualityComparisonEvaluator(DataOutput out, IEvaluatorFactory evalLeftFactory,
-                IEvaluatorFactory evalRightFactory) throws AlgebricksException {
+        public EqualityComparisonEvaluator(DataOutput out, ICopyEvaluatorFactory evalLeftFactory,
+                ICopyEvaluatorFactory evalRightFactory) throws AlgebricksException {
             super(out, evalLeftFactory, evalRightFactory);
         }
 
@@ -85,8 +85,8 @@ public class ComparisonEvalFactory implements IEvaluatorFactory {
     }
 
     static class InequalityComparisonEvaluator extends AbstractComparisonEvaluator {
-        public InequalityComparisonEvaluator(DataOutput out, IEvaluatorFactory evalLeftFactory,
-                IEvaluatorFactory evalRightFactory) throws AlgebricksException {
+        public InequalityComparisonEvaluator(DataOutput out, ICopyEvaluatorFactory evalLeftFactory,
+                ICopyEvaluatorFactory evalRightFactory) throws AlgebricksException {
             super(out, evalLeftFactory, evalRightFactory);
         }
 
@@ -113,8 +113,8 @@ public class ComparisonEvalFactory implements IEvaluatorFactory {
     }
 
     static class GreaterThanOrEqualComparisonEvaluator extends AbstractComparisonEvaluator {
-        public GreaterThanOrEqualComparisonEvaluator(DataOutput out, IEvaluatorFactory evalLeftFactory,
-                IEvaluatorFactory evalRightFactory) throws AlgebricksException {
+        public GreaterThanOrEqualComparisonEvaluator(DataOutput out, ICopyEvaluatorFactory evalLeftFactory,
+                ICopyEvaluatorFactory evalRightFactory) throws AlgebricksException {
             super(out, evalLeftFactory, evalRightFactory);
         }
 
@@ -142,8 +142,8 @@ public class ComparisonEvalFactory implements IEvaluatorFactory {
     }
 
     static class GreaterThanComparisonEvaluator extends AbstractComparisonEvaluator {
-        public GreaterThanComparisonEvaluator(DataOutput out, IEvaluatorFactory evalLeftFactory,
-                IEvaluatorFactory evalRightFactory) throws AlgebricksException {
+        public GreaterThanComparisonEvaluator(DataOutput out, ICopyEvaluatorFactory evalLeftFactory,
+                ICopyEvaluatorFactory evalRightFactory) throws AlgebricksException {
             super(out, evalLeftFactory, evalRightFactory);
         }
 
@@ -170,8 +170,8 @@ public class ComparisonEvalFactory implements IEvaluatorFactory {
     }
 
     static class LessThanOrEqualComparisonEvaluator extends AbstractComparisonEvaluator {
-        public LessThanOrEqualComparisonEvaluator(DataOutput out, IEvaluatorFactory evalLeftFactory,
-                IEvaluatorFactory evalRightFactory) throws AlgebricksException {
+        public LessThanOrEqualComparisonEvaluator(DataOutput out, ICopyEvaluatorFactory evalLeftFactory,
+                ICopyEvaluatorFactory evalRightFactory) throws AlgebricksException {
             super(out, evalLeftFactory, evalRightFactory);
         }
 
@@ -199,8 +199,8 @@ public class ComparisonEvalFactory implements IEvaluatorFactory {
     }
 
     static class LessThanComparisonEvaluator extends AbstractComparisonEvaluator {
-        public LessThanComparisonEvaluator(DataOutput out, IEvaluatorFactory evalLeftFactory,
-                IEvaluatorFactory evalRightFactory) throws AlgebricksException {
+        public LessThanComparisonEvaluator(DataOutput out, ICopyEvaluatorFactory evalLeftFactory,
+                ICopyEvaluatorFactory evalRightFactory) throws AlgebricksException {
             super(out, evalLeftFactory, evalRightFactory);
         }
 

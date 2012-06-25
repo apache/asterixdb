@@ -13,9 +13,9 @@ import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateFunctionFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -40,18 +40,18 @@ public class CountAggregateDescriptor extends AbstractAggregateFunctionDynamicDe
     }
 
     @Override
-    public IAggregateFunctionFactory createAggregateFunctionFactory(final IEvaluatorFactory[] args)
+    public ICopyAggregateFunctionFactory createAggregateFunctionFactory(final ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
-        return new IAggregateFunctionFactory() {
+        return new ICopyAggregateFunctionFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IAggregateFunction createAggregateFunction(IDataOutputProvider provider) throws AlgebricksException {
+            public ICopyAggregateFunction createAggregateFunction(IDataOutputProvider provider) throws AlgebricksException {
 
                 final DataOutput out = provider.getDataOutput();
 
-                return new IAggregateFunction() {
+                return new ICopyAggregateFunction() {
                     private AMutableInt32 result = new AMutableInt32(-1);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AInt32> int32Serde = AqlSerializerDeserializerProvider.INSTANCE

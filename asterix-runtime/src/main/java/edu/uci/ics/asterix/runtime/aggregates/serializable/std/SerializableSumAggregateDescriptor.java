@@ -28,10 +28,10 @@ import edu.uci.ics.asterix.runtime.aggregates.base.AbstractSerializableAggregate
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ISerializableAggregateFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ISerializableAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunction;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -53,18 +53,18 @@ public class SerializableSumAggregateDescriptor extends AbstractSerializableAggr
     }
 
     @Override
-    public ISerializableAggregateFunctionFactory createAggregateFunctionFactory(final IEvaluatorFactory[] args)
+    public ICopySerializableAggregateFunctionFactory createAggregateFunctionFactory(final ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
-        return new ISerializableAggregateFunctionFactory() {
+        return new ICopySerializableAggregateFunctionFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ISerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
+            public ICopySerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
 
-                return new ISerializableAggregateFunction() {
+                return new ICopySerializableAggregateFunction() {
 
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-                    private IEvaluator eval = args[0].createEvaluator(inputVal);
+                    private ICopyEvaluator eval = args[0].createEvaluator(inputVal);
                     private AMutableDouble aDouble = new AMutableDouble(0);
                     private AMutableFloat aFloat = new AMutableFloat(0);
                     private AMutableInt64 aInt64 = new AMutableInt64(0);
@@ -107,41 +107,41 @@ public class SerializableSumAggregateDescriptor extends AbstractSerializableAggr
                         eval.evaluate(tuple);
                         if (inputVal.getLength() > 0) {
                             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                                    .deserialize(inputVal.getBytes()[0]);
+                                    .deserialize(inputVal.getByteArray()[0]);
                             switch (typeTag) {
                                 case INT8: {
                                     metInt8s = true;
-                                    byte val = AInt8SerializerDeserializer.getByte(inputVal.getBytes(), 1);
+                                    byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }
                                 case INT16: {
                                     metInt16s = true;
-                                    short val = AInt16SerializerDeserializer.getShort(inputVal.getBytes(), 1);
+                                    short val = AInt16SerializerDeserializer.getShort(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }
                                 case INT32: {
                                     metInt32s = true;
-                                    int val = AInt32SerializerDeserializer.getInt(inputVal.getBytes(), 1);
+                                    int val = AInt32SerializerDeserializer.getInt(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }
                                 case INT64: {
                                     metInt64s = true;
-                                    long val = AInt64SerializerDeserializer.getLong(inputVal.getBytes(), 1);
+                                    long val = AInt64SerializerDeserializer.getLong(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }
                                 case FLOAT: {
                                     metFloats = true;
-                                    float val = AFloatSerializerDeserializer.getFloat(inputVal.getBytes(), 1);
+                                    float val = AFloatSerializerDeserializer.getFloat(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }
                                 case DOUBLE: {
                                     metDoubles = true;
-                                    double val = ADoubleSerializerDeserializer.getDouble(inputVal.getBytes(), 1);
+                                    double val = ADoubleSerializerDeserializer.getDouble(inputVal.getByteArray(), 1);
                                     sum += val;
                                     break;
                                 }

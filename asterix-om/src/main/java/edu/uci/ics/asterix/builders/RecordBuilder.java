@@ -11,8 +11,8 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.data.std.api.IValueReference;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IValueReference;
 
 public class RecordBuilder implements IARecordBuilder {
     private int openPartOffset;
@@ -127,9 +127,9 @@ public class RecordBuilder implements IARecordBuilder {
         closedPartOffsets[id] = closedPartOutputStream.size();
         int len = value.getLength() - 1;
         // +1 because we do not store the value tag.
-        closedPartOutputStream.write(value.getBytes(), value.getStartIndex() + 1, len);
+        closedPartOutputStream.write(value.getByteArray(), value.getStartOffset() + 1, len);
         numberOfClosedFields++;
-        if (isNullable && value.getBytes()[0] != SER_NULL_TYPE_TAG) {
+        if (isNullable && value.getByteArray()[0] != SER_NULL_TYPE_TAG) {
             nullBitMap[id / 8] |= (byte) (1 << (7 - (id % 8)));
         }
     }
@@ -142,12 +142,12 @@ public class RecordBuilder implements IARecordBuilder {
             for (int i = 0; i < tempOpenPartOffsets.length; i++)
                 openPartOffsets[i] = tempOpenPartOffsets[i];
         }
-        fieldNameHashCode = utf8HashFunction.hash(name.getBytes(), name.getStartIndex() + 1, name.getLength());
+        fieldNameHashCode = utf8HashFunction.hash(name.getByteArray(), name.getStartOffset() + 1, name.getLength());
         openPartOffsets[this.numberOfOpenFields] = fieldNameHashCode;
         openPartOffsets[this.numberOfOpenFields] = (openPartOffsets[numberOfOpenFields] << 32);
         openPartOffsets[numberOfOpenFields++] += openPartOutputStream.size();
-        openPartOutputStream.write(name.getBytes(), name.getStartIndex() + 1, name.getLength() - 1);
-        openPartOutputStream.write(value.getBytes(), value.getStartIndex(), value.getLength());
+        openPartOutputStream.write(name.getByteArray(), name.getStartOffset() + 1, name.getLength() - 1);
+        openPartOutputStream.write(value.getByteArray(), value.getStartOffset(), value.getLength());
     }
 
     @Override

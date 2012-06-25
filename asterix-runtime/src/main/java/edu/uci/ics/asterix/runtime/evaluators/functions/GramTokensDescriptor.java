@@ -12,8 +12,8 @@ import edu.uci.ics.fuzzyjoin.tokenizer.NGramUTF8StringBinaryTokenizer;
 import edu.uci.ics.fuzzyjoin.tokenizer.UTF8NGramTokenFactory;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 
 public class GramTokensDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -33,12 +33,12 @@ public class GramTokensDescriptor extends AbstractScalarFunctionDynamicDescripto
     }
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) throws AlgebricksException {
-        return new IEvaluatorFactory() {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
+        return new ICopyEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
+            public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
                 ITokenFactory tokenFactory = new UTF8NGramTokenFactory(ATypeTag.STRING.serialize(),
                         ATypeTag.INT32.serialize());
                 NGramUTF8StringBinaryTokenizer tokenizer = new NGramUTF8StringBinaryTokenizer(3, true, true, true,

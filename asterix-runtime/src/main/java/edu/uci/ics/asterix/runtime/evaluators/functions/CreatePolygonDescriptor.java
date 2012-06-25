@@ -10,8 +10,8 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -28,17 +28,17 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
     };
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) throws AlgebricksException {
-        return new IEvaluatorFactory() {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
+        return new ICopyEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             private DataOutput out;
             private ArrayBackedValueStorage outInput;
 
             @Override
-            public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
 
-                final IEvaluator[] argEvals = new IEvaluator[args.length];
+                final ICopyEvaluator[] argEvals = new ICopyEvaluator[args.length];
                 out = output.getDataOutput();
 
                 outInput = new ArrayBackedValueStorage();
@@ -47,7 +47,7 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
                     argEvals[i] = args[i].createEvaluator(outInput);
                 }
 
-                return new IEvaluator() {
+                return new ICopyEvaluator() {
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -62,7 +62,7 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
                             outInput.reset();
                             argEvals[i].evaluate(tuple);
                             try {
-                                out.write(outInput.getBytes(), outInput.getStartIndex() + 1, outInput.getLength() - 1);
+                                out.write(outInput.getByteArray(), outInput.getStartOffset() + 1, outInput.getLength() - 1);
                             } catch (IOException e) {
                                 throw new AlgebricksException(e);
                             }

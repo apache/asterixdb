@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.util;
+package edu.uci.ics.asterix.runtime.pointables;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -28,38 +29,60 @@ import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
+import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
+import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
+import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
+import edu.uci.ics.asterix.runtime.util.container.IObjectFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IValueReference;
 
-public class ARecordAccessor implements IValueReference {
+/**
+ * This class interprets the binary data representation of a record. One can
+ * call getFieldNames, getFieldTypeTags and getFieldValues to get pointable
+ * objects for field names, field type tags, and field values.
+ * 
+ */
+public class ARecordPointable extends AbstractVisitablePointable {
 
-    private List<SimpleValueReference> fieldNames = new ArrayList<SimpleValueReference>();
-    private List<SimpleValueReference> fieldTypeTags = new ArrayList<SimpleValueReference>();
-    private List<SimpleValueReference> fieldValues = new ArrayList<SimpleValueReference>();
+    /**
+     * DO NOT allow to create ARecordPointable object arbitrarily, force to use
+     * object pool based allocator, in order to have object reuse
+     */
+    static IObjectFactory<IVisitablePointable, IAType> FACTORY = new IObjectFactory<IVisitablePointable, IAType>() {
+        public IVisitablePointable create(IAType type) {
+            return new ARecordPointable((ARecordType) type);
+        }
+    };
 
-    private byte[] typeBuffer = new byte[32768];
-    private ResettableByteArrayOutputStream typeBos = new ResettableByteArrayOutputStream();
-    private DataOutputStream typeDos = new DataOutputStream(typeBos);
+    // access results: field names, field types, and field values
+    private final List<IVisitablePointable> fieldNames = new ArrayList<IVisitablePointable>();
+    private final List<IVisitablePointable> fieldTypeTags = new ArrayList<IVisitablePointable>();
+    private final List<IVisitablePointable> fieldValues = new ArrayList<IVisitablePointable>();
 
-    private byte[] dataBuffer = new byte[32768];
-    private ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
-    private DataOutputStream dataDos = new DataOutputStream(dataBos);
+    // pointable allocator
+    private final PointableAllocator allocator = new PointableAllocator();
+
+    private final ResettableByteArrayOutputStream typeBos = new ResettableByteArrayOutputStream();
+    private final DataOutputStream typeDos = new DataOutputStream(typeBos);
+
+    private final ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
+    private final DataOutputStream dataDos = new DataOutputStream(dataBos);
+
+    private final ARecordType inputRecType;
+
+    private final int numberOfSchemaFields;
+    private final int[] fieldOffsets;
+    private final IVisitablePointable nullReference = AFlatValuePointable.FACTORY.create(null);
 
     private int closedPartTypeInfoSize = 0;
-    private ARecordType inputRecType;
-
-    private int numberOfSchemaFields;
     private int offsetArrayOffset;
-    private int[] fieldOffsets;
-    private int fieldCursor = -1;
     private ATypeTag typeTag;
-    private SimpleValueReference nullReference = new SimpleValueReference();
 
-    private byte[] data;
-    private int start;
-    private int len;
-
-    public ARecordAccessor(ARecordType inputType) {
+    /**
+     * private constructor, to prevent constructing it arbitrarily
+     * 
+     * @param inputType
+     */
+    private ARecordPointable(ARecordType inputType) {
         this.inputRecType = inputType;
         IAType[] fieldTypes = inputType.getFieldTypes();
         String[] fieldNameStrs = inputType.getFieldNames();
@@ -67,17 +90,23 @@ public class ARecordAccessor implements IValueReference {
 
         // initialize the buffer for closed parts(fieldName bytes+ type bytes) +
         // constant(null bytes)
-        typeBos.setByteArray(typeBuffer, 0);
+        typeBos.reset();
         try {
             for (int i = 0; i < numberOfSchemaFields; i++) {
                 ATypeTag ftypeTag = fieldTypes[i].getTypeTag();
+
+                if (fieldTypes[i].getTypeTag() == ATypeTag.UNION
+                        && NonTaggedFormatUtil.isOptionalField((AUnionType) fieldTypes[i]))
+                    // optional field: add the embedded non-null type tag
+                    ftypeTag = ((AUnionType) fieldTypes[i]).getUnionList()
+                            .get(NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST).getTypeTag();
 
                 // add type tag Reference
                 int tagStart = typeBos.size();
                 typeDos.writeByte(ftypeTag.serialize());
                 int tagEnd = typeBos.size();
-                SimpleValueReference typeTagReference = new SimpleValueReference();
-                typeTagReference.reset(typeBuffer, tagStart, tagEnd - tagStart);
+                IVisitablePointable typeTagReference = AFlatValuePointable.FACTORY.create(null);
+                typeTagReference.set(typeBos.getByteArray(), tagStart, tagEnd - tagStart);
                 fieldTypeTags.add(typeTagReference);
 
                 // add type name Reference (including a astring type tag)
@@ -85,8 +114,8 @@ public class ARecordAccessor implements IValueReference {
                 typeDos.writeByte(ATypeTag.STRING.serialize());
                 typeDos.writeUTF(fieldNameStrs[i]);
                 int nameEnd = typeBos.size();
-                SimpleValueReference typeNameReference = new SimpleValueReference();
-                typeNameReference.reset(typeBuffer, nameStart, nameEnd - nameStart);
+                IVisitablePointable typeNameReference = AFlatValuePointable.FACTORY.create(null);
+                typeNameReference.set(typeBos.getByteArray(), nameStart, nameEnd - nameStart);
                 fieldNames.add(typeNameReference);
             }
 
@@ -95,7 +124,7 @@ public class ARecordAccessor implements IValueReference {
             INullWriter nullWriter = AqlNullWriterFactory.INSTANCE.createNullWriter();
             nullWriter.writeNull(typeDos);
             int nullFieldEnd = typeBos.size();
-            nullReference.reset(typeBuffer, nullFieldStart, nullFieldEnd - nullFieldStart);
+            nullReference.set(typeBos.getByteArray(), nullFieldStart, nullFieldEnd - nullFieldStart);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
@@ -104,17 +133,24 @@ public class ARecordAccessor implements IValueReference {
     }
 
     private void reset() {
-        typeBos.setByteArray(typeBuffer, closedPartTypeInfoSize);
-        dataBos.setByteArray(dataBuffer, 0);
-        fieldCursor = -1;
+        typeBos.reset(closedPartTypeInfoSize);
+        dataBos.reset(0);
+        // reset the allocator
+        allocator.reset();
+
+        // clean up the returned containers
+        for (int i = fieldNames.size() - 1; i >= numberOfSchemaFields; i--)
+            fieldNames.remove(i);
+        for (int i = fieldTypeTags.size() - 1; i >= numberOfSchemaFields; i--)
+            fieldTypeTags.remove(i);
+        fieldValues.clear();
     }
 
-    public void reset(byte[] b, int start, int len) {
+    @Override
+    public void set(byte[] b, int start, int len) {
         // clear the previous states
         reset();
-        this.data = b;
-        this.start = start;
-        this.len = len;
+        super.set(b, start, len);
 
         boolean isExpanded = false;
         int openPartOffset = 0;
@@ -130,10 +166,12 @@ public class ARecordAccessor implements IValueReference {
                 if (isExpanded) {
                     openPartOffset = s + AInt32SerializerDeserializer.getInt(b, s + 6);
                     s += 10;
-                } else
+                } else {
                     s += 6;
-            } else
+                }
+            } else {
                 s += 5;
+            }
         }
         try {
             if (numberOfSchemaFields > 0) {
@@ -153,23 +191,24 @@ public class ARecordAccessor implements IValueReference {
                     offsetArrayOffset += 4;
                 }
                 for (int fieldNumber = 0; fieldNumber < numberOfSchemaFields; fieldNumber++) {
-                    next();
                     if (hasNullableFields) {
                         byte b1 = b[nullBitMapOffset + fieldNumber / 8];
                         int p = 1 << (7 - (fieldNumber % 8));
                         if ((b1 & p) == 0) {
                             // set null value (including type tag inside)
-                            nextFieldValue().reset(nullReference);
+                            fieldValues.add(nullReference);
                             continue;
                         }
                     }
                     IAType[] fieldTypes = inputRecType.getFieldTypes();
                     int fieldValueLength = 0;
 
+                    IAType fieldType = fieldTypes[fieldNumber];
                     if (fieldTypes[fieldNumber].getTypeTag() == ATypeTag.UNION) {
                         if (NonTaggedFormatUtil.isOptionalField((AUnionType) fieldTypes[fieldNumber])) {
-                            typeTag = ((AUnionType) fieldTypes[fieldNumber]).getUnionList()
-                                    .get(NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST).getTypeTag();
+                            fieldType = ((AUnionType) fieldTypes[fieldNumber]).getUnionList().get(
+                                    NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                            typeTag = fieldType.getTypeTag();
                             fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffsets[fieldNumber],
                                     typeTag, false);
                         }
@@ -183,14 +222,15 @@ public class ARecordAccessor implements IValueReference {
                     dataDos.writeByte(typeTag.serialize());
                     dataDos.write(b, fieldOffsets[fieldNumber], fieldValueLength);
                     int fend = dataBos.size();
-                    nextFieldValue().reset(dataBuffer, fstart, fend - fstart);
+                    IVisitablePointable fieldValue = allocator.allocateFieldValue(fieldType);
+                    fieldValue.set(dataBos.getByteArray(), fstart, fend - fstart);
+                    fieldValues.add(fieldValue);
                 }
             }
             if (isExpanded) {
                 int numberOfOpenFields = AInt32SerializerDeserializer.getInt(b, openPartOffset);
                 int fieldOffset = openPartOffset + 4 + (8 * numberOfOpenFields);
                 for (int i = 0; i < numberOfOpenFields; i++) {
-                    next();
                     // set the field name (including a type tag, which is
                     // astring)
                     int fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffset, ATypeTag.STRING,
@@ -199,16 +239,24 @@ public class ARecordAccessor implements IValueReference {
                     dataDos.writeByte(ATypeTag.STRING.serialize());
                     dataDos.write(b, fieldOffset, fieldValueLength);
                     int fnend = dataBos.size();
-                    nextFieldName().reset(dataBuffer, fnstart, fnend - fnstart);
+                    IVisitablePointable fieldName = allocator.allocateEmpty();
+                    fieldName.set(dataBos.getByteArray(), fnstart, fnend - fnstart);
+                    fieldNames.add(fieldName);
                     fieldOffset += fieldValueLength;
 
                     // set the field type tag
-                    nextFieldType().reset(b, fieldOffset, 1);
+                    IVisitablePointable fieldTypeTag = allocator.allocateEmpty();
+                    fieldTypeTag.set(b, fieldOffset, 1);
+                    fieldTypeTags.add(fieldTypeTag);
                     typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[fieldOffset]);
 
                     // set the field value (already including type tag)
                     fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffset, typeTag, true) + 1;
-                    nextFieldValue().reset(b, fieldOffset, fieldValueLength);
+
+                    // allocate
+                    IVisitablePointable fieldValueAccessor = allocator.allocateFieldValue(typeTag);
+                    fieldValueAccessor.set(b, fieldOffset, fieldValueLength);
+                    fieldValues.add(fieldValueAccessor);
                     fieldOffset += fieldValueLength;
                 }
             }
@@ -217,68 +265,21 @@ public class ARecordAccessor implements IValueReference {
         }
     }
 
-    private void next() {
-        fieldCursor++;
-    }
-
-    private SimpleValueReference nextFieldName() {
-        if (fieldCursor < fieldNames.size()) {
-            return fieldNames.get(fieldCursor);
-        } else {
-            SimpleValueReference fieldNameReference = new SimpleValueReference();
-            fieldNames.add(fieldNameReference);
-            return fieldNameReference;
-        }
-    }
-
-    private SimpleValueReference nextFieldType() {
-        if (fieldCursor < fieldTypeTags.size()) {
-            return fieldTypeTags.get(fieldCursor);
-        } else {
-            SimpleValueReference fieldTypeReference = new SimpleValueReference();
-            fieldTypeTags.add(fieldTypeReference);
-            return fieldTypeReference;
-        }
-    }
-
-    private SimpleValueReference nextFieldValue() {
-        if (fieldCursor < fieldValues.size()) {
-            return fieldValues.get(fieldCursor);
-        } else {
-            SimpleValueReference fieldValueReference = new SimpleValueReference();
-            fieldValues.add(fieldValueReference);
-            return fieldValueReference;
-        }
-    }
-
-    public int getCursor() {
-        return fieldCursor;
-    }
-
-    public List<SimpleValueReference> getFieldNames() {
+    public List<IVisitablePointable> getFieldNames() {
         return fieldNames;
     }
 
-    public List<SimpleValueReference> getFieldTypeTags() {
+    public List<IVisitablePointable> getFieldTypeTags() {
         return fieldTypeTags;
     }
 
-    public List<SimpleValueReference> getFieldValues() {
+    public List<IVisitablePointable> getFieldValues() {
         return fieldValues;
     }
 
     @Override
-    public byte[] getBytes() {
-        return data;
+    public <R, T> R accept(IVisitablePointableVisitor<R, T> vistor, T tag) throws AsterixException {
+        return vistor.visit(this, tag);
     }
 
-    @Override
-    public int getStartIndex() {
-        return start;
-    }
-
-    @Override
-    public int getLength() {
-        return len;
-    }
 }

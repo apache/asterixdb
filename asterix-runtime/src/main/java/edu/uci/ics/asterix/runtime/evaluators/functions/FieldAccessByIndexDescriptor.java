@@ -7,7 +7,7 @@ import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.common.FieldAccessByIndexEvalFactory;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 
 public class FieldAccessByIndexDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -32,7 +32,7 @@ public class FieldAccessByIndexDescriptor extends AbstractScalarFunctionDynamicD
     }
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(IEvaluatorFactory[] args) {
+    public ICopyEvaluatorFactory createEvaluatorFactory(ICopyEvaluatorFactory[] args) {
         return new FieldAccessByIndexEvalFactory(args[0], args[1], recType);
     }
 

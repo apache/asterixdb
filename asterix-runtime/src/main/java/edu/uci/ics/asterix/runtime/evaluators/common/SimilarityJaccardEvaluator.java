@@ -11,8 +11,8 @@ import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.fuzzyjoin.similarity.SimilarityMetricJaccard;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
@@ -20,15 +20,15 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 // assumes that both arguments are sorted by the same ordering
 
-public class SimilarityJaccardEvaluator implements IEvaluator {
+public class SimilarityJaccardEvaluator implements ICopyEvaluator {
 
     // assuming type indicator in serde format
     protected final int typeIndicatorSize = 1;
 
     protected final DataOutput out;
     protected final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-    protected final IEvaluator firstOrdListEval;
-    protected final IEvaluator secondOrdListEval;
+    protected final ICopyEvaluator firstOrdListEval;
+    protected final ICopyEvaluator secondOrdListEval;
 
     protected final AsterixOrderedListIterator fstOrdListIter = new AsterixOrderedListIterator();
     protected final AsterixOrderedListIterator sndOrdListIter = new AsterixOrderedListIterator();
@@ -52,7 +52,7 @@ public class SimilarityJaccardEvaluator implements IEvaluator {
     protected int secondStart = -1;
     protected float jaccSim = 0.0f;
 
-    public SimilarityJaccardEvaluator(IEvaluatorFactory[] args, IDataOutputProvider output) throws AlgebricksException {
+    public SimilarityJaccardEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output) throws AlgebricksException {
         out = output.getDataOutput();
         firstOrdListEval = args[0].createEvaluator(argOut);
         secondOrdListEval = args[1].createEvaluator(argOut);
@@ -63,7 +63,7 @@ public class SimilarityJaccardEvaluator implements IEvaluator {
         runArgEvals(tuple);
         if (!checkArgTypes(firstTypeTag, secondTypeTag))
             return;
-        jaccSim = computeResult(argOut.getBytes(), firstStart, secondStart, firstTypeTag);
+        jaccSim = computeResult(argOut.getByteArray(), firstStart, secondStart, firstTypeTag);
         try {
             writeResult(jaccSim);
         } catch (IOException e) {
@@ -79,8 +79,8 @@ public class SimilarityJaccardEvaluator implements IEvaluator {
         secondStart = argOut.getLength();
         secondOrdListEval.evaluate(tuple);
 
-        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getBytes()[firstStart]);
-        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getBytes()[secondStart]);
+        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[firstStart]);
+        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[secondStart]);
     }
 
     protected float computeResult(byte[] bytes, int firstStart, int secondStart, ATypeTag argType)

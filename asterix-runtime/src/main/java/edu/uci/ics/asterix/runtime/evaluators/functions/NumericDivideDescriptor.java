@@ -26,8 +26,8 @@ import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamic
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
@@ -51,19 +51,19 @@ public class NumericDivideDescriptor extends AbstractScalarFunctionDynamicDescri
     }
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) throws AlgebricksException {
-        return new IEvaluatorFactory() {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
+        return new ICopyEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
 
-                return new IEvaluator() {
+                return new ICopyEvaluator() {
                     private DataOutput out = output.getDataOutput();
                     // one temp. buffer re-used by both children
                     private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private IEvaluator evalLeft = args[0].createEvaluator(argOut);
-                    private IEvaluator evalRight = args[1].createEvaluator(argOut);
+                    private ICopyEvaluator evalLeft = args[0].createEvaluator(argOut);
+                    private ICopyEvaluator evalRight = args[1].createEvaluator(argOut);
                     private double[] operands = new double[args.length];
                     private boolean metInt8 = false, metInt16 = false, metInt32 = false, metInt64 = false,
                             metFloat = false, metDouble = false;
@@ -88,36 +88,36 @@ public class NumericDivideDescriptor extends AbstractScalarFunctionDynamicDescri
                                     evalLeft.evaluate(tuple);
                                 else
                                     evalRight.evaluate(tuple);
-                                typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getBytes()[0]);
+                                typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]);
                                 switch (typeTag) {
                                     case INT8: {
                                         metInt8 = true;
-                                        operands[i] = AInt8SerializerDeserializer.getByte(argOut.getBytes(), 1);
+                                        operands[i] = AInt8SerializerDeserializer.getByte(argOut.getByteArray(), 1);
                                         break;
                                     }
                                     case INT16: {
                                         metInt16 = true;
-                                        operands[i] = AInt16SerializerDeserializer.getShort(argOut.getBytes(), 1);
+                                        operands[i] = AInt16SerializerDeserializer.getShort(argOut.getByteArray(), 1);
                                         break;
                                     }
                                     case INT32: {
                                         metInt32 = true;
-                                        operands[i] = AInt32SerializerDeserializer.getInt(argOut.getBytes(), 1);
+                                        operands[i] = AInt32SerializerDeserializer.getInt(argOut.getByteArray(), 1);
                                         break;
                                     }
                                     case INT64: {
                                         metInt64 = true;
-                                        operands[i] = AInt64SerializerDeserializer.getLong(argOut.getBytes(), 1);
+                                        operands[i] = AInt64SerializerDeserializer.getLong(argOut.getByteArray(), 1);
                                         break;
                                     }
                                     case FLOAT: {
                                         metFloat = true;
-                                        operands[i] = AFloatSerializerDeserializer.getFloat(argOut.getBytes(), 1);
+                                        operands[i] = AFloatSerializerDeserializer.getFloat(argOut.getByteArray(), 1);
                                         break;
                                     }
                                     case DOUBLE: {
                                         metDouble = true;
-                                        operands[i] = ADoubleSerializerDeserializer.getDouble(argOut.getBytes(), 1);
+                                        operands[i] = ADoubleSerializerDeserializer.getDouble(argOut.getByteArray(), 1);
                                         break;
                                     }
                                     case NULL: {
@@ -131,7 +131,7 @@ public class NumericDivideDescriptor extends AbstractScalarFunctionDynamicDescri
                                                 : "Right"
                                                         + " Operand of Division can not be "
                                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
-                                                                .getBytes()[0]));
+                                                                .getByteArray()[0]));
                                     }
                                 }
                             }

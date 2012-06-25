@@ -11,22 +11,22 @@ import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.fuzzyjoin.similarity.SimilarityMetricEditDistance;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class EditDistanceEvaluator implements IEvaluator {
+public class EditDistanceEvaluator implements ICopyEvaluator {
 
     // assuming type indicator in serde format
     protected final int typeIndicatorSize = 1;
 
     protected final DataOutput out;
     protected final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-    protected final IEvaluator firstStringEval;
-    protected final IEvaluator secondStringEval;
+    protected final ICopyEvaluator firstStringEval;
+    protected final ICopyEvaluator secondStringEval;
     protected final SimilarityMetricEditDistance ed = new SimilarityMetricEditDistance();
     protected final AsterixOrderedListIterator firstOrdListIter = new AsterixOrderedListIterator();
     protected final AsterixOrderedListIterator secondOrdListIter = new AsterixOrderedListIterator();
@@ -42,7 +42,7 @@ public class EditDistanceEvaluator implements IEvaluator {
     protected ATypeTag firstTypeTag;
     protected ATypeTag secondTypeTag;
 
-    public EditDistanceEvaluator(IEvaluatorFactory[] args, IDataOutputProvider output) throws AlgebricksException {
+    public EditDistanceEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output) throws AlgebricksException {
         out = output.getDataOutput();
         firstStringEval = args[0].createEvaluator(argOut);
         secondStringEval = args[1].createEvaluator(argOut);
@@ -56,15 +56,15 @@ public class EditDistanceEvaluator implements IEvaluator {
         if (!checkArgTypes(firstTypeTag, secondTypeTag))
             return;
 
-        itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getBytes()[firstStart + 1]);
+        itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[firstStart + 1]);
         if (itemTypeTag == ATypeTag.ANY)
             throw new AlgebricksException("\n Edit Distance can only be called on homogenous lists");
 
-        itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getBytes()[secondStart + 1]);
+        itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[secondStart + 1]);
         if (itemTypeTag == ATypeTag.ANY)
             throw new AlgebricksException("\n Edit Distance can only be called on homogenous lists");
 
-        editDistance = computeResult(argOut.getBytes(), firstStart, secondStart, firstTypeTag);
+        editDistance = computeResult(argOut.getByteArray(), firstStart, secondStart, firstTypeTag);
 
         try {
             writeResult(editDistance);
@@ -81,8 +81,8 @@ public class EditDistanceEvaluator implements IEvaluator {
         secondStart = argOut.getLength();
         secondStringEval.evaluate(tuple);
 
-        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getBytes()[firstStart]);
-        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getBytes()[secondStart]);
+        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[firstStart]);
+        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[secondStart]);
     }
 
     protected int computeResult(byte[] bytes, int firstStart, int secondStart, ATypeTag argType)

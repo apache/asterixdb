@@ -41,7 +41,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 
 public class AqlDataSource implements IDataSource<AqlSourceId> {
 
@@ -102,7 +102,7 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
     }
 
     private void initInternalDataset(IAType itemType) {
-        List<Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
+        List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
                 .getPartitioningFunctions(adecl);
         int n = partitioningFunctions.size();
         schemaTypes = new IAType[n + 1];
@@ -118,7 +118,7 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
         if (decl.getAqlCompiledDatasetDetails() instanceof AqlCompiledExternalDatasetDetails) {
             initExternalDataset(itemType);
         } else {
-            List<Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
+            List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
                     .getPartitioningFunctions(adecl);
             int n = partitioningFunctions.size();
             schemaTypes = new IAType[n + 1];

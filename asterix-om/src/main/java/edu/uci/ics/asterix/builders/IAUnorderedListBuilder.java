@@ -4,7 +4,7 @@ import java.io.DataOutput;
 
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IValueReference;
+import edu.uci.ics.hyracks.data.std.api.IValueReference;
 
 public interface IAUnorderedListBuilder {
 

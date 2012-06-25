@@ -19,7 +19,7 @@ create type TestType as closed {
 id:int32,
 description:string,
 name:string,
-batters:[BatterType]
+batters:{{BatterType}}
 }
 
 create dataset T1(TestType) partitioned by key id;
@@ -28,11 +28,12 @@ insert into dataset T1({
 "id":1234,
 "description":"donut",
 "name":"Cake",
-"batters":[{"id":345,"descprt":"Regular"},{"id":445,"descprt":"Chocolate"}] }
+"batters":{{ {"id":345,"descrpt":"Regular"},{"id":445,"descrpt":"Chocolate"} }} }
 );
 
-write output to nc1:"rttest/open-closed_heteror-list01.adm";
+write output to nc1:"rttest/open-closed_heterog-list01.adm";
 
 for $d in dataset("T1") 
+order by $d.id
 return $d
 
