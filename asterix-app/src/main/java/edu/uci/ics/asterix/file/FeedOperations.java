@@ -37,8 +37,10 @@ import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionCons
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.LogicalExpressionJobGenToExpressionRuntimeProviderAdapter;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -144,7 +146,12 @@ public class FeedOperations {
             outColumns[i] = i + 1;
             projectionList[i + 1] = i + 1;
         }
-        return new AssignRuntimeFactory(outColumns, evalFactories, projectionList);
+        IScalarEvaluatorFactory[] sefs = new IScalarEvaluatorFactory[evalFactories.length];
+        for (int i = 0; i < evalFactories.length; ++i) {
+            sefs[i] = new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter.ScalarEvaluatorFactoryAdapter(
+                    evalFactories[i]);
+        }
+        return new AssignRuntimeFactory(outColumns, sefs, projectionList);
     }
 
     @SuppressWarnings("unchecked")

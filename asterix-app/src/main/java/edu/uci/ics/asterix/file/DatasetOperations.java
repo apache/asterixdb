@@ -42,11 +42,13 @@ import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionCons
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.LogicalExpressionJobGenToExpressionRuntimeProviderAdapter;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
@@ -139,8 +141,8 @@ public class DatasetOperations {
     }
 
     // TODO: Lots of common code in this file. Refactor everything after merging in asterix-fix-issue-9.
-    public static JobSpecification createDatasetJobSpec(String datasetName,
-            AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException {
+    public static JobSpecification createDatasetJobSpec(String datasetName, AqlCompiledMetadataDeclarations metadata)
+            throws AsterixException, AlgebricksException {
         AqlCompiledDatasetDecl compiledDatasetDecl = metadata.findDataset(datasetName);
         if (compiledDatasetDecl == null) {
             throw new AsterixException("Could not find dataset " + datasetName);
@@ -159,15 +161,15 @@ public class DatasetOperations {
         LOGGER.info("CREATING File Splits: " + sb.toString());
         IIndexRegistryProvider<IIndex> indexRegistryProvider = AsterixIndexRegistryProvider.INSTANCE;
         IStorageManagerInterface storageManager = AsterixStorageManagerInterface.INSTANCE;
-        TreeIndexCreateOperatorDescriptor indexCreateOp = new TreeIndexCreateOperatorDescriptor(spec,
-                storageManager, indexRegistryProvider, splitsAndConstraint.first, typeTraits, comparatorFactories,
+        TreeIndexCreateOperatorDescriptor indexCreateOp = new TreeIndexCreateOperatorDescriptor(spec, storageManager,
+                indexRegistryProvider, splitsAndConstraint.first, typeTraits, comparatorFactories,
                 new BTreeDataflowHelperFactory(), NoOpOperationCallbackProvider.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp,
                 splitsAndConstraint.second);
         spec.addRoot(indexCreateOp);
         return spec;
     }
-    
+
     public static Job createLoadDatasetJobSpec(CompiledLoadFromFileStatement loadStmt,
             AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException {
         String datasetName = loadStmt.getDatasetName();
@@ -286,7 +288,12 @@ public class DatasetOperations {
             outColumns[i] = i + 1;
             projectionList[i + 1] = i + 1;
         }
-        return new AssignRuntimeFactory(outColumns, evalFactories, projectionList);
+        IScalarEvaluatorFactory[] sefs = new IScalarEvaluatorFactory[evalFactories.length];
+        for (int i = 0; i < evalFactories.length; ++i) {
+            sefs[i] = new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter.ScalarEvaluatorFactoryAdapter(
+                    evalFactories[i]);
+        }
+        return new AssignRuntimeFactory(outColumns, sefs, projectionList);
     }
 
     private static RecordDescriptor computePayloadKeyRecordDescriptor(AqlCompiledDatasetDecl compiledDatasetDecl,

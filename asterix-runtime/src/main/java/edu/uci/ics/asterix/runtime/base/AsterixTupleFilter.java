@@ -17,28 +17,28 @@ package edu.uci.ics.asterix.runtime.base;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspector;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilter;
 
 public class AsterixTupleFilter implements ITupleFilter {
-	
-	private final IBinaryBooleanInspector boolInspector;
-	private final ICopyEvaluator eval;
-    private final ArrayBackedValueStorage evalOut = new ArrayBackedValueStorage();
-    
-	public AsterixTupleFilter(ICopyEvaluatorFactory evalFactory,
-			IBinaryBooleanInspector boolInspector) throws AlgebricksException {
-		this.boolInspector = boolInspector;
-		eval = evalFactory.createEvaluator(evalOut);
-	}
-	
-	@Override
-	public boolean accept(IFrameTupleReference tuple) throws Exception {
-		evalOut.reset();
-		eval.evaluate(tuple);
-		return boolInspector.getBooleanValue(evalOut.getByteArray(), 0, 2);
-	}
+
+    private final IBinaryBooleanInspector boolInspector;
+    private final IScalarEvaluator eval;
+    private final IPointable p = VoidPointable.FACTORY.createPointable();
+
+    public AsterixTupleFilter(IScalarEvaluatorFactory evalFactory, IBinaryBooleanInspector boolInspector)
+            throws AlgebricksException {
+        this.boolInspector = boolInspector;
+        eval = evalFactory.createScalarEvaluator();
+    }
+
+    @Override
+    public boolean accept(IFrameTupleReference tuple) throws Exception {
+        eval.evaluate(tuple, p);
+        return boolInspector.getBooleanValue(p.getByteArray(), p.getStartOffset(), p.getLength());
+    }
 }

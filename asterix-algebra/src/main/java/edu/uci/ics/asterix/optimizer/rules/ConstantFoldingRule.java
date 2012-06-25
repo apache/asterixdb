@@ -50,6 +50,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractLogicalEx
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.LogicalExpressionJobGenToExpressionRuntimeProviderAdapter;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.StatefulFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
@@ -59,12 +60,13 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionRe
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 
 public class ConstantFoldingRule implements IAlgebraicRewriteRule {
 
@@ -104,8 +106,9 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             AqlBinaryComparatorFactoryProvider.INSTANCE, AqlTypeTraitProvider.INSTANCE,
             AqlBinaryBooleanInspectorImpl.INSTANCE, AqlBinaryIntegerInspector.INSTANCE,
             AqlPrinterFactoryProvider.INSTANCE, AqlNullWriterFactory.INSTANCE, null,
-            AqlLogicalExpressionJobGen.INSTANCE, AqlExpressionTypeComputer.INSTANCE, AqlNullableTypeComputer.INSTANCE,
-            null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null);
+            new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(AqlLogicalExpressionJobGen.INSTANCE),
+            AqlExpressionTypeComputer.INSTANCE, AqlNullableTypeComputer.INSTANCE, null, null, null,
+            GlobalConfig.DEFAULT_FRAME_SIZE, null);
 
     private static final IOperatorSchema[] _emptySchemas = new IOperatorSchema[] {};
 
@@ -127,7 +130,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
     private class ConstantFoldingVisitor implements ILogicalExpressionVisitor<Pair<Boolean, ILogicalExpression>, Void>,
             ILogicalExpressionReferenceTransform {
 
-        private ArrayBackedValueStorage resStore = new ArrayBackedValueStorage();
+        private IPointable p = VoidPointable.FACTORY.createPointable();
         private ByteBufferInputStream bbis = new ByteBufferInputStream();
         private DataInputStream dis = new DataInputStream(bbis);
 
@@ -175,16 +178,15 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                     return new Pair<Boolean, ILogicalExpression>(changed, expr);
                 }
             }
-            ICopyEvaluatorFactory fact = _jobGenCtx.getExpressionJobGen().createEvaluatorFactory(expr, _emptyTypeEnv,
-                    _emptySchemas, _jobGenCtx);
-            ICopyEvaluator eval = fact.createEvaluator(resStore);
-            resStore.reset();
-            eval.evaluate(null);
+            IScalarEvaluatorFactory fact = _jobGenCtx.getExpressionRuntimeProvider().createEvaluatorFactory(expr,
+                    _emptyTypeEnv, _emptySchemas, _jobGenCtx);
+            IScalarEvaluator eval = fact.createScalarEvaluator();
+            eval.evaluate(null, p);
             Object t = _emptyTypeEnv.getType(expr);
-            
+
             @SuppressWarnings("rawtypes")
             ISerializerDeserializer serde = _jobGenCtx.getSerializerDeserializerProvider().getSerializerDeserializer(t);
-            bbis.setByteBuffer(ByteBuffer.wrap(resStore.getByteArray(), resStore.getStartOffset(), resStore.getLength()), 0);
+            bbis.setByteBuffer(ByteBuffer.wrap(p.getByteArray(), p.getStartOffset(), p.getLength()), 0);
             IAObject o;
             try {
                 o = (IAObject) serde.deserialize(dis);
