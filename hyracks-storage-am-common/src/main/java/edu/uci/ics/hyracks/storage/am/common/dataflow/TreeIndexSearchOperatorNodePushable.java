@@ -29,7 +29,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
@@ -51,14 +50,11 @@ public abstract class TreeIndexSearchOperatorNodePushable extends AbstractUnaryI
 
     protected RecordDescriptor recDesc;
 
-    private final IOperationCallbackProvider callbackProvider;
-
     public TreeIndexSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, IRecordDescriptorProvider recordDescProvider) {
         treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
                 opDesc, ctx, partition);
         this.recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
-        this.callbackProvider = opDesc.getOpCallbackProvider();
     }
 
     protected abstract ISearchPredicate createSearchPredicate();
@@ -83,8 +79,8 @@ public abstract class TreeIndexSearchOperatorNodePushable extends AbstractUnaryI
             dos = tb.getDataOutput();
             appender = new FrameTupleAppender(treeIndexHelper.getHyracksTaskContext().getFrameSize());
             appender.reset(writeBuffer, true);
-            indexAccessor = treeIndex.createAccessor(callbackProvider.getModificationOperationCallback(),
-                    callbackProvider.getSearchOperationCallback());
+            indexAccessor = treeIndex.createAccessor(treeIndexHelper.getModificationOperationCallback(),
+                    treeIndexHelper.getSearchOperationCallback());
             cursor = createCursor();
         } catch (Exception e) {
             treeIndexHelper.deinit();

@@ -14,12 +14,12 @@ public enum NoOpOperationCallbackProvider implements IOperationCallbackProvider 
     INSTANCE;
 
     @Override
-    public IModificationOperationCallback getModificationOperationCallback() {
+    public IModificationOperationCallback getModificationOperationCallback(long resourceId) {
         return NoOpOperationCallback.INSTANCE;
     }
 
     @Override
-    public ISearchOperationCallback getSearchOperationCallback() {
+    public ISearchOperationCallback getSearchOperationCallback(long resourceId) {
         return NoOpOperationCallback.INSTANCE;
     }
 }

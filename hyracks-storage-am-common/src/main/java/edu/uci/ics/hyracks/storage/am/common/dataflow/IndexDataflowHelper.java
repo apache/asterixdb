@@ -24,7 +24,9 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
@@ -36,6 +38,8 @@ public abstract class IndexDataflowHelper {
     protected final int partition;
     protected final IIndexOperatorDescriptor opDesc;
     protected final IHyracksTaskContext ctx;
+    protected transient IModificationOperationCallback modificationOperationCallback;
+    protected transient ISearchOperationCallback searchOperationCallback;
 
     public IndexDataflowHelper(IIndexOperatorDescriptor opDesc, final IHyracksTaskContext ctx, int partition) {
         this.opDesc = opDesc;
@@ -115,6 +119,10 @@ public abstract class IndexDataflowHelper {
                 indexRegistry.register(resourceId, index);
             }
         }
+        
+        //set operationCallback object
+        modificationOperationCallback = opDesc.getOpCallbackProvider().getModificationOperationCallback(resourceId);
+        searchOperationCallback = opDesc.getOpCallbackProvider().getSearchOperationCallback(resourceId);
     }
 
     public abstract IIndex createIndexInstance() throws HyracksDataException;
@@ -151,4 +159,13 @@ public abstract class IndexDataflowHelper {
     public IOperationCallbackProvider getOpCallbackProvider() {
         return opDesc.getOpCallbackProvider();
     }
+    
+    public IModificationOperationCallback getModificationOperationCallback() {
+        return modificationOperationCallback;
+    }
+    
+    public ISearchOperationCallback getSearchOperationCallback() {
+        return searchOperationCallback;
+    }
+    
 }

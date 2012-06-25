@@ -26,7 +26,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilter;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
@@ -42,7 +41,6 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
     private ByteBuffer writeBuffer;
     private IIndexAccessor indexAccessor;
     private ITupleFilter tupleFilter;
-    private final IOperationCallbackProvider callbackProvider;
 
     public TreeIndexInsertUpdateDeleteOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition, int[] fieldPermutation,
@@ -51,7 +49,6 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
                 opDesc, ctx, partition);
         this.recordDescProvider = recordDescProvider;
         this.op = op;
-        this.callbackProvider = opDesc.getOpCallbackProvider();
         tuple.setFieldPermutation(fieldPermutation);
     }
 
@@ -66,8 +63,8 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         try {
             treeIndexHelper.init(false);
             ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
-            indexAccessor = treeIndex.createAccessor(callbackProvider.getModificationOperationCallback(),
-                    callbackProvider.getSearchOperationCallback());
+            indexAccessor = treeIndex.createAccessor(treeIndexHelper.getModificationOperationCallback(),
+                    treeIndexHelper.getSearchOperationCallback());
             ITupleFilterFactory tupleFilterFactory = opDesc.getTupleFilterFactory();
             if (tupleFilterFactory != null) {
                 tupleFilter = tupleFilterFactory.createTupleFilter();
@@ -93,7 +90,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
                     }
                 }
                 tuple.reset(accessor, i);
-                IModificationOperationCallback modificationCallback = callbackProvider
+                IModificationOperationCallback modificationCallback = treeIndexHelper
                         .getModificationOperationCallback();
                 modificationCallback.before(tuple);
                 switch (op) {
