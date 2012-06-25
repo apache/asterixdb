@@ -39,8 +39,8 @@ public class EndsWithDescriptor extends AbstractScalarFunctionDynamicDescriptor 
 
                     @Override
                     protected boolean findMatch(byte[] strBytes, byte[] patternBytes) {
-                        int utflen1 = UTF8StringPointable.getUTFLen(strBytes, 1);
-                        int utflen2 = UTF8StringPointable.getUTFLen(patternBytes, 1);
+                        int utflen1 = UTF8StringPointable.getUTFLength(strBytes, 1);
+                        int utflen2 = UTF8StringPointable.getUTFLength(patternBytes, 1);
 
                         int s1Start = 3;
                         int s2Start = 3;

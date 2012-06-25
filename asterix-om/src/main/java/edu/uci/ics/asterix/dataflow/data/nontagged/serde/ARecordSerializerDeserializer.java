@@ -268,11 +268,13 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             return -1; // this record does not have an open part
 
         int numberOfOpenField = AInt32SerializerDeserializer.getInt(serRecord, openPartOffset);
-        int utflength = UTF8StringPointable.getUTFLen(fieldName, 1);
-        
-        IBinaryHashFunction utf8HashFunction = AqlBinaryHashFunctionFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryHashFunction();
+        int utflength = UTF8StringPointable.getUTFLength(fieldName, 1);
 
-        IBinaryComparator utf8BinaryComparator = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
+        IBinaryHashFunction utf8HashFunction = AqlBinaryHashFunctionFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
+                .createBinaryHashFunction();
+
+        IBinaryComparator utf8BinaryComparator = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
+                .createBinaryComparator();
 
         int fieldNameHashCode = utf8HashFunction.hash(fieldName, 1, utflength);
 

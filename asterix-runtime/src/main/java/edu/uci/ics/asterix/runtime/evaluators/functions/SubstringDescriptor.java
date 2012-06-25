@@ -57,7 +57,7 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         evalString.evaluate(tuple);
 
                         byte[] bytes = argOut.getByteArray();
-                        int utflen = UTF8StringPointable.getUTFLen(bytes, 1);
+                        int utflen = UTF8StringPointable.getUTFLength(bytes, 1);
                         int sStart = 3;
                         int c = 0;
                         int idxPos1 = 0;
