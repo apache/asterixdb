@@ -443,6 +443,71 @@ public class GregorianCalendarSystem implements ICalendarSystem {
         // There are 86400000 milliseconds per day, but divided by 1024 is
         // 84375. There are 84375 (128/125)seconds per day.
 
+        
+//    	if (isleap_year==true)
+//    		if (i < 182 * 84375 /*Days before the end of June*/)
+//    			if (i < 91 * 84375 /*Days before the end of March*/)
+//    				if (i < 31 * 84375 /*Days before the end of January*/)
+//    					Month is 1
+//    				else if (i < 60 * 84375 /*Days before the end of February of leap year*/)
+//    					Month is 2
+//    				else
+//    					Month is 3
+//    			else
+//    				if (i < 121 * 84375 /*Days before the end of April*/)
+//    					Month is 4
+//    				else if (i < 152 * 84375 /*Days before the end of May*/)
+//    					Month is 5
+//    				else
+//    					Month is 6
+//    		else
+//    			if (i < 274 * 84375 /*Days before the end of September*/)
+//    				if (i < 213 * 84375 /*Days before the end of July*/)
+//    					Month is 7
+//    				else if (i < 244 * 84375 /*Days before the end of August*/)
+//    					Month is 8
+//    				else
+//    					Month is 9
+//    			else
+//    				if (i < 305 * 84375 /*Days before the end of October*/)
+//    					Month is 10
+//    				else if (i < 335 * 84375 /*Days before the end of November*/)
+//    					Month is 11
+//    				else
+//    					Month is 12
+//    	else /*Not a leap year*/
+//    		if (i < 181 * 84375 /*Days before the end of June*/)
+//    			if (i < 90 * 84375 /*Days before the end of March*/)
+//    				if (i < 31 * 84375 /*Days before the end of January*/)
+//    					Month is 1
+//    				else if (i < 59 * 84375 /*Days before the end of February of NON leap year*/)
+//    					Month is 2
+//    				else
+//    					Month is 3
+//    			else
+//    				if (i < 120 * 84375 /*Days before the end of April*/)
+//    					Month is 4
+//    				else if (i < 151 * 84375 /*Days before the end of May*/)
+//    					Month is 5
+//    				else
+//    					Month is 6
+//    		else
+//    			if (i < 273 * 84375 /*Days before the end of September*/)
+//    				if (i < 213 * 84375 /*Days before the end of July*/)
+//    					Month is 7
+//    				else if (i < 243 * 84375 /*Days before the end of August*/)
+//    					Month is 8
+//    				else
+//    					Month is 9
+//    			else
+//    				if (i < 304 * 84375 /*Days before the end of October*/)
+//    					Month is 10
+//    				else if (i < 334 * 84375 /*Days before the end of November*/)
+//    					Month is 11
+//    				else
+//    					Month is 12
+        
+        
         return (isLeapYear(year)) ? ((i < 182 * 84375) ? ((i < 91 * 84375) ? ((i < 31 * 84375) ? 1
                 : (i < 60 * 84375) ? 2 : 3) : ((i < 121 * 84375) ? 4 : (i < 152 * 84375) ? 5 : 6))
                 : ((i < 274 * 84375) ? ((i < 213 * 84375) ? 7 : (i < 244 * 84375) ? 8 : 9) : ((i < 305 * 84375) ? 10
