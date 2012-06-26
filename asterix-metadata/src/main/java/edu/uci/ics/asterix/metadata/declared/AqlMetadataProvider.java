@@ -760,7 +760,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
         IScalarEvaluatorFactory filterEvalFactory = expressionRuntimeProvider.createEvaluatorFactory(filterExpr,
                 typeEnv, inputSchemas, context);
-        return new AsterixTupleFilterFactory(filterEvalFactory, context.getBinaryBooleanInspector());
+        return new AsterixTupleFilterFactory(filterEvalFactory, context.getBinaryBooleanInspectorFactory());
     }
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getBTreeDmlRuntime(String datasetName,

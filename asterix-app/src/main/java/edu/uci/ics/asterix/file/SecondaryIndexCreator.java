@@ -315,7 +315,7 @@ public abstract class SecondaryIndexCreator {
         }
         StreamSelectRuntimeFactory select = new StreamSelectRuntimeFactory(
                 new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter.ScalarEvaluatorFactoryAdapter(selectCond),
-                null, AqlBinaryBooleanInspectorImpl.INSTANCE);
+                null, AqlBinaryBooleanInspectorImpl.FACTORY);
         AlgebricksMetaOperatorDescriptor asterixSelectOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 1,
                 new IPushRuntimeFactory[] { select }, new RecordDescriptor[] { secondaryRecDesc });
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, asterixSelectOp,

@@ -151,10 +151,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCal
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
-import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspector;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
-import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspector;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import edu.uci.ics.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.ISerializerDeserializerProvider;
@@ -324,8 +324,8 @@ public class NonTaggedDataFormat implements IDataFormat {
     }
 
     @Override
-    public IBinaryBooleanInspector getBinaryBooleanInspector() {
-        return AqlBinaryBooleanInspectorImpl.INSTANCE;
+    public IBinaryBooleanInspectorFactory getBinaryBooleanInspectorFactory() {
+        return AqlBinaryBooleanInspectorImpl.FACTORY;
     }
 
     @Override
@@ -442,8 +442,8 @@ public class NonTaggedDataFormat implements IDataFormat {
                         new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
                         new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
                                 new AInt32(i)))));
-                return new Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>(evalFactory, partitionFun,
-                        recType.getFieldTypes()[i]);
+                return new Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>(evalFactory,
+                        partitionFun, recType.getFieldTypes()[i]);
             }
         }
         throw new AlgebricksException("Could not find field " + fldName + " in the schema.");
@@ -573,8 +573,8 @@ public class NonTaggedDataFormat implements IDataFormat {
     }
 
     @Override
-    public IBinaryIntegerInspector getBinaryIntegerInspector() {
-        return AqlBinaryIntegerInspector.INSTANCE;
+    public IBinaryIntegerInspectorFactory getBinaryIntegerInspectorFactory() {
+        return AqlBinaryIntegerInspector.FACTORY;
     }
 
     @Override

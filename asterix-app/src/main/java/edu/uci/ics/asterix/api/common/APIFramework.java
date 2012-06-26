@@ -509,8 +509,8 @@ public class APIFramework {
         }
 
         AlgebricksPartitionConstraint clusterLocs = planAndMetadata.getClusterLocations();
-        builder.setBinaryBooleanInspector(format.getBinaryBooleanInspector());
-        builder.setBinaryIntegerInspector(format.getBinaryIntegerInspector());
+        builder.setBinaryBooleanInspectorFactory(format.getBinaryBooleanInspectorFactory());
+        builder.setBinaryIntegerInspectorFactory(format.getBinaryIntegerInspectorFactory());
         builder.setClusterLocations(clusterLocs);
         builder.setComparatorFactoryProvider(format.getBinaryComparatorFactoryProvider());
         builder.setExpressionRuntimeProvider(new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(
