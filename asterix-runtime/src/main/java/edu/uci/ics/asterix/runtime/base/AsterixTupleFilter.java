@@ -19,21 +19,21 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspector;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilter;
 
 public class AsterixTupleFilter implements ITupleFilter {
-
     private final IBinaryBooleanInspector boolInspector;
     private final IScalarEvaluator eval;
     private final IPointable p = VoidPointable.FACTORY.createPointable();
 
-    public AsterixTupleFilter(IScalarEvaluatorFactory evalFactory, IBinaryBooleanInspector boolInspector)
-            throws AlgebricksException {
+    public AsterixTupleFilter(IHyracksTaskContext ctx, IScalarEvaluatorFactory evalFactory,
+            IBinaryBooleanInspector boolInspector) throws AlgebricksException {
         this.boolInspector = boolInspector;
-        eval = evalFactory.createScalarEvaluator();
+        eval = evalFactory.createScalarEvaluator(ctx);
     }
 
     @Override

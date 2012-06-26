@@ -180,7 +180,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             }
             IScalarEvaluatorFactory fact = _jobGenCtx.getExpressionRuntimeProvider().createEvaluatorFactory(expr,
                     _emptyTypeEnv, _emptySchemas, _jobGenCtx);
-            IScalarEvaluator eval = fact.createScalarEvaluator();
+            IScalarEvaluator eval = fact.createScalarEvaluator(null);
             eval.evaluate(null, p);
             Object t = _emptyTypeEnv.getType(expr);
 

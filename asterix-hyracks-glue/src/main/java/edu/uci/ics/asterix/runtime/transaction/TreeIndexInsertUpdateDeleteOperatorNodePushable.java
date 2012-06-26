@@ -47,6 +47,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 
 public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
+    private final IHyracksTaskContext ctx;
     private FrameTupleAccessor accessor;
     private TreeIndexDataflowHelper treeIndexHelper;
     private final IRecordDescriptorProvider recordDescProvider;
@@ -69,6 +70,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
     public TreeIndexInsertUpdateDeleteOperatorNodePushable(TransactionContext txnContext,
             AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition, int[] fieldPermutation,
             IRecordDescriptorProvider recordDescProvider, IndexOp op) {
+        this.ctx = ctx;
         treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
                 opDesc, ctx, partition);
         this.recordDescProvider = recordDescProvider;
@@ -109,7 +111,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
             indexAccessor = treeIndex.createAccessor();
             ITupleFilterFactory tupleFilterFactory = opDesc.getTupleFilterFactory();
             if (tupleFilterFactory != null) {
-                tupleFilter = tupleFilterFactory.createTupleFilter();
+                tupleFilter = tupleFilterFactory.createTupleFilter(ctx);
                 frameTuple = new FrameTupleReference();
             }
             initializeTransactionSupport();
@@ -128,7 +130,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         byte[] resourceId = DataUtil.intToByteArray(fileId);
         int tupleCount = accessor.getTupleCount();
         try {
-            for (int i = 0; i < tupleCount; i++) {                
+            for (int i = 0; i < tupleCount; i++) {
                 if (tupleFilter != null) {
                     frameTuple.reset(accessor, i);
                     if (!tupleFilter.accept(frameTuple)) {
@@ -194,9 +196,9 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
     @Override
     public void fail() throws HyracksDataException {
         try {
-        	writer.fail();
+            writer.fail();
         } finally {
-        	txnContext.addCloseableResource(new ICloseable() {
+            txnContext.addCloseableResource(new ICloseable() {
                 @Override
                 public void close(TransactionContext txnContext) throws ACIDException {
                     try {
