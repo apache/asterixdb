@@ -50,9 +50,11 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushPolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
@@ -95,8 +97,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMFileManager fileNameManager,
             BTreeFactory diskBTreeFactory, BTreeFactory bulkLoadBTreeFactory, IFileMapProvider diskFileMapProvider,
-            int fieldCount, IBinaryComparatorFactory[] cmpFactories, ILSMFlushPolicy flushPolicy,
-            ILSMMergePolicy mergePolicy) {
+            int fieldCount, IBinaryComparatorFactory[] cmpFactories, ILSMFlushController flushController,
+            ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOScheduler ioScheduler) {
         memBTree = new BTree(memBufferCache, fieldCount, cmpFactories, memFreePageManager, interiorFrameFactory,
                 insertLeafFrameFactory);
         this.memFreePageManager = memFreePageManager;
@@ -109,7 +111,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         this.cmpFactories = cmpFactories;
         this.diskBTrees = new LinkedList<Object>();
         this.fileManager = fileNameManager;
-        lsmHarness = new LSMHarness(this, flushPolicy, mergePolicy);
+        lsmHarness = new LSMHarness(this, flushController, mergePolicy, opTracker, ioScheduler);
         componentFinalizer = new TreeIndexComponentFinalizer(diskFileMapProvider);
     }
 
@@ -348,41 +350,40 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         return diskBTrees;
     }
 
-	@Override
-	public ITreeIndexBulkLoader createBulkLoader(float fillLevel)
-			throws TreeIndexException {
-		return new LSMBTreeBulkLoader(fillLevel);
-	}
-	
-	public class LSMBTreeBulkLoader implements ITreeIndexBulkLoader {
-		private final BTree diskBTree;
-		private final BTreeBulkLoader bulkLoader;
+    @Override
+    public ITreeIndexBulkLoader createBulkLoader(float fillLevel) throws TreeIndexException {
+        return new LSMBTreeBulkLoader(fillLevel);
+    }
 
-		public LSMBTreeBulkLoader(float fillFactor) throws TreeIndexException {
-			try {
-				diskBTree = createBulkLoadTarget();
-			} catch (HyracksDataException e) {
-				throw new TreeIndexException(e);
-			}
-	        bulkLoader = (BTreeBulkLoader) diskBTree.createBulkLoader(0.7f);
-		}
+    public class LSMBTreeBulkLoader implements ITreeIndexBulkLoader {
+        private final BTree diskBTree;
+        private final BTreeBulkLoader bulkLoader;
 
-		@Override
-		public void add(ITupleReference tuple) throws HyracksDataException {
-			bulkLoader.add(tuple);
-		}
+        public LSMBTreeBulkLoader(float fillFactor) throws TreeIndexException {
+            try {
+                diskBTree = createBulkLoadTarget();
+            } catch (HyracksDataException e) {
+                throw new TreeIndexException(e);
+            }
+            bulkLoader = (BTreeBulkLoader) diskBTree.createBulkLoader(0.7f);
+        }
 
-		@Override
-		public void end() throws HyracksDataException {
-	        bulkLoader.end();
-	        lsmHarness.addBulkLoadedComponent(diskBTree);
-		}
-		
-	}
+        @Override
+        public void add(ITupleReference tuple) throws HyracksDataException {
+            bulkLoader.add(tuple);
+        }
 
-	@Deprecated
-	private ITreeIndexBulkLoader bulkloader;
-	
+        @Override
+        public void end() throws HyracksDataException {
+            bulkLoader.end();
+            lsmHarness.addBulkLoadedComponent(diskBTree);
+        }
+
+    }
+
+    @Deprecated
+    private ITreeIndexBulkLoader bulkloader;
+
     @Override
     public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws TreeIndexException, HyracksDataException {
         bulkloader = createBulkLoader(fillFactor);
@@ -474,5 +475,20 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     @Override
     public IBufferCache getBufferCache() {
         return diskBufferCache;
+    }
+
+    @Override
+    public ILSMFlushController getFlushController() {
+        return lsmHarness.getFlushController();
+    }
+
+    @Override
+    public ILSMOperationTracker getOperationTracker() {
+        return lsmHarness.getOperationTracker();
+    }
+
+    @Override
+    public ILSMIOScheduler getIOScheduler() {
+        return lsmHarness.getIOScheduler();
     }
 }

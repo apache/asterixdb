@@ -27,7 +27,6 @@ import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 
 @SuppressWarnings("rawtypes")
 public class LSMBTreeMergeTest extends LSMBTreeMergeTestDriver {
@@ -53,7 +52,9 @@ public class LSMBTreeMergeTest extends LSMBTreeMergeTestDriver {
             BTreeLeafFrameType leafType) throws Exception {
         return LSMBTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
                 harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskBufferCache(),
-                harness.getDiskFileMapProvider(), fieldSerdes, numKeys, harness.getFileId(), NoMergePolicy.INSTANCE);
+                harness.getDiskFileMapProvider(), fieldSerdes, numKeys, harness.getFileId(),
+                harness.getFlushController(), harness.getMergePolicy(), harness.getOperationTracker(),
+                harness.getIOScheduler());
     }
 
     @Override

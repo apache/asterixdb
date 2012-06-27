@@ -22,15 +22,16 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushPolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeInMemoryBufferCache;
@@ -50,36 +51,35 @@ public abstract class AbstractLSMRTreeDataflowHelper extends TreeIndexDataflowHe
     protected final IBinaryComparatorFactory[] btreeComparatorFactories;
     protected final IPrimitiveValueProviderFactory[] valueProviderFactories;
     protected final RTreePolicyType rtreePolicyType;
-    protected final ILSMFlushPolicy flushPolicy;
+    protected final ILSMFlushController flushController;
     protected final ILSMMergePolicy mergePolicy;
+    protected final ILSMOperationTracker opTracker;
+    protected final ILSMIOScheduler ioScheduler;
 
     public AbstractLSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            ILSMFlushPolicy flushPolicy, ILSMMergePolicy mergePolicy) {
-        super(opDesc, ctx, partition);
-        memPageSize = DEFAULT_MEM_PAGE_SIZE;
-        memNumPages = DEFAULT_MEM_NUM_PAGES;
-        this.btreeComparatorFactories = btreeComparatorFactories;
-        this.valueProviderFactories = valueProviderFactories;
-        this.rtreePolicyType = rtreePolicyType;
-        this.flushPolicy = flushPolicy;
-        this.mergePolicy = mergePolicy;
+            ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMIOScheduler ioScheduler) {
+        this(opDesc, ctx, partition, DEFAULT_MEM_PAGE_SIZE, DEFAULT_MEM_NUM_PAGES, btreeComparatorFactories,
+                valueProviderFactories, rtreePolicyType, flushController, mergePolicy, opTracker, ioScheduler);
     }
 
-    public AbstractLSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists, int memPageSize,
-            int memNumPages, IBinaryComparatorFactory[] btreeComparatorFactories,
+    public AbstractLSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
+            int memPageSize, int memNumPages, IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            ILSMFlushPolicy flushPolicy, ILSMMergePolicy mergePolicy) {
+            ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMIOScheduler ioScheduler) {
         super(opDesc, ctx, partition);
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
         this.btreeComparatorFactories = btreeComparatorFactories;
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
-        this.flushPolicy = flushPolicy;
+        this.flushController = flushController;
         this.mergePolicy = mergePolicy;
+        this.opTracker = opTracker;
+        this.ioScheduler = ioScheduler;
     }
 
     @Override

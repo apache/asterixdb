@@ -60,4 +60,10 @@ public interface ILSMHarness extends IIndex {
     public List<Object> getDiskComponents();
 
     public ILSMComponentFinalizer getComponentFinalizer();
+
+    public ILSMFlushController getFlushController();
+
+    public ILSMOperationTracker getOperationTracker();
+
+    public ILSMIOScheduler getIOScheduler();
 }

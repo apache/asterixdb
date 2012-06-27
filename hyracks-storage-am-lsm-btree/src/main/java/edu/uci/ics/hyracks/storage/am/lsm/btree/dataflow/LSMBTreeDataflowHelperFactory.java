@@ -19,26 +19,34 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushPolicyProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushControllerProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
 
 public class LSMBTreeDataflowHelperFactory implements IIndexDataflowHelperFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private final ILSMFlushPolicyProvider flushPolicyProvider;
+    private final ILSMFlushControllerProvider flushControllerProvider;
     private final ILSMMergePolicyProvider mergePolicyProvider;
+    private final ILSMOperationTrackerProvider opTrackerProvider;
+    private final ILSMIOSchedulerProvider ioSchedulerProvider;
 
-    public LSMBTreeDataflowHelperFactory(ILSMFlushPolicyProvider flushPolicyProvider,
-            ILSMMergePolicyProvider mergePolicyProvider) {
-        this.flushPolicyProvider = flushPolicyProvider;
+    public LSMBTreeDataflowHelperFactory(ILSMFlushControllerProvider flushControllerProvider,
+            ILSMMergePolicyProvider mergePolicyProvider, ILSMOperationTrackerProvider opTrackerProvider,
+            ILSMIOSchedulerProvider ioSchedulerProvider) {
+        this.flushControllerProvider = flushControllerProvider;
         this.mergePolicyProvider = mergePolicyProvider;
+        this.opTrackerProvider = opTrackerProvider;
+        this.ioSchedulerProvider = ioSchedulerProvider;
     }
 
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
-        return new LSMBTreeDataflowHelper(opDesc, ctx, partition, flushPolicyProvider.getFlushPolicy(),
-                mergePolicyProvider.getMergePolicy());
+        return new LSMBTreeDataflowHelper(opDesc, ctx, partition, flushControllerProvider.getFlushController(),
+                mergePolicyProvider.getMergePolicy(), opTrackerProvider.getOperationTracker(),
+                ioSchedulerProvider.getIOScheduler());
     }
 }

@@ -26,11 +26,12 @@ import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateFlushPolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SequentialScheduler;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
@@ -64,12 +65,13 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
     public static LSMBTreeTestContext create(InMemoryBufferCache memBufferCache,
             InMemoryFreePageManager memFreePageManager, IOManager ioManager, String onDiskDir,
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ISerializerDeserializer[] fieldSerdes,
-            int numKeyFields, int fileId, ILSMMergePolicy mergePolicy) throws Exception {
+            int numKeyFields, int fileId, ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
+            ILSMOperationTracker opTracker, ILSMIOScheduler ioScheduler) throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
-        LSMBTree lsmTree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager,
-                ioManager, onDiskDir, diskBufferCache, diskFileMapProvider, typeTraits, cmpFactories,
-                new ImmediateFlushPolicy(SequentialScheduler.INSTANCE), mergePolicy);
+        LSMBTree lsmTree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, onDiskDir,
+                diskBufferCache, diskFileMapProvider, typeTraits, cmpFactories, flushController, mergePolicy,
+                opTracker, ioScheduler);
         lsmTree.create(fileId);
         lsmTree.open(fileId);
         LSMBTreeTestContext testCtx = new LSMBTreeTestContext(fieldSerdes, lsmTree);

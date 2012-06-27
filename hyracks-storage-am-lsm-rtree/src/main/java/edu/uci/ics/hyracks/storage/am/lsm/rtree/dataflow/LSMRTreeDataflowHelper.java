@@ -20,13 +20,14 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.IIOManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushPolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
@@ -38,18 +39,19 @@ public class LSMRTreeDataflowHelper extends AbstractLSMRTreeDataflowHelper {
     public LSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            ILSMFlushPolicy flushPolicy, ILSMMergePolicy mergePolicy) {
-        super(opDesc, ctx, partition, btreeComparatorFactories, valueProviderFactories, rtreePolicyType, flushPolicy,
-                mergePolicy);
+            ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMIOScheduler ioScheduler) {
+        super(opDesc, ctx, partition, btreeComparatorFactories, valueProviderFactories, rtreePolicyType,
+                flushController, mergePolicy, opTracker, ioScheduler);
     }
 
-    public LSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackProvider opCallbackProvider, int partition, boolean createIfNotExists, int memPageSize,
-            int memNumPages, IBinaryComparatorFactory[] btreeComparatorFactories,
+    public LSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
+            int memPageSize, int memNumPages, IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            ILSMFlushPolicy flushPolicy, ILSMMergePolicy mergePolicy) {
-        super(opDesc, ctx, opCallbackProvider, partition, createIfNotExists, memPageSize, memNumPages,
-                btreeComparatorFactories, valueProviderFactories, rtreePolicyType, flushPolicy, mergePolicy);
+            ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMIOScheduler ioScheduler) {
+        super(opDesc, ctx, partition, memPageSize, memNumPages, btreeComparatorFactories, valueProviderFactories,
+                rtreePolicyType, flushController, mergePolicy, opTracker, ioScheduler);
     }
 
     @Override
@@ -61,7 +63,7 @@ public class LSMRTreeDataflowHelper extends AbstractLSMRTreeDataflowHelper {
         try {
             return LSMRTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, onDiskDir,
                     diskBufferCache, diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                    valueProviderFactories, rtreePolicyType, flushPolicy, mergePolicy);
+                    valueProviderFactories, rtreePolicyType, flushController, mergePolicy, opTracker, ioScheduler);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

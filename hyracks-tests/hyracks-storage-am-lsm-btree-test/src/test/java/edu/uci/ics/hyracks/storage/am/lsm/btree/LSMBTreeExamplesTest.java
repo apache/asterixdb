@@ -27,8 +27,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateFlushPolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 
 public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
     private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();
@@ -38,8 +36,8 @@ public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
             throws TreeIndexException {
         return LSMBTreeUtils.createLSMTree(harness.getMemBufferCache(), harness.getMemFreePageManager(),
                 harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskBufferCache(),
-                harness.getDiskFileMapProvider(), typeTraits, cmpFactories, new ImmediateFlushPolicy(harness.getIOScheduler()),
-                NoMergePolicy.INSTANCE);
+                harness.getDiskFileMapProvider(), typeTraits, cmpFactories, harness.getFlushController(),
+                harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler());
     }
 
     @Override

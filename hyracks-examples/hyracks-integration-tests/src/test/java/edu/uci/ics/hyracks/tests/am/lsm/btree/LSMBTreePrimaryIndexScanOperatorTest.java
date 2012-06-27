@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.tests.am.btree.BTreePrimaryIndexScanOperatorTest;
 import edu.uci.ics.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 
 public class LSMBTreePrimaryIndexScanOperatorTest extends BTreePrimaryIndexScanOperatorTest {
+
     protected ITreeIndexOperatorTestHelper createTestHelper() throws HyracksException {
         return new LSMBTreeOperatorTestHelper(TestStorageManagerComponentHolder.getIOManager());
     }

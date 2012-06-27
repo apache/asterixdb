@@ -25,8 +25,10 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushPolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -38,21 +40,28 @@ public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
     private final int memPageSize;
     private final int memNumPages;
 
-    private final ILSMFlushPolicy flushPolicy;
+    private final ILSMFlushController flushController;
     private final ILSMMergePolicy mergePolicy;
+    private final ILSMOperationTracker opTracker;
+    private final ILSMIOScheduler ioScheduler;
 
     public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            ILSMFlushPolicy flushPolicy, ILSMMergePolicy mergePolicy) {
-        this(opDesc, ctx, partition, DEFAULT_MEM_PAGE_SIZE, DEFAULT_MEM_NUM_PAGES, flushPolicy, mergePolicy);
+            ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMIOScheduler ioScheduler) {
+        this(opDesc, ctx, partition, DEFAULT_MEM_PAGE_SIZE, DEFAULT_MEM_NUM_PAGES, flushController, mergePolicy,
+                opTracker, ioScheduler);
     }
 
     public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            int memPageSize, int memNumPages, ILSMFlushPolicy flushPolicy, ILSMMergePolicy mergePolicy) {
+            int memPageSize, int memNumPages, ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
+            ILSMOperationTracker opTracker, ILSMIOScheduler ioScheduler) {
         super(opDesc, ctx, partition);
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
-        this.flushPolicy = flushPolicy;
+        this.flushController = flushController;
         this.mergePolicy = mergePolicy;
+        this.opTracker = opTracker;
+        this.ioScheduler = ioScheduler;
     }
 
     @Override
@@ -66,9 +75,9 @@ public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
             file.delete();
         }
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(memNumPages, metaDataFrameFactory);
-        return LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager,
-                ctx.getIOManager(), file.getFile().getPath(), opDesc.getStorageManager()
-                        .getBufferCache(ctx), opDesc.getStorageManager().getFileMapProvider(ctx), treeOpDesc
-                        .getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories(), flushPolicy, mergePolicy);
+        return LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ctx.getIOManager(), file.getFile()
+                .getPath(), opDesc.getStorageManager().getBufferCache(ctx), opDesc.getStorageManager()
+                .getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
+                .getTreeIndexComparatorFactories(), flushController, mergePolicy, opTracker, ioScheduler);
     }
 }

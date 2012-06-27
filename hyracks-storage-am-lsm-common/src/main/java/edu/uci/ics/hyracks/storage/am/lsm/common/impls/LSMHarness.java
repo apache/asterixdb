@@ -28,9 +28,11 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushPolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 
 /**
  * Common code for synchronizing LSM operations like
@@ -51,11 +53,6 @@ public class LSMHarness {
     // All accesses to the LSM-Tree's on-disk components are synchronized on diskComponentsSync.
     private Object diskComponentsSync = new Object();
 
-    // For synchronizing all operations with flushes.
-    // Currently, all operations block during a flush.
-    private int threadRefCount;
-    private boolean flushFlag;
-
     // For synchronizing searchers with a concurrent merge.
     private AtomicBoolean isMerging = new AtomicBoolean(false);
     private AtomicInteger searcherRefCountA = new AtomicInteger(0);
@@ -67,56 +64,30 @@ public class LSMHarness {
     private AtomicInteger searcherRefCount = searcherRefCountA;
 
     // Flush and Merge Policies
-    private final ILSMFlushPolicy flushPolicy;
+    private final ILSMFlushController flushController;
     private final ILSMMergePolicy mergePolicy;
+    private final ILSMOperationTracker opTracker;
+    private final ILSMIOScheduler ioScheduler;
 
-    public LSMHarness(ILSMIndex lsmIndex, ILSMFlushPolicy flushPolicy, ILSMMergePolicy mergePolicy) {
+    public LSMHarness(ILSMIndex lsmIndex, ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
+            ILSMOperationTracker opTracker, ILSMIOScheduler ioScheduler) {
         this.lsmIndex = lsmIndex;
-        this.threadRefCount = 0;
-        this.flushPolicy = flushPolicy;
+        this.opTracker = opTracker;
+        this.flushController = flushController;
         this.mergePolicy = mergePolicy;
-        this.flushFlag = false;
+        this.ioScheduler = ioScheduler;
     }
 
-    public void threadEnter() {
-        threadRefCount++;
-    }
-
-    public void threadExit() throws HyracksDataException, IndexException {
-        synchronized (this) {
-            threadRefCount--;
-
-            // Check if we've reached or exceeded the maximum number of pages.
-            if (!flushFlag && lsmIndex.getInMemoryFreePageManager().isFull()) {
-                flushFlag = true;
-            }
-
-            // Flush will only be handled by last exiting thread.
-            if (flushFlag && threadRefCount == 0) {
-                flushPolicy.memoryComponentExceededThreshold(lsmIndex);
-            }
+    private void threadExit() {
+        if (!lsmIndex.getFlushController().getFlushStatus(lsmIndex) && lsmIndex.getInMemoryFreePageManager().isFull()) {
+            lsmIndex.getFlushController().setFlushStatus(lsmIndex, true);
         }
+        opTracker.threadExit(lsmIndex);
     }
 
     public void insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ctx) throws HyracksDataException,
             IndexException {
-        boolean waitForFlush = true;
-        do {
-            synchronized (this) {
-                // flushFlag may be set to true even though the flush has not occurred yet.
-                // If flushFlag is set, then the flush is queued to occur by the last exiting thread.
-                // This operation should wait for that flush to occur before proceeding.
-                if (!flushFlag) {
-                    // Increment the threadRefCount in order to block the possibility of a concurrent flush.
-                    // The corresponding threadExit() call is in LSMTreeRangeSearchCursor.close()
-                    threadEnter();
-
-                    // A flush is not pending, so proceed with the operation.
-                    waitForFlush = false;
-                }
-            }
-        } while (waitForFlush);
-
+        opTracker.threadEnter(lsmIndex);
         // It is possible, due to concurrent execution of operations, that an operation will 
         // fail. In such a case, simply retry the operation. Refer to the specific LSMIndex code 
         // to see exactly why an operation might fail.
@@ -149,7 +120,7 @@ public class LSMHarness {
         }
 
         // Unblock entering threads waiting for the flush
-        flushFlag = false;
+        flushController.setFlushStatus(lsmIndex, false);
     }
 
     public List<Object> search(IIndexCursor cursor, ISearchPredicate pred, IIndexOpContext ctx,
@@ -157,22 +128,7 @@ public class LSMHarness {
         // If the search doesn't include the in-memory component, then we don't have
         // to synchronize with a flush.
         if (includeMemComponent) {
-            boolean waitForFlush = true;
-            do {
-                synchronized (this) {
-                    // flushFlag may be set to true even though the flush has not occurred yet.
-                    // If flushFlag is set, then the flush is queued to occur by the last exiting thread.
-                    // This operation should wait for that flush to occur before proceeding.
-                    if (!flushFlag) {
-                        // Increment the threadRefCount in order to block the possibility of a concurrent flush.
-                        // The corresponding threadExit() call is in LSMTreeRangeSearchCursor.close()
-                        threadEnter();
-
-                        // A flush is not pending, so proceed with the operation.
-                        waitForFlush = false;
-                    }
-                }
-            } while (waitForFlush);
+            opTracker.threadEnter(lsmIndex);
         }
 
         // Get a snapshot of the current on-disk Trees.
@@ -259,11 +215,7 @@ public class LSMHarness {
         // If the in-memory Tree was not included in the search, then we don't
         // need to synchronize with a flush.
         if (includeMemComponent) {
-            try {
-                threadExit();
-            } catch (IndexException e) {
-                throw new HyracksDataException(e);
-            }
+            threadExit();
         }
         // A merge may be waiting on this searcher to finish searching the on-disk components.
         // Decrement the searcherRefCount so that the merge process is able to cleanup any old
@@ -281,5 +233,17 @@ public class LSMHarness {
             lsmIndex.addFlushedComponent(index);
             mergePolicy.diskComponentAdded(lsmIndex, lsmIndex.getDiskComponents().size());
         }
+    }
+
+    public ILSMFlushController getFlushController() {
+        return flushController;
+    }
+
+    public ILSMOperationTracker getOperationTracker() {
+        return opTracker;
+    }
+
+    public ILSMIOScheduler getIOScheduler() {
+        return ioScheduler;
     }
 }

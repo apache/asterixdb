@@ -29,10 +29,16 @@ import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SequentialScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -61,6 +67,9 @@ public class LSMRTreeTestHarness {
     protected LSMRTreeInMemoryFreePageManager memFreePageManager;
     protected IHyracksTaskContext ctx;
     protected ILSMIOScheduler ioScheduler;
+    protected ILSMFlushController flushController;
+    protected ILSMMergePolicy mergePolicy;
+    protected ILSMOperationTracker opTracker;
 
     protected final Random rnd = new Random();
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
@@ -74,7 +83,10 @@ public class LSMRTreeTestHarness {
         this.memPageSize = AccessMethodTestsConfig.LSM_RTREE_MEM_PAGE_SIZE;
         this.memNumPages = AccessMethodTestsConfig.LSM_RTREE_MEM_NUM_PAGES;
         this.hyracksFrameSize = AccessMethodTestsConfig.LSM_RTREE_HYRACKS_FRAME_SIZE;
-        this.ioScheduler = SequentialScheduler.INSTANCE;
+        this.ioScheduler = ImmediateScheduler.INSTANCE;
+        this.mergePolicy = NoMergePolicy.INSTANCE;
+        this.flushController = new FlushController();
+        this.opTracker = new RefCountingOperationTracker();
     }
 
     public LSMRTreeTestHarness(int diskPageSize, int diskNumPages, int diskMaxOpenFiles, int memPageSize,
@@ -85,7 +97,10 @@ public class LSMRTreeTestHarness {
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
         this.hyracksFrameSize = hyracksFrameSize;
-        this.ioScheduler = SequentialScheduler.INSTANCE;
+        this.ioScheduler = ImmediateScheduler.INSTANCE;
+        this.mergePolicy = NoMergePolicy.INSTANCE;
+        this.flushController = new FlushController();
+        this.opTracker = new RefCountingOperationTracker();
     }
 
     public void setUp() throws HyracksException {
@@ -101,6 +116,7 @@ public class LSMRTreeTestHarness {
     }
 
     public void tearDown() throws HyracksDataException {
+        ioScheduler.shutdown();
         diskBufferCache.close();
         for (IODeviceHandle dev : ioManager.getIODevices()) {
             File dir = new File(dev.getPath(), onDiskDir);
@@ -182,5 +198,17 @@ public class LSMRTreeTestHarness {
 
     public ILSMIOScheduler getIOScheduler() {
         return ioScheduler;
+    }
+
+    public ILSMOperationTracker getOperationTracker() {
+        return opTracker;
+    }
+
+    public ILSMFlushController getFlushController() {
+        return flushController;
+    }
+
+    public ILSMMergePolicy getMergePolicy() {
+        return mergePolicy;
     }
 }

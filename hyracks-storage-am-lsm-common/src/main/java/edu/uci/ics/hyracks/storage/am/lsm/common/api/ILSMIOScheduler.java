@@ -4,4 +4,6 @@ public interface ILSMIOScheduler {
     public void scheduleFlush(ILSMIndex index);
 
     public void scheduleMerge(ILSMIndex index);
+
+    public void shutdown();
 }
