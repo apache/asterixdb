@@ -31,8 +31,8 @@ public class BTreeFactory extends TreeFactory<BTree> {
 
     @Override
     public BTree createIndexInstance() {
-        return new BTree(bufferCache, fieldCount, cmpFactories, freePageManagerFactory.createFreePageManager(),
-                interiorFrameFactory, leafFrameFactory);
+        return new BTree(bufferCache, freePageManagerFactory.createFreePageManager(), interiorFrameFactory, leafFrameFactory,
+                cmpFactories, fieldCount);
     }
 
 }

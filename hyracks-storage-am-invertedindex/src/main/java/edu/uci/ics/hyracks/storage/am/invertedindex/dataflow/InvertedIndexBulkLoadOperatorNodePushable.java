@@ -23,16 +23,16 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.PermutingFrameTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
-import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex.InvertedIndexBulkLoadContext;
 
 public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
     private final TreeIndexDataflowHelper btreeDataflowHelper;
     private final InvertedIndexDataflowHelper invIndexDataflowHelper;
     private InvertedIndex invIndex;
-    private InvertedIndex.InvertedIndexBulkLoadContext bulkLoadCtx;
+    private IIndexBulkLoader bulkLoader;
 
     private FrameTupleAccessor accessor;
     private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
@@ -72,7 +72,8 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
         try {
             invIndexDataflowHelper.init(false);
             invIndex = (InvertedIndex) invIndexDataflowHelper.getIndex();
-            bulkLoadCtx = (InvertedIndexBulkLoadContext) invIndex.beginBulkLoad(BTree.DEFAULT_FILL_FACTOR);
+
+            bulkLoader = invIndex.createBulkLoader(BTree.DEFAULT_FILL_FACTOR);
         } catch (Exception e) {
             // Cleanup in case of failure.
             invIndexDataflowHelper.deinit();
@@ -90,14 +91,14 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
         int tupleCount = accessor.getTupleCount();
         for (int i = 0; i < tupleCount; i++) {
             tuple.reset(accessor, i);
-            invIndex.bulkLoadAddTuple(tuple, bulkLoadCtx);
+            bulkLoader.add(tuple);
         }
     }
 
     @Override
     public void close() throws HyracksDataException {
         try {
-            invIndex.endBulkLoad(bulkLoadCtx);
+            bulkLoader.end();
         } catch (Exception e) {
             throw new HyracksDataException(e);
         } finally {

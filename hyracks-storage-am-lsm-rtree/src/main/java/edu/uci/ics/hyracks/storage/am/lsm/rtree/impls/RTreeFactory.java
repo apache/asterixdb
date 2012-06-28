@@ -31,8 +31,8 @@ public class RTreeFactory extends TreeFactory<RTree> {
 
     @Override
     public RTree createIndexInstance() {
-        return new RTree(bufferCache, fieldCount, cmpFactories, freePageManagerFactory.createFreePageManager(),
-                interiorFrameFactory, leafFrameFactory);
+        return new RTree(bufferCache, freePageManagerFactory.createFreePageManager(), interiorFrameFactory, leafFrameFactory,
+                cmpFactories, fieldCount);
     }
 
 }

@@ -35,7 +35,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexBulkLoader;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
@@ -242,7 +242,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             bTreeTupleSorter.sort();
         }
 
-        ITreeIndexBulkLoader rTreeBulkloader = diskRTree.createBulkLoader(1.0f);
+        IIndexBulkLoader rTreeBulkloader = diskRTree.createBulkLoader(1.0f);
         LSMRTreeFlushCursor cursor = new LSMRTreeFlushCursor(rTreeTupleSorter, bTreeTupleSorter, comparatorFields,
                 linearizerArray);
         cursor.open(null, null);
@@ -282,7 +282,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
 
         // Bulk load the tuples from all on-disk RTrees into the new RTree.
         RTree mergedRTree = createMergeTarget(mergingDiskRTrees);
-        ITreeIndexBulkLoader bulkloader = mergedRTree.createBulkLoader(1.0f);
+        IIndexBulkLoader bulkloader = mergedRTree.createBulkLoader(1.0f);
         try {
             while (cursor.hasNext()) {
                 cursor.next();
@@ -331,7 +331,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     }
 
     @Override
-    public ITreeIndexBulkLoader createBulkLoader(float fillLevel) throws TreeIndexException {
+    public IIndexBulkLoader createBulkLoader(float fillLevel) throws TreeIndexException {
         return new LSMRTreeWithAntiMatterTuplesBulkLoader(fillLevel);
     }
 
@@ -341,7 +341,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         return (RTree) createDiskTree(bulkLoadRTreeFactory, fileRef, true);
     }
 
-    public class LSMRTreeWithAntiMatterTuplesBulkLoader implements ITreeIndexBulkLoader {
+    public class LSMRTreeWithAntiMatterTuplesBulkLoader implements IIndexBulkLoader {
         private final RTree diskRTree;
         private final RTreeBulkLoader bulkLoader;
 

@@ -36,10 +36,10 @@ import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -55,7 +55,7 @@ public abstract class OrderedIndexExamplesTest {
             throws TreeIndexException;
 
     protected abstract int getIndexFileId();
-    
+
     /**
      * Fixed-Length Key,Value Example.
      * 
@@ -94,7 +94,8 @@ public abstract class OrderedIndexExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         int numInserts = 10000;
         for (int i = 0; i < numInserts; i++) {
             int f0 = rnd.nextInt() % numInserts;
@@ -173,7 +174,8 @@ public abstract class OrderedIndexExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         int numInserts = 10000;
         for (int i = 0; i < 10000; i++) {
             int f0 = rnd.nextInt() % 2000;
@@ -250,7 +252,8 @@ public abstract class OrderedIndexExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         // Max string length to be generated.
         int maxLength = 10;
         int numInserts = 10000;
@@ -325,7 +328,8 @@ public abstract class OrderedIndexExamplesTest {
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         // Max string length to be generated.
         int runs = 3;
         for (int run = 0; run < runs; run++) {
@@ -427,7 +431,8 @@ public abstract class OrderedIndexExamplesTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Inserting into tree...");
         }
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         int maxLength = 10;
@@ -517,20 +522,21 @@ public abstract class OrderedIndexExamplesTest {
             LOGGER.info("Bulk loading " + ins + " tuples");
         }
         long start = System.currentTimeMillis();
-        IIndexBulkLoadContext bulkLoadCtx = treeIndex.beginBulkLoad(0.7f);
+        IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f);
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         for (int i = 0; i < ins; i++) {
             TupleUtils.createIntegerTuple(tb, tuple, i, i, 5);
-            treeIndex.bulkLoadAddTuple(tuple, bulkLoadCtx);
+            bulkLoader.add(tuple);
         }
-        treeIndex.endBulkLoad(bulkLoadCtx);
+        bulkLoader.end();
         long end = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(ins + " tuples loaded in " + (end - start) + "ms");
         }
 
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
 
         // Build low key.
         ArrayTupleBuilder lowKeyTb = new ArrayTupleBuilder(1);
@@ -548,12 +554,11 @@ public abstract class OrderedIndexExamplesTest {
         treeIndex.close();
     }
 
-    private void orderedScan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes)
-            throws Exception {
+    private void orderedScan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Ordered Scan:");
         }
-        IIndexCursor scanCursor = (IIndexCursor) indexAccessor.createSearchCursor();        
+        IIndexCursor scanCursor = (IIndexCursor) indexAccessor.createSearchCursor();
         RangePredicate nullPred = new RangePredicate(null, null, true, true, null, null);
         indexAccessor.search(scanCursor, nullPred);
         try {
@@ -570,45 +575,44 @@ public abstract class OrderedIndexExamplesTest {
         }
     }
 
-	private void diskOrderScan(IIndexAccessor indexAccessor,
-			ISerializerDeserializer[] fieldSerdes) throws Exception {
-		try {
-			if (LOGGER.isLoggable(Level.INFO)) {
-				LOGGER.info("Disk-Order Scan:");
-			}
-			ITreeIndexAccessor treeIndexAccessor = (ITreeIndexAccessor) indexAccessor;
-			TreeDiskOrderScanCursor diskOrderCursor = (TreeDiskOrderScanCursor) treeIndexAccessor
-					.createDiskOrderScanCursor();
-			treeIndexAccessor.diskOrderScan(diskOrderCursor);
-			try {
-				while (diskOrderCursor.hasNext()) {
-					diskOrderCursor.next();
-					ITupleReference frameTuple = diskOrderCursor.getTuple();
-					String rec = TupleUtils.printTuple(frameTuple, fieldSerdes);
-					if (LOGGER.isLoggable(Level.INFO)) {
-						LOGGER.info(rec);
-					}
-				}
-			} finally {
-				diskOrderCursor.close();
-			}
-		} catch (UnsupportedOperationException e) {
-			// Ignore exception because some indexes, e.g. the LSMBTree, don't
-			// support disk-order scan.
-			if (LOGGER.isLoggable(Level.INFO)) {
-				LOGGER.info("Ignoring disk-order scan since it's not supported.");
-			}
-		} catch (ClassCastException e) {
-			// Ignore exception because IIndexAccessor sometimes isn't
-			// an ITreeIndexAccessor, e.g., for the LSMBTree.
-			if (LOGGER.isLoggable(Level.INFO)) {
-				LOGGER.info("Ignoring disk-order scan since it's not supported.");
-			}
-		}
-	}
+    private void diskOrderScan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes) throws Exception {
+        try {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Disk-Order Scan:");
+            }
+            ITreeIndexAccessor treeIndexAccessor = (ITreeIndexAccessor) indexAccessor;
+            TreeDiskOrderScanCursor diskOrderCursor = (TreeDiskOrderScanCursor) treeIndexAccessor
+                    .createDiskOrderScanCursor();
+            treeIndexAccessor.diskOrderScan(diskOrderCursor);
+            try {
+                while (diskOrderCursor.hasNext()) {
+                    diskOrderCursor.next();
+                    ITupleReference frameTuple = diskOrderCursor.getTuple();
+                    String rec = TupleUtils.printTuple(frameTuple, fieldSerdes);
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info(rec);
+                    }
+                }
+            } finally {
+                diskOrderCursor.close();
+            }
+        } catch (UnsupportedOperationException e) {
+            // Ignore exception because some indexes, e.g. the LSMBTree, don't
+            // support disk-order scan.
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Ignoring disk-order scan since it's not supported.");
+            }
+        } catch (ClassCastException e) {
+            // Ignore exception because IIndexAccessor sometimes isn't
+            // an ITreeIndexAccessor, e.g., for the LSMBTree.
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Ignoring disk-order scan since it's not supported.");
+            }
+        }
+    }
 
-    private void rangeSearch(IBinaryComparatorFactory[] cmpFactories, IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes,
-            ITupleReference lowKey, ITupleReference highKey) throws Exception {
+    private void rangeSearch(IBinaryComparatorFactory[] cmpFactories, IIndexAccessor indexAccessor,
+            ISerializerDeserializer[] fieldSerdes, ITupleReference lowKey, ITupleReference highKey) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             String lowKeyString = TupleUtils.printTuple(lowKey, fieldSerdes);
             String highKeyString = TupleUtils.printTuple(highKey, fieldSerdes);
@@ -617,8 +621,7 @@ public abstract class OrderedIndexExamplesTest {
         ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
         MultiComparator lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmpFactories, lowKey);
         MultiComparator highKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmpFactories, highKey);
-        RangePredicate rangePred = new RangePredicate(lowKey, highKey, true, true, lowKeySearchCmp,
-                highKeySearchCmp);
+        RangePredicate rangePred = new RangePredicate(lowKey, highKey, true, true, lowKeySearchCmp, highKeySearchCmp);
         indexAccessor.search(rangeCursor, rangePred);
         try {
             while (rangeCursor.hasNext()) {

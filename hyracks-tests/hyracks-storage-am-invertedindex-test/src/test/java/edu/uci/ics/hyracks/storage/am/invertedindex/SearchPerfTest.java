@@ -28,8 +28,8 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex.InvertedIndexAccessor;
@@ -66,7 +66,7 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
         loadData();
     }
 
-    public void loadData() throws HyracksDataException, TreeIndexException {
+    public void loadData() throws HyracksDataException, IndexException {
         tokens.add("compilers");
         tokens.add("computer");
         tokens.add("databases");
@@ -85,7 +85,7 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
         int addProb = 0;
         int addProbStep = 10;
 
-        IIndexBulkLoadContext ctx = invIndex.beginBulkLoad(BTree.DEFAULT_FILL_FACTOR);
+        IIndexBulkLoader bulkLoader = invIndex.createBulkLoader(BTree.DEFAULT_FILL_FACTOR);
 
         for (int i = 0; i < tokens.size(); i++) {
 
@@ -100,14 +100,14 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
                     tuple.reset(tb.getFieldEndOffsets(), tb.getByteArray());
                     checkInvLists.get(i).add(j);
                     try {
-                        invIndex.bulkLoadAddTuple(tuple, ctx);
+                        bulkLoader.add(tuple);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             }
         }
-        invIndex.endBulkLoad(ctx);
+        bulkLoader.end();
     }
 
     /**

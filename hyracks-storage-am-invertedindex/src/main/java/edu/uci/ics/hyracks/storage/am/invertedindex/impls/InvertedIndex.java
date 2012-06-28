@@ -31,6 +31,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
@@ -60,7 +61,7 @@ import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
  */
 public class InvertedIndex implements IIndex {
     private final IHyracksCommonContext ctx = new DefaultHyracksCommonContext();
-    
+
     private BTree btree;
     private int rootPageId = 0;
     private IBufferCache bufferCache;
@@ -93,13 +94,12 @@ public class InvertedIndex implements IIndex {
     @Override
     public void create(int indexFileId) throws HyracksDataException {
     }
-    
+
     @Override
     public void close() {
         this.fileId = -1;
     }
 
-        
     public boolean openCursor(ITreeIndexCursor btreeCursor, RangePredicate btreePred, ITreeIndexAccessor btreeAccessor,
             IInvertedListCursor invListCursor) throws HyracksDataException, IndexException {
         btreeAccessor.search(btreeCursor, btreePred);
@@ -128,114 +128,13 @@ public class InvertedIndex implements IIndex {
         }
         return ret;
     }
-    
-    @Override
-    public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws TreeIndexException, HyracksDataException {
-        InvertedIndexBulkLoadContext ctx = new InvertedIndexBulkLoadContext(fillFactor);
-        ctx.init(rootPageId, fileId);
-        return ctx;
-    }
 
-    /**
-     * Assumptions:
-     * The first btree.getMultiComparator().getKeyFieldCount() fields in tuple
-     * are btree keys (e.g., a string token).
-     * The next invListCmp.getKeyFieldCount() fields in tuple are keys of the
-     * inverted list (e.g., primary key).
-     * Key fields of inverted list are fixed size.
-     * 
-     */
-    @Override
-    public void bulkLoadAddTuple(ITupleReference tuple, IIndexBulkLoadContext ictx) throws HyracksDataException {
-        InvertedIndexBulkLoadContext ctx = (InvertedIndexBulkLoadContext) ictx;
-        
-        // First inverted list, copy token to baaos and start new list.
-        if (ctx.currentInvListTokenBaaos.size() == 0) {
-            ctx.currentInvListStartPageId = ctx.currentPageId;
-            ctx.currentInvListStartOffset = invListBuilder.getPos();
-
-            // Remember current token.
-            ctx.currentInvListTokenBaaos.reset();
-            for (int i = 0; i < numTokenFields; i++) {
-                ctx.currentInvListTokenBaaos.write(tuple.getFieldData(i), tuple.getFieldStart(i),
-                        tuple.getFieldLength(i));
-            }
-
-            if (!invListBuilder.startNewList(tuple, numTokenFields)) {
-                ctx.pinNextPage();
-                invListBuilder.setTargetBuffer(ctx.currentPage.getBuffer().array(), 0);
-                if (!invListBuilder.startNewList(tuple, numTokenFields)) {
-                    throw new IllegalStateException("Failed to create first inverted list.");
-                }
-            }
-        }
-
-        // Create new inverted list?
-        ctx.currentInvListToken.reset(ctx.currentInvListTokenBaaos.getByteArray(), 0);
-        if (ctx.tokenCmp.compare(tuple, ctx.currentInvListToken) != 0) {
-
-            // Create entry in btree for last inverted list.
-            createAndInsertBTreeTuple(ctx);
-
-            // Remember new token.
-            ctx.currentInvListTokenBaaos.reset();
-            for (int i = 0; i < numTokenFields; i++) {
-                ctx.currentInvListTokenBaaos.write(tuple.getFieldData(i), tuple.getFieldStart(i),
-                        tuple.getFieldLength(i));
-            }
-
-            // Start new list.
-            if (!invListBuilder.startNewList(tuple, numTokenFields)) {
-                ctx.pinNextPage();
-                invListBuilder.setTargetBuffer(ctx.currentPage.getBuffer().array(), 0);
-                if (!invListBuilder.startNewList(tuple, numTokenFields)) {
-                    throw new IllegalStateException("Failed to start new inverted list after switching to a new page.");
-                }
-            }
-
-            ctx.currentInvListStartPageId = ctx.currentPageId;
-            ctx.currentInvListStartOffset = invListBuilder.getPos();
-        }
-
-        // Append to current inverted list.
-        if (!invListBuilder.appendElement(tuple, numTokenFields, numInvListKeys)) {
-            ctx.pinNextPage();
-            invListBuilder.setTargetBuffer(ctx.currentPage.getBuffer().array(), 0);
-            if (!invListBuilder.appendElement(tuple, numTokenFields, numInvListKeys)) {
-                throw new IllegalStateException(
-                        "Failed to append element to inverted list after switching to a new page.");
-            }
-        }
-    }
-
-    private void createAndInsertBTreeTuple(InvertedIndexBulkLoadContext ctx) throws HyracksDataException {        
-        // Build tuple.        
-        ctx.btreeTupleBuilder.reset();
-        ctx.btreeTupleBuilder.addField(ctx.currentInvListTokenBaaos.getByteArray(), 0,
-                ctx.currentInvListTokenBaaos.size());
-        ctx.btreeTupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, ctx.currentInvListStartPageId);
-        ctx.btreeTupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, ctx.currentPageId);
-        ctx.btreeTupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, ctx.currentInvListStartOffset);
-        ctx.btreeTupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, invListBuilder.getListSize());
-        // Reset tuple reference and add it.
-        ctx.btreeTupleReference.reset(ctx.btreeTupleBuilder.getFieldEndOffsets(), ctx.btreeTupleBuilder.getByteArray());
-        btree.bulkLoadAddTuple(ctx.btreeTupleReference, ctx.btreeBulkLoadCtx);
-    }
-
-    @Override
-    public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException {
-        // Create entry in btree for last inverted list.
-        InvertedIndexBulkLoadContext ctx = (InvertedIndexBulkLoadContext) ictx;
-        createAndInsertBTreeTuple(ctx);
-        btree.endBulkLoad(ctx.btreeBulkLoadCtx);
-        ctx.deinit();
-    }
-    
-    public final class InvertedIndexBulkLoadContext implements IIndexBulkLoadContext {
+    public final class InvertedIndexBulkLoader implements IIndexBulkLoader {
         private final ArrayTupleBuilder btreeTupleBuilder;
         private final ArrayTupleReference btreeTupleReference;
         private final float btreeFillFactor;
         private IIndexBulkLoadContext btreeBulkLoadCtx;
+        private final IIndexBulkLoader btreeBulkloader;
 
         private int currentInvListStartPageId;
         private int currentInvListStartOffset;
@@ -246,26 +145,18 @@ public class InvertedIndex implements IIndex {
         private ICachedPage currentPage;
         private final MultiComparator tokenCmp;
 
-        public InvertedIndexBulkLoadContext(float btreeFillFactor) {
+        public InvertedIndexBulkLoader(float btreeFillFactor, int startPageId, int fileId) throws IndexException,
+                HyracksDataException {
             this.tokenCmp = MultiComparator.create(btree.getComparatorFactories());
             this.btreeTupleBuilder = new ArrayTupleBuilder(btree.getFieldCount());
             this.btreeTupleReference = new ArrayTupleReference();
             this.btreeFillFactor = btreeFillFactor;
-        }
 
-        public void init(int startPageId, int fileId) throws HyracksDataException, TreeIndexException {
-            btreeBulkLoadCtx = btree.beginBulkLoad(btreeFillFactor);
+            this.btreeBulkloader = btree.createBulkLoader(btreeFillFactor);
             currentPageId = startPageId;
             currentPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
             currentPage.acquireWriteLatch();
             invListBuilder.setTargetBuffer(currentPage.getBuffer().array(), 0);
-        }
-
-        public void deinit() throws HyracksDataException {
-            if (currentPage != null) {
-                currentPage.releaseWriteLatch();
-                bufferCache.unpin(currentPage);
-            }
         }
 
         public void pinNextPage() throws HyracksDataException {
@@ -274,6 +165,101 @@ public class InvertedIndex implements IIndex {
             currentPageId++;
             currentPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
             currentPage.acquireWriteLatch();
+        }
+
+        private void createAndInsertBTreeTuple() throws HyracksDataException {
+            // Build tuple.        
+            btreeTupleBuilder.reset();
+            btreeTupleBuilder.addField(currentInvListTokenBaaos.getByteArray(), 0, currentInvListTokenBaaos.size());
+            btreeTupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, currentInvListStartPageId);
+            btreeTupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, currentPageId);
+            btreeTupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, currentInvListStartOffset);
+            btreeTupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, invListBuilder.getListSize());
+            // Reset tuple reference and add it.
+            btreeTupleReference.reset(btreeTupleBuilder.getFieldEndOffsets(), btreeTupleBuilder.getByteArray());
+            btreeBulkloader.add(btreeTupleReference);
+        }
+
+        /**
+         * Assumptions:
+         * The first btree.getMultiComparator().getKeyFieldCount() fields in tuple
+         * are btree keys (e.g., a string token).
+         * The next invListCmp.getKeyFieldCount() fields in tuple are keys of the
+         * inverted list (e.g., primary key).
+         * Key fields of inverted list are fixed size.
+         * 
+         */
+        @Override
+        public void add(ITupleReference tuple) throws HyracksDataException {
+            // First inverted list, copy token to baaos and start new list.
+            if (currentInvListTokenBaaos.size() == 0) {
+                currentInvListStartPageId = currentPageId;
+                currentInvListStartOffset = invListBuilder.getPos();
+
+                // Remember current token.
+                currentInvListTokenBaaos.reset();
+                for (int i = 0; i < numTokenFields; i++) {
+                    currentInvListTokenBaaos.write(tuple.getFieldData(i), tuple.getFieldStart(i),
+                            tuple.getFieldLength(i));
+                }
+
+                if (!invListBuilder.startNewList(tuple, numTokenFields)) {
+                    pinNextPage();
+                    invListBuilder.setTargetBuffer(currentPage.getBuffer().array(), 0);
+                    if (!invListBuilder.startNewList(tuple, numTokenFields)) {
+                        throw new IllegalStateException("Failed to create first inverted list.");
+                    }
+                }
+            }
+
+            // Create new inverted list?
+            currentInvListToken.reset(currentInvListTokenBaaos.getByteArray(), 0);
+            if (tokenCmp.compare(tuple, currentInvListToken) != 0) {
+
+                // Create entry in btree for last inverted list.
+                createAndInsertBTreeTuple();
+
+                // Remember new token.
+                currentInvListTokenBaaos.reset();
+                for (int i = 0; i < numTokenFields; i++) {
+                    currentInvListTokenBaaos.write(tuple.getFieldData(i), tuple.getFieldStart(i),
+                            tuple.getFieldLength(i));
+                }
+
+                // Start new list.
+                if (!invListBuilder.startNewList(tuple, numTokenFields)) {
+                    pinNextPage();
+                    invListBuilder.setTargetBuffer(currentPage.getBuffer().array(), 0);
+                    if (!invListBuilder.startNewList(tuple, numTokenFields)) {
+                        throw new IllegalStateException(
+                                "Failed to start new inverted list after switching to a new page.");
+                    }
+                }
+
+                currentInvListStartPageId = currentPageId;
+                currentInvListStartOffset = invListBuilder.getPos();
+            }
+
+            // Append to current inverted list.
+            if (!invListBuilder.appendElement(tuple, numTokenFields, numInvListKeys)) {
+                pinNextPage();
+                invListBuilder.setTargetBuffer(currentPage.getBuffer().array(), 0);
+                if (!invListBuilder.appendElement(tuple, numTokenFields, numInvListKeys)) {
+                    throw new IllegalStateException(
+                            "Failed to append element to inverted list after switching to a new page.");
+                }
+            }
+        }
+
+        @Override
+        public void end() throws HyracksDataException {
+            createAndInsertBTreeTuple();
+            btreeBulkloader.end();
+
+            if (currentPage != null) {
+                currentPage.releaseWriteLatch();
+                bufferCache.unpin(currentPage);
+            }
         }
     }
 
@@ -289,7 +275,7 @@ public class InvertedIndex implements IIndex {
     public IBinaryComparatorFactory[] getInvListElementCmpFactories() {
         return invListCmpFactories;
     }
-    
+
     public ITypeTraits[] getTypeTraits() {
         return invListTypeTraits;
     }
@@ -297,14 +283,14 @@ public class InvertedIndex implements IIndex {
     public BTree getBTree() {
         return btree;
     }
-    
-    public class InvertedIndexAccessor implements IIndexAccessor {        
+
+    public class InvertedIndexAccessor implements IIndexAccessor {
         private final IInvertedIndexSearcher searcher;
-        
+
         public InvertedIndexAccessor(InvertedIndex index) {
             this.searcher = new TOccurrenceSearcher(ctx, index, tokenizer);
         }
-        
+
         @Override
         public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
             // TODO Auto-generated method stub
@@ -322,9 +308,9 @@ public class InvertedIndex implements IIndex {
 
         @Override
         public void upsert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
-        	// TODO Auto-generated method stub
+            // TODO Auto-generated method stub
         }
-        
+
         @Override
         public IIndexCursor createSearchCursor() {
             return new InvertedIndexSearchCursor(searcher);
@@ -335,14 +321,15 @@ public class InvertedIndex implements IIndex {
                 IndexException {
             searcher.search((InvertedIndexSearchCursor) cursor, (InvertedIndexSearchPredicate) searchPred);
         }
-        
+
         public IInvertedIndexSearcher getSearcher() {
             return searcher;
         }
     }
-    
+
     @Override
-    public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback) {
+    public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback) {
         return new InvertedIndexAccessor(this);
     }
 
@@ -371,6 +358,15 @@ public class InvertedIndex implements IIndex {
         @Override
         public IIOManager getIOManager() {
             return null;
+        }
+    }
+
+    @Override
+    public IIndexBulkLoader createBulkLoader(float fillFactor) throws IndexException {
+        try {
+            return new InvertedIndexBulkLoader(fillFactor, rootPageId, fileId);
+        } catch (HyracksDataException e) {
+            throw new IndexException(e);
         }
     }
 }

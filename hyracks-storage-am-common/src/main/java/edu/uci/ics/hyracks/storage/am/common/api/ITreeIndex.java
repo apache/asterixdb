@@ -65,5 +65,5 @@ public interface ITreeIndex extends IIndex {
  	 * @throws TreeIndexException if the user tries to instantiate a second bulk
 	 * loader
  	 */
-	public ITreeIndexBulkLoader createBulkLoader(float fillFactor) throws TreeIndexException;
+	public IIndexBulkLoader createBulkLoader(float fillFactor) throws TreeIndexException;
 }

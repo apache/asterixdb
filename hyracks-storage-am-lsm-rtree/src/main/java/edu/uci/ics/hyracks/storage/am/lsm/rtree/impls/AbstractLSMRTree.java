@@ -28,10 +28,8 @@ import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyExcept
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
@@ -121,11 +119,11 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
             IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
             int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, ILSMFlushController flushController,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOScheduler ioScheduler) {
-        RTree memRTree = new RTree(memBufferCache, fieldCount, rtreeCmpFactories, memFreePageManager,
-                rtreeInteriorFrameFactory, rtreeLeafFrameFactory);
+        RTree memRTree = new RTree(memBufferCache, memFreePageManager, rtreeInteriorFrameFactory,
+                rtreeLeafFrameFactory, rtreeCmpFactories, fieldCount);
         // TODO: Do we need another operation callback here?
-        BTree memBTree = new BTree(memBufferCache, fieldCount, btreeCmpFactories, memFreePageManager,
-                btreeInteriorFrameFactory, btreeLeafFrameFactory);
+        BTree memBTree = new BTree(memBufferCache, memFreePageManager, btreeInteriorFrameFactory,
+                btreeLeafFrameFactory, btreeCmpFactories, fieldCount);
         memComponent = new LSMRTreeComponent(memRTree, memBTree);
         this.memFreePageManager = memFreePageManager;
         this.diskBufferCache = diskRTreeFactory.getBufferCache();
@@ -180,25 +178,6 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
         // Tree will be closed during cleanup of merge().
         diskTree.open(diskTreeFileId);
         return diskTree;
-    }
-
-    @Deprecated
-    private ITreeIndexBulkLoader bulkloader;
-
-    @Override
-    public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws TreeIndexException, HyracksDataException {
-        bulkloader = createBulkLoader(fillFactor);
-        return null;
-    }
-
-    @Override
-    public void bulkLoadAddTuple(ITupleReference tuple, IIndexBulkLoadContext ictx) throws HyracksDataException {
-        bulkloader.add(tuple);
-    }
-
-    @Override
-    public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException {
-        bulkloader.end();
     }
 
     @Override

@@ -16,9 +16,8 @@
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
@@ -69,41 +68,10 @@ public interface IIndex {
             ISearchOperationCallback searchCallback);
 
     /**
-     * Prepares the index for bulk loading, returning a bulk load context. The
-     * index may require to be empty for bulk loading.
-     * 
-     * @param fillFactor
-     *            Desired fill factor in [0, 1.0].
-     * @throws HyracksDataException
-     *             If the BufferCache throws while un/pinning or un/latching.
-     * @throws IndexException
-     *             For example, if the index was already loaded and only
-     *             supports a single load.
-     * @returns A new context for bulk loading, required for appending tuples.
+     * @param fillFactor TODO
+     * @throws IndexException TODO
      */
-    public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws IndexException, HyracksDataException;
-
-    /**
-     * Append a tuple to the index in the context of a bulk load.
-     * 
-     * @param tuple
-     *            Tuple to be inserted.
-     * @param ictx
-     *            Existing bulk load context.
-     * @throws HyracksDataException
-     *             If the BufferCache throws while un/pinning or un/latching.
-     */
-    public void bulkLoadAddTuple(ITupleReference tuple, IIndexBulkLoadContext ictx) throws HyracksDataException;
-
-    /**
-     * Finalize the bulk loading operation in the given context.
-     * 
-     * @param ictx
-     *            Existing bulk load context to be finalized.
-     * @throws HyracksDataException
-     *             If the BufferCache throws while un/pinning or un/latching.
-     */
-    public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException;
+    public IIndexBulkLoader createBulkLoader(float fillFactor) throws IndexException;
 
     /**
      * @return BufferCache underlying this index.

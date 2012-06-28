@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -33,7 +34,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
@@ -60,10 +60,10 @@ public class RTree extends AbstractTreeIndex {
     // Global node sequence number used for the concurrency control protocol
     private final AtomicLong globalNsn;
 
-    public RTree(IBufferCache bufferCache, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
-            IFreePageManager freePageManager, ITreeIndexFrameFactory interiorFrameFactory,
-            ITreeIndexFrameFactory leafFrameFactory) {
-        super(bufferCache, fieldCount, cmpFactories, freePageManager, interiorFrameFactory, leafFrameFactory);
+    public RTree(IBufferCache bufferCache, IFreePageManager freePageManager,
+            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
+            IBinaryComparatorFactory[] cmpFactories, int fieldCount) {
+        super(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories, fieldCount);
         globalNsn = new AtomicLong();
     }
 
@@ -133,31 +133,6 @@ public class RTree extends AbstractTreeIndex {
             node.releaseReadLatch();
             bufferCache.unpin(node);
             e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void create(int fileId) throws HyracksDataException {
-        treeLatch.writeLock().lock();
-        try {
-            ITreeIndexFrame leafFrame = leafFrameFactory.createFrame();
-            ITreeIndexMetaDataFrame metaFrame = freePageManager.getMetaDataFrameFactory().createFrame();
-            freePageManager.open(fileId);
-            freePageManager.init(metaFrame, rootPage);
-
-            // initialize root page
-            ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), true);
-
-            rootNode.acquireWriteLatch();
-            try {
-                leafFrame.setPage(rootNode);
-                leafFrame.initBuffer((byte) 0);
-            } finally {
-                rootNode.releaseWriteLatch();
-                bufferCache.unpin(rootNode);
-            }
-        } finally {
-            treeLatch.writeLock().unlock();
         }
     }
 
@@ -875,7 +850,7 @@ public class RTree extends AbstractTreeIndex {
     }
 
     @Override
-    public AbstractTreeIndexBulkLoader createBulkLoader(float fillFactor) throws TreeIndexException {
+    public IIndexBulkLoader createBulkLoader(float fillFactor) throws TreeIndexException {
         try {
             return new RTreeBulkLoader(fillFactor);
         } catch (HyracksDataException e) {

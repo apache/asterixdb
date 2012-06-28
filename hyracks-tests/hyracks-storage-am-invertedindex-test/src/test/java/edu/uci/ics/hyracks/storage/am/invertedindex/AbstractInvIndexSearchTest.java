@@ -157,8 +157,8 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
 
         freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
-        btree = new BTree(bufferCache, btreeTypeTraits.length, btreeCmpFactories, freePageManager,
-                interiorFrameFactory, leafFrameFactory);
+        btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory,
+                btreeCmpFactories, btreeTypeTraits.length);
         btree.create(btreeFileId);
         btree.open(btreeFileId);
 

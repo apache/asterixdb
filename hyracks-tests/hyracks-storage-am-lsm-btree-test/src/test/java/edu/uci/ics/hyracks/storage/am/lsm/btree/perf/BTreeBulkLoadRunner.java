@@ -19,16 +19,16 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleBatch;
 
 public class BTreeBulkLoadRunner extends BTreeRunner {
 
     protected final float fillFactor;
-    
-    public BTreeBulkLoadRunner(int numBatches, int pageSize, int numPages, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories, float fillFactor)
-            throws HyracksDataException, BTreeException {
+
+    public BTreeBulkLoadRunner(int numBatches, int pageSize, int numPages, ITypeTraits[] typeTraits,
+            IBinaryComparatorFactory[] cmpFactories, float fillFactor) throws HyracksDataException, BTreeException {
         super(numBatches, pageSize, numPages, typeTraits, cmpFactories);
         this.fillFactor = fillFactor;
     }
@@ -37,14 +37,14 @@ public class BTreeBulkLoadRunner extends BTreeRunner {
     public long runExperiment(DataGenThread dataGen, int numThreads) throws Exception {
         btree.create(btreeFileId);
         long start = System.currentTimeMillis();
-        IIndexBulkLoadContext bulkLoadCtx = btree.beginBulkLoad(1.0f);
+        IIndexBulkLoader bulkLoader = btree.createBulkLoader(1.0f);
         for (int i = 0; i < numBatches; i++) {
             TupleBatch batch = dataGen.tupleBatchQueue.take();
             for (int j = 0; j < batch.size(); j++) {
-                btree.bulkLoadAddTuple(batch.get(j), bulkLoadCtx);    
+                bulkLoader.add(batch.get(j));
             }
         }
-        btree.endBulkLoad(bulkLoadCtx);
+        bulkLoader.end();
         long end = System.currentTimeMillis();
         long time = end - start;
         return time;

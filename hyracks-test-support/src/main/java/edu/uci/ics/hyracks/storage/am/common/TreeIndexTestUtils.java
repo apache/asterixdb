@@ -33,9 +33,9 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -143,12 +143,12 @@ public abstract class TreeIndexTestUtils {
                 LOGGER.info("Ignoring disk-order scan since it's not supported.");
             }
         } catch (ClassCastException e) {
-			// Ignore exception because IIndexAccessor sometimes isn't
-			// an ITreeIndexAccessor, e.g., for the LSMBTree.
-			if (LOGGER.isLoggable(Level.INFO)) {
-				LOGGER.info("Ignoring disk-order scan since it's not supported.");
-			}
-		}
+            // Ignore exception because IIndexAccessor sometimes isn't
+            // an ITreeIndexAccessor, e.g., for the LSMBTree.
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Ignoring disk-order scan since it's not supported.");
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -180,7 +180,7 @@ public abstract class TreeIndexTestUtils {
             }
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     public void upsertIntTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
         int fieldCount = ctx.getFieldCount();
@@ -243,7 +243,8 @@ public abstract class TreeIndexTestUtils {
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         // Perform bulk load.
-        IIndexBulkLoadContext bulkLoadCtx = ctx.getIndex().beginBulkLoad(0.7f);
+        //        IIndexBulkLoadContext bulkLoadCtx = ctx.getIndex().beginBulkLoad(0.7f);
+        IIndexBulkLoader bulkLoader = ctx.getIndex().createBulkLoader(0.7f);
         int c = 1;
         for (CheckTuple checkTuple : checkTuples) {
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -252,10 +253,12 @@ public abstract class TreeIndexTestUtils {
                 }
             }
             createTupleFromCheckTuple(checkTuple, tupleBuilder, tuple, ctx.getFieldSerdes());
-            ctx.getIndex().bulkLoadAddTuple(tuple, bulkLoadCtx);
+            //            ctx.getIndex().bulkLoadAddTuple(tuple, bulkLoadCtx);
+            bulkLoader.add(tuple);
             c++;
         }
-        ctx.getIndex().endBulkLoad(bulkLoadCtx);
+        //        ctx.getIndex().endBulkLoad(bulkLoadCtx);
+        bulkLoader.end();
     }
 
     @SuppressWarnings("unchecked")

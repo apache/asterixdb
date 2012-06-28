@@ -28,14 +28,13 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexBulkLoader;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
@@ -182,7 +181,7 @@ public class LSMRTree extends AbstractLSMRTree {
         LSMRTreeFileNameComponent fileNames = (LSMRTreeFileNameComponent) fileManager.getRelFlushFileName();
         FileReference rtreeFile = fileManager.createFlushFile(fileNames.getRTreeFileName());
         RTree diskRTree = (RTree) createDiskTree(diskRTreeFactory, rtreeFile, true);
-        ITreeIndexBulkLoader rTreeBulkloader;
+        IIndexBulkLoader rTreeBulkloader;
         ITreeIndexCursor cursor;
 
         IBinaryComparatorFactory[] linearizerArray = { linearizer };
@@ -236,7 +235,7 @@ public class LSMRTree extends AbstractLSMRTree {
         BTree diskBTree = (BTree) createDiskTree(diskBTreeFactory, btreeFile, true);
 
         // BulkLoad the tuples from the in-memory tree into the new disk BTree.
-        ITreeIndexBulkLoader bTreeBulkloader = diskBTree.createBulkLoader(1.0f);
+        IIndexBulkLoader bTreeBulkloader = diskBTree.createBulkLoader(1.0f);
         try {
             while (btreeScanCursor.hasNext()) {
                 btreeScanCursor.next();
@@ -277,7 +276,7 @@ public class LSMRTree extends AbstractLSMRTree {
         RTree mergedRTree = (RTree) createDiskTree(diskRTreeFactory, rtreeFile, true);
         BTree mergedBTree = (BTree) createDiskTree(diskBTreeFactory, btreeFile, true);
 
-        ITreeIndexBulkLoader bulkloader = mergedRTree.createBulkLoader(1.0f);
+        IIndexBulkLoader bulkloader = mergedRTree.createBulkLoader(1.0f);
         try {
             while (cursor.hasNext()) {
                 cursor.next();
@@ -290,8 +289,7 @@ public class LSMRTree extends AbstractLSMRTree {
         bulkloader.end();
 
         // Load an empty BTree tree.
-        IIndexBulkLoadContext btreeBulkLoadCtx = mergedBTree.beginBulkLoad(1.0f);
-        mergedBTree.endBulkLoad(btreeBulkLoadCtx);
+        mergedBTree.createBulkLoader(1.0f).end();
 
         return new LSMRTreeComponent(mergedRTree, mergedBTree);
     }
@@ -338,11 +336,11 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
-    public ITreeIndexBulkLoader createBulkLoader(float fillLevel) throws TreeIndexException {
+    public IIndexBulkLoader createBulkLoader(float fillLevel) throws TreeIndexException {
         return new LSMRTreeBulkLoader(fillLevel);
     }
 
-    public class LSMRTreeBulkLoader implements ITreeIndexBulkLoader {
+    public class LSMRTreeBulkLoader implements IIndexBulkLoader {
         private final RTree diskRTree;
         private final BTree diskBTree;
         private final RTreeBulkLoader bulkLoader;

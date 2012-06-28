@@ -51,7 +51,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
@@ -123,8 +123,8 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
-        BTree btree = new BTree(bufferCache, btreeTypeTraits.length, cmpFactories, freePageManager,
-                interiorFrameFactory, leafFrameFactory);
+        BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
+                btreeTypeTraits.length);
         btree.create(btreeFileId);
         btree.open(btreeFileId);
 
@@ -176,7 +176,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         int addProb = 0;
         int addProbStep = 10;
 
-        IIndexBulkLoadContext ctx = invIndex.beginBulkLoad(BTree.DEFAULT_FILL_FACTOR);
+        IIndexBulkLoader bulkLoader = invIndex.createBulkLoader(BTree.DEFAULT_FILL_FACTOR);
 
         for (int i = 0; i < tokens.size(); i++) {
 
@@ -198,14 +198,14 @@ public class BulkLoadTest extends AbstractInvIndexTest {
                     tuple.reset(accessor, 0);
 
                     try {
-                        invIndex.bulkLoadAddTuple(tuple, ctx);
+                        bulkLoader.add(tuple);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             }
         }
-        invIndex.endBulkLoad(ctx);
+        bulkLoader.end();
 
         // ------- START VERIFICATION -----------
 

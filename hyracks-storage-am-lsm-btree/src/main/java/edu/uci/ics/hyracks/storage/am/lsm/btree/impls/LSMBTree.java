@@ -31,7 +31,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeBulkLoader;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -39,7 +39,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
@@ -99,8 +98,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
             BTreeFactory diskBTreeFactory, BTreeFactory bulkLoadBTreeFactory, IFileMapProvider diskFileMapProvider,
             int fieldCount, IBinaryComparatorFactory[] cmpFactories, ILSMFlushController flushController,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOScheduler ioScheduler) {
-        memBTree = new BTree(memBufferCache, fieldCount, cmpFactories, memFreePageManager, interiorFrameFactory,
-                insertLeafFrameFactory);
+        memBTree = new BTree(memBufferCache, memFreePageManager, interiorFrameFactory, insertLeafFrameFactory,
+                cmpFactories, fieldCount);
         this.memFreePageManager = memFreePageManager;
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
@@ -191,16 +190,16 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         memBTreeAccessor.search(scanCursor, nullPred);
         BTree diskBTree = createFlushTarget();
         // Bulk load the tuples from the in-memory BTree into the new disk BTree.
-        IIndexBulkLoadContext bulkLoadCtx = diskBTree.beginBulkLoad(1.0f);
+        IIndexBulkLoader bulkLoader = diskBTree.createBulkLoader(1.0f);
         try {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
-                diskBTree.bulkLoadAddTuple(scanCursor.getTuple(), bulkLoadCtx);
+                bulkLoader.add(scanCursor.getTuple());
             }
         } finally {
             scanCursor.close();
         }
-        diskBTree.endBulkLoad(bulkLoadCtx);
+        bulkLoader.end();
         return diskBTree;
     }
 
@@ -308,17 +307,17 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
 
         // Bulk load the tuples from all on-disk BTrees into the new BTree.
         BTree mergedBTree = createMergeTarget(mergingDiskBTrees);
-        IIndexBulkLoadContext bulkLoadCtx = mergedBTree.beginBulkLoad(1.0f);
+        IIndexBulkLoader bulkLoader = mergedBTree.createBulkLoader(1.0f);
         try {
             while (cursor.hasNext()) {
                 cursor.next();
                 ITupleReference frameTuple = cursor.getTuple();
-                mergedBTree.bulkLoadAddTuple(frameTuple, bulkLoadCtx);
+                bulkLoader.add(frameTuple);
             }
         } finally {
             cursor.close();
         }
-        mergedBTree.endBulkLoad(bulkLoadCtx);
+        bulkLoader.end();
         return mergedBTree;
     }
 
@@ -351,11 +350,11 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     }
 
     @Override
-    public ITreeIndexBulkLoader createBulkLoader(float fillLevel) throws TreeIndexException {
+    public IIndexBulkLoader createBulkLoader(float fillLevel) throws TreeIndexException {
         return new LSMBTreeBulkLoader(fillLevel);
     }
 
-    public class LSMBTreeBulkLoader implements ITreeIndexBulkLoader {
+    public class LSMBTreeBulkLoader implements IIndexBulkLoader {
         private final BTree diskBTree;
         private final BTreeBulkLoader bulkLoader;
 
@@ -379,25 +378,6 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
             lsmHarness.addBulkLoadedComponent(diskBTree);
         }
 
-    }
-
-    @Deprecated
-    private ITreeIndexBulkLoader bulkloader;
-
-    @Override
-    public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws TreeIndexException, HyracksDataException {
-        bulkloader = createBulkLoader(fillFactor);
-        return null;
-    }
-
-    @Override
-    public void bulkLoadAddTuple(ITupleReference tuple, IIndexBulkLoadContext ictx) throws HyracksDataException {
-        bulkloader.add(tuple);
-    }
-
-    @Override
-    public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException {
-        bulkloader.end();
     }
 
     @Override

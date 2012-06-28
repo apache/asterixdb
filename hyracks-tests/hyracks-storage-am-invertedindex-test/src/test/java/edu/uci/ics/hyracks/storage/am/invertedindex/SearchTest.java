@@ -31,8 +31,8 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex.InvertedIndexAccessor;
@@ -133,7 +133,7 @@ public class SearchTest extends AbstractInvIndexSearchTest {
         }
     }
 
-    public void loadData() throws IOException, TreeIndexException {
+    public void loadData() throws IOException, IndexException {
         List<TokenIdPair> pairs = new ArrayList<TokenIdPair>();
         // generate pairs for subsequent sorting and bulk-loading
         int id = 0;
@@ -152,7 +152,7 @@ public class SearchTest extends AbstractInvIndexSearchTest {
         Collections.sort(pairs);
 
         // bulk load index
-        IIndexBulkLoadContext ctx = invIndex.beginBulkLoad(BTree.DEFAULT_FILL_FACTOR);
+        IIndexBulkLoader bulkLoader = invIndex.createBulkLoader(BTree.DEFAULT_FILL_FACTOR);
 
         for (TokenIdPair t : pairs) {
             tb.reset();
@@ -162,12 +162,12 @@ public class SearchTest extends AbstractInvIndexSearchTest {
             tuple.reset(tb.getFieldEndOffsets(), tb.getByteArray());
 
             try {
-                invIndex.bulkLoadAddTuple(tuple, ctx);
+                bulkLoader.add(tuple);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        invIndex.endBulkLoad(ctx);
+        bulkLoader.end();
     }
 
     /**

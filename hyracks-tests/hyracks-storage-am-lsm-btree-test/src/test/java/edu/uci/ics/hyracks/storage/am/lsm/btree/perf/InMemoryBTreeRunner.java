@@ -71,8 +71,8 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         IFreePageManager freePageManager = new InMemoryFreePageManager(bufferCache.getNumPages(), metaFrameFactory);
-        btree = new BTree(bufferCache, typeTraits.length, cmpFactories, freePageManager, interiorFrameFactory,
-                leafFrameFactory);
+        btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
+                typeTraits.length);
     }
 
     @Override
