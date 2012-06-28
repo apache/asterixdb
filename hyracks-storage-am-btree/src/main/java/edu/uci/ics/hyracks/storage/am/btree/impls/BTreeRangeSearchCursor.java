@@ -19,7 +19,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
-import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
@@ -32,36 +31,29 @@ import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
 public class BTreeRangeSearchCursor implements ITreeIndexCursor {
 
-    private int fileId = -1;
-    private ICachedPage page = null;
-    private IBufferCache bufferCache = null;
-
-    private int tupleIndex = 0;
-    private int stopTupleIndex;
-    private int tupleIndexInc = 0;
-
-    private FindTupleMode lowKeyFtm;
-    private FindTupleMode highKeyFtm;
-
-    private FindTupleNoExactMatchPolicy lowKeyFtp;
-    private FindTupleNoExactMatchPolicy highKeyFtp;
-
     private final IBTreeLeafFrame frame;
     private final ITreeIndexTupleReference frameTuple;
     private final boolean exclusiveLatchNodes;
+
+    private IBufferCache bufferCache = null;
+    private int fileId = -1;
+
+    private ICachedPage page = null;
+    private int pageId = -1; // This is used by the LSMRTree flush operation
+
+    private int tupleIndex = 0;
+    private int stopTupleIndex;
+
+    private FindTupleMode lowKeyFtm;
+    private FindTupleMode highKeyFtm;
+    private FindTupleNoExactMatchPolicy lowKeyFtp;
+    private FindTupleNoExactMatchPolicy highKeyFtp;
 
     private RangePredicate pred;
     private MultiComparator lowKeyCmp;
     private MultiComparator highKeyCmp;
     private ITupleReference lowKey;
     private ITupleReference highKey;
-
-    // This is only used by the LSM-RTree
-    private int pageId = -1;
-    // TODO(ALEX): How this is different tupleIndex? Why do we need it?
-    private int currentTupleIndex = 0;
-
-    private ISearchOperationCallback searchCallback;
 
     public BTreeRangeSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes) {
         this.frame = frame;
@@ -79,6 +71,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
             }
             bufferCache.unpin(page);
         }
+
         tupleIndex = 0;
         page = null;
         pred = null;
@@ -94,7 +87,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     }
 
     public int getTupleOffset() {
-        return frame.getTupleOffset(currentTupleIndex);
+        return frame.getTupleOffset(tupleIndex - 1);
     }
 
     public int getPageId() {
@@ -112,12 +105,10 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
                 page.releaseReadLatch();
             }
             bufferCache.unpin(page);
+
             page = nextLeaf;
             frame.setPage(page);
-
-            // This is only needed for the LSMRTree flush operation
             pageId = nextLeafPage;
-
             nextLeafPage = frame.getNextLeaf();
         } while (frame.getTupleCount() == 0 && nextLeafPage > 0);
     }
@@ -139,10 +130,6 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         }
 
         frameTuple.resetByTupleIndex(frame, tupleIndex);
-
-        // This is only needed for the LSMRTree flush operation
-        currentTupleIndex = tupleIndex;
-
         if (highKey == null || tupleIndex <= stopTupleIndex) {
             return true;
         } else {
@@ -152,13 +139,14 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
 
     @Override
     public void next() throws HyracksDataException {
-        tupleIndex += tupleIndexInc;
+        tupleIndex++;
     }
 
     private int getLowKeyIndex() throws HyracksDataException {
         if (lowKey == null) {
             return 0;
         }
+
         int index = frame.findTupleIndex(lowKey, frameTuple, lowKeyCmp, lowKeyFtm, lowKeyFtp);
         if (pred.lowKeyInclusive) {
             index++;
@@ -167,6 +155,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
                 index = frame.getTupleCount();
             }
         }
+
         return index;
     }
 
@@ -174,6 +163,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         if (highKey == null) {
             return frame.getTupleCount() - 1;
         }
+
         int index = frame.findTupleIndex(highKey, frameTuple, highKeyCmp, highKeyFtm, highKeyFtp);
         if (pred.highKeyInclusive) {
             if (index < 0) {
@@ -182,6 +172,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
                 index--;
             }
         }
+
         return index;
     }
 
@@ -196,20 +187,17 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
             }
             bufferCache.unpin(page);
         }
-        searchCallback = initialState.getSearchOperationCallback();
-        page = initialState.getPage();
-        frame.setPage(page);
 
         pageId = ((BTreeCursorInitialState) initialState).getPageId();
+        page = initialState.getPage();
+        frame.setPage(page);
 
         pred = (RangePredicate) searchPred;
         lowKeyCmp = pred.getLowKeyComparator();
         highKeyCmp = pred.getHighKeyComparator();
-
         lowKey = pred.getLowKey();
         highKey = pred.getHighKey();
 
-        // init
         lowKeyFtm = FindTupleMode.EXCLUSIVE;
         if (pred.lowKeyInclusive) {
             lowKeyFtp = FindTupleNoExactMatchPolicy.LOWER_KEY;
@@ -226,16 +214,11 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
 
         tupleIndex = getLowKeyIndex();
         stopTupleIndex = getHighKeyIndex();
-        tupleIndexInc = 1;
     }
 
     @Override
-    public void reset() {
-        try {
-            close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void reset() throws HyracksDataException {
+        close();
     }
 
     @Override
