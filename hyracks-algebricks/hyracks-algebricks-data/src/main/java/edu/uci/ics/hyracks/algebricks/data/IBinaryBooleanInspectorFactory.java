@@ -12,21 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.runtime.context;
+package edu.uci.ics.hyracks.algebricks.data;
+
+import java.io.Serializable;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
-public class RuntimeContext {
-    private IHyracksTaskContext hyracksContext;
-
-    public RuntimeContext() {
-    }
-
-    public IHyracksTaskContext getHyracksContext() {
-        return hyracksContext;
-    }
-
-    public void setHyracksContext(IHyracksTaskContext hyracksContext) {
-        this.hyracksContext = hyracksContext;
-    }
+public interface IBinaryBooleanInspectorFactory extends Serializable {
+    public IBinaryBooleanInspector createBinaryBooleanInspector(IHyracksTaskContext ctx);
 }

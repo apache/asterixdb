@@ -38,9 +38,11 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralProperti
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspector;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparatorFactory;
@@ -127,7 +129,7 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
         IScalarEvaluatorFactory cond = expressionRuntimeProvider.createEvaluatorFactory(join.getCondition().getValue(),
                 context.getTypeEnvironment(op), conditionInputSchemas, context);
         ITuplePairComparatorFactory comparatorFactory = new TuplePairEvaluatorFactory(cond,
-                context.getBinaryBooleanInspector());
+                context.getBinaryBooleanInspectorFactory());
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
         IOperatorDescriptor opDesc = null;
 
@@ -153,22 +155,22 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
 
         private static final long serialVersionUID = 1L;
         private final IScalarEvaluatorFactory cond;
-        private final IBinaryBooleanInspector binaryBooleanInspector;
+        private final IBinaryBooleanInspectorFactory binaryBooleanInspectorFactory;
 
-        public TuplePairEvaluatorFactory(IScalarEvaluatorFactory cond, IBinaryBooleanInspector binaryBooleanInspector) {
+        public TuplePairEvaluatorFactory(IScalarEvaluatorFactory cond,
+                IBinaryBooleanInspectorFactory binaryBooleanInspectorFactory) {
             this.cond = cond;
-            this.binaryBooleanInspector = binaryBooleanInspector;
+            this.binaryBooleanInspectorFactory = binaryBooleanInspectorFactory;
         }
 
         @Override
-        public synchronized ITuplePairComparator createTuplePairComparator() {
-            return new TuplePairEvaluator(cond, binaryBooleanInspector);
+        public synchronized ITuplePairComparator createTuplePairComparator(IHyracksTaskContext ctx) {
+            return new TuplePairEvaluator(ctx, cond, binaryBooleanInspectorFactory.createBinaryBooleanInspector(ctx));
         }
-
     }
 
     public static class TuplePairEvaluator implements ITuplePairComparator {
-
+        private final IHyracksTaskContext ctx;
         private IScalarEvaluator condEvaluator;
         private final IScalarEvaluatorFactory condFactory;
         private final IPointable p;
@@ -177,7 +179,9 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
         private final FrameTupleReference rightRef;
         private final IBinaryBooleanInspector binaryBooleanInspector;
 
-        public TuplePairEvaluator(IScalarEvaluatorFactory condFactory, IBinaryBooleanInspector binaryBooleanInspector) {
+        public TuplePairEvaluator(IHyracksTaskContext ctx, IScalarEvaluatorFactory condFactory,
+                IBinaryBooleanInspector binaryBooleanInspector) {
+            this.ctx = ctx;
             this.condFactory = condFactory;
             this.binaryBooleanInspector = binaryBooleanInspector;
             this.leftRef = new FrameTupleReference();
@@ -191,7 +195,7 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
                 int innerIndex) throws HyracksDataException {
             if (condEvaluator == null) {
                 try {
-                    this.condEvaluator = condFactory.createScalarEvaluator();
+                    this.condEvaluator = condFactory.createScalarEvaluator(ctx);
                 } catch (AlgebricksException ae) {
                     throw new HyracksDataException(ae);
                 }

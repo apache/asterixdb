@@ -4,11 +4,12 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspector;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
@@ -19,15 +20,15 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
 
     private IScalarEvaluatorFactory maxObjectsEvalFactory;
     private IScalarEvaluatorFactory offsetEvalFactory;
-    private IBinaryIntegerInspector binaryIntegerInspector;
+    private IBinaryIntegerInspectorFactory binaryIntegerInspectorFactory;
 
     public StreamLimitRuntimeFactory(IScalarEvaluatorFactory maxObjectsEvalFactory,
             IScalarEvaluatorFactory offsetEvalFactory, int[] projectionList,
-            IBinaryIntegerInspector binaryIntegerInspector) {
+            IBinaryIntegerInspectorFactory binaryIntegerInspectorFactory) {
         super(projectionList);
         this.maxObjectsEvalFactory = maxObjectsEvalFactory;
         this.offsetEvalFactory = offsetEvalFactory;
-        this.binaryIntegerInspector = binaryIntegerInspector;
+        this.binaryIntegerInspectorFactory = binaryIntegerInspectorFactory;
     }
 
     @Override
@@ -41,7 +42,8 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
     }
 
     @Override
-    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final RuntimeContext context) {
+    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx) {
+        final IBinaryIntegerInspector bii = binaryIntegerInspectorFactory.createBinaryIntegerInspector(ctx);
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
             private IPointable p = VoidPointable.FACTORY.createPointable();
             private IScalarEvaluator evalMaxObjects;
@@ -55,11 +57,11 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
             public void open() throws HyracksDataException {
                 // if (first) {
                 if (evalMaxObjects == null) {
-                    initAccessAppendRef(context);
+                    initAccessAppendRef(ctx);
                     try {
-                        evalMaxObjects = maxObjectsEvalFactory.createScalarEvaluator();
+                        evalMaxObjects = maxObjectsEvalFactory.createScalarEvaluator(ctx);
                         if (offsetEvalFactory != null) {
-                            evalOffset = offsetEvalFactory.createScalarEvaluator();
+                            evalOffset = offsetEvalFactory.createScalarEvaluator(ctx);
                         }
                     } catch (AlgebricksException ae) {
                         throw new HyracksDataException(ae);
@@ -124,7 +126,7 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
                 } catch (AlgebricksException ae) {
                     throw new HyracksDataException(ae);
                 }
-                int lim = binaryIntegerInspector.getIntegerValue(p.getByteArray(), p.getStartOffset(), p.getLength());
+                int lim = bii.getIntegerValue(p.getByteArray(), p.getStartOffset(), p.getLength());
                 return lim;
             }
 

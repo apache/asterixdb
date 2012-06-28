@@ -18,8 +18,8 @@ import edu.uci.ics.hyracks.algebricks.data.IAWriter;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
 public class PrinterRuntimeFactory implements IPushRuntimeFactory {
@@ -52,9 +52,9 @@ public class PrinterRuntimeFactory implements IPushRuntimeFactory {
     }
 
     @Override
-    public IPushRuntime createPushRuntime(final RuntimeContext context) {
+    public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) {
         IAWriter w = PrinterBasedWriterFactory.INSTANCE.createWriter(printColumns, System.out, printerFactories,
                 inputRecordDesc);
-        return new SinkWriterRuntime(w, context, System.out, inputRecordDesc);
+        return new SinkWriterRuntime(w, ctx, System.out, inputRecordDesc);
     }
 }

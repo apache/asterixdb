@@ -20,6 +20,7 @@ import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
@@ -60,7 +61,7 @@ public class TPCHCustomerOrderNestedLoopJoinTest extends AbstractIntegrationTest
         }
 
         @Override
-        public ITuplePairComparator createTuplePairComparator() {
+        public ITuplePairComparator createTuplePairComparator(IHyracksTaskContext ctx) {
             return new JoinComparator(bFactory.createBinaryComparator(), pos0, pos1);
         }
     }

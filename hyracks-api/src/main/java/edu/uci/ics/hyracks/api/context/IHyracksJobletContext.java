@@ -26,4 +26,6 @@ public interface IHyracksJobletContext extends IHyracksCommonContext, IWorkspace
     public JobId getJobId();
 
     public ICounterContext getCounterContext();
+
+    public Object getGlobalJobData();
 }

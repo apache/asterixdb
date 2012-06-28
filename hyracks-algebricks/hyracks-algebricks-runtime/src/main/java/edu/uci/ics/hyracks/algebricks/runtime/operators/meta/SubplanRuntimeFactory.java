@@ -21,7 +21,6 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputPushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
@@ -67,7 +66,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
     }
 
     @Override
-    public AbstractOneInputOneOutputPushRuntime createOneOutputPushRuntime(final RuntimeContext context)
+    public AbstractOneInputOneOutputPushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
             throws AlgebricksException {
 
         RecordDescriptor pipelineOutputRecordDescriptor = null;
@@ -82,15 +81,13 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
 
             /**
-             * 
              * Computes the outer product between a given tuple and the frames
              * passed.
-             * 
              */
             class TupleOuterProduct implements IFrameWriter {
 
                 private boolean smthWasWritten = false;
-                private IHyracksTaskContext hCtx = context.getHyracksContext();
+                private IHyracksTaskContext hCtx = ctx;
                 private int frameSize = hCtx.getFrameSize();
                 private FrameTupleAccessor ta = new FrameTupleAccessor(frameSize,
                         pipeline.getRecordDescriptors()[pipeline.getRecordDescriptors().length - 1]);
@@ -148,7 +145,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
 
             IFrameWriter endPipe = new TupleOuterProduct();
 
-            NestedTupleSourceRuntime startOfPipeline = (NestedTupleSourceRuntime) pa.assemblePipeline(endPipe, context);
+            NestedTupleSourceRuntime startOfPipeline = (NestedTupleSourceRuntime) pa.assemblePipeline(endPipe, ctx);
 
             boolean first = true;
 
@@ -156,7 +153,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
             public void open() throws HyracksDataException {
                 if (first) {
                     first = false;
-                    initAccessAppendRef(context);
+                    initAccessAppendRef(ctx);
                 }
                 writer.open();
             }

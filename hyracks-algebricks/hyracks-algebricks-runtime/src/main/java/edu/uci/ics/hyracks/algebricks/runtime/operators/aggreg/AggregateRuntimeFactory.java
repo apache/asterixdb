@@ -19,9 +19,9 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
@@ -56,7 +56,7 @@ public class AggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
     }
 
     @Override
-    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final RuntimeContext context)
+    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
             throws AlgebricksException {
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
 
@@ -71,9 +71,9 @@ public class AggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
                 try {
                     if (first) {
                         first = false;
-                        initAccessAppendRef(context);
+                        initAccessAppendRef(ctx);
                         for (int i = 0; i < aggregFactories.length; i++) {
-                            aggregs[i] = aggregFactories[i].createAggregateEvaluator();
+                            aggregs[i] = aggregFactories[i].createAggregateEvaluator(ctx);
                         }
                     }
                     for (int i = 0; i < aggregFactories.length; i++) {

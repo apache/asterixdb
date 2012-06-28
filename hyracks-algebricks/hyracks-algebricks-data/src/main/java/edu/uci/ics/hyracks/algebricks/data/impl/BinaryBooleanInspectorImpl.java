@@ -15,12 +15,18 @@
 package edu.uci.ics.hyracks.algebricks.data.impl;
 
 import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspector;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 public class BinaryBooleanInspectorImpl implements IBinaryBooleanInspector {
+    public static final IBinaryBooleanInspectorFactory FACTORY = new IBinaryBooleanInspectorFactory() {
+        private static final long serialVersionUID = 1L;
 
-    private static final long serialVersionUID = 1L;
-
-    public static final BinaryBooleanInspectorImpl INSTANCE = new BinaryBooleanInspectorImpl();
+        @Override
+        public IBinaryBooleanInspector createBinaryBooleanInspector(IHyracksTaskContext ctx) {
+            return new BinaryBooleanInspectorImpl();
+        }
+    };
 
     private BinaryBooleanInspectorImpl() {
     }
@@ -29,5 +35,4 @@ public class BinaryBooleanInspectorImpl implements IBinaryBooleanInspector {
     public boolean getBooleanValue(byte[] bytes, int offset, int length) {
         return bytes[offset] == 1;
     }
-
 }

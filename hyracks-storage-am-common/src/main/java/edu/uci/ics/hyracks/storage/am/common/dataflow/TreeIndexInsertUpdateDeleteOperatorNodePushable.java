@@ -67,7 +67,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
                     treeIndexHelper.getSearchOperationCallback());
             ITupleFilterFactory tupleFilterFactory = opDesc.getTupleFilterFactory();
             if (tupleFilterFactory != null) {
-                tupleFilter = tupleFilterFactory.createTupleFilter();
+                tupleFilter = tupleFilterFactory.createTupleFilter(treeIndexHelper.ctx);
                 frameTuple = new FrameTupleReference();
             }
         } catch (Exception e) {

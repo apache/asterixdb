@@ -40,7 +40,7 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregato
     }
 
     @Override
-    public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
+    public IAggregatorDescriptor createAggregator(final IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
             RecordDescriptor outRecordDescriptor, int[] aggKeys, int[] partialKeys) throws HyracksDataException {
 
         return new IAggregatorDescriptor() {
@@ -105,7 +105,7 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregato
                 IAggregateEvaluator[] agg = new IAggregateEvaluator[aggFactories.length];
                 for (int i = 0; i < agg.length; i++) {
                     try {
-                        agg[i] = aggFactories[i].createAggregateEvaluator();
+                        agg[i] = aggFactories[i].createAggregateEvaluator(ctx);
                     } catch (AlgebricksException e) {
                         throw new IllegalStateException(e);
                     }

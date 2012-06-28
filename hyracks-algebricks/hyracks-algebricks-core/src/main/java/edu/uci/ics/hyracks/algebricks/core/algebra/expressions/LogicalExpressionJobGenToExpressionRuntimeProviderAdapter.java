@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -81,7 +82,7 @@ public class LogicalExpressionJobGenToExpressionRuntimeProviderAdapter implement
         }
 
         @Override
-        public IScalarEvaluator createScalarEvaluator() throws AlgebricksException {
+        public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
             final ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
             final ICopyEvaluator ce = cef.createEvaluator(abvs);
             return new IScalarEvaluator() {
@@ -105,7 +106,7 @@ public class LogicalExpressionJobGenToExpressionRuntimeProviderAdapter implement
         }
 
         @Override
-        public IAggregateEvaluator createAggregateEvaluator() throws AlgebricksException {
+        public IAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
             final ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
             final ICopyAggregateFunction caf = caff.createAggregateFunction(abvs);
             return new IAggregateEvaluator() {
@@ -168,7 +169,7 @@ public class LogicalExpressionJobGenToExpressionRuntimeProviderAdapter implement
         }
 
         @Override
-        public IUnnestingEvaluator createUnnestingEvaluator() throws AlgebricksException {
+        public IUnnestingEvaluator createUnnestingEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
             final ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
             final ICopyUnnestingFunction cuf = cuff.createUnnestingFunction(abvs);
             return new IUnnestingEvaluator() {

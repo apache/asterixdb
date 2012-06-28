@@ -37,8 +37,6 @@ import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IJobletEventListener;
-import edu.uci.ics.hyracks.api.job.IJobletEventListenerFactory;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
@@ -168,12 +166,6 @@ public class StartTasksWork extends SynchronizableWork {
                 throw new NullPointerException("JobActivityGraph was null");
             }
             ji = new Joblet(ncs, jobId, appCtx, jag);
-            IJobletEventListenerFactory jelf = jag.getJobSpecification().getJobletEventListenerFactory();
-            if (jelf != null) {
-                IJobletEventListener listener = jelf.createListener(ji);
-                ji.setJobletEventListener(listener);
-                listener.jobletStart();
-            }
             jobletMap.put(jobId, ji);
         }
         return ji;

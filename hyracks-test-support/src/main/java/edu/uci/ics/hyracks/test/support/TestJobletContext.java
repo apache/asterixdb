@@ -88,4 +88,9 @@ public class TestJobletContext implements IHyracksJobletContext {
     public JobId getJobId() {
         return jobId;
     }
+
+    @Override
+    public Object getGlobalJobData() {
+        return null;
+    }
 }

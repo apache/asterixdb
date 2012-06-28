@@ -15,16 +15,25 @@
 package edu.uci.ics.hyracks.algebricks.data.impl;
 
 import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspector;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 
 public class BinaryIntegerInspectorImpl implements IBinaryIntegerInspector {
+    public static final IBinaryIntegerInspectorFactory FACTORY = new IBinaryIntegerInspectorFactory() {
+        private static final long serialVersionUID = 1L;
 
-    private static final long serialVersionUID = 1L;
-    public static final BinaryIntegerInspectorImpl INSTANCE = new BinaryIntegerInspectorImpl();
+        @Override
+        public IBinaryIntegerInspector createBinaryIntegerInspector(IHyracksTaskContext ctx) {
+            return new BinaryIntegerInspectorImpl();
+        }
+    };
+
+    private BinaryIntegerInspectorImpl() {
+    }
 
     @Override
     public int getIntegerValue(byte[] bytes, int offset, int length) {
         return IntegerPointable.getInteger(bytes, offset);
     }
-
 }

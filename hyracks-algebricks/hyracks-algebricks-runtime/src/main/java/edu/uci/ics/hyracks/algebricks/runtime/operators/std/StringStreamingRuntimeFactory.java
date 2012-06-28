@@ -24,9 +24,9 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
@@ -50,7 +50,7 @@ public class StringStreamingRuntimeFactory extends AbstractOneInputOneOutputRunt
     }
 
     @Override
-    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final RuntimeContext context)
+    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
             throws AlgebricksException {
         final IPrinter[] printers = new IPrinter[printerFactories.length];
         for (int i = 0; i < printerFactories.length; i++) {
@@ -125,11 +125,11 @@ public class StringStreamingRuntimeFactory extends AbstractOneInputOneOutputRunt
             public void open() throws HyracksDataException {
                 if (first) {
                     first = false;
-                    initAccessAppendRef(context);
+                    initAccessAppendRef(ctx);
                 }
 
                 try {
-                    ITupleParser parser = parserFactory.createTupleParser(context.getHyracksContext());
+                    ITupleParser parser = parserFactory.createTupleParser(ctx);
                     process = Runtime.getRuntime().exec(command);
                     ps = new PrintStream(process.getOutputStream());
                     ForwardScriptOutput fso = new ForwardScriptOutput(parser, process.getInputStream());

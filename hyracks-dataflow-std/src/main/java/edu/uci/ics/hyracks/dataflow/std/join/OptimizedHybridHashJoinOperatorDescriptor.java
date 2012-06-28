@@ -63,32 +63,32 @@ import edu.uci.ics.hyracks.dataflow.std.structures.SerializableHashTable;
  *         of R (in terms of buffers). HHJ (Hybrid Hash Join) has two main phases: Build and Probe, where in our implementation Probe phase
  *         can apply HHJ recursively, based on the value of M and size of R and S. HHJ phases proceed as follow:
  *         BUILD:
- *         – Calculate number of partitions (Based on the size of R, fudge factor and M) [See Shapiro's paper for the detailed discussion].
- *         – Initialize the build phase (one frame per partition – all partitions considered resident at first)
- *         – Read tuples of R, frame by frame, and hash each tuple (based on a given hash function) to find
+ *         Calculate number of partitions (Based on the size of R, fudge factor and M) [See Shapiro's paper for the detailed discussion].
+ *         Initialize the build phase (one frame per partition, all partitions considered resident at first)
+ *         Read tuples of R, frame by frame, and hash each tuple (based on a given hash function) to find
  *         its target partition and try to append it to that partition:
- *         – If target partition's buffer is full, try to allocate a new buffer for it.
- *         – if no free buffer is available, find the largest resident partition and spill it. Using its freed
+ *         If target partition's buffer is full, try to allocate a new buffer for it.
+ *         if no free buffer is available, find the largest resident partition and spill it. Using its freed
  *         buffers after spilling, allocate a new buffer for the target partition.
- *         – Being done with R, close the build phase. (During closing we write the very last buffer of each
+ *         Being done with R, close the build phase. (During closing we write the very last buffer of each
  *         spilled partition to the disk, and we do partition tuning, where we try to bring back as many buffers, belonging to
  *         spilled partitions as possible into memory, based on the free buffers - We will stop at the point where remaining free buffers is not enough
  *         for reloading an entire partition back into memory)
- *         – Create the hash table for the resident partitions (basically we create an in-memory hash join here)
+ *         Create the hash table for the resident partitions (basically we create an in-memory hash join here)
  *         PROBE:
- *         – Initialize the probe phase on S (mainly allocate one buffer per spilled partition, and one buffer
+ *         Initialize the probe phase on S (mainly allocate one buffer per spilled partition, and one buffer
  *         for the whole resident partitions)
- *         – Read tuples of S, frame by frame and hash each tuple T to its target partition P
- *         – if P is a resident partition, pass T to the in-memory hash join and generate the output record,
+ *         Read tuples of S, frame by frame and hash each tuple T to its target partition P
+ *         if P is a resident partition, pass T to the in-memory hash join and generate the output record,
  *         if any matching(s) record found
- *         – if P is spilled, write T to the dedicated buffer for P (on the probe side)
- *         – Once scanning of S is done, we try to join partition pairs (Ri, Si) of the spilled partitions:
- *         – if any of Ri or Si is smaller than M, then we simply use an in-memory hash join to join them
- *         – otherwise we apply HHJ recursively:
- *         – if after applying HHJ recursively, we do not gain enough size reduction (max size of the
+ *         if P is spilled, write T to the dedicated buffer for P (on the probe side)
+ *         Once scanning of S is done, we try to join partition pairs (Ri, Si) of the spilled partitions:
+ *         if any of Ri or Si is smaller than M, then we simply use an in-memory hash join to join them
+ *         otherwise we apply HHJ recursively:
+ *         if after applying HHJ recursively, we do not gain enough size reduction (max size of the
  *         resulting partitions were more than 80% of the initial Ri,Si size) then we switch to
  *         nested loop join for joining.
- *         – (At each step of partition-pair joining, we consider role reversal, which means if size of Si were
+ *         (At each step of partition-pair joining, we consider role reversal, which means if size of Si were
  *         greater than Ri, then we make sure that we switch the roles of build/probe between them)
  */
 
@@ -116,8 +116,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     private final boolean isLeftOuter;
     private final INullWriterFactory[] nullWriterFactories1;
 
-    public OptimizedHybridHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, int inputsize0, double factor,
-            int[] keys0, int[] keys1, IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories,
+    public OptimizedHybridHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, int inputsize0,
+            double factor, int[] keys0, int[] keys1, IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories,
             IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor,
             ITuplePairComparatorFactory tupPaircomparatorFactory0,
             ITuplePairComparatorFactory tupPaircomparatorFactory1, boolean isLeftOuter,
@@ -139,8 +139,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
     }
 
-    public OptimizedHybridHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, int inputsize0, double factor,
-            int[] keys0, int[] keys1, IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories,
+    public OptimizedHybridHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, int inputsize0,
+            double factor, int[] keys0, int[] keys1, IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories,
             IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor,
             ITuplePairComparatorFactory tupPaircomparatorFactory0, ITuplePairComparatorFactory tupPaircomparatorFactory1)
             throws HyracksDataException {
@@ -325,8 +325,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
             final RecordDescriptor probeRd = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
             final RecordDescriptor buildRd = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 1);
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
-            final ITuplePairComparator nljComparator0 = tuplePairComparatorFactory0.createTuplePairComparator();
-            final ITuplePairComparator nljComparator1 = tuplePairComparatorFactory1.createTuplePairComparator();
+            final ITuplePairComparator nljComparator0 = tuplePairComparatorFactory0.createTuplePairComparator(ctx);
+            final ITuplePairComparator nljComparator1 = tuplePairComparatorFactory1.createTuplePairComparator(ctx);
 
             for (int i = 0; i < comparatorFactories.length; i++) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();

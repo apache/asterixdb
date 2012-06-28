@@ -18,7 +18,6 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputSourcePushRuntime;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -39,13 +38,12 @@ public class EmptyTupleSourceRuntimeFactory implements IPushRuntimeFactory {
     }
 
     @Override
-    public IPushRuntime createPushRuntime(final RuntimeContext context) {
+    public IPushRuntime createPushRuntime(final IHyracksTaskContext ctx) {
         return new AbstractOneInputSourcePushRuntime() {
 
-            private IHyracksTaskContext hCtx = context.getHyracksContext();
-            private ByteBuffer frame = hCtx.allocateFrame();
+            private ByteBuffer frame = ctx.allocateFrame();
             private ArrayTupleBuilder tb = new ArrayTupleBuilder(0);
-            private FrameTupleAppender appender = new FrameTupleAppender(hCtx.getFrameSize());
+            private FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
 
             @Override
             public void open() throws HyracksDataException {

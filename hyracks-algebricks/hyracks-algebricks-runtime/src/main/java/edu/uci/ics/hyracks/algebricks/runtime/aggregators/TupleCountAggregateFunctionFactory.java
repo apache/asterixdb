@@ -5,6 +5,7 @@ import java.io.IOException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -14,7 +15,7 @@ public class TupleCountAggregateFunctionFactory implements IAggregateEvaluatorFa
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IAggregateEvaluator createAggregateEvaluator() throws AlgebricksException {
+    public IAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
         final ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
         return new IAggregateEvaluator() {
 

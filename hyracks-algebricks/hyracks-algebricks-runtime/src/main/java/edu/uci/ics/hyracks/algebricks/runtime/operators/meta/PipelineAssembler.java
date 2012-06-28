@@ -17,8 +17,8 @@ package edu.uci.ics.hyracks.algebricks.runtime.operators.meta;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntime;
-import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
 public class PipelineAssembler {
@@ -40,11 +40,11 @@ public class PipelineAssembler {
         this.outputArity = outputArity;
     }
 
-    public IFrameWriter assemblePipeline(IFrameWriter writer, RuntimeContext rc) throws AlgebricksException {
+    public IFrameWriter assemblePipeline(IFrameWriter writer, IHyracksTaskContext ctx) throws AlgebricksException {
         // plug the operators
         IFrameWriter start = writer;// this.writer;
         for (int i = pipeline.getRuntimeFactories().length - 1; i >= 0; i--) {
-            IPushRuntime newRuntime = pipeline.getRuntimeFactories()[i].createPushRuntime(rc);
+            IPushRuntime newRuntime = pipeline.getRuntimeFactories()[i].createPushRuntime(ctx);
             if (i == pipeline.getRuntimeFactories().length - 1) {
                 if (outputArity == 1) {
                     newRuntime.setFrameWriter(0, start, pipelineOutputRecordDescriptor);

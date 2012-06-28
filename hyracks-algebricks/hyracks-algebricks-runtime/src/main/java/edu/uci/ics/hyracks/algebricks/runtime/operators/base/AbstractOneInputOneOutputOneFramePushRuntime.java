@@ -16,7 +16,6 @@ package edu.uci.ics.hyracks.algebricks.runtime.operators.base;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -74,18 +73,17 @@ public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends Abstr
         }
     }
 
-    protected final void initAccessAppend(RuntimeContext context) {
-        IHyracksTaskContext hCtx = context.getHyracksContext();
+    protected final void initAccessAppend(IHyracksTaskContext ctx) {
         // if (allocFrame) {
-        frame = hCtx.allocateFrame();
-        appender = new FrameTupleAppender(hCtx.getFrameSize());
+        frame = ctx.allocateFrame();
+        appender = new FrameTupleAppender(ctx.getFrameSize());
         appender.reset(frame, true);
         // }
-        tAccess = new FrameTupleAccessor(hCtx.getFrameSize(), inputRecordDesc);
+        tAccess = new FrameTupleAccessor(ctx.getFrameSize(), inputRecordDesc);
     }
 
-    protected final void initAccessAppendRef(RuntimeContext context) {
-        initAccessAppend(context);
+    protected final void initAccessAppendRef(IHyracksTaskContext ctx) {
+        initAccessAppend(ctx);
         tRef = new FrameTupleReference();
     }
 

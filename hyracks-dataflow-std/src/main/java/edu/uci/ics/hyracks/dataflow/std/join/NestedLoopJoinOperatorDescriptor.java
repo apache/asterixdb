@@ -48,8 +48,8 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
     private final ITuplePairComparatorFactory comparatorFactory;
     private final int memSize;
 
-    public NestedLoopJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, ITuplePairComparatorFactory comparatorFactory,
-            RecordDescriptor recordDescriptor, int memSize) {
+    public NestedLoopJoinOperatorDescriptor(IOperatorDescriptorRegistry spec,
+            ITuplePairComparatorFactory comparatorFactory, RecordDescriptor recordDescriptor, int memSize) {
         super(spec, 2, 1);
         this.comparatorFactory = comparatorFactory;
         this.recordDescriptors[0] = recordDescriptor;
@@ -105,7 +105,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 1);
-            final ITuplePairComparator comparator = comparatorFactory.createTuplePairComparator();
+            final ITuplePairComparator comparator = comparatorFactory.createTuplePairComparator(ctx);
 
             IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
                 private JoinCacheTaskState state;

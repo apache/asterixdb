@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.hyracks.algebricks.data;
 
-import java.io.Serializable;
-
-public interface IBinaryBooleanInspector extends Serializable {
+public interface IBinaryBooleanInspector {
     public boolean getBooleanValue(byte[] bytes, int offset, int length);
 }

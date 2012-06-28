@@ -20,10 +20,10 @@ import java.util.Arrays;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IRunningAggregateEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
@@ -74,7 +74,7 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
     }
 
     @Override
-    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final RuntimeContext context)
+    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
             throws AlgebricksException {
         final int[] projectionToOutColumns = new int[projectionList.length];
         for (int j = 0; j < projectionList.length; j++) {
@@ -89,7 +89,7 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
 
             @Override
             public void open() throws HyracksDataException {
-                initAccessAppendRef(context);
+                initAccessAppendRef(ctx);
                 if (first) {
                     first = false;
                     int n = runningAggregates.length;

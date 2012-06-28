@@ -182,7 +182,7 @@ public class PushRuntimeTest {
         IScalarEvaluatorFactory cond = new IntegerGreaterThanEvalFactory(new IntegerConstantEvalFactory(2),
                 new TupleFieldEvaluatorFactory(0));
         StreamSelectRuntimeFactory select = new StreamSelectRuntimeFactory(cond, new int[] { 0 },
-                BinaryBooleanInspectorImpl.INSTANCE);
+                BinaryBooleanInspectorImpl.FACTORY);
         RecordDescriptor selectDesc = intScannerDesc;
 
         String filePath = PATH_ACTUAL + SEPARATOR + "scanSelectWrite.out";
@@ -270,7 +270,7 @@ public class PushRuntimeTest {
 
         // the algebricks op.
         StreamLimitRuntimeFactory limit = new StreamLimitRuntimeFactory(new IntegerConstantEvalFactory(2), null,
-                new int[] { 0 }, BinaryIntegerInspectorImpl.INSTANCE);
+                new int[] { 0 }, BinaryIntegerInspectorImpl.FACTORY);
         RecordDescriptor limitDesc = new RecordDescriptor(
                 new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
 
@@ -435,7 +435,7 @@ public class PushRuntimeTest {
         IScalarEvaluatorFactory cond = new IntegerEqualsEvalFactory(new IntegerConstantEvalFactory(3),
                 new TupleFieldEvaluatorFactory(0)); // Canadian customers
         StreamSelectRuntimeFactory select = new StreamSelectRuntimeFactory(cond, new int[] { 1 },
-                BinaryBooleanInspectorImpl.INSTANCE);
+                BinaryBooleanInspectorImpl.FACTORY);
         RecordDescriptor selectDesc = new RecordDescriptor(
                 new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
 
@@ -505,7 +505,7 @@ public class PushRuntimeTest {
         IScalarEvaluatorFactory cond = new IntegerEqualsEvalFactory(new IntegerConstantEvalFactory(3),
                 new TupleFieldEvaluatorFactory(0)); // Canadian customers
         StreamSelectRuntimeFactory select = new StreamSelectRuntimeFactory(cond, new int[] { 1 },
-                BinaryBooleanInspectorImpl.INSTANCE);
+                BinaryBooleanInspectorImpl.FACTORY);
         RecordDescriptor selectDesc = new RecordDescriptor(
                 new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
 
@@ -838,7 +838,7 @@ public class PushRuntimeTest {
         IScalarEvaluatorFactory cond = new IntegerEqualsEvalFactory(new IntegerConstantEvalFactory(3),
                 new TupleFieldEvaluatorFactory(0)); // Canadian customers
         StreamSelectRuntimeFactory select = new StreamSelectRuntimeFactory(cond, new int[] { 1 },
-                BinaryBooleanInspectorImpl.INSTANCE);
+                BinaryBooleanInspectorImpl.FACTORY);
         RecordDescriptor selectDesc = new RecordDescriptor(
                 new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
 

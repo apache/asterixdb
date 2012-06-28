@@ -19,7 +19,7 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class SinkRuntimeFactory implements IPushRuntimeFactory {
@@ -35,7 +35,7 @@ public class SinkRuntimeFactory implements IPushRuntimeFactory {
     }
 
     @Override
-    public IPushRuntime createPushRuntime(RuntimeContext context) throws AlgebricksException {
+    public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) throws AlgebricksException {
         return new AbstractOneInputSinkPushRuntime() {
 
             @Override

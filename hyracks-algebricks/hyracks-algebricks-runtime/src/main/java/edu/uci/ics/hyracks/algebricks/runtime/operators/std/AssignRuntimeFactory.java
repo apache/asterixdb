@@ -20,10 +20,10 @@ import java.util.Arrays;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
@@ -73,7 +73,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
     }
 
     @Override
-    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final RuntimeContext context)
+    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
             throws AlgebricksException {
         final int[] projectionToOutColumns = new int[projectionList.length];
         for (int j = 0; j < projectionList.length; j++) {
@@ -89,12 +89,12 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
             @Override
             public void open() throws HyracksDataException {
                 if (first) {
-                    initAccessAppendRef(context);
+                    initAccessAppendRef(ctx);
                     first = false;
                     int n = evalFactories.length;
                     for (int i = 0; i < n; i++) {
                         try {
-                            eval[i] = evalFactories[i].createScalarEvaluator();
+                            eval[i] = evalFactories[i].createScalarEvaluator(ctx);
                         } catch (AlgebricksException ae) {
                             throw new HyracksDataException(ae);
                         }

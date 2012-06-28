@@ -19,9 +19,9 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
@@ -60,7 +60,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
     }
 
     @Override
-    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final RuntimeContext context)
+    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
             throws AlgebricksException {
 
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
@@ -70,9 +70,9 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
 
             @Override
             public void open() throws HyracksDataException {
-                initAccessAppendRef(context);
+                initAccessAppendRef(ctx);
                 try {
-                    agg = unnestingFactory.createUnnestingEvaluator();
+                    agg = unnestingFactory.createUnnestingEvaluator(ctx);
                 } catch (AlgebricksException ae) {
                     throw new HyracksDataException(ae);
                 }

@@ -18,8 +18,8 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class NestedTupleSourceRuntimeFactory implements IPushRuntimeFactory {
@@ -35,14 +35,14 @@ public class NestedTupleSourceRuntimeFactory implements IPushRuntimeFactory {
     }
 
     @Override
-    public IPushRuntime createPushRuntime(RuntimeContext context) {
-        return new NestedTupleSourceRuntime(context);
+    public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) {
+        return new NestedTupleSourceRuntime(ctx);
     }
 
     public static class NestedTupleSourceRuntime extends AbstractOneInputOneOutputOneFramePushRuntime {
 
-        public NestedTupleSourceRuntime(RuntimeContext rc) {
-            initAccessAppend(rc);
+        public NestedTupleSourceRuntime(IHyracksTaskContext ctx) {
+            initAccessAppend(ctx);
         }
 
         @Override

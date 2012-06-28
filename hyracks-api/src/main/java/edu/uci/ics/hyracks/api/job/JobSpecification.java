@@ -60,6 +60,8 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     private IJobletEventListenerFactory jobletEventListenerFactory;
 
+    private IGlobalJobDataFactory globalJobDataFactory;
+
     private transient int operatorIdCounter;
 
     private transient int connectorIdCounter;
@@ -230,6 +232,14 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     public void setJobletEventListenerFactory(IJobletEventListenerFactory jobletEventListenerFactory) {
         this.jobletEventListenerFactory = jobletEventListenerFactory;
+    }
+
+    public IGlobalJobDataFactory getGlobalJobDataFactory() {
+        return globalJobDataFactory;
+    }
+
+    public void setGlobalJobDataFactory(IGlobalJobDataFactory globalJobDataFactory) {
+        this.globalJobDataFactory = globalJobDataFactory;
     }
 
     private <K, V> void insertIntoIndexedMap(Map<K, List<V>> map, K key, int index, V value) {

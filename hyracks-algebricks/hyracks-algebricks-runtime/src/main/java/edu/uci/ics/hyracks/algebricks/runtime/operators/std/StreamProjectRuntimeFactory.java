@@ -18,9 +18,9 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class StreamProjectRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
@@ -37,7 +37,7 @@ public class StreamProjectRuntimeFactory extends AbstractOneInputOneOutputRuntim
     }
 
     @Override
-    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final RuntimeContext context)
+    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
             throws AlgebricksException {
 
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
@@ -48,7 +48,7 @@ public class StreamProjectRuntimeFactory extends AbstractOneInputOneOutputRuntim
             public void open() throws HyracksDataException {
                 if (first) {
                     first = false;
-                    initAccessAppend(context);
+                    initAccessAppend(ctx);
                 }
                 writer.open();
             }

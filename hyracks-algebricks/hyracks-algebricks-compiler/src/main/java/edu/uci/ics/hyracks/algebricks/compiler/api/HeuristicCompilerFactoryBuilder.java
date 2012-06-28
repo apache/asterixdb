@@ -85,10 +85,10 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                         AlgebricksConfig.ALGEBRICKS_LOGGER.fine("Starting Job Generation.\n");
                         JobGenContext context = new JobGenContext(null, metadata, appContext,
                                 serializerDeserializerProvider, hashFunctionFactoryProvider, comparatorFactoryProvider,
-                                typeTraitProvider, binaryBooleanInspector, binaryIntegerInspector, printerProvider,
-                                nullWriterFactory, normalizedKeyComputerFactoryProvider, expressionRuntimeProvider,
-                                expressionTypeComputer, nullableTypeComputer, oc, expressionEvalSizeComputer,
-                                partialAggregationTypeComputer, frameSize, clusterLocations);
+                                typeTraitProvider, binaryBooleanInspectorFactory, binaryIntegerInspectorFactory,
+                                printerProvider, nullWriterFactory, normalizedKeyComputerFactoryProvider,
+                                expressionRuntimeProvider, expressionTypeComputer, nullableTypeComputer, oc,
+                                expressionEvalSizeComputer, partialAggregationTypeComputer, frameSize, clusterLocations);
                         PlanCompiler pc = new PlanCompiler(context);
                         return pc.compilePlan(plan, null);
                     }

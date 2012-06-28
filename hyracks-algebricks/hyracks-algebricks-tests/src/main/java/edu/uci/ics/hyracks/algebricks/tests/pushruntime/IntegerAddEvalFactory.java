@@ -19,6 +19,7 @@ import java.io.IOException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
@@ -38,13 +39,13 @@ public class IntegerAddEvalFactory implements IScalarEvaluatorFactory {
     }
 
     @Override
-    public IScalarEvaluator createScalarEvaluator() throws AlgebricksException {
+    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
         return new IScalarEvaluator() {
             private IPointable p = VoidPointable.FACTORY.createPointable();
             private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
 
-            private IScalarEvaluator evalLeft = evalLeftFactory.createScalarEvaluator();
-            private IScalarEvaluator evalRight = evalRightFactory.createScalarEvaluator();
+            private IScalarEvaluator evalLeft = evalLeftFactory.createScalarEvaluator(ctx);
+            private IScalarEvaluator evalRight = evalRightFactory.createScalarEvaluator(ctx);
 
             @SuppressWarnings("static-access")
             @Override

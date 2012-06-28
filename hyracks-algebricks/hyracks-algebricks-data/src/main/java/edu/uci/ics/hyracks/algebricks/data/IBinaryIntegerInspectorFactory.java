@@ -14,6 +14,10 @@
  */
 package edu.uci.ics.hyracks.algebricks.data;
 
-public interface IBinaryIntegerInspector {
-    public int getIntegerValue(byte[] bytes, int offset, int length);
+import java.io.Serializable;
+
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+
+public interface IBinaryIntegerInspectorFactory extends Serializable {
+    public IBinaryIntegerInspector createBinaryIntegerInspector(IHyracksTaskContext ctx);
 }

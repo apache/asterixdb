@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.algebricks.tests.pushruntime;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
@@ -38,7 +39,7 @@ public class IntegerConstantEvalFactory implements IScalarEvaluatorFactory {
     }
 
     @Override
-    public IScalarEvaluator createScalarEvaluator() throws AlgebricksException {
+    public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
         return new IScalarEvaluator() {
 
             private ArrayBackedValueStorage buf = new ArrayBackedValueStorage();

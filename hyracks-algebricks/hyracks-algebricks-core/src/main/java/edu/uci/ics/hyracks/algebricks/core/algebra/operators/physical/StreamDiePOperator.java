@@ -73,7 +73,7 @@ public class StreamDiePOperator extends AbstractPhysicalOperator {
                 .getAfterObjects().getValue(), env, inputSchemas, context);
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, propagatedSchema, context);
         StreamDieRuntimeFactory runtime = new StreamDieRuntimeFactory(afterObjectsFact, null,
-                context.getBinaryIntegerInspector());
+                context.getBinaryIntegerInspectorFactory());
         builder.contributeMicroOperator(die, runtime, recDesc);
         ILogicalOperator src = die.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, die, 0);

@@ -32,7 +32,9 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
+import edu.uci.ics.hyracks.api.job.IGlobalJobDataFactory;
 import edu.uci.ics.hyracks.api.job.IJobletEventListener;
+import edu.uci.ics.hyracks.api.job.IJobletEventListenerFactory;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobId;
@@ -74,7 +76,9 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final IWorkspaceFileFactory fileFactory;
 
-    private IJobletEventListener jobletEventListener;
+    private final Object globalJobData;
+
+    private final IJobletEventListener jobletEventListener;
 
     private JobStatus cleanupStatus;
 
@@ -93,6 +97,16 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         fileFactory = new WorkspaceFileFactory(this, (IOManager) appCtx.getRootContext().getIOManager());
         cleanupPending = false;
+        IJobletEventListenerFactory jelf = jag.getJobSpecification().getJobletEventListenerFactory();
+        if (jelf != null) {
+            IJobletEventListener listener = jelf.createListener(this);
+            this.jobletEventListener = listener;
+            listener.jobletStart();
+        } else {
+            jobletEventListener = null;
+        }
+        IGlobalJobDataFactory gjdf = jag.getJobSpecification().getGlobalJobDataFactory();
+        globalJobData = gjdf != null ? gjdf.createGlobalJobData(this) : null;
     }
 
     @Override
@@ -221,6 +235,11 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         return counter;
     }
 
+    @Override
+    public Object getGlobalJobData() {
+        return globalJobData;
+    }
+
     public synchronized void advertisePartitionRequest(TaskAttemptId taId, Collection<PartitionId> pids,
             IPartitionCollector collector, PartitionState minState) throws Exception {
         for (PartitionId pid : pids) {
@@ -239,10 +258,6 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     public IJobletEventListener getJobletEventListener() {
         return jobletEventListener;
-    }
-
-    public void setJobletEventListener(IJobletEventListener jobletEventListener) {
-        this.jobletEventListener = jobletEventListener;
     }
 
     public void cleanup(JobStatus status) {

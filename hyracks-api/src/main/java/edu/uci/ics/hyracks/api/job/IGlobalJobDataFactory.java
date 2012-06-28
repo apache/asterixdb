@@ -12,8 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.data;
+package edu.uci.ics.hyracks.api.job;
 
-public interface IBinaryIntegerInspector {
-    public int getIntegerValue(byte[] bytes, int offset, int length);
+import java.io.Serializable;
+
+import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
+
+public interface IGlobalJobDataFactory extends Serializable {
+    public Object createGlobalJobData(IHyracksJobletContext ctx);
 }

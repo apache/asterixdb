@@ -22,7 +22,6 @@ import org.json.JSONObject;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
@@ -98,9 +97,7 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
                 PipelineAssembler pa = new PipelineAssembler(pipeline, inputArity, outputArity, null,
                         pipelineOutputRecordDescriptor);
                 try {
-                    RuntimeContext rc = new RuntimeContext();
-                    rc.setHyracksContext(ctx);
-                    startOfPipeline = pa.assemblePipeline(writer, rc);
+                    startOfPipeline = pa.assemblePipeline(writer, ctx);
                 } catch (AlgebricksException e) {
                     throw new HyracksDataException(e);
                 }
@@ -126,9 +123,7 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
                     PipelineAssembler pa = new PipelineAssembler(pipeline, inputArity, outputArity,
                             pipelineInputRecordDescriptor, pipelineOutputRecordDescriptor);
                     try {
-                        RuntimeContext rc = new RuntimeContext();
-                        rc.setHyracksContext(ctx);
-                        startOfPipeline = pa.assemblePipeline(writer, rc);
+                        startOfPipeline = pa.assemblePipeline(writer, ctx);
                     } catch (AlgebricksException ae) {
                         throw new HyracksDataException(ae);
                     }

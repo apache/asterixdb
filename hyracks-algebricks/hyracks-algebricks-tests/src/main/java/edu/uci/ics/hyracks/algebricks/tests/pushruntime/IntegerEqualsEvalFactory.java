@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.algebricks.tests.pushruntime;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.data.std.primitive.BooleanPointable;
 import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
@@ -35,11 +36,11 @@ public class IntegerEqualsEvalFactory implements IScalarEvaluatorFactory {
     }
 
     @Override
-    public IScalarEvaluator createScalarEvaluator() throws AlgebricksException {
+    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
         return new IScalarEvaluator() {
             private IPointable p = VoidPointable.FACTORY.createPointable();
-            private IScalarEvaluator eval1 = evalFact1.createScalarEvaluator();
-            private IScalarEvaluator eval2 = evalFact2.createScalarEvaluator();
+            private IScalarEvaluator eval1 = evalFact1.createScalarEvaluator(ctx);
+            private IScalarEvaluator eval2 = evalFact2.createScalarEvaluator(ctx);
             private byte[] rBytes = new byte[1];
 
             @Override

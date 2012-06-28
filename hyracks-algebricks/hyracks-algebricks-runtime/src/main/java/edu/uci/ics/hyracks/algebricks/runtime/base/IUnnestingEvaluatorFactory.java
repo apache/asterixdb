@@ -17,7 +17,8 @@ package edu.uci.ics.hyracks.algebricks.runtime.base;
 import java.io.Serializable;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 public interface IUnnestingEvaluatorFactory extends Serializable {
-    public IUnnestingEvaluator createUnnestingEvaluator() throws AlgebricksException;
+    public IUnnestingEvaluator createUnnestingEvaluator(IHyracksTaskContext ctx) throws AlgebricksException;
 }

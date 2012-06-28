@@ -27,10 +27,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IPartialAggregati
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
-import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspector;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
-import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspector;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import edu.uci.ics.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.ISerializerDeserializerProvider;
@@ -45,8 +45,8 @@ public abstract class AbstractCompilerFactoryBuilder {
     protected ISerializerDeserializerProvider serializerDeserializerProvider;
     protected IBinaryHashFunctionFactoryProvider hashFunctionFactoryProvider;
     protected IBinaryComparatorFactoryProvider comparatorFactoryProvider;
-    protected IBinaryBooleanInspector binaryBooleanInspector;
-    protected IBinaryIntegerInspector binaryIntegerInspector;
+    protected IBinaryBooleanInspectorFactory binaryBooleanInspectorFactory;
+    protected IBinaryIntegerInspectorFactory binaryIntegerInspectorFactory;
     protected IPrinterFactoryProvider printerProvider;
     protected IExpressionRuntimeProvider expressionRuntimeProvider;
     protected IExpressionTypeComputer expressionTypeComputer;
@@ -102,20 +102,20 @@ public abstract class AbstractCompilerFactoryBuilder {
         return comparatorFactoryProvider;
     }
 
-    public void setBinaryBooleanInspector(IBinaryBooleanInspector binaryBooleanInspector) {
-        this.binaryBooleanInspector = binaryBooleanInspector;
+    public void setBinaryBooleanInspectorFactory(IBinaryBooleanInspectorFactory binaryBooleanInspectorFactory) {
+        this.binaryBooleanInspectorFactory = binaryBooleanInspectorFactory;
     }
 
-    public IBinaryBooleanInspector getBinaryBooleanInspector() {
-        return binaryBooleanInspector;
+    public IBinaryBooleanInspectorFactory getBinaryBooleanInspectorFactory() {
+        return binaryBooleanInspectorFactory;
     }
 
-    public void setBinaryIntegerInspector(IBinaryIntegerInspector binaryIntegerInspector) {
-        this.binaryIntegerInspector = binaryIntegerInspector;
+    public void setBinaryIntegerInspectorFactory(IBinaryIntegerInspectorFactory binaryIntegerInspectorFactory) {
+        this.binaryIntegerInspectorFactory = binaryIntegerInspectorFactory;
     }
 
-    public IBinaryIntegerInspector getBinaryIntegerInspector() {
-        return binaryIntegerInspector;
+    public IBinaryIntegerInspectorFactory getBinaryIntegerInspectorFactory() {
+        return binaryIntegerInspectorFactory;
     }
 
     public void setPrinterProvider(IPrinterFactoryProvider printerProvider) {

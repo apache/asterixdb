@@ -1,9 +1,9 @@
 package edu.uci.ics.hyracks.dataflow.std.join;
 
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparatorFactory;
-
 
 public class JoinComparatorFactory implements ITuplePairComparatorFactory {
     private static final long serialVersionUID = 1L;
@@ -19,7 +19,7 @@ public class JoinComparatorFactory implements ITuplePairComparatorFactory {
     }
 
     @Override
-    public ITuplePairComparator createTuplePairComparator() {
+    public ITuplePairComparator createTuplePairComparator(IHyracksTaskContext ctx) {
         return new JoinComparator(bFactory.createBinaryComparator(), pos0, pos1);
     }
 
