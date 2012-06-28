@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ILogicalExpressionJobGen;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.StatefulFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
@@ -37,7 +37,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequiremen
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyRunningAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.RunningAggregateRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
@@ -91,11 +91,11 @@ public class RunningAggregatePOperator extends AbstractPhysicalOperator {
         for (int i = 0; i < outColumns.length; i++) {
             outColumns[i] = opSchema.findVariable(variables.get(i));
         }
-        ICopyRunningAggregateFunctionFactory[] runningAggFuns = new ICopyRunningAggregateFunctionFactory[expressions.size()];
-        ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
+        IRunningAggregateEvaluatorFactory[] runningAggFuns = new IRunningAggregateEvaluatorFactory[expressions.size()];
+        IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
         for (int i = 0; i < runningAggFuns.length; i++) {
             StatefulFunctionCallExpression expr = (StatefulFunctionCallExpression) expressions.get(i).getValue();
-            runningAggFuns[i] = exprJobGen.createRunningAggregateFunctionFactory(expr,
+            runningAggFuns[i] = expressionRuntimeProvider.createRunningAggregateFunctionFactory(expr,
                     context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas, context);
         }
 

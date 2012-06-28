@@ -15,10 +15,10 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyRunningAggregateFunction
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunctionFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunction;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IRunningAggregateEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
@@ -36,7 +36,7 @@ public class LogicalExpressionJobGenToExpressionRuntimeProviderAdapter implement
     public IScalarEvaluatorFactory createEvaluatorFactory(ILogicalExpression expr, IVariableTypeEnvironment env,
             IOperatorSchema[] inputSchemas, JobGenContext context) throws AlgebricksException {
         ICopyEvaluatorFactory cef = lejg.createEvaluatorFactory(expr, env, inputSchemas, context);
-        return new EvaluatorFactoryAdapter(cef);
+        return new ScalarEvaluatorFactoryAdapter(cef);
     }
 
     @Override
@@ -71,12 +71,12 @@ public class LogicalExpressionJobGenToExpressionRuntimeProviderAdapter implement
         return new UnnestingFunctionFactoryAdapter(cuff);
     }
 
-    private static final class EvaluatorFactoryAdapter implements IScalarEvaluatorFactory {
+    public static final class ScalarEvaluatorFactoryAdapter implements IScalarEvaluatorFactory {
         private static final long serialVersionUID = 1L;
 
         private final ICopyEvaluatorFactory cef;
 
-        public EvaluatorFactoryAdapter(ICopyEvaluatorFactory cef) {
+        public ScalarEvaluatorFactoryAdapter(ICopyEvaluatorFactory cef) {
             this.cef = cef;
         }
 
@@ -95,7 +95,7 @@ public class LogicalExpressionJobGenToExpressionRuntimeProviderAdapter implement
         }
     }
 
-    private static final class AggregateFunctionFactoryAdapter implements IAggregateEvaluatorFactory {
+    public static final class AggregateFunctionFactoryAdapter implements IAggregateEvaluatorFactory {
         private static final long serialVersionUID = 1L;
 
         private final ICopyAggregateFunctionFactory caff;
@@ -121,11 +121,6 @@ public class LogicalExpressionJobGenToExpressionRuntimeProviderAdapter implement
                 }
 
                 @Override
-                public void finishPartial() throws AlgebricksException {
-                    caf.finishPartial();
-                }
-
-                @Override
                 public void finish(IPointable result) throws AlgebricksException {
                     caf.finish();
                     result.set(abvs);
@@ -134,7 +129,7 @@ public class LogicalExpressionJobGenToExpressionRuntimeProviderAdapter implement
         }
     }
 
-    private static final class RunningAggregateFunctionFactoryAdapter implements IRunningAggregateEvaluatorFactory {
+    public static final class RunningAggregateFunctionFactoryAdapter implements IRunningAggregateEvaluatorFactory {
         private static final long serialVersionUID = 1L;
 
         private final ICopyRunningAggregateFunctionFactory craff;
@@ -163,7 +158,7 @@ public class LogicalExpressionJobGenToExpressionRuntimeProviderAdapter implement
         }
     }
 
-    private static final class UnnestingFunctionFactoryAdapter implements IUnnestingEvaluatorFactory {
+    public static final class UnnestingFunctionFactoryAdapter implements IUnnestingEvaluatorFactory {
         private static final long serialVersionUID = 1L;
 
         private final ICopyUnnestingFunctionFactory cuff;
@@ -189,7 +184,7 @@ public class LogicalExpressionJobGenToExpressionRuntimeProviderAdapter implement
 
                 @Override
                 public void init(IFrameTupleReference tuple) throws AlgebricksException {
-                    abvs.reset();
+                    cuf.init(tuple);
                 }
             };
         }

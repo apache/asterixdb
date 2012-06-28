@@ -18,15 +18,16 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyRunningAggregateFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyRunningAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IRunningAggregateEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 
 public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
@@ -34,7 +35,7 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
     private static final long serialVersionUID = 1L;
 
     private int[] outColumns;
-    private ICopyRunningAggregateFunctionFactory[] runningAggregates;
+    private IRunningAggregateEvaluatorFactory[] runningAggregates;
 
     /**
      * @param outColumns
@@ -44,7 +45,7 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
      *            an array of columns to be projected
      */
 
-    public RunningAggregateRuntimeFactory(int[] outColumns, ICopyRunningAggregateFunctionFactory[] runningAggregates,
+    public RunningAggregateRuntimeFactory(int[] outColumns, IRunningAggregateEvaluatorFactory[] runningAggregates,
             int[] projectionList) {
         super(projectionList);
         this.outColumns = outColumns;
@@ -81,9 +82,8 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
         }
 
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
-
-            private ArrayBackedValueStorage evalOutput = new ArrayBackedValueStorage();
-            private ICopyRunningAggregateFunction[] raggs = new ICopyRunningAggregateFunction[runningAggregates.length];
+            private IPointable p = VoidPointable.FACTORY.createPointable();
+            private IRunningAggregateEvaluator[] raggs = new IRunningAggregateEvaluator[runningAggregates.length];
             private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(projectionList.length);
             private boolean first = true;
 
@@ -95,7 +95,7 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
                     int n = runningAggregates.length;
                     for (int i = 0; i < n; i++) {
                         try {
-                            raggs[i] = runningAggregates[i].createRunningAggregateFunction(evalOutput);
+                            raggs[i] = runningAggregates[i].createRunningAggregateEvaluator();
                             raggs[i].init();
                         } catch (AlgebricksException ae) {
                             throw new HyracksDataException(ae);
@@ -122,13 +122,12 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
                 for (int f = 0; f < projectionList.length; f++) {
                     int k = projectionToOutColumns[f];
                     if (k >= 0) {
-                        evalOutput.reset();
                         try {
-                            raggs[k].step(tupleRef);
+                            raggs[k].step(tupleRef, p);
                         } catch (AlgebricksException e) {
                             throw new HyracksDataException(e);
                         }
-                        tb.addField(evalOutput.getByteArray(), evalOutput.getStartOffset(), evalOutput.getLength());
+                        tb.addField(p.getByteArray(), p.getStartOffset(), p.getLength());
                     } else {
                         tb.addField(accessor, tIndex, projectionList[f]);
                     }

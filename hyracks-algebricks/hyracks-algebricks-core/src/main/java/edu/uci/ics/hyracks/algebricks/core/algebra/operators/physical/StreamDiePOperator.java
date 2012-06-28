@@ -19,7 +19,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ILogicalExpressionJobGen;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DieOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
@@ -29,7 +29,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequiremen
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.StreamDieRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
@@ -67,10 +67,10 @@ public class StreamDiePOperator extends AbstractPhysicalOperator {
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
         DieOperator die = (DieOperator) op;
-        ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
+        IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
         IVariableTypeEnvironment env = context.getTypeEnvironment(op);
-        ICopyEvaluatorFactory afterObjectsFact = exprJobGen.createEvaluatorFactory(die.getAfterObjects().getValue(), env,
-                inputSchemas, context);
+        IScalarEvaluatorFactory afterObjectsFact = expressionRuntimeProvider.createEvaluatorFactory(die
+                .getAfterObjects().getValue(), env, inputSchemas, context);
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, propagatedSchema, context);
         StreamDieRuntimeFactory runtime = new StreamDieRuntimeFactory(afterObjectsFact, null,
                 context.getBinaryIntegerInspector());

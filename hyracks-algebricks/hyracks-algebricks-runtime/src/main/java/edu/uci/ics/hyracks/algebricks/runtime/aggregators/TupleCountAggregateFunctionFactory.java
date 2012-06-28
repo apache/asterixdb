@@ -1,23 +1,22 @@
 package edu.uci.ics.hyracks.algebricks.runtime.aggregators;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class TupleCountAggregateFunctionFactory implements ICopyAggregateFunctionFactory {
+public class TupleCountAggregateFunctionFactory implements IAggregateEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
 
     @Override
-    public ICopyAggregateFunction createAggregateFunction(IDataOutputProvider provider) throws AlgebricksException {
-
-        final DataOutput out = provider.getDataOutput();
-        return new ICopyAggregateFunction() {
+    public IAggregateEvaluator createAggregateEvaluator() throws AlgebricksException {
+        final ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
+        return new IAggregateEvaluator() {
 
             int cnt;
 
@@ -32,18 +31,11 @@ public class TupleCountAggregateFunctionFactory implements ICopyAggregateFunctio
             }
 
             @Override
-            public void finish() throws AlgebricksException {
+            public void finish(IPointable result) throws AlgebricksException {
                 try {
-                    out.writeInt(cnt);
-                } catch (IOException e) {
-                    throw new AlgebricksException(e);
-                }
-            }
-
-            @Override
-            public void finishPartial() throws AlgebricksException {
-                try {
-                    out.writeInt(cnt);
+                    abvs.reset();
+                    abvs.getDataOutput().writeInt(cnt);
+                    result.set(abvs);
                 } catch (IOException e) {
                     throw new AlgebricksException(e);
                 }

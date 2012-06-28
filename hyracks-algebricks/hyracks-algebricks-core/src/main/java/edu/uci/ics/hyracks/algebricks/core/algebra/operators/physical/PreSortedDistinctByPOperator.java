@@ -39,7 +39,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralProperti
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.aggreg.SimpleAlgebricksAccumulatingAggregatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -107,7 +107,7 @@ public class PreSortedDistinctByPOperator extends AbstractPhysicalOperator {
         }
         IBinaryComparatorFactory[] comparatorFactories = JobGenHelper.variablesToAscBinaryComparatorFactories(
                 columnList, context.getTypeEnvironment(op), context);
-        ICopyAggregateFunctionFactory[] aggFactories = new ICopyAggregateFunctionFactory[] {};
+        IAggregateEvaluatorFactory[] aggFactories = new IAggregateEvaluatorFactory[] {};
         IAggregatorDescriptorFactory aggregatorFactory = new SimpleAlgebricksAccumulatingAggregatorFactory(
                 aggFactories, keys, fdColumns);
 

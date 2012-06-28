@@ -26,7 +26,7 @@ public class UTF8StringNormalizedKeyComputerFactory implements INormalizedKeyCom
         return new INormalizedKeyComputer() {
             @Override
             public int normalize(byte[] bytes, int start, int length) {
-                int len = UTF8StringPointable.getUTFLen(bytes, start);
+                int len = UTF8StringPointable.getUTFLength(bytes, start);
                 int nk = 0;
                 int offset = start + 2;
                 for (int i = 0; i < 2; ++i) {

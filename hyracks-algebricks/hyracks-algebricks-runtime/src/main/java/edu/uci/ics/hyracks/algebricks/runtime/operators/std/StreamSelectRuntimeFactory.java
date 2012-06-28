@@ -18,19 +18,20 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspector;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 
 public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private ICopyEvaluatorFactory cond;
+    private IScalarEvaluatorFactory cond;
 
     private IBinaryBooleanInspector binaryBooleanInspector;
 
@@ -39,7 +40,7 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
      * @param projectionList
      *            if projectionList is null, then no projection is performed
      */
-    public StreamSelectRuntimeFactory(ICopyEvaluatorFactory cond, int[] projectionList,
+    public StreamSelectRuntimeFactory(IScalarEvaluatorFactory cond, int[] projectionList,
             IBinaryBooleanInspector binaryBooleanInspector) {
         super(projectionList);
         this.cond = cond;
@@ -54,17 +55,15 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final RuntimeContext context) {
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
-
-            private ICopyEvaluator eval;
-            private ArrayBackedValueStorage evalOutput;
+            private IPointable p = VoidPointable.FACTORY.createPointable();
+            private IScalarEvaluator eval;
 
             @Override
             public void open() throws HyracksDataException {
                 if (eval == null) {
                     initAccessAppendRef(context);
-                    evalOutput = new ArrayBackedValueStorage();
                     try {
-                        eval = cond.createEvaluator(evalOutput);
+                        eval = cond.createScalarEvaluator();
                     } catch (AlgebricksException ae) {
                         throw new HyracksDataException(ae);
                     }
@@ -78,13 +77,12 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
                 int nTuple = tAccess.getTupleCount();
                 for (int t = 0; t < nTuple; t++) {
                     tRef.reset(tAccess, t);
-                    evalOutput.reset();
                     try {
-                        eval.evaluate(tRef);
+                        eval.evaluate(tRef, p);
                     } catch (AlgebricksException ae) {
                         throw new HyracksDataException(ae);
                     }
-                    if (binaryBooleanInspector.getBooleanValue(evalOutput.getByteArray(), 0, evalOutput.getLength())) {
+                    if (binaryBooleanInspector.getBooleanValue(p.getByteArray(), p.getStartOffset(), p.getLength())) {
                         if (projectionList != null) {
                             appendProjectionToFrame(t, projectionList);
                         } else {

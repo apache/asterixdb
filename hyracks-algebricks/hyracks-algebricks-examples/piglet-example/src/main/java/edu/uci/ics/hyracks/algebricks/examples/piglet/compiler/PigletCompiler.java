@@ -26,6 +26,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.LogicalExpressionJobGenToExpressionRuntimeProviderAdapter;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
@@ -124,7 +125,8 @@ public class PigletCompiler {
             }
         });
         builder.setPrinterProvider(PigletPrinterFactoryProvider.INSTANCE);
-        builder.setExprJobGen(new PigletExpressionJobGen());
+        builder.setExpressionRuntimeProvider(new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(
+                new PigletExpressionJobGen()));
         builder.setExpressionTypeComputer(new IExpressionTypeComputer() {
             @Override
             public Object getType(ILogicalExpression expr, IMetadataProvider<?, ?> metadataProvider,

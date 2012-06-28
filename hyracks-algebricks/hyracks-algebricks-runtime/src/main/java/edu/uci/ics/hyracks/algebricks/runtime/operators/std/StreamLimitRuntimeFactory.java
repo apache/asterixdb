@@ -4,24 +4,26 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspector;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 
 public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private ICopyEvaluatorFactory maxObjectsEvalFactory;
-    private ICopyEvaluatorFactory offsetEvalFactory;
+    private IScalarEvaluatorFactory maxObjectsEvalFactory;
+    private IScalarEvaluatorFactory offsetEvalFactory;
     private IBinaryIntegerInspector binaryIntegerInspector;
 
-    public StreamLimitRuntimeFactory(ICopyEvaluatorFactory maxObjectsEvalFactory, ICopyEvaluatorFactory offsetEvalFactory,
-            int[] projectionList, IBinaryIntegerInspector binaryIntegerInspector) {
+    public StreamLimitRuntimeFactory(IScalarEvaluatorFactory maxObjectsEvalFactory,
+            IScalarEvaluatorFactory offsetEvalFactory, int[] projectionList,
+            IBinaryIntegerInspector binaryIntegerInspector) {
         super(projectionList);
         this.maxObjectsEvalFactory = maxObjectsEvalFactory;
         this.offsetEvalFactory = offsetEvalFactory;
@@ -41,10 +43,9 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final RuntimeContext context) {
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
-
-            private ICopyEvaluator evalMaxObjects;
-            private ArrayBackedValueStorage evalOutput;
-            private ICopyEvaluator evalOffset = null;
+            private IPointable p = VoidPointable.FACTORY.createPointable();
+            private IScalarEvaluator evalMaxObjects;
+            private IScalarEvaluator evalOffset = null;
             private int toWrite = 0; // how many tuples still to write
             private int toSkip = 0; // how many tuples still to skip
             private boolean firstTuple = true;
@@ -55,11 +56,10 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
                 // if (first) {
                 if (evalMaxObjects == null) {
                     initAccessAppendRef(context);
-                    evalOutput = new ArrayBackedValueStorage();
                     try {
-                        evalMaxObjects = maxObjectsEvalFactory.createEvaluator(evalOutput);
+                        evalMaxObjects = maxObjectsEvalFactory.createScalarEvaluator();
                         if (offsetEvalFactory != null) {
-                            evalOffset = offsetEvalFactory.createEvaluator(evalOutput);
+                            evalOffset = offsetEvalFactory.createScalarEvaluator();
                         }
                     } catch (AlgebricksException ae) {
                         throw new HyracksDataException(ae);
@@ -117,15 +117,14 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
                 // }
             }
 
-            private int evaluateInteger(ICopyEvaluator eval, int tIdx) throws HyracksDataException {
+            private int evaluateInteger(IScalarEvaluator eval, int tIdx) throws HyracksDataException {
                 tRef.reset(tAccess, tIdx);
-                evalOutput.reset();
                 try {
-                    eval.evaluate(tRef);
+                    eval.evaluate(tRef, p);
                 } catch (AlgebricksException ae) {
                     throw new HyracksDataException(ae);
                 }
-                int lim = binaryIntegerInspector.getIntegerValue(evalOutput.getByteArray(), 0, evalOutput.getLength());
+                int lim = binaryIntegerInspector.getIntegerValue(p.getByteArray(), p.getStartOffset(), p.getLength());
                 return lim;
             }
 

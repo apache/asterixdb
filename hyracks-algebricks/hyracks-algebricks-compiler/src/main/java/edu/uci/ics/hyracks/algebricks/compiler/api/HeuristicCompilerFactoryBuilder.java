@@ -86,7 +86,7 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                         JobGenContext context = new JobGenContext(null, metadata, appContext,
                                 serializerDeserializerProvider, hashFunctionFactoryProvider, comparatorFactoryProvider,
                                 typeTraitProvider, binaryBooleanInspector, binaryIntegerInspector, printerProvider,
-                                nullWriterFactory, normalizedKeyComputerFactoryProvider, exprJobGen,
+                                nullWriterFactory, normalizedKeyComputerFactoryProvider, expressionRuntimeProvider,
                                 expressionTypeComputer, nullableTypeComputer, oc, expressionEvalSizeComputer,
                                 partialAggregationTypeComputer, frameSize, clusterLocations);
                         PlanCompiler pc = new PlanCompiler(context);

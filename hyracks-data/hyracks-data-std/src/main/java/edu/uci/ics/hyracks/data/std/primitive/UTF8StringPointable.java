@@ -87,6 +87,10 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         }
     }
 
+    public int charSize(int offset) {
+        return charSize(bytes, start + offset);
+    }
+
     public static int charSize(byte[] b, int s) {
         int c = b[s] & 0xff;
         switch (c >> 4) {
@@ -120,9 +124,18 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         }
     }
 
-    public static int getStrLen(byte[] b, int s) {
+    /**
+     * Gets the length of the string in characters.
+     * 
+     * @return length of string in characters
+     */
+    public int getStringLength() {
+        return getStringLength(bytes, start);
+    }
+
+    public static int getStringLength(byte[] b, int s) {
         int pos = s + 2;
-        int end = pos + getUTFLen(b, s);
+        int end = pos + getUTFLength(b, s);
         int charCount = 0;
         while (pos < end) {
             charCount++;
@@ -131,11 +144,16 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         return charCount;
     }
 
-    public int getUTFLen() {
-        return getUTFLen(bytes, start);
+    /**
+     * Gets the length of the UTF-8 encoded string in bytes.
+     * 
+     * @return length of UTF-8 encoded string in bytes
+     */
+    public int getUTFLength() {
+        return getUTFLength(bytes, start);
     }
 
-    public static int getUTFLen(byte[] b, int s) {
+    public static int getUTFLength(byte[] b, int s) {
         return ((b[s] & 0xff) << 8) + ((b[s + 1] & 0xff) << 0);
     }
 
@@ -146,8 +164,8 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
 
     @Override
     public int compareTo(byte[] bytes, int start, int length) {
-        int utflen1 = getUTFLen(this.bytes, this.start);
-        int utflen2 = getUTFLen(bytes, start);
+        int utflen1 = getUTFLength(this.bytes, this.start);
+        int utflen2 = getUTFLength(bytes, start);
 
         int c1 = 0;
         int c2 = 0;
@@ -171,7 +189,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     @Override
     public int hash() {
         int h = 0;
-        int utflen = getUTFLen(bytes, start);
+        int utflen = getUTFLength(bytes, start);
         int sStart = start + 2;
         int c = 0;
 

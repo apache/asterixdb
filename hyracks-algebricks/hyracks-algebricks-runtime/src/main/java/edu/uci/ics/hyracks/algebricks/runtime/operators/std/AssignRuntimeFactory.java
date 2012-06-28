@@ -18,15 +18,16 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 
 public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
@@ -34,7 +35,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
     private static final long serialVersionUID = 1L;
 
     private int[] outColumns;
-    private ICopyEvaluatorFactory[] evalFactories;
+    private IScalarEvaluatorFactory[] evalFactories;
 
     /**
      * @param outColumns
@@ -44,7 +45,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
      *            an array of columns to be projected
      */
 
-    public AssignRuntimeFactory(int[] outColumns, ICopyEvaluatorFactory[] evalFactories, int[] projectionList) {
+    public AssignRuntimeFactory(int[] outColumns, IScalarEvaluatorFactory[] evalFactories, int[] projectionList) {
         super(projectionList);
         this.outColumns = outColumns;
         this.evalFactories = evalFactories;
@@ -80,9 +81,8 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
         }
 
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
-
-            private ArrayBackedValueStorage evalOutput = new ArrayBackedValueStorage();
-            private ICopyEvaluator[] eval = new ICopyEvaluator[evalFactories.length];
+            private IPointable result = VoidPointable.FACTORY.createPointable();
+            private IScalarEvaluator[] eval = new IScalarEvaluator[evalFactories.length];
             private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(projectionList.length);
             private boolean first = true;
 
@@ -94,7 +94,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                     int n = evalFactories.length;
                     for (int i = 0; i < n; i++) {
                         try {
-                            eval[i] = evalFactories[i].createEvaluator(evalOutput);
+                            eval[i] = evalFactories[i].createScalarEvaluator();
                         } catch (AlgebricksException ae) {
                             throw new HyracksDataException(ae);
                         }
@@ -120,13 +120,12 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                 for (int f = 0; f < projectionList.length; f++) {
                     int k = projectionToOutColumns[f];
                     if (k >= 0) {
-                        evalOutput.reset();
                         try {
-                            eval[k].evaluate(tupleRef);
+                            eval[k].evaluate(tupleRef, result);
                         } catch (AlgebricksException e) {
                             throw new HyracksDataException(e);
                         }
-                        tb.addField(evalOutput.getByteArray(), evalOutput.getStartOffset(), evalOutput.getLength());
+                        tb.addField(result.getByteArray(), result.getStartOffset(), result.getLength());
                     } else {
                         tb.addField(accessor, tIndex, projectionList[f]);
                     }

@@ -36,7 +36,7 @@ public class UTF8StringPrinterFactory implements IPrinterFactory {
 
             @Override
             public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-                int strlen = UTF8StringPointable.getUTFLen(b, s);
+                int strlen = UTF8StringPointable.getUTFLength(b, s);
                 int pos = s + 2;
                 int maxPos = pos + strlen;
                 ps.print("\"");

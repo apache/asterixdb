@@ -14,50 +14,49 @@
  */
 package edu.uci.ics.hyracks.algebricks.tests.pushruntime;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
-public class IntegerAddEvalFactory implements ICopyEvaluatorFactory {
+public class IntegerAddEvalFactory implements IScalarEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private ICopyEvaluatorFactory evalLeftFactory;
-    private ICopyEvaluatorFactory evalRightFactory;
+    private IScalarEvaluatorFactory evalLeftFactory;
+    private IScalarEvaluatorFactory evalRightFactory;
 
-    public IntegerAddEvalFactory(ICopyEvaluatorFactory evalLeftFactory, ICopyEvaluatorFactory evalRightFactory) {
+    public IntegerAddEvalFactory(IScalarEvaluatorFactory evalLeftFactory, IScalarEvaluatorFactory evalRightFactory) {
         this.evalLeftFactory = evalLeftFactory;
         this.evalRightFactory = evalRightFactory;
     }
 
     @Override
-    public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-        return new ICopyEvaluator() {
-
-            private DataOutput out = output.getDataOutput();
+    public IScalarEvaluator createScalarEvaluator() throws AlgebricksException {
+        return new IScalarEvaluator() {
+            private IPointable p = VoidPointable.FACTORY.createPointable();
             private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
 
-            private ICopyEvaluator evalLeft = evalLeftFactory.createEvaluator(argOut);
-            private ICopyEvaluator evalRight = evalRightFactory.createEvaluator(argOut);
+            private IScalarEvaluator evalLeft = evalLeftFactory.createScalarEvaluator();
+            private IScalarEvaluator evalRight = evalRightFactory.createScalarEvaluator();
 
             @SuppressWarnings("static-access")
             @Override
-            public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                argOut.reset();
-                evalLeft.evaluate(tuple);
-                int v1 = IntegerSerializerDeserializer.INSTANCE.getInt(argOut.getByteArray(), 0);
-                argOut.reset();
-                evalRight.evaluate(tuple);
-                int v2 = IntegerSerializerDeserializer.INSTANCE.getInt(argOut.getByteArray(), 0);
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                evalLeft.evaluate(tuple, p);
+                int v1 = IntegerSerializerDeserializer.INSTANCE.getInt(p.getByteArray(), p.getStartOffset());
+                evalRight.evaluate(tuple, p);
+                int v2 = IntegerSerializerDeserializer.INSTANCE.getInt(p.getByteArray(), p.getStartOffset());
                 try {
-                    out.writeInt(v1 + v2);
+                    argOut.reset();
+                    argOut.getDataOutput().writeInt(v1 + v2);
+                    result.set(argOut);
                 } catch (IOException e) {
                     throw new AlgebricksException(e);
                 }

@@ -19,8 +19,8 @@ import java.util.List;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ILogicalExpressionJobGen;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IPartialAggregationTypeComputer;
@@ -48,7 +48,7 @@ public abstract class AbstractCompilerFactoryBuilder {
     protected IBinaryBooleanInspector binaryBooleanInspector;
     protected IBinaryIntegerInspector binaryIntegerInspector;
     protected IPrinterFactoryProvider printerProvider;
-    protected ILogicalExpressionJobGen exprJobGen;
+    protected IExpressionRuntimeProvider expressionRuntimeProvider;
     protected IExpressionTypeComputer expressionTypeComputer;
     protected INullableTypeComputer nullableTypeComputer;
     protected IExpressionEvalSizeComputer expressionEvalSizeComputer;
@@ -126,12 +126,12 @@ public abstract class AbstractCompilerFactoryBuilder {
         return printerProvider;
     }
 
-    public void setExprJobGen(ILogicalExpressionJobGen exprJobGen) {
-        this.exprJobGen = exprJobGen;
+    public void setExpressionRuntimeProvider(IExpressionRuntimeProvider expressionRuntimeProvider) {
+        this.expressionRuntimeProvider = expressionRuntimeProvider;
     }
 
-    public ILogicalExpressionJobGen getExprJobGen() {
-        return exprJobGen;
+    public IExpressionRuntimeProvider getExpressionRuntimeProvider() {
+        return expressionRuntimeProvider;
     }
 
     public void setExpressionTypeComputer(IExpressionTypeComputer expressionTypeComputer) {

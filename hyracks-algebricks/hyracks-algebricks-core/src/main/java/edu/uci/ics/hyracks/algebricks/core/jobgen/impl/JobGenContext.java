@@ -23,8 +23,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ILogicalExpressionJobGen;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IPartialAggregationTypeComputer;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -55,7 +55,7 @@ public class JobGenContext {
     private final Object appContext;
     private final IBinaryBooleanInspector booleanInspector;
     private final IBinaryIntegerInspector integerInspector;
-    private final ILogicalExpressionJobGen exprJobGen;
+    private final IExpressionRuntimeProvider expressionRuntimeProvider;
     private final IExpressionTypeComputer expressionTypeComputer;
     private final IExpressionEvalSizeComputer expressionEvalSizeComputer;
     private final IPartialAggregationTypeComputer partialAggregationTypeComputer;
@@ -71,7 +71,7 @@ public class JobGenContext {
             IBinaryBooleanInspector booleanInspector, IBinaryIntegerInspector integerInspector,
             IPrinterFactoryProvider printerFactoryProvider, INullWriterFactory nullWriterFactory,
             INormalizedKeyComputerFactoryProvider normalizedKeyComputerFactoryProvider,
-            ILogicalExpressionJobGen exprJobGen, IExpressionTypeComputer expressionTypeComputer,
+            IExpressionRuntimeProvider expressionRuntimeProvider, IExpressionTypeComputer expressionTypeComputer,
             INullableTypeComputer nullableTypeComputer, ITypingContext typingContext,
             IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IPartialAggregationTypeComputer partialAggregationTypeComputer, int frameSize,
@@ -89,7 +89,7 @@ public class JobGenContext {
         this.clusterLocations = clusterLocations;
         this.normalizedKeyComputerFactoryProvider = normalizedKeyComputerFactoryProvider;
         this.nullWriterFactory = nullWriterFactory;
-        this.exprJobGen = exprJobGen;
+        this.expressionRuntimeProvider = expressionRuntimeProvider;
         this.expressionTypeComputer = expressionTypeComputer;
         this.typingContext = typingContext;
         this.expressionEvalSizeComputer = expressionEvalSizeComputer;
@@ -142,8 +142,8 @@ public class JobGenContext {
         return printerFactoryProvider;
     }
 
-    public ILogicalExpressionJobGen getExpressionJobGen() {
-        return exprJobGen;
+    public IExpressionRuntimeProvider getExpressionRuntimeProvider() {
+        return expressionRuntimeProvider;
     }
 
     public IOperatorSchema getSchema(ILogicalOperator op) {

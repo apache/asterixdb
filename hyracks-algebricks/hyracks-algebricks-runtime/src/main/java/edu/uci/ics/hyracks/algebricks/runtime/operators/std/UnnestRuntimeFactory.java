@@ -17,21 +17,22 @@ package edu.uci.ics.hyracks.algebricks.runtime.operators.std;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 
 public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
 
     private static final long serialVersionUID = 1L;
 
     private final int outCol;
-    private final ICopyUnnestingFunctionFactory unnestingFactory;
+    private final IUnnestingEvaluatorFactory unnestingFactory;
     private int outColPos;
     private final boolean outColIsProjected;
 
@@ -40,7 +41,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
     // By convention, if the aggregate function writes nothing, it means it
     // produced the last value.
 
-    public UnnestRuntimeFactory(int outCol, ICopyUnnestingFunctionFactory unnestingFactory, int[] projectionList) {
+    public UnnestRuntimeFactory(int outCol, IUnnestingEvaluatorFactory unnestingFactory, int[] projectionList) {
         super(projectionList);
         this.outCol = outCol;
         this.unnestingFactory = unnestingFactory;
@@ -63,17 +64,15 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
             throws AlgebricksException {
 
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
-
-            private ArrayBackedValueStorage evalOutput;
-            private ICopyUnnestingFunction agg;
+            private IPointable p = VoidPointable.FACTORY.createPointable();
+            private IUnnestingEvaluator agg;
             private ArrayTupleBuilder tupleBuilder;
 
             @Override
             public void open() throws HyracksDataException {
                 initAccessAppendRef(context);
-                evalOutput = new ArrayBackedValueStorage();
                 try {
-                    agg = unnestingFactory.createUnnestingFunction(evalOutput);
+                    agg = unnestingFactory.createUnnestingEvaluator();
                 } catch (AlgebricksException ae) {
                     throw new HyracksDataException(ae);
                 }
@@ -92,8 +91,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                         boolean goon = true;
                         do {
                             tupleBuilder.reset();
-                            evalOutput.reset();
-                            if (!agg.step()) {
+                            if (!agg.step(p)) {
                                 goon = false;
                             } else {
                                 if (!outColIsProjected) {
@@ -102,8 +100,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                                     for (int f = 0; f < outColPos; f++) {
                                         tupleBuilder.addField(tAccess, t, f);
                                     }
-                                    tupleBuilder.addField(evalOutput.getByteArray(), evalOutput.getStartOffset(),
-                                            evalOutput.getLength());
+                                    tupleBuilder.addField(p.getByteArray(), p.getStartOffset(), p.getLength());
                                     for (int f = outColPos + 1; f < projectionList.length; f++) {
                                         tupleBuilder.addField(tAccess, t, f);
                                     }

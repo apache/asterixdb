@@ -10,6 +10,4 @@ public interface IAggregateEvaluator {
     public void step(IFrameTupleReference tuple) throws AlgebricksException;
 
     public void finish(IPointable result) throws AlgebricksException;
-
-    public void finishPartial() throws AlgebricksException;
 }

@@ -58,7 +58,7 @@ public final class WriteValueTools {
     }
 
     public static void writeUTF8String(byte[] b, int s, int l, OutputStream os) throws IOException {
-        int stringLength = UTF8StringPointable.getUTFLen(b, s);
+        int stringLength = UTF8StringPointable.getUTFLength(b, s);
         int position = s + 2;
         int maxPosition = position + stringLength;
         os.write('\"');
@@ -82,7 +82,7 @@ public final class WriteValueTools {
     }
 
     public static void writeUTF8StringNoQuotes(byte[] b, int s, int l, OutputStream os) throws IOException {
-        int stringLength = UTF8StringPointable.getUTFLen(b, s);
+        int stringLength = UTF8StringPointable.getUTFLength(b, s);
         int position = s + 2;
         int maxPosition = position + stringLength;
         while (position < maxPosition) {

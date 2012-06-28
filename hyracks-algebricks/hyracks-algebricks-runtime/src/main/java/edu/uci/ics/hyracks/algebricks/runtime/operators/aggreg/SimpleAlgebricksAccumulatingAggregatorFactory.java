@@ -15,15 +15,15 @@
 package edu.uci.ics.hyracks.algebricks.runtime.operators.aggreg;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
@@ -32,14 +32,13 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregatorDescriptorFactory {
 
     private static final long serialVersionUID = 1L;
-    private ICopyAggregateFunctionFactory[] aggFactories;
+    private IAggregateEvaluatorFactory[] aggFactories;
 
-    public SimpleAlgebricksAccumulatingAggregatorFactory(ICopyAggregateFunctionFactory[] aggFactories, int[] keys,
+    public SimpleAlgebricksAccumulatingAggregatorFactory(IAggregateEvaluatorFactory[] aggFactories, int[] keys,
             int[] fdColumns) {
         this.aggFactories = aggFactories;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
             RecordDescriptor outRecordDescriptor, int[] aggKeys, int[] partialKeys) throws HyracksDataException {
@@ -47,17 +46,15 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregato
         return new IAggregatorDescriptor() {
 
             private FrameTupleReference ftr = new FrameTupleReference();
+            private IPointable p = VoidPointable.FACTORY.createPointable();
 
             @Override
             public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-                Pair<ArrayBackedValueStorage[], ICopyAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], ICopyAggregateFunction[]>) state.state;
-                ArrayBackedValueStorage[] aggOutput = aggState.first;
-                ICopyAggregateFunction[] agg = aggState.second;
+                IAggregateEvaluator[] agg = (IAggregateEvaluator[]) state.state;
 
                 // initialize aggregate functions
                 for (int i = 0; i < agg.length; i++) {
-                    aggOutput[i].reset();
                     try {
                         agg[i].init();
                     } catch (AlgebricksException e) {
@@ -78,8 +75,7 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregato
             @Override
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
-                Pair<ArrayBackedValueStorage[], ICopyAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], ICopyAggregateFunction[]>) state.state;
-                ICopyAggregateFunction[] agg = aggState.second;
+                IAggregateEvaluator[] agg = (IAggregateEvaluator[]) state.state;
                 ftr.reset(accessor, tIndex);
                 for (int i = 0; i < agg.length; i++) {
                     try {
@@ -93,14 +89,11 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregato
             @Override
             public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-                Pair<ArrayBackedValueStorage[], ICopyAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], ICopyAggregateFunction[]>) state.state;
-                ArrayBackedValueStorage[] aggOutput = aggState.first;
-                ICopyAggregateFunction[] agg = aggState.second;
+                IAggregateEvaluator[] agg = (IAggregateEvaluator[]) state.state;
                 for (int i = 0; i < agg.length; i++) {
                     try {
-                        agg[i].finish();
-                        tupleBuilder.addField(aggOutput[i].getByteArray(), aggOutput[i].getStartOffset(),
-                                aggOutput[i].getLength());
+                        agg[i].finish(p);
+                        tupleBuilder.addField(p.getByteArray(), p.getStartOffset(), p.getLength());
                     } catch (AlgebricksException e) {
                         throw new HyracksDataException(e);
                     }
@@ -109,17 +102,15 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregato
 
             @Override
             public AggregateState createAggregateStates() {
-                ICopyAggregateFunction[] agg = new ICopyAggregateFunction[aggFactories.length];
-                ArrayBackedValueStorage[] aggOutput = new ArrayBackedValueStorage[aggFactories.length];
+                IAggregateEvaluator[] agg = new IAggregateEvaluator[aggFactories.length];
                 for (int i = 0; i < agg.length; i++) {
-                    aggOutput[i] = new ArrayBackedValueStorage();
                     try {
-                        agg[i] = aggFactories[i].createAggregateFunction(aggOutput[i]);
+                        agg[i] = aggFactories[i].createAggregateEvaluator();
                     } catch (AlgebricksException e) {
                         throw new IllegalStateException(e);
                     }
                 }
-                return new AggregateState(new Pair<ArrayBackedValueStorage[], ICopyAggregateFunction[]>(aggOutput, agg));
+                return new AggregateState(agg);
             }
 
             @Override

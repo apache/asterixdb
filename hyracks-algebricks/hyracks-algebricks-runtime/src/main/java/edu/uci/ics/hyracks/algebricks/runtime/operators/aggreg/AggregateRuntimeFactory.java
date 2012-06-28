@@ -17,14 +17,15 @@ package edu.uci.ics.hyracks.algebricks.runtime.operators.aggreg;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 
 public class AggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
@@ -32,9 +33,9 @@ public class AggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
     private static final long serialVersionUID = 1L;
 
     // private int[] outColumns;
-    private ICopyAggregateFunctionFactory[] aggregFactories;
+    private IAggregateEvaluatorFactory[] aggregFactories;
 
-    public AggregateRuntimeFactory(ICopyAggregateFunctionFactory[] aggregFactories) {
+    public AggregateRuntimeFactory(IAggregateEvaluatorFactory[] aggregFactories) {
         super(null);
         // this.outColumns = outColumns;
         this.aggregFactories = aggregFactories;
@@ -59,8 +60,8 @@ public class AggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
             throws AlgebricksException {
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
 
-            private ICopyAggregateFunction[] aggregs = new ICopyAggregateFunction[aggregFactories.length];
-            private ArrayBackedValueStorage evalOutput = new ArrayBackedValueStorage();
+            private IAggregateEvaluator[] aggregs = new IAggregateEvaluator[aggregFactories.length];
+            private IPointable result = VoidPointable.FACTORY.createPointable();
             private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(aggregs.length);
 
             private boolean first = true;
@@ -72,7 +73,7 @@ public class AggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
                         first = false;
                         initAccessAppendRef(context);
                         for (int i = 0; i < aggregFactories.length; i++) {
-                            aggregs[i] = aggregFactories[i].createAggregateFunction(evalOutput);
+                            aggregs[i] = aggregFactories[i].createAggregateEvaluator();
                         }
                     }
                     for (int i = 0; i < aggregFactories.length; i++) {
@@ -106,13 +107,12 @@ public class AggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
             private void computeAggregate() throws HyracksDataException {
                 tupleBuilder.reset();
                 for (int f = 0; f < aggregs.length; f++) {
-                    evalOutput.reset();
                     try {
-                        aggregs[f].finish();
+                        aggregs[f].finish(result);
                     } catch (AlgebricksException e) {
                         throw new HyracksDataException(e);
                     }
-                    tupleBuilder.addField(evalOutput.getByteArray(), evalOutput.getStartOffset(), evalOutput.getLength());
+                    tupleBuilder.addField(result.getByteArray(), result.getStartOffset(), result.getLength());
                 }
             }
 

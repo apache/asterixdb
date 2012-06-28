@@ -25,14 +25,14 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ILogicalExpressionJobGen;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
@@ -66,10 +66,10 @@ public class AssignPOperator extends AbstractPhysicalOperator {
         for (int i = 0; i < outColumns.length; i++) {
             outColumns[i] = opSchema.findVariable(variables.get(i));
         }
-        ICopyEvaluatorFactory[] evalFactories = new ICopyEvaluatorFactory[expressions.size()];
-        ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
+        IScalarEvaluatorFactory[] evalFactories = new IScalarEvaluatorFactory[expressions.size()];
+        IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
         for (int i = 0; i < evalFactories.length; i++) {
-            evalFactories[i] = exprJobGen.createEvaluatorFactory(expressions.get(i).getValue(),
+            evalFactories[i] = expressionRuntimeProvider.createEvaluatorFactory(expressions.get(i).getValue(),
                     context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas, context);
         }
 
