@@ -99,4 +99,10 @@ public class TestTaskContext implements IHyracksTaskContext {
     public IStateObject getStateObject(Object id) {
         return null;
     }
+
+    @Override
+    public void sendApplicationMessageToCC(byte[] message, String nodeId) throws Exception {
+        // TODO Auto-generated method stub
+
+    }
 }

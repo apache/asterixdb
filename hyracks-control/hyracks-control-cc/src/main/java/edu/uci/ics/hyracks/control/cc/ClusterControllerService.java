@@ -40,6 +40,7 @@ import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.web.WebServer;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationCreateWork;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationDestroyWork;
+import edu.uci.ics.hyracks.control.cc.work.ApplicationMessageWork;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationStartWork;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationStateChangeWork;
 import edu.uci.ics.hyracks.control.cc.work.GetIpAddressNodeNameMapWork;
@@ -391,6 +392,12 @@ public class ClusterControllerService extends AbstractRemoteService {
                 case APPLICATION_STATE_CHANGE_RESPONSE: {
                     CCNCFunctions.ApplicationStateChangeResponseFunction astrf = (CCNCFunctions.ApplicationStateChangeResponseFunction) fn;
                     workQueue.schedule(new ApplicationStateChangeWork(ClusterControllerService.this, astrf));
+                    return;
+                }
+                case SEND_APPLICATION_MESSAGE: {
+                    CCNCFunctions.SendApplicationMessageFunction rsf = (CCNCFunctions.SendApplicationMessageFunction) fn;
+                    workQueue.schedule(new ApplicationMessageWork(ClusterControllerService.this, rsf.getMessage(), rsf
+                            .getAppName(), rsf.getNodeId()));
                     return;
                 }
             }

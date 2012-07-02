@@ -18,6 +18,7 @@ import java.io.Serializable;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.messages.IMessageBroker;
 
 public class TestNCApplicationContext implements INCApplicationContext {
     private final IHyracksRootContext rootCtx;
@@ -59,5 +60,23 @@ public class TestNCApplicationContext implements INCApplicationContext {
     @Override
     public Object getApplicationObject() {
         return appObject;
+    }
+
+    @Override
+    public String getApplicationName() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void setMessageBroker(IMessageBroker staticticsConnector) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public IMessageBroker getMessageBroker() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

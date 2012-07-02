@@ -108,7 +108,7 @@ public class StartTasksWork extends SynchronizableWork {
                     LOGGER.info("Initializing " + taId + " -> " + han);
                 }
                 final int partition = tid.getPartition();
-                Task task = new Task(joblet, taId, han.getClass().getName(), ncs.getExecutor());
+                Task task = new Task(joblet, taId, han.getClass().getName(), ncs.getExecutor(), ncs);
                 IOperatorNodePushable operator = han.createPushRuntime(task, rdp, partition, td.getPartitionCount());
 
                 List<IPartitionCollector> collectors = new ArrayList<IPartitionCollector>();

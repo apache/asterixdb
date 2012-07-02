@@ -27,4 +27,6 @@ public interface IHyracksTaskContext extends IHyracksCommonContext, IWorkspaceFi
     public TaskAttemptId getTaskAttemptId();
 
     public ICounterContext getCounterContext();
+
+    public void sendApplicationMessageToCC(byte[] message, String nodeId) throws Exception;
 }

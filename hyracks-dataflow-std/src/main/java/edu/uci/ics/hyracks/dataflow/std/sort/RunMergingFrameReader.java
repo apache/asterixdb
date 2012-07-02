@@ -54,11 +54,11 @@ public class RunMergingFrameReader implements IFrameReader {
 
     @Override
     public void open() throws HyracksDataException {
-        tupleAccessors = new FrameTupleAccessor[inFrames.size()];
+        tupleAccessors = new FrameTupleAccessor[runCursors.length];
         Comparator<ReferenceEntry> comparator = createEntryComparator(comparators);
-        topTuples = new ReferencedPriorityQueue(ctx.getFrameSize(), recordDesc, inFrames.size(), comparator);
-        tupleIndexes = new int[inFrames.size()];
-        for (int i = 0; i < inFrames.size(); i++) {
+        topTuples = new ReferencedPriorityQueue(ctx.getFrameSize(), recordDesc, runCursors.length, comparator);
+        tupleIndexes = new int[runCursors.length];
+        for (int i = 0; i < runCursors.length; i++) {
             tupleIndexes[i] = 0;
             int runIndex = topTuples.peek().getRunid();
             runCursors[runIndex].open();
@@ -98,7 +98,7 @@ public class RunMergingFrameReader implements IFrameReader {
 
     @Override
     public void close() throws HyracksDataException {
-        for (int i = 0; i < inFrames.size(); ++i) {
+        for (int i = 0; i < runCursors.length; ++i) {
             closeRun(i, runCursors, tupleAccessors);
         }
     }

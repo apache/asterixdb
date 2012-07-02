@@ -49,6 +49,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.RunningAggr
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ScriptOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
@@ -288,6 +289,11 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitReplicateOperator(ReplicateOperator op, Void arg) throws AlgebricksException {
+        return null;
+    }
+
+    @Override
+    public Void visitExtensionOperator(ExtensionOperator op, Void arg) throws AlgebricksException {
         return null;
     }
 

@@ -16,6 +16,8 @@ package edu.uci.ics.hyracks.api.application;
 
 import java.io.Serializable;
 
+import edu.uci.ics.hyracks.api.messages.IMessageBroker;
+
 /**
  * Base class of the {@link ICCApplicationContext} and the
  * {@link INCApplicationContext}.
@@ -39,4 +41,10 @@ public interface IApplicationContext {
      * @return
      */
     public Serializable getDistributedState();
+
+    public void setMessageBroker(IMessageBroker messageBroker);
+
+    public IMessageBroker getMessageBroker();
+
+    public String getApplicationName();
 }

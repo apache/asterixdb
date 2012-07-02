@@ -74,8 +74,45 @@ public class CCNCFunctions {
         CREATE_APPLICATION,
         DESTROY_APPLICATION,
         REPORT_PARTITION_AVAILABILITY,
+        SEND_APPLICATION_MESSAGE,
 
         OTHER
+    }
+
+    public static class SendApplicationMessageFunction extends Function {
+        private static final long serialVersionUID = 1L;
+        private byte[] serializedMessage;
+        private String nodeId;
+        private String appName;
+
+        public String getNodeId() {
+            return nodeId;
+        }
+
+        public void setNodeId(String nodeId) {
+            this.nodeId = nodeId;
+        }
+
+        public byte[] getMessage() {
+            return serializedMessage;
+        }
+
+        public SendApplicationMessageFunction(byte[] data, String appName, String nodeId) {
+            super();
+            this.serializedMessage = data;
+            this.nodeId = nodeId;
+            this.appName = appName;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.SEND_APPLICATION_MESSAGE;
+        }
+
+        public String getAppName() {
+            return appName;
+        }
+
     }
 
     public static abstract class Function implements Serializable {

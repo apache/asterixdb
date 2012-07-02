@@ -48,6 +48,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.RunningAggr
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ScriptOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
@@ -223,8 +224,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     @Override
     public String visitUnnestMapOperator(UnnestMapOperator op, Integer indent) {
         StringBuilder buffer = new StringBuilder();
-        addIndent(buffer, indent).append(
-                "unnest-map " + op.getVariables() + " <- " + op.getExpressionRef().getValue());
+        addIndent(buffer, indent).append("unnest-map " + op.getVariables() + " <- " + op.getExpressionRef().getValue());
         return buffer.toString();
     }
 
@@ -343,6 +343,13 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     public String visitSinkOperator(SinkOperator op, Integer indent) throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
         addIndent(buffer, indent).append("sink");
+        return buffer.toString();
+    }
+
+    @Override
+    public String visitExtensionOperator(ExtensionOperator op, Integer indent) throws AlgebricksException {
+        StringBuilder buffer = new StringBuilder();
+        addIndent(buffer, indent).append("statistics collection");
         return buffer.toString();
     }
 

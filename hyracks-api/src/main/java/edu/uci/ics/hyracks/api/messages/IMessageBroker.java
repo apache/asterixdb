@@ -12,38 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.core.algebra.base;
+package edu.uci.ics.hyracks.api.messages;
 
-public enum LogicalOperatorTag {
-    AGGREGATE,
-    ASSIGN,
-    CLUSTER,
-    DATASOURCESCAN,
-    DISTINCT,
-    GROUP,
-    EMPTYTUPLESOURCE,
-    EXCHANGE,
-    INNERJOIN,
-    LEFTOUTERJOIN,
-    LIMIT,
-    DIE,
-    NESTEDTUPLESOURCE,
-    ORDER,
-    PROJECT,
-    PARTITIONINGSPLIT,
-    REPLICATE,
-    RUNNINGAGGREGATE,
-    SCRIPT,
-    SELECT,
-    SINK,
-    SUBPLAN,
-    UNIONALL,
-    UNNEST,
-    UNNEST_MAP,
-    WRITE,
-    WRITE_RESULT,
-    INSERT_DELETE,
-    INDEX_INSERT_DELETE,
-    UPDATE,
-    EXTENSION_OPERATOR
+/**
+ * @author rico
+ * 
+ */
+public interface IMessageBroker {
+
+    public void receivedMessage(IMessage message, String nodeId);
+
 }

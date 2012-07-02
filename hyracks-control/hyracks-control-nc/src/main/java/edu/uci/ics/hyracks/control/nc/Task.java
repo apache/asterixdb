@@ -87,7 +87,9 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private volatile boolean aborted;
 
-    public Task(Joblet joblet, TaskAttemptId taskId, String displayName, Executor executor) {
+    private NodeControllerService ncs;
+
+    public Task(Joblet joblet, TaskAttemptId taskId, String displayName, Executor executor, NodeControllerService ncs) {
         this.joblet = joblet;
         this.taskAttemptId = taskId;
         this.displayName = displayName;
@@ -101,6 +103,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         failed = false;
         errorBaos = new ByteArrayOutputStream();
         errorWriter = new PrintWriter(errorBaos, true);
+        this.ncs = ncs;
     }
 
     public void setTaskRuntime(IPartitionCollector[] collectors, IOperatorNodePushable operator) {
@@ -339,5 +342,10 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     @Override
     public IStateObject getStateObject(Object id) {
         return opEnv.getStateObject(id);
+    }
+
+    @Override
+    public void sendApplicationMessageToCC(byte[] message, String nodeId) throws Exception {
+        this.ncs.sendApplicationMessageToCC(message, this.getJobletContext().getApplicationContext().getApplicationName(), nodeId);
     }
 }

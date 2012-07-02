@@ -51,8 +51,10 @@ public class BinarySearchAlgorithm {
             int cmp = key.compareTo(vector.getBytes(index), vector.getStart(index), vector.getLength(index));
             if (cmp > 0) {
                 left = index + 1;
+                index = left;
             } else if (cmp < 0) {
                 right = index - 1;
+                index = left;
             } else {
                 return true;
             }

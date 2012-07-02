@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
@@ -86,6 +87,7 @@ public class CreateApplicationWork extends SynchronizableWork {
                     .notifyApplicationStateChange(ncs.getId(), appName, ApplicationStatus.INITIALIZED);
         } catch (Exception e) {
             LOGGER.warning("Error creating application: " + e.getMessage());
+            LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
         }
     }
 }
