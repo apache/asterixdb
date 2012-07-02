@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
@@ -43,6 +44,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrack
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
+import edu.uci.ics.hyracks.storage.common.smi.TransientFileMapManager;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
 
@@ -52,7 +54,6 @@ public class LSMBTreeTestHarness {
     public static final BTreeLeafFrameType[] LEAF_FRAMES_TO_TEST = new BTreeLeafFrameType[] { BTreeLeafFrameType.REGULAR_NSM };
 
     private static final long RANDOM_SEED = 50;
-    private static final int DUMMY_FILE_ID = -1;
 
     protected final int diskPageSize;
     protected final int diskNumPages;
@@ -76,6 +77,7 @@ public class LSMBTreeTestHarness {
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final static String sep = System.getProperty("file.separator");
     protected String onDiskDir;
+    protected FileReference file;
 
     public LSMBTreeTestHarness() {
         this.diskPageSize = AccessMethodTestsConfig.LSM_BTREE_DISK_PAGE_SIZE;
@@ -106,11 +108,13 @@ public class LSMBTreeTestHarness {
 
     public void setUp() throws HyracksException {
         onDiskDir = "lsm_btree_" + simpleDateFormat.format(new Date()) + sep;
+        file = new FileReference(new File(onDiskDir));
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(diskPageSize, diskNumPages, diskMaxOpenFiles);
         diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), memPageSize, memNumPages);
+        memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), memPageSize, memNumPages,
+                new TransientFileMapManager());
         memFreePageManager = new InMemoryFreePageManager(memNumPages, new LIFOMetaDataFrameFactory());
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         rnd.setSeed(RANDOM_SEED);
@@ -161,10 +165,6 @@ public class LSMBTreeTestHarness {
         return hyracksFrameSize;
     }
 
-    public int getFileId() {
-        return DUMMY_FILE_ID;
-    }
-
     public IOManager getIOManager() {
         return ioManager;
     }
@@ -189,8 +189,8 @@ public class LSMBTreeTestHarness {
         return ctx;
     }
 
-    public String getOnDiskDir() {
-        return onDiskDir;
+    public FileReference getFileReference() {
+        return file;
     }
 
     public Random getRandom() {

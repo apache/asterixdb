@@ -19,20 +19,25 @@ import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class BTreeUtils {
-    public static BTree createBTree(IBufferCache bufferCache, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories, BTreeLeafFrameType leafType) throws BTreeException {
+    public static BTree createBTree(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
+            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories, BTreeLeafFrameType leafType)
+            throws BTreeException {
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = getLeafFrameFactory(tupleWriterFactory, leafType);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
-        BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories, typeTraits.length);
+        BTree btree = new BTree(bufferCache, fileMapProvider, freePageManager, interiorFrameFactory, leafFrameFactory,
+                cmpFactories, typeTraits.length);
         return btree;
     }
-    
+
     // Creates a new MultiComparator by constructing new IBinaryComparators.
-    public static MultiComparator getSearchMultiComparator(IBinaryComparatorFactory[] cmpFactories, ITupleReference searchKey) {
+    public static MultiComparator getSearchMultiComparator(IBinaryComparatorFactory[] cmpFactories,
+            ITupleReference searchKey) {
         if (searchKey == null || cmpFactories.length == searchKey.getFieldCount()) {
             return MultiComparator.create(cmpFactories);
         }
@@ -42,11 +47,12 @@ public class BTreeUtils {
         }
         return new MultiComparator(newCmps);
     }
-    
-    public static ITreeIndexFrameFactory getLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, BTreeLeafFrameType leafType) throws BTreeException {
-        switch(leafType) {
+
+    public static ITreeIndexFrameFactory getLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory,
+            BTreeLeafFrameType leafType) throws BTreeException {
+        switch (leafType) {
             case REGULAR_NSM: {
-                return new BTreeNSMLeafFrameFactory(tupleWriterFactory);                
+                return new BTreeNSMLeafFrameFactory(tupleWriterFactory);
             }
             case FIELD_PREFIX_COMPRESSED_NSM: {
                 return new BTreeFieldPrefixNSMLeafFrameFactory(tupleWriterFactory);

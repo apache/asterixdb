@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestWorkerFactory;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import edu.uci.ics.hyracks.storage.am.common.TestWorkloadConf;
@@ -53,7 +54,7 @@ public class LSMRTreeWithAntiMatterTuplesMultiThreadTest extends AbstractRTreeMu
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType) throws TreeIndexException {
         return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(harness.getMemBufferCache(),
-                harness.getMemFreePageManager(), harness.getIOManager(), harness.getOnDiskDir(),
+                harness.getMemFreePageManager(), harness.getIOManager(), harness.getFileReference(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits, rtreeCmpFactories,
                 btreeCmpFactories, valueProviderFactories, rtreePolicyType, harness.getFlushController(),
                 harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler());
@@ -104,13 +105,13 @@ public class LSMRTreeWithAntiMatterTuplesMultiThreadTest extends AbstractRTreeMu
     }
 
     @Override
-    protected int getFileId() {
-        return harness.getFileId();
+    protected String getIndexTypeName() {
+        return "LSMRTree";
     }
 
     @Override
-    protected String getIndexTypeName() {
-        return "LSMRTree";
+    protected FileReference getFileReference() {
+        return harness.getFileReference();
     }
 
 }

@@ -16,29 +16,38 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public abstract class TreeFactory<T extends ITreeIndex> {
 
-    protected IBufferCache bufferCache;
-    protected int fieldCount;
-    protected IBinaryComparatorFactory[] cmpFactories;
-    protected ITreeIndexFrameFactory interiorFrameFactory;
-    protected ITreeIndexFrameFactory leafFrameFactory;
-    protected LinkedListFreePageManagerFactory freePageManagerFactory;
+    protected final IBufferCache bufferCache;
 
-    public TreeFactory(IBufferCache bufferCache, LinkedListFreePageManagerFactory freePageManagerFactory,
-            IBinaryComparatorFactory[] cmpFactories, int fieldCount, ITreeIndexFrameFactory interiorFrameFactory,
-            ITreeIndexFrameFactory leafFrameFactory) {
+    protected final IFileMapProvider fileMapProvider;
+
+    protected final IFreePageManagerFactory freePageManagerFactory;
+
+    protected final ITreeIndexFrameFactory interiorFrameFactory;
+
+    protected final ITreeIndexFrameFactory leafFrameFactory;
+
+    protected final IBinaryComparatorFactory[] cmpFactories;
+
+    protected final int fieldCount;
+
+    public TreeFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
+            IFreePageManagerFactory freePageManagerFactory, ITreeIndexFrameFactory interiorFrameFactory,
+            ITreeIndexFrameFactory leafFrameFactory, IBinaryComparatorFactory[] cmpFactories, int fieldCount) {
         this.bufferCache = bufferCache;
-        this.fieldCount = fieldCount;
-        this.cmpFactories = cmpFactories;
+        this.fileMapProvider = fileMapProvider;
+        this.freePageManagerFactory = freePageManagerFactory;
         this.interiorFrameFactory = interiorFrameFactory;
         this.leafFrameFactory = leafFrameFactory;
-        this.freePageManagerFactory = freePageManagerFactory;
+        this.cmpFactories = cmpFactories;
+        this.fieldCount = fieldCount;
     }
 
     public abstract T createIndexInstance();

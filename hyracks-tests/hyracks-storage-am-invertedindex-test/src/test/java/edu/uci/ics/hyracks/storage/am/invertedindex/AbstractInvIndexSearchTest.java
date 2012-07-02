@@ -137,7 +137,7 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
     protected IIndexCursor resultCursor;
 
     protected abstract void setTokenizer();
-    
+
     /**
      * Initialize members, generate data, and bulk load the inverted index.
      */
@@ -149,33 +149,27 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
 
         // --- BTREE ---
 
-        bufferCache.createFile(btreeFile);
-        btreeFileId = fmp.lookupFileId(btreeFile);
-        bufferCache.openFile(btreeFileId);
-
         btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
         freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
-        btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory,
-                btreeCmpFactories, btreeTypeTraits.length);
-        btree.create(btreeFileId);
-        btree.open(btreeFileId);
+        btree = new BTree(bufferCache, fmp, freePageManager, interiorFrameFactory, leafFrameFactory, btreeCmpFactories,
+                btreeTypeTraits.length);
+        btree.create(btreeFile);
+        btree.open(btreeFile);
 
         // --- INVERTED INDEX ---
 
         setTokenizer();
-        
-        bufferCache.createFile(invListsFile);
-        invListsFileId = fmp.lookupFileId(invListsFile);
-        bufferCache.openFile(invListsFileId);
 
         invListTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
         invListCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
-        invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories, invListBuilder, tokenizer);
-        invIndex.open(invListsFileId);
+        invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories, invListBuilder,
+                tokenizer, fmp);
+        invIndex.create(invListsFile);
+        invIndex.open(invListsFile);
 
         rnd.setSeed(50);
     }
@@ -185,8 +179,6 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
         AbstractInvIndexTest.tearDown();
         btree.close();
         invIndex.close();
-        bufferCache.closeFile(btreeFileId);
-        bufferCache.closeFile(invListsFileId);
         bufferCache.close();
     }
 }

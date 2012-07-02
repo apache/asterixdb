@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStats;
 import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStatsGatherer;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
     private final TreeIndexDataflowHelper treeIndexHelper;
@@ -58,8 +59,11 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
             treeIndexHelper.init(false);
             ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
             IBufferCache bufferCache = treeIndexHelper.getOperatorDescriptor().getStorageManager().getBufferCache(ctx);
-            statsGatherer = new TreeIndexStatsGatherer(bufferCache, treeIndex.getFreePageManager(),
-                    treeIndexHelper.getIndexFileId(), treeIndex.getRootPageId());
+            IFileMapProvider fileMapProvider = treeIndexHelper.getOperatorDescriptor().getStorageManager()
+                    .getFileMapProvider(ctx);
+            int indexFileId = fileMapProvider.lookupFileId(treeIndexHelper.getFilereference());
+            statsGatherer = new TreeIndexStatsGatherer(bufferCache, treeIndex.getFreePageManager(), indexFileId,
+                    treeIndex.getRootPageId());
             TreeIndexStats stats = statsGatherer.gatherStats(treeIndex.getLeafFrameFactory().createFrame(), treeIndex
                     .getInteriorFrameFactory().createFrame(), treeIndex.getFreePageManager().getMetaDataFrameFactory()
                     .createFrame());

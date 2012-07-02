@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -35,7 +36,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
@@ -87,14 +87,15 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
      * Opens LSMRTree, cleaning up invalid files from base dir, and registering
      * all valid files as on-disk RTrees and BTrees.
      * 
-     * @param indexFileId
+     * @param fileReference
      *            Dummy file id.
      * @throws HyracksDataException
      */
     @Override
-    public void open(int indexFileId) throws HyracksDataException {
-        super.open(indexFileId);
+    public void open(FileReference fileReference) throws HyracksDataException {
+        super.open(fileReference);
         RTree dummyRTree = diskRTreeFactory.createIndexInstance();
+        dummyRTree.create(new FileReference(new File("dummyrtree")));
         List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(dummyRTree, componentFinalizer);
         for (Object o : validFileNames) {
             String fileName = (String) o;
@@ -108,8 +109,6 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     public void close() throws HyracksDataException {
         for (Object o : diskComponents) {
             RTree rtree = (RTree) o;
-            diskBufferCache.closeFile(rtree.getFileId());
-            diskBufferCache.deleteFile(rtree.getFileId(), false);
             rtree.close();
         }
         diskComponents.clear();
@@ -196,13 +195,13 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         // Since the LSM-RTree is used as a secondary assumption, the
         // primary key will be the last comparator in the BTree comparators
         if (rTreeTupleSorter == null) {
-            rTreeTupleSorter = new TreeTupleSorter(memRTreeTuples, MEM_RTREE_FILE_ID, linearizerArray,
-                    rtreeLeafFrameFactory.createFrame(), rtreeLeafFrameFactory.createFrame(), memComponent.getRTree()
-                            .getBufferCache(), comparatorFields);
+            rTreeTupleSorter = new TreeTupleSorter(memRTreeTuples, memComponent.getRTree().getFileId(),
+                    linearizerArray, rtreeLeafFrameFactory.createFrame(), rtreeLeafFrameFactory.createFrame(),
+                    memComponent.getRTree().getBufferCache(), comparatorFields);
 
-            bTreeTupleSorter = new TreeTupleSorter(memBTreeTuples, MEM_BTREE_FILE_ID, linearizerArray,
-                    btreeLeafFrameFactory.createFrame(), btreeLeafFrameFactory.createFrame(), memComponent.getBTree()
-                            .getBufferCache(), comparatorFields);
+            bTreeTupleSorter = new TreeTupleSorter(memBTreeTuples, memComponent.getBTree().getFileId(),
+                    linearizerArray, btreeLeafFrameFactory.createFrame(), btreeLeafFrameFactory.createFrame(),
+                    memComponent.getBTree().getBufferCache(), comparatorFields);
         } else {
             rTreeTupleSorter.reset();
             bTreeTupleSorter.reset();
@@ -301,8 +300,6 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         for (Object o : mergedComponents) {
             RTree oldRTree = (RTree) o;
             FileReference fileRef = diskFileMapProvider.lookupFileName(oldRTree.getFileId());
-            diskBufferCache.closeFile(oldRTree.getFileId());
-            diskBufferCache.deleteFile(oldRTree.getFileId(), false);
             oldRTree.close();
             fileRef.getFile().delete();
         }

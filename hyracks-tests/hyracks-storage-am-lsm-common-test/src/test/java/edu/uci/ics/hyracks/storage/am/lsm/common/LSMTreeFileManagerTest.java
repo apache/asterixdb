@@ -53,9 +53,10 @@ public class LSMTreeFileManagerTest {
     protected IOManager ioManager;
     protected IFileMapProvider fileMapProvider;
     protected String baseDir;
+    protected FileReference file;
     // Dummy finalizer that always considers components valid. Just for testing.
     protected ILSMComponentFinalizer componentFinalizer = new DummyLSMComponentFinalizer();
-    
+
     @Before
     public void setUp() throws HyracksException {
         TestStorageManagerComponentHolder.init(DEFAULT_PAGE_SIZE, DEFAULT_NUM_PAGES, DEFAULT_MAX_OPEN_FILES);
@@ -64,8 +65,9 @@ public class LSMTreeFileManagerTest {
         baseDir = "lsm_tree" + simpleDateFormat.format(new Date()) + sep;
         File f = new File(baseDir);
         f.mkdirs();
+        file = new FileReference(f);
     }
-    
+
     @After
     public void tearDown() throws HyracksDataException {
         File f = new File(baseDir);
@@ -73,7 +75,7 @@ public class LSMTreeFileManagerTest {
     }
 
     public void sortOrderTest(boolean testFlushFileName) throws InterruptedException, HyracksDataException {
-        ILSMFileManager fileManager = new LSMTreeFileManager(ioManager, fileMapProvider, baseDir);
+        ILSMFileManager fileManager = new LSMTreeFileManager(ioManager, fileMapProvider, file);
         LinkedList<String> fileNames = new LinkedList<String>();
 
         int numFileNames = 100;
@@ -109,14 +111,14 @@ public class LSMTreeFileManagerTest {
         sortOrderTest(true);
         sortOrderTest(false);
     }
-    
+
     public void cleanInvalidFilesTest(IOManager ioManager) throws InterruptedException, IOException {
-        ILSMFileManager fileManager = new LSMTreeFileManager(ioManager, fileMapProvider, baseDir);
+        ILSMFileManager fileManager = new LSMTreeFileManager(ioManager, fileMapProvider, file);
         fileManager.createDirs();
-        
+
         List<FileReference> flushFiles = new ArrayList<FileReference>();
         List<FileReference> allFiles = new ArrayList<FileReference>();
-        
+
         int numFileNames = 100;
         long sleepTime = 5;
         // Generate a bunch of flush files.
@@ -124,10 +126,10 @@ public class LSMTreeFileManagerTest {
             String relFlushFileName = (String) fileManager.getRelFlushFileName();
             FileReference flushFile = fileManager.createFlushFile(relFlushFileName);
             flushFiles.add(flushFile);
-            Thread.sleep(sleepTime);            
+            Thread.sleep(sleepTime);
         }
         allFiles.addAll(flushFiles);
-        
+
         // Simulate merging some of the flush files.
         // Merge range 0 to 4.
         FileReference mergeFile1 = simulateMerge(fileManager, flushFiles.get(0), flushFiles.get(4));
@@ -144,19 +146,19 @@ public class LSMTreeFileManagerTest {
         // Merge range 50 to 79.
         FileReference mergeFile5 = simulateMerge(fileManager, flushFiles.get(50), flushFiles.get(79));
         allFiles.add(mergeFile5);
-        
+
         // Simulate merging of merge files.
         FileReference mergeFile6 = simulateMerge(fileManager, mergeFile1, mergeFile2);
         allFiles.add(mergeFile6);
         FileReference mergeFile7 = simulateMerge(fileManager, mergeFile3, mergeFile4);
         allFiles.add(mergeFile7);
-        
+
         // Create all files and set delete on exit for all files.
-        for (FileReference fileRef : allFiles) {            
+        for (FileReference fileRef : allFiles) {
             fileRef.getFile().createNewFile();
             fileRef.getFile().deleteOnExit();
         }
-        
+
         // Populate expected valid flush files.
         List<String> expectedValidFiles = new ArrayList<String>();
         for (int i = 30; i < 50; i++) {
@@ -165,7 +167,7 @@ public class LSMTreeFileManagerTest {
         for (int i = 80; i < 100; i++) {
             expectedValidFiles.add(flushFiles.get(i).getFile().getName());
         }
-        
+
         // Populate expected valid merge files.
         expectedValidFiles.add(mergeFile5.getFile().getName());
         expectedValidFiles.add(mergeFile6.getFile().getName());
@@ -173,10 +175,10 @@ public class LSMTreeFileManagerTest {
 
         // Sort expected files.
         Collections.sort(expectedValidFiles, fileManager.getFileNameComparator());
-        
+
         // Pass null and a dummy component finalizer. We don't test for physical consistency in this test.
         List<Object> validFiles = fileManager.cleanupAndGetValidFiles(null, componentFinalizer);
-        
+
         // Check actual files against expected files.
         assertEquals(expectedValidFiles.size(), validFiles.size());
         for (int i = 0; i < expectedValidFiles.size(); i++) {
@@ -184,10 +186,10 @@ public class LSMTreeFileManagerTest {
             File f = new File(fileName);
             assertEquals(expectedValidFiles.get(i), f.getName());
         }
-        
+
         // Make sure invalid files were removed from all IODevices.
         ArrayList<String> remainingFiles = new ArrayList<String>();
-        for(IODeviceHandle dev : ioManager.getIODevices()) {
+        for (IODeviceHandle dev : ioManager.getIODevices()) {
             File dir = new File(dev.getPath(), baseDir);
             FilenameFilter filter = new FilenameFilter() {
                 public boolean accept(File dir, String name) {
@@ -200,38 +202,38 @@ public class LSMTreeFileManagerTest {
                 remainingFiles.add(f.getName());
             }
         }
-        
+
         Collections.sort(remainingFiles, fileManager.getFileNameComparator());
         // Check actual files in directory against expected files.
         assertEquals(expectedValidFiles.size(), remainingFiles.size());
         for (int i = 0; i < expectedValidFiles.size(); i++) {
-            assertEquals(expectedValidFiles.get(i), remainingFiles.get(i));            
+            assertEquals(expectedValidFiles.get(i), remainingFiles.get(i));
         }
     }
-    
+
     @Test
     public void singleIODeviceTest() throws InterruptedException, IOException {
         IOManager singleDeviceIOManager = createIOManager(1);
         cleanInvalidFilesTest(singleDeviceIOManager);
         cleanDirs(singleDeviceIOManager);
     }
-    
+
     @Test
     public void twoIODevicesTest() throws InterruptedException, IOException {
         IOManager twoDevicesIOManager = createIOManager(2);
         cleanInvalidFilesTest(twoDevicesIOManager);
         cleanDirs(twoDevicesIOManager);
     }
-    
+
     @Test
     public void fourIODevicesTest() throws InterruptedException, IOException {
         IOManager fourDevicesIOManager = createIOManager(4);
         cleanInvalidFilesTest(fourDevicesIOManager);
         cleanDirs(fourDevicesIOManager);
     }
-    
+
     private void cleanDirs(IOManager ioManager) {
-        for(IODeviceHandle dev : ioManager.getIODevices()) {
+        for (IODeviceHandle dev : ioManager.getIODevices()) {
             File dir = new File(dev.getPath(), baseDir);
             FilenameFilter filter = new FilenameFilter() {
                 public boolean accept(File dir, String name) {
@@ -245,7 +247,7 @@ public class LSMTreeFileManagerTest {
             }
         }
     }
-    
+
     private IOManager createIOManager(int numDevices) throws HyracksException {
         List<IODeviceHandle> devices = new ArrayList<IODeviceHandle>();
         for (int i = 0; i < numDevices; i++) {
@@ -254,14 +256,17 @@ public class LSMTreeFileManagerTest {
         }
         return new IOManager(devices, Executors.newCachedThreadPool());
     }
-    
-    private FileReference simulateMerge(ILSMFileManager fileManager, FileReference a, FileReference b) throws HyracksDataException {
-        String relMergeFileName = (String) fileManager.getRelMergeFileName(a.getFile().getName(), b.getFile().getName());
+
+    private FileReference simulateMerge(ILSMFileManager fileManager, FileReference a, FileReference b)
+            throws HyracksDataException {
+        String relMergeFileName = (String) fileManager
+                .getRelMergeFileName(a.getFile().getName(), b.getFile().getName());
         FileReference mergeFile = fileManager.createMergeFile(relMergeFileName);
         return mergeFile;
     }
-    
-    private String getMergeFileName(ILSMFileManager fileNameManager, String firstFile, String lastFile) throws HyracksDataException {
+
+    private String getMergeFileName(ILSMFileManager fileNameManager, String firstFile, String lastFile)
+            throws HyracksDataException {
         File f1 = new File(firstFile);
         File f2 = new File(lastFile);
         return (String) fileNameManager.getRelMergeFileName(f1.getName(), f2.getName());

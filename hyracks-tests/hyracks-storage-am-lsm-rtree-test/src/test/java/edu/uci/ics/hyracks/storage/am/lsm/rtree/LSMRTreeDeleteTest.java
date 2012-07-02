@@ -50,10 +50,10 @@ public class LSMRTreeDeleteTest extends AbstractRTreeDeleteTest {
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, RTreePolicyType rtreePolicyType)
             throws Exception {
         return LSMRTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
-                harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskBufferCache(),
+                harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
                 harness.getDiskFileMapProvider(), fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType,
-                harness.getFileId(), harness.getFlushController(), harness.getMergePolicy(),
-                harness.getOperationTracker(), harness.getIOScheduler());
+                harness.getFlushController(), harness.getMergePolicy(), harness.getOperationTracker(),
+                harness.getIOScheduler());
     }
 
     @Override

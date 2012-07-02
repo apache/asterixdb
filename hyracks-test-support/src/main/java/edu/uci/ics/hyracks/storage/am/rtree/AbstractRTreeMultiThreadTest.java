@@ -26,6 +26,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
@@ -64,13 +65,13 @@ public abstract class AbstractRTreeMultiThreadTest {
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType)
             throws TreeIndexException;
 
-    protected abstract int getFileId();
-
     protected abstract ITreeIndexTestWorkerFactory getWorkerFactory();
 
     protected abstract ArrayList<TestWorkloadConf> getTestWorkloadConf();
 
     protected abstract String getIndexTypeName();
+
+    protected abstract FileReference getFileReference();
 
     protected static float[] getUniformOpProbs(TestOperation[] ops) {
         float[] opProbs = new float[ops.length];
@@ -106,7 +107,7 @@ public abstract class AbstractRTreeMultiThreadTest {
 
         TreeIndexMultiThreadTestDriver driver = new TreeIndexMultiThreadTestDriver(index, workerFactory, fieldSerdes,
                 conf.ops, conf.opProbs);
-        driver.init(getFileId());
+        driver.init(getFileReference());
         long[] times = driver.run(numThreads, 1, NUM_OPERATIONS, batchSize);
         driver.deinit();
 

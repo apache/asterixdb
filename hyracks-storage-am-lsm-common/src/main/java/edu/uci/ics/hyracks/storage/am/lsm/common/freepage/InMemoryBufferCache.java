@@ -28,15 +28,20 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPageInternal;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class InMemoryBufferCache implements IBufferCacheInternal {
     protected final ICacheMemoryAllocator allocator;
+    protected final IFileMapManager fileMapManager;
     protected final int pageSize;
     protected final CachedPage[] pages;
     protected final List<CachedPage> overflowPages = new ArrayList<CachedPage>();
 
-    public InMemoryBufferCache(ICacheMemoryAllocator allocator, int pageSize, int numPages) {
+    public InMemoryBufferCache(ICacheMemoryAllocator allocator, int pageSize, int numPages,
+            IFileMapManager fileMapManager) {
         this.allocator = allocator;
+        this.fileMapManager = fileMapManager;
         this.pageSize = pageSize;
         ByteBuffer[] buffers = allocator.allocate(pageSize, numPages);
         pages = new CachedPage[buffers.length];
@@ -93,7 +98,9 @@ public class InMemoryBufferCache implements IBufferCacheInternal {
 
     @Override
     public void createFile(FileReference fileRef) throws HyracksDataException {
-        // Do nothing.
+        synchronized (fileMapManager) {
+            fileMapManager.registerFile(fileRef);
+        }
     }
 
     @Override
@@ -108,7 +115,9 @@ public class InMemoryBufferCache implements IBufferCacheInternal {
 
     @Override
     public void deleteFile(int fileId, boolean flushDirtyPages) throws HyracksDataException {
-        // Do nothing.
+        synchronized (fileMapManager) {
+            fileMapManager.unregisterFile(fileId);
+        }
     }
 
     @Override
@@ -181,5 +190,9 @@ public class InMemoryBufferCache implements IBufferCacheInternal {
 
     @Override
     public void flushDirtyPage(ICachedPage page) throws HyracksDataException {
+    }
+
+    public IFileMapProvider getFileMapProvider() {
+        return fileMapManager;
     }
 }

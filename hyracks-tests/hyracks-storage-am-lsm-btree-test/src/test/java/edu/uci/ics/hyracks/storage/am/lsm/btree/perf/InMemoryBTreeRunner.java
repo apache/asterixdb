@@ -15,12 +15,14 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.btree.perf;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
@@ -40,10 +42,11 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManage
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
+import edu.uci.ics.hyracks.storage.common.smi.TransientFileMapManager;
 
 public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
     protected IBufferCache bufferCache;
-    protected int btreeFileId;
+    protected FileReference file;
 
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final static String tmpDir = System.getProperty("java.io.tmpdir");
@@ -57,22 +60,21 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
             IBinaryComparatorFactory[] cmpFactories) throws HyracksDataException, BTreeException {
         this.numBatches = numBatches;
         fileName = tmpDir + sep + simpleDateFormat.format(new Date());
+        file = new FileReference(new File(fileName));
         init(pageSize, numPages, typeTraits, cmpFactories);
     }
 
     protected void init(int pageSize, int numPages, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
             throws HyracksDataException, BTreeException {
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
-        bufferCache = new InMemoryBufferCache(allocator, pageSize, numPages);
-        // Chose an aribtrary file id.
-        btreeFileId = 0;
+        bufferCache = new InMemoryBufferCache(allocator, pageSize, numPages, new TransientFileMapManager());
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         IFreePageManager freePageManager = new InMemoryFreePageManager(bufferCache.getNumPages(), metaFrameFactory);
-        btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
-                typeTraits.length);
+        btree = new BTree(bufferCache, new TransientFileMapManager(), freePageManager, interiorFrameFactory,
+                leafFrameFactory, cmpFactories, typeTraits.length);
     }
 
     @Override
@@ -105,13 +107,12 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
 
     @Override
     public void deinit() throws Exception {
-        bufferCache.closeFile(btreeFileId);
         bufferCache.close();
     }
 
     @Override
     public void reset() throws Exception {
-        btree.create(btreeFileId);
+        btree.create(file);
     }
 
     public class BTreeThread extends Thread {

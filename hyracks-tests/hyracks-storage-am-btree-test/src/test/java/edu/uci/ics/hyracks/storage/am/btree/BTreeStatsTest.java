@@ -1,7 +1,6 @@
 package edu.uci.ics.hyracks.storage.am.btree;
 
 import java.io.DataOutput;
-import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.logging.Level;
@@ -14,7 +13,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -58,12 +56,8 @@ public class BTreeStatsTest extends AbstractBTreeTest {
     public void test01() throws Exception {
 
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
-        IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        FileReference file = new FileReference(new File(harness.getFileName()));
-        bufferCache.createFile(file);
-        int fileId = fmp.lookupFileId(file);
-        bufferCache.openFile(fileId);
+        IBufferCache bufferCache = harness.getBufferCache();
+        IFileMapProvider fmp = harness.getFileMapProvider();
 
         // declare fields
         int fieldCount = 2;
@@ -87,10 +81,10 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
-        BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
-                fieldCount);
-        btree.create(fileId);
-        btree.open(fileId);
+        BTree btree = new BTree(bufferCache, fmp, freePageManager, interiorFrameFactory, leafFrameFactory,
+                cmpFactories, fieldCount);
+        btree.create(harness.getFileReference());
+        btree.open(harness.getFileReference());
 
         Random rnd = new Random();
         rnd.setSeed(50);
@@ -147,6 +141,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
             }
         }
 
+        int fileId = fmp.lookupFileId(harness.getFileReference());
         TreeIndexStatsGatherer statsGatherer = new TreeIndexStatsGatherer(bufferCache, freePageManager, fileId,
                 btree.getRootPageId());
         TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
@@ -159,7 +154,6 @@ public class BTreeStatsTest extends AbstractBTreeTest {
         bufferCacheWarmup.warmup(leafFrame, metaFrame, new int[] { 1, 2 }, new int[] { 2, 5 });
 
         btree.close();
-        bufferCache.closeFile(fileId);
         bufferCache.close();
     }
 }

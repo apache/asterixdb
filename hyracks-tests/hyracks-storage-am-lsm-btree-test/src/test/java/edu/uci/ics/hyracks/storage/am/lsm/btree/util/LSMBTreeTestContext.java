@@ -20,6 +20,7 @@ import java.util.Collection;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestContext;
@@ -63,17 +64,17 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
     }
 
     public static LSMBTreeTestContext create(InMemoryBufferCache memBufferCache,
-            InMemoryFreePageManager memFreePageManager, IOManager ioManager, String onDiskDir,
+            InMemoryFreePageManager memFreePageManager, IOManager ioManager, FileReference file,
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ISerializerDeserializer[] fieldSerdes,
-            int numKeyFields, int fileId, ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
+            int numKeyFields, ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
             ILSMOperationTracker opTracker, ILSMIOScheduler ioScheduler) throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
-        LSMBTree lsmTree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, onDiskDir,
+        LSMBTree lsmTree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file,
                 diskBufferCache, diskFileMapProvider, typeTraits, cmpFactories, flushController, mergePolicy,
                 opTracker, ioScheduler);
-        lsmTree.create(fileId);
-        lsmTree.open(fileId);
+        lsmTree.create(file);
+        lsmTree.open(file);
         LSMBTreeTestContext testCtx = new LSMBTreeTestContext(fieldSerdes, lsmTree);
         return testCtx;
     }

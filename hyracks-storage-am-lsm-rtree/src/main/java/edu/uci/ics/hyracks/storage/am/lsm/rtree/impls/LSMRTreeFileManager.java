@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
@@ -40,15 +41,15 @@ public class LSMRTreeFileManager extends LSMTreeFileManager {
             return !name.startsWith(".") && name.endsWith(BTREE_STRING);
         }
     };
-    
+
     private static FilenameFilter rtreeFilter = new FilenameFilter() {
         public boolean accept(File dir, String name) {
             return !name.startsWith(".") && name.endsWith(RTREE_STRING);
         }
     };
-    
-    public LSMRTreeFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, String baseDir) {
-        super(ioManager, fileMapProvider, baseDir);
+
+    public LSMRTreeFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file) {
+        super(ioManager, fileMapProvider, file);
     }
 
     @Override
@@ -67,14 +68,15 @@ public class LSMRTreeFileManager extends LSMTreeFileManager {
     }
 
     @Override
-    public List<Object> cleanupAndGetValidFiles(Object lsmComponent, ILSMComponentFinalizer componentFinalizer) throws HyracksDataException {
+    public List<Object> cleanupAndGetValidFiles(Object lsmComponent, ILSMComponentFinalizer componentFinalizer)
+            throws HyracksDataException {
         List<Object> validFiles = new ArrayList<Object>();
         ArrayList<ComparableFileName> allRTreeFiles = new ArrayList<ComparableFileName>();
         ArrayList<ComparableFileName> allBTreeFiles = new ArrayList<ComparableFileName>();
         LSMRTreeComponent component = (LSMRTreeComponent) lsmComponent;
-        
+
         // Gather files from all IODeviceHandles.
-        for (IODeviceHandle dev : ioManager.getIODevices()) {            
+        for (IODeviceHandle dev : ioManager.getIODevices()) {
             cleanupAndGetValidFilesInternal(dev, btreeFilter, component.getBTree(), componentFinalizer, allBTreeFiles);
             HashSet<String> btreeFilesSet = new HashSet<String>();
             for (ComparableFileName cmpFileName : allBTreeFiles) {
@@ -83,7 +85,8 @@ public class LSMRTreeFileManager extends LSMTreeFileManager {
             }
             // List of valid RTree files that may or may not have a BTree buddy. Will check for buddies below.
             ArrayList<ComparableFileName> tmpAllRTreeFiles = new ArrayList<ComparableFileName>();
-            cleanupAndGetValidFilesInternal(dev, rtreeFilter, component.getRTree(), componentFinalizer, tmpAllRTreeFiles);
+            cleanupAndGetValidFilesInternal(dev, rtreeFilter, component.getRTree(), componentFinalizer,
+                    tmpAllRTreeFiles);
             // Look for buddy BTrees for all valid RTrees. 
             // If no buddy is found, delete the file, otherwise add the RTree to allRTreeFiles. 
             for (ComparableFileName cmpFileName : tmpAllRTreeFiles) {
@@ -103,7 +106,7 @@ public class LSMRTreeFileManager extends LSMTreeFileManager {
         if (allRTreeFiles.size() != allBTreeFiles.size()) {
             throw new HyracksDataException("Unequal number of valid RTree and BTree files found. Aborting cleanup.");
         }
-        
+
         // Trivial cases.
         if (allRTreeFiles.isEmpty() || allBTreeFiles.isEmpty()) {
             return validFiles;

@@ -41,7 +41,6 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
     @Test
     public void test01() throws Exception {
         IBufferCache bufferCache = harness.getBufferCache();
-        int btreeFileId = harness.getBTreeFileId();
 
         // declare fields
         int fieldCount = 2;
@@ -65,10 +64,10 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
         IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
 
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
-        BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
-                fieldCount);
-        btree.create(btreeFileId);
-        btree.open(btreeFileId);
+        BTree btree = new BTree(bufferCache, harness.getFileMapProvider(), freePageManager, interiorFrameFactory,
+                leafFrameFactory, cmpFactories, fieldCount);
+        btree.create(harness.getFileReference());
+        btree.open(harness.getFileReference());
 
         Random rnd = new Random();
         rnd.setSeed(50);

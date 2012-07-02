@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.btree.perf;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -22,6 +23,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
@@ -42,6 +44,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrack
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
+import edu.uci.ics.hyracks.storage.common.smi.TransientFileMapManager;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
 
@@ -59,6 +62,7 @@ public class LSMTreeRunner implements IExperimentRunner {
     protected final static String sep = System.getProperty("file.separator");
     protected final static String classDir = "/lsmtree/";
     protected String onDiskDir;
+    protected FileReference file;
 
     protected final int numBatches;
     protected final LSMBTree lsmtree;
@@ -75,6 +79,7 @@ public class LSMTreeRunner implements IExperimentRunner {
         this.onDiskNumPages = onDiskNumPages;
 
         onDiskDir = classDir + sep + simpleDateFormat.format(new Date()) + sep;
+        file = new FileReference(new File(onDiskDir));
         ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 
         TestStorageManagerComponentHolder.init(this.onDiskPageSize, this.onDiskNumPages, MAX_OPEN_FILES);
@@ -83,12 +88,12 @@ public class LSMTreeRunner implements IExperimentRunner {
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
 
         InMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), inMemPageSize,
-                inMemNumPages);
+                inMemNumPages, new TransientFileMapManager());
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(inMemNumPages,
                 new LIFOMetaDataFrameFactory());
         this.ioScheduler = ImmediateScheduler.INSTANCE;
-        lsmtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, onDiskDir, bufferCache,
-                fmp, typeTraits, cmpFactories, new FlushController(), NoMergePolicy.INSTANCE,
+        lsmtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file, bufferCache, fmp,
+                typeTraits, cmpFactories, new FlushController(), NoMergePolicy.INSTANCE,
                 new RefCountingOperationTracker(), ioScheduler);
     }
 
@@ -122,7 +127,7 @@ public class LSMTreeRunner implements IExperimentRunner {
 
     @Override
     public void reset() throws Exception {
-        lsmtree.create(lsmtreeFileId);
+        lsmtree.create(file);
     }
 
     @Override

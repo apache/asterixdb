@@ -19,6 +19,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
@@ -56,12 +57,12 @@ public class LSMRTreeDataflowHelper extends AbstractLSMRTreeDataflowHelper {
 
     @Override
     protected ITreeIndex createLSMTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
-            IIOManager ioManager, String onDiskDir, IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider,
+            IIOManager ioManager, FileReference file, IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider,
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType) throws HyracksDataException {
         try {
-            return LSMRTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, onDiskDir,
+            return LSMRTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file,
                     diskBufferCache, diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories,
                     valueProviderFactories, rtreePolicyType, flushController, mergePolicy, opTracker, ioScheduler);
         } catch (TreeIndexException e) {

@@ -54,9 +54,9 @@ public class LSMRTreeWithAntiMatterTuplesMultiBulkLoadTest extends AbstractRTree
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, RTreePolicyType rtreePolicyType)
             throws Exception {
         return LSMRTreeWithAntiMatterTuplesTestContext.create(harness.getMemBufferCache(),
-                harness.getMemFreePageManager(), harness.getIOManager(), harness.getOnDiskDir(),
+                harness.getMemFreePageManager(), harness.getIOManager(), harness.getFileReference(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes, valueProviderFactories,
-                numKeys, rtreePolicyType, harness.getFileId(), harness.getFlushController(), harness.getMergePolicy(),
+                numKeys, rtreePolicyType, harness.getFlushController(), harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler());
 
     }

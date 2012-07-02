@@ -138,10 +138,10 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
         invListsTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
         invListsComparatorFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-	createPrimaryIndex();
+        createPrimaryIndex();
         loadPrimaryIndex();
         printPrimaryIndex();
-	createInvertedIndex();
+        createInvertedIndex();
         loadInvertedIndex();
     }
 
@@ -158,10 +158,9 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     public void createInvertedIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         InvertedIndexCreateOperatorDescriptor invIndexCreateOp = new InvertedIndexCreateOperatorDescriptor(spec,
-                storageManager, btreeFileSplitProvider, invListsFileSplitProvider,
-                indexRegistryProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
-                invListsComparatorFactories, tokenizerFactory, btreeDataflowHelperFactory,
-                NoOpOperationCallbackProvider.INSTANCE);
+                storageManager, btreeFileSplitProvider, invListsFileSplitProvider, indexRegistryProvider,
+                tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories,
+                tokenizerFactory, btreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, invIndexCreateOp, NC1_ID);
         spec.addRoot(invIndexCreateOp);
         runTest(spec);

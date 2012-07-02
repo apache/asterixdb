@@ -32,7 +32,8 @@ public class BTreeDataflowHelper extends TreeIndexDataflowHelper {
     @Override
     public ITreeIndex createIndexInstance() throws HyracksDataException {
         try {
-            return BTreeUtils.createBTree(opDesc.getStorageManager().getBufferCache(ctx), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
+            return BTreeUtils.createBTree(opDesc.getStorageManager().getBufferCache(ctx), opDesc.getStorageManager()
+                    .getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
                     .getTreeIndexComparatorFactories(), BTreeLeafFrameType.REGULAR_NSM);
         } catch (BTreeException e) {
             throw new HyracksDataException(e);

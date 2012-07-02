@@ -96,14 +96,8 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
         // create file refs
         FileReference btreeFile = new FileReference(new File(btreeFileName));
-        bufferCache.createFile(btreeFile);
-        int btreeFileId = fmp.lookupFileId(btreeFile);
-        bufferCache.openFile(btreeFileId);
 
         FileReference invListsFile = new FileReference(new File(invListsFileName));
-        bufferCache.createFile(invListsFile);
-        int invListsFileId = fmp.lookupFileId(invListsFile);
-        bufferCache.openFile(invListsFileId);
 
         // Declare token type traits, and compute BTree type traits.
         ITypeTraits[] tokenTypeTraits = new ITypeTraits[] { UTF8StringPointable.TYPE_TRAITS };
@@ -123,10 +117,10 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
-        BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
-                btreeTypeTraits.length);
-        btree.create(btreeFileId);
-        btree.open(btreeFileId);
+        BTree btree = new BTree(bufferCache, fmp, freePageManager, interiorFrameFactory, leafFrameFactory,
+                cmpFactories, btreeTypeTraits.length);
+        btree.create(btreeFile);
+        btree.open(btreeFile);
 
         int invListFields = 1;
         ITypeTraits[] invListTypeTraits = new ITypeTraits[invListFields];
@@ -138,8 +132,9 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
         InvertedIndex invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories,
-                invListBuilder, null);
-        invIndex.open(invListsFileId);
+                invListBuilder, null, fmp);
+        invIndex.create(invListsFile);
+        invIndex.open(invListsFile);
 
         Random rnd = new Random();
         rnd.setSeed(50);
@@ -214,8 +209,8 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         MultiComparator btreeCmp = MultiComparator.create(cmpFactories);
         RangePredicate btreePred = new RangePredicate(searchKey, searchKey, true, true, btreeCmp, btreeCmp);
 
-        IInvertedListCursor invListCursor = new FixedSizeElementInvertedListCursor(bufferCache, invListsFileId,
-                invListTypeTraits);
+        IInvertedListCursor invListCursor = new FixedSizeElementInvertedListCursor(bufferCache,
+                fmp.lookupFileId(invListsFile), invListTypeTraits);
 
         ISerializerDeserializer[] tokenSerde = { UTF8StringSerializerDeserializer.INSTANCE };
         RecordDescriptor tokenRecDesc = new RecordDescriptor(tokenSerde);
@@ -284,8 +279,6 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         }
 
         btree.close();
-        bufferCache.closeFile(btreeFileId);
-        bufferCache.closeFile(invListsFileId);
         bufferCache.close();
     }
 

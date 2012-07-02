@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexMultiThreadTest;
 import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestWorkerFactory;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
@@ -50,7 +51,7 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
             throws TreeIndexException {
         return LSMBTreeUtils.createLSMTree(harness.getMemBufferCache(), harness.getMemFreePageManager(),
-                harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskBufferCache(),
+                harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
                 harness.getDiskFileMapProvider(), typeTraits, cmpFactories, harness.getFlushController(),
                 harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler());
     }
@@ -102,12 +103,12 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
     }
 
     @Override
-    protected int getFileId() {
-        return harness.getFileId();
+    protected String getIndexTypeName() {
+        return "LSMBTree";
     }
 
     @Override
-    protected String getIndexTypeName() {
-        return "LSMBTree";
+    protected FileReference getFileReference() {
+        return harness.getFileReference();
     }
 }

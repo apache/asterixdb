@@ -24,6 +24,7 @@ import org.junit.Test;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
@@ -36,10 +37,10 @@ import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -54,11 +55,10 @@ public abstract class OrderedIndexExamplesTest {
     protected abstract ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
             throws TreeIndexException;
 
-    protected abstract int getIndexFileId();
+    protected abstract FileReference getFileReference();
 
     /**
      * Fixed-Length Key,Value Example.
-     * 
      * Create a tree index with one fixed-length key field and one fixed-length value
      * field. Fill index with random values using insertions (not bulk load).
      * Perform scans and range search.
@@ -83,10 +83,10 @@ public abstract class OrderedIndexExamplesTest {
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
         cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        int indexFileId = getIndexFileId();
+        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
-        treeIndex.create(indexFileId);
-        treeIndex.open(indexFileId);
+        treeIndex.create(file);
+        treeIndex.open(file);
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -136,7 +136,6 @@ public abstract class OrderedIndexExamplesTest {
 
     /**
      * Composite Key Example (Non-Unique Index).
-     * 
      * Create a tree index with two fixed-length key fields and one fixed-length
      * value field. Fill index with random values using insertions (not bulk
      * load) Perform scans and range search.
@@ -163,10 +162,10 @@ public abstract class OrderedIndexExamplesTest {
         cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
         cmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        int indexFileId = getIndexFileId();
+        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
-        treeIndex.create(indexFileId);
-        treeIndex.open(indexFileId);
+        treeIndex.create(file);
+        treeIndex.open(file);
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -241,10 +240,10 @@ public abstract class OrderedIndexExamplesTest {
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
         cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
-        int indexFileId = getIndexFileId();
+        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
-        treeIndex.create(indexFileId);
-        treeIndex.open(indexFileId);
+        treeIndex.create(file);
+        treeIndex.open(file);
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -296,7 +295,6 @@ public abstract class OrderedIndexExamplesTest {
 
     /**
      * Deletion Example.
-     * 
      * Create a BTree with one variable-length key field and one variable-length
      * value field. Fill B-tree with random values using insertions, then delete
      * entries one-by-one. Repeat procedure a few times on same BTree.
@@ -321,10 +319,10 @@ public abstract class OrderedIndexExamplesTest {
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
         cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
-        int indexFileId = getIndexFileId();
+        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
-        treeIndex.create(indexFileId);
-        treeIndex.open(indexFileId);
+        treeIndex.create(file);
+        treeIndex.open(file);
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
@@ -398,7 +396,6 @@ public abstract class OrderedIndexExamplesTest {
 
     /**
      * Update example.
-     * 
      * Create a BTree with one variable-length key field and one variable-length
      * value field. Fill B-tree with random values using insertions, then update
      * entries one-by-one. Repeat procedure a few times on same BTree.
@@ -423,10 +420,10 @@ public abstract class OrderedIndexExamplesTest {
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
         cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
-        int indexFileId = getIndexFileId();
+        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
-        treeIndex.create(indexFileId);
-        treeIndex.open(indexFileId);
+        treeIndex.create(file);
+        treeIndex.open(file);
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Inserting into tree...");
@@ -485,10 +482,8 @@ public abstract class OrderedIndexExamplesTest {
 
     /**
      * Bulk load example.
-     * 
      * Load a tree with 100,000 tuples. BTree has a composite key to "simulate"
      * non-unique index creation.
-     * 
      */
     @Test
     public void bulkLoadExample() throws Exception {
@@ -511,10 +506,10 @@ public abstract class OrderedIndexExamplesTest {
         cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
         cmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        int indexFileId = getIndexFileId();
+        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
-        treeIndex.create(indexFileId);
-        treeIndex.open(indexFileId);
+        treeIndex.create(file);
+        treeIndex.open(file);
 
         // Load sorted records.
         int ins = 100000;

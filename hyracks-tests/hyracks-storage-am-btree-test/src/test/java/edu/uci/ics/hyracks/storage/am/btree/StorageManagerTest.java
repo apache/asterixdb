@@ -27,9 +27,10 @@ import edu.uci.ics.hyracks.storage.am.btree.util.AbstractBTreeTest;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.sync.LatchType;
 
-public class StorageManagerTest extends AbstractBTreeTest {	
+public class StorageManagerTest extends AbstractBTreeTest {
     public class PinnedLatchedPage {
         public final ICachedPage page;
         public final LatchType latch;
@@ -43,7 +44,10 @@ public class StorageManagerTest extends AbstractBTreeTest {
     }
 
     public enum FileAccessType {
-        FTA_READONLY, FTA_WRITEONLY, FTA_MIXED, FTA_UNLATCHED
+        FTA_READONLY,
+        FTA_WRITEONLY,
+        FTA_MIXED,
+        FTA_UNLATCHED
     }
 
     public class FileAccessWorker implements Runnable {
@@ -249,11 +253,17 @@ public class StorageManagerTest extends AbstractBTreeTest {
     }
 
     @Test
-    public void oneThreadOneFileTest() throws Exception { 
-		Thread worker = new Thread(new FileAccessWorker(0,
-				harness.getBufferCache(), FileAccessType.FTA_UNLATCHED,
-				harness.getBTreeFileId(), 10, 10, 100, 10, 0));
+    public void oneThreadOneFileTest() throws Exception {
+        IBufferCache bufferCache = harness.getBufferCache();
+        IFileMapProvider fmp = harness.getFileMapProvider();
+        bufferCache.createFile(harness.getFileReference());
+        int btreeFileId = harness.getFileMapProvider().lookupFileId(harness.getFileReference());
+        bufferCache.openFile(btreeFileId);
+        Thread worker = new Thread(new FileAccessWorker(0, harness.getBufferCache(), FileAccessType.FTA_UNLATCHED,
+                btreeFileId, 10, 10, 100, 10, 0));
         worker.start();
         worker.join();
+        bufferCache.closeFile(btreeFileId);
+        bufferCache.close();
     }
 }

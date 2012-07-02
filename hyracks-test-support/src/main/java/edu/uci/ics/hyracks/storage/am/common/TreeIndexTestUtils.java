@@ -243,7 +243,6 @@ public abstract class TreeIndexTestUtils {
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         // Perform bulk load.
-        //        IIndexBulkLoadContext bulkLoadCtx = ctx.getIndex().beginBulkLoad(0.7f);
         IIndexBulkLoader bulkLoader = ctx.getIndex().createBulkLoader(0.7f);
         int c = 1;
         for (CheckTuple checkTuple : checkTuples) {
@@ -253,11 +252,9 @@ public abstract class TreeIndexTestUtils {
                 }
             }
             createTupleFromCheckTuple(checkTuple, tupleBuilder, tuple, ctx.getFieldSerdes());
-            //            ctx.getIndex().bulkLoadAddTuple(tuple, bulkLoadCtx);
             bulkLoader.add(tuple);
             c++;
         }
-        //        ctx.getIndex().endBulkLoad(bulkLoadCtx);
         bulkLoader.end();
     }
 

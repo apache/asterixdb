@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -34,20 +35,20 @@ public interface IIndex {
      * Initializes the persistent state of an index, e.g., the root page, and
      * metadata pages.
      * 
-     * @param indexFileId
+     * @param fileReference
      *            The file id to use for this index.
      * @throws HyracksDataException
      *             If the BufferCache throws while un/pinning or un/latching.
      */
-    public void create(int indexFileId) throws HyracksDataException;
+    public void create(FileReference file) throws HyracksDataException;
 
     /**
      * Opens the index backed by the given file id.
      * 
-     * @param indexFileId
+     * @param fileReference
      *            The file id backing this index.
      */
-    public void open(int indexFileId) throws HyracksDataException;
+    public void open(FileReference file) throws HyracksDataException;
 
     /**
      * Closes the index.
@@ -61,15 +62,19 @@ public interface IIndex {
      * on the same IIndex
      * 
      * @returns IIndexAccessor An accessor for this tree.
-     * @param modificationCallback TODO
-     * @param searchCallback TODO
+     * @param modificationCallback
+     *            TODO
+     * @param searchCallback
+     *            TODO
      */
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback);
 
     /**
-     * @param fillFactor TODO
-     * @throws IndexException TODO
+     * @param fillFactor
+     *            TODO
+     * @throws IndexException
+     *             TODO
      */
     public IIndexBulkLoader createBulkLoader(float fillFactor) throws IndexException;
 

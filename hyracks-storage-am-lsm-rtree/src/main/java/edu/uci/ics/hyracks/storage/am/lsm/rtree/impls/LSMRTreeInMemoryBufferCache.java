@@ -21,11 +21,12 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
+import edu.uci.ics.hyracks.storage.common.smi.TransientFileMapManager;
 
 public class LSMRTreeInMemoryBufferCache extends InMemoryBufferCache {
 
     public LSMRTreeInMemoryBufferCache(ICacheMemoryAllocator allocator, int pageSize, int numPages) {
-        super(allocator, pageSize, numPages);
+        super(allocator, pageSize, numPages, new TransientFileMapManager());
     }
 
     @Override

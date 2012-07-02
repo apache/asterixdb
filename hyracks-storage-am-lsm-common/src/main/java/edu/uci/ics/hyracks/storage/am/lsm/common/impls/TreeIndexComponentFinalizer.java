@@ -40,10 +40,7 @@ public class TreeIndexComponentFinalizer implements ILSMComponentFinalizer {
         ITreeIndex treeIndex = (ITreeIndex) lsmComponent;
         IBufferCache bufferCache = treeIndex.getBufferCache();
         FileReference fileRef = new FileReference(file);
-        bufferCache.createFile(fileRef);
-        int fileId = fileMapProvider.lookupFileId(fileRef);
-        bufferCache.openFile(fileId);
-        treeIndex.open(fileId);
+        treeIndex.open(fileRef);
         try {
             int metadataPage = treeIndex.getFreePageManager().getFirstMetadataPage();
             ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory()
@@ -60,8 +57,6 @@ public class TreeIndexComponentFinalizer implements ILSMComponentFinalizer {
             }
         } finally {
             treeIndex.close();
-            bufferCache.closeFile(fileId);
-            bufferCache.deleteFile(fileId, false);
         }
     }
 

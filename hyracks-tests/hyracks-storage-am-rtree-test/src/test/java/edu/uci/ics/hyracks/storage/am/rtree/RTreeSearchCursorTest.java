@@ -78,7 +78,6 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
         }
 
         IBufferCache bufferCache = harness.getBufferCache();
-        int rtreeFileId = harness.getTreeFileId();
 
         // Declare fields.
         int fieldCount = 5;
@@ -117,14 +116,15 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
         IRTreeLeafFrame leafFrame = (IRTreeLeafFrame) leafFrameFactory.createFrame();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
-        RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
-                fieldCount);
-        rtree.create(rtreeFileId);
-        rtree.open(rtreeFileId);
+        RTree rtree = new RTree(bufferCache, harness.getFileMapProvider(), freePageManager, interiorFrameFactory,
+                leafFrameFactory, cmpFactories, fieldCount);
+        rtree.create(harness.getFileReference());
+        rtree.open(harness.getFileReference());
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = rtree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        ITreeIndexAccessor indexAccessor = rtree.createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         int numInserts = 10000;
         ArrayList<RTreeCheckTuple> checkTuples = new ArrayList<RTreeCheckTuple>();
         for (int i = 0; i < numInserts; i++) {
@@ -133,8 +133,7 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
             int p2x = rnd.nextInt();
             int p2y = rnd.nextInt();
 
-            int pk = rnd.nextInt();
-            ;
+            int pk = rnd.nextInt();;
 
             TupleUtils.createIntegerTuple(tb, tuple, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
                     Math.max(p1y, p2y), pk);

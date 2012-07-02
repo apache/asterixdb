@@ -17,22 +17,24 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class BTreeFactory extends TreeFactory<BTree> {
 
-    public BTreeFactory(IBufferCache bufferCache, LinkedListFreePageManagerFactory freePageManagerFactory,
-            IBinaryComparatorFactory[] cmpFactories, int fieldCount, ITreeIndexFrameFactory interiorFrameFactory,
-            ITreeIndexFrameFactory leafFrameFactory) {
-        super(bufferCache, freePageManagerFactory, cmpFactories, fieldCount, interiorFrameFactory, leafFrameFactory);
+    public BTreeFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
+            IFreePageManagerFactory freePageManagerFactory, ITreeIndexFrameFactory interiorFrameFactory,
+            ITreeIndexFrameFactory leafFrameFactory, IBinaryComparatorFactory[] cmpFactories, int fieldCount) {
+        super(bufferCache, fileMapProvider, freePageManagerFactory, interiorFrameFactory, leafFrameFactory,
+                cmpFactories, fieldCount);
     }
 
     @Override
     public BTree createIndexInstance() {
-        return new BTree(bufferCache, freePageManagerFactory.createFreePageManager(), interiorFrameFactory, leafFrameFactory,
-                cmpFactories, fieldCount);
+        return new BTree(bufferCache, fileMapProvider, freePageManagerFactory.createFreePageManager(),
+                interiorFrameFactory, leafFrameFactory, cmpFactories, fieldCount);
     }
 
 }

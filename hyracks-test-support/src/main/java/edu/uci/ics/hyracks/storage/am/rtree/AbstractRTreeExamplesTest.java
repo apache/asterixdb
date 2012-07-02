@@ -24,6 +24,7 @@ import org.junit.Test;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
@@ -34,10 +35,10 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDese
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -57,11 +58,10 @@ public abstract class AbstractRTreeExamplesTest {
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType)
             throws TreeIndexException;
 
-    protected abstract int getIndexFileId();
+    protected abstract FileReference getFileReference();
 
     /**
      * Two Dimensions Example.
-     * 
      * Create an RTree index of two dimensions, where they keys are of type
      * integer, and the payload is two integer values. Fill index with random
      * values using insertions (not bulk load). Perform scans and range search.
@@ -109,11 +109,11 @@ public abstract class AbstractRTreeExamplesTest {
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
                 rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
-        int indexFileId = getIndexFileId();
+        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
                 valueProviderFactories, RTreePolicyType.RTREE);
-        treeIndex.create(indexFileId);
-        treeIndex.open(indexFileId);
+        treeIndex.create(file);
+        treeIndex.open(file);
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -166,7 +166,6 @@ public abstract class AbstractRTreeExamplesTest {
 
     /**
      * Two Dimensions Example.
-     * 
      * Create an RTree index of three dimensions, where they keys are of type
      * double, and the payload is one double value. Fill index with random
      * values using insertions (not bulk load). Perform scans and range search.
@@ -218,11 +217,11 @@ public abstract class AbstractRTreeExamplesTest {
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
                 rtreeCmpFactories.length, DoublePointable.FACTORY);
 
-        int indexFileId = getIndexFileId();
+        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
                 valueProviderFactories, RTreePolicyType.RTREE);
-        treeIndex.create(indexFileId);
-        treeIndex.open(indexFileId);
+        treeIndex.create(file);
+        treeIndex.open(file);
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -277,7 +276,6 @@ public abstract class AbstractRTreeExamplesTest {
 
     /**
      * Deletion Example.
-     * 
      * Create an RTree index of two dimensions, where they keys are of type
      * integer, and the payload is one integer value. Fill index with random
      * values using insertions, then delete entries one-by-one. Repeat procedure
@@ -319,11 +317,11 @@ public abstract class AbstractRTreeExamplesTest {
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
                 rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
-        int indexFileId = getIndexFileId();
+        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
                 valueProviderFactories, RTreePolicyType.RTREE);
-        treeIndex.create(indexFileId);
-        treeIndex.open(indexFileId);
+        treeIndex.create(file);
+        treeIndex.open(file);
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
@@ -409,9 +407,7 @@ public abstract class AbstractRTreeExamplesTest {
 
     /**
      * Bulk load example.
-     * 
      * Load a tree with 10,000 tuples.
-     * 
      */
     @Test
     public void bulkLoadExample() throws Exception {
@@ -453,11 +449,11 @@ public abstract class AbstractRTreeExamplesTest {
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
                 rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
-        int indexFileId = getIndexFileId();
+        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
                 valueProviderFactories, RTreePolicyType.RTREE);
-        treeIndex.create(indexFileId);
-        treeIndex.open(indexFileId);
+        treeIndex.create(file);
+        treeIndex.open(file);
 
         // Load records.
         int numInserts = 10000;

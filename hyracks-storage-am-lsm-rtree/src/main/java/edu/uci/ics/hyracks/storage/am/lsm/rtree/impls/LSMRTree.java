@@ -28,13 +28,13 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
@@ -83,15 +83,17 @@ public class LSMRTree extends AbstractLSMRTree {
      * Opens LSMRTree, cleaning up invalid files from base dir, and registering
      * all valid files as on-disk RTrees and BTrees.
      * 
-     * @param indexFileId
+     * @param fileReference
      *            Dummy file id.
      * @throws HyracksDataException
      */
     @Override
-    public void open(int indexFileId) throws HyracksDataException {
-        super.open(indexFileId);
+    public void open(FileReference fileReference) throws HyracksDataException {
+        super.open(fileReference);
         RTree dummyRTree = diskRTreeFactory.createIndexInstance();
+        dummyRTree.create(new FileReference(new File("dummyrtree")));
         BTree dummyBTree = diskBTreeFactory.createIndexInstance();
+        dummyBTree.create(new FileReference(new File("dummybtree")));
         LSMRTreeComponent dummyComponent = new LSMRTreeComponent(dummyRTree, dummyBTree);
         List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(dummyComponent, componentFinalizer);
         for (Object o : validFileNames) {
@@ -111,11 +113,7 @@ public class LSMRTree extends AbstractLSMRTree {
             LSMRTreeComponent diskComponent = (LSMRTreeComponent) o;
             RTree rtree = diskComponent.getRTree();
             BTree btree = diskComponent.getBTree();
-            diskBufferCache.closeFile(rtree.getFileId());
-            diskBufferCache.deleteFile(rtree.getFileId(), false);
             rtree.close();
-            diskBufferCache.closeFile(btree.getFileId());
-            diskBufferCache.deleteFile(btree.getFileId(), false);
             btree.close();
         }
         diskComponents.clear();
@@ -187,9 +185,9 @@ public class LSMRTree extends AbstractLSMRTree {
         IBinaryComparatorFactory[] linearizerArray = { linearizer };
 
         if (rTreeTupleSorter == null) {
-            rTreeTupleSorter = new TreeTupleSorter(memRTreeTuples, MEM_RTREE_FILE_ID, linearizerArray,
-                    rtreeLeafFrameFactory.createFrame(), rtreeLeafFrameFactory.createFrame(), memComponent.getRTree()
-                            .getBufferCache(), comparatorFields);
+            rTreeTupleSorter = new TreeTupleSorter(memRTreeTuples, memComponent.getRTree().getFileId(),
+                    linearizerArray, rtreeLeafFrameFactory.createFrame(), rtreeLeafFrameFactory.createFrame(),
+                    memComponent.getRTree().getBufferCache(), comparatorFields);
         } else {
             rTreeTupleSorter.reset();
         }
@@ -300,14 +298,10 @@ public class LSMRTree extends AbstractLSMRTree {
             LSMRTreeComponent component = (LSMRTreeComponent) o;
             BTree oldBTree = component.getBTree();
             FileReference btreeFileRef = diskFileMapProvider.lookupFileName(oldBTree.getFileId());
-            diskBufferCache.closeFile(oldBTree.getFileId());
-            diskBufferCache.deleteFile(oldBTree.getFileId(), false);
             oldBTree.close();
             btreeFileRef.getFile().delete();
             RTree oldRTree = component.getRTree();
             FileReference rtreeFileRef = diskFileMapProvider.lookupFileName(oldRTree.getFileId());
-            diskBufferCache.closeFile(oldRTree.getFileId());
-            diskBufferCache.deleteFile(oldRTree.getFileId(), false);
             oldRTree.close();
             rtreeFileRef.getFile().delete();
         }

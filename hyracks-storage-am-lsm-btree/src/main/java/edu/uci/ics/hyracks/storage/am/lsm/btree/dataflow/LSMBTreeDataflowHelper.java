@@ -32,6 +32,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
+import edu.uci.ics.hyracks.storage.common.smi.TransientFileMapManager;
 
 public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
     private static int DEFAULT_MEM_PAGE_SIZE = 32768;
@@ -68,16 +69,16 @@ public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
     public ITreeIndex createIndexInstance() throws HyracksDataException {
         ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
         InMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), memPageSize,
-                memNumPages);
+                memNumPages, new TransientFileMapManager());
         IFileSplitProvider fileSplitProvider = opDesc.getFileSplitProvider();
         FileReference file = fileSplitProvider.getFileSplits()[partition].getLocalFile();
         if (file.getFile().exists() && !file.getFile().isDirectory()) {
             file.delete();
         }
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(memNumPages, metaDataFrameFactory);
-        return LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ctx.getIOManager(), file.getFile()
-                .getPath(), opDesc.getStorageManager().getBufferCache(ctx), opDesc.getStorageManager()
-                .getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
-                .getTreeIndexComparatorFactories(), flushController, mergePolicy, opTracker, ioScheduler);
+        return LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ctx.getIOManager(), file, opDesc
+                .getStorageManager().getBufferCache(ctx), opDesc.getStorageManager().getFileMapProvider(ctx),
+                treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories(), flushController,
+                mergePolicy, opTracker, ioScheduler);
     }
 }

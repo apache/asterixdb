@@ -1,11 +1,25 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.common.impls;
 
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
@@ -21,29 +35,95 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public abstract class AbstractTreeIndex implements ITreeIndex {
 
     protected final static int rootPage = 1;
 
     protected final IBufferCache bufferCache;
+
+    protected final IFileMapProvider fileMapProvider;
+
     protected final IFreePageManager freePageManager;
+
     protected final ITreeIndexFrameFactory interiorFrameFactory;
+
     protected final ITreeIndexFrameFactory leafFrameFactory;
+
     protected final IBinaryComparatorFactory[] cmpFactories;
+
     protected final int fieldCount;
+
+    protected FileReference file;
 
     protected int fileId;
 
-    public AbstractTreeIndex(IBufferCache bufferCache, IFreePageManager freePageManager,
-            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
-            IBinaryComparatorFactory[] cmpFactories, int fieldCount) {
+    public AbstractTreeIndex(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
+            IFreePageManager freePageManager, ITreeIndexFrameFactory interiorFrameFactory,
+            ITreeIndexFrameFactory leafFrameFactory, IBinaryComparatorFactory[] cmpFactories, int fieldCount) {
         this.bufferCache = bufferCache;
+        this.fileMapProvider = fileMapProvider;
         this.freePageManager = freePageManager;
         this.interiorFrameFactory = interiorFrameFactory;
         this.leafFrameFactory = leafFrameFactory;
         this.cmpFactories = cmpFactories;
         this.fieldCount = fieldCount;
+    }
+
+    private void initFile(FileReference file, boolean create) throws HyracksDataException {
+        this.file = file;
+        fileId = -1;
+        boolean fileIsMapped = false;
+        synchronized (fileMapProvider) {
+            fileIsMapped = fileMapProvider.isMapped(file);
+            if (!fileIsMapped) {
+                bufferCache.createFile(file);
+            }
+            fileId = fileMapProvider.lookupFileId(file);
+            try {
+                // Also creates the file if it doesn't exist yet.
+                bufferCache.openFile(fileId);
+            } catch (HyracksDataException e) {
+                // Revert state of buffer cache since file failed to open.
+                if (!fileIsMapped) {
+                    bufferCache.deleteFile(fileId, false);
+                }
+                throw e;
+            }
+        }
+        freePageManager.open(fileId);
+
+        if (create) {
+            ITreeIndexFrame frame = leafFrameFactory.createFrame();
+            ITreeIndexMetaDataFrame metaFrame = freePageManager.getMetaDataFrameFactory().createFrame();
+
+            freePageManager.init(metaFrame, rootPage);
+
+            ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), true);
+            rootNode.acquireWriteLatch();
+            try {
+                frame.setPage(rootNode);
+                frame.initBuffer((byte) 0);
+            } finally {
+                rootNode.releaseWriteLatch();
+                bufferCache.unpin(rootNode);
+            }
+        }
+    }
+
+    public synchronized void create(FileReference file) throws HyracksDataException {
+        initFile(file, true);
+    }
+
+    public void open(FileReference file) throws HyracksDataException {
+        initFile(file, false);
+    }
+
+    public void close() throws HyracksDataException {
+        bufferCache.closeFile(fileId);
+        freePageManager.close();
+        fileId = -1;
     }
 
     public boolean isEmptyTree(ITreeIndexFrame frame) throws HyracksDataException {
@@ -62,41 +142,6 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         }
     }
 
-    public synchronized void create(int fileId) throws HyracksDataException {
-        ITreeIndexFrame frame = leafFrameFactory.createFrame();
-        ITreeIndexMetaDataFrame metaFrame = freePageManager.getMetaDataFrameFactory().createFrame();
-        freePageManager.open(fileId);
-        freePageManager.init(metaFrame, rootPage);
-
-        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), true);
-        rootNode.acquireWriteLatch();
-        try {
-            frame.setPage(rootNode);
-            frame.initBuffer((byte) 0);
-        } finally {
-            rootNode.releaseWriteLatch();
-            bufferCache.unpin(rootNode);
-        }
-    }
-
-    public void open(int fileId) {
-        this.fileId = fileId;
-        freePageManager.open(fileId);
-    }
-
-    public void close() {
-        fileId = -1;
-        freePageManager.close();
-    }
-
-    public int getFileId() {
-        return fileId;
-    }
-
-    public IBufferCache getBufferCache() {
-        return bufferCache;
-    }
-
     public byte getTreeHeight(ITreeIndexFrame frame) throws HyracksDataException {
         ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), false);
         rootNode.acquireReadLatch();
@@ -107,6 +152,18 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
             rootNode.releaseReadLatch();
             bufferCache.unpin(rootNode);
         }
+    }
+
+    public int getFileId() {
+        return fileId;
+    }
+
+    public FileReference getFileReference() {
+        return file;
+    }
+
+    public IBufferCache getBufferCache() {
+        return bufferCache;
     }
 
     public ITreeIndexFrameFactory getInteriorFrameFactory() {
@@ -135,27 +192,24 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
 
     public abstract IIndexBulkLoader createBulkLoader(float fillFactor) throws TreeIndexException;
 
-    public TreeIndexInsertBulkLoader createInsertBulkLoader() throws TreeIndexException {
-        final Logger LOGGER = Logger.getLogger(TreeIndexInsertBulkLoader.class.getName());
-
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Using insert bulkload. This might negatively impact your performance.");
-        }
-
-        return new TreeIndexInsertBulkLoader();
-    }
-
     public abstract class AbstractTreeIndexBulkLoader implements IIndexBulkLoader {
         protected final MultiComparator cmp;
+
         protected final int slotSize;
+
         protected final int leafMaxBytes;
+
         protected final int interiorMaxBytes;
-        // we maintain a frontier of nodes for each level
+
         protected final ArrayList<NodeFrontier> nodeFrontiers = new ArrayList<NodeFrontier>();
+
         protected final ITreeIndexMetaDataFrame metaFrame;
+
         protected final ITreeIndexTupleWriter tupleWriter;
 
-        protected ITreeIndexFrame leafFrame, interiorFrame;
+        protected ITreeIndexFrame leafFrame;
+
+        protected ITreeIndexFrame interiorFrame;
 
         public AbstractTreeIndexBulkLoader(float fillFactor) throws TreeIndexException, HyracksDataException {
             leafFrame = leafFrameFactory.createFrame();

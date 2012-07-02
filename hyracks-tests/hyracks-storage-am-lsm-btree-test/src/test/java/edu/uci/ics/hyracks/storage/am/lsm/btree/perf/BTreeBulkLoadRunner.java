@@ -35,7 +35,7 @@ public class BTreeBulkLoadRunner extends BTreeRunner {
 
     @Override
     public long runExperiment(DataGenThread dataGen, int numThreads) throws Exception {
-        btree.create(btreeFileId);
+        btree.create(file);
         long start = System.currentTimeMillis();
         IIndexBulkLoader bulkLoader = btree.createBulkLoader(1.0f);
         for (int i = 0; i < numBatches; i++) {

@@ -95,15 +95,15 @@ public abstract class AbstractLSMRTreeDataflowHelper extends TreeIndexDataflowHe
         InMemoryFreePageManager memFreePageManager = new LSMRTreeInMemoryFreePageManager(memNumPages,
                 metaDataFrameFactory);
 
-        return createLSMTree(memBufferCache, memFreePageManager, ctx.getIOManager(), file.getFile().getPath(), opDesc
-                .getStorageManager().getBufferCache(ctx), opDesc.getStorageManager().getFileMapProvider(ctx),
+        return createLSMTree(memBufferCache, memFreePageManager, ctx.getIOManager(), file, opDesc.getStorageManager()
+                .getBufferCache(ctx), opDesc.getStorageManager().getFileMapProvider(ctx),
                 treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories(),
                 btreeComparatorFactories, valueProviderFactories, rtreePolicyType);
 
     }
 
     protected abstract ITreeIndex createLSMTree(IBufferCache memBufferCache,
-            InMemoryFreePageManager memFreePageManager, IIOManager ioManager, String onDiskDir,
+            InMemoryFreePageManager memFreePageManager, IIOManager ioManager, FileReference file,
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType)

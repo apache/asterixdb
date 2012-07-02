@@ -22,8 +22,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 
 public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
     private float fillFactor;
@@ -54,10 +54,10 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
         try {
             treeIndexHelper.init(false);
             treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
-            treeIndex.open(treeIndexHelper.getIndexFileId());
             bulkLoader = treeIndex.createBulkLoader(fillFactor);
         } catch (Exception e) {
             // cleanup in case of failure
+            System.out.println("help");
             treeIndexHelper.deinit();
             throw new HyracksDataException(e);
         }

@@ -40,6 +40,7 @@ public class RTreeTestHarness {
 
     protected IHyracksTaskContext ctx;
     protected IBufferCache bufferCache;
+    protected IFileMapProvider fileMapProvider;
     protected int treeFileId;
 
     protected final Random rnd = new Random();
@@ -47,10 +48,11 @@ public class RTreeTestHarness {
     protected final String tmpDir = System.getProperty("java.io.tmpdir");
     protected final String sep = System.getProperty("file.separator");
     protected String fileName;
+    protected FileReference file;
 
     public RTreeTestHarness() {
         this.pageSize = AccessMethodTestsConfig.RTREE_PAGE_SIZE;
-        this.numPages =  AccessMethodTestsConfig.RTREE_NUM_PAGES;
+        this.numPages = AccessMethodTestsConfig.RTREE_NUM_PAGES;
         this.maxOpenFiles = AccessMethodTestsConfig.RTREE_MAX_OPEN_FILES;
         this.hyracksFrameSize = AccessMethodTestsConfig.RTREE_HYRACKS_FRAME_SIZE;
     }
@@ -64,13 +66,14 @@ public class RTreeTestHarness {
 
     public void setUp() throws HyracksDataException {
         fileName = tmpDir + sep + simpleDateFormat.format(new Date());
+        file = new FileReference(new File(fileName));
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(pageSize, numPages, maxOpenFiles);
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
         FileReference file = new FileReference(new File(fileName));
         bufferCache.createFile(file);
-        treeFileId = fmp.lookupFileId(file);
+        treeFileId = fileMapProvider.lookupFileId(file);
         bufferCache.openFile(treeFileId);
         rnd.setSeed(RANDOM_SEED);
     }
@@ -90,8 +93,8 @@ public class RTreeTestHarness {
         return bufferCache;
     }
 
-    public int getTreeFileId() {
-        return treeFileId;
+    public IFileMapProvider getFileMapProvider() {
+        return fileMapProvider;
     }
 
     public String getFileName() {
@@ -116,5 +119,9 @@ public class RTreeTestHarness {
 
     public int getMaxOpenFiles() {
         return maxOpenFiles;
+    }
+
+    public FileReference getFileReference() {
+        return file;
     }
 }

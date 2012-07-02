@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -38,15 +39,10 @@ public class LSMRTreeExamplesTest extends AbstractRTreeExamplesTest {
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType) throws TreeIndexException {
         return LSMRTreeUtils.createLSMTree(harness.getMemBufferCache(), harness.getMemFreePageManager(),
-                harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskBufferCache(),
+                harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
                 harness.getDiskFileMapProvider(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
                 valueProviderFactories, rtreePolicyType, harness.getFlushController(), harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler());
-    }
-
-    @Override
-    protected int getIndexFileId() {
-        return harness.getFileId();
     }
 
     @Before
@@ -58,4 +54,10 @@ public class LSMRTreeExamplesTest extends AbstractRTreeExamplesTest {
     public void tearDown() throws HyracksDataException {
         harness.tearDown();
     }
+
+    @Override
+    protected FileReference getFileReference() {
+        return harness.getFileReference();
+    }
+
 }

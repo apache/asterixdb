@@ -22,8 +22,6 @@ import org.junit.Before;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestContext;
-import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexUpdateTest;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
@@ -50,8 +48,8 @@ public class BTreeUpdateTest extends OrderedIndexUpdateTest {
     @Override
     protected OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
             BTreeLeafFrameType leafType) throws Exception {
-        return BTreeTestContext.create(harness.getBufferCache(), harness.getBTreeFileId(), fieldSerdes, numKeys,
-                leafType);
+        return BTreeTestContext.create(harness.getBufferCache(), harness.getFileMapProvider(),
+                harness.getFileReference(), fieldSerdes, numKeys, leafType);
     }
 
     @Override

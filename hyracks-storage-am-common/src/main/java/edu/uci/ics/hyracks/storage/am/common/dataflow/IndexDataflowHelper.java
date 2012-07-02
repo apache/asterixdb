@@ -27,8 +27,6 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
-import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
 
 public abstract class IndexDataflowHelper {
@@ -48,30 +46,9 @@ public abstract class IndexDataflowHelper {
     }
 
     public void init(boolean forceCreate) throws HyracksDataException {
-        IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
-        IFileMapProvider fileMapProvider = opDesc.getStorageManager().getFileMapProvider(ctx);
         IndexRegistry<IIndex> indexRegistry = opDesc.getIndexRegistryProvider().getRegistry(ctx);
-        FileReference fileRef = getFilereference();
         IIndexArtifactMap indexArtifactMap = opDesc.getStorageManager().getIndexArtifactMap(ctx);
-        int fileId = -1;
-        boolean fileIsMapped = false;
-        synchronized (fileMapProvider) {
-            fileIsMapped = fileMapProvider.isMapped(fileRef);
-            if (!fileIsMapped) {
-                bufferCache.createFile(fileRef);
-            }
-            fileId = fileMapProvider.lookupFileId(fileRef);
-            try {
-                // Also creates the file if it doesn't exist yet.
-                bufferCache.openFile(fileId);
-            } catch (HyracksDataException e) {
-                // Revert state of buffer cache since file failed to open.
-                if (!fileIsMapped) {
-                    bufferCache.deleteFile(fileId, false);
-                }
-                throw e;
-            }
-        }
+        FileReference fileRef = getFilereference();
 
         // check whether the requested index instance already exists by
         // retrieving indexRegistry with resourceId
@@ -94,8 +71,6 @@ public abstract class IndexDataflowHelper {
         // get the corresponding resourceId with the fullDir
         long resourceId = indexArtifactMap.get(fullDir);
 
-        // Only set indexFileId member after openFile() succeeds.
-        indexFileId = fileId;
         // Create new index instance and register it.
         synchronized (indexRegistry) {
             // Check if the index has already been registered.
@@ -106,7 +81,7 @@ public abstract class IndexDataflowHelper {
                 register = true;
             }
             if (forceCreate) {
-                index.create(indexFileId);
+                index.create(fileRef);
                 // Create new resourceId
                 try {
                     resourceId = indexArtifactMap.create(baseDir, ioDeviceHandles);
@@ -114,12 +89,12 @@ public abstract class IndexDataflowHelper {
                     throw new HyracksDataException(e);
                 }
             }
-            index.open(indexFileId);
+            index.open(fileRef);
             if (register) {
                 indexRegistry.register(resourceId, index);
             }
         }
-        
+
         //set operationCallback object
         modificationOperationCallback = opDesc.getOpCallbackProvider().getModificationOperationCallback(resourceId);
         searchOperationCallback = opDesc.getOpCallbackProvider().getSearchOperationCallback(resourceId);
@@ -133,11 +108,7 @@ public abstract class IndexDataflowHelper {
     }
 
     public void deinit() throws HyracksDataException {
-        if (indexFileId != -1) {
-            IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
-            bufferCache.closeFile(indexFileId);
-            indexFileId = -1;
-        }
+        index.close();
     }
 
     public IIndex getIndex() {
@@ -159,13 +130,13 @@ public abstract class IndexDataflowHelper {
     public IOperationCallbackProvider getOpCallbackProvider() {
         return opDesc.getOpCallbackProvider();
     }
-    
+
     public IModificationOperationCallback getModificationOperationCallback() {
         return modificationOperationCallback;
     }
-    
+
     public ISearchOperationCallback getSearchOperationCallback() {
         return searchOperationCallback;
     }
-    
+
 }

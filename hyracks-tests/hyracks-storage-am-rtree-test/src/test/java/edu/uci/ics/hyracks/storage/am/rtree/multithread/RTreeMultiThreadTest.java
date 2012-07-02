@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestWorkerFactory;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import edu.uci.ics.hyracks.storage.am.common.TestWorkloadConf;
@@ -51,8 +52,8 @@ public class RTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType) throws TreeIndexException {
-        return RTreeUtils.createRTree(harness.getBufferCache(), typeTraits, valueProviderFactories, rtreeCmpFactories,
-                rtreePolicyType);
+        return RTreeUtils.createRTree(harness.getBufferCache(), harness.getFileMapProvider(), typeTraits,
+                valueProviderFactories, rtreeCmpFactories, rtreePolicyType);
 
     }
 
@@ -87,12 +88,12 @@ public class RTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
     }
 
     @Override
-    protected int getFileId() {
-        return harness.getTreeFileId();
+    protected String getIndexTypeName() {
+        return "RTree";
     }
 
     @Override
-    protected String getIndexTypeName() {
-        return "RTree";
+    protected FileReference getFileReference() {
+        return harness.getFileReference();
     }
 }

@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
@@ -75,6 +76,7 @@ public class LSMRTreeTestHarness {
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final static String sep = System.getProperty("file.separator");
     protected String onDiskDir;
+    protected FileReference file;
 
     public LSMRTreeTestHarness() {
         this.diskPageSize = AccessMethodTestsConfig.LSM_RTREE_DISK_PAGE_SIZE;
@@ -105,6 +107,7 @@ public class LSMRTreeTestHarness {
 
     public void setUp() throws HyracksException {
         onDiskDir = "lsm_rtree_" + simpleDateFormat.format(new Date()) + sep;
+        file = new FileReference(new File(onDiskDir));
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(diskPageSize, diskNumPages, diskMaxOpenFiles);
         diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
@@ -160,10 +163,6 @@ public class LSMRTreeTestHarness {
         return hyracksFrameSize;
     }
 
-    public int getFileId() {
-        return DUMMY_FILE_ID;
-    }
-
     public IOManager getIOManager() {
         return ioManager;
     }
@@ -190,6 +189,10 @@ public class LSMRTreeTestHarness {
 
     public String getOnDiskDir() {
         return onDiskDir;
+    }
+
+    public FileReference getFileReference() {
+        return file;
     }
 
     public Random getRandom() {

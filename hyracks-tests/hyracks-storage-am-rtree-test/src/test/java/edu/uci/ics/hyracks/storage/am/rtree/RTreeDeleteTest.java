@@ -46,8 +46,8 @@ public class RTreeDeleteTest extends AbstractRTreeDeleteTest {
     protected AbstractRTreeTestContext createTestContext(ISerializerDeserializer[] fieldSerdes,
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, RTreePolicyType rtreePolicyType)
             throws Exception {
-        return RTreeTestContext.create(harness.getBufferCache(), harness.getTreeFileId(), fieldSerdes,
-                valueProviderFactories, numKeys, rtreePolicyType);
+        return RTreeTestContext.create(harness.getBufferCache(), harness.getFileMapProvider(),
+                harness.getFileReference(), fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType);
     }
 
     @Override

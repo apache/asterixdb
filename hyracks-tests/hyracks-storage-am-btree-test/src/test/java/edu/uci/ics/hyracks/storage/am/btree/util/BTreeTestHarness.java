@@ -37,25 +37,36 @@ public class BTreeTestHarness {
     private static final long RANDOM_SEED = 50;
 
     protected final int pageSize;
+
     protected final int numPages;
+
     protected final int maxOpenFiles;
+
     protected final int hyracksFrameSize;
 
     protected IHyracksTaskContext ctx;
+
     protected IBufferCache bufferCache;
-    protected int btreeFileId;
+
+    protected IFileMapProvider fileMapProvider;
+
+    protected FileReference file;
 
     protected final Random rnd = new Random();
+
     protected final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
+
     protected final String tmpDir = System.getProperty("java.io.tmpdir");
+
     protected final String sep = System.getProperty("file.separator");
+
     protected String fileName;
 
     public BTreeTestHarness() {
-    	this.pageSize = AccessMethodTestsConfig.BTREE_PAGE_SIZE;
-    	this.numPages = AccessMethodTestsConfig.BTREE_NUM_PAGES;
-    	this.maxOpenFiles = AccessMethodTestsConfig.BTREE_MAX_OPEN_FILES;
-    	this.hyracksFrameSize = AccessMethodTestsConfig.BTREE_HYRACKS_FRAME_SIZE;
+        this.pageSize = AccessMethodTestsConfig.BTREE_PAGE_SIZE;
+        this.numPages = AccessMethodTestsConfig.BTREE_NUM_PAGES;
+        this.maxOpenFiles = AccessMethodTestsConfig.BTREE_MAX_OPEN_FILES;
+        this.hyracksFrameSize = AccessMethodTestsConfig.BTREE_HYRACKS_FRAME_SIZE;
     }
 
     public BTreeTestHarness(int pageSize, int numPages, int maxOpenFiles, int hyracksFrameSize) {
@@ -70,19 +81,14 @@ public class BTreeTestHarness {
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(pageSize, numPages, maxOpenFiles);
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        FileReference file = new FileReference(new File(fileName));
-        bufferCache.createFile(file);
-        btreeFileId = fmp.lookupFileId(file);
-        bufferCache.openFile(btreeFileId);
+        fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        file = new FileReference(new File(fileName));
         rnd.setSeed(RANDOM_SEED);
     }
 
     public void tearDown() throws HyracksDataException {
-        bufferCache.closeFile(btreeFileId);
         bufferCache.close();
-        File f = new File(fileName);
-        f.deleteOnExit();
+        file.delete();
     }
 
     public IHyracksTaskContext getHyracksTaskContext() {
@@ -93,8 +99,12 @@ public class BTreeTestHarness {
         return bufferCache;
     }
 
-    public int getBTreeFileId() {
-        return btreeFileId;
+    public IFileMapProvider getFileMapProvider() {
+        return fileMapProvider;
+    }
+
+    public FileReference getFileReference() {
+        return file;
     }
 
     public String getFileName() {

@@ -43,7 +43,8 @@ public class LSMTreeFileManager implements ILSMFileManager {
     protected final IFileMapProvider fileMapProvider;
 
     // baseDir should reflect dataset name and partition name.
-    protected final String baseDir;
+    protected FileReference file;
+    protected String baseDir;
     protected final Format formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
     protected final Comparator<String> cmp = new FileNameComparator();
     protected final Comparator<ComparableFileName> recencyCmp = new RecencyComparator();
@@ -57,13 +58,14 @@ public class LSMTreeFileManager implements ILSMFileManager {
         }
     };
 
-    public LSMTreeFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, String baseDir) {
+    public LSMTreeFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file) {
+        this.file = file;
+        this.baseDir = file.getFile().getPath();
         if (!baseDir.endsWith(System.getProperty("file.separator"))) {
             baseDir += System.getProperty("file.separator");
         }
         this.fileMapProvider = fileMapProvider;
         this.ioManager = ioManager;
-        this.baseDir = baseDir;
     }
 
     @Override

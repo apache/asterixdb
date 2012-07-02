@@ -54,6 +54,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
@@ -69,6 +70,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
 
     // In-memory components.   
     private final BTree memBTree;
+    private final FileReference memBtreeFile = new FileReference(new File("memBtree"));
     private final InMemoryFreePageManager memFreePageManager;
 
     // On-disk components.    
@@ -98,8 +100,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
             BTreeFactory diskBTreeFactory, BTreeFactory bulkLoadBTreeFactory, IFileMapProvider diskFileMapProvider,
             int fieldCount, IBinaryComparatorFactory[] cmpFactories, ILSMFlushController flushController,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOScheduler ioScheduler) {
-        memBTree = new BTree(memBufferCache, memFreePageManager, interiorFrameFactory, insertLeafFrameFactory,
-                cmpFactories, fieldCount);
+        memBTree = new BTree(memBufferCache, ((InMemoryBufferCache) memBufferCache).getFileMapProvider(),
+                memFreePageManager, interiorFrameFactory, insertLeafFrameFactory, cmpFactories, fieldCount);
         this.memFreePageManager = memFreePageManager;
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
@@ -115,8 +117,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     }
 
     @Override
-    public void create(int indexFileId) throws HyracksDataException {
-        memBTree.create(indexFileId);
+    public void create(FileReference fileReference) throws HyracksDataException {
+        memBTree.create(memBtreeFile);
         fileManager.createDirs();
     }
 
@@ -124,18 +126,19 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
      * Opens LSMBTree, cleaning up invalid files from base dir, and registering
      * all valid files as on-disk BTrees.
      * 
-     * @param indexFileId
+     * @param fileReference
      *            Dummy file id used for in-memory BTree.
      * @throws HyracksDataException
      */
     @Override
-    public void open(int indexFileId) throws HyracksDataException {
+    public void open(FileReference fileReference) throws HyracksDataException {
         synchronized (this) {
             if (isOpen) {
                 return;
             }
-            memBTree.open(indexFileId);
+            memBTree.open(memBtreeFile);
             BTree dummyBTree = diskBTreeFactory.createIndexInstance();
+            dummyBTree.create(new FileReference(new File("dummy")));
             List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(dummyBTree, componentFinalizer);
             for (Object o : validFileNames) {
                 String fileName = (String) o;
@@ -155,8 +158,6 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
             }
             for (Object o : diskBTrees) {
                 BTree btree = (BTree) o;
-                diskBufferCache.closeFile(btree.getFileId());
-                diskBufferCache.deleteFile(btree.getFileId(), false);
                 btree.close();
             }
             diskBTrees.clear();
@@ -211,7 +212,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     @Override
     public void resetInMemoryComponent() throws HyracksDataException {
         memFreePageManager.reset();
-        memBTree.create(memBTree.getFileId());
+        memBTree.create(memBTree.getFileReference());
     }
 
     private BTree createBulkLoadTarget() throws HyracksDataException {
@@ -239,18 +240,13 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
 
     private BTree createDiskBTree(BTreeFactory factory, FileReference fileRef, boolean createBTree)
             throws HyracksDataException {
-        // File will be deleted during cleanup of merge().
-        diskBufferCache.createFile(fileRef);
-        int diskBTreeFileId = diskFileMapProvider.lookupFileId(fileRef);
-        // File will be closed during cleanup of merge().
-        diskBufferCache.openFile(diskBTreeFileId);
         // Create new BTree instance.
         BTree diskBTree = factory.createIndexInstance();
         if (createBTree) {
-            diskBTree.create(diskBTreeFileId);
+            diskBTree.create(fileRef);
         }
         // BTree will be closed during cleanup of merge().
-        diskBTree.open(diskBTreeFileId);
+        diskBTree.open(fileRef);
         return diskBTree;
     }
 
@@ -332,8 +328,6 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         for (Object o : mergedComponents) {
             BTree oldBTree = (BTree) o;
             FileReference fileRef = diskFileMapProvider.lookupFileName(oldBTree.getFileId());
-            diskBufferCache.closeFile(oldBTree.getFileId());
-            diskBufferCache.deleteFile(oldBTree.getFileId(), false);
             oldBTree.close();
             fileRef.getFile().delete();
         }

@@ -26,15 +26,17 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
+import edu.uci.ics.hyracks.storage.common.smi.TransientFileMapManager;
 
-public class InMemoryBufferCacheTest{
+public class InMemoryBufferCacheTest {
     private static final int PAGE_SIZE = 256;
     private static final int NUM_PAGES = 100;
     private HashSet<ICachedPage> pinnedPages = new HashSet<ICachedPage>();
-    
+
     @Test
     public void test01() throws Exception {
-        InMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES);
+        InMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES,
+                new TransientFileMapManager());
         int dummyFileId = 0;
         // Pin all pages, and make sure they return unique ICachedPages.
         // We expect no overflow pages.

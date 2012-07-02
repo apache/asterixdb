@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
@@ -50,11 +51,11 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 /**
  * An inverted index consists of two files: 1. a file storing (paginated)
  * inverted lists 2. a BTree-file mapping from tokens to inverted lists.
- * 
  * Implemented features: bulk loading and searching (based on T-Occurrence) Not
  * implemented features: updates (insert/update/delete) Limitations: a query
  * cannot exceed the size of a Hyracks frame.
@@ -65,7 +66,9 @@ public class InvertedIndex implements IIndex {
     private BTree btree;
     private int rootPageId = 0;
     private IBufferCache bufferCache;
+    private IFileMapProvider fileMapProvider;
     private int fileId;
+    private FileReference file;
     private final ITypeTraits[] invListTypeTraits;
     private final IBinaryComparatorFactory[] invListCmpFactories;
     private final IInvertedListBuilder invListBuilder;
@@ -75,8 +78,9 @@ public class InvertedIndex implements IIndex {
 
     public InvertedIndex(IBufferCache bufferCache, BTree btree, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, IInvertedListBuilder invListBuilder,
-            IBinaryTokenizer tokenizer) {
+            IBinaryTokenizer tokenizer, IFileMapProvider fileMapProvider) {
         this.bufferCache = bufferCache;
+        this.fileMapProvider = fileMapProvider;
         this.btree = btree;
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
@@ -86,13 +90,38 @@ public class InvertedIndex implements IIndex {
         this.numInvListKeys = invListCmpFactories.length;
     }
 
-    @Override
-    public void open(int fileId) {
-        this.fileId = fileId;
+    private void initFile(FileReference file, boolean create) throws HyracksDataException {
+        this.file = file;
+        fileId = -1;
+        boolean fileIsMapped = false;
+        synchronized (fileMapProvider) {
+            fileIsMapped = fileMapProvider.isMapped(file);
+            if (!fileIsMapped) {
+                bufferCache.createFile(file);
+            }
+            fileId = fileMapProvider.lookupFileId(file);
+            try {
+                // Also creates the file if it doesn't exist yet.
+                bufferCache.openFile(fileId);
+            } catch (HyracksDataException e) {
+                // Revert state of buffer cache since file failed to open.
+                if (!fileIsMapped) {
+                    bufferCache.deleteFile(fileId, false);
+                }
+                throw e;
+            }
+        }
+
     }
 
     @Override
-    public void create(int indexFileId) throws HyracksDataException {
+    public void create(FileReference file) throws HyracksDataException {
+        initFile(file, true);
+    }
+
+    @Override
+    public void open(FileReference file) throws HyracksDataException {
+        initFile(file, false);
     }
 
     @Override
@@ -187,7 +216,6 @@ public class InvertedIndex implements IIndex {
          * The next invListCmp.getKeyFieldCount() fields in tuple are keys of the
          * inverted list (e.g., primary key).
          * Key fields of inverted list are fixed size.
-         * 
          */
         @Override
         public void add(ITupleReference tuple) throws HyracksDataException {
