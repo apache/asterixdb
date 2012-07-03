@@ -33,9 +33,9 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -72,7 +72,7 @@ public abstract class TreeIndexTestUtils {
         DataOutput dos = tupleBuilder.getDataOutput();
         tupleBuilder.reset();
         for (int i = 0; i < fieldCount; i++) {
-            fieldSerdes[i].serialize(checkTuple.get(i), dos);
+            fieldSerdes[i].serialize(checkTuple.getField(i), dos);
             tupleBuilder.addFieldEndOffset();
         }
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
@@ -88,7 +88,7 @@ public abstract class TreeIndexTestUtils {
                     tuple.getFieldLength(i));
             DataInput dataIn = new DataInputStream(inStream);
             Comparable fieldObj = (Comparable) fieldSerdes[i].deserialize(dataIn);
-            checkTuple.add(fieldObj);
+            checkTuple.appendField(fieldObj);
         }
         return checkTuple;
     }
@@ -106,7 +106,7 @@ public abstract class TreeIndexTestUtils {
     }
 
     public void checkDiskOrderScan(ITreeIndexTestContext ctx) throws Exception {
-        try {
+    	try {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Testing Disk-Order Scan.");
             }

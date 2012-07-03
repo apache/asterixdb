@@ -43,8 +43,8 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
                     actual.getFieldLength(i));
             DataInput dataIn = new DataInputStream(inStream);
             Object actualObj = fieldSerdes[i].deserialize(dataIn);
-            if (!actualObj.equals(expected.get(i))) {
-                fail("Actual and expected fields do not match on field " + i + ".\nExpected: " + expected.get(i)
+            if (!actualObj.equals(expected.getField(i))) {
+                fail("Actual and expected fields do not match on field " + i + ".\nExpected: " + expected.getField(i)
                         + "\nActual  : " + actualObj);
             }
         }
@@ -64,13 +64,13 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
             boolean geLowKey = true;
             boolean leHighKey = true;
             for (int i = 0; i < lowKey.getNumKeys(); i++) {
-                if (t.get(i).compareTo(lowKey.get(i)) < 0) {
+                if (t.getField(i).compareTo(lowKey.getField(i)) < 0) {
                     geLowKey = false;
                     break;
                 }
             }
             for (int i = 0; i < highKey.getNumKeys(); i++) {
-                if (t.get(i).compareTo(highKey.get(i)) > 0) {
+                if (t.getField(i).compareTo(highKey.getField(i)) > 0) {
                     leHighKey = false;
                     break;
                 }
@@ -317,7 +317,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
             // Update check tuple's non-key fields.
             for (int j = keyFieldCount; j < fieldCount; j++) {
                 Comparable newValue = getRandomUpdateValue(ctx.getFieldSerdes()[j], rnd);
-                checkTuple.set(j, newValue);
+                checkTuple.setField(j, newValue);
             }
 
             createTupleFromCheckTuple(checkTuple, updateTupleBuilder, updateTuple, ctx.getFieldSerdes());
@@ -334,7 +334,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     public CheckTuple createStringCheckTuple(String[] fieldValues, int numKeyFields) {
         CheckTuple<String> checkTuple = new CheckTuple<String>(fieldValues.length, numKeyFields);
         for (String s : fieldValues) {
-            checkTuple.add((String) s);
+            checkTuple.appendField((String) s);
         }
         return checkTuple;
     }
@@ -396,7 +396,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     protected CheckTuple createIntCheckTuple(int[] fieldValues, int numKeyFields) {
         CheckTuple<Integer> checkTuple = new CheckTuple<Integer>(fieldValues.length, numKeyFields);
         for (int v : fieldValues) {
-            checkTuple.add(v);
+            checkTuple.appendField(v);
         }
         return checkTuple;
     }

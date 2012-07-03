@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.util.HashMultiSet;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 
@@ -32,9 +33,9 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
 
     @SuppressWarnings("unchecked")
     // Create a new ArrayList containing the elements satisfying the search key
-    public ArrayList<RTreeCheckTuple> getRangeSearchExpectedResults(ArrayList<RTreeCheckTuple> checkTuples,
+    public HashMultiSet<RTreeCheckTuple> getRangeSearchExpectedResults(Collection<RTreeCheckTuple> checkTuples,
             RTreeCheckTuple key) {
-        ArrayList<RTreeCheckTuple> expectedResult = new ArrayList<RTreeCheckTuple>();
+        HashMultiSet<RTreeCheckTuple> expectedResult = new HashMultiSet<RTreeCheckTuple>();
         Iterator<RTreeCheckTuple> iter = checkTuples.iterator();
         while (iter.hasNext()) {
             RTreeCheckTuple t = iter.next();
@@ -61,9 +62,9 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
         RTreeCheckTuple keyCheck = (RTreeCheckTuple) createCheckTupleFromTuple(key, ctx.getFieldSerdes(),
                 cmp.getKeyFieldCount());
 
-        ArrayList<RTreeCheckTuple> expectedResult = null;
+        HashMultiSet<RTreeCheckTuple> expectedResult = null;
 
-        expectedResult = getRangeSearchExpectedResults((ArrayList<RTreeCheckTuple>) ctx.getCheckTuples(), keyCheck);
+        expectedResult = getRangeSearchExpectedResults(ctx.getCheckTuples(), keyCheck);
         checkExpectedResults(searchCursor, expectedResult, ctx.getFieldSerdes(), ctx.getKeyFieldCount(), null);
     }
 
@@ -122,7 +123,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
     protected CheckTuple createDoubleCheckTuple(double[] fieldValues, int numKeyFields) {
         RTreeCheckTuple<Double> checkTuple = new RTreeCheckTuple<Double>(fieldValues.length, numKeyFields);
         for (double v : fieldValues) {
-            checkTuple.add(v);
+            checkTuple.appendField(v);
         }
         return checkTuple;
     }
@@ -194,7 +195,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
     protected CheckTuple createIntCheckTuple(int[] fieldValues, int numKeyFields) {
         RTreeCheckTuple<Integer> checkTuple = new RTreeCheckTuple<Integer>(fieldValues.length, numKeyFields);
         for (int v : fieldValues) {
-            checkTuple.add(v);
+            checkTuple.appendField(v);
         }
         return checkTuple;
     }

@@ -15,17 +15,17 @@
 
 package edu.uci.ics.hyracks.storage.am.rtree;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.TreeIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.util.HashMultiSet;
 
 @SuppressWarnings("rawtypes")
 public abstract class AbstractRTreeTestContext extends TreeIndexTestContext<RTreeCheckTuple> {
-    private final ArrayList<RTreeCheckTuple> checkTuples = new ArrayList<RTreeCheckTuple>();
-
+    private final HashMultiSet<RTreeCheckTuple> checkTuples = new HashMultiSet<RTreeCheckTuple>();
+	
     public AbstractRTreeTestContext(ISerializerDeserializer[] fieldSerdes, ITreeIndex treeIndex) {
         super(fieldSerdes, treeIndex);
     }
@@ -34,5 +34,4 @@ public abstract class AbstractRTreeTestContext extends TreeIndexTestContext<RTre
     public Collection<RTreeCheckTuple> getCheckTuples() {
         return checkTuples;
     }
-
 }

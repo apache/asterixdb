@@ -43,6 +43,7 @@ import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.util.HashMultiSet;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
@@ -142,11 +143,11 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
             } catch (TreeIndexException e) {
             }
             RTreeCheckTuple checkTuple = new RTreeCheckTuple(fieldCount, keyFieldCount);
-            checkTuple.add(Math.min(p1x, p2x));
-            checkTuple.add(Math.min(p1y, p2y));
-            checkTuple.add(Math.max(p1x, p2x));
-            checkTuple.add(Math.max(p1y, p2y));
-            checkTuple.add(pk);
+            checkTuple.appendField(Math.min(p1x, p2x));
+            checkTuple.appendField(Math.min(p1y, p2y));
+            checkTuple.appendField(Math.max(p1x, p2x));
+            checkTuple.appendField(Math.max(p1y, p2y));
+            checkTuple.appendField(pk);
 
             checkTuples.add(checkTuple);
         }
@@ -162,7 +163,7 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
 
         RTreeCheckTuple keyCheck = (RTreeCheckTuple) rTreeTestUtils.createCheckTupleFromTuple(key, fieldSerdes,
                 keyFieldCount);
-        ArrayList<RTreeCheckTuple> expectedResult = rTreeTestUtils.getRangeSearchExpectedResults(checkTuples, keyCheck);
+        HashMultiSet<RTreeCheckTuple> expectedResult = rTreeTestUtils.getRangeSearchExpectedResults(checkTuples, keyCheck);
 
         rTreeTestUtils.getRangeSearchExpectedResults(checkTuples, keyCheck);
         indexAccessor.search(searchCursor, searchPredicate);
