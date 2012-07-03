@@ -46,6 +46,12 @@ import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 @SuppressWarnings("rawtypes")
 public abstract class AbstractRTreeMultiThreadTest {
 
+	protected final boolean testRstarPolicy;
+	
+	public AbstractRTreeMultiThreadTest(boolean testRstarPolicy) {
+		this.testRstarPolicy = testRstarPolicy;
+	}
+	
     protected final Logger LOGGER = Logger.getLogger(AbstractRTreeMultiThreadTest.class.getName());
 
     // Machine-specific number of threads to use for testing.
@@ -161,7 +167,7 @@ public abstract class AbstractRTreeMultiThreadTest {
 
     @Test
     public void rtreeFourDimensionsDouble() throws InterruptedException, HyracksException, TreeIndexException {
-        ISerializerDeserializer[] fieldSerdes = { DoubleSerializerDeserializer.INSTANCE,
+    	ISerializerDeserializer[] fieldSerdes = { DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
@@ -183,7 +189,14 @@ public abstract class AbstractRTreeMultiThreadTest {
 
     @Test
     public void rstartreeTwoDimensionsInt() throws InterruptedException, HyracksException, TreeIndexException {
-        ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
+    	if (!testRstarPolicy) {
+    		if (LOGGER.isLoggable(Level.INFO)) {
+    			LOGGER.info("Ignoring RTree Multithread Test With Two Dimensions With Integer Keys.");
+    		}
+    		return;
+    	}
+    	
+    	ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
 
@@ -203,7 +216,14 @@ public abstract class AbstractRTreeMultiThreadTest {
 
     @Test
     public void rstartreeTwoDimensionsDouble() throws Exception {
-        ISerializerDeserializer[] fieldSerdes = { DoubleSerializerDeserializer.INSTANCE,
+    	if (!testRstarPolicy) {
+    		if (LOGGER.isLoggable(Level.INFO)) {
+    			LOGGER.info("Ignoring RTree Multithread Test With Two Dimensions With Double Keys.");
+    		}
+    		return;
+    	}
+    	
+    	ISerializerDeserializer[] fieldSerdes = { DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE };
 
@@ -224,7 +244,14 @@ public abstract class AbstractRTreeMultiThreadTest {
 
     @Test
     public void rstartreeFourDimensionsDouble() throws InterruptedException, HyracksException, TreeIndexException {
-        ISerializerDeserializer[] fieldSerdes = { DoubleSerializerDeserializer.INSTANCE,
+    	if (!testRstarPolicy) {
+    		if (LOGGER.isLoggable(Level.INFO)) {
+    			LOGGER.info("Ignoring RTree Multithread Test With Four Dimensions With Double Keys.");
+    		}
+    		return;
+    	}
+    	
+    	ISerializerDeserializer[] fieldSerdes = { DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,

@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeWithAntiMatterTuplesTestContext;
 import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeDeleteTest;
@@ -33,8 +34,12 @@ import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 @SuppressWarnings("rawtypes")
 public class LSMRTreeWithAntiMatterTuplesDeleteTest extends AbstractRTreeDeleteTest {
 
-    private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
+	private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
 
+	public LSMRTreeWithAntiMatterTuplesDeleteTest() {
+		super(AccessMethodTestsConfig.LSM_RTREE_TEST_RSTAR_POLICY);
+	}
+	
     @Before
     public void setUp() throws HyracksException {
         harness.setUp();

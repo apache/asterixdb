@@ -32,7 +32,8 @@ public abstract class LSMRTreeMergeTestDriver extends AbstractRTreeTestDriver {
 
     private final RTreeTestUtils rTreeTestUtils;
 
-    public LSMRTreeMergeTestDriver() {
+    public LSMRTreeMergeTestDriver(boolean testRstarPolicy) {
+    	super(testRstarPolicy);
         this.rTreeTestUtils = new RTreeTestUtils();
     }
 

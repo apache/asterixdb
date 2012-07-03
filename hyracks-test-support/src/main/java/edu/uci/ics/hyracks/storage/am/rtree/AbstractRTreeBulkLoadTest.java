@@ -28,8 +28,9 @@ public abstract class AbstractRTreeBulkLoadTest extends AbstractRTreeTestDriver 
     private final RTreeTestUtils rTreeTestUtils;
     private final int bulkLoadRounds;
 
-    public AbstractRTreeBulkLoadTest(int bulkLoadRounds) {
-        this.bulkLoadRounds = bulkLoadRounds;
+    public AbstractRTreeBulkLoadTest(int bulkLoadRounds, boolean testRstarPolicy) {
+        super(testRstarPolicy);
+    	this.bulkLoadRounds = bulkLoadRounds;
         this.rTreeTestUtils = new RTreeTestUtils();
     }
 

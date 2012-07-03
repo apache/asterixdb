@@ -33,8 +33,9 @@ import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 @SuppressWarnings("rawtypes")
 public class LSMRTreeMultiBulkLoadTest extends AbstractRTreeBulkLoadTest {
-    public LSMRTreeMultiBulkLoadTest() {
-        super(AccessMethodTestsConfig.LSM_RTREE_BULKLOAD_ROUNDS);
+    
+	public LSMRTreeMultiBulkLoadTest() {
+        super(AccessMethodTestsConfig.LSM_RTREE_BULKLOAD_ROUNDS, AccessMethodTestsConfig.LSM_RTREE_TEST_RSTAR_POLICY);
     }
 
     private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();

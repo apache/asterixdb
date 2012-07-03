@@ -35,10 +35,14 @@ import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 public class LSMRTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
 
-    private LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
+	private LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
 
     private LSMRTreeTestWorkerFactory workerFactory = new LSMRTreeTestWorkerFactory();
 
+    public LSMRTreeMultiThreadTest() {
+		super(false);
+	}
+    
     @Override
     protected void setUp() throws HyracksException {
         harness.setUp();

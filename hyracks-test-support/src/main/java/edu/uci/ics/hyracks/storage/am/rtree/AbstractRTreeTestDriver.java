@@ -35,6 +35,12 @@ import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 
 @SuppressWarnings("rawtypes")
 public abstract class AbstractRTreeTestDriver {
+	protected final boolean testRstarPolicy;
+	
+	public AbstractRTreeTestDriver(boolean testRstarPolicy) {
+		this.testRstarPolicy = testRstarPolicy;
+	}
+	
     protected final Logger LOGGER = Logger.getLogger(AbstractRTreeTestDriver.class.getName());
 
     protected static final int numTuplesToInsert = AccessMethodTestsConfig.RTREE_NUM_TUPLES_TO_INSERT;
@@ -74,7 +80,7 @@ public abstract class AbstractRTreeTestDriver {
 
     @Test
     public void rtreeTwoDimensionsDouble() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+    	if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("RTree " + getTestOpName() + " Test With Two Dimensions With Double Keys.");
         }
 
@@ -95,7 +101,7 @@ public abstract class AbstractRTreeTestDriver {
 
     @Test
     public void rtreeFourDimensionsDouble() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+    	if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("RTree " + getTestOpName() + " Test With Four Dimensions With Double Keys.");
         }
 
@@ -119,7 +125,13 @@ public abstract class AbstractRTreeTestDriver {
 
     @Test
     public void rstartreeTwoDimensionsInt() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+    	if (!testRstarPolicy) {
+    		if (LOGGER.isLoggable(Level.INFO)) {
+    			LOGGER.info("Ignoring RTree " + getTestOpName() + " Test With Two Dimensions With Integer Keys.");
+            }
+    		return;
+    	}
+    	if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("RTree " + getTestOpName() + " Test With Two Dimensions With Integer Keys.");
         }
 
@@ -140,7 +152,13 @@ public abstract class AbstractRTreeTestDriver {
 
     @Test
     public void rstartreeTwoDimensionsDouble() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+    	if (!testRstarPolicy) {
+    		if (LOGGER.isLoggable(Level.INFO)) {
+    			LOGGER.info("Ignoring RTree " + getTestOpName() + " Test With Two Dimensions With Double Keys.");
+            }
+    		return;
+    	}
+    	if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("RTree " + getTestOpName() + " Test With Two Dimensions With Double Keys.");
         }
 
@@ -161,7 +179,13 @@ public abstract class AbstractRTreeTestDriver {
 
     @Test
     public void rstartreeFourDimensionsDouble() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+    	if (!testRstarPolicy) {
+    		if (LOGGER.isLoggable(Level.INFO)) {
+    			LOGGER.info("Ignoring RTree " + getTestOpName() + " Test With Four Dimensions With Double Keys.");
+            }
+    		return;
+    	}
+    	if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("RTree " + getTestOpName() + " Test With Four Dimensions With Double Keys.");
         }
 

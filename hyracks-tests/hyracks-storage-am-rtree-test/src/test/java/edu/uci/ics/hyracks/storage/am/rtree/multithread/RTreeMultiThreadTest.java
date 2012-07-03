@@ -34,7 +34,11 @@ import edu.uci.ics.hyracks.storage.am.rtree.utils.RTreeTestHarness;
 
 public class RTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
 
-    private RTreeTestHarness harness = new RTreeTestHarness();
+    public RTreeMultiThreadTest() {
+		super(true);
+	}
+
+	private RTreeTestHarness harness = new RTreeTestHarness();
 
     private RTreeTestWorkerFactory workerFactory = new RTreeTestWorkerFactory();
 
