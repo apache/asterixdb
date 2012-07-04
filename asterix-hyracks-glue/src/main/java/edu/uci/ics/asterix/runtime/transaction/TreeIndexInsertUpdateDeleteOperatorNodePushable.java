@@ -101,7 +101,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
     public void open() throws HyracksDataException {
         AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexHelper
                 .getOperatorDescriptor();
-        RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
+        RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         accessor = new FrameTupleAccessor(treeIndexHelper.getHyracksTaskContext().getFrameSize(), inputRecDesc);
         writeBuffer = treeIndexHelper.getHyracksTaskContext().allocateFrame();
         writer.open();

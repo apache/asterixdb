@@ -218,10 +218,9 @@ public class TestSecondaryIndexJob {
 
         TestSecondaryIndexJob tij = new TestSecondaryIndexJob();
         JobSpecification jobSpec = tij.createJobSpec();
-        JobId jobId = hcc.createJob("asterix", jobSpec);
 
         long start = System.currentTimeMillis();
-        hcc.start(jobId);
+        JobId jobId = hcc.startJob("asterix", jobSpec);
         hcc.waitForCompletion(jobId);
         long end = System.currentTimeMillis();
         System.err.println(start + " " + end + " " + (end - start));

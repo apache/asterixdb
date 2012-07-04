@@ -555,9 +555,8 @@ public class APIFramework {
             DisplayFormat pdf) throws Exception {
         for (int i = 0; i < specs.length; i++) {
             specs[i].setMaxReattempts(0);
-            JobId jobId = hcc.createJob(GlobalConfig.HYRACKS_APP_NAME, specs[i]);
+            JobId jobId = hcc.startJob(GlobalConfig.HYRACKS_APP_NAME, specs[i]);
             long startTime = System.currentTimeMillis();
-            hcc.start(jobId);
             hcc.waitForCompletion(jobId);
             long endTime = System.currentTimeMillis();
             double duration = (endTime - startTime) / 1000.00;
@@ -570,10 +569,9 @@ public class APIFramework {
             throws Exception {
         for (int i = 0; i < jobs.length; i++) {
             jobs[i].getJobSpec().setMaxReattempts(0);
-            JobId jobId = hcc.createJob(GlobalConfig.HYRACKS_APP_NAME, jobs[i].getJobSpec());
             long startTime = System.currentTimeMillis();
             try {
-                hcc.start(jobId);
+                JobId jobId = hcc.startJob(GlobalConfig.HYRACKS_APP_NAME, jobs[i].getJobSpec());
                 if (jobs[i].getSubmissionMode() == SubmissionMode.ASYNCHRONOUS) {
                     continue;
                 }

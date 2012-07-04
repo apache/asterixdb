@@ -84,9 +84,8 @@ public class AsterixHyracksIntegrationUtil {
     }
 
     public static void runJob(JobSpecification spec) throws Exception {
-        JobId jobId = hcc.createJob(GlobalConfig.HYRACKS_APP_NAME, spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         GlobalConfig.ASTERIX_LOGGER.info(spec.toJSON().toString());
-        hcc.start(jobId);
+        JobId jobId = hcc.startJob(GlobalConfig.HYRACKS_APP_NAME, spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         GlobalConfig.ASTERIX_LOGGER.info(jobId.toString());
         hcc.waitForCompletion(jobId);
     }
