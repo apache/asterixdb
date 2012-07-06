@@ -18,7 +18,7 @@ public class ARecordType extends AbstractComplexType {
     private IAType[] fieldTypes;
     private boolean isOpen;
     private transient final List<IRecordTypeAnnotation> annotations = new ArrayList<IRecordTypeAnnotation>();
-    private transient final Map<String, IAType> typeMap = new HashMap<String, IAType>();
+    private transient final Map<String, Integer> typeMap = new HashMap<String, Integer>();
 
     public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen) {
         super(typeName);
@@ -26,7 +26,7 @@ public class ARecordType extends AbstractComplexType {
         this.fieldTypes = fieldTypes;
         this.isOpen = isOpen;
         for (int i = 0; i < fieldNames.length; i++) {
-        	typeMap.put(fieldNames[i], fieldTypes[i]);
+        	typeMap.put(fieldNames[i], i);
         }
     }
 
@@ -83,7 +83,7 @@ public class ARecordType extends AbstractComplexType {
     }
 
     public IAType getFieldType(String fieldName) {
-    	return typeMap.get(fieldName);
+    	return fieldTypes[typeMap.get(fieldName)];
     }
     
     @Override

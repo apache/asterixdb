@@ -69,7 +69,7 @@ public class DatasetUtils {
     }
 
     public static String getNodegroupName(Dataset dataset) {
-        return (((AqlCompiledInternalDatasetDetails) dataset.getDatasetDetails())).getNodegroupName();
+        return (((InternalDatasetDetails) dataset.getDatasetDetails())).getNodeGroupName();
     }
 
     // TODO: TO be removed.
