@@ -6,8 +6,8 @@ import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
+import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -69,6 +69,8 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
 	
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+        setMetadataDeclarations(context);
+        
     	// Match operator pattern and initialize operator members.
         if (!matchesOperatorPattern(opRef, context)) {
             return false;
@@ -89,7 +91,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         pruneIndexCandidates(analyzedAMs);
         
         // Choose index to be applied.
-        Pair<IAccessMethod, AqlCompiledIndexDecl> chosenIndex = chooseIndex(analyzedAMs);
+        Pair<IAccessMethod, Index> chosenIndex = chooseIndex(analyzedAMs);
         if (chosenIndex == null) {
             context.addToDontApplySet(this, select);
             return false;

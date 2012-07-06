@@ -7,14 +7,17 @@ import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledDatasetDecl;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl;
+import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
+import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
+import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -33,6 +36,8 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * Class that embodies the commonalities between rewrite rules for access methods.
  */
 public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRewriteRule {
+    
+    private AqlCompiledMetadataDeclarations metadata;
     
     public abstract Map<FunctionIdentifier, List<IAccessMethod>> getAccessMethods();
     
@@ -53,7 +58,12 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         return false;
     }
     
-    protected void fillSubTreeIndexExprs(OptimizableOperatorSubTree subTree, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
+    protected void setMetadataDeclarations(IOptimizationContext context) {
+        AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
+        metadata = metadataProvider.getMetadataDeclarations();
+    }
+    
+    protected void fillSubTreeIndexExprs(OptimizableOperatorSubTree subTree, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) throws AlgebricksException {
         // The assign may be null if there is only a filter on the primary index key.
         // Match variables from lowest assign which comes directly after the dataset scan.
         List<LogicalVariable> varList = (!subTree.assigns.isEmpty()) ? subTree.assigns.get(subTree.assigns.size() - 1).getVariables() : subTree.dataSourceScan.getVariables();
@@ -85,16 +95,16 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * Simply picks the first index that it finds.
      * TODO: Improve this decision process by making it more systematic.
      */
-    protected Pair<IAccessMethod, AqlCompiledIndexDecl> chooseIndex(
+    protected Pair<IAccessMethod, Index> chooseIndex(
             Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
         Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
         while (amIt.hasNext()) {
             Map.Entry<IAccessMethod, AccessMethodAnalysisContext> amEntry = amIt.next();
             AccessMethodAnalysisContext analysisCtx = amEntry.getValue();
-            Iterator<Map.Entry<AqlCompiledIndexDecl, List<Integer>>> indexIt = analysisCtx.indexExprs.entrySet().iterator();
+            Iterator<Map.Entry<Index, List<Integer>>> indexIt = analysisCtx.indexExprs.entrySet().iterator();
             if (indexIt.hasNext()) {
-                Map.Entry<AqlCompiledIndexDecl, List<Integer>> indexEntry = indexIt.next();
-                return new Pair<IAccessMethod, AqlCompiledIndexDecl>(amEntry.getKey(), indexEntry.getKey());
+                Map.Entry<Index, List<Integer>> indexEntry = indexIt.next();
+                return new Pair<IAccessMethod, Index>(amEntry.getKey(), indexEntry.getKey());
             }
         }
         return null;
@@ -110,15 +120,15 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * 
      */
     public void pruneIndexCandidates(IAccessMethod accessMethod, AccessMethodAnalysisContext analysisCtx) {
-        Iterator<Map.Entry<AqlCompiledIndexDecl, List<Integer>>> it = analysisCtx.indexExprs.entrySet().iterator();
+        Iterator<Map.Entry<Index, List<Integer>>> it = analysisCtx.indexExprs.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry<AqlCompiledIndexDecl, List<Integer>> entry = it.next();
-            AqlCompiledIndexDecl index = entry.getKey();
+            Map.Entry<Index, List<Integer>> entry = it.next();
+            Index index = entry.getKey();
             Iterator<Integer> exprsIter = entry.getValue().iterator();
             boolean allUsed = true;
             int lastFieldMatched = -1;
-            for (int i = 0; i < index.getFieldExprs().size(); i++) {
-                String keyField = index.getFieldExprs().get(i);
+            for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
+                String keyField = index.getKeyFieldNames().get(i);
                 boolean foundKeyField = false;
                 while (exprsIter.hasNext()) {
                     Integer ix = exprsIter.next();
@@ -223,31 +233,30 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * 
      * @return true if a candidate index was added to foundIndexExprs, false
      *         otherwise
+     * @throws AlgebricksException 
      */
     protected boolean fillIndexExprs(String fieldName, int matchedFuncExprIndex,
-            AqlCompiledDatasetDecl datasetDecl, AccessMethodAnalysisContext analysisCtx) {
-        AqlCompiledIndexDecl primaryIndexDecl = DatasetUtils.getPrimaryIndex(datasetDecl);
-        List<String> primaryIndexFields = primaryIndexDecl.getFieldExprs();     
-        List<AqlCompiledIndexDecl> indexCandidates = DatasetUtils.findSecondaryIndexesByOneOfTheKeys(datasetDecl, fieldName);
-        // Check whether the primary index is a candidate. If so, add it to the list.
-        if (primaryIndexFields.contains(fieldName)) {
-            if (indexCandidates == null) {
-                indexCandidates = new ArrayList<AqlCompiledIndexDecl>(1);
+            Dataset dataset, AccessMethodAnalysisContext analysisCtx) throws AlgebricksException {
+        List<Index> datasetIndexes = metadata.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
+        List<Index> indexCandidates = new ArrayList<Index>();
+        // Add an index to the candidates if one of the indexed fields is fieldName.
+        for (Index index : datasetIndexes) {
+            if (index.getKeyFieldNames().contains(fieldName)) {
+                indexCandidates.add(index);
             }
-            indexCandidates.add(primaryIndexDecl);
         }
         // No index candidates for fieldName.
-        if (indexCandidates == null) {
+        if (indexCandidates.isEmpty()) {
             return false;
         }
         // Go through the candidates and fill indexExprs.
-        for (AqlCompiledIndexDecl index : indexCandidates) {
-            analysisCtx.addIndexExpr(datasetDecl, index, matchedFuncExprIndex);
+        for (Index index : indexCandidates) {
+            analysisCtx.addIndexExpr(dataset, index, matchedFuncExprIndex);
         }
         return true;
     }
 
-    protected void fillAllIndexExprs(List<LogicalVariable> varList, OptimizableOperatorSubTree subTree, AccessMethodAnalysisContext analysisCtx) {
+    protected void fillAllIndexExprs(List<LogicalVariable> varList, OptimizableOperatorSubTree subTree, AccessMethodAnalysisContext analysisCtx) throws AlgebricksException {
         for (int optFuncExprIndex = 0; optFuncExprIndex < analysisCtx.matchedFuncExprs.size(); optFuncExprIndex++) {
             for (int varIndex = 0; varIndex < varList.size(); varIndex++) {
                 LogicalVariable var = varList.get(varIndex);
@@ -274,12 +283,12 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         break;
                     }
                     // The variable value is one of the partitioning fields.
-                    fieldName = DatasetUtils.getPartitioningExpressions(subTree.datasetDecl).get(varIndex);
+                    fieldName = DatasetUtils.getPartitioningKeys(subTree.dataset).get(varIndex);
                 }
                 // Set the fieldName in the corresponding matched function expression, and remember matching subtree.
                 optFuncExpr.setFieldName(funcVarIndex, fieldName);
                 optFuncExpr.setOptimizableSubTree(funcVarIndex, subTree);
-                fillIndexExprs(fieldName, optFuncExprIndex, subTree.datasetDecl, analysisCtx);
+                fillIndexExprs(fieldName, optFuncExprIndex, subTree.dataset, analysisCtx);
             }
         }
     }

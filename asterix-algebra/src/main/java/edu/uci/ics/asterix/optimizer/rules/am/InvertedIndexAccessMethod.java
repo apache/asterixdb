@@ -14,9 +14,8 @@ import edu.uci.ics.asterix.dataflow.data.common.ListEditDistanceSearchModifierFa
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryTokenizerFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledDatasetDecl;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl.IndexKind;
+import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.om.base.AFloat;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.ANull;
@@ -309,12 +308,13 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     private ILogicalOperator createSecondaryToPrimaryPlan(OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree, 
-            AqlCompiledIndexDecl chosenIndex, IOptimizableFuncExpr optFuncExpr, boolean retainInput, boolean requiresBroadcast, IOptimizationContext context) throws AlgebricksException {
-        AqlCompiledDatasetDecl datasetDecl = indexSubTree.datasetDecl;
+            Index chosenIndex, IOptimizableFuncExpr optFuncExpr, boolean retainInput, boolean requiresBroadcast, IOptimizationContext context) throws AlgebricksException {
+        Dataset dataset = indexSubTree.dataset;
         ARecordType recordType = indexSubTree.recordType;
         DataSourceScanOperator dataSourceScan = indexSubTree.dataSourceScan;
         
-        InvertedIndexJobGenParams jobGenParams = new InvertedIndexJobGenParams(chosenIndex.getIndexName(), chosenIndex.getKind(), datasetDecl.getName(), retainInput, requiresBroadcast);
+        InvertedIndexJobGenParams jobGenParams = new InvertedIndexJobGenParams(chosenIndex.getIndexName(),
+                chosenIndex.getIndexType(), dataset.getDatasetName(), retainInput, requiresBroadcast);
         // Add function-specific args such as search modifier, and possibly a similarity threshold.
         addFunctionSpecificArgs(optFuncExpr, jobGenParams);
         // Add the type of search key from the optFuncExpr.
@@ -343,11 +343,11 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             inputOp = (AbstractLogicalOperator) probeSubTree.root;
         }
         jobGenParams.setKeyVarList(keyVarList);
-        UnnestMapOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(datasetDecl,
+        UnnestMapOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset,
                 recordType, chosenIndex, inputOp, jobGenParams, context, true, retainInput);
         // Generate the rest of the upstream plan which feeds the search results into the primary index.
         UnnestMapOperator primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceScan,
-                datasetDecl, recordType, secondaryIndexUnnestOp, context, true, retainInput, false);
+                dataset, recordType, secondaryIndexUnnestOp, context, true, retainInput, false);
         return primaryIndexUnnestOp;
     }
     
@@ -368,7 +368,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     
     @Override
     public boolean applySelectPlanTransformation(Mutable<ILogicalOperator> selectRef, OptimizableOperatorSubTree subTree,
-            AqlCompiledIndexDecl chosenIndex, AccessMethodAnalysisContext analysisCtx, IOptimizationContext context)
+            Index chosenIndex, AccessMethodAnalysisContext analysisCtx, IOptimizationContext context)
             throws AlgebricksException {
         IOptimizableFuncExpr optFuncExpr = chooseOptFuncExpr(chosenIndex, analysisCtx);
         ILogicalOperator indexPlanRootOp = createSecondaryToPrimaryPlan(subTree, null, chosenIndex, optFuncExpr, false, false, context);
@@ -380,17 +380,17 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     @Override
     public boolean applyJoinPlanTransformation(Mutable<ILogicalOperator> joinRef,
             OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree,
-            AqlCompiledIndexDecl chosenIndex, AccessMethodAnalysisContext analysisCtx, IOptimizationContext context)
+            Index chosenIndex, AccessMethodAnalysisContext analysisCtx, IOptimizationContext context)
             throws AlgebricksException {
         // Figure out if the index is applicable on the left or right side (if both, we arbitrarily prefer the left side).
-        AqlCompiledDatasetDecl dataset = analysisCtx.indexDatasetMap.get(chosenIndex);
+        Dataset dataset = analysisCtx.indexDatasetMap.get(chosenIndex);
         // Determine probe and index subtrees based on chosen index.
         OptimizableOperatorSubTree indexSubTree = null;
         OptimizableOperatorSubTree probeSubTree = null;
-        if (dataset.getName().equals(leftSubTree.datasetDecl.getName())) {
+        if (dataset.getDatasetName().equals(leftSubTree.dataset.getDatasetName())) {
             indexSubTree = leftSubTree;
             probeSubTree = rightSubTree;
-        } else if (dataset.getName().equals(rightSubTree.datasetDecl.getName())) {
+        } else if (dataset.getDatasetName().equals(rightSubTree.dataset.getDatasetName())) {
             indexSubTree = rightSubTree;
             probeSubTree = leftSubTree;
         }
@@ -454,7 +454,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         return true;
     }
     
-    private IOptimizableFuncExpr chooseOptFuncExpr(AqlCompiledIndexDecl chosenIndex, AccessMethodAnalysisContext analysisCtx) {
+    private IOptimizableFuncExpr chooseOptFuncExpr(Index chosenIndex, AccessMethodAnalysisContext analysisCtx) {
         // TODO: We can probably do something smarter here.
         // Pick the first expr optimizable by this index.
         List<Integer> indexExprs = analysisCtx.getIndexExprs(chosenIndex);
@@ -462,7 +462,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         return analysisCtx.matchedFuncExprs.get(firstExprIndex);
     }
 
-    private Mutable<ILogicalOperator> createPanicNestedLoopJoinPlan(Mutable<ILogicalOperator> joinRef, OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree, IOptimizableFuncExpr optFuncExpr, AqlCompiledIndexDecl chosenIndex, IOptimizationContext context) throws AlgebricksException {
+    private Mutable<ILogicalOperator> createPanicNestedLoopJoinPlan(Mutable<ILogicalOperator> joinRef, OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree, IOptimizableFuncExpr optFuncExpr, Index chosenIndex, IOptimizationContext context) throws AlgebricksException {
         LogicalVariable inputSearchVar = getInputSearchVar(optFuncExpr, indexSubTree);
         
         // We split the plan into two "branches", and add selections on each side.
@@ -487,7 +487,6 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         LogicalOperatorDeepCopyVisitor deepCopyVisitor = new LogicalOperatorDeepCopyVisitor(counter);
         ILogicalOperator scanSubTree = deepCopyVisitor.deepCopy(indexSubTree.root, null);        
         context.setVarCounter(counter.get());
-        //context.computeAndSetTypeEnvironmentForOperator(scanSubTree);
         
         List<LogicalVariable> copyLiveVars = new ArrayList<LogicalVariable>();
         VariableUtilities.getLiveVariables(scanSubTree, copyLiveVars);
@@ -516,7 +515,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         return isFilterableSelectOpRef;
     }
     
-    private void createIsFilterableSelectOps(ILogicalOperator inputOp, LogicalVariable inputSearchVar, IAType inputSearchVarType, IOptimizableFuncExpr optFuncExpr, AqlCompiledIndexDecl chosenIndex, IOptimizationContext context, Mutable<ILogicalOperator> isFilterableSelectOpRef, Mutable<ILogicalOperator> isNotFilterableSelectOpRef) throws AlgebricksException {        
+    private void createIsFilterableSelectOps(ILogicalOperator inputOp, LogicalVariable inputSearchVar, IAType inputSearchVarType, IOptimizableFuncExpr optFuncExpr, Index chosenIndex, IOptimizationContext context, Mutable<ILogicalOperator> isFilterableSelectOpRef, Mutable<ILogicalOperator> isNotFilterableSelectOpRef) throws AlgebricksException {        
         // Create select operator for removing tuples that are not filterable.
         // First determine the proper filter function and args based on the type of the input search var.
         ILogicalExpression isFilterableExpr = null;
@@ -616,7 +615,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public boolean exprIsOptimizable(AqlCompiledIndexDecl index, IOptimizableFuncExpr optFuncExpr) {
+    public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK) {
             // Must be for a join query.
             if (optFuncExpr.getNumConstantVals() == 1) {
@@ -631,7 +630,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             AInt32 edThresh = (AInt32) intObj;
             int mergeThreshold = 0;
             // We can only optimize edit distance on strings using an ngram index.
-            if (listOrStrObj.getType().getTypeTag() == ATypeTag.STRING && index.getKind() == IndexKind.NGRAM_INVIX) {
+            if (listOrStrObj.getType().getTypeTag() == ATypeTag.STRING && index.getIndexType() == IndexType.NGRAM_INVIX) {
                 AString astr = (AString) listOrStrObj;                    
                 // Compute merge threshold.
                 mergeThreshold = (astr.getStringValue().length() + index.getGramLength() - 1)
@@ -639,7 +638,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             }
             // We can only optimize edit distance on lists using a word index.
             if ((listOrStrObj.getType().getTypeTag() == ATypeTag.ORDEREDLIST || listOrStrObj.getType().getTypeTag() == ATypeTag.UNORDEREDLIST)
-                    && index.getKind() == IndexKind.WORD_INVIX) {
+                    && index.getIndexType() == IndexType.WORD_INVIX) {
                 IACollection alist = (IACollection) listOrStrObj;        
                 // Compute merge threshold.
                 mergeThreshold = alist.size() - edThresh.getIntegerValue();
@@ -665,11 +664,11 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 AbstractFunctionCallExpression nonConstfuncExpr = (AbstractFunctionCallExpression) nonConstArg;
                 // We can use this index if the tokenization function matches the index type.
                 if (nonConstfuncExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.WORD_TOKENS &&
-                        index.getKind() == IndexKind.WORD_INVIX) {
+                        index.getIndexType() == IndexType.WORD_INVIX) {
                     return true;
                 }
                 if (nonConstfuncExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.GRAM_TOKENS &&
-                        index.getKind() == IndexKind.NGRAM_INVIX) {
+                        index.getIndexType() == IndexType.NGRAM_INVIX) {
                     return true;
                 }
             }
@@ -682,7 +681,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         }
         // We can only optimize contains with ngram indexes.
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.CONTAINS
-                && index.getKind() == IndexKind.NGRAM_INVIX) {
+                && index.getIndexType() == IndexType.NGRAM_INVIX) {
             // Check that the constant search string has at least gramLength characters.
             AsterixConstantValue strConstVal = (AsterixConstantValue) optFuncExpr.getConstantVal(0);
             IAObject strObj = strConstVal.getObject();
@@ -733,9 +732,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         return AqlTypeTraitProvider.INSTANCE.getTypeTrait(type);
     }
     
-    public static IBinaryTokenizerFactory getBinaryTokenizerFactory(SearchModifierType searchModifierType, ATypeTag searchKeyType, AqlCompiledIndexDecl index)
-            throws AlgebricksException {
-        switch (index.getKind()) {
+    public static IBinaryTokenizerFactory getBinaryTokenizerFactory(SearchModifierType searchModifierType,
+            ATypeTag searchKeyType, Index index) throws AlgebricksException {
+        switch (index.getIndexType()) {
             case WORD_INVIX: {
                 return AqlBinaryTokenizerFactoryProvider.INSTANCE.getWordTokenizerFactory(searchKeyType, false);
             }
@@ -746,20 +745,20 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                         index.getGramLength(), prePost, false);
             }
             default: {
-                throw new AlgebricksException("Tokenizer not applicable to index kind '" + index.getKind() + "'.");
+                throw new AlgebricksException("Tokenizer not applicable to index kind '" + index.getIndexType() + "'.");
             }
         }
     }
     
-    public static IBinaryTokenizerFactory getBinaryTokenizerFactory(ATypeTag keyType, IndexType indexType, int gramLength)
-            throws AlgebricksException {
+    public static IBinaryTokenizerFactory getBinaryTokenizerFactory(ATypeTag keyType, IndexType indexType,
+            int gramLength) throws AlgebricksException {
         switch (indexType) {
             case WORD_INVIX: {
                 return AqlBinaryTokenizerFactoryProvider.INSTANCE.getWordTokenizerFactory(keyType, false);
             }
             case NGRAM_INVIX: {
-                return AqlBinaryTokenizerFactoryProvider.INSTANCE.getNGramTokenizerFactory(keyType,
-                        gramLength, true, false);
+                return AqlBinaryTokenizerFactoryProvider.INSTANCE.getNGramTokenizerFactory(keyType, gramLength, true,
+                        false);
             }
             default: {
                 throw new AlgebricksException("Tokenizer not applicable to index type '" + indexType + "'.");
@@ -767,8 +766,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         }
     }
     
-    public static IInvertedIndexSearchModifierFactory getSearchModifierFactory(SearchModifierType searchModifierType, IAObject simThresh, AqlCompiledIndexDecl index) throws AlgebricksException {
-        switch(searchModifierType) {
+    public static IInvertedIndexSearchModifierFactory getSearchModifierFactory(SearchModifierType searchModifierType,
+            IAObject simThresh, Index index) throws AlgebricksException {
+        switch (searchModifierType) {
             case CONJUNCTIVE: {
                 return new ConjunctiveSearchModifierFactory();
             }
@@ -778,7 +778,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             }
             case EDIT_DISTANCE: {
                 int edThresh = ((AInt32) simThresh).getIntegerValue();
-                switch (index.getKind()) {
+                switch (index.getIndexType()) {
                     case NGRAM_INVIX: {
                         // Edit distance on strings, filtered with overlapping grams.
                         return new EditDistanceSearchModifierFactory(index.getGramLength(), edThresh);
@@ -788,7 +788,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                         return new ListEditDistanceSearchModifierFactory(edThresh);
                     }
                     default: {
-                        throw new AlgebricksException("Incompatible search modifier '" + searchModifierType + "' for index type '" + index.getKind() + "'");
+                        throw new AlgebricksException("Incompatible search modifier '" + searchModifierType
+                                + "' for index type '" + index.getIndexType() + "'");
                     }
                 }
             }

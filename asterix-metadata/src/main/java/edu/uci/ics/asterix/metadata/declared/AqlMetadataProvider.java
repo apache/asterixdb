@@ -19,6 +19,7 @@ import java.io.File;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import edu.uci.ics.asterix.common.parse.IParseFileSplitsDecl;
@@ -34,7 +35,10 @@ import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl.IndexKind;
+import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
+import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
+import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -47,12 +51,10 @@ import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsoluteParti
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
-import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSink;
@@ -63,7 +65,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSc
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.SinkWriterRuntimeFactory;
@@ -121,23 +122,23 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             List<LogicalVariable> projectVariables, boolean projectPushed, IOperatorSchema opSchema,
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec)
             throws AlgebricksException {
-        AqlCompiledDatasetDecl adecl = metadata.findDataset(dataSource.getId().getDatasetName());
-        if (adecl == null) {
+    	Dataset dataset = metadata.findDataset(dataSource.getId().getDatasetName());
+        if (dataset == null) {
             throw new AlgebricksException("Unknown dataset " + dataSource.getId().getDatasetName());
         }
-        switch (adecl.getDatasetType()) {
+        switch (dataset.getType()) {
             case FEED:
                 if (dataSource instanceof ExternalFeedDataSource) {
-                    return buildExternalDatasetScan(jobSpec, adecl, dataSource);
+                    return buildExternalDatasetScan(jobSpec, dataset, dataSource);
                 } else {
-                    return buildInternalDatasetScan(jobSpec, scanVariables, opSchema, typeEnv, adecl, dataSource,
+                    return buildInternalDatasetScan(jobSpec, scanVariables, opSchema, typeEnv, dataset, dataSource,
                             context);
                 }
             case INTERNAL: {
-                return buildInternalDatasetScan(jobSpec, scanVariables, opSchema, typeEnv, adecl, dataSource, context);
+                return buildInternalDatasetScan(jobSpec, scanVariables, opSchema, typeEnv, dataset, dataSource, context);
             }
             case EXTERNAL: {
-                return buildExternalDatasetScan(jobSpec, adecl, dataSource);
+                return buildExternalDatasetScan(jobSpec, dataset, dataSource);
             }
             default: {
                 throw new IllegalArgumentException();
@@ -147,18 +148,19 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildInternalDatasetScan(JobSpecification jobSpec,
             List<LogicalVariable> outputVars, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv,
-            AqlCompiledDatasetDecl acedl, IDataSource<AqlSourceId> dataSource, JobGenContext context)
+            Dataset dataset, IDataSource<AqlSourceId> dataSource, JobGenContext context)
             throws AlgebricksException {
         AqlSourceId asid = dataSource.getId();
+        String dataverseName = asid.getDataverseName();
         String datasetName = asid.getDatasetName();
-        String indexName = DatasetUtils.getPrimaryIndex(acedl).getIndexName();
-        return buildBtreeRuntime(jobSpec, outputVars, opSchema, typeEnv, metadata, context, false, datasetName, acedl,
-                indexName, null, null, true, true);
+        Index primaryIndex = metadata.getDatasetPrimaryIndex(dataverseName, datasetName);
+        return buildBtreeRuntime(jobSpec, outputVars, opSchema, typeEnv, metadata, context, false, datasetName, dataset,
+                primaryIndex.getIndexName(), null, null, true, true);
     }
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDatasetScan(JobSpecification jobSpec,
-            AqlCompiledDatasetDecl acedl, IDataSource<AqlSourceId> dataSource) throws AlgebricksException {
-        String itemTypeName = acedl.getItemTypeName();
+            Dataset dataset, IDataSource<AqlSourceId> dataSource) throws AlgebricksException {
+        String itemTypeName = dataset.getDatatypeName();
         IAType itemType;
         try {
             itemType = metadata.findType(itemTypeName);
@@ -167,28 +169,27 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
 
         if (dataSource instanceof ExternalFeedDataSource) {
-            AqlCompiledFeedDatasetDetails acfdd = (AqlCompiledFeedDatasetDetails) ((ExternalFeedDataSource) dataSource)
-                    .getCompiledDatasetDecl().getAqlCompiledDatasetDetails();
-
-            return buildFeedIntakeRuntime(jobSpec, metadata.getDataverseName(), acedl.getName(), itemType, acfdd,
-                    metadata.getFormat());
+            FeedDatasetDetails datasetDetails = (FeedDatasetDetails) ((ExternalFeedDataSource) dataSource).getDataset()
+                    .getDatasetDetails();
+            return buildFeedIntakeRuntime(jobSpec, metadata.getDataverseName(), dataset.getDatasetName(), itemType,
+                    datasetDetails, metadata.getFormat());
         } else {
             return buildExternalDataScannerRuntime(jobSpec, itemType,
-                    (AqlCompiledExternalDatasetDetails) acedl.getAqlCompiledDatasetDetails(), metadata.getFormat());
+                    (ExternalDatasetDetails) dataset.getDatasetDetails(), metadata.getFormat());
         }
     }
 
     @SuppressWarnings("rawtypes")
     public static Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDataScannerRuntime(
-            JobSpecification jobSpec, IAType itemType, AqlCompiledExternalDatasetDetails decl, IDataFormat format)
+            JobSpecification jobSpec, IAType itemType, ExternalDatasetDetails datasetDetails, IDataFormat format)
             throws AlgebricksException {
         if (itemType.getTypeTag() != ATypeTag.RECORD) {
             throw new AlgebricksException("Can only scan datasets of records.");
         }
-
+        
         IDatasourceReadAdapter adapter;
         try {
-            adapter = (IDatasourceReadAdapter) Class.forName(decl.getAdapter()).newInstance();
+            adapter = (IDatasourceReadAdapter) Class.forName(datasetDetails.getAdapter()).newInstance();
         } catch (Exception e) {
             e.printStackTrace();
             throw new AlgebricksException("unable to load the adapter class " + e);
@@ -201,7 +202,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         ARecordType rt = (ARecordType) itemType;
 
         try {
-            adapter.configure(decl.getProperties(), itemType);
+            adapter.configure(datasetDetails.getProperties(), itemType);
         } catch (Exception e) {
             e.printStackTrace();
             throw new AlgebricksException("unable to configure the datasource adapter " + e);
@@ -211,7 +212,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         RecordDescriptor scannerDesc = new RecordDescriptor(new ISerializerDeserializer[] { payloadSerde });
 
         ExternalDataScanOperatorDescriptor dataScanner = new ExternalDataScanOperatorDescriptor(jobSpec,
-                decl.getAdapter(), decl.getProperties(), rt, scannerDesc);
+        		datasetDetails.getAdapter(), datasetDetails.getProperties(), rt, scannerDesc);
         dataScanner.setDatasourceAdapter(adapter);
         AlgebricksPartitionConstraint constraint = adapter.getPartitionConstraint();
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(dataScanner, constraint);
@@ -243,13 +244,13 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     @SuppressWarnings("rawtypes")
     public static Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildFeedIntakeRuntime(
             JobSpecification jobSpec, String dataverse, String dataset, IAType itemType,
-            AqlCompiledFeedDatasetDetails decl, IDataFormat format) throws AlgebricksException {
+            FeedDatasetDetails datasetDetails, IDataFormat format) throws AlgebricksException {
         if (itemType.getTypeTag() != ATypeTag.RECORD) {
             throw new AlgebricksException("Can only consume records.");
         }
         IDatasourceAdapter adapter;
         try {
-            adapter = (IDatasourceAdapter) Class.forName(decl.getAdapter()).newInstance();
+            adapter = (IDatasourceAdapter) Class.forName(datasetDetails.getAdapter()).newInstance();
         } catch (Exception e) {
             e.printStackTrace();
             throw new AlgebricksException("unable to load the adapter class " + e);
@@ -257,7 +258,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
         ARecordType rt = (ARecordType) itemType;
         try {
-            adapter.configure(decl.getProperties(), itemType);
+            adapter.configure(datasetDetails.getProperties(), itemType);
         } catch (Exception e) {
             e.printStackTrace();
             throw new AlgebricksException("unable to configure the datasource adapter " + e);
@@ -267,46 +268,39 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         RecordDescriptor feedDesc = new RecordDescriptor(new ISerializerDeserializer[] { payloadSerde });
 
         FeedIntakeOperatorDescriptor feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, new FeedId(dataverse,
-                dataset), decl.getAdapter(), decl.getProperties(), rt, feedDesc);
+                dataset), datasetDetails.getAdapter(), datasetDetails.getProperties(), rt, feedDesc);
 
         AlgebricksPartitionConstraint constraint = adapter.getPartitionConstraint();
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(feedIngestor, constraint);
     }
 
     public static Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildFeedMessengerRuntime(
-            JobSpecification jobSpec, AqlCompiledMetadataDeclarations metadata, AqlCompiledFeedDatasetDetails decl,
+            JobSpecification jobSpec, AqlCompiledMetadataDeclarations metadata, FeedDatasetDetails datasetDetails,
             String dataverse, String dataset, List<IFeedMessage> feedMessages) throws AlgebricksException {
-
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc;
-        try {
-            spPc = metadata.splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataset, dataset);
-        } catch (Exception e) {
-            throw new AlgebricksException(e);
-        }
-
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc = metadata
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataset, dataset);
         FeedMessageOperatorDescriptor feedMessenger = new FeedMessageOperatorDescriptor(jobSpec, dataverse, dataset,
                 feedMessages);
-
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(feedMessenger, spPc.second);
     }
 
     public static Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildBtreeRuntime(JobSpecification jobSpec,
             List<LogicalVariable> outputVars, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv,
             AqlCompiledMetadataDeclarations metadata, JobGenContext context, boolean retainInput, String datasetName,
-            AqlCompiledDatasetDecl datasetDecl, String indexName, int[] lowKeyFields, int[] highKeyFields,
+            Dataset dataset, String indexName, int[] lowKeyFields, int[] highKeyFields,
             boolean lowKeyInclusive, boolean highKeyInclusive) throws AlgebricksException {
         boolean isSecondary = true;
-        AqlCompiledIndexDecl primaryIndexDecl = DatasetUtils.getPrimaryIndex(datasetDecl);
-        if (primaryIndexDecl != null) {
-            isSecondary = !indexName.equals(primaryIndexDecl.getIndexName());
+        Index primaryIndex = metadata.getDatasetPrimaryIndex(dataset.getDataverseName(), dataset.getDatasetName());
+        if (primaryIndex != null) {
+            isSecondary = !indexName.equals(primaryIndex.getIndexName());
         }
-        int numPrimaryKeys = DatasetUtils.getPartitioningFunctions(datasetDecl).size();
+        int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
         RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
         int numKeys = numPrimaryKeys;
         int keysStartIndex = outputRecDesc.getFieldCount() - numKeys - 1;
         if (isSecondary) {
-            AqlCompiledIndexDecl secondaryIndexDecl = DatasetUtils.findSecondaryIndexByName(datasetDecl, indexName);
-            int numSecondaryKeys = secondaryIndexDecl.getFieldExprs().size();
+            Index secondaryIndex = metadata.getIndex(dataset.getDataverseName(), dataset.getDatasetName(), indexName);
+            int numSecondaryKeys = secondaryIndex.getKeyFieldNames().size();
             numKeys += numSecondaryKeys;
             keysStartIndex = outputRecDesc.getFieldCount() - numKeys;
         }
@@ -332,23 +326,23 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     @SuppressWarnings("rawtypes")
     public static Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildRtreeRuntime(
             AqlCompiledMetadataDeclarations metadata, JobGenContext context, JobSpecification jobSpec,
-            String datasetName, AqlCompiledDatasetDecl ddecl, String indexName, int[] keyFields)
+            String datasetName, Dataset dataset, String indexName, int[] keyFields)
             throws AlgebricksException {
-        String itemTypeName = ddecl.getItemTypeName();
-        IAType itemType;
-        try {
-            itemType = metadata.findType(itemTypeName);
-        } catch (Exception e) {
-            throw new AlgebricksException(e);
+        // TODO: This can be shrunk to a single line.
+        String itemTypeName = dataset.getDatatypeName();
+        IAType itemType = metadata.findType(itemTypeName);
+        if (itemType.getTypeTag() != ATypeTag.RECORD) {
+            throw new AlgebricksException("Only record types can be indexed.");
         }
+        ARecordType recType = (ARecordType) itemType;
 
         boolean isSecondary = true;
-        AqlCompiledIndexDecl primIdxDecl = DatasetUtils.getPrimaryIndex(ddecl);
-        if (primIdxDecl != null) {
-            isSecondary = !indexName.equals(primIdxDecl.getIndexName());
+        Index primaryIndex = metadata.getDatasetPrimaryIndex(dataset.getDataverseName(), dataset.getDatasetName());
+        if (primaryIndex != null) {
+            isSecondary = !indexName.equals(primaryIndex.getIndexName());
         }
 
-        int numPrimaryKeys = DatasetUtils.getPartitioningFunctions(ddecl).size();
+        int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
         ISerializerDeserializer[] recordFields;
         IBinaryComparatorFactory[] comparatorFactories;
         ITypeTraits[] typeTraits;
@@ -357,12 +351,12 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         int numNestedSecondaryKeyFields = 0;
         int i = 0;
         if (isSecondary) {
-            AqlCompiledIndexDecl cid = DatasetUtils.findSecondaryIndexByName(ddecl, indexName);
-            if (cid == null) {
+            Index secondaryIndex = metadata.getIndex(dataset.getDataverseName(), dataset.getDatasetName(), indexName);
+            if (secondaryIndex == null) {
                 throw new AlgebricksException("Code generation error: no index " + indexName + " for dataset "
                         + datasetName);
             }
-            List<String> secondaryKeyFields = cid.getFieldExprs();
+            List<String> secondaryKeyFields = secondaryIndex.getKeyFieldNames();
             numSecondaryKeys = secondaryKeyFields.size();
 
             if (numSecondaryKeys != 1) {
@@ -371,11 +365,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                                 + numSecondaryKeys
                                 + " fields as a key for the R-tree index. There can be only one field as a key for the R-tree index.");
             }
-
-            if (itemType.getTypeTag() != ATypeTag.RECORD) {
-                throw new AlgebricksException("Only record types can be indexed.");
-            }
-            ARecordType recType = (ARecordType) itemType;
 
             Pair<IAType, Boolean> keyTypePair = AqlCompiledIndexDecl.getNonNullableKeyFieldType(
                     secondaryKeyFields.get(0), recType);
@@ -407,9 +396,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             throw new AlgebricksException("R-tree can only be used as a secondary index");
         }
 
-        for (Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : DatasetUtils
-                .getPartitioningFunctions(ddecl)) {
-            IAType keyType = evalFactoryAndType.third;
+        List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+        for (String partitioningKey : partitioningKeys) {
+            IAType keyType = recType.getFieldType(partitioningKey);
             ISerializerDeserializer keySerde = AqlSerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(keyType);
             recordFields[i] = keySerde;
@@ -453,20 +442,19 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     public IDataSourceIndex<String, AqlSourceId> findDataSourceIndex(String indexId, AqlSourceId dataSourceId)
             throws AlgebricksException {
         AqlDataSource ads = findDataSource(dataSourceId);
-        AqlCompiledDatasetDecl adecl = ads.getCompiledDatasetDecl();
-        if (adecl.getDatasetType() == DatasetType.EXTERNAL) {
+        Dataset dataset = ads.getDataset();
+        if (dataset.getType() == DatasetType.EXTERNAL) {
             throw new AlgebricksException("No index for external dataset " + dataSourceId);
         }
 
-        String idxName = (String) indexId;
-        AqlCompiledIndexDecl acid = DatasetUtils.findSecondaryIndexByName(adecl, idxName);
-        AqlSourceId asid = (AqlSourceId) dataSourceId;
-        if (acid != null) {
-            return new AqlIndex(acid, metadata, asid.getDatasetName());
+        String indexName = (String) indexId;
+        Index secondaryIndex = metadata.getIndex(dataset.getDataverseName(), dataset.getDatasetName(), indexName);
+        if (secondaryIndex != null) {
+            return new AqlIndex(secondaryIndex, metadata, dataset.getDatasetName());
         } else {
-            AqlCompiledIndexDecl primIdx = DatasetUtils.getPrimaryIndex(adecl);
-            if (primIdx.getIndexName().equals(indexId)) {
-                return new AqlIndex(primIdx, metadata, asid.getDatasetName());
+            Index primaryIndex = metadata.getDatasetPrimaryIndex(dataset.getDataverseName(), dataset.getDatasetName());
+            if (primaryIndex.getIndexName().equals(indexId)) {
+                return new AqlIndex(primaryIndex, metadata, dataset.getDatasetName());
             } else {
                 return null;
             }
@@ -478,29 +466,29 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         if (!aqlId.getDataverseName().equals(metadata.getDataverseName())) {
             return null;
         }
-        AqlCompiledDatasetDecl acdd = metadata.findDataset(aqlId.getDatasetName());
-        if (acdd == null) {
+        Dataset dataset = metadata.findDataset(aqlId.getDatasetName());
+        if (dataset == null) {
             throw new AlgebricksException("Datasource with id " + aqlId + " was not found.");
         }
-        String tName = acdd.getItemTypeName();
-        IAType itemType;
-        try {
-            itemType = metadata.findType(tName);
-        } catch (Exception e) {
-            throw new AlgebricksException(e);
-        }
-        return new AqlDataSource(aqlId, acdd, itemType);
+        String tName = dataset.getDatatypeName();
+        IAType itemType = metadata.findType(tName);
+        return new AqlDataSource(aqlId, dataset, itemType);
     }
 
     @Override
     public boolean scannerOperatorIsLeaf(IDataSource<AqlSourceId> dataSource) {
         AqlSourceId asid = dataSource.getId();
         String datasetName = asid.getDatasetName();
-        AqlCompiledDatasetDecl adecl = metadata.findDataset(datasetName);
-        if (adecl == null) {
+        Dataset dataset = null;
+        try {
+            dataset = metadata.findDataset(datasetName);
+        } catch (AlgebricksException e) {
+            throw new IllegalStateException(e);
+        }
+        if (dataset == null) {
             throw new IllegalArgumentException("Unknown dataset " + datasetName);
         }
-        return adecl.getDatasetType() == DatasetType.EXTERNAL;
+        return dataset.getType() == DatasetType.EXTERNAL;
     }
 
     @Override
@@ -520,27 +508,23 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
         fieldPermutation[numKeys] = propagatedSchema.findVariable(payload);
 
-        AqlCompiledDatasetDecl compiledDatasetDecl = metadata.findDataset(datasetName);
-        if (compiledDatasetDecl == null) {
+        Dataset dataset = metadata.findDataset(datasetName);
+        if (dataset == null) {
             throw new AlgebricksException("Unknown dataset " + datasetName);
         }
-        String indexName = DatasetUtils.getPrimaryIndex(compiledDatasetDecl).getIndexName();
+        Index primaryIndex = metadata.getDatasetPrimaryIndex(dataset.getDataverseName(), dataset.getDatasetName());
+        String indexName = primaryIndex.getIndexName();
 
-        ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(compiledDatasetDecl, metadata);
-
-        IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
-
+        String itemTypeName = dataset.getDatatypeName();
+        ARecordType itemType = (ARecordType) metadata.findType(itemTypeName);
+        
+        ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);       
         IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(
-                compiledDatasetDecl, context.getBinaryComparatorFactoryProvider());
-
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint;
-        try {
-            splitsAndConstraint = metadata.splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName,
-                    indexName);
-        } catch (Exception e) {
-            throw new AlgebricksException(e);
-        }
-
+                dataset, itemType, context.getBinaryComparatorFactoryProvider());
+                
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, indexName);
+        IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
                 appContext.getStorageManagerInterface(), appContext.getIndexRegistryProvider(),
                 splitsAndConstraint.first, typeTraits, comparatorFactories, fieldPermutation,
@@ -567,27 +551,25 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
         fieldPermutation[numKeys] = propagatedSchema.findVariable(payload);
 
-        AqlCompiledDatasetDecl compiledDatasetDecl = metadata.findDataset(datasetName);
-        if (compiledDatasetDecl == null) {
+        Dataset dataset = metadata.findDataset(datasetName);
+        if (dataset == null) {
             throw new AlgebricksException("Unknown dataset " + datasetName);
         }
-        String indexName = DatasetUtils.getPrimaryIndex(compiledDatasetDecl).getIndexName();
+        Index primaryIndex = metadata.getDatasetPrimaryIndex(dataset.getDataverseName(), dataset.getDatasetName());
+        String indexName = primaryIndex.getIndexName();
 
-        ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(compiledDatasetDecl, metadata);
+        String itemTypeName = dataset.getDatatypeName();
+        ARecordType itemType = (ARecordType) metadata.findType(itemTypeName);
+        
+        ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);
 
         IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
 
         IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(
-                compiledDatasetDecl, context.getBinaryComparatorFactoryProvider());
+                dataset, itemType, context.getBinaryComparatorFactoryProvider());
 
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint;
-        try {
-            splitsAndConstraint = metadata.splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName,
-                    indexName);
-        } catch (Exception e) {
-            throw new AlgebricksException(e);
-        }
-
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, indexName);
         TreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, recordDesc, appContext.getStorageManagerInterface(), appContext.getIndexRegistryProvider(),
                 splitsAndConstraint.first, typeTraits, comparatorFactories, fieldPermutation, IndexOp.INSERT,
@@ -595,6 +577,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad, splitsAndConstraint.second);
     }
 
+    // TODO: Seems like we can share the code with getInsertRuntime().
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getDeleteRuntime(
             IDataSource<AqlSourceId> dataSource, IOperatorSchema propagatedSchema, List<LogicalVariable> keys,
@@ -613,27 +596,25 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
         fieldPermutation[numKeys] = propagatedSchema.findVariable(payload);
 
-        AqlCompiledDatasetDecl compiledDatasetDecl = metadata.findDataset(datasetName);
-        if (compiledDatasetDecl == null) {
+        Dataset dataset = metadata.findDataset(datasetName);
+        if (dataset == null) {
             throw new AlgebricksException("Unknown dataset " + datasetName);
         }
-        String indexName = DatasetUtils.getPrimaryIndex(compiledDatasetDecl).getIndexName();
+        Index primaryIndex = metadata.getDatasetPrimaryIndex(dataset.getDataverseName(), dataset.getDatasetName());
+        String indexName = primaryIndex.getIndexName();
 
-        ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(compiledDatasetDecl, metadata);
+        String itemTypeName = dataset.getDatatypeName();
+        ARecordType itemType = (ARecordType) metadata.findType(itemTypeName);
+
+        ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);
 
         IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
 
         IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(
-                compiledDatasetDecl, context.getBinaryComparatorFactoryProvider());
+                dataset, itemType, context.getBinaryComparatorFactoryProvider());
 
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint;
-        try {
-            splitsAndConstraint = metadata.splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName,
-                    indexName);
-        } catch (Exception e) {
-            throw new AlgebricksException(e);
-        }
-
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, indexName);
         TreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, recordDesc, appContext.getStorageManagerInterface(), appContext.getIndexRegistryProvider(),
                 splitsAndConstraint.first, typeTraits, comparatorFactories, fieldPermutation, IndexOp.DELETE,
@@ -641,6 +622,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad, splitsAndConstraint.second);
     }
 
+    // TODO: Seems like we can share this code with getIndexDeleteRuntime().
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexInsertRuntime(
             IDataSourceIndex<String, AqlSourceId> dataSourceIndex, IOperatorSchema propagatedSchema,
@@ -649,13 +631,13 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             JobGenContext context, JobSpecification spec) throws AlgebricksException {
         String indexName = dataSourceIndex.getId();
         String datasetName = dataSourceIndex.getDataSource().getId().getDatasetName();
-        AqlCompiledDatasetDecl compiledDatasetDecl = metadata.findDataset(datasetName);
-        if (compiledDatasetDecl == null) {
+        Dataset dataset = metadata.findDataset(datasetName);
+        if (dataset == null) {
             throw new AlgebricksException("Unknown dataset " + datasetName);
         }
-        AqlCompiledIndexDecl cid = DatasetUtils.findSecondaryIndexByName(compiledDatasetDecl, indexName);
+        Index secondaryIndex = metadata.getIndex(dataset.getDataverseName(), dataset.getDatasetName(), indexName);
         AsterixTupleFilterFactory filterFactory = createTupleFilterFactory(inputSchemas, typeEnv, filterExpr, context);
-        if (cid.getKind() == IndexKind.BTREE) {
+        if (secondaryIndex.getIndexType() == IndexType.BTREE) {
             return getBTreeDmlRuntime(datasetName, indexName, propagatedSchema, primaryKeys, secondaryKeys,
                     filterFactory, recordDesc, context, spec, IndexOp.INSERT);
         } else {
@@ -672,13 +654,13 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             JobGenContext context, JobSpecification spec) throws AlgebricksException {
         String indexName = dataSourceIndex.getId();
         String datasetName = dataSourceIndex.getDataSource().getId().getDatasetName();
-        AqlCompiledDatasetDecl compiledDatasetDecl = metadata.findDataset(datasetName);
-        if (compiledDatasetDecl == null) {
+        Dataset dataset = metadata.findDataset(datasetName);
+        if (dataset == null) {
             throw new AlgebricksException("Unknown dataset " + datasetName);
         }
-        AqlCompiledIndexDecl cid = DatasetUtils.findSecondaryIndexByName(compiledDatasetDecl, indexName);
+        Index secondaryIndex = metadata.getIndex(dataset.getDataverseName(), dataset.getDatasetName(), indexName);
         AsterixTupleFilterFactory filterFactory = createTupleFilterFactory(inputSchemas, typeEnv, filterExpr, context);
-        if (cid.getKind() == IndexKind.BTREE) {
+        if (secondaryIndex.getIndexType() == IndexType.BTREE) {
             return getBTreeDmlRuntime(datasetName, indexName, propagatedSchema, primaryKeys, secondaryKeys,
                     filterFactory, recordDesc, context, spec, IndexOp.DELETE);
         } else {
@@ -719,26 +701,20 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             i++;
         }
 
-        // dataset
-        AqlCompiledDatasetDecl compiledDatasetDecl = metadata.findDataset(datasetName);
-        if (compiledDatasetDecl == null) {
+        Dataset dataset = metadata.findDataset(datasetName);
+        if (dataset == null) {
             throw new AlgebricksException("Unknown dataset " + datasetName);
         }
-        String itemTypeName = compiledDatasetDecl.getItemTypeName();
-        IAType itemType;
-        try {
-            itemType = metadata.findType(itemTypeName);
-        } catch (Exception e) {
-            throw new AlgebricksException(e);
-        }
+        String itemTypeName = dataset.getDatatypeName();
+        IAType itemType = metadata.findType(itemTypeName);
         if (itemType.getTypeTag() != ATypeTag.RECORD) {
             throw new AlgebricksException("Only record types can be indexed.");
         }
         ARecordType recType = (ARecordType) itemType;
 
-        // index parameters
-        AqlCompiledIndexDecl cid = DatasetUtils.findSecondaryIndexByName(compiledDatasetDecl, indexName);
-        List<String> secondaryKeyExprs = cid.getFieldExprs();
+        // Index parameters.
+        Index secondaryIndex = metadata.getIndex(dataset.getDataverseName(), dataset.getDatasetName(), indexName);
+        List<String> secondaryKeyExprs = secondaryIndex.getKeyFieldNames();
         ITypeTraits[] typeTraits = new ITypeTraits[numKeys];
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[numKeys];
         for (i = 0; i < secondaryKeys.size(); ++i) {
@@ -749,9 +725,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     true);
             typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
         }
-        for (Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : DatasetUtils
-                .getPartitioningFunctions(compiledDatasetDecl)) {
-            IAType keyType = evalFactoryAndType.third;
+        List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+        for (String partitioningKey : partitioningKeys) {
+            IAType keyType = recType.getFieldType(partitioningKey);
             comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,
                     true);
             typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
@@ -759,13 +735,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
 
         IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint;
-        try {
-            splitsAndConstraint = metadata.splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName,
-                    indexName);
-        } catch (Exception e) {
-            throw new AlgebricksException(e);
-        }
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, indexName);
         TreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, recordDesc, appContext.getStorageManagerInterface(), appContext.getIndexRegistryProvider(),
                 splitsAndConstraint.first, typeTraits, comparatorFactories, fieldPermutation, indexOp,
@@ -777,20 +748,15 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             String indexName, IOperatorSchema propagatedSchema, List<LogicalVariable> primaryKeys,
             List<LogicalVariable> secondaryKeys, AsterixTupleFilterFactory filterFactory, RecordDescriptor recordDesc,
             JobGenContext context, JobSpecification spec, IndexOp indexOp) throws AlgebricksException {
-        AqlCompiledDatasetDecl compiledDatasetDecl = metadata.findDataset(datasetName);
-        String itemTypeName = compiledDatasetDecl.getItemTypeName();
-        IAType itemType;
-        try {
-            itemType = metadata.findType(itemTypeName);
-        } catch (Exception e) {
-            throw new AlgebricksException(e);
-        }
+        Dataset dataset = metadata.findDataset(datasetName);
+        String itemTypeName = dataset.getDatatypeName();
+        IAType itemType = metadata.findType(itemTypeName);
         if (itemType.getTypeTag() != ATypeTag.RECORD) {
             throw new AlgebricksException("Only record types can be indexed.");
         }
         ARecordType recType = (ARecordType) itemType;
-        AqlCompiledIndexDecl cid = DatasetUtils.findSecondaryIndexByName(compiledDatasetDecl, indexName);
-        List<String> secondaryKeyExprs = cid.getFieldExprs();
+        Index secondaryIndex = metadata.getIndex(dataset.getDataverseName(), dataset.getDatasetName(), indexName);
+        List<String> secondaryKeyExprs = secondaryIndex.getKeyFieldNames();
         Pair<IAType, Boolean> keyPairType = AqlCompiledIndexDecl.getNonNullableKeyFieldType(secondaryKeyExprs.get(0),
                 recType);
         IAType spatialType = keyPairType.first;
@@ -816,16 +782,14 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         IAType nestedKeyType = NonTaggedFormatUtil.getNestedSpatialType(spatialType.getTypeTag());
         IPrimitiveValueProviderFactory[] valueProviderFactories = new IPrimitiveValueProviderFactory[numSecondaryKeys];
         for (i = 0; i < numSecondaryKeys; i++) {
-            ISerializerDeserializer keySerde = AqlSerializerDeserializerProvider.INSTANCE
-                    .getSerializerDeserializer(nestedKeyType);
             comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(
                     nestedKeyType, true);
             typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(nestedKeyType);
             valueProviderFactories[i] = AqlPrimitiveValueProviderFactory.INSTANCE;
         }
-        for (Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : DatasetUtils
-                .getPartitioningFunctions(compiledDatasetDecl)) {
-            IAType keyType = evalFactoryAndType.third;
+        List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+        for (String partitioningKey : partitioningKeys) {
+            IAType keyType = recType.getFieldType(partitioningKey);
             comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,
                     true);
             typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
@@ -833,13 +797,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
 
         IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint;
-        try {
-            splitsAndConstraint = metadata.splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName,
-                    indexName);
-        } catch (Exception e) {
-            throw new AlgebricksException(e);
-        }
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, indexName);
         TreeIndexInsertUpdateDeleteOperatorDescriptor rtreeUpdate = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, recordDesc, appContext.getStorageManagerInterface(), appContext.getIndexRegistryProvider(),
                 splitsAndConstraint.first, typeTraits, comparatorFactories, fieldPermutation, indexOp,

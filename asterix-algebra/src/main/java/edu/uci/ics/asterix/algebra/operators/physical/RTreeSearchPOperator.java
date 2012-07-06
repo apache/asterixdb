@@ -1,11 +1,11 @@
 package edu.uci.ics.asterix.algebra.operators.physical;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledDatasetDecl;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl.IndexKind;
+import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
+import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.optimizer.rules.am.RTreeJobGenParams;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -56,23 +56,23 @@ public class RTreeSearchPOperator extends IndexSearchPOperator {
 
         RTreeJobGenParams jobGenParams = new RTreeJobGenParams();
         jobGenParams.readFromFuncArgs(unnestFuncExpr.getArguments());
-        if (jobGenParams.getIndexKind() != IndexKind.RTREE) {
-            throw new NotImplementedException(jobGenParams.getIndexKind() + " indexes are not implemented.");
+        if (jobGenParams.getIndexType() != IndexType.RTREE) {
+            throw new NotImplementedException(jobGenParams.getIndexType() + " indexes are not implemented.");
         }
 
         int[] keyIndexes = getKeyIndexes(jobGenParams.getKeyVarList(), inputSchemas);
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
         AqlCompiledMetadataDeclarations metadata = mp.getMetadataDeclarations();
-        AqlCompiledDatasetDecl adecl = metadata.findDataset(jobGenParams.getDatasetName());
-        if (adecl == null) {
+        Dataset dataset = metadata.findDataset(jobGenParams.getDatasetName());
+        if (dataset == null) {
             throw new AlgebricksException("Unknown dataset " + jobGenParams.getDatasetName());
         }
-        if (adecl.getDatasetType() == DatasetType.EXTERNAL) {
+        if (dataset.getType() == DatasetType.EXTERNAL) {
             throw new AlgebricksException("Trying to run rtree search over external dataset ("
                     + jobGenParams.getDatasetName() + ").");
         }
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> rtreeSearch = AqlMetadataProvider.buildRtreeRuntime(
-                metadata, context, builder.getJobSpec(), jobGenParams.getDatasetName(), adecl,
+                metadata, context, builder.getJobSpec(), jobGenParams.getDatasetName(), dataset,
                 jobGenParams.getIndexName(), keyIndexes);
         builder.contributeHyracksOperator(unnestMap, rtreeSearch.first);
         builder.contributeAlgebricksPartitionConstraint(rtreeSearch.first, rtreeSearch.second);

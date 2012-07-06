@@ -9,7 +9,7 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import edu.uci.ics.asterix.algebra.operators.physical.BTreeSearchPOperator;
 import edu.uci.ics.asterix.algebra.operators.physical.InvertedIndexPOperator;
 import edu.uci.ics.asterix.algebra.operators.physical.RTreeSearchPOperator;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl.IndexKind;
+import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
@@ -157,9 +157,9 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                             throw new AlgebricksException("Could not find index " + jobGenParams.getIndexName()
                                     + " for dataset " + dataSourceId);
                         }
-                        IndexKind indexKind = jobGenParams.getIndexKind();
+                        IndexType indexType = jobGenParams.getIndexType();
                         boolean requiresBroadcast = jobGenParams.getRequiresBroadcast();
-                        switch (indexKind) {
+                        switch (indexType) {
                             case BTREE: {
                                 op.setPhysicalOperator(new BTreeSearchPOperator(dsi, requiresBroadcast));
                                 break;
@@ -177,7 +177,7 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                                 break;
                             }
                             default: {
-                                throw new NotImplementedException(indexKind + " indexes are not implemented.");
+                                throw new NotImplementedException(indexType + " indexes are not implemented.");
                             }
                         }
                     }

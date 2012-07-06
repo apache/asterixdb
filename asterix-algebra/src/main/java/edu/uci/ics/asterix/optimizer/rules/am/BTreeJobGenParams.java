@@ -6,7 +6,7 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl.IndexKind;
+import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
@@ -27,9 +27,9 @@ public class BTreeJobGenParams extends AccessMethodJobGenParams {
         super();
     }
     
-    public BTreeJobGenParams(String indexName, IndexKind indexKind, String datasetName, boolean retainInput,
+    public BTreeJobGenParams(String indexName, IndexType indexType, String datasetName, boolean retainInput,
             boolean requiresBroadcast) {
-        super(indexName, indexKind, datasetName, retainInput, requiresBroadcast);
+        super(indexName, indexType, datasetName, retainInput, requiresBroadcast);
     }
 
     public void setLowKeyVarList(List<LogicalVariable> keyVarList, int startIndex, int numKeys) {

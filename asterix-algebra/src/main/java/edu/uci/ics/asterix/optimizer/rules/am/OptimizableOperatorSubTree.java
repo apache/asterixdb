@@ -6,9 +6,9 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledDatasetDecl;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
+import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -34,7 +34,7 @@ public class OptimizableOperatorSubTree {
     public Mutable<ILogicalOperator> dataSourceScanRef = null;
     public DataSourceScanOperator dataSourceScan = null;
     // Dataset and type metadata. Set in setDatasetAndTypeMetadata().
-    public AqlCompiledDatasetDecl datasetDecl = null;
+    public Dataset dataset = null;
     public ARecordType recordType = null;    
     
     public boolean initFromSubTree(Mutable<ILogicalOperator> subTreeOpRef) {
@@ -92,15 +92,15 @@ public class OptimizableOperatorSubTree {
             return false;
         }
         AqlCompiledMetadataDeclarations metadata = metadataProvider.getMetadataDeclarations();
-        datasetDecl = metadata.findDataset(datasetName);
-        if (datasetDecl == null) {
+        dataset = metadata.findDataset(datasetName);
+        if (dataset == null) {
             throw new AlgebricksException("No metadata for dataset " + datasetName);
         }
-        if (datasetDecl.getDatasetType() != DatasetType.INTERNAL && datasetDecl.getDatasetType() != DatasetType.FEED) {
+        if (dataset.getType() != DatasetType.INTERNAL && dataset.getType() != DatasetType.FEED) {
             return false;
         }
         // Get the record type for that dataset.
-        IAType itemType = metadata.findType(datasetDecl.getItemTypeName());
+        IAType itemType = metadata.findType(dataset.getDatatypeName());
         if (itemType.getTypeTag() != ATypeTag.RECORD) {
             return false;
         }

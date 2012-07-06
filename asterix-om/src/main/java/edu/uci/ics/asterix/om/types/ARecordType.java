@@ -2,7 +2,9 @@ package edu.uci.ics.asterix.om.types;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import edu.uci.ics.asterix.common.annotations.IRecordTypeAnnotation;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -15,13 +17,17 @@ public class ARecordType extends AbstractComplexType {
     private String[] fieldNames;
     private IAType[] fieldTypes;
     private boolean isOpen;
-    private transient List<IRecordTypeAnnotation> annotations = new ArrayList<IRecordTypeAnnotation>();
+    private transient final List<IRecordTypeAnnotation> annotations = new ArrayList<IRecordTypeAnnotation>();
+    private transient final Map<String, IAType> typeMap = new HashMap<String, IAType>();
 
     public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen) {
         super(typeName);
         this.fieldNames = fieldNames;
         this.fieldTypes = fieldTypes;
         this.isOpen = isOpen;
+        for (int i = 0; i < fieldNames.length; i++) {
+        	typeMap.put(fieldNames[i], fieldTypes[i]);
+        }
     }
 
     public final String[] getFieldNames() {
@@ -76,6 +82,10 @@ public class ARecordType extends AbstractComplexType {
         return -1;
     }
 
+    public IAType getFieldType(String fieldName) {
+    	return typeMap.get(fieldName);
+    }
+    
     @Override
     public String getDisplayName() {
         return "ARecord";

@@ -52,10 +52,12 @@ public class Dataset implements IMetadataEntity {
         return datasetName;
     }
 
+    // TODO: getItemTypeName()
     public String getDatatypeName() {
         return datatypeName;
     }
 
+    // TODO: getDatasetType()
     public DatasetType getType() {
         return datasetType;
     }

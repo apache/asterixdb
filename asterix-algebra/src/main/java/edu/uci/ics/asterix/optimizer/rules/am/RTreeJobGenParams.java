@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl.IndexKind;
+import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
@@ -20,9 +20,10 @@ public class RTreeJobGenParams extends AccessMethodJobGenParams {
     public RTreeJobGenParams() {
     }
     
-    public RTreeJobGenParams(String indexName, IndexKind indexKind, String datasetName, boolean retainInput, boolean requiresBroadcast) {
+    // TODO: Call super c'tor.
+    public RTreeJobGenParams(String indexName, IndexType indexType, String datasetName, boolean retainInput, boolean requiresBroadcast) {
         this.indexName = indexName;
-        this.indexKind = indexKind;
+        this.indexType = indexType;
         this.datasetName = datasetName;
         this.retainInput = retainInput;
         this.requiresBroadcast = requiresBroadcast;

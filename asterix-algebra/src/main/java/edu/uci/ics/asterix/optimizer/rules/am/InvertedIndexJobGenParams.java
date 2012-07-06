@@ -6,7 +6,7 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl.IndexKind;
+import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.optimizer.rules.am.InvertedIndexAccessMethod.SearchModifierType;
@@ -30,8 +30,8 @@ public class InvertedIndexJobGenParams extends AccessMethodJobGenParams {
     public InvertedIndexJobGenParams() {
     }
     
-    public InvertedIndexJobGenParams(String indexName, IndexKind indexKind, String datasetName, boolean retainInput, boolean requiresBroadcast) {
-        super(indexName, indexKind, datasetName, retainInput, requiresBroadcast);
+    public InvertedIndexJobGenParams(String indexName, IndexType indexType, String datasetName, boolean retainInput, boolean requiresBroadcast) {
+        super(indexName, indexType, datasetName, retainInput, requiresBroadcast);
     }
     
     public void setSearchModifierType(SearchModifierType searchModifierType) {
