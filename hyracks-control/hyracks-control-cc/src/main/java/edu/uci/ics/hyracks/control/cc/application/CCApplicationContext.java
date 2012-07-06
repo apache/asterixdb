@@ -25,10 +25,9 @@ import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.application.ICCBootstrap;
 import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.job.IJobLifecycleListener;
-import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
@@ -63,9 +62,10 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
         return ccContext;
     }
 
-    public JobSpecification createJobSpecification(byte[] bytes) throws HyracksException {
+    public IActivityClusterGraphGeneratorFactory createActivityClusterGraphGeneratorFactory(byte[] bytes)
+            throws HyracksException {
         try {
-            return (JobSpecification) JavaSerializationUtils.deserialize(bytes, getClassLoader());
+            return (IActivityClusterGraphGeneratorFactory) JavaSerializationUtils.deserialize(bytes, getClassLoader());
         } catch (IOException e) {
             throw new HyracksException(e);
         } catch (ClassNotFoundException e) {
@@ -102,10 +102,10 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
         }
     }
 
-    public synchronized void notifyJobCreation(JobId jobId, IOperatorDescriptorRegistry specification)
+    public synchronized void notifyJobCreation(JobId jobId, IActivityClusterGraphGeneratorFactory acggf)
             throws HyracksException {
         for (IJobLifecycleListener l : jobLifecycleListeners) {
-            l.notifyJobCreation(jobId, specification);
+            l.notifyJobCreation(jobId, acggf);
         }
     }
 

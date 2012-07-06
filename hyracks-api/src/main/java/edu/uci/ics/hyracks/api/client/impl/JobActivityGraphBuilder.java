@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.control.cc.job;
+package edu.uci.ics.hyracks.api.client.impl;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -35,14 +35,10 @@ public class JobActivityGraphBuilder implements IActivityGraphBuilder {
 
     private final Map<ConnectorDescriptorId, Pair<IActivity, Integer>> connectorConsumerMap;
 
-    public JobActivityGraphBuilder(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) {
+    public JobActivityGraphBuilder(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) {
         activityOperatorMap = new HashMap<ActivityId, IOperatorDescriptor>();
-        jag = new JobActivityGraph(appName, jobFlags);
+        jag = new JobActivityGraph();
         this.jobSpec = jobSpec;
-        jag.setConnectorPolicyAssignmentPolicy(jobSpec.getConnectorPolicyAssignmentPolicy());
-        jag.setGlobalJobDataFactory(jobSpec.getGlobalJobDataFactory());
-        jag.setJobletEventListenerFactory(jobSpec.getJobletEventListenerFactory());
-        jag.setMaxReattempts(jobSpec.getMaxReattempts());
         connectorProducerMap = new HashMap<ConnectorDescriptorId, Pair<IActivity, Integer>>();
         connectorConsumerMap = new HashMap<ConnectorDescriptorId, Pair<IActivity, Integer>>();
     }
@@ -54,15 +50,14 @@ public class JobActivityGraphBuilder implements IActivityGraphBuilder {
 
     @Override
     public void addBlockingEdge(IActivity blocker, IActivity blocked) {
-        addToValueSet(jag.getBlocker2BlockedMap(), blocker.getActivityId(), blocked.getActivityId());
         addToValueSet(jag.getBlocked2BlockerMap(), blocked.getActivityId(), blocker.getActivityId());
     }
 
     @Override
     public void addSourceEdge(int operatorInputIndex, IActivity task, int taskInputIndex) {
         if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("Adding source edge: " + task.getActivityId().getOperatorDescriptorId() + ":"
-                    + operatorInputIndex + " -> " + task.getActivityId() + ":" + taskInputIndex);
+            LOGGER.finest("Adding source edge: " + task.getActivityId() + ":" + operatorInputIndex + " -> "
+                    + task.getActivityId() + ":" + taskInputIndex);
         }
         IOperatorDescriptor op = activityOperatorMap.get(task.getActivityId());
         IConnectorDescriptor conn = jobSpec.getInputConnectorDescriptor(op, operatorInputIndex);
@@ -73,8 +68,8 @@ public class JobActivityGraphBuilder implements IActivityGraphBuilder {
     @Override
     public void addTargetEdge(int operatorOutputIndex, IActivity task, int taskOutputIndex) {
         if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("Adding target edge: " + task.getActivityId().getOperatorDescriptorId() + ":"
-                    + operatorOutputIndex + " -> " + task.getActivityId() + ":" + taskOutputIndex);
+            LOGGER.finest("Adding target edge: " + task.getActivityId() + ":" + operatorOutputIndex + " -> "
+                    + task.getActivityId() + ":" + taskOutputIndex);
         }
         IOperatorDescriptor op = activityOperatorMap.get(task.getActivityId());
         IConnectorDescriptor conn = jobSpec.getOutputConnectorDescriptor(op, operatorOutputIndex);

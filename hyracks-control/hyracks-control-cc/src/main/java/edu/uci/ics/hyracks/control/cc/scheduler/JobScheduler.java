@@ -35,14 +35,15 @@ import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.job.JobActivityGraph;
+import edu.uci.ics.hyracks.api.job.ActivityCluster;
+import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
-import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
+import edu.uci.ics.hyracks.control.cc.job.ActivityClusterPlan;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.job.Task;
 import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
@@ -66,8 +67,6 @@ public class JobScheduler {
 
     private final Set<TaskCluster> inProgressTaskClusters;
 
-    private Set<ActivityCluster> rootActivityClusters;
-
     public JobScheduler(ClusterControllerService ccs, JobRun jobRun, Collection<Constraint> constraints) {
         this.ccs = ccs;
         this.jobRun = jobRun;
@@ -75,8 +74,6 @@ public class JobScheduler {
         partitionProducingTaskClusterMap = new HashMap<PartitionId, TaskCluster>();
         inProgressTaskClusters = new HashSet<TaskCluster>();
         solver.addConstraints(constraints);
-        ActivityClusterGraphBuilder acgb = new ActivityClusterGraphBuilder(jobRun);
-        rootActivityClusters = acgb.inferActivityClusters(jobRun.getJobActivityGraph());
     }
 
     public JobRun getJobRun() {
@@ -91,7 +88,7 @@ public class JobScheduler {
         startRunnableActivityClusters();
     }
 
-    private void findRunnableTaskClusterRoots(Set<TaskCluster> frontier, Set<ActivityCluster> roots)
+    private void findRunnableTaskClusterRoots(Set<TaskCluster> frontier, Collection<ActivityCluster> roots)
             throws HyracksException {
         for (ActivityCluster root : roots) {
             findRunnableTaskClusterRoots(frontier, root);
@@ -107,14 +104,13 @@ public class JobScheduler {
                 findRunnableTaskClusterRoots(frontier, depAC);
             } else {
                 boolean tcRootsComplete = true;
-                Set<TaskCluster> depACTCRoots = new HashSet<TaskCluster>();
-                for (TaskCluster tc : depAC.getPlan().getTaskClusters()) {
+                for (TaskCluster tc : getActivityClusterPlan(depAC).getTaskClusters()) {
                     if (tc.getProducedPartitions().isEmpty()) {
                         TaskClusterAttempt tca = findLastTaskClusterAttempt(tc);
                         if (tca == null || tca.getStatus() != TaskClusterAttempt.TaskClusterStatus.COMPLETED) {
                             tcRootsComplete = false;
+                            break;
                         }
-                        depACTCRoots.add(tc);
                     }
                 }
                 if (!tcRootsComplete) {
@@ -126,10 +122,11 @@ public class JobScheduler {
         if (depsComplete) {
             if (!isPlanned(candidate)) {
                 ActivityClusterPlanner acp = new ActivityClusterPlanner(this);
-                acp.planActivityCluster(candidate);
+                ActivityClusterPlan acPlan = acp.planActivityCluster(candidate);
+                jobRun.getActivityClusterPlanMap().put(candidate.getId(), acPlan);
                 partitionProducingTaskClusterMap.putAll(acp.getPartitionProducingTaskClusterMap());
             }
-            for (TaskCluster tc : candidate.getPlan().getTaskClusters()) {
+            for (TaskCluster tc : getActivityClusterPlan(candidate).getTaskClusters()) {
                 if (tc.getProducedPartitions().isEmpty()) {
                     TaskClusterAttempt tca = findLastTaskClusterAttempt(tc);
                     if (tca == null || tca.getStatus() != TaskClusterAttempt.TaskClusterStatus.COMPLETED) {
@@ -140,13 +137,18 @@ public class JobScheduler {
         }
     }
 
+    private ActivityClusterPlan getActivityClusterPlan(ActivityCluster ac) {
+        return jobRun.getActivityClusterPlanMap().get(ac.getId());
+    }
+
     private boolean isPlanned(ActivityCluster ac) {
-        return ac.getPlan() != null;
+        return jobRun.getActivityClusterPlanMap().get(ac.getId()) != null;
     }
 
     private void startRunnableActivityClusters() throws HyracksException {
         Set<TaskCluster> taskClusterRoots = new HashSet<TaskCluster>();
-        findRunnableTaskClusterRoots(taskClusterRoots, rootActivityClusters);
+        findRunnableTaskClusterRoots(taskClusterRoots, jobRun.getActivityClusterGraph().getActivityClusterMap()
+                .values());
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine("Runnable TC roots: " + taskClusterRoots + ", inProgressTaskClusters: "
                     + inProgressTaskClusters);
@@ -286,7 +288,7 @@ public class JobScheduler {
 
     private void assignTaskLocations(TaskCluster tc, Map<String, List<TaskAttemptDescriptor>> taskAttemptMap)
             throws HyracksException {
-        JobActivityGraph jag = jobRun.getJobActivityGraph();
+        ActivityClusterGraph acg = jobRun.getActivityClusterGraph();
         Task[] tasks = tc.getTasks();
         List<TaskClusterAttempt> tcAttempts = tc.getAttempts();
         int attempts = tcAttempts.size();
@@ -309,7 +311,7 @@ public class JobScheduler {
             Task ts = tasks[i];
             TaskId tid = ts.getTaskId();
             TaskAttempt taskAttempt = taskAttempts.get(tid);
-            String nodeId = assignLocation(jag, locationMap, tid, taskAttempt);
+            String nodeId = assignLocation(acg, locationMap, tid, taskAttempt);
             taskAttempt.setNodeId(nodeId);
             taskAttempt.setStatus(TaskAttempt.TaskStatus.RUNNING, null);
             taskAttempt.setStartTime(System.currentTimeMillis());
@@ -355,10 +357,11 @@ public class JobScheduler {
         inProgressTaskClusters.add(tc);
     }
 
-    private String assignLocation(JobActivityGraph jag, Map<TaskId, LValueConstraintExpression> locationMap,
+    private String assignLocation(ActivityClusterGraph acg, Map<TaskId, LValueConstraintExpression> locationMap,
             TaskId tid, TaskAttempt taskAttempt) throws HyracksException {
         ActivityId aid = tid.getActivityId();
-        Set<ActivityId> blockers = jag.getBlocked2BlockerMap().get(aid);
+        ActivityCluster ac = acg.getActivityMap().get(aid);
+        Set<ActivityId> blockers = ac.getBlocked2BlockerMap().get(aid);
         String nodeId = null;
         if (blockers != null) {
             for (ActivityId blocker : blockers) {
@@ -404,8 +407,8 @@ public class JobScheduler {
 
     private String findTaskLocation(TaskId tid) {
         ActivityId aid = tid.getActivityId();
-        ActivityCluster ac = jobRun.getActivityClusterMap().get(aid);
-        Task[] tasks = ac.getPlan().getActivityPlanMap().get(aid).getTasks();
+        ActivityCluster ac = jobRun.getActivityClusterGraph().getActivityMap().get(aid);
+        Task[] tasks = getActivityClusterPlan(ac).getActivityPlanMap().get(aid).getTasks();
         List<TaskClusterAttempt> tcAttempts = tasks[tid.getPartition()].getTaskCluster().getAttempts();
         if (tcAttempts == null || tcAttempts.isEmpty()) {
             return null;
@@ -425,8 +428,8 @@ public class JobScheduler {
 
     private void startTasks(Map<String, List<TaskAttemptDescriptor>> taskAttemptMap) throws HyracksException {
         final JobId jobId = jobRun.getJobId();
-        final JobActivityGraph jag = jobRun.getJobActivityGraph();
-        final String appName = jag.getApplicationName();
+        final ActivityClusterGraph acg = jobRun.getActivityClusterGraph();
+        final String appName = jobRun.getApplicationName();
         final Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies = new HashMap<ConnectorDescriptorId, IConnectorPolicy>(
                 jobRun.getConnectorPolicyMap());
         for (Map.Entry<String, List<TaskAttemptDescriptor>> entry : taskAttemptMap.entrySet()) {
@@ -440,8 +443,9 @@ public class JobScheduler {
                     LOGGER.fine("Starting: " + taskDescriptors + " at " + entry.getKey());
                 }
                 try {
-                    byte[] jagBytes = changed ? JavaSerializationUtils.serialize(jag) : null;
-                    node.getNodeController().startTasks(appName, jobId, jagBytes, taskDescriptors, connectorPolicies);
+                    byte[] jagBytes = changed ? JavaSerializationUtils.serialize(acg) : null;
+                    node.getNodeController().startTasks(appName, jobId, jagBytes, taskDescriptors, connectorPolicies,
+                            jobRun.getFlags());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -606,7 +610,7 @@ public class JobScheduler {
                 lastAttempt.setStatus(TaskClusterAttempt.TaskClusterStatus.FAILED);
                 lastAttempt.setEndTime(System.currentTimeMillis());
                 abortDoomedTaskClusters();
-                if (lastAttempt.getAttempt() >= jobRun.getJobActivityGraph().getMaxReattempts()) {
+                if (lastAttempt.getAttempt() >= jobRun.getActivityClusterGraph().getMaxReattempts()) {
                     abortJob(new HyracksException(details));
                     return;
                 }
@@ -629,8 +633,8 @@ public class JobScheduler {
     public void notifyNodeFailures(Set<String> deadNodes) {
         try {
             jobRun.getPartitionMatchMaker().notifyNodeFailures(deadNodes);
-            for (ActivityCluster ac : jobRun.getActivityClusters()) {
-                TaskCluster[] taskClusters = ac.getPlan().getTaskClusters();
+            for (ActivityCluster ac : jobRun.getActivityClusterGraph().getActivityClusterMap().values()) {
+                TaskCluster[] taskClusters = getActivityClusterPlan(ac).getTaskClusters();
                 if (taskClusters != null) {
                     for (TaskCluster tc : taskClusters) {
                         TaskClusterAttempt lastTaskClusterAttempt = findLastTaskClusterAttempt(tc);

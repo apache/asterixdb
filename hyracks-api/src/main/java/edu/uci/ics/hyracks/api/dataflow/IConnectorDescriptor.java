@@ -28,7 +28,7 @@ import edu.uci.ics.hyracks.api.constraints.IConstraintAcceptor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobActivityGraph;
+import edu.uci.ics.hyracks.api.job.ActivityCluster;
 
 /**
  * Connector that connects operators in a Job.
@@ -91,10 +91,10 @@ public interface IConnectorDescriptor extends Serializable {
      * 
      * @param constraintAcceptor
      *            - Constraint Acceptor
-     * @param plan
-     *            - Job Plan
+     * @param ac
+     *            - Activity Cluster
      */
-    public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, JobActivityGraph plan,
+    public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, ActivityCluster ac,
             ICCApplicationContext appCtx);
 
     /**

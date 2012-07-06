@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.common.controllers;
 
+import java.io.File;
 import java.util.List;
 
 import org.kohsuke.args4j.Option;
@@ -52,6 +53,9 @@ public class CCConfig {
     @Option(name = "-cc-root", usage = "Sets the root folder used for file operations. (default: ClusterControllerService)")
     public String ccRoot = "ClusterControllerService";
 
+    @Option(name = "-cluster-topology", usage = "Sets the XML file that defines the cluster topology. (default: null)")
+    public File clusterTopologyDefinition = null;
+
     public void toCommandLine(List<String> cList) {
         cList.add("-client-net-ip-address");
         cList.add(clientNetIpAddress);
@@ -75,5 +79,9 @@ public class CCConfig {
         cList.add(String.valueOf(jobHistorySize));
         cList.add("-cc-root");
         cList.add(ccRoot);
+        if (clusterTopologyDefinition != null) {
+            cList.add("-cluster-topology");
+            cList.add(clusterTopologyDefinition.getAbsolutePath());
+        }
     }
 }

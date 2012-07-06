@@ -19,7 +19,7 @@ import org.json.JSONObject;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.web.util.IJSONOutputFunction;
-import edu.uci.ics.hyracks.control.cc.work.GetJobActivityGraphJSONWork;
+import edu.uci.ics.hyracks.control.cc.work.GetActivityClusterGraphJSONWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobRunJSONWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobSummariesJSONWork;
 
@@ -49,7 +49,7 @@ public class JobsRESTAPIFunction implements IJSONOutputFunction {
                 JobId jobId = JobId.parse(arguments[0]);
 
                 if ("job-activity-graph".equalsIgnoreCase(arguments[1])) {
-                    GetJobActivityGraphJSONWork gjage = new GetJobActivityGraphJSONWork(ccs, jobId);
+                    GetActivityClusterGraphJSONWork gjage = new GetActivityClusterGraphJSONWork(ccs, jobId);
                     ccs.getWorkQueue().scheduleAndSync(gjage);
                     result.put("result", gjage.getJSON());
                 } else if ("job-run".equalsIgnoreCase(arguments[1])) {

@@ -33,7 +33,7 @@ import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.work.GetJobActivityGraphJSONWork;
+import edu.uci.ics.hyracks.control.cc.work.GetActivityClusterGraphJSONWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobRunJSONWork;
 
 public class JobDetailsPage extends AbstractPage {
@@ -48,13 +48,13 @@ public class JobDetailsPage extends AbstractPage {
 
         JobId jobId = JobId.parse(jobIdStr.toString());
 
-        GetJobActivityGraphJSONWork gjagw = new GetJobActivityGraphJSONWork(ccs, jobId);
-        ccs.getWorkQueue().scheduleAndSync(gjagw);
-        Label jag = new Label("job-activity-graph", gjagw.getJSON().toString());
+        GetActivityClusterGraphJSONWork gacgw = new GetActivityClusterGraphJSONWork(ccs, jobId);
+        ccs.getWorkQueue().scheduleAndSync(gacgw);
+        Label jag = new Label("activity-cluster-graph", gacgw.getJSON().toString());
         jag.setEscapeModelStrings(false);
         add(jag);
 
-        JSONObject jagO = gjagw.getJSON();
+        JSONObject jagO = gacgw.getJSON();
 
         Map<ActivityId, String> activityMap = new HashMap<ActivityId, String>();
         if (jagO.has("activities")) {

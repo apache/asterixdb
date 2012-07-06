@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.control.cc;
 
 import java.io.File;
+import java.io.FileReader;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -29,12 +30,16 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.xml.sax.InputSource;
+
 import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
 import edu.uci.ics.hyracks.api.client.HyracksClientInterfaceFunctions;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
+import edu.uci.ics.hyracks.api.topology.ClusterTopology;
+import edu.uci.ics.hyracks.api.topology.TopologyDefinitionParser;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.web.WebServer;
@@ -137,6 +142,7 @@ public class ClusterControllerService extends AbstractRemoteService {
         };
         workQueue = new WorkQueue();
         this.timer = new Timer(true);
+        final ClusterTopology topology = computeClusterTopology(ccConfig);
         ccContext = new ICCContext() {
             @Override
             public void getIPAddressNodeMap(Map<String, Set<String>> map) throws Exception {
@@ -148,9 +154,27 @@ public class ClusterControllerService extends AbstractRemoteService {
             public ClusterControllerInfo getClusterControllerInfo() {
                 return info;
             }
+
+            @Override
+            public ClusterTopology getClusterTopology() {
+                return topology;
+            }
         };
         sweeper = new DeadNodeSweeper();
         jobCounter = 0;
+    }
+
+    private static ClusterTopology computeClusterTopology(CCConfig ccConfig) throws Exception {
+        if (ccConfig.clusterTopologyDefinition == null) {
+            return null;
+        }
+        FileReader fr = new FileReader(ccConfig.clusterTopologyDefinition);
+        InputSource in = new InputSource(fr);
+        try {
+            return TopologyDefinitionParser.parse(in);
+        } finally {
+            fr.close();
+        }
     }
 
     @Override
@@ -292,7 +316,7 @@ public class ClusterControllerService extends AbstractRemoteService {
                     HyracksClientInterfaceFunctions.StartJobFunction sjf = (HyracksClientInterfaceFunctions.StartJobFunction) fn;
                     JobId jobId = createJobId();
                     workQueue.schedule(new JobStartWork(ClusterControllerService.this, sjf.getAppName(), sjf
-                            .getJobSpec(), sjf.getJobFlags(), jobId, new IPCResponder<JobId>(handle, mid)));
+                            .getACGGFBytes(), sjf.getJobFlags(), jobId, new IPCResponder<JobId>(handle, mid)));
                     return;
                 }
 
@@ -306,6 +330,15 @@ public class ClusterControllerService extends AbstractRemoteService {
                 case GET_NODE_CONTROLLERS_INFO: {
                     workQueue.schedule(new GetNodeControllersInfoWork(ClusterControllerService.this,
                             new IPCResponder<Map<String, NodeControllerInfo>>(handle, mid)));
+                    return;
+                }
+
+                case GET_CLUSTER_TOPOLOGY: {
+                    try {
+                        handle.send(mid, ccContext.getClusterTopology(), null);
+                    } catch (IPCException e) {
+                        e.printStackTrace();
+                    }
                     return;
                 }
             }

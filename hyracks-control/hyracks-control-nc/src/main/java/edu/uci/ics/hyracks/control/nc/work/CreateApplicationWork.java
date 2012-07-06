@@ -18,8 +18,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
@@ -31,13 +29,11 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.control.common.application.ApplicationStatus;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
-import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
+import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
 
-public class CreateApplicationWork extends SynchronizableWork {
-    private static final Logger LOGGER = Logger.getLogger(CreateApplicationWork.class.getName());
-
+public class CreateApplicationWork extends AbstractWork {
     private final NodeControllerService ncs;
 
     private final String appName;
@@ -55,7 +51,7 @@ public class CreateApplicationWork extends SynchronizableWork {
     }
 
     @Override
-    protected void doRun() throws Exception {
+    public void run() {
         try {
             NCApplicationContext appCtx;
             Map<String, NCApplicationContext> applications = ncs.getApplications();
@@ -86,8 +82,7 @@ public class CreateApplicationWork extends SynchronizableWork {
             ncs.getClusterController()
                     .notifyApplicationStateChange(ncs.getId(), appName, ApplicationStatus.INITIALIZED);
         } catch (Exception e) {
-            LOGGER.warning("Error creating application: " + e.getMessage());
-            LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
+            throw new RuntimeException(e);
         }
     }
 }

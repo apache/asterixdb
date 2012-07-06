@@ -21,7 +21,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.job.JobActivityGraph;
+import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
@@ -69,7 +69,7 @@ public class JobCleanupWork extends AbstractWork {
                 }
             }
         } else {
-            CCApplicationContext appCtx = ccs.getApplicationMap().get(run.getJobActivityGraph().getApplicationName());
+            CCApplicationContext appCtx = ccs.getApplicationMap().get(run.getApplicationName());
             if (appCtx != null) {
                 try {
                     appCtx.notifyJobFinish(jobId);
@@ -91,8 +91,8 @@ public class JobCleanupWork extends AbstractWork {
     private JSONObject createJobLogObject(final JobRun run) {
         JSONObject jobLogObject = new JSONObject();
         try {
-            JobActivityGraph jag = run.getJobActivityGraph();
-            jobLogObject.put("job-activity-graph", jag.toJSON());
+            ActivityClusterGraph acg = run.getActivityClusterGraph();
+            jobLogObject.put("activity-cluster-graph", acg.toJSON());
             jobLogObject.put("job-run", run.toJSON());
         } catch (JSONException e) {
             throw new RuntimeException(e);

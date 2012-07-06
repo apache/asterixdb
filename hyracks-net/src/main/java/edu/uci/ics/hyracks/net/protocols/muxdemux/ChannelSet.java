@@ -24,8 +24,6 @@ import edu.uci.ics.hyracks.net.exceptions.NetException;
 public class ChannelSet {
     private static final Logger LOGGER = Logger.getLogger(ChannelSet.class.getName());
 
-    private static final int MAX_OPEN_CHANNELS = 1024;
-
     private static final int INITIAL_SIZE = 16;
 
     private final MultiplexedConnection mConn;
@@ -204,8 +202,8 @@ public class ChannelSet {
     }
 
     private ChannelControlBlock createChannel(int idx) throws NetException {
-        if (idx >= MAX_OPEN_CHANNELS) {
-            throw new NetException("More than " + MAX_OPEN_CHANNELS + " opened concurrently");
+        if (idx > MuxDemuxCommand.MAX_CHANNEL_ID) {
+            throw new NetException("Channel Id > " + MuxDemuxCommand.MAX_CHANNEL_ID + " being opened");
         }
         if (idx >= ccbArray.length) {
             expand(idx);

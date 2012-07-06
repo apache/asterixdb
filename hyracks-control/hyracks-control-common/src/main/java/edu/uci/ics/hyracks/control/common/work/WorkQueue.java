@@ -70,11 +70,11 @@ public class WorkQueue {
 
     public void schedule(AbstractWork event) {
         enqueueCount.incrementAndGet();
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine("Enqueue: " + enqueueCount);
+        if (LOGGER.isLoggable(Level.FINEST)) {
+            LOGGER.finest("Enqueue: " + enqueueCount);
         }
-        if (LOGGER.isLoggable(event.logLevel())) {
-            LOGGER.log(event.logLevel(), "Scheduling: " + event);
+        if (LOGGER.isLoggable(Level.FINER)) {
+            LOGGER.finer("Scheduling: " + event);
         }
         queue.offer(event);
     }
@@ -105,8 +105,8 @@ public class WorkQueue {
                         continue;
                     }
                     dequeueCount.incrementAndGet();
-                    if (LOGGER.isLoggable(Level.FINE)) {
-                        LOGGER.fine("Dequeue: " + dequeueCount + "/" + enqueueCount);
+                    if (LOGGER.isLoggable(Level.FINEST)) {
+                        LOGGER.finest("Dequeue: " + dequeueCount + "/" + enqueueCount);
                     }
                     try {
                         if (LOGGER.isLoggable(r.logLevel())) {

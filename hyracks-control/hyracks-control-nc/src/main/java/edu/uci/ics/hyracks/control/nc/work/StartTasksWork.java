@@ -37,12 +37,13 @@ import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobActivityGraph;
+import edu.uci.ics.hyracks.api.job.ActivityCluster;
+import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
-import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
+import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 import edu.uci.ics.hyracks.control.nc.Joblet;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.Task;
@@ -53,7 +54,7 @@ import edu.uci.ics.hyracks.control.nc.partitions.PipelinedPartition;
 import edu.uci.ics.hyracks.control.nc.partitions.ReceiveSideMaterializingCollector;
 import edu.uci.ics.hyracks.control.nc.profiling.ProfilingPartitionWriterFactory;
 
-public class StartTasksWork extends SynchronizableWork {
+public class StartTasksWork extends AbstractWork {
     private static final Logger LOGGER = Logger.getLogger(StartTasksWork.class.getName());
 
     private final NodeControllerService ncs;
@@ -62,50 +63,57 @@ public class StartTasksWork extends SynchronizableWork {
 
     private final JobId jobId;
 
-    private final byte[] jagBytes;
+    private final byte[] acgBytes;
 
     private final List<TaskAttemptDescriptor> taskDescriptors;
 
     private final Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap;
 
-    public StartTasksWork(NodeControllerService ncs, String appName, JobId jobId, byte[] jagBytes,
+    private final EnumSet<JobFlag> flags;
+
+    public StartTasksWork(NodeControllerService ncs, String appName, JobId jobId, byte[] acgBytes,
             List<TaskAttemptDescriptor> taskDescriptors,
-            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap) {
+            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap, EnumSet<JobFlag> flags) {
         this.ncs = ncs;
         this.appName = appName;
         this.jobId = jobId;
-        this.jagBytes = jagBytes;
+        this.acgBytes = acgBytes;
         this.taskDescriptors = taskDescriptors;
         this.connectorPoliciesMap = connectorPoliciesMap;
+        this.flags = flags;
     }
 
     @Override
-    protected void doRun() throws Exception {
+    public void run() {
         try {
             Map<String, NCApplicationContext> applications = ncs.getApplications();
             NCApplicationContext appCtx = applications.get(appName);
-            final Joblet joblet = getOrCreateLocalJoblet(jobId, appCtx, jagBytes == null ? null
-                    : (JobActivityGraph) appCtx.deserialize(jagBytes));
-            final JobActivityGraph jag = joblet.getJobActivityGraph();
+            final Joblet joblet = getOrCreateLocalJoblet(jobId, appCtx, acgBytes == null ? null
+                    : (ActivityClusterGraph) appCtx.deserialize(acgBytes));
+            final ActivityClusterGraph acg = joblet.getActivityClusterGraph();
 
             IRecordDescriptorProvider rdp = new IRecordDescriptorProvider() {
                 @Override
                 public RecordDescriptor getOutputRecordDescriptor(ActivityId aid, int outputIndex) {
-                    IConnectorDescriptor conn = jag.getActivityOutputMap().get(aid).get(outputIndex);
-                    return jag.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
+                    ActivityCluster ac = acg.getActivityMap().get(aid);
+                    IConnectorDescriptor conn = ac.getActivityOutputMap().get(aid).get(outputIndex);
+                    return ac.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
                 }
 
                 @Override
                 public RecordDescriptor getInputRecordDescriptor(ActivityId aid, int inputIndex) {
-                    IConnectorDescriptor conn = jag.getActivityInputMap().get(aid).get(inputIndex);
-                    return jag.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
+                    ActivityCluster ac = acg.getActivityMap().get(aid);
+                    IConnectorDescriptor conn = ac.getActivityInputMap().get(aid).get(inputIndex);
+                    return ac.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
                 }
             };
 
             for (TaskAttemptDescriptor td : taskDescriptors) {
                 TaskAttemptId taId = td.getTaskAttemptId();
                 TaskId tid = taId.getTaskId();
-                IActivity han = jag.getActivityMap().get(tid.getActivityId());
+                ActivityId aid = tid.getActivityId();
+                ActivityCluster ac = acg.getActivityMap().get(aid);
+                IActivity han = ac.getActivityMap().get(aid);
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Initializing " + taId + " -> " + han);
                 }
@@ -115,7 +123,7 @@ public class StartTasksWork extends SynchronizableWork {
 
                 List<IPartitionCollector> collectors = new ArrayList<IPartitionCollector>();
 
-                List<IConnectorDescriptor> inputs = jag.getActivityInputMap().get(tid.getActivityId());
+                List<IConnectorDescriptor> inputs = ac.getActivityInputMap().get(aid);
                 if (inputs != null) {
                     for (int i = 0; i < inputs.size(); ++i) {
                         IConnectorDescriptor conn = inputs.get(i);
@@ -123,21 +131,21 @@ public class StartTasksWork extends SynchronizableWork {
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("input: " + i + ": " + conn.getConnectorId());
                         }
-                        RecordDescriptor recordDesc = jag.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
+                        RecordDescriptor recordDesc = ac.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
                         IPartitionCollector collector = createPartitionCollector(td, partition, task, i, conn,
                                 recordDesc, cPolicy);
                         collectors.add(collector);
                     }
                 }
-                List<IConnectorDescriptor> outputs = jag.getActivityOutputMap().get(tid.getActivityId());
+                List<IConnectorDescriptor> outputs = ac.getActivityOutputMap().get(aid);
                 if (outputs != null) {
                     for (int i = 0; i < outputs.size(); ++i) {
                         final IConnectorDescriptor conn = outputs.get(i);
-                        RecordDescriptor recordDesc = jag.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
+                        RecordDescriptor recordDesc = ac.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
                         IConnectorPolicy cPolicy = connectorPoliciesMap.get(conn.getConnectorId());
 
                         IPartitionWriterFactory pwFactory = createPartitionWriterFactory(task, cPolicy, jobId, conn,
-                                partition, taId, jag.getJobFlags());
+                                partition, taId, flags);
 
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("output: " + i + ": " + conn.getConnectorId());
@@ -155,19 +163,19 @@ public class StartTasksWork extends SynchronizableWork {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            throw e;
+            throw new RuntimeException(e);
         }
     }
 
-    private Joblet getOrCreateLocalJoblet(JobId jobId, INCApplicationContext appCtx, JobActivityGraph jag)
+    private Joblet getOrCreateLocalJoblet(JobId jobId, INCApplicationContext appCtx, ActivityClusterGraph acg)
             throws Exception {
         Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
         Joblet ji = jobletMap.get(jobId);
         if (ji == null) {
-            if (jag == null) {
+            if (acg == null) {
                 throw new NullPointerException("JobActivityGraph was null");
             }
-            ji = new Joblet(ncs, jobId, appCtx, jag);
+            ji = new Joblet(ncs, jobId, appCtx, acg);
             jobletMap.put(jobId, ji);
         }
         return ji;

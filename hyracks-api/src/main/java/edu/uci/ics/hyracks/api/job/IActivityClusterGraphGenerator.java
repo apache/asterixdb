@@ -12,18 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.context;
+package edu.uci.ics.hyracks.api.job;
 
-import java.util.Map;
 import java.util.Set;
 
-import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
-import edu.uci.ics.hyracks.api.topology.ClusterTopology;
+import edu.uci.ics.hyracks.api.constraints.Constraint;
 
-public interface ICCContext {
-    public ClusterControllerInfo getClusterControllerInfo();
+public interface IActivityClusterGraphGenerator {
+    public Set<Constraint> getConstraints();
 
-    public void getIPAddressNodeMap(Map<String, Set<String>> map) throws Exception;
-
-    public ClusterTopology getClusterTopology();
+    public ActivityClusterGraph initialize();
 }

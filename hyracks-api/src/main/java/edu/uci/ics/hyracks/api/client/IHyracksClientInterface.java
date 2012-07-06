@@ -20,6 +20,7 @@ import java.util.Map;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
+import edu.uci.ics.hyracks.api.topology.ClusterTopology;
 
 public interface IHyracksClientInterface {
     public ClusterControllerInfo getClusterControllerInfo() throws Exception;
@@ -32,9 +33,11 @@ public interface IHyracksClientInterface {
 
     public JobStatus getJobStatus(JobId jobId) throws Exception;
 
-    public JobId startJob(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
+    public JobId startJob(String appName, byte[] acggfBytes, EnumSet<JobFlag> jobFlags) throws Exception;
 
     public void waitForCompletion(JobId jobId) throws Exception;
 
     public Map<String, NodeControllerInfo> getNodeControllersInfo() throws Exception;
+
+    public ClusterTopology getClusterTopology() throws Exception;
 }

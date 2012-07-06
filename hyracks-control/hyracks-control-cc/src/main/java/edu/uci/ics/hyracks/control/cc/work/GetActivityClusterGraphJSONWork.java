@@ -21,12 +21,12 @@ import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class GetJobActivityGraphJSONWork extends SynchronizableWork {
+public class GetActivityClusterGraphJSONWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private final JobId jobId;
     private JSONObject json;
 
-    public GetJobActivityGraphJSONWork(ClusterControllerService ccs, JobId jobId) {
+    public GetActivityClusterGraphJSONWork(ClusterControllerService ccs, JobId jobId) {
         this.ccs = ccs;
         this.jobId = jobId;
     }
@@ -41,7 +41,7 @@ public class GetJobActivityGraphJSONWork extends SynchronizableWork {
                 return;
             }
         }
-        json = run.getJobActivityGraph().toJSON();
+        json = run.getActivityClusterGraph().toJSON();
     }
 
     public JSONObject getJSON() {

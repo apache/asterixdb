@@ -32,11 +32,11 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
+import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
 import edu.uci.ics.hyracks.api.job.IGlobalJobDataFactory;
 import edu.uci.ics.hyracks.api.job.IJobletEventListener;
 import edu.uci.ics.hyracks.api.job.IJobletEventListenerFactory;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
-import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
@@ -60,7 +60,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final JobId jobId;
 
-    private final JobActivityGraph jag;
+    private final ActivityClusterGraph acg;
 
     private final Map<PartitionId, IPartitionCollector> partitionRequestMap;
 
@@ -84,11 +84,12 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private boolean cleanupPending;
 
-    public Joblet(NodeControllerService nodeController, JobId jobId, INCApplicationContext appCtx, JobActivityGraph jag) {
+    public Joblet(NodeControllerService nodeController, JobId jobId, INCApplicationContext appCtx,
+            ActivityClusterGraph acg) {
         this.nodeController = nodeController;
         this.appCtx = appCtx;
         this.jobId = jobId;
-        this.jag = jag;
+        this.acg = acg;
         partitionRequestMap = new HashMap<PartitionId, IPartitionCollector>();
         env = new OperatorEnvironmentImpl(nodeController.getId());
         stateObjectMap = new HashMap<Object, IStateObject>();
@@ -97,7 +98,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         fileFactory = new WorkspaceFileFactory(this, (IOManager) appCtx.getRootContext().getIOManager());
         cleanupPending = false;
-        IJobletEventListenerFactory jelf = jag.getJobletEventListenerFactory();
+        IJobletEventListenerFactory jelf = acg.getJobletEventListenerFactory();
         if (jelf != null) {
             IJobletEventListener listener = jelf.createListener(this);
             this.jobletEventListener = listener;
@@ -105,7 +106,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         } else {
             jobletEventListener = null;
         }
-        IGlobalJobDataFactory gjdf = jag.getGlobalJobDataFactory();
+        IGlobalJobDataFactory gjdf = acg.getGlobalJobDataFactory();
         globalJobData = gjdf != null ? gjdf.createGlobalJobData(this) : null;
     }
 
@@ -114,8 +115,8 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         return jobId;
     }
 
-    public JobActivityGraph getJobActivityGraph() {
-        return jag;
+    public ActivityClusterGraph getActivityClusterGraph() {
+        return acg;
     }
 
     public IOperatorEnvironment getEnvironment() {

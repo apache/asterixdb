@@ -12,11 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job;
+package edu.uci.ics.hyracks.api.topology;
 
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import java.io.Serializable;
+import java.util.List;
 
-public interface IOperatorDescriptorVisitor {
-    public void visit(IOperatorDescriptor op) throws HyracksException;
+public class ClusterTopology implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private final NetworkSwitch clusterSwitch;
+
+    public ClusterTopology(NetworkSwitch clusterSwitch) {
+        this.clusterSwitch = clusterSwitch;
+    }
+
+    public NetworkSwitch getClusterSwitch() {
+        return clusterSwitch;
+    }
+
+    public boolean lookupNetworkTerminal(String terminalName, List<Integer> path) {
+        return clusterSwitch.lookupNetworkTerminal(terminalName, path);
+    }
 }

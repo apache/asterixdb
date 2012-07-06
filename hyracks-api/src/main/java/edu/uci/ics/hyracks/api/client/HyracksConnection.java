@@ -25,11 +25,14 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 
+import edu.uci.ics.hyracks.api.client.impl.JobSpecificationActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
+import edu.uci.ics.hyracks.api.topology.ClusterTopology;
 import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
 import edu.uci.ics.hyracks.ipc.api.RPCInterface;
@@ -100,12 +103,19 @@ public final class HyracksConnection implements IHyracksClientConnection {
 
     @Override
     public JobId startJob(String appName, JobSpecification jobSpec) throws Exception {
-        return hci.startJob(appName, JavaSerializationUtils.serialize(jobSpec), EnumSet.noneOf(JobFlag.class));
+        return startJob(appName, jobSpec, EnumSet.noneOf(JobFlag.class));
     }
 
     @Override
     public JobId startJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
-        return hci.startJob(appName, JavaSerializationUtils.serialize(jobSpec), jobFlags);
+        JobSpecificationActivityClusterGraphGeneratorFactory jsacggf = new JobSpecificationActivityClusterGraphGeneratorFactory(
+                jobSpec);
+        return startJob(appName, jsacggf, jobFlags);
+    }
+
+    public JobId startJob(String appName, IActivityClusterGraphGeneratorFactory acggf, EnumSet<JobFlag> jobFlags)
+            throws Exception {
+        return hci.startJob(appName, JavaSerializationUtils.serialize(acggf), jobFlags);
     }
 
     @Override
@@ -116,5 +126,10 @@ public final class HyracksConnection implements IHyracksClientConnection {
     @Override
     public Map<String, NodeControllerInfo> getNodeControllerInfos() throws Exception {
         return hci.getNodeControllersInfo();
+    }
+
+    @Override
+    public ClusterTopology getClusterTopology() throws Exception {
+        return hci.getClusterTopology();
     }
 }

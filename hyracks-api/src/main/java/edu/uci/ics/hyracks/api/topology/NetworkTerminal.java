@@ -12,18 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.context;
+package edu.uci.ics.hyracks.api.topology;
 
 import java.util.Map;
-import java.util.Set;
 
-import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
-import edu.uci.ics.hyracks.api.topology.ClusterTopology;
+public class NetworkTerminal extends NetworkEndpoint {
+    private static final long serialVersionUID = 1L;
 
-public interface ICCContext {
-    public ClusterControllerInfo getClusterControllerInfo();
+    public NetworkTerminal(String name, Map<String, String> properties) {
+        super(name, properties);
+    }
 
-    public void getIPAddressNodeMap(Map<String, Set<String>> map) throws Exception;
-
-    public ClusterTopology getClusterTopology();
+    @Override
+    public EndpointType getType() {
+        return EndpointType.NETWORK_TERMINAL;
+    }
 }
