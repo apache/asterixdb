@@ -22,7 +22,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexExamplesTest;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -51,8 +50,4 @@ public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
         harness.tearDown();
     }
 
-    @Override
-    protected FileReference getFileReference() {
-        return harness.getFileReference();
-    }
 }

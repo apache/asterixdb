@@ -24,7 +24,6 @@ import edu.uci.ics.hyracks.api.io.IIOManager;
 
 /**
  * Provides file names for LSM on-disk components. Also cleans up invalid files.
- * 
  * There are separate methods to get file names for merge and flush because we
  * need to guarantee the correct order of on-disk components (i.e., the
  * components produced by flush are always newer than those produced by a
@@ -32,6 +31,8 @@ import edu.uci.ics.hyracks.api.io.IIOManager;
  */
 public interface ILSMFileManager {
     public void createDirs();
+
+    public void deleteDirs();
 
     public FileReference createFlushFile(String relFlushFileName);
 
@@ -45,8 +46,7 @@ public interface ILSMFileManager {
 
     // Deletes invalid files, and returns list of valid files from baseDir.
     // The returned valid files are correctly sorted (based on the recency of data). 
-    public List<Object> cleanupAndGetValidFiles(Object lsmComponent, ILSMComponentFinalizer componentFinalizer)
-            throws HyracksDataException;
+    public List<Object> cleanupAndGetValidFiles(ILSMComponentFinalizer componentFinalizer) throws HyracksDataException;
 
     public Comparator<String> getFileNameComparator();
 

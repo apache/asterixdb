@@ -16,7 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -35,12 +34,10 @@ public interface IIndex {
      * Initializes the persistent state of an index, e.g., the root page, and
      * metadata pages.
      * 
-     * @param fileReference
-     *            The file id to use for this index.
      * @throws HyracksDataException
      *             If the BufferCache throws while un/pinning or un/latching.
      */
-    public void create(FileReference file) throws HyracksDataException;
+    public void create() throws HyracksDataException;
 
     /**
      * Opens the index backed by the given file id.
@@ -48,12 +45,16 @@ public interface IIndex {
      * @param fileReference
      *            The file id backing this index.
      */
-    public void open(FileReference file) throws HyracksDataException;
+    public void open() throws HyracksDataException;
 
     /**
      * Closes the index.
      */
     public void close() throws HyracksDataException;
+
+    public void destroy() throws HyracksDataException;
+
+    public void clear() throws HyracksDataException;
 
     /**
      * Creates an index accessor for performing operations on this index.

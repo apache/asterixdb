@@ -118,9 +118,9 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
         RTree rtree = new RTree(bufferCache, harness.getFileMapProvider(), freePageManager, interiorFrameFactory,
-                leafFrameFactory, cmpFactories, fieldCount);
-        rtree.create(harness.getFileReference());
-        rtree.open(harness.getFileReference());
+                leafFrameFactory, cmpFactories, fieldCount, harness.getFileReference());
+        rtree.create();
+        rtree.open();
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
@@ -163,7 +163,8 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
 
         RTreeCheckTuple keyCheck = (RTreeCheckTuple) rTreeTestUtils.createCheckTupleFromTuple(key, fieldSerdes,
                 keyFieldCount);
-        HashMultiSet<RTreeCheckTuple> expectedResult = rTreeTestUtils.getRangeSearchExpectedResults(checkTuples, keyCheck);
+        HashMultiSet<RTreeCheckTuple> expectedResult = rTreeTestUtils.getRangeSearchExpectedResults(checkTuples,
+                keyCheck);
 
         rTreeTestUtils.getRangeSearchExpectedResults(checkTuples, keyCheck);
         indexAccessor.search(searchCursor, searchPredicate);
@@ -171,6 +172,7 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
         rTreeTestUtils.checkExpectedResults(searchCursor, expectedResult, fieldSerdes, keyFieldCount, null);
 
         rtree.close();
+        rtree.destroy();
     }
 
 }

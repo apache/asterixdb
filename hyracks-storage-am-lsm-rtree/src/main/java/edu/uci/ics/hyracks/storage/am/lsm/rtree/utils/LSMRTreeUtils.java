@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
@@ -38,6 +39,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTree;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeWithAntiMatterTuples;
@@ -48,6 +50,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.rtree.tuples.LSMTypeAwareTupleWriterFa
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.linearize.HilbertDoubleComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.linearize.ZCurveDoubleComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.linearize.ZCurveIntComparatorFactory;
@@ -77,16 +80,19 @@ public class LSMRTreeUtils {
         LinkedListFreePageManagerFactory freePageManagerFactory = new LinkedListFreePageManagerFactory(diskBufferCache,
                 metaFrameFactory);
 
-        RTreeFactory diskRTreeFactory = new RTreeFactory(diskBufferCache, diskFileMapProvider, freePageManagerFactory,
-                rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories, typeTraits.length);
-        BTreeFactory diskBTreeFactory = new BTreeFactory(diskBufferCache, diskFileMapProvider, freePageManagerFactory,
-                btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmpFactories, typeTraits.length);
+        TreeFactory<RTree> diskRTreeFactory = new RTreeFactory(diskBufferCache, diskFileMapProvider,
+                freePageManagerFactory, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories,
+                typeTraits.length);
+        TreeFactory<BTree> diskBTreeFactory = new BTreeFactory(diskBufferCache, diskFileMapProvider,
+                freePageManagerFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmpFactories,
+                typeTraits.length);
 
         ILinearizeComparatorFactory linearizer = proposeBestLinearizer(typeTraits, rtreeCmpFactories.length);
         int[] comparatorFields = { 0 };
         IBinaryComparatorFactory[] linearizerArray = { linearizer };
 
-        ILSMFileManager fileNameManager = new LSMRTreeFileManager(ioManager, diskFileMapProvider, file);
+        ILSMFileManager fileNameManager = new LSMRTreeFileManager(ioManager, diskFileMapProvider, file,
+                diskRTreeFactory, diskBTreeFactory);
         LSMRTree lsmTree = new LSMRTree(memBufferCache, memFreePageManager, rtreeInteriorFrameFactory,
                 rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager,
                 diskRTreeFactory, diskBTreeFactory, diskFileMapProvider, typeTraits.length, rtreeCmpFactories,
@@ -123,10 +129,11 @@ public class LSMRTreeUtils {
         LinkedListFreePageManagerFactory freePageManagerFactory = new LinkedListFreePageManagerFactory(diskBufferCache,
                 metaFrameFactory);
 
-        RTreeFactory diskRTreeFactory = new RTreeFactory(diskBufferCache, diskFileMapProvider, freePageManagerFactory,
-                rtreeInteriorFrameFactory, copyTupleLeafFrameFactory, rtreeCmpFactories, typeTraits.length);
+        TreeFactory<RTree> diskRTreeFactory = new RTreeFactory(diskBufferCache, diskFileMapProvider,
+                freePageManagerFactory, rtreeInteriorFrameFactory, copyTupleLeafFrameFactory, rtreeCmpFactories,
+                typeTraits.length);
 
-        RTreeFactory bulkLoadRTreeFactory = new RTreeFactory(diskBufferCache, diskFileMapProvider,
+        TreeFactory<RTree> bulkLoadRTreeFactory = new RTreeFactory(diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories,
                 typeTraits.length);
 
@@ -136,7 +143,7 @@ public class LSMRTreeUtils {
         int[] comparatorFields = { 0, btreeCmpFactories.length - 1 };
         IBinaryComparatorFactory[] linearizerArray = { linearizer, btreeCmpFactories[btreeCmpFactories.length - 1] };
 
-        ILSMFileManager fileNameManager = new LSMTreeFileManager(ioManager, diskFileMapProvider, file);
+        ILSMFileManager fileNameManager = new LSMTreeFileManager(ioManager, diskFileMapProvider, file, diskRTreeFactory);
         LSMRTreeWithAntiMatterTuples lsmTree = new LSMRTreeWithAntiMatterTuples(memBufferCache, memFreePageManager,
                 rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory,
                 fileNameManager, diskRTreeFactory, bulkLoadRTreeFactory, diskFileMapProvider, typeTraits.length,

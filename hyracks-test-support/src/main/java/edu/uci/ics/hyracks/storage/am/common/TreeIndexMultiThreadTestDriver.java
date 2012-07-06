@@ -42,8 +42,8 @@ public class TreeIndexMultiThreadTestDriver {
     }
 
     public void init(FileReference file) throws HyracksDataException {
-        index.create(file);
-        index.open(file);
+        index.create();
+        index.open();
     }
 
     public long[] run(int numThreads, int numRepeats, int numOps, int batchSize) throws InterruptedException,

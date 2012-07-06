@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -32,9 +33,9 @@ public class BTreeFactory extends TreeFactory<BTree> {
     }
 
     @Override
-    public BTree createIndexInstance() {
+    public BTree createIndexInstance(FileReference file) {
         return new BTree(bufferCache, fileMapProvider, freePageManagerFactory.createFreePageManager(),
-                interiorFrameFactory, leafFrameFactory, cmpFactories, fieldCount);
+                interiorFrameFactory, leafFrameFactory, cmpFactories, fieldCount, file);
     }
 
 }

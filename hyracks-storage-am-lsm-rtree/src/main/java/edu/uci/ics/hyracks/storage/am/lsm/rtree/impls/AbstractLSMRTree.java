@@ -97,7 +97,7 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
     protected final IBufferCache diskBufferCache;
     protected final IFileMapProvider diskFileMapProvider;
     // For creating RTree's used in flush and merge.
-    protected final RTreeFactory diskRTreeFactory;
+    protected final TreeFactory<RTree> diskRTreeFactory;
     // List of LSMRTreeComponent instances. Using Object for better sharing via
     // ILSMTree + LSMHarness.
     protected final LinkedList<Object> diskComponents = new LinkedList<Object>();
@@ -113,18 +113,22 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
     protected final ITreeIndexFrameFactory rtreeLeafFrameFactory;
     protected final ITreeIndexFrameFactory btreeLeafFrameFactory;
 
+    private boolean isOpen = false;
+
     public AbstractLSMRTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
-            ILSMFileManager fileManager, RTreeFactory diskRTreeFactory, IFileMapProvider diskFileMapProvider,
+            ILSMFileManager fileManager, TreeFactory<RTree> diskRTreeFactory, IFileMapProvider diskFileMapProvider,
             ILSMComponentFinalizer componentFinalizer, int fieldCount, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
             int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, ILSMFlushController flushController,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOScheduler ioScheduler) {
         RTree memRTree = new RTree(memBufferCache, ((InMemoryBufferCache) memBufferCache).getFileMapProvider(),
-                memFreePageManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories, fieldCount);
+                memFreePageManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories, fieldCount,
+                memBtreeFile);
         BTree memBTree = new BTree(memBufferCache, ((InMemoryBufferCache) memBufferCache).getFileMapProvider(),
-                memFreePageManager, btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmpFactories, fieldCount);
+                memFreePageManager, btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmpFactories, fieldCount,
+                memRtreeFile);
         memComponent = new LSMRTreeComponent(memRTree, memBTree);
         this.memFreePageManager = memFreePageManager;
         this.diskBufferCache = diskRTreeFactory.getBufferCache();
@@ -145,34 +149,71 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
     }
 
     @Override
-    public void create(FileReference fileReference) throws HyracksDataException {
-        memComponent.getRTree().create(memRtreeFile);
-        memComponent.getBTree().create(memBtreeFile);
+    public synchronized void create() throws HyracksDataException {
+        if (isOpen) {
+            throw new HyracksDataException("Failed to create since index is already open.");
+        }
+
+        fileManager.deleteDirs();
         fileManager.createDirs();
+        memComponent.getRTree().create();
+        memComponent.getBTree().create();
     }
 
     @Override
-    public void open(FileReference fileReference) throws HyracksDataException {
-        memComponent.getRTree().open(memRtreeFile);
-        memComponent.getBTree().open(memBtreeFile);
+    public synchronized void open() throws HyracksDataException {
+        if (isOpen) {
+            return;
+        }
+
+        memComponent.getRTree().open();
+        memComponent.getBTree().open();
+        isOpen = true;
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public synchronized void close() throws HyracksDataException {
+        if (!isOpen) {
+            return;
+        }
+
+        isOpen = false;
+
         memComponent.getRTree().close();
         memComponent.getBTree().close();
+    }
+
+    @Override
+    public synchronized void destroy() throws HyracksDataException {
+        if (isOpen) {
+            throw new HyracksDataException("Failed to destroy since index is already open.");
+        }
+
+        memComponent.getRTree().close();
+        memComponent.getBTree().close();
+        fileManager.deleteDirs();
+    }
+
+    @Override
+    public synchronized void clear() throws HyracksDataException {
+        if (!isOpen) {
+            throw new HyracksDataException("Failed to clear since index is not open.");
+        }
+
+        memComponent.getRTree().clear();
+        memComponent.getBTree().clear();
     }
 
     @SuppressWarnings("rawtypes")
     protected ITreeIndex createDiskTree(TreeFactory diskTreeFactory, FileReference fileRef, boolean createTree)
             throws HyracksDataException {
         // Create new tree instance.
-        ITreeIndex diskTree = diskTreeFactory.createIndexInstance();
+        ITreeIndex diskTree = diskTreeFactory.createIndexInstance(fileRef);
         if (createTree) {
-            diskTree.create(fileRef);
+            diskTree.create();
         }
         // Tree will be closed during cleanup of merge().
-        diskTree.open(fileRef);
+        diskTree.open();
         return diskTree;
     }
 
@@ -282,9 +323,9 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
 
     @Override
     public void resetInMemoryComponent() throws HyracksDataException {
-        memComponent.getRTree().create(memRtreeFile);
-        memComponent.getBTree().create(memBtreeFile);
         memFreePageManager.reset();
+        memComponent.getRTree().clear();
+        memComponent.getBTree().clear();
         memRTreeTuples = 0;
         memBTreeTuples = 0;
     }

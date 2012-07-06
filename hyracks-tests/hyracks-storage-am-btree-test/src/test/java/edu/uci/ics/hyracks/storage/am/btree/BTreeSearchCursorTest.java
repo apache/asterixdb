@@ -100,9 +100,9 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
         BTree btree = new BTree(bufferCache, harness.getFileMapProvider(), freePageManager, interiorFrameFactory,
-                leafFrameFactory, cmpFactories, fieldCount);
-        btree.create(harness.getFileReference());
-        btree.open(harness.getFileReference());
+                leafFrameFactory, cmpFactories, fieldCount, harness.getFileReference());
+        btree.create();
+        btree.open();
 
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
@@ -149,6 +149,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false);
 
         btree.close();
+        btree.destroy();
     }
 
     @Test
@@ -174,9 +175,9 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
         BTree btree = new BTree(bufferCache, harness.getFileMapProvider(), freePageManager, interiorFrameFactory,
-                leafFrameFactory, cmpFactories, fieldCount);
-        btree.create(harness.getFileReference());
-        btree.open(harness.getFileReference());
+                leafFrameFactory, cmpFactories, fieldCount, harness.getFileReference());
+        btree.create();
+        btree.open();
 
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
@@ -220,6 +221,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false);
 
         btree.close();
+        btree.destroy();
     }
 
     @Test
@@ -245,9 +247,9 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
         BTree btree = new BTree(bufferCache, harness.getFileMapProvider(), freePageManager, interiorFrameFactory,
-                leafFrameFactory, cmpFactories, fieldCount);
-        btree.create(harness.getFileReference());
-        btree.open(harness.getFileReference());
+                leafFrameFactory, cmpFactories, fieldCount, harness.getFileReference());
+        btree.create();
+        btree.open();
 
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
@@ -291,6 +293,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false);
 
         btree.close();
+        btree.destroy();
     }
 
     public RangePredicate createRangePredicate(int lk, int hk, boolean lowKeyInclusive, boolean highKeyInclusive)

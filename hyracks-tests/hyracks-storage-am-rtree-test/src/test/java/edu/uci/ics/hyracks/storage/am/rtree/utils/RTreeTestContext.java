@@ -48,15 +48,16 @@ public class RTreeTestContext extends AbstractRTreeTestContext {
         return rtree.getComparatorFactories();
     }
 
-    public static RTreeTestContext create(IBufferCache bufferCache, IFileMapProvider fileMapProvider, FileReference file,
-            ISerializerDeserializer[] fieldSerdes, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            int numKeyFields, RTreePolicyType rtreePolicyType) throws Exception {
+    public static RTreeTestContext create(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
+            FileReference file, ISerializerDeserializer[] fieldSerdes,
+            IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeyFields, RTreePolicyType rtreePolicyType)
+            throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
         RTree rtree = RTreeUtils.createRTree(bufferCache, fileMapProvider, typeTraits, valueProviderFactories,
-                cmpFactories, rtreePolicyType);
-        rtree.create(file);
-        rtree.open(file);
+                cmpFactories, rtreePolicyType, file);
+        rtree.create();
+        rtree.open();
         RTreeTestContext testCtx = new RTreeTestContext(fieldSerdes, rtree);
         return testCtx;
     }

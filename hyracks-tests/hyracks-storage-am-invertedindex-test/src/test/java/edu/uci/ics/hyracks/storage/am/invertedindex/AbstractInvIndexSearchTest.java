@@ -154,9 +154,10 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
         freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
         btree = new BTree(bufferCache, fmp, freePageManager, interiorFrameFactory, leafFrameFactory, btreeCmpFactories,
-                btreeTypeTraits.length);
-        btree.create(btreeFile);
-        btree.open(btreeFile);
+                btreeTypeTraits.length, btreeFile);
+
+        btree.create();
+        btree.open();
 
         // --- INVERTED INDEX ---
 
@@ -167,9 +168,9 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
 
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
         invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories, invListBuilder,
-                tokenizer, fmp);
-        invIndex.create(invListsFile);
-        invIndex.open(invListsFile);
+                tokenizer, fmp, invListsFile);
+        invIndex.create();
+        invIndex.open();
 
         rnd.setSeed(50);
     }
@@ -178,7 +179,9 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
     public void deinit() throws HyracksDataException {
         AbstractInvIndexTest.tearDown();
         btree.close();
+        btree.destroy();
         invIndex.close();
+        invIndex.destroy();
         bufferCache.close();
     }
 }

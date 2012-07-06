@@ -21,7 +21,6 @@ import org.junit.Before;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -47,11 +46,7 @@ public class RTreeExamplesTest extends AbstractRTreeExamplesTest {
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType) throws TreeIndexException {
         return RTreeUtils.createRTree(harness.getBufferCache(), harness.getFileMapProvider(), typeTraits,
-                valueProviderFactories, rtreeCmpFactories, rtreePolicyType);
+                valueProviderFactories, rtreeCmpFactories, rtreePolicyType, harness.getFileReference());
     }
 
-    @Override
-    protected FileReference getFileReference() {
-        return harness.getFileReference();
-    }
 }

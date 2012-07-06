@@ -42,26 +42,24 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     protected final static int rootPage = 1;
 
     protected final IBufferCache bufferCache;
-
     protected final IFileMapProvider fileMapProvider;
-
     protected final IFreePageManager freePageManager;
 
     protected final ITreeIndexFrameFactory interiorFrameFactory;
-
     protected final ITreeIndexFrameFactory leafFrameFactory;
 
     protected final IBinaryComparatorFactory[] cmpFactories;
-
     protected final int fieldCount;
 
     protected FileReference file;
+    protected int fileId = -1;
 
-    protected int fileId;
+    private boolean isOpen = false;
 
     public AbstractTreeIndex(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             IFreePageManager freePageManager, ITreeIndexFrameFactory interiorFrameFactory,
-            ITreeIndexFrameFactory leafFrameFactory, IBinaryComparatorFactory[] cmpFactories, int fieldCount) {
+            ITreeIndexFrameFactory leafFrameFactory, IBinaryComparatorFactory[] cmpFactories, int fieldCount,
+            FileReference file) {
         this.bufferCache = bufferCache;
         this.fileMapProvider = fileMapProvider;
         this.freePageManager = freePageManager;
@@ -69,11 +67,60 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         this.leafFrameFactory = leafFrameFactory;
         this.cmpFactories = cmpFactories;
         this.fieldCount = fieldCount;
+        this.file = file;
     }
 
-    private void initFile(FileReference file, boolean create) throws HyracksDataException {
-        this.file = file;
-        fileId = -1;
+    public synchronized void create() throws HyracksDataException {
+        if (isOpen) {
+            throw new HyracksDataException("Failed to create since index is already open.");
+        }
+
+        boolean fileIsMapped = false;
+        synchronized (fileMapProvider) {
+            fileIsMapped = fileMapProvider.isMapped(file);
+            if (!fileIsMapped) {
+                bufferCache.createFile(file);
+            }
+            fileId = fileMapProvider.lookupFileId(file);
+            try {
+                // Also creates the file if it doesn't exist yet.
+                bufferCache.openFile(fileId);
+            } catch (HyracksDataException e) {
+                // Revert state of buffer cache since file failed to open.
+                if (!fileIsMapped) {
+                    bufferCache.deleteFile(fileId, false);
+                }
+                throw e;
+            }
+        }
+
+        freePageManager.open(fileId);
+        initEmptyTree();
+        freePageManager.close();
+        bufferCache.closeFile(fileId);
+    }
+
+    private void initEmptyTree() throws HyracksDataException {
+        ITreeIndexFrame frame = leafFrameFactory.createFrame();
+        ITreeIndexMetaDataFrame metaFrame = freePageManager.getMetaDataFrameFactory().createFrame();
+        freePageManager.init(metaFrame, rootPage);
+
+        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), true);
+        rootNode.acquireWriteLatch();
+        try {
+            frame.setPage(rootNode);
+            frame.initBuffer((byte) 0);
+        } finally {
+            rootNode.releaseWriteLatch();
+            bufferCache.unpin(rootNode);
+        }
+    }
+
+    public synchronized void open() throws HyracksDataException {
+        if (isOpen) {
+            return;
+        }
+
         boolean fileIsMapped = false;
         synchronized (fileMapProvider) {
             fileIsMapped = fileMapProvider.isMapped(file);
@@ -94,36 +141,43 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         }
         freePageManager.open(fileId);
 
-        if (create) {
-            ITreeIndexFrame frame = leafFrameFactory.createFrame();
-            ITreeIndexMetaDataFrame metaFrame = freePageManager.getMetaDataFrameFactory().createFrame();
+        // TODO: Should probably have some way to check that the tree is physically consistent
+        // or that the file we just opened actually is a tree
 
-            freePageManager.init(metaFrame, rootPage);
+        isOpen = true;
+    }
 
-            ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), true);
-            rootNode.acquireWriteLatch();
-            try {
-                frame.setPage(rootNode);
-                frame.initBuffer((byte) 0);
-            } finally {
-                rootNode.releaseWriteLatch();
-                bufferCache.unpin(rootNode);
-            }
+    public synchronized void close() throws HyracksDataException {
+        if (!isOpen) {
+            return;
         }
-    }
 
-    public synchronized void create(FileReference file) throws HyracksDataException {
-        initFile(file, true);
-    }
-
-    public void open(FileReference file) throws HyracksDataException {
-        initFile(file, false);
-    }
-
-    public void close() throws HyracksDataException {
         bufferCache.closeFile(fileId);
         freePageManager.close();
+
+        isOpen = false;
+    }
+
+    public synchronized void destroy() throws HyracksDataException {
+        if (isOpen) {
+            throw new HyracksDataException("Failed to destroy since index is already open.");
+        }
+
+        file.getFile().delete();
+        if (fileId == -1) {
+            return;
+        }
+
+        bufferCache.deleteFile(fileId, false);
         fileId = -1;
+    }
+
+    public synchronized void clear() throws HyracksDataException {
+        if (!isOpen) {
+            throw new HyracksDataException("Failed to clear since index is not open.");
+        }
+
+        initEmptyTree();
     }
 
     public boolean isEmptyTree(ITreeIndexFrame frame) throws HyracksDataException {
@@ -194,21 +248,13 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
 
     public abstract class AbstractTreeIndexBulkLoader implements IIndexBulkLoader {
         protected final MultiComparator cmp;
-
         protected final int slotSize;
-
         protected final int leafMaxBytes;
-
         protected final int interiorMaxBytes;
-
         protected final ArrayList<NodeFrontier> nodeFrontiers = new ArrayList<NodeFrontier>();
-
         protected final ITreeIndexMetaDataFrame metaFrame;
-
         protected final ITreeIndexTupleWriter tupleWriter;
-
         protected ITreeIndexFrame leafFrame;
-
         protected ITreeIndexFrame interiorFrame;
 
         public AbstractTreeIndexBulkLoader(float fillFactor) throws TreeIndexException, HyracksDataException {

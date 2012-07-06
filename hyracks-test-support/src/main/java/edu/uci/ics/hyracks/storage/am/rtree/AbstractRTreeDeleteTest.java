@@ -59,6 +59,7 @@ public abstract class AbstractRTreeDeleteTest extends AbstractRTreeTestDriver {
             }
         }
         ctx.getIndex().close();
+        ctx.getIndex().destroy();
     }
 
     @Override

@@ -81,7 +81,7 @@ public abstract class IndexDataflowHelper {
                 register = true;
             }
             if (forceCreate) {
-                index.create(fileRef);
+                index.create();
                 // Create new resourceId
                 try {
                     resourceId = indexArtifactMap.create(baseDir, ioDeviceHandles);
@@ -89,8 +89,8 @@ public abstract class IndexDataflowHelper {
                     throw new HyracksDataException(e);
                 }
             }
-            index.open(fileRef);
             if (register) {
+                index.open();
                 indexRegistry.register(resourceId, index);
             }
         }
@@ -108,7 +108,6 @@ public abstract class IndexDataflowHelper {
     }
 
     public void deinit() throws HyracksDataException {
-        index.close();
     }
 
     public IIndex getIndex() {

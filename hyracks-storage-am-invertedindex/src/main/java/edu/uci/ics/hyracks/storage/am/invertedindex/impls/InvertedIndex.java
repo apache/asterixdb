@@ -76,9 +76,11 @@ public class InvertedIndex implements IIndex {
     private final int numTokenFields;
     private final int numInvListKeys;
 
+    private boolean isOpen = false;
+
     public InvertedIndex(IBufferCache bufferCache, BTree btree, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, IInvertedListBuilder invListBuilder,
-            IBinaryTokenizer tokenizer, IFileMapProvider fileMapProvider) {
+            IBinaryTokenizer tokenizer, IFileMapProvider fileMapProvider, FileReference file) {
         this.bufferCache = bufferCache;
         this.fileMapProvider = fileMapProvider;
         this.btree = btree;
@@ -88,11 +90,42 @@ public class InvertedIndex implements IIndex {
         this.tokenizer = tokenizer;
         this.numTokenFields = btree.getComparatorFactories().length;
         this.numInvListKeys = invListCmpFactories.length;
+        this.file = file;
     }
 
-    private void initFile(FileReference file, boolean create) throws HyracksDataException {
-        this.file = file;
-        fileId = -1;
+    @Override
+    public synchronized void create() throws HyracksDataException {
+        if (isOpen) {
+            throw new HyracksDataException("Failed to create since index is already open.");
+        }
+
+        boolean fileIsMapped = false;
+        synchronized (fileMapProvider) {
+            fileIsMapped = fileMapProvider.isMapped(file);
+            if (!fileIsMapped) {
+                bufferCache.createFile(file);
+            }
+            fileId = fileMapProvider.lookupFileId(file);
+            try {
+                // Also creates the file if it doesn't exist yet.
+                bufferCache.openFile(fileId);
+            } catch (HyracksDataException e) {
+                // Revert state of buffer cache since file failed to open.
+                if (!fileIsMapped) {
+                    bufferCache.deleteFile(fileId, false);
+                }
+                throw e;
+            }
+        }
+        bufferCache.closeFile(fileId);
+    }
+
+    @Override
+    public synchronized void open() throws HyracksDataException {
+        if (isOpen) {
+            return;
+        }
+
         boolean fileIsMapped = false;
         synchronized (fileMapProvider) {
             fileIsMapped = fileMapProvider.isMapped(file);
@@ -112,21 +145,63 @@ public class InvertedIndex implements IIndex {
             }
         }
 
+        isOpen = true;
     }
 
     @Override
-    public void create(FileReference file) throws HyracksDataException {
-        initFile(file, true);
+    public synchronized void close() throws HyracksDataException {
+        if (!isOpen) {
+            return;
+        }
+
+        bufferCache.closeFile(fileId);
+
+        isOpen = false;
     }
 
     @Override
-    public void open(FileReference file) throws HyracksDataException {
-        initFile(file, false);
+    public synchronized void destroy() throws HyracksDataException {
+        if (isOpen) {
+            throw new HyracksDataException("Failed to destroy since index is already open.");
+        }
+
+        file.getFile().delete();
+        if (fileId == -1) {
+            return;
+        }
+
+        bufferCache.deleteFile(fileId, false);
+        fileId = -1;
     }
 
     @Override
-    public void close() {
-        this.fileId = -1;
+    public synchronized void clear() throws HyracksDataException {
+        if (!isOpen) {
+            throw new HyracksDataException("Failed to clear since index is not open.");
+        }
+        btree.clear();
+        bufferCache.closeFile(fileId);
+        bufferCache.deleteFile(fileId, false);
+        file.getFile().delete();
+
+        boolean fileIsMapped = false;
+        synchronized (fileMapProvider) {
+            fileIsMapped = fileMapProvider.isMapped(file);
+            if (!fileIsMapped) {
+                bufferCache.createFile(file);
+            }
+            fileId = fileMapProvider.lookupFileId(file);
+            try {
+                // Also creates the file if it doesn't exist yet.
+                bufferCache.openFile(fileId);
+            } catch (HyracksDataException e) {
+                // Revert state of buffer cache since file failed to open.
+                if (!fileIsMapped) {
+                    bufferCache.deleteFile(fileId, false);
+                }
+                throw e;
+            }
+        }
     }
 
     public boolean openCursor(ITreeIndexCursor btreeCursor, RangePredicate btreePred, ITreeIndexAccessor btreeAccessor,

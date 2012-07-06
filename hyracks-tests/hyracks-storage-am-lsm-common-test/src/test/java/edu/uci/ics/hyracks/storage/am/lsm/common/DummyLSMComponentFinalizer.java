@@ -15,7 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common;
 
-import java.io.File;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
@@ -23,7 +22,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 public class DummyLSMComponentFinalizer implements ILSMComponentFinalizer {
 
 	@Override
-	public boolean isValid(File file, Object lsmComponent)
+	public boolean isValid(Object lsmComponent)
 			throws HyracksDataException {
 		return true;
 	}

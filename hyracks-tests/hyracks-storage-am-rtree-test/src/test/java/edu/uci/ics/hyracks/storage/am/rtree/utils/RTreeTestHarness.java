@@ -71,15 +71,10 @@ public class RTreeTestHarness {
         TestStorageManagerComponentHolder.init(pageSize, numPages, maxOpenFiles);
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        FileReference file = new FileReference(new File(fileName));
-        bufferCache.createFile(file);
-        treeFileId = fileMapProvider.lookupFileId(file);
-        bufferCache.openFile(treeFileId);
         rnd.setSeed(RANDOM_SEED);
     }
 
     public void tearDown() throws HyracksDataException {
-        bufferCache.closeFile(treeFileId);
         bufferCache.close();
         File f = new File(fileName);
         f.deleteOnExit();

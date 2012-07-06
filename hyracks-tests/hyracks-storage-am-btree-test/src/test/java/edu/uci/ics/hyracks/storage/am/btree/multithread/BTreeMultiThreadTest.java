@@ -51,7 +51,7 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
             throws TreeIndexException {
         return BTreeUtils.createBTree(harness.getBufferCache(), harness.getFileMapProvider(), typeTraits, cmpFactories,
-                BTreeLeafFrameType.REGULAR_NSM);
+                BTreeLeafFrameType.REGULAR_NSM, harness.getFileReference());
     }
 
     @Override
@@ -86,7 +86,7 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
         return workloadConfs;
     }
-    
+
     @Override
     protected FileReference getFileReference() {
         return harness.getFileReference();

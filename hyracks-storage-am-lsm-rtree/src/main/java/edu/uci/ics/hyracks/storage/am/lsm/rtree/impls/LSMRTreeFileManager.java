@@ -27,14 +27,18 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeFileManager;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.AbstractLSMRTree.LSMRTreeComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeFactory;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMRTreeFileManager extends LSMTreeFileManager {
     private static final String RTREE_STRING = "r";
     private static final String BTREE_STRING = "b";
+
+    private final TreeFactory<? extends ITreeIndex> rtreeFactory;
+    private final TreeFactory<? extends ITreeIndex> btreeFactory;
 
     private static FilenameFilter btreeFilter = new FilenameFilter() {
         public boolean accept(File dir, String name) {
@@ -48,8 +52,11 @@ public class LSMRTreeFileManager extends LSMTreeFileManager {
         }
     };
 
-    public LSMRTreeFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file) {
-        super(ioManager, fileMapProvider, file);
+    public LSMRTreeFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
+            TreeFactory<? extends ITreeIndex> rtreeFactory, TreeFactory<? extends ITreeIndex> btreeFactory) {
+        super(ioManager, fileMapProvider, file, null);
+        this.rtreeFactory = rtreeFactory;
+        this.btreeFactory = btreeFactory;
     }
 
     @Override
@@ -68,16 +75,14 @@ public class LSMRTreeFileManager extends LSMTreeFileManager {
     }
 
     @Override
-    public List<Object> cleanupAndGetValidFiles(Object lsmComponent, ILSMComponentFinalizer componentFinalizer)
-            throws HyracksDataException {
+    public List<Object> cleanupAndGetValidFiles(ILSMComponentFinalizer componentFinalizer) throws HyracksDataException {
         List<Object> validFiles = new ArrayList<Object>();
         ArrayList<ComparableFileName> allRTreeFiles = new ArrayList<ComparableFileName>();
         ArrayList<ComparableFileName> allBTreeFiles = new ArrayList<ComparableFileName>();
-        LSMRTreeComponent component = (LSMRTreeComponent) lsmComponent;
 
         // Gather files from all IODeviceHandles.
         for (IODeviceHandle dev : ioManager.getIODevices()) {
-            cleanupAndGetValidFilesInternal(dev, btreeFilter, component.getBTree(), componentFinalizer, allBTreeFiles);
+            cleanupAndGetValidFilesInternal(dev, btreeFilter, btreeFactory, componentFinalizer, allBTreeFiles);
             HashSet<String> btreeFilesSet = new HashSet<String>();
             for (ComparableFileName cmpFileName : allBTreeFiles) {
                 int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
@@ -85,8 +90,7 @@ public class LSMRTreeFileManager extends LSMTreeFileManager {
             }
             // List of valid RTree files that may or may not have a BTree buddy. Will check for buddies below.
             ArrayList<ComparableFileName> tmpAllRTreeFiles = new ArrayList<ComparableFileName>();
-            cleanupAndGetValidFilesInternal(dev, rtreeFilter, component.getRTree(), componentFinalizer,
-                    tmpAllRTreeFiles);
+            cleanupAndGetValidFilesInternal(dev, rtreeFilter, rtreeFactory, componentFinalizer, tmpAllRTreeFiles);
             // Look for buddy BTrees for all valid RTrees. 
             // If no buddy is found, delete the file, otherwise add the RTree to allRTreeFiles. 
             for (ComparableFileName cmpFileName : tmpAllRTreeFiles) {

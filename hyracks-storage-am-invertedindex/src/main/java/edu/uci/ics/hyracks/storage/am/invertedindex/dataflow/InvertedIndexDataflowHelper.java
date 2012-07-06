@@ -53,6 +53,7 @@ public final class InvertedIndexDataflowHelper extends IndexDataflowHelper {
         return new InvertedIndex(opDesc.getStorageManager().getBufferCache(ctx), btree,
                 invIndexOpDesc.getInvListsTypeTraits(), invIndexOpDesc.getInvListsComparatorFactories(),
                 invListBuilder, invIndexOpDesc.getTokenizerFactory().createTokenizer(), opDesc.getStorageManager()
-                        .getFileMapProvider(ctx));
+                        .getFileMapProvider(ctx),
+                opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile());
     }
 }

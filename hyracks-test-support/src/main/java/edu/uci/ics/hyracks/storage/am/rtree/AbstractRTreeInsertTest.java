@@ -25,11 +25,9 @@ import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 /**
  * Tests the RTree insert operation with integer and double fields using various
  * numbers of dimensions and payload fields.
- * 
  * Each tests first fills an RTree with randomly generated tuples. We compare
  * the following operations against expected results: 1. RTree scan. 3.
  * Disk-order scan. 4. Range search.
- * 
  */
 @SuppressWarnings("rawtypes")
 public abstract class AbstractRTreeInsertTest extends AbstractRTreeTestDriver {
@@ -58,6 +56,7 @@ public abstract class AbstractRTreeInsertTest extends AbstractRTreeTestDriver {
         rTreeTestUtils.checkDiskOrderScan(ctx);
         rTreeTestUtils.checkRangeSearch(ctx, key);
         ctx.getIndex().close();
+        ctx.getIndex().destroy();
     }
 
     @Override

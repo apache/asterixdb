@@ -34,7 +34,8 @@ public class BTreeDataflowHelper extends TreeIndexDataflowHelper {
         try {
             return BTreeUtils.createBTree(opDesc.getStorageManager().getBufferCache(ctx), opDesc.getStorageManager()
                     .getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
-                    .getTreeIndexComparatorFactories(), BTreeLeafFrameType.REGULAR_NSM);
+                    .getTreeIndexComparatorFactories(), BTreeLeafFrameType.REGULAR_NSM, opDesc.getFileSplitProvider()
+                    .getFileSplits()[partition].getLocalFile());
         } catch (BTreeException e) {
             throw new HyracksDataException(e);
         }

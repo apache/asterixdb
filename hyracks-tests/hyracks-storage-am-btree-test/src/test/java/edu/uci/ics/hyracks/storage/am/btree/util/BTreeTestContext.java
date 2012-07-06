@@ -51,9 +51,9 @@ public class BTreeTestContext extends OrderedIndexTestContext {
             throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
-        BTree btree = BTreeUtils.createBTree(bufferCache, fileMapProvider, typeTraits, cmpFactories, leafType);
-        btree.create(file);
-        btree.open(file);
+        BTree btree = BTreeUtils.createBTree(bufferCache, fileMapProvider, typeTraits, cmpFactories, leafType, file);
+        btree.create();
+        btree.open();
         BTreeTestContext testCtx = new BTreeTestContext(fieldSerdes, btree);
         return testCtx;
     }

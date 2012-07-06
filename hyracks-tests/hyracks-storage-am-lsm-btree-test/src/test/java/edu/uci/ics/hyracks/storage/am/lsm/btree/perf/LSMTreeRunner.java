@@ -127,7 +127,7 @@ public class LSMTreeRunner implements IExperimentRunner {
 
     @Override
     public void reset() throws Exception {
-        lsmtree.create(file);
+        lsmtree.create();
     }
 
     @Override

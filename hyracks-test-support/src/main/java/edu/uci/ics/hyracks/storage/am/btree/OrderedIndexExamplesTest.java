@@ -24,7 +24,6 @@ import org.junit.Test;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
@@ -55,8 +54,6 @@ public abstract class OrderedIndexExamplesTest {
     protected abstract ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
             throws TreeIndexException;
 
-    protected abstract FileReference getFileReference();
-
     /**
      * Fixed-Length Key,Value Example.
      * Create a tree index with one fixed-length key field and one fixed-length value
@@ -83,10 +80,9 @@ public abstract class OrderedIndexExamplesTest {
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
         cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
-        treeIndex.create(file);
-        treeIndex.open(file);
+        treeIndex.create();
+        treeIndex.open();
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -132,6 +128,7 @@ public abstract class OrderedIndexExamplesTest {
         rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
 
         treeIndex.close();
+        treeIndex.destroy();
     }
 
     /**
@@ -162,10 +159,9 @@ public abstract class OrderedIndexExamplesTest {
         cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
         cmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
-        treeIndex.create(file);
-        treeIndex.open(file);
+        treeIndex.create();
+        treeIndex.open();
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -213,6 +209,7 @@ public abstract class OrderedIndexExamplesTest {
         rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
 
         treeIndex.close();
+        treeIndex.destroy();
     }
 
     /**
@@ -240,10 +237,9 @@ public abstract class OrderedIndexExamplesTest {
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
         cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
-        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
-        treeIndex.create(file);
-        treeIndex.open(file);
+        treeIndex.create();
+        treeIndex.open();
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -291,6 +287,7 @@ public abstract class OrderedIndexExamplesTest {
         rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
 
         treeIndex.close();
+        treeIndex.destroy();
     }
 
     /**
@@ -319,10 +316,9 @@ public abstract class OrderedIndexExamplesTest {
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
         cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
-        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
-        treeIndex.create(file);
-        treeIndex.open(file);
+        treeIndex.create();
+        treeIndex.open();
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
@@ -392,6 +388,7 @@ public abstract class OrderedIndexExamplesTest {
             }
         }
         treeIndex.close();
+        treeIndex.destroy();
     }
 
     /**
@@ -420,10 +417,9 @@ public abstract class OrderedIndexExamplesTest {
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
         cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
-        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
-        treeIndex.create(file);
-        treeIndex.open(file);
+        treeIndex.create();
+        treeIndex.open();
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Inserting into tree...");
@@ -478,6 +474,7 @@ public abstract class OrderedIndexExamplesTest {
             orderedScan(indexAccessor, fieldSerdes);
         }
         treeIndex.close();
+        treeIndex.destroy();
     }
 
     /**
@@ -506,10 +503,9 @@ public abstract class OrderedIndexExamplesTest {
         cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
         cmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
-        treeIndex.create(file);
-        treeIndex.open(file);
+        treeIndex.create();
+        treeIndex.open();
 
         // Load sorted records.
         int ins = 100000;
@@ -547,6 +543,7 @@ public abstract class OrderedIndexExamplesTest {
         rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
 
         treeIndex.close();
+        treeIndex.destroy();
     }
 
     private void orderedScan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes) throws Exception {

@@ -74,7 +74,7 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         IFreePageManager freePageManager = new InMemoryFreePageManager(bufferCache.getNumPages(), metaFrameFactory);
         btree = new BTree(bufferCache, new TransientFileMapManager(), freePageManager, interiorFrameFactory,
-                leafFrameFactory, cmpFactories, typeTraits.length);
+                leafFrameFactory, cmpFactories, typeTraits.length, file);
     }
 
     @Override
@@ -112,7 +112,7 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
 
     @Override
     public void reset() throws Exception {
-        btree.create(file);
+        btree.create();
     }
 
     public class BTreeThread extends Thread {

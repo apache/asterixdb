@@ -75,7 +75,7 @@ public class LSMTreeFileManagerTest {
     }
 
     public void sortOrderTest(boolean testFlushFileName) throws InterruptedException, HyracksDataException {
-        ILSMFileManager fileManager = new LSMTreeFileManager(ioManager, fileMapProvider, file);
+        ILSMFileManager fileManager = new LSMTreeFileManager(ioManager, fileMapProvider, file, new DummyTreeFactory());
         LinkedList<String> fileNames = new LinkedList<String>();
 
         int numFileNames = 100;
@@ -113,7 +113,7 @@ public class LSMTreeFileManagerTest {
     }
 
     public void cleanInvalidFilesTest(IOManager ioManager) throws InterruptedException, IOException {
-        ILSMFileManager fileManager = new LSMTreeFileManager(ioManager, fileMapProvider, file);
+        ILSMFileManager fileManager = new LSMTreeFileManager(ioManager, fileMapProvider, file, new DummyTreeFactory());
         fileManager.createDirs();
 
         List<FileReference> flushFiles = new ArrayList<FileReference>();
@@ -177,7 +177,7 @@ public class LSMTreeFileManagerTest {
         Collections.sort(expectedValidFiles, fileManager.getFileNameComparator());
 
         // Pass null and a dummy component finalizer. We don't test for physical consistency in this test.
-        List<Object> validFiles = fileManager.cleanupAndGetValidFiles(null, componentFinalizer);
+        List<Object> validFiles = fileManager.cleanupAndGetValidFiles(componentFinalizer);
 
         // Check actual files against expected files.
         assertEquals(expectedValidFiles.size(), validFiles.size());

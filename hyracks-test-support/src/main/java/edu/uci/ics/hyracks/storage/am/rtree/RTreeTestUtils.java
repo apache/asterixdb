@@ -112,7 +112,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
             fieldValues[k] = secondValue;
         }
     }
-    
+
     private void setDoublePayloadFields(double[] fieldValues, int numKeyFields, int numFields) {
         for (int j = numKeyFields; j < numFields; j++) {
             fieldValues[j] = doublePayloadValue++;
@@ -214,7 +214,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
             fieldValues[k] = secondValue;
         }
     }
-    
+
     @Override
     protected void setIntPayloadFields(int[] fieldValues, int numKeyFields, int numFields) {
         for (int j = numKeyFields; j < numFields; j++) {

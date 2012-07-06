@@ -56,6 +56,7 @@ public abstract class OrderedIndexBulkLoadTest extends OrderedIndexTestDriver {
             }
         }
         ctx.getIndex().close();
+        ctx.getIndex().destroy();
     }
 
     @Override

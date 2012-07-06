@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -41,6 +42,7 @@ public class LSMTreeFileManager implements ILSMFileManager {
     // where to flush and merge
     protected final IIOManager ioManager;
     protected final IFileMapProvider fileMapProvider;
+    protected final TreeFactory<? extends ITreeIndex> treeFactory;
 
     // baseDir should reflect dataset name and partition name.
     protected FileReference file;
@@ -58,7 +60,8 @@ public class LSMTreeFileManager implements ILSMFileManager {
         }
     };
 
-    public LSMTreeFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file) {
+    public LSMTreeFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
+            TreeFactory<? extends ITreeIndex> treeFactory) {
         this.file = file;
         this.baseDir = file.getFile().getPath();
         if (!baseDir.endsWith(System.getProperty("file.separator"))) {
@@ -66,6 +69,7 @@ public class LSMTreeFileManager implements ILSMFileManager {
         }
         this.fileMapProvider = fileMapProvider;
         this.ioManager = ioManager;
+        this.treeFactory = treeFactory;
     }
 
     @Override
@@ -74,6 +78,27 @@ public class LSMTreeFileManager implements ILSMFileManager {
             File f = new File(dev.getPath(), baseDir);
             f.mkdirs();
         }
+    }
+
+    @Override
+    public void deleteDirs() {
+        for (IODeviceHandle dev : ioManager.getIODevices()) {
+            File f = new File(dev.getPath(), baseDir);
+            if (f.isDirectory()) {
+                deleteDir(f);
+            }
+        }
+    }
+
+    private void deleteDir(File dir) {
+        for (File f : dir.listFiles()) {
+            if (f.isDirectory()) {
+                deleteDir(f);
+            } else {
+                f.delete();
+            }
+        }
+        dir.delete();
     }
 
     public FileReference createFlushFile(String relFlushFileName) {
@@ -128,14 +153,14 @@ public class LSMTreeFileManager implements ILSMFileManager {
         return baseDir;
     }
 
-    protected void cleanupAndGetValidFilesInternal(IODeviceHandle dev, FilenameFilter filter, Object lsmComponent,
-            ILSMComponentFinalizer componentFinalizer, ArrayList<ComparableFileName> allFiles)
-            throws HyracksDataException {
+    protected void cleanupAndGetValidFilesInternal(IODeviceHandle dev, FilenameFilter filter,
+            TreeFactory<? extends ITreeIndex> treeFactory, ILSMComponentFinalizer componentFinalizer,
+            ArrayList<ComparableFileName> allFiles) throws HyracksDataException {
         File dir = new File(dev.getPath(), baseDir);
         String[] files = dir.list(filter);
         for (String fileName : files) {
             File file = new File(dir.getPath() + File.separator + fileName);
-            if (componentFinalizer.isValid(file, lsmComponent)) {
+            if (componentFinalizer.isValid(treeFactory.createIndexInstance(new FileReference(file)))) {
                 allFiles.add(new ComparableFileName(file.getAbsolutePath()));
             } else {
                 file.delete();
@@ -144,8 +169,7 @@ public class LSMTreeFileManager implements ILSMFileManager {
     }
 
     @Override
-    public List<Object> cleanupAndGetValidFiles(Object lsmComponent, ILSMComponentFinalizer componentFinalizer)
-            throws HyracksDataException {
+    public List<Object> cleanupAndGetValidFiles(ILSMComponentFinalizer componentFinalizer) throws HyracksDataException {
         List<Object> validFiles = new ArrayList<Object>();
         ArrayList<ComparableFileName> allFiles = new ArrayList<ComparableFileName>();
 
@@ -155,7 +179,7 @@ public class LSMTreeFileManager implements ILSMFileManager {
         // (2) The file's interval is contained by some other file
         // Here, we only filter out (1).
         for (IODeviceHandle dev : ioManager.getIODevices()) {
-            cleanupAndGetValidFilesInternal(dev, fileNameFilter, lsmComponent, componentFinalizer, allFiles);
+            cleanupAndGetValidFilesInternal(dev, fileNameFilter, treeFactory, componentFinalizer, allFiles);
         }
 
         if (allFiles.isEmpty()) {

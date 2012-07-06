@@ -15,10 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
-import java.io.File;
-
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
@@ -36,11 +33,10 @@ public class TreeIndexComponentFinalizer implements ILSMComponentFinalizer {
     }
 
     @Override
-    public boolean isValid(File file, Object lsmComponent) throws HyracksDataException {
+    public boolean isValid(Object lsmComponent) throws HyracksDataException {
         ITreeIndex treeIndex = (ITreeIndex) lsmComponent;
         IBufferCache bufferCache = treeIndex.getBufferCache();
-        FileReference fileRef = new FileReference(file);
-        treeIndex.open(fileRef);
+        treeIndex.open();
         try {
             int metadataPage = treeIndex.getFreePageManager().getFirstMetadataPage();
             ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory()

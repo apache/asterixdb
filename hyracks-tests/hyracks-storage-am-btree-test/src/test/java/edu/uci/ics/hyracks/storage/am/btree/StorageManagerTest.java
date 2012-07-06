@@ -27,7 +27,6 @@ import edu.uci.ics.hyracks.storage.am.btree.util.AbstractBTreeTest;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
-import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.sync.LatchType;
 
 public class StorageManagerTest extends AbstractBTreeTest {
@@ -255,7 +254,6 @@ public class StorageManagerTest extends AbstractBTreeTest {
     @Test
     public void oneThreadOneFileTest() throws Exception {
         IBufferCache bufferCache = harness.getBufferCache();
-        IFileMapProvider fmp = harness.getFileMapProvider();
         bufferCache.createFile(harness.getFileReference());
         int btreeFileId = harness.getFileMapProvider().lookupFileId(harness.getFileReference());
         bufferCache.openFile(btreeFileId);

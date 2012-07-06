@@ -62,6 +62,7 @@ public abstract class OrderedIndexDeleteTest extends OrderedIndexTestDriver {
             }
         }
         ctx.getIndex().close();
+        ctx.getIndex().destroy();
     }
 
     @Override

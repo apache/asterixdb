@@ -24,7 +24,6 @@ import org.junit.Test;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
@@ -57,8 +56,6 @@ public abstract class AbstractRTreeExamplesTest {
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType)
             throws TreeIndexException;
-
-    protected abstract FileReference getFileReference();
 
     /**
      * Two Dimensions Example.
@@ -109,11 +106,10 @@ public abstract class AbstractRTreeExamplesTest {
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
                 rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
-        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
                 valueProviderFactories, RTreePolicyType.RTREE);
-        treeIndex.create(file);
-        treeIndex.open(file);
+        treeIndex.create();
+        treeIndex.open();
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -162,6 +158,7 @@ public abstract class AbstractRTreeExamplesTest {
         rangeSearch(rtreeCmpFactories, indexAccessor, fieldSerdes, key);
 
         treeIndex.close();
+        treeIndex.destroy();
     }
 
     /**
@@ -217,11 +214,10 @@ public abstract class AbstractRTreeExamplesTest {
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
                 rtreeCmpFactories.length, DoublePointable.FACTORY);
 
-        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
                 valueProviderFactories, RTreePolicyType.RTREE);
-        treeIndex.create(file);
-        treeIndex.open(file);
+        treeIndex.create();
+        treeIndex.open();
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -272,6 +268,7 @@ public abstract class AbstractRTreeExamplesTest {
         rangeSearch(rtreeCmpFactories, indexAccessor, fieldSerdes, key);
 
         treeIndex.close();
+        treeIndex.destroy();
     }
 
     /**
@@ -317,11 +314,10 @@ public abstract class AbstractRTreeExamplesTest {
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
                 rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
-        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
                 valueProviderFactories, RTreePolicyType.RTREE);
-        treeIndex.create(file);
-        treeIndex.open(file);
+        treeIndex.create();
+        treeIndex.open();
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
@@ -403,6 +399,7 @@ public abstract class AbstractRTreeExamplesTest {
             }
         }
         treeIndex.close();
+        treeIndex.destroy();
     }
 
     /**
@@ -449,11 +446,10 @@ public abstract class AbstractRTreeExamplesTest {
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
                 rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
-        FileReference file = getFileReference();
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
                 valueProviderFactories, RTreePolicyType.RTREE);
-        treeIndex.create(file);
-        treeIndex.open(file);
+        treeIndex.create();
+        treeIndex.open();
 
         // Load records.
         int numInserts = 10000;
@@ -495,6 +491,7 @@ public abstract class AbstractRTreeExamplesTest {
         rangeSearch(rtreeCmpFactories, indexAccessor, fieldSerdes, key);
 
         treeIndex.close();
+        treeIndex.destroy();
     }
 
     private void scan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes) throws Exception {

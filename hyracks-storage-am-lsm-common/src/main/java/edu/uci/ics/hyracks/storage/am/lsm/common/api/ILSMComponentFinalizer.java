@@ -15,7 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
-import java.io.File;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
@@ -25,7 +24,7 @@ public interface ILSMComponentFinalizer {
      * Checks whether the given file is valid with respect to the given LSM component.
      * Used for guaranteeing the atomicity of LSM component writes.
      */
-    public boolean isValid(File file, Object lsmComponent) throws HyracksDataException;
+    public boolean isValid(Object lsmComponent) throws HyracksDataException;
 
     /**
      * Marks the given LSM component as physically valid, synchronously forcing

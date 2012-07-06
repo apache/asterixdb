@@ -47,9 +47,9 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeFileManager.LSMRTreeFileNameComponent;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree.RTreeBulkLoader;
@@ -62,12 +62,12 @@ public class LSMRTree extends AbstractLSMRTree {
 
     // On-disk components.
     // For creating BTree's used in flush and merge.
-    private final BTreeFactory diskBTreeFactory;
+    private final TreeFactory<BTree> diskBTreeFactory;
 
     public LSMRTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
-            ILSMFileManager fileManager, RTreeFactory diskRTreeFactory, BTreeFactory diskBTreeFactory,
+            ILSMFileManager fileManager, TreeFactory<RTree> diskRTreeFactory, TreeFactory<BTree> diskBTreeFactory,
             IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
             int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, ILSMFlushController flushController,
@@ -88,14 +88,9 @@ public class LSMRTree extends AbstractLSMRTree {
      * @throws HyracksDataException
      */
     @Override
-    public void open(FileReference fileReference) throws HyracksDataException {
-        super.open(fileReference);
-        RTree dummyRTree = diskRTreeFactory.createIndexInstance();
-        dummyRTree.create(new FileReference(new File("dummyrtree")));
-        BTree dummyBTree = diskBTreeFactory.createIndexInstance();
-        dummyBTree.create(new FileReference(new File("dummybtree")));
-        LSMRTreeComponent dummyComponent = new LSMRTreeComponent(dummyRTree, dummyBTree);
-        List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(dummyComponent, componentFinalizer);
+    public synchronized void open() throws HyracksDataException {
+        super.open();
+        List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(componentFinalizer);
         for (Object o : validFileNames) {
             LSMRTreeFileNameComponent component = (LSMRTreeFileNameComponent) o;
             FileReference rtreeFile = new FileReference(new File(component.getRTreeFileName()));
@@ -108,7 +103,7 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public synchronized void close() throws HyracksDataException {
         for (Object o : diskComponents) {
             LSMRTreeComponent diskComponent = (LSMRTreeComponent) o;
             RTree rtree = diskComponent.getRTree();
@@ -118,6 +113,29 @@ public class LSMRTree extends AbstractLSMRTree {
         }
         diskComponents.clear();
         super.close();
+    }
+
+    @Override
+    public synchronized void destroy() throws HyracksDataException {
+        for (Object o : diskComponents) {
+            LSMRTreeComponent component = (LSMRTreeComponent) o;
+            component.getBTree().destroy();
+            component.getRTree().destroy();
+        }
+        super.destroy();
+    }
+
+    @Override
+    public synchronized void clear() throws HyracksDataException {
+        for (Object o : diskComponents) {
+            LSMRTreeComponent component = (LSMRTreeComponent) o;
+            component.getBTree().close();
+            component.getRTree().close();
+            component.getBTree().destroy();
+            component.getRTree().destroy();
+        }
+        diskComponents.clear();
+        super.clear();
     }
 
     private LSMRTreeFileNameComponent getMergeTargetFileName(List<Object> mergingDiskTrees) throws HyracksDataException {
