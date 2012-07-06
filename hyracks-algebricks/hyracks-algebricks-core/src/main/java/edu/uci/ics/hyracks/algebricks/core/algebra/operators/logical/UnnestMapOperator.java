@@ -34,13 +34,15 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisi
 public class UnnestMapOperator extends AbstractUnnestOperator {
 
     private final List<Object> variableTypes; // TODO: get rid of this and
-
+    private final boolean propagateInput;
+    
     // deprecate UnnestMap
 
     public UnnestMapOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression,
-            List<Object> variableTypes) {
+            List<Object> variableTypes, boolean propagateInput) {
         super(variables, expression);
         this.variableTypes = variableTypes;
+        this.propagateInput = propagateInput;
     }
 
     @Override
@@ -61,10 +63,12 @@ public class UnnestMapOperator extends AbstractUnnestOperator {
     @Override
     public VariablePropagationPolicy getVariablePropagationPolicy() {
         return new VariablePropagationPolicy() {
-
             @Override
             public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources)
                     throws AlgebricksException {
+                if (propagateInput) {
+                    target.addAllVariables(sources[0]);
+                }
                 for (LogicalVariable v : variables) {
                     target.addVariable(v);
                 }
@@ -78,13 +82,28 @@ public class UnnestMapOperator extends AbstractUnnestOperator {
 
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
-        IVariableTypeEnvironment env = new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(),
-                ctx.getMetadataProvider());
+        IVariableTypeEnvironment env = null;
+        if (propagateInput) {
+            env = createPropagatingAllInputsTypeEnvironment(ctx);
+        } else {
+            env = new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getMetadataProvider());
+        }
         int n = variables.size();
         for (int i = 0; i < n; i++) {
             env.setVarType(variables.get(i), variableTypes.get(i));
         }
         return env;
     }
+    
+    public boolean propagatesInput() {
+        return propagateInput;
+    }
+    
+    /*
+    @Override
+    public boolean isMap() {
+        return !propagateInput;
+    }
+    */
 
 }

@@ -98,10 +98,10 @@ public class OptimizedExternalSortOperatorDescriptor extends AbstractOperatorDes
         OptimizedSortActivity osa = new OptimizedSortActivity(new ActivityId(odId, SORT_ACTIVITY_ID));
         OptimizedMergeActivity oma = new OptimizedMergeActivity(new ActivityId(odId, MERGE_ACTIVITY_ID));
 
-        builder.addActivity(osa);
+        builder.addActivity(this, osa);
         builder.addSourceEdge(0, osa, 0);
 
-        builder.addActivity(oma);
+        builder.addActivity(this, oma);
         builder.addTargetEdge(0, oma, 0);
 
         builder.addBlockingEdge(osa, oma);
@@ -191,8 +191,8 @@ public class OptimizedExternalSortOperatorDescriptor extends AbstractOperatorDes
             IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
                 public void initialize() throws HyracksDataException {
-                    OptimizedSortTaskState state = (OptimizedSortTaskState) ctx.getStateObject(new TaskId(new ActivityId(
-                            getOperatorId(), SORT_ACTIVITY_ID), partition));
+                    OptimizedSortTaskState state = (OptimizedSortTaskState) ctx.getStateObject(new TaskId(
+                            new ActivityId(getOperatorId(), SORT_ACTIVITY_ID), partition));
 
                     List<IFrameReader> runs = state.runs;
 

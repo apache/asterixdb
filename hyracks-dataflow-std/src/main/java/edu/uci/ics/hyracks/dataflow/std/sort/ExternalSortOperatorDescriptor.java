@@ -75,10 +75,10 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
         SortActivity sa = new SortActivity(new ActivityId(odId, SORT_ACTIVITY_ID));
         MergeActivity ma = new MergeActivity(new ActivityId(odId, MERGE_ACTIVITY_ID));
 
-        builder.addActivity(sa);
+        builder.addActivity(this, sa);
         builder.addSourceEdge(0, sa, 0);
 
-        builder.addActivity(ma);
+        builder.addActivity(this, ma);
         builder.addTargetEdge(0, ma, 0);
 
         builder.addBlockingEdge(sa, ma);

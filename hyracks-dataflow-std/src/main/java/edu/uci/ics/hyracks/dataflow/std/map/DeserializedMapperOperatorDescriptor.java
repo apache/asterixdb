@@ -64,8 +64,8 @@ public class DeserializedMapperOperatorDescriptor extends AbstractSingleActivity
 
     private final IDeserializedMapperFactory mapperFactory;
 
-    public DeserializedMapperOperatorDescriptor(IOperatorDescriptorRegistry spec, IDeserializedMapperFactory mapperFactory,
-            RecordDescriptor recordDescriptor) {
+    public DeserializedMapperOperatorDescriptor(IOperatorDescriptorRegistry spec,
+            IDeserializedMapperFactory mapperFactory, RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);
         this.mapperFactory = mapperFactory;
         recordDescriptors[0] = recordDescriptor;
@@ -75,6 +75,6 @@ public class DeserializedMapperOperatorDescriptor extends AbstractSingleActivity
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
         return new DeserializedOperatorNodePushable(ctx, new MapperOperator(),
-                recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0));
+                recordDescProvider.getInputRecordDescriptor(getActivityId(), 0));
     }
 }

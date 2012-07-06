@@ -25,13 +25,11 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -47,7 +45,6 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearcher;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
-import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
@@ -72,7 +69,6 @@ public class InvertedIndex implements IIndex {
     private final ITypeTraits[] invListTypeTraits;
     private final IBinaryComparatorFactory[] invListCmpFactories;
     private final IInvertedListBuilder invListBuilder;
-    private final IBinaryTokenizer tokenizer;
     private final int numTokenFields;
     private final int numInvListKeys;
 
@@ -80,14 +76,13 @@ public class InvertedIndex implements IIndex {
 
     public InvertedIndex(IBufferCache bufferCache, BTree btree, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, IInvertedListBuilder invListBuilder,
-            IBinaryTokenizer tokenizer, IFileMapProvider fileMapProvider, FileReference file) {
+            IFileMapProvider fileMapProvider, FileReference file) {
         this.bufferCache = bufferCache;
         this.fileMapProvider = fileMapProvider;
         this.btree = btree;
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
         this.invListBuilder = invListBuilder;
-        this.tokenizer = tokenizer;
         this.numTokenFields = btree.getComparatorFactories().length;
         this.numInvListKeys = invListCmpFactories.length;
         this.file = file;
@@ -236,26 +231,26 @@ public class InvertedIndex implements IIndex {
     public final class InvertedIndexBulkLoader implements IIndexBulkLoader {
         private final ArrayTupleBuilder btreeTupleBuilder;
         private final ArrayTupleReference btreeTupleReference;
-        private final float btreeFillFactor;
-        private IIndexBulkLoadContext btreeBulkLoadCtx;
         private final IIndexBulkLoader btreeBulkloader;
 
         private int currentInvListStartPageId;
         private int currentInvListStartOffset;
-        private final ByteArrayAccessibleOutputStream currentInvListTokenBaaos = new ByteArrayAccessibleOutputStream();
-        private final FixedSizeTupleReference currentInvListToken = new FixedSizeTupleReference(invListTypeTraits);
+        private final ArrayTupleBuilder lastTupleBuilder;
+        private final ArrayTupleReference lastTuple;
 
         private int currentPageId;
         private ICachedPage currentPage;
         private final MultiComparator tokenCmp;
+        private final MultiComparator invListCmp;
 
         public InvertedIndexBulkLoader(float btreeFillFactor, int startPageId, int fileId) throws IndexException,
                 HyracksDataException {
             this.tokenCmp = MultiComparator.create(btree.getComparatorFactories());
+            this.invListCmp = MultiComparator.create(invListCmpFactories);
             this.btreeTupleBuilder = new ArrayTupleBuilder(btree.getFieldCount());
             this.btreeTupleReference = new ArrayTupleReference();
-            this.btreeFillFactor = btreeFillFactor;
-
+            this.lastTupleBuilder = new ArrayTupleBuilder(numTokenFields + numInvListKeys);
+            this.lastTuple = new ArrayTupleReference();
             this.btreeBulkloader = btree.createBulkLoader(btreeFillFactor);
             currentPageId = startPageId;
             currentPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
@@ -274,7 +269,8 @@ public class InvertedIndex implements IIndex {
         private void createAndInsertBTreeTuple() throws HyracksDataException {
             // Build tuple.        
             btreeTupleBuilder.reset();
-            btreeTupleBuilder.addField(currentInvListTokenBaaos.getByteArray(), 0, currentInvListTokenBaaos.size());
+            btreeTupleBuilder.addField(lastTuple.getFieldData(0), lastTuple.getFieldStart(0),
+                    lastTuple.getFieldLength(0));
             btreeTupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, currentInvListStartPageId);
             btreeTupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, currentPageId);
             btreeTupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, currentInvListStartOffset);
@@ -294,18 +290,18 @@ public class InvertedIndex implements IIndex {
          */
         @Override
         public void add(ITupleReference tuple) throws HyracksDataException {
-            // First inverted list, copy token to baaos and start new list.
-            if (currentInvListTokenBaaos.size() == 0) {
-                currentInvListStartPageId = currentPageId;
-                currentInvListStartOffset = invListBuilder.getPos();
-
-                // Remember current token.
-                currentInvListTokenBaaos.reset();
-                for (int i = 0; i < numTokenFields; i++) {
-                    currentInvListTokenBaaos.write(tuple.getFieldData(i), tuple.getFieldStart(i),
-                            tuple.getFieldLength(i));
+            boolean firstElement = lastTupleBuilder.getSize() == 0;
+            boolean startNewList = firstElement;
+            if (!firstElement) {
+                // If the current and the last token don't match, we start a new list.
+                lastTuple.reset(lastTupleBuilder.getFieldEndOffsets(), lastTupleBuilder.getByteArray());
+                startNewList = tokenCmp.compare(tuple, lastTuple) != 0;
+            }
+            if (startNewList) {
+                if (!firstElement) {
+                    // Create entry in btree for last inverted list.
+                    createAndInsertBTreeTuple();
                 }
-
                 if (!invListBuilder.startNewList(tuple, numTokenFields)) {
                     pinNextPage();
                     invListBuilder.setTargetBuffer(currentPage.getBuffer().array(), 0);
@@ -313,34 +309,13 @@ public class InvertedIndex implements IIndex {
                         throw new IllegalStateException("Failed to create first inverted list.");
                     }
                 }
-            }
-
-            // Create new inverted list?
-            currentInvListToken.reset(currentInvListTokenBaaos.getByteArray(), 0);
-            if (tokenCmp.compare(tuple, currentInvListToken) != 0) {
-
-                // Create entry in btree for last inverted list.
-                createAndInsertBTreeTuple();
-
-                // Remember new token.
-                currentInvListTokenBaaos.reset();
-                for (int i = 0; i < numTokenFields; i++) {
-                    currentInvListTokenBaaos.write(tuple.getFieldData(i), tuple.getFieldStart(i),
-                            tuple.getFieldLength(i));
-                }
-
-                // Start new list.
-                if (!invListBuilder.startNewList(tuple, numTokenFields)) {
-                    pinNextPage();
-                    invListBuilder.setTargetBuffer(currentPage.getBuffer().array(), 0);
-                    if (!invListBuilder.startNewList(tuple, numTokenFields)) {
-                        throw new IllegalStateException(
-                                "Failed to start new inverted list after switching to a new page.");
-                    }
-                }
-
                 currentInvListStartPageId = currentPageId;
                 currentInvListStartOffset = invListBuilder.getPos();
+            } else {
+                if (invListCmp.compare(tuple, lastTuple, numTokenFields) == 0) {
+                    // Duplicate inverted-list element.
+                    return;
+                }
             }
 
             // Append to current inverted list.
@@ -351,6 +326,13 @@ public class InvertedIndex implements IIndex {
                     throw new IllegalStateException(
                             "Failed to append element to inverted list after switching to a new page.");
                 }
+            }
+
+            // Remember last tuple by creating a copy.
+            // TODO: This portion can be optimized by only copying the token when it changes, and using the last appended inverted-list element as a reference.
+            lastTupleBuilder.reset();
+            for (int i = 0; i < tuple.getFieldCount(); i++) {
+                lastTupleBuilder.addField(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
             }
         }
 
@@ -391,7 +373,7 @@ public class InvertedIndex implements IIndex {
         private final IInvertedIndexSearcher searcher;
 
         public InvertedIndexAccessor(InvertedIndex index) {
-            this.searcher = new TOccurrenceSearcher(ctx, index, tokenizer);
+            this.searcher = new TOccurrenceSearcher(ctx, index);
         }
 
         @Override

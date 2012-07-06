@@ -51,6 +51,22 @@ public class MultiComparator {
         }
         return 0;
     }
+	
+	public int compare(ITupleReference tupleA,
+			ITupleReference tupleB, int startFieldIndex) {
+		for (int i = 0; i < cmps.length; i++) {
+			int ix = startFieldIndex + i;
+			int cmp = cmps[i].compare(tupleA.getFieldData(ix),
+					tupleA.getFieldStart(ix), tupleA.getFieldLength(ix),
+					tupleB.getFieldData(ix), tupleB.getFieldStart(ix),
+					tupleB.getFieldLength(ix));
+			if (cmp < 0)
+				return -1;
+			else if (cmp > 0)
+				return 1;
+		}
+		return 0;
+	}
 
     public int fieldRangeCompare(ITupleReference tupleA, ITupleReference tupleB, int startFieldIndex, int numFields) {
         for (int i = startFieldIndex; i < startFieldIndex + numFields; i++) {

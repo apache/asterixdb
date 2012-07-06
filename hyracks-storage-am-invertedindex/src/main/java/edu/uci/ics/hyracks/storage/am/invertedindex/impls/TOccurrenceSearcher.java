@@ -50,6 +50,8 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IToken;
 
+// TODO: The search procedure is rather confusing regarding cursor positions, hasNext() calls etc.
+// Needs an overhaul some time.
 public class TOccurrenceSearcher implements IInvertedIndexSearcher {
 
     protected final IHyracksCommonContext ctx;
@@ -80,7 +82,6 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
 
     protected final InvertedIndex invIndex;
     protected final MultiComparator invListCmp;
-    protected final IBinaryTokenizer queryTokenizer;
     protected final ITypeTraits[] invListFieldsWithCount;
     protected int occurrenceThreshold;
 
@@ -88,11 +89,10 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
     protected List<IInvertedListCursor> invListCursorCache = new ArrayList<IInvertedListCursor>(cursorCacheSize);
     protected List<IInvertedListCursor> invListCursors = new ArrayList<IInvertedListCursor>(cursorCacheSize);
 
-    public TOccurrenceSearcher(IHyracksCommonContext ctx, InvertedIndex invIndex, IBinaryTokenizer queryTokenizer) {
+    public TOccurrenceSearcher(IHyracksCommonContext ctx, InvertedIndex invIndex) {
         this.ctx = ctx;
         this.invIndex = invIndex;
         this.invListCmp = MultiComparator.create(invIndex.getInvListElementCmpFactories());
-        this.queryTokenizer = queryTokenizer;
 
         leafFrame = invIndex.getBTree().getLeafFrameFactory().createFrame();
         interiorFrame = invIndex.getBTree().getInteriorFrameFactory().createFrame();
@@ -150,6 +150,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         ITupleReference queryTuple = searchPred.getQueryTuple();
         int queryFieldIndex = searchPred.getQueryFieldIndex();
         IInvertedIndexSearchModifier searchModifier = searchPred.getSearchModifier();
+        IBinaryTokenizer queryTokenizer = searchPred.getQueryTokenizer();
 
         queryTokenAppender.reset(queryTokenFrame, true);
         queryTokenizer.reset(queryTuple.getFieldData(queryFieldIndex), queryTuple.getFieldStart(queryFieldIndex),
@@ -349,7 +350,9 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
 
             if (advanceCursor) {
                 invListTidx++;
-                invListCursor.next();
+                if (invListCursor.hasNext()) {
+                    invListCursor.next();
+                }
             }
         }
 
@@ -440,7 +443,9 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
 
             if (advanceCursor) {
                 invListTidx++;
-                invListCursor.next();
+                if (invListCursor.hasNext()) {
+                    invListCursor.next();
+                }
             }
         }
 
@@ -449,7 +454,9 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
             ITupleReference invListTuple = invListCursor.getTuple();
             newBufIdx = appendTupleToNewResults(invListTuple, 1, newBufIdx);
             invListTidx++;
-            invListCursor.next();
+            if (invListCursor.hasNext()) {
+                invListCursor.next();
+            }
         }
 
         // append remaining elements from previous result set

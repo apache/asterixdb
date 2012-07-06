@@ -42,7 +42,7 @@ public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends AbstractTreeI
             IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation, IndexOp op,
             IIndexDataflowHelperFactory dataflowHelperFactory, ITupleFilterFactory tupleFilterFactory, IOperationCallbackProvider opCallbackProvider) {
         super(spec, 1, 1, recDesc, storageManager, indexRegistryProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, dataflowHelperFactory, tupleFilterFactory, opCallbackProvider);
+                comparatorFactories, dataflowHelperFactory, tupleFilterFactory, false, opCallbackProvider);
         this.fieldPermutation = fieldPermutation;
         this.op = op;
     }

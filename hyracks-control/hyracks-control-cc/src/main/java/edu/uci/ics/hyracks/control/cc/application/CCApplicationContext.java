@@ -26,11 +26,10 @@ import edu.uci.ics.hyracks.api.application.ICCBootstrap;
 import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IJobLifecycleListener;
-import edu.uci.ics.hyracks.api.job.IJobSpecificationFactory;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.control.cc.job.DeserializingJobSpecificationFactory;
+import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
 import edu.uci.ics.hyracks.control.common.work.IResultCallback;
@@ -44,8 +43,6 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
     protected IResultCallback<Object> initializationCallback;
     protected IResultCallback<Object> deinitializationCallback;
 
-    private IJobSpecificationFactory jobSpecFactory;
-
     private List<IJobLifecycleListener> jobLifecycleListeners;
 
     public CCApplicationContext(ServerContext serverCtx, ICCContext ccContext, String appName) throws IOException {
@@ -53,7 +50,6 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
         this.ccContext = ccContext;
         initPendingNodeIds = new HashSet<String>();
         deinitPendingNodeIds = new HashSet<String>();
-        jobSpecFactory = DeserializingJobSpecificationFactory.INSTANCE;
         jobLifecycleListeners = new ArrayList<IJobLifecycleListener>();
     }
 
@@ -67,13 +63,14 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
         return ccContext;
     }
 
-    @Override
-    public void setJobSpecificationFactory(IJobSpecificationFactory jobSpecFactory) {
-        this.jobSpecFactory = jobSpecFactory;
-    }
-
     public JobSpecification createJobSpecification(byte[] bytes) throws HyracksException {
-        return jobSpecFactory.createJobSpecification(bytes, (ICCBootstrap) bootstrap, this);
+        try {
+            return (JobSpecification) JavaSerializationUtils.deserialize(bytes, getClassLoader());
+        } catch (IOException e) {
+            throw new HyracksException(e);
+        } catch (ClassNotFoundException e) {
+            throw new HyracksException(e);
+        }
     }
 
     @Override
@@ -105,7 +102,8 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
         }
     }
 
-    public synchronized void notifyJobCreation(JobId jobId, IOperatorDescriptorRegistry specification) throws HyracksException {
+    public synchronized void notifyJobCreation(JobId jobId, IOperatorDescriptorRegistry specification)
+            throws HyracksException {
         for (IJobLifecycleListener l : jobLifecycleListeners) {
             l.notifyJobCreation(jobId, specification);
         }

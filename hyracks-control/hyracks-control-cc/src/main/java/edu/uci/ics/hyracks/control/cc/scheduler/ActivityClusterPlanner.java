@@ -184,7 +184,7 @@ public class ActivityClusterPlanner {
         for (ActivityId ac1 : activities) {
             Task[] ac1TaskStates = activityPlanMap.get(ac1).getTasks();
             int nProducers = ac1TaskStates.length;
-            List<IConnectorDescriptor> outputConns = jag.getActivityOutputConnectorDescriptors(ac1);
+            List<IConnectorDescriptor> outputConns = jag.getActivityOutputMap().get(ac1);
             if (outputConns != null) {
                 for (IConnectorDescriptor c : outputConns) {
                     ConnectorDescriptorId cdId = c.getConnectorId();
@@ -334,7 +334,7 @@ public class ActivityClusterPlanner {
         for (ActivityId a1 : activities) {
             Task[] ac1TaskStates = taskMap.get(a1).getTasks();
             int nProducers = ac1TaskStates.length;
-            List<IConnectorDescriptor> outputConns = jag.getActivityOutputConnectorDescriptors(a1);
+            List<IConnectorDescriptor> outputConns = jag.getActivityOutputMap().get(a1);
             if (outputConns != null) {
                 for (IConnectorDescriptor c : outputConns) {
                     ConnectorDescriptorId cdId = c.getConnectorId();
@@ -356,7 +356,7 @@ public class ActivityClusterPlanner {
     }
 
     private IConnectorPolicy assignConnectorPolicy(IConnectorDescriptor c, int nProducers, int nConsumers, int[] fanouts) {
-        IConnectorPolicyAssignmentPolicy cpap = scheduler.getJobRun().getJobActivityGraph().getJobSpecification()
+        IConnectorPolicyAssignmentPolicy cpap = scheduler.getJobRun().getJobActivityGraph()
                 .getConnectorPolicyAssignmentPolicy();
         if (cpap != null) {
             return cpap.getConnectorPolicyAssignment(c, nProducers, nConsumers, fanouts);
@@ -368,6 +368,7 @@ public class ActivityClusterPlanner {
             throws HyracksException {
         PartitionConstraintSolver solver = scheduler.getSolver();
         JobRun jobRun = scheduler.getJobRun();
+        JobActivityGraph jag = jobRun.getJobActivityGraph();
         Set<LValueConstraintExpression> lValues = new HashSet<LValueConstraintExpression>();
         for (ActivityId anId : ac.getActivities()) {
             lValues.add(new PartitionCountExpression(anId.getOperatorDescriptorId()));
@@ -393,22 +394,25 @@ public class ActivityClusterPlanner {
         for (ActivityId anId : ac.getActivities()) {
             int nParts = nPartMap.get(anId.getOperatorDescriptorId());
             int[] nInputPartitions = null;
-            List<IConnectorDescriptor> inputs = jobRun.getJobActivityGraph().getActivityInputConnectorDescriptors(anId);
+            List<IConnectorDescriptor> inputs = jag.getActivityInputMap().get(anId);
             if (inputs != null) {
                 nInputPartitions = new int[inputs.size()];
                 for (int i = 0; i < nInputPartitions.length; ++i) {
-                    nInputPartitions[i] = nPartMap.get(jobRun.getJobActivityGraph()
-                            .getProducerActivity(inputs.get(i).getConnectorId()).getOperatorDescriptorId());
+                    ConnectorDescriptorId cdId = inputs.get(i).getConnectorId();
+                    ActivityId aid = jag.getProducerActivity(cdId);
+                    Integer nPartInt = nPartMap.get(aid.getOperatorDescriptorId());
+                    nInputPartitions[i] = nPartInt;
                 }
             }
             int[] nOutputPartitions = null;
-            List<IConnectorDescriptor> outputs = jobRun.getJobActivityGraph().getActivityOutputConnectorDescriptors(
-                    anId);
+            List<IConnectorDescriptor> outputs = jag.getActivityOutputMap().get(anId);
             if (outputs != null) {
                 nOutputPartitions = new int[outputs.size()];
                 for (int i = 0; i < nOutputPartitions.length; ++i) {
-                    nOutputPartitions[i] = nPartMap.get(jobRun.getJobActivityGraph()
-                            .getConsumerActivity(outputs.get(i).getConnectorId()).getOperatorDescriptorId());
+                    ConnectorDescriptorId cdId = outputs.get(i).getConnectorId();
+                    ActivityId aid = jag.getConsumerActivity(cdId);
+                    Integer nPartInt = nPartMap.get(aid.getOperatorDescriptorId());
+                    nOutputPartitions[i] = nPartInt;
                 }
             }
             ActivityPartitionDetails apd = new ActivityPartitionDetails(nParts, nInputPartitions, nOutputPartitions);

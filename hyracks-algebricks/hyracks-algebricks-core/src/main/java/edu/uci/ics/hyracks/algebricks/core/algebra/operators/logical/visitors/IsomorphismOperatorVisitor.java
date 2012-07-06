@@ -15,7 +15,6 @@
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -268,8 +267,7 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         if (aop.getOperatorTag() != LogicalOperatorTag.PARTITIONINGSPLIT)
             return Boolean.FALSE;
         PartitioningSplitOperator partitionOpArg = (PartitioningSplitOperator) copyAndSubstituteVar(op, arg);
-        boolean isomorphic = compareExpressions(Arrays.asList(op.getExpressions()),
-                Arrays.asList(partitionOpArg.getExpressions()));
+        boolean isomorphic = compareExpressions(op.getExpressions(), partitionOpArg.getExpressions());
         return isomorphic;
     }
 
@@ -686,8 +684,8 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         public ILogicalOperator visitPartitioningSplitOperator(PartitioningSplitOperator op, Void arg)
                 throws AlgebricksException {
             ArrayList<Mutable<ILogicalExpression>> newExpressions = new ArrayList<Mutable<ILogicalExpression>>();
-            deepCopyExpressionRefs(newExpressions, Arrays.asList(op.getExpressions()));
-            return new PartitioningSplitOperator(newExpressions.toArray(new Mutable[0]), op.hasDefault());
+            deepCopyExpressionRefs(newExpressions, op.getExpressions());
+            return new PartitioningSplitOperator(newExpressions, op.getDefaultBranchIndex());
         }
 
         @Override
@@ -734,7 +732,7 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             ArrayList<LogicalVariable> newInputList = new ArrayList<LogicalVariable>();
             newInputList.addAll(op.getVariables());
             return new UnnestMapOperator(newInputList, deepCopyExpressionRef(op.getExpressionRef()),
-                    new ArrayList<Object>(op.getVariableTypes()));
+                    new ArrayList<Object>(op.getVariableTypes()), op.propagatesInput());
         }
 
         @Override

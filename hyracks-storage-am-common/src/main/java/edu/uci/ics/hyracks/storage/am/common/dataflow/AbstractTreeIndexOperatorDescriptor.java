@@ -42,6 +42,7 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 	protected final IIndexDataflowHelperFactory dataflowHelperFactory;
 	protected final ITupleFilterFactory tupleFilterFactory;
 	
+	protected final boolean retainInput;
     protected final IOperationCallbackProvider opCallbackProvider;
 
 	public AbstractTreeIndexOperatorDescriptor(IOperatorDescriptorRegistry spec,
@@ -53,7 +54,7 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 			IBinaryComparatorFactory[] comparatorFactories,
 			IIndexDataflowHelperFactory dataflowHelperFactory,
 			ITupleFilterFactory tupleFilterFactory,
-			IOperationCallbackProvider opCallbackProvider) {
+			boolean retainInput, IOperationCallbackProvider opCallbackProvider) {
 		super(spec, inputArity, outputArity);
 		this.fileSplitProvider = fileSplitProvider;
 		this.storageManager = storageManager;
@@ -61,6 +62,7 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 		this.typeTraits = typeTraits;
 		this.comparatorFactories = comparatorFactories;
 		this.dataflowHelperFactory = dataflowHelperFactory;
+		this.retainInput = retainInput;
 		this.tupleFilterFactory = tupleFilterFactory;
         this.opCallbackProvider = opCallbackProvider;
 		if (outputArity > 0) {
@@ -101,6 +103,11 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends
 	@Override
 	public IIndexDataflowHelperFactory getIndexDataflowHelperFactory() {
 		return dataflowHelperFactory;
+	}
+	
+	@Override
+	public boolean getRetainInput() {
+		return retainInput;
 	}
 	
 	@Override

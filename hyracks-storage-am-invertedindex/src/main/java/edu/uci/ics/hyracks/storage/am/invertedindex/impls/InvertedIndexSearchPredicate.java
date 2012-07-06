@@ -19,15 +19,18 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
+import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
 
 public class InvertedIndexSearchPredicate implements ISearchPredicate {
     private static final long serialVersionUID = 1L;
 
     private ITupleReference queryTuple;
     private int queryFieldIndex;
-    private final IInvertedIndexSearchModifier searchModifier;
+    private final IBinaryTokenizer queryTokenizer;
+    private final IInvertedIndexSearchModifier searchModifier;    
     
-    public InvertedIndexSearchPredicate(IInvertedIndexSearchModifier searchModifier) {
+    public InvertedIndexSearchPredicate(IBinaryTokenizer queryTokenizer, IInvertedIndexSearchModifier searchModifier) {
+        this.queryTokenizer = queryTokenizer;
         this.searchModifier = searchModifier;
     }
     
@@ -49,6 +52,10 @@ public class InvertedIndexSearchPredicate implements ISearchPredicate {
     
     public IInvertedIndexSearchModifier getSearchModifier() {
         return searchModifier;
+    }
+    
+    public IBinaryTokenizer getQueryTokenizer() {
+        return queryTokenizer;
     }
     
     @Override

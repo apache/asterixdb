@@ -32,5 +32,7 @@ public interface IIndexOperatorDescriptor extends IActivity {
     
     public IIndexDataflowHelperFactory getIndexDataflowHelperFactory();
     
+    public boolean getRetainInput();
+    
     public IOperationCallbackProvider getOpCallbackProvider();
 }

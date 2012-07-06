@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
-import java.util.List;
-
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
@@ -32,6 +30,14 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLog
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
+/**
+ * Matches the following operator pattern:
+ * (select) <-- ((assign)* <-- (select)*)+
+ * 
+ * Consolidates the selects to:
+ * (select) <-- (assign)*
+ *
+ */
 public class ConsolidateSelectsRule implements IAlgebraicRewriteRule {
 
     @Override
@@ -41,39 +47,63 @@ public class ConsolidateSelectsRule implements IAlgebraicRewriteRule {
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+    	AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.SELECT) {
             return false;
         }
-        SelectOperator select = (SelectOperator) op;
-
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) select.getInputs().get(0).getValue();
-        if (op2.getOperatorTag() != LogicalOperatorTag.SELECT) {
-            return false;
-        }
+        SelectOperator firstSelect = (SelectOperator) op;
 
         IFunctionInfo andFn = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.AND);
-        AbstractFunctionCallExpression conj = new ScalarFunctionCallExpression(andFn);
-        conj.getArguments().add(new MutableObject<ILogicalExpression>(select.getCondition().getValue()));
-        conj.getArguments().add(((SelectOperator) op2).getCondition());
-
-        Mutable<ILogicalOperator> botOpRef = select.getInputs().get(0);
-        boolean more = true;
-        while (more) {
-            botOpRef = botOpRef.getValue().getInputs().get(0);
-            AbstractLogicalOperator botOp = (AbstractLogicalOperator) botOpRef.getValue();
-            if (botOp.getOperatorTag() == LogicalOperatorTag.SELECT) {
-                conj.getArguments().add(((SelectOperator) botOp).getCondition());
-            } else {
-                more = false;
+        // New conjuncts for consolidated select.
+        AbstractFunctionCallExpression conj = null;        
+        AbstractLogicalOperator topMostOp = null;
+        AbstractLogicalOperator selectParent = null;
+        AbstractLogicalOperator nextSelect = firstSelect;
+		do {
+        	// Skip through assigns.
+            do {
+            	selectParent = nextSelect;
+            	nextSelect = (AbstractLogicalOperator) selectParent.getInputs().get(0).getValue();
+            } while (nextSelect.getOperatorTag() == LogicalOperatorTag.ASSIGN);
+            // Stop if the child op is not a select.
+            if (nextSelect.getOperatorTag() != LogicalOperatorTag.SELECT) {
+        		break;
+        	}
+            // Remember the top-most op that we are not removing.
+            topMostOp = selectParent;
+            
+            // Initialize the new conjuncts, if necessary.
+            if (conj == null) {
+            	conj = new ScalarFunctionCallExpression(andFn);
+            	// Add the first select's condition.
+            	conj.getArguments().add(new MutableObject<ILogicalExpression>(firstSelect.getCondition().getValue()));
             }
+            
+            // Consolidate all following selects.
+            do {
+                // Add the condition nextSelect to the new list of conjuncts.
+                conj.getArguments().add(((SelectOperator) nextSelect).getCondition());
+                selectParent = nextSelect;
+                nextSelect = (AbstractLogicalOperator) nextSelect.getInputs().get(0).getValue();
+            } while (nextSelect.getOperatorTag() == LogicalOperatorTag.SELECT);
+            
+            // Hook up the input of the top-most remaining op if necessary.
+            if (topMostOp.getOperatorTag() == LogicalOperatorTag.ASSIGN || topMostOp == firstSelect) {
+            	topMostOp.getInputs().set(0, selectParent.getInputs().get(0));
+            }
+            
+            // Prepare for next iteration.
+            nextSelect = selectParent;
+        } while (true);
+		
+		// Did we consolidate any selects?
+        if (conj == null) {
+        	return false;
         }
-        select.getCondition().setValue(conj);
-        List<Mutable<ILogicalOperator>> selInptList = select.getInputs();
-        selInptList.clear();
-        selInptList.add(botOpRef);
-        context.computeAndSetTypeEnvironmentForOperator(select);
+        
+        // Set the new conjuncts.
+        firstSelect.getCondition().setValue(conj);
+        context.computeAndSetTypeEnvironmentForOperator(firstSelect);
         return true;
     }
-
 }

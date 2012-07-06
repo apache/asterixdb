@@ -54,10 +54,10 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
         MaterializerActivityNode ma = new MaterializerActivityNode(new ActivityId(odId, MATERIALIZER_ACTIVITY_ID));
         ReaderActivityNode ra = new ReaderActivityNode(new ActivityId(odId, READER_ACTIVITY_ID));
 
-        builder.addActivity(ma);
+        builder.addActivity(this, ma);
         builder.addSourceEdge(0, ma, 0);
 
-        builder.addActivity(ra);
+        builder.addActivity(this, ra);
         builder.addTargetEdge(0, ra, 0);
 
         builder.addBlockingEdge(ma, ra);

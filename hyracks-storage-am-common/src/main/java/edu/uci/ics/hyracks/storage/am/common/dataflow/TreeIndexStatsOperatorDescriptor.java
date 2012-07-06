@@ -38,7 +38,7 @@ public class TreeIndexStatsOperatorDescriptor extends AbstractTreeIndexOperatorD
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories,
             IIndexDataflowHelperFactory dataflowHelperFactory, IOperationCallbackProvider opCallbackProvider) {
         super(spec, 0, 1, recDesc, storageManager, indexRegistryProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, dataflowHelperFactory, null, opCallbackProvider);
+                comparatorFactories, dataflowHelperFactory, null, false, opCallbackProvider);
     }
 
     @Override

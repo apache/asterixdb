@@ -40,7 +40,7 @@ public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
         UnionActivityNode uba = new UnionActivityNode(new ActivityId(getOperatorId(), 0));
-        builder.addActivity(uba);
+        builder.addActivity(this, uba);
         for (int i = 0; i < inputArity; ++i) {
             builder.addSourceEdge(i, uba, i);
         }
@@ -58,7 +58,7 @@ public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
         public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
                 throws HyracksDataException {
-            RecordDescriptor inRecordDesc = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
+            RecordDescriptor inRecordDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
             return new UnionOperator(ctx, inRecordDesc);
         }
     }

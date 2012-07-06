@@ -46,7 +46,6 @@ import edu.uci.ics.hyracks.control.cc.work.ApplicationStateChangeWork;
 import edu.uci.ics.hyracks.control.cc.work.GetIpAddressNodeNameMapWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobStatusWork;
 import edu.uci.ics.hyracks.control.cc.work.GetNodeControllersInfoWork;
-import edu.uci.ics.hyracks.control.cc.work.JobCreateWork;
 import edu.uci.ics.hyracks.control.cc.work.JobStartWork;
 import edu.uci.ics.hyracks.control.cc.work.JobletCleanupNotificationWork;
 import edu.uci.ics.hyracks.control.cc.work.NodeHeartbeatWork;
@@ -282,14 +281,6 @@ public class ClusterControllerService extends AbstractRemoteService {
                     return;
                 }
 
-                case CREATE_JOB: {
-                    HyracksClientInterfaceFunctions.CreateJobFunction cjf = (HyracksClientInterfaceFunctions.CreateJobFunction) fn;
-                    JobId jobId = createJobId();
-                    workQueue.schedule(new JobCreateWork(ClusterControllerService.this, jobId, cjf.getAppName(), cjf
-                            .getJobSpec(), cjf.getJobFlags(), new IPCResponder<JobId>(handle, mid)));
-                    return;
-                }
-
                 case GET_JOB_STATUS: {
                     HyracksClientInterfaceFunctions.GetJobStatusFunction gjsf = (HyracksClientInterfaceFunctions.GetJobStatusFunction) fn;
                     workQueue.schedule(new GetJobStatusWork(ClusterControllerService.this, gjsf.getJobId(),
@@ -299,8 +290,9 @@ public class ClusterControllerService extends AbstractRemoteService {
 
                 case START_JOB: {
                     HyracksClientInterfaceFunctions.StartJobFunction sjf = (HyracksClientInterfaceFunctions.StartJobFunction) fn;
-                    workQueue.schedule(new JobStartWork(ClusterControllerService.this, sjf.getJobId(),
-                            new IPCResponder<Object>(handle, mid)));
+                    JobId jobId = createJobId();
+                    workQueue.schedule(new JobStartWork(ClusterControllerService.this, sjf.getAppName(), sjf
+                            .getJobSpec(), sjf.getJobFlags(), jobId, new IPCResponder<JobId>(handle, mid)));
                     return;
                 }
 

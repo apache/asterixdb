@@ -42,10 +42,17 @@ public class BTreeUpdateSearchOperatorNodePushable extends BTreeSearchOperatorNo
     }
 
     @Override
-    protected void writeSearchResults() throws Exception {
+    protected void writeSearchResults(int tupleIndex) throws Exception {
         while (cursor.hasNext()) {
             tb.reset();
             cursor.next();
+            if (retainInput) {
+            	frameTuple.reset(accessor, tupleIndex);
+                for (int i = 0; i < frameTuple.getFieldCount(); i++) {
+                	dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
+                    tb.addFieldEndOffset();
+                }
+            }
             ITupleReference tuple = cursor.getTuple();
             tupleUpdater.updateTuple(tuple);
             for (int i = 0; i < tuple.getFieldCount(); i++) {

@@ -105,37 +105,6 @@ public class HyracksClientInterfaceFunctions {
         }
     }
 
-    public static class CreateJobFunction extends Function {
-        private static final long serialVersionUID = 1L;
-
-        private final String appName;
-        private final byte[] jobSpec;
-        private final EnumSet<JobFlag> jobFlags;
-
-        public CreateJobFunction(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) {
-            this.appName = appName;
-            this.jobSpec = jobSpec;
-            this.jobFlags = jobFlags;
-        }
-
-        @Override
-        public FunctionId getFunctionId() {
-            return FunctionId.CREATE_JOB;
-        }
-
-        public String getAppName() {
-            return appName;
-        }
-
-        public byte[] getJobSpec() {
-            return jobSpec;
-        }
-
-        public EnumSet<JobFlag> getJobFlags() {
-            return jobFlags;
-        }
-    }
-
     public static class GetJobStatusFunction extends Function {
         private static final long serialVersionUID = 1L;
 
@@ -158,10 +127,14 @@ public class HyracksClientInterfaceFunctions {
     public static class StartJobFunction extends Function {
         private static final long serialVersionUID = 1L;
 
-        private final JobId jobId;
+        private final String appName;
+        private final byte[] jobSpec;
+        private final EnumSet<JobFlag> jobFlags;
 
-        public StartJobFunction(JobId jobId) {
-            this.jobId = jobId;
+        public StartJobFunction(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) {
+            this.appName = appName;
+            this.jobSpec = jobSpec;
+            this.jobFlags = jobFlags;
         }
 
         @Override
@@ -169,8 +142,16 @@ public class HyracksClientInterfaceFunctions {
             return FunctionId.START_JOB;
         }
 
-        public JobId getJobId() {
-            return jobId;
+        public String getAppName() {
+            return appName;
+        }
+
+        public byte[] getJobSpec() {
+            return jobSpec;
+        }
+
+        public EnumSet<JobFlag> getJobFlags() {
+            return jobFlags;
         }
     }
 

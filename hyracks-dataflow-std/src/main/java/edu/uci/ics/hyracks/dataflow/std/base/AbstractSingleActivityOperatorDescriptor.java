@@ -36,7 +36,7 @@ public abstract class AbstractSingleActivityOperatorDescriptor extends AbstractO
 
     @Override
     public final void contributeActivities(IActivityGraphBuilder builder) {
-        builder.addActivity(this);
+        builder.addActivity(this, this);
         for (int i = 0; i < getInputArity(); ++i) {
             builder.addSourceEdge(i, this, i);
         }

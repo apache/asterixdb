@@ -122,8 +122,7 @@ public class ExternalGroupClient {
 
             System.out.print(i + "\t" + (System.currentTimeMillis() - start));
             start = System.currentTimeMillis();
-            JobId jobId = hcc.createJob(options.app, job);
-            hcc.start(jobId);
+            JobId jobId = hcc.startJob(options.app, job);
             hcc.waitForCompletion(jobId);
             System.out.println("\t" + (System.currentTimeMillis() - start));
         }
@@ -201,8 +200,8 @@ public class ExternalGroupClient {
 
         switch (alg) {
             case 0: // new external hash graph
-                grouper = new edu.uci.ics.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor(spec, keys,
-                        framesLimit, new IBinaryComparatorFactory[] {
+                grouper = new edu.uci.ics.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor(spec,
+                        keys, framesLimit, new IBinaryComparatorFactory[] {
                         // PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
                         new IntegerNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
@@ -238,8 +237,8 @@ public class ExternalGroupClient {
                         PointableBinaryHashFunctionFactory.of(IntegerPointable.FACTORY) }));
                 spec.connect(scanSortConn2, fileScanner, 0, sorter2, 0);
 
-                grouper = new edu.uci.ics.hyracks.dataflow.std.group.preclustered.PreclusteredGroupOperatorDescriptor(spec, keys,
-                        new IBinaryComparatorFactory[] {
+                grouper = new edu.uci.ics.hyracks.dataflow.std.group.preclustered.PreclusteredGroupOperatorDescriptor(
+                        spec, keys, new IBinaryComparatorFactory[] {
                         // PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
                         new MultiFieldsAggregatorFactory(
@@ -274,8 +273,8 @@ public class ExternalGroupClient {
                 spec.connect(scanConn2, fileScanner, 0, grouper, 0);
                 break;
             default:
-                grouper = new edu.uci.ics.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor(spec, keys,
-                        framesLimit, new IBinaryComparatorFactory[] {
+                grouper = new edu.uci.ics.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor(spec,
+                        keys, framesLimit, new IBinaryComparatorFactory[] {
                         // PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
                         new IntegerNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(

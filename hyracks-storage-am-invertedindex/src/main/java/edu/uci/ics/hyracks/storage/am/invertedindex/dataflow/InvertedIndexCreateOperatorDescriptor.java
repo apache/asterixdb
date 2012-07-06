@@ -42,7 +42,7 @@ public class InvertedIndexCreateOperatorDescriptor extends AbstractInvertedIndex
             IOperationCallbackProvider opCallbackProvider) {
         super(spec, 0, 0, null, storageManager, btreeFileSplitProvider, invListsFileSplitProvider,
                 indexRegistryProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
-                invListComparatorFactories, tokenizerFactory, btreeDataflowHelperFactory, opCallbackProvider);
+                invListComparatorFactories, tokenizerFactory, btreeDataflowHelperFactory, false, opCallbackProvider);
     }
 
     @Override

@@ -48,7 +48,6 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.UTF8WordTokenFact
  * queries from a list of predefined tokens in the index, and measure the
  * performance of executing them with different search modifiers. We test the
  * ConjunctiveSearchModifier and the JaccardSearchModifier.
- * 
  */
 public class SearchPerfTest extends AbstractInvIndexSearchTest {
 
@@ -114,7 +113,6 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
      * Determine the expected results with the ScanCount algorithm. The
      * ScanCount algorithm is very simple, so we can be confident the results
      * are correct.
-     * 
      */
     protected void fillExpectedResults(int[] queryTokenIndexes, int numQueryTokens, int occurrenceThreshold) {
         // reset scan count array
@@ -145,15 +143,13 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
      * tokens. We run each query, measure it's time, and verify it's results
      * against the results produced by ScanCount, implemented in
      * fillExpectedResults().
-     * 
      */
     private void runQueries(IInvertedIndexSearchModifier searchModifier, int numQueries) throws Exception {
-
         rnd.setSeed(50);
 
         InvertedIndexAccessor accessor = (InvertedIndexAccessor) invIndex.createAccessor(
                 NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-        InvertedIndexSearchPredicate searchPred = new InvertedIndexSearchPredicate(searchModifier);
+        InvertedIndexSearchPredicate searchPred = new InvertedIndexSearchPredicate(tokenizer, searchModifier);
 
         // generate random queries
         int[] queryTokenIndexes = new int[tokens.size()];
@@ -240,7 +236,6 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
     /**
      * Runs 50 random conjunctive search queries to test the
      * ConjunctiveSearchModifier.
-     * 
      */
     @Test
     public void conjunctiveKeywordQueryTest() throws Exception {
@@ -251,7 +246,6 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
     /**
      * Runs 50 random jaccard-based search queries with thresholds 1.0, 0.9,
      * 0.8, 0.7, 0.6, 0.5. Tests the JaccardSearchModifier.
-     * 
      */
     @Test
     public void jaccardKeywordQueryTest() throws Exception {

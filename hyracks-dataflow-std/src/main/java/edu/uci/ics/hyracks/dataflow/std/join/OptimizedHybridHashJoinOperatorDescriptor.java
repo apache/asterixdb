@@ -93,7 +93,6 @@ import edu.uci.ics.hyracks.dataflow.std.structures.SerializableHashTable;
  */
 
 public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
-
     private static final int BUILD_AND_PARTITION_ACTIVITY_ID = 0;
     private static final int PARTITION_AND_JOIN_ACTIVITY_ID = 1;
 
@@ -162,15 +161,15 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
-        PartitionAndBuildActivityNode phase1 = new PartitionAndBuildActivityNode(new ActivityId(odId,
-                BUILD_AND_PARTITION_ACTIVITY_ID));
-        ProbeAndJoinActivityNode phase2 = new ProbeAndJoinActivityNode(new ActivityId(odId,
-                PARTITION_AND_JOIN_ACTIVITY_ID));
+        ActivityId buildAid = new ActivityId(odId, BUILD_AND_PARTITION_ACTIVITY_ID);
+        ActivityId probeAid = new ActivityId(odId, PARTITION_AND_JOIN_ACTIVITY_ID);
+        PartitionAndBuildActivityNode phase1 = new PartitionAndBuildActivityNode(buildAid, probeAid);
+        ProbeAndJoinActivityNode phase2 = new ProbeAndJoinActivityNode(probeAid, buildAid);
 
-        builder.addActivity(phase1);
+        builder.addActivity(this, phase1);
         builder.addSourceEdge(0, phase1, 0);
 
-        builder.addActivity(phase2);
+        builder.addActivity(this, phase2);
         builder.addSourceEdge(1, phase2, 0);
 
         builder.addBlockingEdge(phase1, phase2);
@@ -236,16 +235,19 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     private class PartitionAndBuildActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        public PartitionAndBuildActivityNode(ActivityId id) {
+        private final ActivityId probeAid;
+
+        public PartitionAndBuildActivityNode(ActivityId id, ActivityId probeAid) {
             super(id);
+            this.probeAid = probeAid;
         }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions) {
 
-            final RecordDescriptor probeRd = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
-            final RecordDescriptor buildRd = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 1);
+            final RecordDescriptor probeRd = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
+            final RecordDescriptor buildRd = recordDescProvider.getInputRecordDescriptor(probeAid, 0);
 
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; i++) {
@@ -314,16 +316,19 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
         private static final long serialVersionUID = 1L;
 
-        public ProbeAndJoinActivityNode(ActivityId id) {
+        private final ActivityId buildAid;
+
+        public ProbeAndJoinActivityNode(ActivityId id, ActivityId buildAid) {
             super(id);
+            this.buildAid = buildAid;
         }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions) {
 
-            final RecordDescriptor probeRd = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
-            final RecordDescriptor buildRd = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 1);
+            final RecordDescriptor probeRd = recordDescProvider.getInputRecordDescriptor(buildAid, 0);
+            final RecordDescriptor buildRd = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             final ITuplePairComparator nljComparator0 = tuplePairComparatorFactory0.createTuplePairComparator(ctx);
             final ITuplePairComparator nljComparator1 = tuplePairComparatorFactory1.createTuplePairComparator(ctx);

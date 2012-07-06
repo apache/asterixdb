@@ -45,11 +45,12 @@ public class InvertedIndexSearchOperatorDescriptor extends AbstractInvertedIndex
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenComparatorFactories,
             ITypeTraits[] invListsTypeTraits, IBinaryComparatorFactory[] invListComparatorFactories,
             IIndexDataflowHelperFactory btreeDataflowHelperFactory, IBinaryTokenizerFactory queryTokenizerFactory,
-            IInvertedIndexSearchModifierFactory searchModifierFactory, RecordDescriptor recDesc,
+            IInvertedIndexSearchModifierFactory searchModifierFactory, RecordDescriptor recDesc, boolean retainInput,
             IOperationCallbackProvider opCallbackProvider) {
         super(spec, 1, 1, recDesc, storageManager, btreeFileSplitProvider, invListsFileSplitProvider,
                 indexRegistryProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
-                invListComparatorFactories, queryTokenizerFactory, btreeDataflowHelperFactory, opCallbackProvider);
+                invListComparatorFactories, queryTokenizerFactory, btreeDataflowHelperFactory, retainInput,
+                opCallbackProvider);
         this.queryField = queryField;
         this.searchModifierFactory = searchModifierFactory;
     }

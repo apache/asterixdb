@@ -81,7 +81,7 @@ public class UnnestPOperator extends AbstractScanPOperator {
                 context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas, context);
         int[] projectionList = JobGenHelper.projectAllVariables(opSchema);
         UnnestRuntimeFactory unnestRuntime = new UnnestRuntimeFactory(outCol, unnestingFactory, projectionList);
-        RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, opSchema, context);
+        RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
         builder.contributeMicroOperator(unnest, unnestRuntime, recDesc);
         ILogicalOperator src = unnest.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, unnest, 0);

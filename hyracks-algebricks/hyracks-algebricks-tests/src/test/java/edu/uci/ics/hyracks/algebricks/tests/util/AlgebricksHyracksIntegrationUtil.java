@@ -79,9 +79,8 @@ public class AlgebricksHyracksIntegrationUtil {
     }
 
     public static void runJob(JobSpecification spec) throws Exception {
-        JobId jobId = hcc.createJob(AlgebricksConfig.HYRACKS_APP_NAME, spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         AlgebricksConfig.ALGEBRICKS_LOGGER.info(spec.toJSON().toString());
-        hcc.start(jobId);
+        JobId jobId = hcc.startJob(AlgebricksConfig.HYRACKS_APP_NAME, spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         AlgebricksConfig.ALGEBRICKS_LOGGER.info(jobId.toString());
         hcc.waitForCompletion(jobId);
     }

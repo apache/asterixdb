@@ -15,7 +15,6 @@
 package edu.uci.ics.hyracks.api.job;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -31,8 +30,7 @@ import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
+import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
 public class JobActivityGraph implements Serializable {
@@ -40,54 +38,63 @@ public class JobActivityGraph implements Serializable {
 
     private final String appName;
 
-    private final JobSpecification jobSpec;
-
     private final EnumSet<JobFlag> jobFlags;
 
-    private final Map<ActivityId, IActivity> activityNodes;
+    private final Map<ActivityId, IActivity> activityMap;
+
+    private final Map<ConnectorDescriptorId, IConnectorDescriptor> connectorMap;
+
+    private final Map<ConnectorDescriptorId, RecordDescriptor> connectorRecordDescriptorMap;
+
+    private final Map<ActivityId, List<IConnectorDescriptor>> activityInputMap;
+
+    private final Map<ActivityId, List<IConnectorDescriptor>> activityOutputMap;
+
+    private final Map<ConnectorDescriptorId, Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>> connectorActivityMap;
 
     private final Map<ActivityId, Set<ActivityId>> blocker2blockedMap;
 
     private final Map<ActivityId, Set<ActivityId>> blocked2blockerMap;
 
-    private final Map<OperatorDescriptorId, Set<ActivityId>> operatorActivityMap;
+    private IConnectorPolicyAssignmentPolicy connectorPolicyAssignmentPolicy;
 
-    private final Map<ActivityId, List<Integer>> activityInputMap;
+    private int maxReattempts;
 
-    private final Map<ActivityId, List<Integer>> activityOutputMap;
+    private IJobletEventListenerFactory jobletEventListenerFactory;
 
-    private final Map<OperatorDescriptorId, List<ActivityId>> operatorInputMap;
+    private IGlobalJobDataFactory globalJobDataFactory;
 
-    private final Map<OperatorDescriptorId, List<ActivityId>> operatorOutputMap;
-
-    public JobActivityGraph(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) {
+    public JobActivityGraph(String appName, EnumSet<JobFlag> jobFlags) {
         this.appName = appName;
-        this.jobSpec = jobSpec;
         this.jobFlags = jobFlags;
-        activityNodes = new HashMap<ActivityId, IActivity>();
+        activityMap = new HashMap<ActivityId, IActivity>();
+        connectorMap = new HashMap<ConnectorDescriptorId, IConnectorDescriptor>();
+        connectorRecordDescriptorMap = new HashMap<ConnectorDescriptorId, RecordDescriptor>();
+        activityInputMap = new HashMap<ActivityId, List<IConnectorDescriptor>>();
+        activityOutputMap = new HashMap<ActivityId, List<IConnectorDescriptor>>();
+        connectorActivityMap = new HashMap<ConnectorDescriptorId, Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>>();
         blocker2blockedMap = new HashMap<ActivityId, Set<ActivityId>>();
         blocked2blockerMap = new HashMap<ActivityId, Set<ActivityId>>();
-        operatorActivityMap = new HashMap<OperatorDescriptorId, Set<ActivityId>>();
-        activityInputMap = new HashMap<ActivityId, List<Integer>>();
-        activityOutputMap = new HashMap<ActivityId, List<Integer>>();
-        operatorInputMap = new HashMap<OperatorDescriptorId, List<ActivityId>>();
-        operatorOutputMap = new HashMap<OperatorDescriptorId, List<ActivityId>>();
     }
 
     public String getApplicationName() {
         return appName;
     }
 
-    public JobSpecification getJobSpecification() {
-        return jobSpec;
-    }
-
     public EnumSet<JobFlag> getJobFlags() {
         return jobFlags;
     }
 
-    public Map<ActivityId, IActivity> getActivityNodeMap() {
-        return activityNodes;
+    public Map<ActivityId, IActivity> getActivityMap() {
+        return activityMap;
+    }
+
+    public Map<ConnectorDescriptorId, IConnectorDescriptor> getConnectorMap() {
+        return connectorMap;
+    }
+
+    public Map<ConnectorDescriptorId, RecordDescriptor> getConnectorRecordDescriptorMap() {
+        return connectorRecordDescriptorMap;
     }
 
     public Map<ActivityId, Set<ActivityId>> getBlocker2BlockedMap() {
@@ -98,106 +105,64 @@ public class JobActivityGraph implements Serializable {
         return blocked2blockerMap;
     }
 
-    public Map<OperatorDescriptorId, Set<ActivityId>> getOperatorActivityMap() {
-        return operatorActivityMap;
-    }
-
-    public Map<ActivityId, List<Integer>> getActivityInputMap() {
+    public Map<ActivityId, List<IConnectorDescriptor>> getActivityInputMap() {
         return activityInputMap;
     }
 
-    public Map<ActivityId, List<Integer>> getActivityOutputMap() {
+    public Map<ActivityId, List<IConnectorDescriptor>> getActivityOutputMap() {
         return activityOutputMap;
     }
 
-    public Map<OperatorDescriptorId, List<ActivityId>> getOperatorInputMap() {
-        return operatorInputMap;
-    }
-
-    public Map<OperatorDescriptorId, List<ActivityId>> getOperatorOutputMap() {
-        return operatorOutputMap;
-    }
-
-    public List<IConnectorDescriptor> getActivityInputConnectorDescriptors(ActivityId hanId) {
-        List<Integer> inputIndexes = activityInputMap.get(hanId);
-        if (inputIndexes == null) {
-            return null;
-        }
-        OperatorDescriptorId ownerId = hanId.getOperatorDescriptorId();
-        List<IConnectorDescriptor> inputs = new ArrayList<IConnectorDescriptor>();
-        for (Integer i : inputIndexes) {
-            inputs.add(jobSpec.getInputConnectorDescriptor(ownerId, i));
-        }
-        return inputs;
-    }
-
-    public List<IConnectorDescriptor> getActivityOutputConnectorDescriptors(ActivityId hanId) {
-        List<Integer> outputIndexes = activityOutputMap.get(hanId);
-        if (outputIndexes == null) {
-            return null;
-        }
-        OperatorDescriptorId ownerId = hanId.getOperatorDescriptorId();
-        List<IConnectorDescriptor> outputs = new ArrayList<IConnectorDescriptor>();
-        for (Integer i : outputIndexes) {
-            outputs.add(jobSpec.getOutputConnectorDescriptor(ownerId, i));
-        }
-        return outputs;
+    public Map<ConnectorDescriptorId, Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>> getConnectorActivityMap() {
+        return connectorActivityMap;
     }
 
     public ActivityId getConsumerActivity(ConnectorDescriptorId cdId) {
-        Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connEdge = jobSpec
-                .getConnectorOperatorMap().get(cdId);
-
-        OperatorDescriptorId consumerOpId = connEdge.getRight().getLeft().getOperatorId();
-        int consumerInputIdx = connEdge.getRight().getRight();
-
-        for (ActivityId anId : operatorActivityMap.get(consumerOpId)) {
-            List<Integer> anInputs = activityInputMap.get(anId);
-            if (anInputs != null) {
-                for (Integer idx : anInputs) {
-                    if (idx.intValue() == consumerInputIdx) {
-                        return anId;
-                    }
-                }
-            }
-        }
-        return null;
+        Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>> connEdge = connectorActivityMap.get(cdId);
+        return connEdge.getRight().getLeft().getActivityId();
     }
 
     public ActivityId getProducerActivity(ConnectorDescriptorId cdId) {
-        Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connEdge = jobSpec
-                .getConnectorOperatorMap().get(cdId);
-
-        OperatorDescriptorId producerOpId = connEdge.getLeft().getLeft().getOperatorId();
-        int producerInputIdx = connEdge.getLeft().getRight();
-
-        for (ActivityId anId : operatorActivityMap.get(producerOpId)) {
-            List<Integer> anOutputs = activityOutputMap.get(anId);
-            if (anOutputs != null) {
-                for (Integer idx : anOutputs) {
-                    if (idx.intValue() == producerInputIdx) {
-                        return anId;
-                    }
-                }
-            }
-        }
-        return null;
+        Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>> connEdge = connectorActivityMap.get(cdId);
+        return connEdge.getLeft().getLeft().getActivityId();
     }
 
-    public RecordDescriptor getActivityInputRecordDescriptor(ActivityId hanId, int inputIndex) {
-        int opInputIndex = getActivityInputMap().get(hanId).get(inputIndex);
-        return jobSpec.getOperatorInputRecordDescriptor(hanId.getOperatorDescriptorId(), opInputIndex);
+    public IConnectorPolicyAssignmentPolicy getConnectorPolicyAssignmentPolicy() {
+        return connectorPolicyAssignmentPolicy;
     }
 
-    public RecordDescriptor getActivityOutputRecordDescriptor(ActivityId hanId, int outputIndex) {
-        int opOutputIndex = getActivityOutputMap().get(hanId).get(outputIndex);
-        return jobSpec.getOperatorOutputRecordDescriptor(hanId.getOperatorDescriptorId(), opOutputIndex);
+    public void setConnectorPolicyAssignmentPolicy(IConnectorPolicyAssignmentPolicy connectorPolicyAssignmentPolicy) {
+        this.connectorPolicyAssignmentPolicy = connectorPolicyAssignmentPolicy;
+    }
+
+    public void setMaxReattempts(int maxReattempts) {
+        this.maxReattempts = maxReattempts;
+    }
+
+    public int getMaxReattempts() {
+        return maxReattempts;
+    }
+
+    public IJobletEventListenerFactory getJobletEventListenerFactory() {
+        return jobletEventListenerFactory;
+    }
+
+    public void setJobletEventListenerFactory(IJobletEventListenerFactory jobletEventListenerFactory) {
+        this.jobletEventListenerFactory = jobletEventListenerFactory;
+    }
+
+    public IGlobalJobDataFactory getGlobalJobDataFactory() {
+        return globalJobDataFactory;
+    }
+
+    public void setGlobalJobDataFactory(IGlobalJobDataFactory globalJobDataFactory) {
+        this.globalJobDataFactory = globalJobDataFactory;
     }
 
     @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder();
-        buffer.append("ActivityNodes: " + activityNodes);
+        buffer.append("ActivityNodes: " + activityMap);
         buffer.append('\n');
         buffer.append("Blocker->Blocked: " + blocker2blockedMap);
         buffer.append('\n');
@@ -212,13 +177,12 @@ public class JobActivityGraph implements Serializable {
         jplan.put("flags", jobFlags.toString());
 
         JSONArray jans = new JSONArray();
-        for (IActivity an : activityNodes.values()) {
+        for (IActivity an : activityMap.values()) {
             JSONObject jan = new JSONObject();
             jan.put("id", an.getActivityId().toString());
             jan.put("java-class", an.getClass().getName());
-            jan.put("operator-id", an.getActivityId().getOperatorDescriptorId().toString());
 
-            List<IConnectorDescriptor> inputs = getActivityInputConnectorDescriptors(an.getActivityId());
+            List<IConnectorDescriptor> inputs = activityInputMap.get(an.getActivityId());
             if (inputs != null) {
                 JSONArray jInputs = new JSONArray();
                 for (int i = 0; i < inputs.size(); ++i) {
@@ -230,7 +194,7 @@ public class JobActivityGraph implements Serializable {
                 jan.put("inputs", jInputs);
             }
 
-            List<IConnectorDescriptor> outputs = getActivityOutputConnectorDescriptors(an.getActivityId());
+            List<IConnectorDescriptor> outputs = activityOutputMap.get(an.getActivityId());
             if (outputs != null) {
                 JSONArray jOutputs = new JSONArray();
                 for (int i = 0; i < outputs.size(); ++i) {

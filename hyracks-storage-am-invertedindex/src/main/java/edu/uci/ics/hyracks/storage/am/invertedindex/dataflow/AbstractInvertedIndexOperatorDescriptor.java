@@ -44,6 +44,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     // General.
     protected final IStorageManagerInterface storageManager;
     protected final IIndexRegistryProvider<IIndex> indexRegistryProvider;
+    protected final boolean retainInput;
     protected final IOperationCallbackProvider opCallbackProvider;
     
     // Btree.
@@ -66,12 +67,13 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
             IIndexRegistryProvider<IIndex> indexRegistryProvider, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTraits[] invListsTypeTraits,
             IBinaryComparatorFactory[] invListComparatorFactories, IBinaryTokenizerFactory tokenizerFactory,
-            IIndexDataflowHelperFactory btreeDataflowHelperFactory, IOperationCallbackProvider opCallbackProvider) {
+            IIndexDataflowHelperFactory btreeDataflowHelperFactory, boolean retainInput, IOperationCallbackProvider opCallbackProvider) {
         super(spec, inputArity, outputArity);
 
         // General.
         this.storageManager = storageManager;
         this.indexRegistryProvider = indexRegistryProvider;
+        this.retainInput = retainInput;
         this.opCallbackProvider = opCallbackProvider;
         
         // Btree.
@@ -147,6 +149,11 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     @Override
     public IIndexDataflowHelperFactory getIndexDataflowHelperFactory() {
         return btreeDataflowHelperFactory;
+    }
+    
+    @Override
+    public boolean getRetainInput() {
+    	return retainInput;
     }
     
     @Override

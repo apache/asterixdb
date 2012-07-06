@@ -26,11 +26,11 @@ import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
 import edu.uci.ics.hyracks.api.comm.IPartitionWriterFactory;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
-import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
@@ -90,20 +90,22 @@ public class StartTasksWork extends SynchronizableWork {
 
             IRecordDescriptorProvider rdp = new IRecordDescriptorProvider() {
                 @Override
-                public RecordDescriptor getOutputRecordDescriptor(OperatorDescriptorId opId, int outputIndex) {
-                    return jag.getJobSpecification().getOperatorOutputRecordDescriptor(opId, outputIndex);
+                public RecordDescriptor getOutputRecordDescriptor(ActivityId aid, int outputIndex) {
+                    IConnectorDescriptor conn = jag.getActivityOutputMap().get(aid).get(outputIndex);
+                    return jag.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
                 }
 
                 @Override
-                public RecordDescriptor getInputRecordDescriptor(OperatorDescriptorId opId, int inputIndex) {
-                    return jag.getJobSpecification().getOperatorInputRecordDescriptor(opId, inputIndex);
+                public RecordDescriptor getInputRecordDescriptor(ActivityId aid, int inputIndex) {
+                    IConnectorDescriptor conn = jag.getActivityInputMap().get(aid).get(inputIndex);
+                    return jag.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
                 }
             };
 
             for (TaskAttemptDescriptor td : taskDescriptors) {
                 TaskAttemptId taId = td.getTaskAttemptId();
                 TaskId tid = taId.getTaskId();
-                IActivity han = jag.getActivityNodeMap().get(tid.getActivityId());
+                IActivity han = jag.getActivityMap().get(tid.getActivityId());
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Initializing " + taId + " -> " + han);
                 }
@@ -113,7 +115,7 @@ public class StartTasksWork extends SynchronizableWork {
 
                 List<IPartitionCollector> collectors = new ArrayList<IPartitionCollector>();
 
-                List<IConnectorDescriptor> inputs = jag.getActivityInputConnectorDescriptors(tid.getActivityId());
+                List<IConnectorDescriptor> inputs = jag.getActivityInputMap().get(tid.getActivityId());
                 if (inputs != null) {
                     for (int i = 0; i < inputs.size(); ++i) {
                         IConnectorDescriptor conn = inputs.get(i);
@@ -121,17 +123,17 @@ public class StartTasksWork extends SynchronizableWork {
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("input: " + i + ": " + conn.getConnectorId());
                         }
-                        RecordDescriptor recordDesc = jag.getJobSpecification().getConnectorRecordDescriptor(conn);
+                        RecordDescriptor recordDesc = jag.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
                         IPartitionCollector collector = createPartitionCollector(td, partition, task, i, conn,
                                 recordDesc, cPolicy);
                         collectors.add(collector);
                     }
                 }
-                List<IConnectorDescriptor> outputs = jag.getActivityOutputConnectorDescriptors(tid.getActivityId());
+                List<IConnectorDescriptor> outputs = jag.getActivityOutputMap().get(tid.getActivityId());
                 if (outputs != null) {
                     for (int i = 0; i < outputs.size(); ++i) {
                         final IConnectorDescriptor conn = outputs.get(i);
-                        RecordDescriptor recordDesc = jag.getJobSpecification().getConnectorRecordDescriptor(conn);
+                        RecordDescriptor recordDesc = jag.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
                         IConnectorPolicy cPolicy = connectorPoliciesMap.get(conn.getConnectorId());
 
                         IPartitionWriterFactory pwFactory = createPartitionWriterFactory(task, cPolicy, jobId, conn,

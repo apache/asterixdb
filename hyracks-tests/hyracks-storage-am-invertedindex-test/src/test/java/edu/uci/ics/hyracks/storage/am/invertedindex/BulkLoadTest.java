@@ -131,7 +131,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
         InvertedIndex invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories,
-                invListBuilder, null, fmp, invListsFile);
+                invListBuilder, fmp, invListsFile);
         invIndex.create();
         invIndex.open();
 

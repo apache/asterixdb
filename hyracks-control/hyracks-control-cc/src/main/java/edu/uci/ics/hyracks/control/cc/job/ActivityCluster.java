@@ -71,4 +71,9 @@ public class ActivityCluster {
     public void setPlan(ActivityClusterPlan acp) {
         this.acp = acp;
     }
+
+    @Override
+    public String toString() {
+        return String.valueOf(activities);
+    }
 }

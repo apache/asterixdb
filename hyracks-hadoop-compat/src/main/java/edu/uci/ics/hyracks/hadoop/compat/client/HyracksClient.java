@@ -66,11 +66,10 @@ public class HyracksClient {
         JobId jobId;
         if (doProfiling) {
             System.out.println("PROFILING");
-            jobId = connection.createJob(applicationName, spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
+            jobId = connection.startJob(applicationName, spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         } else {
-            jobId = connection.createJob(applicationName, spec);
+            jobId = connection.startJob(applicationName, spec);
         }
-        connection.start(jobId);
         HyracksRunningJob runningJob = new HyracksRunningJob(jobId, spec, this);
         return runningJob;
     }

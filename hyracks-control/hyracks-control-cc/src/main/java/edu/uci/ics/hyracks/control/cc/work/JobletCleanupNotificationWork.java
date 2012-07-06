@@ -83,7 +83,6 @@ public class JobletCleanupNotificationWork extends AbstractWork {
         JSONObject jobLogObject = new JSONObject();
         try {
             JobActivityGraph jag = run.getJobActivityGraph();
-            jobLogObject.put("job-specification", jag.getJobSpecification().toJSON());
             jobLogObject.put("job-activity-graph", jag.toJSON());
             jobLogObject.put("job-run", run.toJSON());
         } catch (JSONException e) {

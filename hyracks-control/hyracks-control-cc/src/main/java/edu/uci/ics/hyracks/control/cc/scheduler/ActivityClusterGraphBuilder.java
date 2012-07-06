@@ -25,11 +25,8 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
-import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
 import edu.uci.ics.hyracks.control.cc.job.ActivityClusterId;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
@@ -43,33 +40,22 @@ public class ActivityClusterGraphBuilder {
         this.jobRun = jobRun;
     }
 
-    private static Pair<ActivityId, ActivityId> findMergePair(JobActivityGraph jag, JobSpecification spec,
-            Set<ActivityCluster> eqSets) {
-        Map<ActivityId, IActivity> activityNodeMap = jag.getActivityNodeMap();
+    private static Pair<ActivityId, ActivityId> findMergePair(JobActivityGraph jag, Set<ActivityCluster> eqSets) {
         for (ActivityCluster eqSet : eqSets) {
             for (ActivityId t : eqSet.getActivities()) {
-                IActivity activity = activityNodeMap.get(t);
-                List<Integer> inputList = jag.getActivityInputMap().get(t);
+                List<IConnectorDescriptor> inputList = jag.getActivityInputMap().get(t);
                 if (inputList != null) {
-                    for (Integer idx : inputList) {
-                        IConnectorDescriptor conn = spec.getInputConnectorDescriptor(activity.getActivityId()
-                                .getOperatorDescriptorId(), idx);
-                        OperatorDescriptorId producerId = spec.getProducer(conn).getOperatorId();
-                        int producerOutputIndex = spec.getProducerOutputIndex(conn);
-                        ActivityId inTask = jag.getOperatorOutputMap().get(producerId).get(producerOutputIndex);
+                    for (IConnectorDescriptor conn : inputList) {
+                        ActivityId inTask = jag.getProducerActivity(conn.getConnectorId());
                         if (!eqSet.getActivities().contains(inTask)) {
                             return Pair.<ActivityId, ActivityId> of(t, inTask);
                         }
                     }
                 }
-                List<Integer> outputList = jag.getActivityOutputMap().get(t);
+                List<IConnectorDescriptor> outputList = jag.getActivityOutputMap().get(t);
                 if (outputList != null) {
-                    for (Integer idx : outputList) {
-                        IConnectorDescriptor conn = spec.getOutputConnectorDescriptor(activity.getActivityId()
-                                .getOperatorDescriptorId(), idx);
-                        OperatorDescriptorId consumerId = spec.getConsumer(conn).getOperatorId();
-                        int consumerInputIndex = spec.getConsumerInputIndex(conn);
-                        ActivityId outTask = jag.getOperatorInputMap().get(consumerId).get(consumerInputIndex);
+                    for (IConnectorDescriptor conn : outputList) {
+                        ActivityId outTask = jag.getConsumerActivity(conn.getConnectorId());
                         if (!eqSet.getActivities().contains(outTask)) {
                             return Pair.<ActivityId, ActivityId> of(t, outTask);
                         }
@@ -81,27 +67,23 @@ public class ActivityClusterGraphBuilder {
     }
 
     public Set<ActivityCluster> inferActivityClusters(JobActivityGraph jag) {
-        JobSpecification spec = jag.getJobSpecification();
-
         /*
          * Build initial equivalence sets map. We create a map such that for each IOperatorTask, t -> { t }
          */
         Map<ActivityId, ActivityCluster> stageMap = new HashMap<ActivityId, ActivityCluster>();
         Set<ActivityCluster> stages = new HashSet<ActivityCluster>();
-        for (Set<ActivityId> taskIds : jag.getOperatorActivityMap().values()) {
-            for (ActivityId taskId : taskIds) {
-                Set<ActivityId> eqSet = new HashSet<ActivityId>();
-                eqSet.add(taskId);
-                ActivityCluster stage = new ActivityCluster(eqSet);
-                stageMap.put(taskId, stage);
-                stages.add(stage);
-            }
+        for (ActivityId taskId : jag.getActivityMap().keySet()) {
+            Set<ActivityId> eqSet = new HashSet<ActivityId>();
+            eqSet.add(taskId);
+            ActivityCluster stage = new ActivityCluster(eqSet);
+            stageMap.put(taskId, stage);
+            stages.add(stage);
         }
 
         boolean changed = true;
         while (changed) {
             changed = false;
-            Pair<ActivityId, ActivityId> pair = findMergePair(jag, spec, stages);
+            Pair<ActivityId, ActivityId> pair = findMergePair(jag, stages);
             if (pair != null) {
                 merge(stageMap, stages, pair.getLeft(), pair.getRight());
                 changed = true;

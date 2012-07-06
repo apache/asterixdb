@@ -44,7 +44,8 @@ public class InvertedIndexBulkLoadOperatorDescriptor extends AbstractInvertedInd
             IOperationCallbackProvider opCallbackProvider) {
         super(spec, 1, 0, null, storageManager, btreeFileSplitProvider, invListsFileSplitProvider,
                 indexRegistryProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
-                invListComparatorFactories, tokenizerFactory, btreeDataflowHelperFactory, opCallbackProvider);
+                invListComparatorFactories, tokenizerFactory, btreeDataflowHelperFactory, false,
+                opCallbackProvider);
         this.fieldPermutation = fieldPermutation;
     }
 

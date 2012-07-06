@@ -97,7 +97,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         fileFactory = new WorkspaceFileFactory(this, (IOManager) appCtx.getRootContext().getIOManager());
         cleanupPending = false;
-        IJobletEventListenerFactory jelf = jag.getJobSpecification().getJobletEventListenerFactory();
+        IJobletEventListenerFactory jelf = jag.getJobletEventListenerFactory();
         if (jelf != null) {
             IJobletEventListener listener = jelf.createListener(this);
             this.jobletEventListener = listener;
@@ -105,7 +105,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         } else {
             jobletEventListener = null;
         }
-        IGlobalJobDataFactory gjdf = jag.getJobSpecification().getGlobalJobDataFactory();
+        IGlobalJobDataFactory gjdf = jag.getGlobalJobDataFactory();
         globalJobData = gjdf != null ? gjdf.createGlobalJobData(this) : null;
     }
 

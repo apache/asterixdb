@@ -23,15 +23,13 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
-import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
 
 public class TOccurrenceSearcherSuffixProbeOnly extends TOccurrenceSearcher {
 
 	protected final MultiComparator invListCmp;
 	
-    public TOccurrenceSearcherSuffixProbeOnly(IHyracksTaskContext ctx, InvertedIndex invIndex,
-            IBinaryTokenizer queryTokenizer) {
-        super(ctx, invIndex, queryTokenizer);
+    public TOccurrenceSearcherSuffixProbeOnly(IHyracksTaskContext ctx, InvertedIndex invIndex) {
+        super(ctx, invIndex);
         this.invListCmp = MultiComparator.create(invIndex.getInvListElementCmpFactories());
     }
 

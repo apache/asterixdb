@@ -105,11 +105,10 @@ public abstract class AbstractMultiNCIntegrationTest {
     }
 
     protected void runTest(JobSpecification spec) throws Exception {
-        JobId jobId = hcc.createJob("test", spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(spec.toJSON().toString(2));
         }
-        hcc.start(jobId);
+        JobId jobId = hcc.startJob("test", spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(jobId.toString());
         }

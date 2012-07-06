@@ -30,11 +30,9 @@ public interface IHyracksClientInterface {
 
     public void destroyApplication(String appName) throws Exception;
 
-    public JobId createJob(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
-
     public JobStatus getJobStatus(JobId jobId) throws Exception;
 
-    public void startJob(JobId jobId) throws Exception;
+    public JobId startJob(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
 
     public void waitForCompletion(JobId jobId) throws Exception;
 

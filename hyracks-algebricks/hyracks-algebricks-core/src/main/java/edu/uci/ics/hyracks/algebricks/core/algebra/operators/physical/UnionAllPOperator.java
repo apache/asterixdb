@@ -85,7 +85,7 @@ public class UnionAllPOperator extends AbstractPhysicalOperator {
         }
 
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
-        RecordDescriptor recordDescriptor = JobGenHelper.mkRecordDescriptor(op, opSchema, context);
+        RecordDescriptor recordDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
 
         // at algebricks level, union all only accepts two inputs, although at
         // hyracks

@@ -50,7 +50,8 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
      * @param inputArity
      * @param outputArity
      */
-    public PlainFileWriterOperatorDescriptor(IOperatorDescriptorRegistry spec, IFileSplitProvider fileSplitProvider, String delim) {
+    public PlainFileWriterOperatorDescriptor(IOperatorDescriptorRegistry spec, IFileSplitProvider fileSplitProvider,
+            String delim) {
         super(spec, 1, 0);
         this.fileSplitProvider = fileSplitProvider;
         this.delim = delim;
@@ -74,9 +75,9 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
         final FileSplit[] splits = fileSplitProvider.getFileSplits();
         // Frame accessor
         final FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(ctx.getFrameSize(),
-                recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0));
+                recordDescProvider.getInputRecordDescriptor(getActivityId(), 0));
         // Record descriptor
-        final RecordDescriptor recordDescriptor = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
+        final RecordDescriptor recordDescriptor = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
         return new AbstractUnaryInputSinkOperatorNodePushable() {
             private BufferedWriter out;
 

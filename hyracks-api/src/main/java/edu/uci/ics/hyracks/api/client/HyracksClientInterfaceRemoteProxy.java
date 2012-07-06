@@ -61,13 +61,6 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
     }
 
     @Override
-    public JobId createJob(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
-        HyracksClientInterfaceFunctions.CreateJobFunction cjf = new HyracksClientInterfaceFunctions.CreateJobFunction(
-                appName, jobSpec, jobFlags);
-        return (JobId) rpci.call(ipcHandle, cjf);
-    }
-
-    @Override
     public JobStatus getJobStatus(JobId jobId) throws Exception {
         HyracksClientInterfaceFunctions.GetJobStatusFunction gjsf = new HyracksClientInterfaceFunctions.GetJobStatusFunction(
                 jobId);
@@ -75,10 +68,10 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
     }
 
     @Override
-    public void startJob(JobId jobId) throws Exception {
+    public JobId startJob(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
         HyracksClientInterfaceFunctions.StartJobFunction sjf = new HyracksClientInterfaceFunctions.StartJobFunction(
-                jobId);
-        rpci.call(ipcHandle, sjf);
+                appName, jobSpec, jobFlags);
+        return (JobId) rpci.call(ipcHandle, sjf);
     }
 
     @Override

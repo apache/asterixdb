@@ -106,7 +106,7 @@ public class RunningAggregatePOperator extends AbstractPhysicalOperator {
                 projectionList);
 
         // contribute one Asterix framewriter
-        RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, opSchema, context);
+        RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
         builder.contributeMicroOperator(ragg, runtime, recDesc);
         // and contribute one edge from its child
         ILogicalOperator src = ragg.getInputs().get(0).getValue();

@@ -91,10 +91,10 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
         AggregateActivity aggregateAct = new AggregateActivity(new ActivityId(getOperatorId(), AGGREGATE_ACTIVITY_ID));
         MergeActivity mergeAct = new MergeActivity(new ActivityId(odId, MERGE_ACTIVITY_ID));
 
-        builder.addActivity(aggregateAct);
+        builder.addActivity(this, aggregateAct);
         builder.addSourceEdge(0, aggregateAct, 0);
 
-        builder.addActivity(mergeAct);
+        builder.addActivity(this, mergeAct);
         builder.addTargetEdge(0, mergeAct, 0);
 
         builder.addBlockingEdge(aggregateAct, mergeAct);
@@ -113,7 +113,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                 throws HyracksDataException {
             return new ExternalGroupBuildOperatorNodePushable(ctx, new TaskId(getActivityId(), partition), keyFields,
                     framesLimit, comparatorFactories, firstNormalizerFactory, aggregatorFactory,
-                    recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0), recordDescriptors[0],
+                    recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), recordDescriptors[0],
                     spillableTableFactory);
         }
     }

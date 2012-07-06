@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSourcePropertiesProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
@@ -66,11 +67,11 @@ public class DataSourceScanPOperator extends AbstractScanPOperator {
             throws AlgebricksException {
         DataSourceScanOperator scan = (DataSourceScanOperator) op;
         IMetadataProvider mp = context.getMetadataProvider();
-
+        IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(op);
         List<LogicalVariable> vars = scan.getVariables();
         List<LogicalVariable> projectVars = scan.getProjectVariables();
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = mp.getScannerRuntime(dataSource, vars,
-                projectVars, scan.isProjectPushed(), context, builder.getJobSpec());
+                projectVars, scan.isProjectPushed(), opSchema, typeEnv, context, builder.getJobSpec());
         builder.contributeHyracksOperator(scan, p.first);
         if (p.second != null) {
             builder.contributeAlgebricksPartitionConstraint(p.first, p.second);

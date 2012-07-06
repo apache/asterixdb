@@ -2,6 +2,7 @@ package edu.uci.ics.hyracks.control.cc.job;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -9,9 +10,14 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
+import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
+import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
+import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -19,7 +25,32 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 public class JobActivityGraphBuilder implements IActivityGraphBuilder {
     private static final Logger LOGGER = Logger.getLogger(JobActivityGraphBuilder.class.getName());
 
-    private JobActivityGraph jag;
+    private final Map<ActivityId, IOperatorDescriptor> activityOperatorMap;
+
+    private final JobActivityGraph jag;
+
+    private final JobSpecification jobSpec;
+
+    private final Map<ConnectorDescriptorId, Pair<IActivity, Integer>> connectorProducerMap;
+
+    private final Map<ConnectorDescriptorId, Pair<IActivity, Integer>> connectorConsumerMap;
+
+    public JobActivityGraphBuilder(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) {
+        activityOperatorMap = new HashMap<ActivityId, IOperatorDescriptor>();
+        jag = new JobActivityGraph(appName, jobFlags);
+        this.jobSpec = jobSpec;
+        jag.setConnectorPolicyAssignmentPolicy(jobSpec.getConnectorPolicyAssignmentPolicy());
+        jag.setGlobalJobDataFactory(jobSpec.getGlobalJobDataFactory());
+        jag.setJobletEventListenerFactory(jobSpec.getJobletEventListenerFactory());
+        jag.setMaxReattempts(jobSpec.getMaxReattempts());
+        connectorProducerMap = new HashMap<ConnectorDescriptorId, Pair<IActivity, Integer>>();
+        connectorConsumerMap = new HashMap<ConnectorDescriptorId, Pair<IActivity, Integer>>();
+    }
+
+    public void addConnector(IConnectorDescriptor conn) {
+        jag.getConnectorMap().put(conn.getConnectorId(), conn);
+        jag.getConnectorRecordDescriptorMap().put(conn.getConnectorId(), jobSpec.getConnectorRecordDescriptor(conn));
+    }
 
     @Override
     public void addBlockingEdge(IActivity blocker, IActivity blocked) {
@@ -33,9 +64,10 @@ public class JobActivityGraphBuilder implements IActivityGraphBuilder {
             LOGGER.finest("Adding source edge: " + task.getActivityId().getOperatorDescriptorId() + ":"
                     + operatorInputIndex + " -> " + task.getActivityId() + ":" + taskInputIndex);
         }
-        insertIntoIndexedMap(jag.getActivityInputMap(), task.getActivityId(), taskInputIndex, operatorInputIndex);
-        insertIntoIndexedMap(jag.getOperatorInputMap(), task.getActivityId().getOperatorDescriptorId(),
-                operatorInputIndex, task.getActivityId());
+        IOperatorDescriptor op = activityOperatorMap.get(task.getActivityId());
+        IConnectorDescriptor conn = jobSpec.getInputConnectorDescriptor(op, operatorInputIndex);
+        insertIntoIndexedMap(jag.getActivityInputMap(), task.getActivityId(), taskInputIndex, conn);
+        connectorConsumerMap.put(conn.getConnectorId(), Pair.of(task, taskInputIndex));
     }
 
     @Override
@@ -44,16 +76,28 @@ public class JobActivityGraphBuilder implements IActivityGraphBuilder {
             LOGGER.finest("Adding target edge: " + task.getActivityId().getOperatorDescriptorId() + ":"
                     + operatorOutputIndex + " -> " + task.getActivityId() + ":" + taskOutputIndex);
         }
-        insertIntoIndexedMap(jag.getActivityOutputMap(), task.getActivityId(), taskOutputIndex, operatorOutputIndex);
-        insertIntoIndexedMap(jag.getOperatorOutputMap(), task.getActivityId().getOperatorDescriptorId(),
-                operatorOutputIndex, task.getActivityId());
+        IOperatorDescriptor op = activityOperatorMap.get(task.getActivityId());
+        IConnectorDescriptor conn = jobSpec.getOutputConnectorDescriptor(op, operatorOutputIndex);
+        insertIntoIndexedMap(jag.getActivityOutputMap(), task.getActivityId(), taskOutputIndex, conn);
+        connectorProducerMap.put(conn.getConnectorId(), Pair.of(task, taskOutputIndex));
     }
 
     @Override
-    public void addActivity(IActivity task) {
+    public void addActivity(IOperatorDescriptor op, IActivity task) {
+        activityOperatorMap.put(task.getActivityId(), op);
         ActivityId activityId = task.getActivityId();
-        jag.getActivityNodeMap().put(activityId, task);
-        addToValueSet(jag.getOperatorActivityMap(), activityId.getOperatorDescriptorId(), activityId);
+        jag.getActivityMap().put(activityId, task);
+    }
+
+    public void finish() {
+        Map<ConnectorDescriptorId, Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>> caMap = jag
+                .getConnectorActivityMap();
+        for (Map.Entry<ConnectorDescriptorId, Pair<IActivity, Integer>> e : connectorProducerMap.entrySet()) {
+            ConnectorDescriptorId cdId = e.getKey();
+            Pair<IActivity, Integer> producer = e.getValue();
+            Pair<IActivity, Integer> consumer = connectorConsumerMap.get(cdId);
+            caMap.put(cdId, Pair.of(producer, consumer));
+        }
     }
 
     private <K, V> void addToValueSet(Map<K, Set<V>> map, K n1, V n2) {
@@ -70,10 +114,6 @@ public class JobActivityGraphBuilder implements IActivityGraphBuilder {
         for (int i = n; i <= index; ++i) {
             list.add(null);
         }
-    }
-
-    public void init(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) {
-        jag = new JobActivityGraph(appName, jobSpec, jobFlags);
     }
 
     private <K, V> void insertIntoIndexedMap(Map<K, List<V>> map, K key, int index, V value) {

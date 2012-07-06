@@ -47,9 +47,9 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
 
     private final int tableSize;
 
-    public HashGroupOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] keys, ITuplePartitionComputerFactory tpcf,
-            IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
-            RecordDescriptor outRecordDescriptor, int tableSize) {
+    public HashGroupOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] keys,
+            ITuplePartitionComputerFactory tpcf, IBinaryComparatorFactory[] comparatorFactories,
+            IAggregatorDescriptorFactory aggregatorFactory, RecordDescriptor outRecordDescriptor, int tableSize) {
         super(spec, 1, 1);
         this.keys = keys;
         this.tpcf = tpcf;
@@ -69,10 +69,10 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
         HashBuildActivity ha = new HashBuildActivity(new ActivityId(odId, HASH_BUILD_ACTIVITY_ID));
-        builder.addActivity(ha);
+        builder.addActivity(this, ha);
 
         OutputActivity oa = new OutputActivity(new ActivityId(odId, OUTPUT_ACTIVITY_ID));
-        builder.addActivity(oa);
+        builder.addActivity(this, oa);
 
         builder.addSourceEdge(0, ha, 0);
         builder.addTargetEdge(0, oa, 0);
@@ -91,7 +91,7 @@ public class HashGroupOperatorDescriptor extends AbstractOperatorDescriptor {
                 final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             return new HashGroupBuildOperatorNodePushable(ctx, new TaskId(getActivityId(), partition), keys, tpcf,
                     comparatorFactories, aggregatorFactory, tableSize, recordDescProvider.getInputRecordDescriptor(
-                            getOperatorId(), 0), recordDescriptors[0]);
+                            getActivityId(), 0), recordDescriptors[0]);
         }
     }
 

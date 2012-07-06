@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.group.preclustered;
 
-
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -47,6 +46,6 @@ public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityO
             final IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
             throws HyracksDataException {
         return new PreclusteredGroupOperatorNodePushable(ctx, groupFields, comparatorFactories, aggregatorFactory,
-                recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0), recordDescriptors[0]);
+                recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), recordDescriptors[0]);
     }
 }

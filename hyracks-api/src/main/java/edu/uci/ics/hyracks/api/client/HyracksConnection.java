@@ -94,23 +94,18 @@ public final class HyracksConnection implements IHyracksClientConnection {
     }
 
     @Override
-    public JobId createJob(String appName, JobSpecification jobSpec) throws Exception {
-        return createJob(appName, jobSpec, EnumSet.noneOf(JobFlag.class));
-    }
-
-    @Override
-    public JobId createJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
-        return hci.createJob(appName, JavaSerializationUtils.serialize(jobSpec), jobFlags);
-    }
-
-    @Override
     public JobStatus getJobStatus(JobId jobId) throws Exception {
         return hci.getJobStatus(jobId);
     }
 
     @Override
-    public void start(JobId jobId) throws Exception {
-        hci.startJob(jobId);
+    public JobId startJob(String appName, JobSpecification jobSpec) throws Exception {
+        return hci.startJob(appName, JavaSerializationUtils.serialize(jobSpec), EnumSet.noneOf(JobFlag.class));
+    }
+
+    @Override
+    public JobId startJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
+        return hci.startJob(appName, JavaSerializationUtils.serialize(jobSpec), jobFlags);
     }
 
     @Override

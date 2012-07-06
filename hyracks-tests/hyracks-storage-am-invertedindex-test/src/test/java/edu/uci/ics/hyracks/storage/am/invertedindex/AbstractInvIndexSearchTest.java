@@ -167,8 +167,8 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
         invListCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
-        invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories, invListBuilder,
-                tokenizer, fmp, invListsFile);
+        invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories, invListBuilder, fmp,
+                invListsFile);
         invIndex.create();
         invIndex.open();
 

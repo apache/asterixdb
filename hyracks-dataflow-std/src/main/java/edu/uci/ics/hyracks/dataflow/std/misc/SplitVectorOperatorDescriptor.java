@@ -105,7 +105,7 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
             };
             return new DeserializedOperatorNodePushable(ctx, op, recordDescProvider.getInputRecordDescriptor(
-                    getOperatorId(), 0));
+                    getActivityId(), 0));
         }
     }
 
@@ -158,8 +158,8 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
                     writer.fail();
                 }
             };
-            return new DeserializedOperatorNodePushable(ctx, op, recordDescProvider.getInputRecordDescriptor(
-                    getOperatorId(), 0));
+            return new DeserializedOperatorNodePushable(ctx, op, recordDescProvider.getOutputRecordDescriptor(
+                    getActivityId(), 0));
         }
     }
 
@@ -178,10 +178,10 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
         CollectActivity ca = new CollectActivity(new ActivityId(odId, COLLECT_ACTIVITY_ID));
         SplitActivity sa = new SplitActivity(new ActivityId(odId, SPLIT_ACTIVITY_ID));
 
-        builder.addActivity(ca);
+        builder.addActivity(this, ca);
         builder.addSourceEdge(0, ca, 0);
 
-        builder.addActivity(sa);
+        builder.addActivity(this, sa);
         builder.addTargetEdge(0, sa, 0);
 
         builder.addBlockingEdge(ca, sa);

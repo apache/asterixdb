@@ -49,7 +49,6 @@ public class ConsolidateAssignsRule implements IAlgebraicRewriteRule {
         if (op2.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
             return false;
         }
-
         AssignOperator assign2 = (AssignOperator) op2;
 
         HashSet<LogicalVariable> used1 = new HashSet<LogicalVariable>();

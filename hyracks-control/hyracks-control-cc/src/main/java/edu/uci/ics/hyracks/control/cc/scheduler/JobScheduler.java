@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.control.cc.scheduler;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -25,32 +26,24 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.constraints.Constraint;
-import edu.uci.ics.hyracks.api.constraints.IConstraintAcceptor;
 import edu.uci.ics.hyracks.api.constraints.expressions.LValueConstraintExpression;
 import edu.uci.ics.hyracks.api.constraints.expressions.PartitionLocationExpression;
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
-import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
-import edu.uci.ics.hyracks.control.cc.job.IConnectorDescriptorVisitor;
-import edu.uci.ics.hyracks.control.cc.job.IOperatorDescriptorVisitor;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
-import edu.uci.ics.hyracks.control.cc.job.PlanUtils;
 import edu.uci.ics.hyracks.control.cc.job.Task;
 import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
 import edu.uci.ics.hyracks.control.cc.job.TaskCluster;
@@ -75,12 +68,15 @@ public class JobScheduler {
 
     private Set<ActivityCluster> rootActivityClusters;
 
-    public JobScheduler(ClusterControllerService ccs, JobRun jobRun) {
+    public JobScheduler(ClusterControllerService ccs, JobRun jobRun, Collection<Constraint> constraints) {
         this.ccs = ccs;
         this.jobRun = jobRun;
         solver = new PartitionConstraintSolver();
         partitionProducingTaskClusterMap = new HashMap<PartitionId, TaskCluster>();
         inProgressTaskClusters = new HashSet<TaskCluster>();
+        solver.addConstraints(constraints);
+        ActivityClusterGraphBuilder acgb = new ActivityClusterGraphBuilder(jobRun);
+        rootActivityClusters = acgb.inferActivityClusters(jobRun.getJobActivityGraph());
     }
 
     public JobRun getJobRun() {
@@ -92,41 +88,7 @@ public class JobScheduler {
     }
 
     public void startJob() throws HyracksException {
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine("Starting Job: " + jobRun.getJobActivityGraph().getJobSpecification());
-        }
-        analyze();
         startRunnableActivityClusters();
-    }
-
-    private void analyze() throws HyracksException {
-        final JobActivityGraph jag = jobRun.getJobActivityGraph();
-        final ICCApplicationContext appCtx = ccs.getApplicationMap().get(jag.getApplicationName());
-        JobSpecification spec = jag.getJobSpecification();
-        final Set<Constraint> contributedConstraints = new HashSet<Constraint>();
-        final IConstraintAcceptor acceptor = new IConstraintAcceptor() {
-            @Override
-            public void addConstraint(Constraint constraint) {
-                contributedConstraints.add(constraint);
-            }
-        };
-        PlanUtils.visit(spec, new IOperatorDescriptorVisitor() {
-            @Override
-            public void visit(IOperatorDescriptor op) {
-                op.contributeSchedulingConstraints(acceptor, jag, appCtx);
-            }
-        });
-        PlanUtils.visit(spec, new IConnectorDescriptorVisitor() {
-            @Override
-            public void visit(IConnectorDescriptor conn) {
-                conn.contributeSchedulingConstraints(acceptor, jag, appCtx);
-            }
-        });
-        contributedConstraints.addAll(spec.getUserConstraints());
-        solver.addConstraints(contributedConstraints);
-
-        ActivityClusterGraphBuilder acgb = new ActivityClusterGraphBuilder(jobRun);
-        rootActivityClusters = acgb.inferActivityClusters(jag);
     }
 
     private void findRunnableTaskClusterRoots(Set<TaskCluster> frontier, Set<ActivityCluster> roots)
@@ -644,7 +606,7 @@ public class JobScheduler {
                 lastAttempt.setStatus(TaskClusterAttempt.TaskClusterStatus.FAILED);
                 lastAttempt.setEndTime(System.currentTimeMillis());
                 abortDoomedTaskClusters();
-                if (lastAttempt.getAttempt() >= jobRun.getJobActivityGraph().getJobSpecification().getMaxReattempts()) {
+                if (lastAttempt.getAttempt() >= jobRun.getJobActivityGraph().getMaxReattempts()) {
                     abortJob(new HyracksException(details));
                     return;
                 }

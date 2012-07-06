@@ -45,9 +45,10 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
     private final boolean isLeftOuter;
     private final INullWriterFactory[] nullWriterFactories1;
 
-    public GraceHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, int inputsize0, int recordsPerFrame,
-            double factor, int[] keys0, int[] keys1, IBinaryHashFunctionFactory[] hashFunctionFactories,
-            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor) {
+    public GraceHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, int inputsize0,
+            int recordsPerFrame, double factor, int[] keys0, int[] keys1,
+            IBinaryHashFunctionFactory[] hashFunctionFactories, IBinaryComparatorFactory[] comparatorFactories,
+            RecordDescriptor recordDescriptor) {
         super(spec, 2, 1);
         this.memsize = memsize;
         this.inputsize0 = inputsize0;
@@ -62,10 +63,10 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
         recordDescriptors[0] = recordDescriptor;
     }
 
-    public GraceHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, int inputsize0, int recordsPerFrame,
-            double factor, int[] keys0, int[] keys1, IBinaryHashFunctionFactory[] hashFunctionFactories,
-            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor, boolean isLeftOuter,
-            INullWriterFactory[] nullWriterFactories1) {
+    public GraceHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, int inputsize0,
+            int recordsPerFrame, double factor, int[] keys0, int[] keys1,
+            IBinaryHashFunctionFactory[] hashFunctionFactories, IBinaryComparatorFactory[] comparatorFactories,
+            RecordDescriptor recordDescriptor, boolean isLeftOuter, INullWriterFactory[] nullWriterFactories1) {
         super(spec, 2, 1);
         this.memsize = memsize;
         this.inputsize0 = inputsize0;
@@ -82,19 +83,19 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
 
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
-        HashPartitionActivityNode rpart = new HashPartitionActivityNode(new ActivityId(odId, RPARTITION_ACTIVITY_ID),
-                keys0, 0);
-        HashPartitionActivityNode spart = new HashPartitionActivityNode(new ActivityId(odId, SPARTITION_ACTIVITY_ID),
-                keys1, 1);
-        JoinActivityNode join = new JoinActivityNode(new ActivityId(odId, JOIN_ACTIVITY_ID));
+        ActivityId rpartAid = new ActivityId(odId, RPARTITION_ACTIVITY_ID);
+        HashPartitionActivityNode rpart = new HashPartitionActivityNode(rpartAid, keys0);
+        ActivityId spartAid = new ActivityId(odId, SPARTITION_ACTIVITY_ID);
+        HashPartitionActivityNode spart = new HashPartitionActivityNode(spartAid, keys1);
+        JoinActivityNode join = new JoinActivityNode(new ActivityId(odId, JOIN_ACTIVITY_ID), rpartAid, spartAid);
 
-        builder.addActivity(rpart);
+        builder.addActivity(this, rpart);
         builder.addSourceEdge(0, rpart, 0);
 
-        builder.addActivity(spart);
+        builder.addActivity(this, spart);
         builder.addSourceEdge(1, spart, 0);
 
-        builder.addActivity(join);
+        builder.addActivity(this, join);
         builder.addBlockingEdge(rpart, spart);
         builder.addBlockingEdge(spart, join);
 
@@ -107,13 +108,11 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
 
     private class HashPartitionActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
-        private int operatorInputIndex;
         private int keys[];
 
-        public HashPartitionActivityNode(ActivityId id, int keys[], int operatorInputIndex) {
+        public HashPartitionActivityNode(ActivityId id, int keys[]) {
             super(id);
             this.keys = keys;
-            this.operatorInputIndex = operatorInputIndex;
         }
 
         @Override
@@ -121,23 +120,28 @@ public class GraceHashJoinOperatorDescriptor extends AbstractOperatorDescriptor 
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             return new GraceHashJoinPartitionBuildOperatorNodePushable(ctx, new TaskId(getActivityId(), partition),
                     keys, hashFunctionFactories, comparatorFactories, (int) Math.ceil(Math.sqrt(inputsize0 * factor
-                            / nPartitions)), recordDescProvider.getInputRecordDescriptor(getOperatorId(),
-                            operatorInputIndex));
+                            / nPartitions)), recordDescProvider.getInputRecordDescriptor(getActivityId(), 0));
         }
     }
 
     private class JoinActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        public JoinActivityNode(ActivityId id) {
+        private final ActivityId rpartAid;
+
+        private final ActivityId spartAid;
+
+        public JoinActivityNode(ActivityId id, ActivityId rpartAid, ActivityId spartAid) {
             super(id);
+            this.rpartAid = rpartAid;
+            this.spartAid = spartAid;
         }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 final IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions) {
-            final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
-            final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 1);
+            final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(rpartAid, 0);
+            final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(spartAid, 0);
             int numPartitions = (int) Math.ceil(Math.sqrt(inputsize0 * factor / nPartitions));
 
             return new GraceHashJoinOperatorNodePushable(ctx, new TaskId(new ActivityId(getOperatorId(),

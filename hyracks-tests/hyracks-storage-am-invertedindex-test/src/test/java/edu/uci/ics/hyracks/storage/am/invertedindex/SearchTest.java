@@ -173,16 +173,12 @@ public class SearchTest extends AbstractInvIndexSearchTest {
     /**
      * Runs a specified number of randomly picked strings from dataStrings as
      * queries. We run each query, measure it's time, and print it's results.
-     * 
      */
     private void runQueries(IInvertedIndexSearchModifier searchModifier, int numQueries) throws Exception {
-
         rnd.setSeed(50);
-
         InvertedIndexAccessor accessor = (InvertedIndexAccessor) invIndex.createAccessor(
                 NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-        InvertedIndexSearchPredicate searchPred = new InvertedIndexSearchPredicate(searchModifier);
-
+        InvertedIndexSearchPredicate searchPred = new InvertedIndexSearchPredicate(tokenizer, searchModifier);
         for (int i = 0; i < numQueries; i++) {
 
             int queryIndex = Math.abs(rnd.nextInt() % dataStrings.size());
@@ -236,7 +232,6 @@ public class SearchTest extends AbstractInvIndexSearchTest {
     /**
      * Runs 5 random conjunctive search queries to test the
      * ConjunctiveSearchModifier.
-     * 
      */
     @Test
     public void conjunctiveQueryTest() throws Exception {
@@ -247,7 +242,6 @@ public class SearchTest extends AbstractInvIndexSearchTest {
     /**
      * Runs 5 random jaccard-based search queries with thresholds 0.9, 0.8, 0.7.
      * Tests the JaccardSearchModifier.
-     * 
      */
     @Test
     public void jaccardQueryTest() throws Exception {
@@ -275,7 +269,6 @@ public class SearchTest extends AbstractInvIndexSearchTest {
     /**
      * Runs 5 random edit-distance based search queries with thresholds 1, 2, 3.
      * Tests the EditDistanceSearchModifier.
-     * 
      */
     @Test
     public void editDistanceQueryTest() throws Exception {

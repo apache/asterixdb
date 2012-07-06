@@ -38,7 +38,7 @@ public class BufferCache implements IBufferCacheInternal {
     private static final int MAP_FACTOR = 2;
 
     private static final int MAX_VICTIMIZATION_TRY_COUNT = 5;
-    private static final int MAX_WAIT_FOR_CLEANER_THREAD_TIME = 1000;
+    private static final int MAX_WAIT_FOR_CLEANER_THREAD_TIME = 1000 * 60;
     private static final int MIN_CLEANED_COUNT_DIFF = 4;
 
     private final int maxOpenFiles;

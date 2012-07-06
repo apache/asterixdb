@@ -38,7 +38,6 @@ public class BTreeSearchOperatorNodePushable extends TreeIndexSearchOperatorNode
         super(opDesc, ctx, partition, recordDescProvider);
         this.lowKeyInclusive = lowKeyInclusive;
         this.highKeyInclusive = highKeyInclusive;
-        this.recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getOperatorId(), 0);
         if (lowKeyFields != null && lowKeyFields.length > 0) {
             lowKey = new PermutingFrameTupleReference();
             lowKey.setFieldPermutation(lowKeyFields);
