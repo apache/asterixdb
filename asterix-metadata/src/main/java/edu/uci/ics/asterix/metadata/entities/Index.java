@@ -35,6 +35,19 @@ public class Index implements Serializable {
     private final IndexType indexType;
     private final List<String> keyFieldNames;
     private final boolean isPrimaryIndex;
+    // Specific to NGRAM indexes.
+    private final int gramLength;
+
+    public Index(String dataverseName, String datasetName, String indexName, IndexType indexType,
+            List<String> keyFieldNames, int gramLength, boolean isPrimaryIndex) {
+        this.dataverseName = dataverseName;
+        this.datasetName = datasetName;
+        this.indexName = indexName;
+        this.indexType = indexType;
+        this.keyFieldNames = keyFieldNames;
+        this.gramLength = gramLength;
+        this.isPrimaryIndex = isPrimaryIndex;
+    }
 
     public Index(String dataverseName, String datasetName, String indexName, IndexType indexType,
             List<String> keyFieldNames, boolean isPrimaryIndex) {
@@ -43,6 +56,7 @@ public class Index implements Serializable {
         this.indexName = indexName;
         this.indexType = indexType;
         this.keyFieldNames = keyFieldNames;
+        this.gramLength = -1;
         this.isPrimaryIndex = isPrimaryIndex;
     }
 
@@ -60,6 +74,10 @@ public class Index implements Serializable {
 
     public List<String> getKeyFieldNames() {
         return keyFieldNames;
+    }
+
+    public int getGramLength() {
+        return gramLength;
     }
 
     public IndexType getIndexType() {

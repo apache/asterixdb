@@ -1,0 +1,15 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/similarity_similarity-jaccard-prefix-check.adm";
+
+for $l in [1]
+return [
+  similarity-jaccard-prefix-check(3, [1, 2, 3], 3, [1, 2, 3], 1, 1f),
+  similarity-jaccard-prefix-check(3, [1, 2, 3], 3, [1, 2, 4], 1, .5f),
+  similarity-jaccard-prefix-check(3, [1, 2, 3], 3, [1, 2, 4], 1, .6f),
+  similarity-jaccard-prefix-check(3, [1, 2, 3], 9, [1, 2, 3], 1, .5f),
+  similarity-jaccard-prefix-check(4, [1, 2, 3, 4], 2, [1, 2], 1, .5f),
+  similarity-jaccard-prefix-check(4, [1, 2, 3, 4], 4, [1, 2], 1, .33f)
+]

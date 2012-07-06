@@ -241,6 +241,10 @@ public class AsterixBuiltinFunctions {
             "similarity-jaccard", 2, true);
     public final static FunctionIdentifier SIMILARITY_JACCARD_CHECK = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "similarity-jaccard-check", 3, true);
+    public final static FunctionIdentifier SIMILARITY_JACCARD_SORTED = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "similarity-jaccard-sorted", 2, true);
+    public final static FunctionIdentifier SIMILARITY_JACCARD_SORTED_CHECK = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "similarity-jaccard-sorted-check", 3, true);
     public final static FunctionIdentifier SIMILARITY_JACCARD_PREFIX = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "similarity-jaccard-prefix", 6, true);
     public final static FunctionIdentifier SIMILARITY_JACCARD_PREFIX_CHECK = new FunctionIdentifier(
@@ -250,6 +254,10 @@ public class AsterixBuiltinFunctions {
             "edit-distance", 2, true);
     public final static FunctionIdentifier EDIT_DISTANCE_CHECK = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "edit-distance-check", 3, true);
+    public final static FunctionIdentifier EDIT_DISTANCE_LIST_IS_FILTERABLE = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "edit-distance-list-is-filterable", 2, true);
+    public final static FunctionIdentifier EDIT_DISTANCE_STRING_IS_FILTERABLE = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "edit-distance-string-is-filterable", 4, true);
 
     // tokenizers:
     public final static FunctionIdentifier WORD_TOKENS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -419,6 +427,8 @@ public class AsterixBuiltinFunctions {
         add(DURATION_CONSTRUCTOR, OptionalADurationTypeComputer.INSTANCE);
         add(EDIT_DISTANCE, AInt32TypeComputer.INSTANCE);
         add(EDIT_DISTANCE_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
+        add(EDIT_DISTANCE_STRING_IS_FILTERABLE, ABooleanTypeComputer.INSTANCE);
+        add(EDIT_DISTANCE_LIST_IS_FILTERABLE, ABooleanTypeComputer.INSTANCE);
         add(EMBED_TYPE, new IResultTypeComputer() {
             @Override
             public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
@@ -494,6 +504,8 @@ public class AsterixBuiltinFunctions {
         add(SERIAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
         add(SIMILARITY_JACCARD, AFloatTypeComputer.INSTANCE);
         add(SIMILARITY_JACCARD_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
+        add(SIMILARITY_JACCARD_SORTED, AFloatTypeComputer.INSTANCE);
+        add(SIMILARITY_JACCARD_SORTED_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
         add(SIMILARITY_JACCARD_PREFIX, AFloatTypeComputer.INSTANCE);
         add(SIMILARITY_JACCARD_PREFIX_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
         add(SPATIAL_AREA, ADoubleTypeComputer.INSTANCE);

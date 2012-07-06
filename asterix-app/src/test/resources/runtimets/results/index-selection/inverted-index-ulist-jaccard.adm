@@ -1,0 +1,1 @@
+{ "cid": 153, "name": "Randy Hueso", "age": 11, "address": { "number": 1957, "street": "Oak St.", "city": "San Jose" }, "interests": {{ "Computers", "Wine", "Databases", "Walking" }}, "children": [  ] }

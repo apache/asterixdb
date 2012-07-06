@@ -59,7 +59,7 @@ public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends AbstractTreeI
             IIndexDataflowHelperFactory dataflowHelperFactory, ITupleFilterFactory tupleFilterFactory,
             IOperationCallbackProvider opCallbackProvider, long transactionId) {
         super(spec, 1, 1, recDesc, storageManager, indexRegistryProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, dataflowHelperFactory, tupleFilterFactory, opCallbackProvider);
+                comparatorFactories, dataflowHelperFactory, tupleFilterFactory, false, opCallbackProvider);
         this.fieldPermutation = fieldPermutation;
         this.op = op;
         this.transactionId = transactionId;

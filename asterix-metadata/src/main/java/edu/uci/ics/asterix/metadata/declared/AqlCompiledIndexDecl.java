@@ -29,17 +29,29 @@ public class AqlCompiledIndexDecl {
 
     public enum IndexKind {
         BTREE,
-        RTREE
+        RTREE,
+        WORD_INVIX,
+        NGRAM_INVIX
     }
 
     private String indexName;
     private IndexKind kind;
     private List<String> fieldExprs = new ArrayList<String>();
+    // Only for NGRAM indexes.
+    private int gramLength;
+
+    public AqlCompiledIndexDecl(String indexName, IndexKind kind, List<String> fieldExprs, int gramLength) {
+        this.indexName = indexName;
+        this.kind = kind;
+        this.fieldExprs = fieldExprs;
+        this.gramLength = gramLength;
+    }
 
     public AqlCompiledIndexDecl(String indexName, IndexKind kind, List<String> fieldExprs) {
         this.indexName = indexName;
         this.kind = kind;
         this.fieldExprs = fieldExprs;
+        this.gramLength = -1;
     }
 
     @Override
@@ -59,18 +71,12 @@ public class AqlCompiledIndexDecl {
         return fieldExprs;
     }
 
-    public static IAType keyFieldType(String expr, ARecordType recType) throws AlgebricksException {
-        String[] names = recType.getFieldNames();
-        int n = names.length;
-        for (int i = 0; i < n; i++) {
-            if (names[i].equals(expr)) {
-                return recType.getFieldTypes()[i];
-            }
-        }
-        throw new AlgebricksException("Could not find field " + expr + " in the schema.");
+    public int getGramLength() {
+        return gramLength;
     }
 
-    public static Pair<IAType, Boolean> getNonNullableKeyFieldType(String expr, ARecordType recType) throws AlgebricksException {
+    public static Pair<IAType, Boolean> getNonNullableKeyFieldType(String expr, ARecordType recType)
+            throws AlgebricksException {
         IAType keyType = AqlCompiledIndexDecl.keyFieldType(expr, recType);
         boolean nullable = false;
         if (keyType.getTypeTag() == ATypeTag.UNION) {
@@ -82,5 +88,16 @@ public class AqlCompiledIndexDecl {
             }
         }
         return new Pair<IAType, Boolean>(keyType, nullable);
+    }
+
+    private static IAType keyFieldType(String expr, ARecordType recType) throws AlgebricksException {
+        String[] names = recType.getFieldNames();
+        int n = names.length;
+        for (int i = 0; i < n; i++) {
+            if (names[i].equals(expr)) {
+                return recType.getFieldTypes()[i];
+            }
+        }
+        throw new AlgebricksException("Could not find field " + expr + " in the schema.");
     }
 }

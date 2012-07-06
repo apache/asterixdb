@@ -30,7 +30,9 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.LogicalExpressionJobGenToExpressionRuntimeProviderAdapter;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.ISerializerDeserializerProvider;
+import edu.uci.ics.hyracks.algebricks.data.ITypeTraitProvider;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -80,7 +82,7 @@ public abstract class SecondaryIndexCreator {
     protected RecordDescriptor primaryRecDesc;
     protected IBinaryComparatorFactory[] secondaryComparatorFactories;
     protected RecordDescriptor secondaryRecDesc;
-    protected ICopyEvaluatorFactory[] evalFactories;
+    protected ICopyEvaluatorFactory[] secondaryFieldAccessEvalFactories;
 
     // Prevent public construction. Should be created via createIndexCreator().
     protected SecondaryIndexCreator(PhysicalOptimizationConfig physOptConf) {
@@ -100,7 +102,8 @@ public abstract class SecondaryIndexCreator {
                 indexCreator = new SecondaryRTreeCreator(physOptConf);
                 break;
             }
-            case KEYWORD: {
+            case WORD_INVIX:
+            case NGRAM_INVIX: {
                 indexCreator = new SecondaryInvertedIndexCreator(physOptConf);
                 break;
             }
@@ -142,7 +145,7 @@ public abstract class SecondaryIndexCreator {
         secondaryPartitionConstraint = secondarySplitsAndConstraint.second;
         // Must be called in this order.
         setPrimaryRecDescAndComparators();
-        setSecondaryRecDescAndComparators(createIndexStmt.getKeyFields());
+        setSecondaryRecDescAndComparators(createIndexStmt);
     }
 
     protected void setPrimaryRecDescAndComparators() throws AlgebricksException {
@@ -168,25 +171,28 @@ public abstract class SecondaryIndexCreator {
         primaryRecDesc = new RecordDescriptor(primaryRecFields, primaryTypeTraits);
     }
 
-    protected void setSecondaryRecDescAndComparators(List<String> secondaryKeyFields) throws AlgebricksException,
-            AsterixException {
-        evalFactories = new ICopyEvaluatorFactory[numSecondaryKeys];
+    protected void setSecondaryRecDescAndComparators(CompiledCreateIndexStatement createIndexStmt)
+            throws AlgebricksException, AsterixException {
+        List<String> secondaryKeyFields = createIndexStmt.getKeyFields();
+        secondaryFieldAccessEvalFactories = new ICopyEvaluatorFactory[numSecondaryKeys];
         secondaryComparatorFactories = new IBinaryComparatorFactory[numSecondaryKeys + numPrimaryKeys];
         ISerializerDeserializer[] secondaryRecFields = new ISerializerDeserializer[numPrimaryKeys + numSecondaryKeys];
         ITypeTraits[] secondaryTypeTraits = new ITypeTraits[numSecondaryKeys + numPrimaryKeys];
         ISerializerDeserializerProvider serdeProvider = metadata.getFormat().getSerdeProvider();
+        ITypeTraitProvider typeTraitProvider = metadata.getFormat().getTypeTraitProvider();
+        IBinaryComparatorFactoryProvider comparatorFactoryProvider = metadata.getFormat()
+                .getBinaryComparatorFactoryProvider();
         for (int i = 0; i < numSecondaryKeys; i++) {
-            evalFactories[i] = metadata.getFormat().getFieldAccessEvaluatorFactory(itemType, secondaryKeyFields.get(i),
-                    numPrimaryKeys);
+            secondaryFieldAccessEvalFactories[i] = metadata.getFormat().getFieldAccessEvaluatorFactory(itemType,
+                    secondaryKeyFields.get(i), numPrimaryKeys);
             Pair<IAType, Boolean> keyTypePair = AqlCompiledIndexDecl.getNonNullableKeyFieldType(
                     secondaryKeyFields.get(i), itemType);
             IAType keyType = keyTypePair.first;
             anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;
             ISerializerDeserializer keySerde = serdeProvider.getSerializerDeserializer(keyType);
             secondaryRecFields[i] = keySerde;
-            secondaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(
-                    keyType, true);
-            secondaryTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+            secondaryComparatorFactories[i] = comparatorFactoryProvider.getBinaryComparatorFactory(keyType, true);
+            secondaryTypeTraits[i] = typeTraitProvider.getTypeTrait(keyType);
         }
         // Add serializers and comparators for primary index fields.
         for (int i = 0; i < numPrimaryKeys; i++) {
@@ -228,7 +234,8 @@ public abstract class SecondaryIndexCreator {
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 AsterixStorageManagerInterface.INSTANCE, AsterixIndexRegistryProvider.INSTANCE,
                 primaryFileSplitProvider, primaryRecDesc.getTypeTraits(), primaryComparatorFactories, lowKeyFields,
-                highKeyFields, true, true, new BTreeDataflowHelperFactory(), NoOpOperationCallbackProvider.INSTANCE);
+                highKeyFields, true, true, new BTreeDataflowHelperFactory(), false,
+                NoOpOperationCallbackProvider.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, primarySearchOp,
                 primaryPartitionConstraint);
         return primarySearchOp;
@@ -248,10 +255,10 @@ public abstract class SecondaryIndexCreator {
         for (int i = 0; i < numPrimaryKeys; i++) {
             projectionList[projCount++] = i;
         }
-        IScalarEvaluatorFactory[] sefs = new IScalarEvaluatorFactory[evalFactories.length];
-        for (int i = 0; i < evalFactories.length; ++i) {
+        IScalarEvaluatorFactory[] sefs = new IScalarEvaluatorFactory[secondaryFieldAccessEvalFactories.length];
+        for (int i = 0; i < secondaryFieldAccessEvalFactories.length; ++i) {
             sefs[i] = new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter.ScalarEvaluatorFactoryAdapter(
-                    evalFactories[i]);
+                    secondaryFieldAccessEvalFactories[i]);
         }
         AssignRuntimeFactory assign = new AssignRuntimeFactory(outColumns, sefs, projectionList);
         AlgebricksMetaOperatorDescriptor asterixAssignOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 1,

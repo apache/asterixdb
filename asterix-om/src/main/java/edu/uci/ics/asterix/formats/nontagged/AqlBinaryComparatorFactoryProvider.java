@@ -7,6 +7,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AObjectDescBinary
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.BooleanBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.LongBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.RectangleBinaryComparatorFactory;
+import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
@@ -22,13 +23,32 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
 
     private static final long serialVersionUID = 1L;
     public static final AqlBinaryComparatorFactoryProvider INSTANCE = new AqlBinaryComparatorFactoryProvider();
-    public static final PointableBinaryComparatorFactory INTEGER_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(IntegerPointable.FACTORY);
-    public static final PointableBinaryComparatorFactory FLOAT_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(FloatPointable.FACTORY);
-    public static final PointableBinaryComparatorFactory DOUBLE_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(DoublePointable.FACTORY);
-    public static final PointableBinaryComparatorFactory UTF8STRING_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY);
-    
-    
+    public static final PointableBinaryComparatorFactory INTEGER_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
+            IntegerPointable.FACTORY);
+    public static final PointableBinaryComparatorFactory FLOAT_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
+            FloatPointable.FACTORY);
+    public static final PointableBinaryComparatorFactory DOUBLE_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
+            DoublePointable.FACTORY);
+    public static final PointableBinaryComparatorFactory UTF8STRING_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
+            UTF8StringPointable.FACTORY);
+    // Equivalent to UTF8STRING_POINTABLE_INSTANCE but all characters are considered lower case to implement case-insensitive comparisons.    
+    public static final PointableBinaryComparatorFactory UTF8STRING_LOWERCASE_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
+            UTF8StringLowercasePointable.FACTORY);
+
     private AqlBinaryComparatorFactoryProvider() {
+    }
+
+    // This method add the option of ignoring the case in string comparisons.
+    // TODO: We should incorporate this option more nicely, but I'd have to change algebricks.
+    public IBinaryComparatorFactory getBinaryComparatorFactory(Object type, boolean ascending, boolean ignoreCase) {
+        if (type == null) {
+            return anyBinaryComparatorFactory(ascending);
+        }
+        IAType aqlType = (IAType) type;
+        if (aqlType.getTypeTag() == ATypeTag.STRING && ignoreCase) {
+            return addOffset(UTF8STRING_LOWERCASE_POINTABLE_INSTANCE, ascending);
+        }
+        return getBinaryComparatorFactory(type, ascending);
     }
 
     @Override
@@ -119,7 +139,7 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
         if (ascending) {
             return AObjectAscBinaryComparatorFactory.INSTANCE;
         } else {
-            return AObjectDescBinaryComparatorFactory.INSTANCE;            
+            return AObjectDescBinaryComparatorFactory.INSTANCE;
         }
     }
 }

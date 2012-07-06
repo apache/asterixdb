@@ -1,0 +1,33 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/similarity_edit-distance-string-is-filterable.adm";
+
+let $a := ""
+let $b := "abcdefghij"
+let $results :=
+[
+  edit-distance-string-is-filterable($a, 0, 2, false),
+  edit-distance-string-is-filterable($a, 0, 2, true),
+  edit-distance-string-is-filterable($a, 1, 2, false),
+  edit-distance-string-is-filterable($a, 1, 2, true),
+  edit-distance-string-is-filterable($b, 0, 2, false),
+  edit-distance-string-is-filterable($b, 0, 2, true),
+  edit-distance-string-is-filterable($b, 1, 2, false),
+  edit-distance-string-is-filterable($b, 1, 2, true),    
+  edit-distance-string-is-filterable($b, 4, 2, false),
+  edit-distance-string-is-filterable($b, 5, 2, true), 
+  edit-distance-string-is-filterable($b, 5, 2, false),
+  edit-distance-string-is-filterable($b, 6, 2, true),
+  edit-distance-string-is-filterable($b, 0, 3, false),
+  edit-distance-string-is-filterable($b, 0, 3, true),
+  edit-distance-string-is-filterable($b, 1, 3, false),
+  edit-distance-string-is-filterable($b, 1, 3, true),
+  edit-distance-string-is-filterable($b, 2, 3, false),
+  edit-distance-string-is-filterable($b, 3, 3, true), 
+  edit-distance-string-is-filterable($b, 3, 3, false),
+  edit-distance-string-is-filterable($b, 4, 3, true)  
+]
+for $i in $results
+return $i

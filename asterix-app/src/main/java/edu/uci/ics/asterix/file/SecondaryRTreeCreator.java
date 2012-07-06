@@ -12,6 +12,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
+import edu.uci.ics.asterix.translator.DmlTranslator.CompiledCreateIndexStatement;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
@@ -58,8 +59,9 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
     }
 
     @Override
-    protected void setSecondaryRecDescAndComparators(List<String> secondaryKeyFields) throws AlgebricksException,
-            AsterixException {
+    protected void setSecondaryRecDescAndComparators(CompiledCreateIndexStatement createIndexStmt)
+            throws AlgebricksException, AsterixException {
+        List<String> secondaryKeyFields = createIndexStmt.getKeyFields();
         int numSecondaryKeys = secondaryKeyFields.size();
         if (numSecondaryKeys != 1) {
             throw new AsterixException(
@@ -76,8 +78,8 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
         }
         int numDimensions = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
         numNestedSecondaryKeyFields = numDimensions * 2;
-        evalFactories = metadata.getFormat().createMBRFactory(itemType, secondaryKeyFields.get(0), numPrimaryKeys,
-                numDimensions);
+        secondaryFieldAccessEvalFactories = metadata.getFormat().createMBRFactory(itemType, secondaryKeyFields.get(0),
+                numPrimaryKeys, numDimensions);
         secondaryComparatorFactories = new IBinaryComparatorFactory[numNestedSecondaryKeyFields];
         valueProviderFactories = new IPrimitiveValueProviderFactory[numNestedSecondaryKeyFields];
         ISerializerDeserializer[] secondaryRecFields = new ISerializerDeserializer[numPrimaryKeys

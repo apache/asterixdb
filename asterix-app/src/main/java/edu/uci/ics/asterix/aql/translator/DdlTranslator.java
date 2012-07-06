@@ -242,7 +242,7 @@ public class DdlTranslator extends AbstractAqlTranslator {
                     } else {
                         MetadataManager.INSTANCE.addIndex(mdTxnCtx, new Index(compiledDeclarations.getDataverseName(),
                                 datasetName, indexName, stmtCreateIndex.getIndexType(),
-                                stmtCreateIndex.getFieldExprs(), false));
+                                stmtCreateIndex.getFieldExprs(), stmtCreateIndex.getGramLength(), false));
                         runCreateIndexJob(hcc, stmtCreateIndex);
                     }
                     break;
@@ -487,7 +487,7 @@ public class DdlTranslator extends AbstractAqlTranslator {
         // For now we must still convert to a CompiledCreateIndexStatement here.
         CompiledCreateIndexStatement createIndexStmt = new CompiledCreateIndexStatement(stmtCreateIndex.getIndexName()
                 .getValue(), stmtCreateIndex.getDatasetName().getValue(), stmtCreateIndex.getFieldExprs(),
-                stmtCreateIndex.getIndexType());
+                stmtCreateIndex.getGramLength(), stmtCreateIndex.getIndexType());
         JobSpecification spec = IndexOperations.buildSecondaryIndexCreationJobSpec(createIndexStmt,
                 compiledDeclarations);
         if (spec == null) {
