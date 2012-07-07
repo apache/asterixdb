@@ -7,14 +7,17 @@ import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledDatasetDecl;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl;
+import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
+import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
+import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -33,10 +36,13 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * Class that embodies the commonalities between rewrite rules for access methods.
  */
 public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRewriteRule {
-    
+
+    private AqlCompiledMetadataDeclarations metadata;
+
     public abstract Map<FunctionIdentifier, List<IAccessMethod>> getAccessMethods();
-    
-    protected static void registerAccessMethod(IAccessMethod accessMethod, Map<FunctionIdentifier, List<IAccessMethod>> accessMethods) {
+
+    protected static void registerAccessMethod(IAccessMethod accessMethod,
+            Map<FunctionIdentifier, List<IAccessMethod>> accessMethods) {
         List<FunctionIdentifier> funcs = accessMethod.getOptimizableFunctions();
         for (FunctionIdentifier funcIdent : funcs) {
             List<IAccessMethod> l = accessMethods.get(funcIdent);
@@ -47,16 +53,23 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             l.add(accessMethod);
         }
     }
-    
+
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
     }
-    
-    protected void fillSubTreeIndexExprs(OptimizableOperatorSubTree subTree, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
+
+    protected void setMetadataDeclarations(IOptimizationContext context) {
+        AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
+        metadata = metadataProvider.getMetadataDeclarations();
+    }
+
+    protected void fillSubTreeIndexExprs(OptimizableOperatorSubTree subTree,
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) throws AlgebricksException {
         // The assign may be null if there is only a filter on the primary index key.
         // Match variables from lowest assign which comes directly after the dataset scan.
-        List<LogicalVariable> varList = (!subTree.assigns.isEmpty()) ? subTree.assigns.get(subTree.assigns.size() - 1).getVariables() : subTree.dataSourceScan.getVariables();
+        List<LogicalVariable> varList = (!subTree.assigns.isEmpty()) ? subTree.assigns.get(subTree.assigns.size() - 1)
+                .getVariables() : subTree.dataSourceScan.getVariables();
         Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
         // Check applicability of indexes by access method type.
         while (amIt.hasNext()) {
@@ -80,26 +93,25 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             }
         }
     }
-    
+
     /**
      * Simply picks the first index that it finds.
      * TODO: Improve this decision process by making it more systematic.
      */
-    protected Pair<IAccessMethod, AqlCompiledIndexDecl> chooseIndex(
-            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
+    protected Pair<IAccessMethod, Index> chooseIndex(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
         Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
         while (amIt.hasNext()) {
             Map.Entry<IAccessMethod, AccessMethodAnalysisContext> amEntry = amIt.next();
             AccessMethodAnalysisContext analysisCtx = amEntry.getValue();
-            Iterator<Map.Entry<AqlCompiledIndexDecl, List<Integer>>> indexIt = analysisCtx.indexExprs.entrySet().iterator();
+            Iterator<Map.Entry<Index, List<Integer>>> indexIt = analysisCtx.indexExprs.entrySet().iterator();
             if (indexIt.hasNext()) {
-                Map.Entry<AqlCompiledIndexDecl, List<Integer>> indexEntry = indexIt.next();
-                return new Pair<IAccessMethod, AqlCompiledIndexDecl>(amEntry.getKey(), indexEntry.getKey());
+                Map.Entry<Index, List<Integer>> indexEntry = indexIt.next();
+                return new Pair<IAccessMethod, Index>(amEntry.getKey(), indexEntry.getKey());
             }
         }
         return null;
     }
-    
+
     /**
      * Removes irrelevant access methods candidates, based on whether the
      * expressions in the query match those in the index. For example, some
@@ -107,18 +119,17 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * only require a match on a prefix of fields to be applicable. This methods
      * removes all index candidates indexExprs that are definitely not
      * applicable according to the expressions involved.
-     * 
      */
     public void pruneIndexCandidates(IAccessMethod accessMethod, AccessMethodAnalysisContext analysisCtx) {
-        Iterator<Map.Entry<AqlCompiledIndexDecl, List<Integer>>> it = analysisCtx.indexExprs.entrySet().iterator();
+        Iterator<Map.Entry<Index, List<Integer>>> it = analysisCtx.indexExprs.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry<AqlCompiledIndexDecl, List<Integer>> entry = it.next();
-            AqlCompiledIndexDecl index = entry.getKey();
+            Map.Entry<Index, List<Integer>> entry = it.next();
+            Index index = entry.getKey();
             Iterator<Integer> exprsIter = entry.getValue().iterator();
             boolean allUsed = true;
             int lastFieldMatched = -1;
-            for (int i = 0; i < index.getFieldExprs().size(); i++) {
-                String keyField = index.getFieldExprs().get(i);
+            for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
+                String keyField = index.getKeyFieldNames().get(i);
                 boolean foundKeyField = false;
                 while (exprsIter.hasNext()) {
                     Integer ix = exprsIter.next();
@@ -140,7 +151,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 if (!foundKeyField) {
                     allUsed = false;
                     break;
-                }                
+                }
             }
             // If the access method requires all exprs to be matched but they are not, remove this candidate.
             if (!allUsed && accessMethod.matchAllIndexExprs()) {
@@ -154,37 +165,39 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             }
         }
     }
-    
+
     /**
      * Analyzes the given selection condition, filling analyzedAMs with applicable access method types.
      * At this point we are not yet consulting the metadata whether an actual index exists or not.
      */
-    protected boolean analyzeCondition(ILogicalExpression cond, List<AssignOperator> assigns, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
+    protected boolean analyzeCondition(ILogicalExpression cond, List<AssignOperator> assigns,
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) cond;
         FunctionIdentifier funcIdent = funcExpr.getFunctionIdentifier();
         // Don't consider optimizing a disjunctive condition with an index (too complicated for now).
         if (funcIdent == AlgebricksBuiltinFunctions.OR) {
             return false;
         }
-        boolean found = analyzeFunctionExpr(funcExpr, assigns, analyzedAMs);        
+        boolean found = analyzeFunctionExpr(funcExpr, assigns, analyzedAMs);
         for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
             ILogicalExpression argExpr = arg.getValue();
             if (argExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
                 continue;
             }
             AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) argExpr;
-            boolean matchFound = analyzeFunctionExpr(argFuncExpr, assigns, analyzedAMs); 
+            boolean matchFound = analyzeFunctionExpr(argFuncExpr, assigns, analyzedAMs);
             found = found || matchFound;
         }
         return found;
     }
-    
+
     /**
      * Finds applicable access methods for the given function expression based
      * on the function identifier, and an analysis of the function's arguments.
      * Updates the analyzedAMs accordingly.
      */
-    protected boolean analyzeFunctionExpr(AbstractFunctionCallExpression funcExpr, List<AssignOperator> assigns, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
+    protected boolean analyzeFunctionExpr(AbstractFunctionCallExpression funcExpr, List<AssignOperator> assigns,
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
         FunctionIdentifier funcIdent = funcExpr.getFunctionIdentifier();
         if (funcIdent == AlgebricksBuiltinFunctions.AND) {
             return false;
@@ -197,7 +210,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         boolean atLeastOneMatchFound = false;
         // Place holder for a new analysis context in case we need one.
         AccessMethodAnalysisContext newAnalysisCtx = new AccessMethodAnalysisContext();
-        for(IAccessMethod accessMethod : relevantAMs) {
+        for (IAccessMethod accessMethod : relevantAMs) {
             AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(accessMethod);
             // Use the current place holder.
             if (analysisCtx == null) {
@@ -216,38 +229,38 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         }
         return atLeastOneMatchFound;
     }
-    
+
     /**
-     * Finds secondary indexes whose keys include fieldName, and adds a mapping in analysisCtx.indexEsprs 
+     * Finds secondary indexes whose keys include fieldName, and adds a mapping in analysisCtx.indexEsprs
      * from that index to the a corresponding optimizable function expression.
      * 
      * @return true if a candidate index was added to foundIndexExprs, false
      *         otherwise
+     * @throws AlgebricksException
      */
-    protected boolean fillIndexExprs(String fieldName, int matchedFuncExprIndex,
-            AqlCompiledDatasetDecl datasetDecl, AccessMethodAnalysisContext analysisCtx) {
-        AqlCompiledIndexDecl primaryIndexDecl = DatasetUtils.getPrimaryIndex(datasetDecl);
-        List<String> primaryIndexFields = primaryIndexDecl.getFieldExprs();     
-        List<AqlCompiledIndexDecl> indexCandidates = DatasetUtils.findSecondaryIndexesByOneOfTheKeys(datasetDecl, fieldName);
-        // Check whether the primary index is a candidate. If so, add it to the list.
-        if (primaryIndexFields.contains(fieldName)) {
-            if (indexCandidates == null) {
-                indexCandidates = new ArrayList<AqlCompiledIndexDecl>(1);
+    protected boolean fillIndexExprs(String fieldName, int matchedFuncExprIndex, Dataset dataset,
+            AccessMethodAnalysisContext analysisCtx) throws AlgebricksException {
+        List<Index> datasetIndexes = metadata.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
+        List<Index> indexCandidates = new ArrayList<Index>();
+        // Add an index to the candidates if one of the indexed fields is fieldName.
+        for (Index index : datasetIndexes) {
+            if (index.getKeyFieldNames().contains(fieldName)) {
+                indexCandidates.add(index);
             }
-            indexCandidates.add(primaryIndexDecl);
         }
         // No index candidates for fieldName.
-        if (indexCandidates == null) {
+        if (indexCandidates.isEmpty()) {
             return false;
         }
         // Go through the candidates and fill indexExprs.
-        for (AqlCompiledIndexDecl index : indexCandidates) {
-            analysisCtx.addIndexExpr(datasetDecl, index, matchedFuncExprIndex);
+        for (Index index : indexCandidates) {
+            analysisCtx.addIndexExpr(dataset, index, matchedFuncExprIndex);
         }
         return true;
     }
 
-    protected void fillAllIndexExprs(List<LogicalVariable> varList, OptimizableOperatorSubTree subTree, AccessMethodAnalysisContext analysisCtx) {
+    protected void fillAllIndexExprs(List<LogicalVariable> varList, OptimizableOperatorSubTree subTree,
+            AccessMethodAnalysisContext analysisCtx) throws AlgebricksException {
         for (int optFuncExprIndex = 0; optFuncExprIndex < analysisCtx.matchedFuncExprs.size(); optFuncExprIndex++) {
             for (int varIndex = 0; varIndex < varList.size(); varIndex++) {
                 LogicalVariable var = varList.get(varIndex);
@@ -263,7 +276,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     // Get the fieldName corresponding to the assigned variable at varIndex
                     // from the assign operator right above the datasource scan.
                     // If the expr at varIndex is not a fieldAccess we get back null.
-                    fieldName = getFieldNameOfFieldAccess(subTree.assigns.get(subTree.assigns.size() - 1), subTree.recordType, varIndex);
+                    fieldName = getFieldNameOfFieldAccess(subTree.assigns.get(subTree.assigns.size() - 1),
+                            subTree.recordType, varIndex);
                     if (fieldName == null) {
                         continue;
                     }
@@ -274,24 +288,24 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         break;
                     }
                     // The variable value is one of the partitioning fields.
-                    fieldName = DatasetUtils.getPartitioningExpressions(subTree.datasetDecl).get(varIndex);
+                    fieldName = DatasetUtils.getPartitioningKeys(subTree.dataset).get(varIndex);
                 }
                 // Set the fieldName in the corresponding matched function expression, and remember matching subtree.
                 optFuncExpr.setFieldName(funcVarIndex, fieldName);
                 optFuncExpr.setOptimizableSubTree(funcVarIndex, subTree);
-                fillIndexExprs(fieldName, optFuncExprIndex, subTree.datasetDecl, analysisCtx);
+                fillIndexExprs(fieldName, optFuncExprIndex, subTree.dataset, analysisCtx);
             }
         }
     }
-    
+
     /**
      * Returns the field name corresponding to the assigned variable at varIndex.
      * Returns null if the expr at varIndex is not a field access function.
      */
     protected String getFieldNameOfFieldAccess(AssignOperator assign, ARecordType recordType, int varIndex) {
         // Get expression corresponding to var at varIndex.
-        AbstractLogicalExpression assignExpr = (AbstractLogicalExpression) assign.getExpressions()
-                .get(varIndex).getValue();
+        AbstractLogicalExpression assignExpr = (AbstractLogicalExpression) assign.getExpressions().get(varIndex)
+                .getValue();
         if (assignExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return null;
         }

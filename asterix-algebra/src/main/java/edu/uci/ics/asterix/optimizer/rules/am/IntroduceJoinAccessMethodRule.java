@@ -6,8 +6,8 @@ import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
+import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -47,26 +47,28 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
  * to accept any subtree on one side, as long as the other side has a datasource scan.
  */
 public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethodRule {
-    
+
     protected Mutable<ILogicalOperator> joinRef = null;
     protected InnerJoinOperator join = null;
-	protected AbstractFunctionCallExpression joinCond = null;
-	protected final OptimizableOperatorSubTree leftSubTree = new OptimizableOperatorSubTree();	
-	protected final OptimizableOperatorSubTree rightSubTree = new OptimizableOperatorSubTree();
-	
-	// Register access methods.
-	protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<FunctionIdentifier, List<IAccessMethod>>();
-	static {
-	    registerAccessMethod(InvertedIndexAccessMethod.INSTANCE, accessMethods);
-	}
-	
+    protected AbstractFunctionCallExpression joinCond = null;
+    protected final OptimizableOperatorSubTree leftSubTree = new OptimizableOperatorSubTree();
+    protected final OptimizableOperatorSubTree rightSubTree = new OptimizableOperatorSubTree();
+
+    // Register access methods.
+    protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<FunctionIdentifier, List<IAccessMethod>>();
+    static {
+        registerAccessMethod(InvertedIndexAccessMethod.INSTANCE, accessMethods);
+    }
+
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
-    	// Match operator pattern and initialize optimizable sub trees.
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        setMetadataDeclarations(context);
+
+        // Match operator pattern and initialize optimizable sub trees.
         if (!matchesOperatorPattern(opRef, context)) {
             return false;
         }
-        
         // Analyze condition on those optimizable subtrees that have a datasource scan.
         Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new HashMap<IAccessMethod, AccessMethodAnalysisContext>();
         boolean matchInLeftSubTree = false;
@@ -101,14 +103,14 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
             fillSubTreeIndexExprs(rightSubTree, analyzedAMs);
         }
         pruneIndexCandidates(analyzedAMs);
-        
+
         // Choose index to be applied.
-        Pair<IAccessMethod, AqlCompiledIndexDecl> chosenIndex = chooseIndex(analyzedAMs);
+        Pair<IAccessMethod, Index> chosenIndex = chooseIndex(analyzedAMs);
         if (chosenIndex == null) {
             context.addToDontApplySet(this, join);
             return false;
         }
-        
+
         // Apply plan transformation using chosen index.
         AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenIndex.first);
         boolean res = chosenIndex.first.applyJoinPlanTransformation(joinRef, leftSubTree, rightSubTree,
@@ -119,7 +121,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         context.addToDontApplySet(this, join);
         return res;
     }
-    
+
     protected boolean matchesOperatorPattern(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         // First check that the operator is a join and its condition is a function call.
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();

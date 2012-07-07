@@ -19,6 +19,12 @@ import java.io.Serializable;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
+import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.AUnionType;
+import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 
 /**
  * Metadata describing an index.
@@ -90,5 +96,31 @@ public class Index implements Serializable {
 
     public boolean isSecondaryIndex() {
         return !isPrimaryIndex();
+    }
+
+    public static Pair<IAType, Boolean> getNonNullableKeyFieldType(String expr, ARecordType recType)
+            throws AlgebricksException {
+        IAType keyType = Index.keyFieldType(expr, recType);
+        boolean nullable = false;
+        if (keyType.getTypeTag() == ATypeTag.UNION) {
+            AUnionType unionType = (AUnionType) keyType;
+            if (unionType.isNullableType()) {
+                // The non-null type is always at index 1.
+                keyType = unionType.getUnionList().get(1);
+                nullable = true;
+            }
+        }
+        return new Pair<IAType, Boolean>(keyType, nullable);
+    }
+
+    private static IAType keyFieldType(String expr, ARecordType recType) throws AlgebricksException {
+        String[] names = recType.getFieldNames();
+        int n = names.length;
+        for (int i = 0; i < n; i++) {
+            if (names[i].equals(expr)) {
+                return recType.getFieldTypes()[i];
+            }
+        }
+        throw new AlgebricksException("Could not find field " + expr + " in the schema.");
     }
 }

@@ -35,7 +35,6 @@ import edu.uci.ics.asterix.metadata.IDatasetDetails;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledDatasetDecl;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
@@ -461,11 +460,11 @@ public class DmlTranslator extends AbstractAqlTranslator {
                 clauseList.add(dieClause);
             }
 
-            AqlCompiledDatasetDecl aqlDataset = compiledDeclarations.findDataset(datasetName);
-            if (aqlDataset == null) {
+            Dataset dataset = compiledDeclarations.findDataset(datasetName);
+            if (dataset == null) {
                 throw new AlgebricksException("Unknown dataset " + datasetName);
             }
-            String itemTypeName = aqlDataset.getItemTypeName();
+            String itemTypeName = dataset.getItemTypeName();
             IAType itemType = compiledDeclarations.findType(itemTypeName);
             ARecordType recType = (ARecordType) itemType;
             String[] fieldNames = recType.getFieldNames();

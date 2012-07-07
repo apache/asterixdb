@@ -6,8 +6,8 @@ import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
+import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -51,29 +51,32 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
  * 
  */
 public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMethodRule {
-    
-	// Operators representing the patterns to be matched:
+
+    // Operators representing the patterns to be matched:
     // These ops are set in matchesPattern()
     protected Mutable<ILogicalOperator> selectRef = null;
     protected SelectOperator select = null;
-	protected AbstractFunctionCallExpression selectCond = null;
-	protected final OptimizableOperatorSubTree subTree = new OptimizableOperatorSubTree();
+    protected AbstractFunctionCallExpression selectCond = null;
+    protected final OptimizableOperatorSubTree subTree = new OptimizableOperatorSubTree();
 
-	// Register access methods.
-	protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<FunctionIdentifier, List<IAccessMethod>>();
-	static {
-	    registerAccessMethod(BTreeAccessMethod.INSTANCE, accessMethods);
-	    registerAccessMethod(RTreeAccessMethod.INSTANCE, accessMethods);
-	    registerAccessMethod(InvertedIndexAccessMethod.INSTANCE, accessMethods);
-	}
-	
+    // Register access methods.
+    protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<FunctionIdentifier, List<IAccessMethod>>();
+    static {
+        registerAccessMethod(BTreeAccessMethod.INSTANCE, accessMethods);
+        registerAccessMethod(RTreeAccessMethod.INSTANCE, accessMethods);
+        registerAccessMethod(InvertedIndexAccessMethod.INSTANCE, accessMethods);
+    }
+
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
-    	// Match operator pattern and initialize operator members.
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        setMetadataDeclarations(context);
+
+        // Match operator pattern and initialize operator members.
         if (!matchesOperatorPattern(opRef, context)) {
             return false;
         }
-        
+
         // Analyze select condition.
         Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new HashMap<IAccessMethod, AccessMethodAnalysisContext>();
         if (!analyzeCondition(selectCond, subTree.assigns, analyzedAMs)) {
@@ -84,28 +87,28 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         if (!subTree.setDatasetAndTypeMetadata((AqlMetadataProvider) context.getMetadataProvider())) {
             return false;
         }
-        
+
         fillSubTreeIndexExprs(subTree, analyzedAMs);
         pruneIndexCandidates(analyzedAMs);
-        
+
         // Choose index to be applied.
-        Pair<IAccessMethod, AqlCompiledIndexDecl> chosenIndex = chooseIndex(analyzedAMs);
+        Pair<IAccessMethod, Index> chosenIndex = chooseIndex(analyzedAMs);
         if (chosenIndex == null) {
             context.addToDontApplySet(this, select);
             return false;
         }
-        
+
         // Apply plan transformation using chosen index.
         AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenIndex.first);
-        boolean res = chosenIndex.first.applySelectPlanTransformation(selectRef, subTree, 
-                chosenIndex.second, analysisCtx, context);
+        boolean res = chosenIndex.first.applySelectPlanTransformation(selectRef, subTree, chosenIndex.second,
+                analysisCtx, context);
         if (res) {
             OperatorPropertiesUtil.typeOpRec(opRef, context);
         }
         context.addToDontApplySet(this, select);
         return res;
     }
-    
+
     protected boolean matchesOperatorPattern(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         // First check that the operator is a select and its condition is a function call.
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();

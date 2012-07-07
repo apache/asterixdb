@@ -6,9 +6,9 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledDatasetDecl;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
+import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceS
 
 /**
  * Operator subtree that matches the following patterns, and provides convenient access to its nodes:
- * (select)? <-- (assign)+ <-- (datasource scan) 
+ * (select)? <-- (assign)+ <-- (datasource scan)
  * and
  * (select)? <-- (datasource scan)
  */
@@ -34,9 +34,9 @@ public class OptimizableOperatorSubTree {
     public Mutable<ILogicalOperator> dataSourceScanRef = null;
     public DataSourceScanOperator dataSourceScan = null;
     // Dataset and type metadata. Set in setDatasetAndTypeMetadata().
-    public AqlCompiledDatasetDecl datasetDecl = null;
-    public ARecordType recordType = null;    
-    
+    public Dataset dataset = null;
+    public ARecordType recordType = null;
+
     public boolean initFromSubTree(Mutable<ILogicalOperator> subTreeOpRef) {
         rootRef = subTreeOpRef;
         root = subTreeOpRef.getValue();
@@ -62,7 +62,7 @@ public class OptimizableOperatorSubTree {
             assignRefs.add(subTreeOpRef);
             assigns.add((AssignOperator) subTreeOp);
             subTreeOpRef = subTreeOp.getInputs().get(0);
-            subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();   
+            subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();
         } while (subTreeOp.getOperatorTag() == LogicalOperatorTag.ASSIGN);
         // Set to last valid assigns.
         subTreeOpRef = assignRefs.get(assignRefs.size() - 1);
@@ -77,11 +77,11 @@ public class OptimizableOperatorSubTree {
         dataSourceScan = (DataSourceScanOperator) op3;
         return true;
     }
-    
+
     /**
      * Find the dataset corresponding to the datasource scan in the metadata.
      * Also sets recordType to be the type of that dataset.
-     */  
+     */
     public boolean setDatasetAndTypeMetadata(AqlMetadataProvider metadataProvider) throws AlgebricksException {
         if (dataSourceScan == null) {
             return false;
@@ -92,22 +92,22 @@ public class OptimizableOperatorSubTree {
             return false;
         }
         AqlCompiledMetadataDeclarations metadata = metadataProvider.getMetadataDeclarations();
-        datasetDecl = metadata.findDataset(datasetName);
-        if (datasetDecl == null) {
+        dataset = metadata.findDataset(datasetName);
+        if (dataset == null) {
             throw new AlgebricksException("No metadata for dataset " + datasetName);
         }
-        if (datasetDecl.getDatasetType() != DatasetType.INTERNAL && datasetDecl.getDatasetType() != DatasetType.FEED) {
+        if (dataset.getDatasetType() != DatasetType.INTERNAL && dataset.getDatasetType() != DatasetType.FEED) {
             return false;
         }
         // Get the record type for that dataset.
-        IAType itemType = metadata.findType(datasetDecl.getItemTypeName());
+        IAType itemType = metadata.findType(dataset.getItemTypeName());
         if (itemType.getTypeTag() != ATypeTag.RECORD) {
             return false;
         }
         recordType = (ARecordType) itemType;
         return true;
     }
-    
+
     public boolean hasDataSourceScan() {
         return dataSourceScan != null;
     }

@@ -147,7 +147,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                             .getValueByPos(MetadataRecordTypes.FEED_DETAILS_ARECORD_STATE_FIELD_INDEX))
                             .getStringValue();
 
-                     datasetDetails = new FeedDatasetDetails(fileStructure, partitioningStrategy, partitioningKey,
+                    datasetDetails = new FeedDatasetDetails(fileStructure, partitioningStrategy, partitioningKey,
                             partitioningKey, groupName, adapter, properties, functionIdentifier, feedState);
                 }
                 break;
@@ -209,13 +209,13 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
         // write field 2
         fieldValue.reset();
-        aString.setValue(dataset.getDatatypeName());
+        aString.setValue(dataset.getItemTypeName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_DATATYPENAME_FIELD_INDEX, fieldValue);
 
         // write field 3
         fieldValue.reset();
-        aString.setValue(dataset.getType().toString());
+        aString.setValue(dataset.getDatasetType().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_DATASETTYPE_FIELD_INDEX, fieldValue);
 
@@ -241,7 +241,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
             throws HyracksDataException {
 
         dataset.getDatasetDetails().writeDatasetDetailsRecordType(fieldValue.getDataOutput());
-        switch (dataset.getType()) {
+        switch (dataset.getDatasetType()) {
             case INTERNAL:
                 recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_INTERNALDETAILS_FIELD_INDEX, fieldValue);
                 break;

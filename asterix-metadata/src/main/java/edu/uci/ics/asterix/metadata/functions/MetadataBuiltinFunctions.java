@@ -1,8 +1,8 @@
 package edu.uci.ics.asterix.metadata.functions;
 
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledDatasetDecl;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
+import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
@@ -53,11 +53,11 @@ public class MetadataBuiltinFunctions {
                 AsterixConstantValue acv = (AsterixConstantValue) ((ConstantExpression) a1).getValue();
                 String datasetName = ((AString) acv.getObject()).getStringValue();
                 AqlCompiledMetadataDeclarations metadata = ((AqlMetadataProvider) mp).getMetadataDeclarations();
-                AqlCompiledDatasetDecl acdd = metadata.findDataset(datasetName);
-                if (acdd == null) {
+                Dataset dataset = metadata.findDataset(datasetName);
+                if (dataset == null) {
                     throw new AlgebricksException("Could not find dataset " + datasetName);
                 }
-                String tn = acdd.getItemTypeName();
+                String tn = dataset.getItemTypeName();
                 IAType t2 = metadata.findType(tn);
                 if (t2 == null) {
                     throw new AlgebricksException("No type for dataset " + datasetName);
@@ -89,11 +89,11 @@ public class MetadataBuiltinFunctions {
                 AsterixConstantValue acv = (AsterixConstantValue) ((ConstantExpression) a1).getValue();
                 String datasetName = ((AString) acv.getObject()).getStringValue();
                 AqlCompiledMetadataDeclarations metadata = ((AqlMetadataProvider) mp).getMetadataDeclarations();
-                AqlCompiledDatasetDecl acdd = metadata.findDataset(datasetName);
-                if (acdd == null) {
+                Dataset dataset = metadata.findDataset(datasetName);
+                if (dataset == null) {
                     throw new AlgebricksException("Could not find dataset " + datasetName);
                 }
-                String tn = acdd.getItemTypeName();
+                String tn = dataset.getItemTypeName();
                 IAType t2 = metadata.findType(tn);
                 if (t2 == null) {
                     throw new AlgebricksException("No type for dataset " + datasetName);
