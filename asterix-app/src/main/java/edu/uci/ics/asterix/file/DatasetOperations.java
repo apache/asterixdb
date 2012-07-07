@@ -76,7 +76,6 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDropOperatorDescr
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
-// TODO: Lots of common code in this file. Clean it up!
 public class DatasetOperations {
 
     private static final PhysicalOptimizationConfig physicalOptimizationConfig = OptimizationConfUtil
@@ -146,7 +145,6 @@ public class DatasetOperations {
         return specs;
     }
 
-    // TODO: Lots of common code in this file. Refactor everything after merging in asterix-fix-issue-9.
     public static JobSpecification createDatasetJobSpec(String datasetName, AqlCompiledMetadataDeclarations metadata)
             throws AsterixException, AlgebricksException {
         Dataset dataset = metadata.findDataset(datasetName);
@@ -177,6 +175,7 @@ public class DatasetOperations {
         return spec;
     }
 
+    @SuppressWarnings("rawtypes")
     public static Job createLoadDatasetJobSpec(CompiledLoadFromFileStatement loadStmt,
             AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException {
         String datasetName = loadStmt.getDatasetName();
