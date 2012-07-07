@@ -20,11 +20,16 @@ create type CSXType as open {
   misc: string
 }
 
-create dataset DBLP(DBLPType) partitioned by key;
-create dataset CSX(CSXType) partitioned by key;
+create dataset DBLP(DBLPType) partitioned by key id;
+create dataset CSX(CSXType) partitioned by key id;
 
-load dataset DBLP from nc1:'data/pub-small/dblp-small-id.txt' delimited by ':';
-load dataset CSX from nc1:'data/pub-small/csx-small-id.txt' delimited by ':';
+load dataset DBLP
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/pub-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
+
+load dataset CSX
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/pub-small/csx-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
 
 write output to nc1:'rttest/fuzzyjoin_dblp-csx-aqlplus_1.adm';
 

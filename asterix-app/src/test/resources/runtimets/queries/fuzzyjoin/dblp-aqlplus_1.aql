@@ -14,7 +14,9 @@ create type DBLPType as closed {
 
 create dataset DBLP(DBLPType) partitioned by key id;
 
-load dataset DBLP from nc1:'data/pub-small/dblp-small-id.txt' delimited by ':';
+load dataset DBLP 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/pub-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
 
 write output to nc1:'rttest/fuzzyjoin_dblp-aqlplus_1.adm';
 
