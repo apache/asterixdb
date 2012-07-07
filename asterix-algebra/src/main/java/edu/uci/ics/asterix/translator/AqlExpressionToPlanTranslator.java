@@ -224,10 +224,10 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             }
 
             AqlSourceId sourceId = new AqlSourceId(dataVerseName, outputDatasetName);
-            String itemTypeName = dataset.getDatatypeName();
+            String itemTypeName = dataset.getItemTypeName();
             IAType itemType = compiledDeclarations.findType(itemTypeName);
             AqlDataSource dataSource = new AqlDataSource(sourceId, dataset, itemType);
-            if (dataset.getType() == DatasetType.EXTERNAL) {
+            if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
                 throw new AlgebricksException("Cannot write output to an external dataset.");
             }
             ArrayList<LogicalVariable> vars = new ArrayList<LogicalVariable>();

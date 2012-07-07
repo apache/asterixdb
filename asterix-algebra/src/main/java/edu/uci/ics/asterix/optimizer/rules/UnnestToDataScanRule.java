@@ -86,7 +86,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
 
                 ArrayList<LogicalVariable> v = new ArrayList<LogicalVariable>();
 
-                if (dataset.getType() == DatasetType.INTERNAL || dataset.getType() == DatasetType.FEED) {
+                if (dataset.getDatasetType() == DatasetType.INTERNAL || dataset.getDatasetType() == DatasetType.FEED) {
                     int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
                     for (int i = 0; i < numPrimaryKeys; i++) {
                         v.add(context.newVar());
@@ -131,8 +131,8 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
                     throw new AlgebricksException("Could not find dataset " + datasetName);
                 }
 
-                if (dataset.getType() != DatasetType.FEED) {
-                    throw new IllegalArgumentException("invalid dataset type:" + dataset.getType());
+                if (dataset.getDatasetType() != DatasetType.FEED) {
+                    throw new IllegalArgumentException("invalid dataset type:" + dataset.getDatasetType());
                 }
 
                 AqlSourceId asid = new AqlSourceId(metadata.getDataverseName(), datasetName);
@@ -169,7 +169,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
         if (!aqlId.getDataverseName().equals(metadata.getDataverseName())) {
             return null;
         }
-        String tName = dataset.getDatatypeName();
+        String tName = dataset.getItemTypeName();
         IAType itemType = metadata.findType(tName);
         ExternalFeedDataSource extDataSource = new ExternalFeedDataSource(aqlId, dataset, itemType,
                 AqlDataSource.AqlDataSourceType.EXTERNAL_FEED);

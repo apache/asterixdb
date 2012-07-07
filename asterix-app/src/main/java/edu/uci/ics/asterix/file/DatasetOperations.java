@@ -100,7 +100,7 @@ public class DatasetOperations {
         if (dataset == null) {
             throw new AlgebricksException("DROP DATASET: No metadata for dataset " + datasetName);
         }
-        if (dataset.getType() == DatasetType.EXTERNAL) {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             return new JobSpecification[0];
         }
 
@@ -153,7 +153,7 @@ public class DatasetOperations {
         if (dataset == null) {
             throw new AsterixException("Could not find dataset " + datasetName);
         }
-        ARecordType itemType = (ARecordType) metadata.findType(dataset.getDatatypeName());
+        ARecordType itemType = (ARecordType) metadata.findType(dataset.getItemTypeName());
         JobSpecification spec = new JobSpecification();
         IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(
                 dataset, itemType, metadata.getFormat().getBinaryComparatorFactoryProvider());
@@ -184,14 +184,14 @@ public class DatasetOperations {
         if (dataset == null) {
             throw new AsterixException("Could not find dataset " + datasetName);
         }
-        if (dataset.getType() != DatasetType.INTERNAL
-                && dataset.getType() != DatasetType.FEED) {
+        if (dataset.getDatasetType() != DatasetType.INTERNAL
+                && dataset.getDatasetType() != DatasetType.FEED) {
             throw new AsterixException("Cannot load data into dataset  (" + datasetName + ")" + "of type "
-                    + dataset.getType());
+                    + dataset.getDatasetType());
         }
         JobSpecification spec = new JobSpecification();
 
-        ARecordType itemType = (ARecordType) metadata.findType(dataset.getDatatypeName());
+        ARecordType itemType = (ARecordType) metadata.findType(dataset.getItemTypeName());
         IDataFormat format = metadata.getFormat();
         ISerializerDeserializer payloadSerde = format.getSerdeProvider().getSerializerDeserializer(itemType);
 

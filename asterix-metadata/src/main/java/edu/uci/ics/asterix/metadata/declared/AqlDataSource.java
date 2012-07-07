@@ -84,7 +84,7 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
     public AqlDataSource(AqlSourceId id, Dataset dataset, IAType itemType) throws AlgebricksException {
         this.id = id;
         this.dataset = dataset;
-        switch (dataset.getType()) {
+        switch (dataset.getDatasetType()) {
             case FEED:
                 initFeedDataset(itemType, dataset);
                 break;
@@ -170,7 +170,7 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
 
     @Override
     public IDataSourcePropertiesProvider getPropertiesProvider() {
-        return new AqlDataSourcePartitioningProvider(dataset.getType(), domain);
+        return new AqlDataSourcePartitioningProvider(dataset.getDatasetType(), domain);
     }
 
     @Override

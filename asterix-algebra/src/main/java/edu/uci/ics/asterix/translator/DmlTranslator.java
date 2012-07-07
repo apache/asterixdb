@@ -464,7 +464,7 @@ public class DmlTranslator extends AbstractAqlTranslator {
             if (dataset == null) {
                 throw new AlgebricksException("Unknown dataset " + datasetName);
             }
-            String itemTypeName = dataset.getDatatypeName();
+            String itemTypeName = dataset.getItemTypeName();
             IAType itemType = compiledDeclarations.findType(itemTypeName);
             ARecordType recType = (ARecordType) itemType;
             String[] fieldNames = recType.getFieldNames();

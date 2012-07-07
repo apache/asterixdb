@@ -126,7 +126,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         if (dataset == null) {
             throw new AlgebricksException("Unknown dataset " + dataSource.getId().getDatasetName());
         }
-        switch (dataset.getType()) {
+        switch (dataset.getDatasetType()) {
             case FEED:
                 if (dataSource instanceof ExternalFeedDataSource) {
                     return buildExternalDatasetScan(jobSpec, dataset, dataSource);
@@ -148,29 +148,21 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildInternalDatasetScan(JobSpecification jobSpec,
             List<LogicalVariable> outputVars, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv,
-            Dataset dataset, IDataSource<AqlSourceId> dataSource, JobGenContext context)
-            throws AlgebricksException {
+            Dataset dataset, IDataSource<AqlSourceId> dataSource, JobGenContext context) throws AlgebricksException {
         AqlSourceId asid = dataSource.getId();
         String dataverseName = asid.getDataverseName();
         String datasetName = asid.getDatasetName();
         Index primaryIndex = metadata.getDatasetPrimaryIndex(dataverseName, datasetName);
-        return buildBtreeRuntime(jobSpec, outputVars, opSchema, typeEnv, metadata, context, false, datasetName, dataset,
-                primaryIndex.getIndexName(), null, null, true, true);
+        return buildBtreeRuntime(jobSpec, outputVars, opSchema, typeEnv, metadata, context, false, datasetName,
+                dataset, primaryIndex.getIndexName(), null, null, true, true);
     }
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDatasetScan(JobSpecification jobSpec,
             Dataset dataset, IDataSource<AqlSourceId> dataSource) throws AlgebricksException {
-        String itemTypeName = dataset.getDatatypeName();
-        IAType itemType;
-        try {
-            itemType = metadata.findType(itemTypeName);
-        } catch (Exception e) {
-            throw new AlgebricksException(e);
-        }
-
+        String itemTypeName = dataset.getItemTypeName();
+        IAType itemType = metadata.findType(itemTypeName);
         if (dataSource instanceof ExternalFeedDataSource) {
-            FeedDatasetDetails datasetDetails = (FeedDatasetDetails) ((ExternalFeedDataSource) dataSource).getDataset()
-                    .getDatasetDetails();
+            FeedDatasetDetails datasetDetails = (FeedDatasetDetails) dataset.getDatasetDetails();
             return buildFeedIntakeRuntime(jobSpec, metadata.getDataverseName(), dataset.getDatasetName(), itemType,
                     datasetDetails, metadata.getFormat());
         } else {
@@ -328,14 +320,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             AqlCompiledMetadataDeclarations metadata, JobGenContext context, JobSpecification jobSpec,
             String datasetName, Dataset dataset, String indexName, int[] keyFields)
             throws AlgebricksException {
-        // TODO: This can be shrunk to a single line.
-        String itemTypeName = dataset.getDatatypeName();
-        IAType itemType = metadata.findType(itemTypeName);
-        if (itemType.getTypeTag() != ATypeTag.RECORD) {
-            throw new AlgebricksException("Only record types can be indexed.");
-        }
-        ARecordType recType = (ARecordType) itemType;
-
+        ARecordType recType = (ARecordType) metadata.findType(dataset.getItemTypeName());
         boolean isSecondary = true;
         Index primaryIndex = metadata.getDatasetPrimaryIndex(dataset.getDataverseName(), dataset.getDatasetName());
         if (primaryIndex != null) {
@@ -350,72 +335,60 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         int numSecondaryKeys = 0;
         int numNestedSecondaryKeyFields = 0;
         int i = 0;
-        if (isSecondary) {
-            Index secondaryIndex = metadata.getIndex(dataset.getDataverseName(), dataset.getDatasetName(), indexName);
-            if (secondaryIndex == null) {
-                throw new AlgebricksException("Code generation error: no index " + indexName + " for dataset "
-                        + datasetName);
-            }
-            List<String> secondaryKeyFields = secondaryIndex.getKeyFieldNames();
-            numSecondaryKeys = secondaryKeyFields.size();
-
-            if (numSecondaryKeys != 1) {
-                throw new AlgebricksException(
-                        "Cannot use "
-                                + numSecondaryKeys
-                                + " fields as a key for the R-tree index. There can be only one field as a key for the R-tree index.");
-            }
-
-            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableKeyFieldType(
-                    secondaryKeyFields.get(0), recType);
-            IAType keyType = keyTypePair.first;
-            if (keyType == null) {
-                throw new AlgebricksException("Could not find field " + secondaryKeyFields.get(0) + " in the schema.");
-            }
-
-            int dimension = NonTaggedFormatUtil.getNumDimensions(keyType.getTypeTag());
-            numNestedSecondaryKeyFields = dimension * 2;
-
-            int numFields = numNestedSecondaryKeyFields + numPrimaryKeys;
-            recordFields = new ISerializerDeserializer[numFields];
-            typeTraits = new ITypeTraits[numFields];
-            comparatorFactories = new IBinaryComparatorFactory[numNestedSecondaryKeyFields];
-            valueProviderFactories = new IPrimitiveValueProviderFactory[numNestedSecondaryKeyFields];
-
-            IAType nestedKeyType = NonTaggedFormatUtil.getNestedSpatialType(keyType.getTypeTag());
-            for (i = 0; i < numNestedSecondaryKeyFields; i++) {
-                ISerializerDeserializer keySerde = AqlSerializerDeserializerProvider.INSTANCE
-                        .getSerializerDeserializer(nestedKeyType);
-                recordFields[i] = keySerde;
-                comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(
-                        nestedKeyType, true);
-                typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(nestedKeyType);
-                valueProviderFactories[i] = AqlPrimitiveValueProviderFactory.INSTANCE;
-            }
-        } else {
+        if (!isSecondary) {
             throw new AlgebricksException("R-tree can only be used as a secondary index");
+        }
+        Index secondaryIndex = metadata.getIndex(dataset.getDataverseName(), dataset.getDatasetName(), indexName);
+        if (secondaryIndex == null) {
+            throw new AlgebricksException("Code generation error: no index " + indexName + " for dataset "
+                    + datasetName);
+        }
+        List<String> secondaryKeyFields = secondaryIndex.getKeyFieldNames();
+        numSecondaryKeys = secondaryKeyFields.size();
+        if (numSecondaryKeys != 1) {
+            throw new AlgebricksException(
+                    "Cannot use "
+                            + numSecondaryKeys
+                            + " fields as a key for the R-tree index. There can be only one field as a key for the R-tree index.");
+        }
+        Pair<IAType, Boolean> keyTypePair = Index.getNonNullableKeyFieldType(
+                secondaryKeyFields.get(0), recType);
+        IAType keyType = keyTypePair.first;
+        if (keyType == null) {
+            throw new AlgebricksException("Could not find field " + secondaryKeyFields.get(0) + " in the schema.");
+        }
+        int dimension = NonTaggedFormatUtil.getNumDimensions(keyType.getTypeTag());
+        numNestedSecondaryKeyFields = dimension * 2;
+
+        int numFields = numNestedSecondaryKeyFields + numPrimaryKeys;
+        recordFields = new ISerializerDeserializer[numFields];
+        typeTraits = new ITypeTraits[numFields];
+        comparatorFactories = new IBinaryComparatorFactory[numNestedSecondaryKeyFields];
+        valueProviderFactories = new IPrimitiveValueProviderFactory[numNestedSecondaryKeyFields];
+
+        IAType nestedKeyType = NonTaggedFormatUtil.getNestedSpatialType(keyType.getTypeTag());
+        for (i = 0; i < numNestedSecondaryKeyFields; i++) {
+            ISerializerDeserializer keySerde = AqlSerializerDeserializerProvider.INSTANCE
+                    .getSerializerDeserializer(nestedKeyType);
+            recordFields[i] = keySerde;
+            comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(
+                    nestedKeyType, true);
+            typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(nestedKeyType);
+            valueProviderFactories[i] = AqlPrimitiveValueProviderFactory.INSTANCE;
         }
 
         List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
         for (String partitioningKey : partitioningKeys) {
-            IAType keyType = recType.getFieldType(partitioningKey);
+            IAType type = recType.getFieldType(partitioningKey);
             ISerializerDeserializer keySerde = AqlSerializerDeserializerProvider.INSTANCE
-                    .getSerializerDeserializer(keyType);
+                    .getSerializerDeserializer(type);
             recordFields[i] = keySerde;
-            typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+            typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(type);
             ++i;
         }
-
         IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
         RecordDescriptor recDesc = new RecordDescriptor(recordFields);
-
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc;
-        try {
-            spPc = metadata.splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, indexName);
-        } catch (Exception e) {
-            throw new AlgebricksException(e);
-        }
-
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc = metadata.splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, indexName);
         RTreeSearchOperatorDescriptor rtreeSearchOp = new RTreeSearchOperatorDescriptor(jobSpec, recDesc,
                 appContext.getStorageManagerInterface(), appContext.getIndexRegistryProvider(), spPc.first, typeTraits,
                 comparatorFactories, keyFields, new RTreeDataflowHelperFactory(valueProviderFactories), false,
@@ -443,7 +416,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             throws AlgebricksException {
         AqlDataSource ads = findDataSource(dataSourceId);
         Dataset dataset = ads.getDataset();
-        if (dataset.getType() == DatasetType.EXTERNAL) {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             throw new AlgebricksException("No index for external dataset " + dataSourceId);
         }
 
@@ -470,7 +443,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         if (dataset == null) {
             throw new AlgebricksException("Datasource with id " + aqlId + " was not found.");
         }
-        String tName = dataset.getDatatypeName();
+        String tName = dataset.getItemTypeName();
         IAType itemType = metadata.findType(tName);
         return new AqlDataSource(aqlId, dataset, itemType);
     }
@@ -488,7 +461,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         if (dataset == null) {
             throw new IllegalArgumentException("Unknown dataset " + datasetName);
         }
-        return dataset.getType() == DatasetType.EXTERNAL;
+        return dataset.getDatasetType() == DatasetType.EXTERNAL;
     }
 
     @Override
@@ -515,7 +488,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         Index primaryIndex = metadata.getDatasetPrimaryIndex(dataset.getDataverseName(), dataset.getDatasetName());
         String indexName = primaryIndex.getIndexName();
 
-        String itemTypeName = dataset.getDatatypeName();
+        String itemTypeName = dataset.getItemTypeName();
         ARecordType itemType = (ARecordType) metadata.findType(itemTypeName);
         
         ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);       
@@ -558,7 +531,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         Index primaryIndex = metadata.getDatasetPrimaryIndex(dataset.getDataverseName(), dataset.getDatasetName());
         String indexName = primaryIndex.getIndexName();
 
-        String itemTypeName = dataset.getDatatypeName();
+        String itemTypeName = dataset.getItemTypeName();
         ARecordType itemType = (ARecordType) metadata.findType(itemTypeName);
         
         ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);
@@ -603,7 +576,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         Index primaryIndex = metadata.getDatasetPrimaryIndex(dataset.getDataverseName(), dataset.getDatasetName());
         String indexName = primaryIndex.getIndexName();
 
-        String itemTypeName = dataset.getDatatypeName();
+        String itemTypeName = dataset.getItemTypeName();
         ARecordType itemType = (ARecordType) metadata.findType(itemTypeName);
 
         ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);
@@ -705,7 +678,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         if (dataset == null) {
             throw new AlgebricksException("Unknown dataset " + datasetName);
         }
-        String itemTypeName = dataset.getDatatypeName();
+        String itemTypeName = dataset.getItemTypeName();
         IAType itemType = metadata.findType(itemTypeName);
         if (itemType.getTypeTag() != ATypeTag.RECORD) {
             throw new AlgebricksException("Only record types can be indexed.");
@@ -749,7 +722,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             List<LogicalVariable> secondaryKeys, AsterixTupleFilterFactory filterFactory, RecordDescriptor recordDesc,
             JobGenContext context, JobSpecification spec, IndexOp indexOp) throws AlgebricksException {
         Dataset dataset = metadata.findDataset(datasetName);
-        String itemTypeName = dataset.getDatatypeName();
+        String itemTypeName = dataset.getItemTypeName();
         IAType itemType = metadata.findType(itemTypeName);
         if (itemType.getTypeTag() != ATypeTag.RECORD) {
             throw new AlgebricksException("Only record types can be indexed.");

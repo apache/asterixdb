@@ -74,8 +74,8 @@ public class FeedOperations {
         if (dataset == null) {
             throw new AsterixException("FEED DATASET: No metadata for dataset " + datasetName);
         }
-        if (dataset.getType() != DatasetType.FEED) {
-            throw new AsterixException("Operation not support for dataset type  " + dataset.getType());
+        if (dataset.getDatasetType() != DatasetType.FEED) {
+            throw new AsterixException("Operation not support for dataset type  " + dataset.getDatasetType());
         }
 
         JobSpecification spec = new JobSpecification();

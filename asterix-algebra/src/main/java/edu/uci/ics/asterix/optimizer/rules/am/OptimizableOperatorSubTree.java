@@ -96,11 +96,11 @@ public class OptimizableOperatorSubTree {
         if (dataset == null) {
             throw new AlgebricksException("No metadata for dataset " + datasetName);
         }
-        if (dataset.getType() != DatasetType.INTERNAL && dataset.getType() != DatasetType.FEED) {
+        if (dataset.getDatasetType() != DatasetType.INTERNAL && dataset.getDatasetType() != DatasetType.FEED) {
             return false;
         }
         // Get the record type for that dataset.
-        IAType itemType = metadata.findType(dataset.getDatatypeName());
+        IAType itemType = metadata.findType(dataset.getItemTypeName());
         if (itemType.getTypeTag() != ATypeTag.RECORD) {
             return false;
         }

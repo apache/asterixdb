@@ -87,7 +87,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
         if (dataset == null) {
             throw new AlgebricksException("Unknown dataset " + jobGenParams.getDatasetName());
         }
-        if (dataset.getType() == DatasetType.EXTERNAL) {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             throw new AlgebricksException("Trying to run inverted index search over external dataset (" + jobGenParams.getDatasetName() + ").");
         }
         int[] keyIndexes = getKeyIndexes(jobGenParams.getKeyVarList(), inputSchemas);
@@ -113,7 +113,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             ATypeTag searchKeyType, int[] keyFields, SearchModifierType searchModifierType,
             IAlgebricksConstantValue similarityThreshold) throws AlgebricksException {
         IAObject simThresh = ((AsterixConstantValue)similarityThreshold).getObject();
-        String itemTypeName = dataset.getDatatypeName();
+        String itemTypeName = dataset.getItemTypeName();
         IAType itemType = metadata.findType(itemTypeName);
         int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
         Index secondaryIndex = metadata.getIndex(dataset.getDataverseName(), dataset.getDatasetName(), indexName);

@@ -72,7 +72,7 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
         if (dataset == null) {
             throw new AlgebricksException("Unknown dataset " + jobGenParams.getDatasetName());
         }
-        if (dataset.getType() == DatasetType.EXTERNAL) {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             throw new AlgebricksException("Trying to run btree search over external dataset ("
                     + jobGenParams.getDatasetName() + ").");
         }

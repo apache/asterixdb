@@ -260,7 +260,7 @@ public class AqlCompiledMetadataDeclarations {
 
         File relPathFile = new File(getRelativePath(datasetName + "_idx_" + targetIdxName));
         Dataset dataset = findDataset(datasetName);
-        if (dataset.getType() != DatasetType.INTERNAL & dataset.getType() != DatasetType.FEED) {
+        if (dataset.getDatasetType() != DatasetType.INTERNAL & dataset.getDatasetType() != DatasetType.FEED) {
             throw new AlgebricksException("Not an internal or feed dataset");
         }
         InternalDatasetDetails datasetDetails = (InternalDatasetDetails) dataset.getDatasetDetails();

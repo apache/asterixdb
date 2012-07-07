@@ -126,10 +126,10 @@ public abstract class SecondaryIndexCreator {
         if (dataset == null) {
             throw new AsterixException("Unknown dataset " + datasetName);
         }
-        if (dataset.getType() == DatasetType.EXTERNAL) {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             throw new AsterixException("Cannot index an external dataset (" + datasetName + ").");
         }
-        itemType = (ARecordType) metadata.findType(dataset.getDatatypeName());
+        itemType = (ARecordType) metadata.findType(dataset.getItemTypeName());
         payloadSerde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
         numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
         numSecondaryKeys = createIndexStmt.getKeyFields().size();

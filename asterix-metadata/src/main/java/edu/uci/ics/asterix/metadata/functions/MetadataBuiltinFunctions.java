@@ -57,7 +57,7 @@ public class MetadataBuiltinFunctions {
                 if (dataset == null) {
                     throw new AlgebricksException("Could not find dataset " + datasetName);
                 }
-                String tn = dataset.getDatatypeName();
+                String tn = dataset.getItemTypeName();
                 IAType t2 = metadata.findType(tn);
                 if (t2 == null) {
                     throw new AlgebricksException("No type for dataset " + datasetName);
@@ -93,7 +93,7 @@ public class MetadataBuiltinFunctions {
                 if (dataset == null) {
                     throw new AlgebricksException("Could not find dataset " + datasetName);
                 }
-                String tn = dataset.getDatatypeName();
+                String tn = dataset.getItemTypeName();
                 IAType t2 = metadata.findType(tn);
                 if (t2 == null) {
                     throw new AlgebricksException("No type for dataset " + datasetName);

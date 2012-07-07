@@ -95,14 +95,14 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         if (dataset == null) {
             throw new AlgebricksException("Unknown dataset " + datasetName);
         }
-        if (dataset.getType() == DatasetType.EXTERNAL) {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             return false;
         }
 
         List<LogicalVariable> projectVars = new ArrayList<LogicalVariable>();
         VariableUtilities.getUsedVariables(op1, projectVars);
         // Create operators for secondary index insert/delete.
-        String itemTypeName = dataset.getDatatypeName();
+        String itemTypeName = dataset.getItemTypeName();
         IAType itemType = metadata.findType(itemTypeName);
         if (itemType.getTypeTag() != ATypeTag.RECORD) {
             throw new AlgebricksException("Only record types can be indexed.");

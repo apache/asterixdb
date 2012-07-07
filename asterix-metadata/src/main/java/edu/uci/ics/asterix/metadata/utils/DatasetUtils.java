@@ -19,7 +19,7 @@ public class DatasetUtils {
     public static IBinaryComparatorFactory[] computeKeysBinaryComparatorFactories(Dataset dataset,
             ARecordType itemType, IBinaryComparatorFactoryProvider comparatorFactoryProvider)
             throws AlgebricksException {
-        if (dataset.getType() == DatasetType.EXTERNAL) {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             throw new AlgebricksException("not implemented");
         }
         List<String> partitioningKeys = getPartitioningKeys(dataset);
@@ -33,7 +33,7 @@ public class DatasetUtils {
 
     public static IBinaryHashFunctionFactory[] computeKeysBinaryHashFunFactories(Dataset dataset, ARecordType itemType,
             IBinaryHashFunctionFactoryProvider hashFunProvider) throws AlgebricksException {
-        if (dataset.getType() == DatasetType.EXTERNAL) {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             throw new AlgebricksException("not implemented");
         }
         List<String> partitioningKeys = getPartitioningKeys(dataset);
@@ -47,7 +47,7 @@ public class DatasetUtils {
 
     public static ITypeTraits[] computeTupleTypeTraits(Dataset dataset, ARecordType itemType)
             throws AlgebricksException {
-        if (dataset.getType() == DatasetType.EXTERNAL) {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             throw new AlgebricksException("not implemented");
         }
         List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
