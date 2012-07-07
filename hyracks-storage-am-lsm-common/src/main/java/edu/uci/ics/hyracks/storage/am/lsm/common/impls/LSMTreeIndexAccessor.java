@@ -42,7 +42,7 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     @Override
     public void update(ITupleReference tuple) throws HyracksDataException, IndexException {
         // Update is the same as insert.
-        ctx.reset(IndexOp.INSERT);
+        ctx.reset(IndexOp.UPDATE);
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
     }
 

@@ -73,6 +73,7 @@ public final class LSMBTreeOpContext implements IIndexOpContext {
                 // Update will only be set if a previous attempt to delete or
                 // insert failed, so we must preserve the semantics of the
                 // previously requested operation.
+                setMemBTreeAccessor();
                 return;
 
             case INSERT:

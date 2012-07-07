@@ -26,8 +26,10 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeBulkLoader;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
@@ -45,7 +47,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
@@ -201,15 +202,48 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
 
     @Override
     public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
-            TreeIndexException {
+            IndexException {
         LSMBTreeOpContext ctx = (LSMBTreeOpContext) ictx;
 
-        if (ctx.getIndexOp() == IndexOp.PHYSICALDELETE) {
-            ctx.memBTreeAccessor.delete(tuple);
-            return true;
+        switch (ctx.getIndexOp()) {
+            case PHYSICALDELETE:
+                ctx.memBTreeAccessor.delete(tuple);
+                break;
+            case INSERT:
+                insert(tuple, ctx);
+                break;
+            default:
+                ctx.memBTreeAccessor.upsert(tuple);
+                break;
         }
 
-        ctx.memBTreeAccessor.upsert(tuple);
+        return true;
+    }
+
+    private boolean insert(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException, IndexException {
+        MultiComparator comparator = MultiComparator.create(memBTree.getComparatorFactories());
+        LSMBTreeRangeSearchCursor searchCursor = new LSMBTreeRangeSearchCursor();
+        IIndexCursor memCursor = new BTreeRangeSearchCursor(ctx.memBTreeOpCtx.leafFrame, false);
+        RangePredicate predicate = new RangePredicate(tuple, tuple, true, true, comparator, comparator);
+
+        ctx.memBTreeAccessor.search(memCursor, predicate);
+        try {
+            if (memCursor.hasNext()) {
+                throw new BTreeDuplicateKeyException("Failed to insert key since key already exists.");
+            }
+        } finally {
+            memCursor.close();
+        }
+
+        lsmHarness.search(searchCursor, predicate, ctx, false);
+        try {
+            if (searchCursor.hasNext()) {
+                throw new BTreeDuplicateKeyException("Failed to insert key since key already exists.");
+            }
+        } finally {
+            searchCursor.close();
+        }
+        ctx.memBTreeAccessor.insert(tuple);
 
         return true;
     }
