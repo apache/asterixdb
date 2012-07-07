@@ -366,7 +366,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                                 + " fields as a key for the R-tree index. There can be only one field as a key for the R-tree index.");
             }
 
-            Pair<IAType, Boolean> keyTypePair = AqlCompiledIndexDecl.getNonNullableKeyFieldType(
+            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableKeyFieldType(
                     secondaryKeyFields.get(0), recType);
             IAType keyType = keyTypePair.first;
             if (keyType == null) {
@@ -718,7 +718,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         ITypeTraits[] typeTraits = new ITypeTraits[numKeys];
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[numKeys];
         for (i = 0; i < secondaryKeys.size(); ++i) {
-            Pair<IAType, Boolean> keyPairType = AqlCompiledIndexDecl.getNonNullableKeyFieldType(secondaryKeyExprs
+            Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(secondaryKeyExprs
                     .get(i).toString(), recType);
             IAType keyType = keyPairType.first;
             comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,
@@ -757,8 +757,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         ARecordType recType = (ARecordType) itemType;
         Index secondaryIndex = metadata.getIndex(dataset.getDataverseName(), dataset.getDatasetName(), indexName);
         List<String> secondaryKeyExprs = secondaryIndex.getKeyFieldNames();
-        Pair<IAType, Boolean> keyPairType = AqlCompiledIndexDecl.getNonNullableKeyFieldType(secondaryKeyExprs.get(0),
-                recType);
+		Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(
+				secondaryKeyExprs.get(0), recType);
         IAType spatialType = keyPairType.first;
         int dimension = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
         int numSecondaryKeys = dimension * 2;

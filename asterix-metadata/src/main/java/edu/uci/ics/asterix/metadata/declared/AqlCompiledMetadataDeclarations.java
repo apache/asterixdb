@@ -23,7 +23,6 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.annotations.TypeDataGen;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
-import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.metadata.MetadataException;
@@ -31,7 +30,6 @@ import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.api.IMetadataManager;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl.IndexKind;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
@@ -182,81 +180,6 @@ public class AqlCompiledMetadataDeclarations {
         } catch (MetadataException e) {
             throw new AlgebricksException(e);
         }
-    	
-        /*
-    	try {
-            Dataset datasetRecord = this.metadataManager.getDataset(mdTxnCtx, dataverseName, datasetName);
-            if (datasetRecord == null) {
-                return null;
-            }
-
-            IAqlCompiledDatasetDetails acdd = null;
-            switch (datasetRecord.getType()) {
-                case FEED:
-                case INTERNAL: {
-                    String typeName = datasetRecord.getDatatypeName();
-                    InternalDatasetDetails id = (InternalDatasetDetails) datasetRecord.getDatasetDetails();
-                    ARecordType recType = (ARecordType) findType(typeName);
-                    List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningEvalFactories = computePartitioningEvaluatorFactories(
-                            id.getPartitioningKey(), recType);
-                    List<Index> indexRecord = this.metadataManager.getDatasetIndexes(mdTxnCtx, dataverseName,
-                            datasetName);
-                    AqlCompiledIndexDecl primaryIndex = null;
-                    List<AqlCompiledIndexDecl> secondaryIndexes = new ArrayList<AqlCompiledIndexDecl>();
-                    for (int i = 0; i < indexRecord.size(); i++) {
-                        Index rec = indexRecord.get(i);
-                        if (rec.isPrimaryIndex()) {
-                            primaryIndex = new AqlCompiledIndexDecl(rec.getIndexName(), IndexKind.BTREE,
-                                    rec.getKeyFieldNames());
-                        } else {
-                            secondaryIndexes.add(new AqlCompiledIndexDecl(rec.getIndexName(), getIndexKindFromType(rec
-                                    .getIndexType()), rec.getKeyFieldNames(), rec.getGramLength()));
-                        }
-                    }
-
-                    if (datasetRecord.getType() == DatasetType.INTERNAL) {
-                        acdd = new AqlCompiledInternalDatasetDetails(id.getPartitioningKey(),
-                                partitioningEvalFactories, id.getNodeGroupName(), primaryIndex, secondaryIndexes);
-                    } else {
-                        acdd = new AqlCompiledFeedDatasetDetails(id.getPartitioningKey(), partitioningEvalFactories,
-                                id.getNodeGroupName(), primaryIndex, secondaryIndexes,
-                                ((FeedDatasetDetails) id).getAdapter(), ((FeedDatasetDetails) id).getProperties(),
-                                ((FeedDatasetDetails) id).getFunctionIdentifier(), ((FeedDatasetDetails) id)
-                                        .getFeedState().toString());
-                    }
-                    break;
-                }
-
-                case EXTERNAL: {
-                    acdd = new AqlCompiledExternalDatasetDetails(
-                            ((ExternalDatasetDetails) datasetRecord.getDatasetDetails()).getAdapter(),
-                            ((ExternalDatasetDetails) datasetRecord.getDatasetDetails()).getProperties());
-                    break;
-                }
-
-            }
-            AqlCompiledDatasetDecl dataset = new AqlCompiledDatasetDecl(datasetRecord.getDatasetName(),
-                    datasetRecord.getDatatypeName(), datasetRecord.getType(), acdd);
-            return dataset;
-
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-        */
-    }
-
-    private IndexKind getIndexKindFromType(IndexType type) {
-        switch (type) {
-            case BTREE:
-                return IndexKind.BTREE;
-            case RTREE:
-                return IndexKind.RTREE;
-            case WORD_INVIX:
-                return IndexKind.WORD_INVIX;
-            case NGRAM_INVIX:
-                return IndexKind.NGRAM_INVIX;
-        }
-        return null;
     }
 
     public List<Index> getDatasetIndexes(String dataverseName, String datasetName) throws AlgebricksException {

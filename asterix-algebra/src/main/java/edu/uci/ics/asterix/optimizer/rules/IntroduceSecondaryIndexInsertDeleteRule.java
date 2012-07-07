@@ -9,7 +9,6 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
 import edu.uci.ics.asterix.metadata.declared.AqlIndex;
@@ -163,8 +162,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 currentTop = indexUpdate;
                 context.computeAndSetTypeEnvironmentForOperator(indexUpdate);
             } else if (index.getIndexType() == IndexType.RTREE) {
-                Pair<IAType, Boolean> keyPairType = AqlCompiledIndexDecl.getNonNullableKeyFieldType(
-                        secondaryKeyFields.get(0), recType);
+                Pair<IAType, Boolean> keyPairType = Index
+                        .getNonNullableKeyFieldType(secondaryKeyFields.get(0), recType);
                 IAType spatialType = keyPairType.first;
                 int dimension = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
                 int numKeys = dimension * 2;

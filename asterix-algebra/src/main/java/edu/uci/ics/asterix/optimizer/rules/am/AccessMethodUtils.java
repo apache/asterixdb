@@ -8,7 +8,6 @@ import org.apache.commons.lang3.mutable.MutableObject;
 
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
@@ -123,8 +122,8 @@ public class AccessMethodUtils {
                 return index.getKeyFieldNames().size();
             }
             case RTREE: {
-                Pair<IAType, Boolean> keyPairType = AqlCompiledIndexDecl.getNonNullableKeyFieldType(index
-                        .getKeyFieldNames().get(0), recordType);
+                Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(index.getKeyFieldNames().get(0),
+                        recordType);
                 IAType keyType = keyPairType.first;
                 int numDimensions = NonTaggedFormatUtil.getNumDimensions(keyType.getTypeTag());
                 return numDimensions * 2;
@@ -146,13 +145,14 @@ public class AccessMethodUtils {
                 case WORD_INVIX:
                 case NGRAM_INVIX: {
                     for (String sk : index.getKeyFieldNames()) {
-                    	Pair<IAType, Boolean> keyPairType = AqlCompiledIndexDecl.getNonNullableKeyFieldType(sk, recordType);
+                        Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(sk, recordType);
                         dest.add(keyPairType.first);
                     }
                     break;
                 }
                 case RTREE: {
-                	Pair<IAType, Boolean> keyPairType = AqlCompiledIndexDecl.getNonNullableKeyFieldType(index.getKeyFieldNames().get(0), recordType);
+                    Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(index.getKeyFieldNames()
+                            .get(0), recordType);
                     IAType keyType = keyPairType.first;
                     IAType nestedKeyType = NonTaggedFormatUtil.getNestedSpatialType(keyType.getTypeTag());
                     int numKeys = getNumSecondaryKeys(index, recordType);
