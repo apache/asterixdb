@@ -147,7 +147,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                             .getValueByPos(MetadataRecordTypes.FEED_DETAILS_ARECORD_STATE_FIELD_INDEX))
                             .getStringValue();
 
-                     datasetDetails = new FeedDatasetDetails(fileStructure, partitioningStrategy, partitioningKey,
+                    datasetDetails = new FeedDatasetDetails(fileStructure, partitioningStrategy, partitioningKey,
                             partitioningKey, groupName, adapter, properties, functionIdentifier, feedState);
                 }
                 break;

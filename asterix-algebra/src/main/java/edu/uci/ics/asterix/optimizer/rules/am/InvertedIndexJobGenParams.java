@@ -20,44 +20,47 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IAlgebricksConsta
  * and from a list of function arguments, typically of an unnest-map.
  */
 public class InvertedIndexJobGenParams extends AccessMethodJobGenParams {
-    
+
     protected SearchModifierType searchModifierType;
     protected IAlgebricksConstantValue similarityThreshold;
     protected ATypeTag searchKeyType;
     protected List<LogicalVariable> keyVarList;
     protected List<LogicalVariable> nonKeyVarList;
-    
+
     public InvertedIndexJobGenParams() {
     }
-    
-    public InvertedIndexJobGenParams(String indexName, IndexType indexType, String datasetName, boolean retainInput, boolean requiresBroadcast) {
+
+    public InvertedIndexJobGenParams(String indexName, IndexType indexType, String datasetName, boolean retainInput,
+            boolean requiresBroadcast) {
         super(indexName, indexType, datasetName, retainInput, requiresBroadcast);
     }
-    
+
     public void setSearchModifierType(SearchModifierType searchModifierType) {
         this.searchModifierType = searchModifierType;
     }
-        
+
     public void setSimilarityThreshold(IAlgebricksConstantValue similarityThreshold) {
         this.similarityThreshold = similarityThreshold;
     }
-    
+
     public void setSearchKeyType(ATypeTag searchKeyType) {
         this.searchKeyType = searchKeyType;
     }
-    
+
     public void setKeyVarList(List<LogicalVariable> keyVarList) {
         this.keyVarList = keyVarList;
     }
-    
+
     public void writeToFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {
         super.writeToFuncArgs(funcArgs);
         // Write search modifier type.
-        funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createInt32Constant(searchModifierType.ordinal())));
+        funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createInt32Constant(searchModifierType
+                .ordinal())));
         // Write similarity threshold.
         funcArgs.add(new MutableObject<ILogicalExpression>(new ConstantExpression(similarityThreshold)));
         // Write search key type.
-        funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createInt32Constant(searchKeyType.ordinal())));
+        funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createInt32Constant(searchKeyType
+                .ordinal())));
         // Write key var list.
         writeVarList(keyVarList, funcArgs);
         // Write non-key var list.
@@ -65,7 +68,7 @@ public class InvertedIndexJobGenParams extends AccessMethodJobGenParams {
             writeVarList(nonKeyVarList, funcArgs);
         }
     }
-    
+
     public void readFromFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {
         super.readFromFuncArgs(funcArgs);
         int index = super.getNumParams();
@@ -73,7 +76,8 @@ public class InvertedIndexJobGenParams extends AccessMethodJobGenParams {
         int searchModifierOrdinal = AccessMethodUtils.getInt32Constant(funcArgs.get(index));
         searchModifierType = SearchModifierType.values()[searchModifierOrdinal];
         // Read similarity threshold. Concrete type depends on search modifier.
-        similarityThreshold = ((AsterixConstantValue) ((ConstantExpression) funcArgs.get(index + 1).getValue()).getValue());
+        similarityThreshold = ((AsterixConstantValue) ((ConstantExpression) funcArgs.get(index + 1).getValue())
+                .getValue());
         // Read type of search key.
         int typeTagOrdinal = AccessMethodUtils.getInt32Constant(funcArgs.get(index + 2));
         searchKeyType = ATypeTag.values()[typeTagOrdinal];
@@ -84,23 +88,23 @@ public class InvertedIndexJobGenParams extends AccessMethodJobGenParams {
         // We don't need to read the non-key var list.
         nonKeyVarList = null;
     }
-    
+
     public SearchModifierType getSearchModifierType() {
         return searchModifierType;
     }
-    
+
     public IAlgebricksConstantValue getSimilarityThreshold() {
         return similarityThreshold;
     }
-    
+
     public ATypeTag getSearchKeyType() {
         return searchKeyType;
     }
-    
+
     public List<LogicalVariable> getKeyVarList() {
         return keyVarList;
     }
-    
+
     public List<LogicalVariable> getNonKeyVarList() {
         return nonKeyVarList;
     }

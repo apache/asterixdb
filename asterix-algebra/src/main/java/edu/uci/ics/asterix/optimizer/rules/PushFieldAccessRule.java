@@ -55,7 +55,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (context.checkIfInDontApplySet(this, op)) {
             return false;
@@ -154,7 +155,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                 break;
             }
         }
-        
+
         return hasSecondaryIndex;
     }
 

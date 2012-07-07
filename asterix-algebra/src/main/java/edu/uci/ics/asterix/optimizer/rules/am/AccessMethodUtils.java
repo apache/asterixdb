@@ -41,7 +41,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperat
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 
 /**
- * Static helper functions for rewriting plans using indexes. 
+ * Static helper functions for rewriting plans using indexes.
  */
 public class AccessMethodUtils {
     public static void appendPrimaryIndexTypes(Dataset dataset, IAType itemType, List<Object> target) {
@@ -52,41 +52,38 @@ public class AccessMethodUtils {
         }
         target.add(itemType);
     }
-	
-	public static ConstantExpression createStringConstant(String str) {
+
+    public static ConstantExpression createStringConstant(String str) {
         return new ConstantExpression(new AsterixConstantValue(new AString(str)));
     }
-	
-	public static ConstantExpression createInt32Constant(int i) {
+
+    public static ConstantExpression createInt32Constant(int i) {
         return new ConstantExpression(new AsterixConstantValue(new AInt32(i)));
     }
-	
-	public static ConstantExpression createBooleanConstant(boolean b) {
+
+    public static ConstantExpression createBooleanConstant(boolean b) {
         if (b) {
             return new ConstantExpression(new AsterixConstantValue(ABoolean.TRUE));
         } else {
             return new ConstantExpression(new AsterixConstantValue(ABoolean.FALSE));
         }
     }
-	
-	public static String getStringConstant(Mutable<ILogicalExpression> expr) {
-        IAObject obj = ((AsterixConstantValue)((ConstantExpression) expr.getValue())
-                .getValue()).getObject();
-        return ((AString)obj).getStringValue();
+
+    public static String getStringConstant(Mutable<ILogicalExpression> expr) {
+        IAObject obj = ((AsterixConstantValue) ((ConstantExpression) expr.getValue()).getValue()).getObject();
+        return ((AString) obj).getStringValue();
     }
-	
+
     public static int getInt32Constant(Mutable<ILogicalExpression> expr) {
-        IAObject obj = ((AsterixConstantValue)((ConstantExpression) expr.getValue())
-                .getValue()).getObject();
-        return ((AInt32)obj).getIntegerValue();
+        IAObject obj = ((AsterixConstantValue) ((ConstantExpression) expr.getValue()).getValue()).getObject();
+        return ((AInt32) obj).getIntegerValue();
     }
-    
+
     public static boolean getBooleanConstant(Mutable<ILogicalExpression> expr) {
-        IAObject obj = ((AsterixConstantValue)((ConstantExpression) expr.getValue())
-                .getValue()).getObject();
-        return ((ABoolean)obj).getBoolean();
+        IAObject obj = ((AsterixConstantValue) ((ConstantExpression) expr.getValue()).getValue()).getObject();
+        return ((ABoolean) obj).getBoolean();
     }
-	
+
     public static boolean analyzeFuncExprArgsForOneConstAndVar(AbstractFunctionCallExpression funcExpr,
             AccessMethodAnalysisContext analysisCtx) {
         IAlgebricksConstantValue constFilterVal = null;
@@ -112,9 +109,8 @@ public class AccessMethodUtils {
         analysisCtx.matchedFuncExprs.add(new OptimizableFuncExpr(funcExpr, fieldVar, constFilterVal));
         return true;
     }
-    
-    public static int getNumSecondaryKeys(Index index, ARecordType recordType)
-            throws AlgebricksException {
+
+    public static int getNumSecondaryKeys(Index index, ARecordType recordType) throws AlgebricksException {
         switch (index.getIndexType()) {
             case BTREE:
             case WORD_INVIX:
@@ -133,12 +129,12 @@ public class AccessMethodUtils {
             }
         }
     }
-    
+
     /**
      * Appends the types of the fields produced by the given secondary index to dest.
      */
-    public static void appendSecondaryIndexTypes(Dataset dataset, ARecordType recordType,
-            Index index, boolean primaryKeysOnly, List<Object> dest) throws AlgebricksException {
+    public static void appendSecondaryIndexTypes(Dataset dataset, ARecordType recordType, Index index,
+            boolean primaryKeysOnly, List<Object> dest) throws AlgebricksException {
         if (!primaryKeysOnly) {
             switch (index.getIndexType()) {
                 case BTREE:
@@ -169,10 +165,10 @@ public class AccessMethodUtils {
             dest.add(recordType.getFieldType(partitioningKey));
         }
     }
-    
-    public static void appendSecondaryIndexOutputVars(Dataset dataset, ARecordType recordType,
-            Index index, boolean primaryKeysOnly, IOptimizationContext context,
-            List<LogicalVariable> dest) throws AlgebricksException {
+
+    public static void appendSecondaryIndexOutputVars(Dataset dataset, ARecordType recordType, Index index,
+            boolean primaryKeysOnly, IOptimizationContext context, List<LogicalVariable> dest)
+            throws AlgebricksException {
         int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
         int numSecondaryKeys = getNumSecondaryKeys(index, recordType);
         int numVars = (primaryKeysOnly) ? numPrimaryKeys : numPrimaryKeys + numSecondaryKeys;
@@ -180,7 +176,7 @@ public class AccessMethodUtils {
             dest.add(context.newVar());
         }
     }
-    
+
     public static List<LogicalVariable> getPrimaryKeyVarsFromUnnestMap(Dataset dataset, ILogicalOperator unnestMapOp) {
         int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
         List<LogicalVariable> primaryKeyVars = new ArrayList<LogicalVariable>();
@@ -193,11 +189,10 @@ public class AccessMethodUtils {
         }
         return primaryKeyVars;
     }
-    
-    public static UnnestMapOperator createSecondaryIndexUnnestMap(Dataset dataset,
-            ARecordType recordType, Index index, ILogicalOperator inputOp,
-            AccessMethodJobGenParams jobGenParams, IOptimizationContext context, boolean outputPrimaryKeysOnly,
-            boolean retainInput) throws AlgebricksException {
+
+    public static UnnestMapOperator createSecondaryIndexUnnestMap(Dataset dataset, ARecordType recordType, Index index,
+            ILogicalOperator inputOp, AccessMethodJobGenParams jobGenParams, IOptimizationContext context,
+            boolean outputPrimaryKeysOnly, boolean retainInput) throws AlgebricksException {
         // The job gen parameters are transferred to the actual job gen via the UnnestMapOperator's function arguments.
         ArrayList<Mutable<ILogicalExpression>> secondaryIndexFuncArgs = new ArrayList<Mutable<ILogicalExpression>>();
         jobGenParams.writeToFuncArgs(secondaryIndexFuncArgs);
@@ -205,32 +200,35 @@ public class AccessMethodUtils {
         List<LogicalVariable> secondaryIndexUnnestVars = new ArrayList<LogicalVariable>();
         List<Object> secondaryIndexOutputTypes = new ArrayList<Object>();
         // Append output variables/types generated by the secondary-index search (not forwarded from input).
-        appendSecondaryIndexOutputVars(dataset, recordType, index, outputPrimaryKeysOnly, context, secondaryIndexUnnestVars);
-        appendSecondaryIndexTypes(dataset, recordType, index, outputPrimaryKeysOnly, secondaryIndexOutputTypes);        
+        appendSecondaryIndexOutputVars(dataset, recordType, index, outputPrimaryKeysOnly, context,
+                secondaryIndexUnnestVars);
+        appendSecondaryIndexTypes(dataset, recordType, index, outputPrimaryKeysOnly, secondaryIndexOutputTypes);
         // An index search is expressed as an unnest over an index-search function.
         IFunctionInfo secondaryIndexSearch = FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.INDEX_SEARCH);
-        UnnestingFunctionCallExpression secondaryIndexSearchFunc = new UnnestingFunctionCallExpression(secondaryIndexSearch, secondaryIndexFuncArgs);
+        UnnestingFunctionCallExpression secondaryIndexSearchFunc = new UnnestingFunctionCallExpression(
+                secondaryIndexSearch, secondaryIndexFuncArgs);
         secondaryIndexSearchFunc.setReturnsUniqueValues(true);
         // This is the operator that jobgen will be looking for. It contains an unnest function that has all necessary arguments to determine
         // which index to use, which variables contain the index-search keys, what is the original dataset, etc.
-        UnnestMapOperator secondaryIndexUnnestOp = new UnnestMapOperator(secondaryIndexUnnestVars, new MutableObject<ILogicalExpression>(
-                secondaryIndexSearchFunc), secondaryIndexOutputTypes, retainInput);
-        secondaryIndexUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));        
+        UnnestMapOperator secondaryIndexUnnestOp = new UnnestMapOperator(secondaryIndexUnnestVars,
+                new MutableObject<ILogicalExpression>(secondaryIndexSearchFunc), secondaryIndexOutputTypes, retainInput);
+        secondaryIndexUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
         context.computeAndSetTypeEnvironmentForOperator(secondaryIndexUnnestOp);
         secondaryIndexUnnestOp.setExecutionMode(ExecutionMode.PARTITIONED);
         return secondaryIndexUnnestOp;
     }
-    
-    public static UnnestMapOperator createPrimaryIndexUnnestMap(DataSourceScanOperator dataSourceScan, Dataset dataset, 
-            ARecordType recordType, ILogicalOperator inputOp,
-            IOptimizationContext context, boolean sortPrimaryKeys, boolean retainInput, boolean requiresBroadcast) throws AlgebricksException {        
+
+    public static UnnestMapOperator createPrimaryIndexUnnestMap(DataSourceScanOperator dataSourceScan, Dataset dataset,
+            ARecordType recordType, ILogicalOperator inputOp, IOptimizationContext context, boolean sortPrimaryKeys,
+            boolean retainInput, boolean requiresBroadcast) throws AlgebricksException {
         List<LogicalVariable> primaryKeyVars = AccessMethodUtils.getPrimaryKeyVarsFromUnnestMap(dataset, inputOp);
         // Optionally add a sort on the primary-index keys before searching the primary index.
         OrderOperator order = null;
         if (sortPrimaryKeys) {
             order = new OrderOperator();
             for (LogicalVariable pkVar : primaryKeyVars) {
-                Mutable<ILogicalExpression> vRef = new MutableObject<ILogicalExpression>(new VariableReferenceExpression(pkVar));
+                Mutable<ILogicalExpression> vRef = new MutableObject<ILogicalExpression>(
+                        new VariableReferenceExpression(pkVar));
                 order.getOrderExpressions().add(
                         new Pair<IOrder, Mutable<ILogicalExpression>>(OrderOperator.ASC_ORDER, vRef));
             }
@@ -257,11 +255,12 @@ public class AccessMethodUtils {
         appendPrimaryIndexTypes(dataset, recordType, primaryIndexOutputTypes);
         // An index search is expressed as an unnest over an index-search function.
         IFunctionInfo primaryIndexSearch = FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.INDEX_SEARCH);
-        AbstractFunctionCallExpression primaryIndexSearchFunc = new ScalarFunctionCallExpression(primaryIndexSearch, primaryIndexFuncArgs);
+        AbstractFunctionCallExpression primaryIndexSearchFunc = new ScalarFunctionCallExpression(primaryIndexSearch,
+                primaryIndexFuncArgs);
         // This is the operator that jobgen will be looking for. It contains an unnest function that has all necessary arguments to determine
         // which index to use, which variables contain the index-search keys, what is the original dataset, etc.
-        UnnestMapOperator primaryIndexUnnestOp = new UnnestMapOperator(primaryIndexUnnestVars, new MutableObject<ILogicalExpression>(primaryIndexSearchFunc),
-                primaryIndexOutputTypes, retainInput);
+        UnnestMapOperator primaryIndexUnnestOp = new UnnestMapOperator(primaryIndexUnnestVars,
+                new MutableObject<ILogicalExpression>(primaryIndexSearchFunc), primaryIndexOutputTypes, retainInput);
         // Fed by the order operator or the secondaryIndexUnnestOp.
         if (sortPrimaryKeys) {
             primaryIndexUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(order));
@@ -272,5 +271,5 @@ public class AccessMethodUtils {
         primaryIndexUnnestOp.setExecutionMode(ExecutionMode.PARTITIONED);
         return primaryIndexUnnestOp;
     }
-    
+
 }

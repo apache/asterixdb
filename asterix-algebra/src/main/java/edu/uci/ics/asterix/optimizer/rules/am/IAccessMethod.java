@@ -19,13 +19,13 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOpera
  * with a given index.
  */
 public interface IAccessMethod {
-    
+
     /**
      * @return A list of function identifiers that are optimizable by this
      *         access method.
      */
     public List<FunctionIdentifier> getOptimizableFunctions();
-    
+
     /**
      * Analyzes the arguments of a given optimizable funcExpr to see if this
      * access method is applicable (e.g., one arg is a constant and one is a
@@ -37,8 +37,9 @@ public interface IAccessMethod {
      * @return true if funcExpr is optimizable by this access method, false
      *         otherwise
      */
-    public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr, List<AssignOperator> assigns, AccessMethodAnalysisContext analysisCtx);
-    
+    public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr, List<AssignOperator> assigns,
+            AccessMethodAnalysisContext analysisCtx);
+
     /**
      * Indicates whether all index expressions must be matched in order for this
      * index to be applicable.
@@ -54,21 +55,21 @@ public interface IAccessMethod {
      * @return boolean
      */
     public boolean matchPrefixIndexExprs();
-    
+
     /**
      * Applies the plan transformation to use chosenIndex to optimize a selection query.
      */
-    public boolean applySelectPlanTransformation(Mutable<ILogicalOperator> selectRef, OptimizableOperatorSubTree subTree,            
-            Index chosenIndex, AccessMethodAnalysisContext analysisCtx, IOptimizationContext context)
-            throws AlgebricksException;
-    
+    public boolean applySelectPlanTransformation(Mutable<ILogicalOperator> selectRef,
+            OptimizableOperatorSubTree subTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
+            IOptimizationContext context) throws AlgebricksException;
+
     /**
      * Applies the plan transformation to use chosenIndex to optimize a join query.
      */
-    public boolean applyJoinPlanTransformation(Mutable<ILogicalOperator> joinRef, OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree,
-            Index chosenIndex, AccessMethodAnalysisContext analysisCtx, IOptimizationContext context)
-            throws AlgebricksException;
-    
+    public boolean applyJoinPlanTransformation(Mutable<ILogicalOperator> joinRef,
+            OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree, Index chosenIndex,
+            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context) throws AlgebricksException;
+
     /**
      * Analyzes expr to see whether it is optimizable by the given concrete index.
      */

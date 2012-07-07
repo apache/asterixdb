@@ -23,20 +23,21 @@ public class AccessMethodJobGenParams {
     protected String datasetName;
     protected boolean retainInput;
     protected boolean requiresBroadcast;
-    
+
     private final int NUM_PARAMS = 5;
-    
+
     public AccessMethodJobGenParams() {
     }
-    
-    public AccessMethodJobGenParams(String indexName, IndexType indexType, String datasetName, boolean retainInput, boolean requiresBroadcast) {
+
+    public AccessMethodJobGenParams(String indexName, IndexType indexType, String datasetName, boolean retainInput,
+            boolean requiresBroadcast) {
         this.indexName = indexName;
         this.indexType = indexType;
         this.datasetName = datasetName;
         this.retainInput = retainInput;
         this.requiresBroadcast = requiresBroadcast;
     }
-    
+
     public void writeToFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {
         funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createStringConstant(indexName)));
         funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createInt32Constant(indexType.ordinal())));
@@ -52,7 +53,7 @@ public class AccessMethodJobGenParams {
         retainInput = AccessMethodUtils.getBooleanConstant(funcArgs.get(3));
         requiresBroadcast = AccessMethodUtils.getBooleanConstant(funcArgs.get(4));
     }
-    
+
     public String getIndexName() {
         return indexName;
     }
@@ -72,7 +73,7 @@ public class AccessMethodJobGenParams {
     public boolean getRequiresBroadcast() {
         return requiresBroadcast;
     }
-    
+
     protected void writeVarList(List<LogicalVariable> varList, List<Mutable<ILogicalExpression>> funcArgs) {
         Mutable<ILogicalExpression> numKeysRef = new MutableObject<ILogicalExpression>(new ConstantExpression(
                 new AsterixConstantValue(new AInt32(varList.size()))));
@@ -83,7 +84,7 @@ public class AccessMethodJobGenParams {
             funcArgs.add(keyVarRef);
         }
     }
-    
+
     protected int readVarList(List<Mutable<ILogicalExpression>> funcArgs, int index, List<LogicalVariable> varList) {
         int numLowKeys = AccessMethodUtils.getInt32Constant(funcArgs.get(index));
         if (numLowKeys > 0) {
@@ -95,7 +96,7 @@ public class AccessMethodJobGenParams {
         }
         return index + numLowKeys + 1;
     }
-    
+
     protected int getNumParams() {
         return NUM_PARAMS;
     }

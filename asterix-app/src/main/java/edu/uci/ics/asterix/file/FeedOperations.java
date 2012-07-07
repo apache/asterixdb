@@ -100,8 +100,8 @@ public class FeedOperations {
 
         try {
             Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = AqlMetadataProvider.buildFeedMessengerRuntime(
-                    spec, metadata, (FeedDatasetDetails) dataset.getDatasetDetails(),
-                    metadata.getDataverseName(), datasetName, feedMessages);
+                    spec, metadata, (FeedDatasetDetails) dataset.getDatasetDetails(), metadata.getDataverseName(),
+                    datasetName, feedMessages);
             feedMessenger = p.first;
             messengerPc = p.second;
         } catch (AlgebricksException e) {

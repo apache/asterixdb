@@ -106,9 +106,9 @@ public class DatasetOperations {
         List<Index> datasetIndexes = metadata.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
         int numSecondaryIndexes = 0;
         for (Index index : datasetIndexes) {
-        	if (index.isSecondaryIndex()) {
-        		numSecondaryIndexes++;
-        	}
+            if (index.isSecondaryIndex()) {
+                numSecondaryIndexes++;
+            }
         }
         JobSpecification[] specs;
         if (numSecondaryIndexes > 0) {
@@ -116,16 +116,17 @@ public class DatasetOperations {
             int i = 0;
             // First, drop secondary indexes.
             for (Index index : datasetIndexes) {
-            	if (index.isSecondaryIndex()) {
-            		specs[i] = new JobSpecification();
-            		Pair<IFileSplitProvider, AlgebricksPartitionConstraint> idxSplitsAndConstraint = metadata
-            				.splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, index.getIndexName());
-            		TreeIndexDropOperatorDescriptor secondaryBtreeDrop = new TreeIndexDropOperatorDescriptor(specs[i],
-            				storageManager, indexRegistryProvider, idxSplitsAndConstraint.first);
-            		AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specs[i], secondaryBtreeDrop,
-            				idxSplitsAndConstraint.second);
-            		i++;
-            	}
+                if (index.isSecondaryIndex()) {
+                    specs[i] = new JobSpecification();
+                    Pair<IFileSplitProvider, AlgebricksPartitionConstraint> idxSplitsAndConstraint = metadata
+                            .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName,
+                                    index.getIndexName());
+                    TreeIndexDropOperatorDescriptor secondaryBtreeDrop = new TreeIndexDropOperatorDescriptor(specs[i],
+                            storageManager, indexRegistryProvider, idxSplitsAndConstraint.first);
+                    AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specs[i], secondaryBtreeDrop,
+                            idxSplitsAndConstraint.second);
+                    i++;
+                }
             }
         } else {
             specs = new JobSpecification[1];
@@ -153,8 +154,8 @@ public class DatasetOperations {
         }
         ARecordType itemType = (ARecordType) metadata.findType(dataset.getItemTypeName());
         JobSpecification spec = new JobSpecification();
-        IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(
-                dataset, itemType, metadata.getFormat().getBinaryComparatorFactoryProvider());
+        IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
+                itemType, metadata.getFormat().getBinaryComparatorFactoryProvider());
         ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, datasetName);
@@ -183,8 +184,7 @@ public class DatasetOperations {
         if (dataset == null) {
             throw new AsterixException("Could not find dataset " + datasetName);
         }
-        if (dataset.getDatasetType() != DatasetType.INTERNAL
-                && dataset.getDatasetType() != DatasetType.FEED) {
+        if (dataset.getDatasetType() != DatasetType.INTERNAL && dataset.getDatasetType() != DatasetType.FEED) {
             throw new AsterixException("Cannot load data into dataset  (" + datasetName + ")" + "of type "
                     + dataset.getDatasetType());
         }
@@ -194,14 +194,14 @@ public class DatasetOperations {
         IDataFormat format = metadata.getFormat();
         ISerializerDeserializer payloadSerde = format.getSerdeProvider().getSerializerDeserializer(itemType);
 
-        IBinaryHashFunctionFactory[] hashFactories = DatasetUtils.computeKeysBinaryHashFunFactories(
-                dataset, itemType, metadata.getFormat().getBinaryHashFunctionFactoryProvider());
-        IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(
-                dataset, itemType, metadata.getFormat().getBinaryComparatorFactoryProvider());
+        IBinaryHashFunctionFactory[] hashFactories = DatasetUtils.computeKeysBinaryHashFunFactories(dataset, itemType,
+                metadata.getFormat().getBinaryHashFunctionFactoryProvider());
+        IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
+                itemType, metadata.getFormat().getBinaryComparatorFactoryProvider());
         ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);
 
-        ExternalDatasetDetails externalDatasetDetails = new ExternalDatasetDetails(
-                loadStmt.getAdapter(), loadStmt.getProperties());
+        ExternalDatasetDetails externalDatasetDetails = new ExternalDatasetDetails(loadStmt.getAdapter(),
+                loadStmt.getProperties());
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = AqlMetadataProvider
                 .buildExternalDataScannerRuntime(spec, itemType, externalDatasetDetails, format);
         IOperatorDescriptor scanner = p.first;
@@ -274,13 +274,14 @@ public class DatasetOperations {
         return fs.getNodeName() + ":" + fs.getLocalFile().toString();
     }
 
-    private static AssignRuntimeFactory makeAssignRuntimeFactory(Dataset dataset, ARecordType itemType, IDataFormat format) throws AlgebricksException {
+    private static AssignRuntimeFactory makeAssignRuntimeFactory(Dataset dataset, ARecordType itemType,
+            IDataFormat format) throws AlgebricksException {
         List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
         int numKeys = partitioningKeys.size();
         ICopyEvaluatorFactory[] evalFactories = new ICopyEvaluatorFactory[numKeys];
         for (int i = 0; i < numKeys; i++) {
-            Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType = 
-                    format.partitioningEvaluatorFactory(itemType, partitioningKeys.get(i));
+            Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType = format
+                    .partitioningEvaluatorFactory(itemType, partitioningKeys.get(i));
             evalFactories[i] = evalFactoryAndType.first;
         }
         int[] outColumns = new int[numKeys];

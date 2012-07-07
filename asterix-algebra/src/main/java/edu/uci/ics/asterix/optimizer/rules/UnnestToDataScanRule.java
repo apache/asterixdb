@@ -103,7 +103,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
 
                 return true;
             }
-            
+
             if (fid.equals(AsterixBuiltinFunctions.FEED_INGEST)) {
                 if (unnest.getPositionalVariable() != null) {
                     throw new AlgebricksException("No positional variables are allowed over datasets.");
@@ -159,7 +159,6 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
                 return true;
             }
         }
-        
 
         return false;
     }
@@ -175,7 +174,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
                 AqlDataSource.AqlDataSourceType.EXTERNAL_FEED);
         return extDataSource;
     }
-    
+
     public void addPrimaryKey(List<LogicalVariable> scanVariables, IOptimizationContext context) {
         int n = scanVariables.size();
         List<LogicalVariable> head = new ArrayList<LogicalVariable>(scanVariables.subList(0, n - 1));

@@ -241,8 +241,8 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
                 @SuppressWarnings("unchecked")
                 ScalarFunctionCallExpression f = new ScalarFunctionCallExpression(finfoAccess,
                         new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
-                        new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(new AString(
-                                keyFieldName)))));
+                        new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
+                                new AString(keyFieldName)))));
                 f.substituteVar(METADATA_DUMMY_VAR, resVar);
                 exprs.add(new MutableObject<ILogicalExpression>(f));
                 LogicalVariable v = context.newVar();

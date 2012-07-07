@@ -91,7 +91,7 @@ public class MetadataNode implements IMetadataNode {
     private MetadataNode() {
         super();
     }
-    
+
     public void initialize(AsterixAppRuntimeContext runtimeContext) {
         this.transactionProvider = runtimeContext.getTransactionProvider();
         this.indexRegistry = runtimeContext.getIndexRegistry();

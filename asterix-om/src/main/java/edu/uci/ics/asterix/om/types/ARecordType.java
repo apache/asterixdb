@@ -26,7 +26,7 @@ public class ARecordType extends AbstractComplexType {
         this.fieldTypes = fieldTypes;
         this.isOpen = isOpen;
         for (int i = 0; i < fieldNames.length; i++) {
-        	typeMap.put(fieldNames[i], i);
+            typeMap.put(fieldNames[i], i);
         }
     }
 
@@ -83,9 +83,9 @@ public class ARecordType extends AbstractComplexType {
     }
 
     public IAType getFieldType(String fieldName) {
-    	return fieldTypes[typeMap.get(fieldName)];
+        return fieldTypes[typeMap.get(fieldName)];
     }
-    
+
     @Override
     public String getDisplayName() {
         return "ARecord";

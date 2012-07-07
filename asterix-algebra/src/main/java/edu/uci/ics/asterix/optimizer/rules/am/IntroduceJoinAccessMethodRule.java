@@ -47,24 +47,25 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
  * to accept any subtree on one side, as long as the other side has a datasource scan.
  */
 public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethodRule {
-    
+
     protected Mutable<ILogicalOperator> joinRef = null;
     protected InnerJoinOperator join = null;
-	protected AbstractFunctionCallExpression joinCond = null;
-	protected final OptimizableOperatorSubTree leftSubTree = new OptimizableOperatorSubTree();	
-	protected final OptimizableOperatorSubTree rightSubTree = new OptimizableOperatorSubTree();
-	
-	// Register access methods.
-	protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<FunctionIdentifier, List<IAccessMethod>>();
-	static {
-	    registerAccessMethod(InvertedIndexAccessMethod.INSTANCE, accessMethods);
-	}
-	
+    protected AbstractFunctionCallExpression joinCond = null;
+    protected final OptimizableOperatorSubTree leftSubTree = new OptimizableOperatorSubTree();
+    protected final OptimizableOperatorSubTree rightSubTree = new OptimizableOperatorSubTree();
+
+    // Register access methods.
+    protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<FunctionIdentifier, List<IAccessMethod>>();
+    static {
+        registerAccessMethod(InvertedIndexAccessMethod.INSTANCE, accessMethods);
+    }
+
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         setMetadataDeclarations(context);
-        
-    	// Match operator pattern and initialize optimizable sub trees.
+
+        // Match operator pattern and initialize optimizable sub trees.
         if (!matchesOperatorPattern(opRef, context)) {
             return false;
         }
@@ -102,14 +103,14 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
             fillSubTreeIndexExprs(rightSubTree, analyzedAMs);
         }
         pruneIndexCandidates(analyzedAMs);
-        
+
         // Choose index to be applied.
         Pair<IAccessMethod, Index> chosenIndex = chooseIndex(analyzedAMs);
         if (chosenIndex == null) {
             context.addToDontApplySet(this, join);
             return false;
         }
-        
+
         // Apply plan transformation using chosen index.
         AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenIndex.first);
         boolean res = chosenIndex.first.applyJoinPlanTransformation(joinRef, leftSubTree, rightSubTree,
@@ -120,7 +121,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         context.addToDontApplySet(this, join);
         return res;
     }
-    
+
     protected boolean matchesOperatorPattern(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         // First check that the operator is a join and its condition is a function call.
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();

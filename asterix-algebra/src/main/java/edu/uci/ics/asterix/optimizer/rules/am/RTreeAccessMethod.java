@@ -31,7 +31,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceS
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 
 /**
- * Class for helping rewrite rules to choose and apply RTree indexes.  
+ * Class for helping rewrite rules to choose and apply RTree indexes.
  */
 public class RTreeAccessMethod implements IAccessMethod {
 
@@ -39,19 +39,20 @@ public class RTreeAccessMethod implements IAccessMethod {
     static {
         funcIdents.add(AsterixBuiltinFunctions.SPATIAL_INTERSECT);
     }
-    
+
     public static RTreeAccessMethod INSTANCE = new RTreeAccessMethod();
-    
+
     @Override
     public List<FunctionIdentifier> getOptimizableFunctions() {
         return funcIdents;
     }
 
     @Override
-    public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr, List<AssignOperator> assigns, AccessMethodAnalysisContext analysisCtx) {
+    public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr, List<AssignOperator> assigns,
+            AccessMethodAnalysisContext analysisCtx) {
         return AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVar(funcExpr, analysisCtx);
     }
-    
+
     @Override
     public boolean matchAllIndexExprs() {
         return true;
@@ -63,9 +64,9 @@ public class RTreeAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public boolean applySelectPlanTransformation(Mutable<ILogicalOperator> selectRef, OptimizableOperatorSubTree subTree,
-            Index index, AccessMethodAnalysisContext analysisCtx, IOptimizationContext context)
-            throws AlgebricksException {
+    public boolean applySelectPlanTransformation(Mutable<ILogicalOperator> selectRef,
+            OptimizableOperatorSubTree subTree, Index index, AccessMethodAnalysisContext analysisCtx,
+            IOptimizationContext context) throws AlgebricksException {
         Dataset dataset = subTree.dataset;
         ARecordType recordType = subTree.recordType;
         // TODO: We can probably do something smarter here based on selectivity or MBR area.
@@ -73,14 +74,14 @@ public class RTreeAccessMethod implements IAccessMethod {
         List<Integer> indexExprs = analysisCtx.getIndexExprs(index);
         int firstExprIndex = indexExprs.get(0);
         IOptimizableFuncExpr optFuncExpr = analysisCtx.matchedFuncExprs.get(firstExprIndex);
-        
+
         // Get the number of dimensions corresponding to the field indexed by
         // chosenIndex.
         Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(optFuncExpr.getFieldName(0), recordType);
         IAType spatialType = keyPairType.first;
         int numDimensions = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
         int numSecondaryKeys = numDimensions * 2;
-        
+
         DataSourceScanOperator dataSourceScan = subTree.dataSourceScan;
         // TODO: For now retainInput and requiresBroadcast are always false.
         RTreeJobGenParams jobGenParams = new RTreeJobGenParams(index.getIndexName(), IndexType.RTREE,
@@ -97,14 +98,16 @@ public class RTreeAccessMethod implements IAccessMethod {
             AbstractFunctionCallExpression createMBR = new ScalarFunctionCallExpression(
                     FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.CREATE_MBR));
             // Spatial object is the constant from the func expr we are optimizing.
-            createMBR.getArguments().add(new MutableObject<ILogicalExpression>(new ConstantExpression(optFuncExpr.getConstantVal(0))));
+            createMBR.getArguments().add(
+                    new MutableObject<ILogicalExpression>(new ConstantExpression(optFuncExpr.getConstantVal(0))));
             // The number of dimensions.
             createMBR.getArguments().add(
-                    new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
-                            new AInt32(numDimensions)))));
+                    new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(new AInt32(
+                            numDimensions)))));
             // Which part of the MBR to extract.
             createMBR.getArguments().add(
-                    new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(new AInt32(i)))));
+                    new MutableObject<ILogicalExpression>(new ConstantExpression(
+                            new AsterixConstantValue(new AInt32(i)))));
             // Add a variable and its expr to the lists which will be passed into an assign op.
             LogicalVariable keyVar = context.newVar();
             keyVarList.add(keyVar);
@@ -118,25 +121,24 @@ public class RTreeAccessMethod implements IAccessMethod {
         assignSearchKeys.getInputs().add(dataSourceScan.getInputs().get(0));
         assignSearchKeys.setExecutionMode(dataSourceScan.getExecutionMode());
 
-        UnnestMapOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset,
-                recordType, index, assignSearchKeys, jobGenParams, context, false, false);
+        UnnestMapOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
+                index, assignSearchKeys, jobGenParams, context, false, false);
         // Generate the rest of the upstream plan which feeds the search results into the primary index.
-        UnnestMapOperator primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceScan,
-                dataset, recordType, secondaryIndexUnnestOp, context, true, false, false);
+        UnnestMapOperator primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceScan, dataset,
+                recordType, secondaryIndexUnnestOp, context, true, false, false);
         // Replace the datasource scan with the new plan rooted at primaryIndexUnnestMap.
         subTree.dataSourceScanRef.setValue(primaryIndexUnnestOp);
         return true;
     }
-    
+
     @Override
     public boolean applyJoinPlanTransformation(Mutable<ILogicalOperator> joinRef,
-            OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree,
-            Index chosenIndex, AccessMethodAnalysisContext analysisCtx, IOptimizationContext context)
-            throws AlgebricksException {
+            OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree, Index chosenIndex,
+            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context) throws AlgebricksException {
         // TODO Implement this.
         return false;
     }
-    
+
     @Override
     public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
         // No additional analysis required.

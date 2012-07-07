@@ -79,8 +79,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             AssignOperator assignOp = (AssignOperator) op2;
             ILogicalExpression assignExpr = assignOp.getExpressions().get(0).getValue();
             if (assignExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) assignOp.getExpressions()
-                        .get(0).getValue();
+                ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) assignOp.getExpressions().get(0)
+                        .getValue();
                 fid = funcExpr.getFunctionIdentifier();
             }
         }
@@ -200,8 +200,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 IndexInsertDeleteOperator indexUpdate = new IndexInsertDeleteOperator(dataSourceIndex,
                         insertOp.getPrimaryKeyExpressions(), secondaryExpressions, filterExpression,
                         insertOp.getOperation());
-                indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(assignCoordinates));                
-                currentTop = indexUpdate;                
+                indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(assignCoordinates));
+                currentTop = indexUpdate;
                 context.computeAndSetTypeEnvironmentForOperator(indexUpdate);
             }
         }
@@ -222,7 +222,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             IAType secondaryKeyType = (IAType) typeEnv.getVarType(secondaryKeyVar);
             if (!isNullableType(secondaryKeyType) && !forceFilter) {
                 continue;
-            }            
+            }
             ScalarFunctionCallExpression isNullFuncExpr = new ScalarFunctionCallExpression(
                     FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.IS_NULL),
                     new MutableObject<ILogicalExpression>(new VariableReferenceExpression(secondaryKeyVar)));
@@ -245,10 +245,10 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         }
         return filterExpression;
     }
-    
+
     private boolean isNullableType(IAType type) {
         if (type.getTypeTag() == ATypeTag.UNION) {
-            return ((AUnionType)type).isNullableType();
+            return ((AUnionType) type).isNullableType();
         }
         return false;
     }

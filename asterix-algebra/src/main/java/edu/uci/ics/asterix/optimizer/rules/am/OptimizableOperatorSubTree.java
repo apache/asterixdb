@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceS
 
 /**
  * Operator subtree that matches the following patterns, and provides convenient access to its nodes:
- * (select)? <-- (assign)+ <-- (datasource scan) 
+ * (select)? <-- (assign)+ <-- (datasource scan)
  * and
  * (select)? <-- (datasource scan)
  */
@@ -35,8 +35,8 @@ public class OptimizableOperatorSubTree {
     public DataSourceScanOperator dataSourceScan = null;
     // Dataset and type metadata. Set in setDatasetAndTypeMetadata().
     public Dataset dataset = null;
-    public ARecordType recordType = null;    
-    
+    public ARecordType recordType = null;
+
     public boolean initFromSubTree(Mutable<ILogicalOperator> subTreeOpRef) {
         rootRef = subTreeOpRef;
         root = subTreeOpRef.getValue();
@@ -62,7 +62,7 @@ public class OptimizableOperatorSubTree {
             assignRefs.add(subTreeOpRef);
             assigns.add((AssignOperator) subTreeOp);
             subTreeOpRef = subTreeOp.getInputs().get(0);
-            subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();   
+            subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();
         } while (subTreeOp.getOperatorTag() == LogicalOperatorTag.ASSIGN);
         // Set to last valid assigns.
         subTreeOpRef = assignRefs.get(assignRefs.size() - 1);
@@ -77,11 +77,11 @@ public class OptimizableOperatorSubTree {
         dataSourceScan = (DataSourceScanOperator) op3;
         return true;
     }
-    
+
     /**
      * Find the dataset corresponding to the datasource scan in the metadata.
      * Also sets recordType to be the type of that dataset.
-     */  
+     */
     public boolean setDatasetAndTypeMetadata(AqlMetadataProvider metadataProvider) throws AlgebricksException {
         if (dataSourceScan == null) {
             return false;
@@ -107,7 +107,7 @@ public class OptimizableOperatorSubTree {
         recordType = (ARecordType) itemType;
         return true;
     }
-    
+
     public boolean hasDataSourceScan() {
         return dataSourceScan != null;
     }

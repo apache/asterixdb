@@ -97,7 +97,7 @@ public class Index implements Serializable {
     public boolean isSecondaryIndex() {
         return !isPrimaryIndex();
     }
-    
+
     public static Pair<IAType, Boolean> getNonNullableKeyFieldType(String expr, ARecordType recType)
             throws AlgebricksException {
         IAType keyType = Index.keyFieldType(expr, recType);

@@ -152,7 +152,7 @@ public abstract class SecondaryIndexCreator {
         ISerializerDeserializer[] primaryRecFields = new ISerializerDeserializer[numPrimaryKeys + 1];
         ITypeTraits[] primaryTypeTraits = new ITypeTraits[numPrimaryKeys + 1];
         primaryComparatorFactories = new IBinaryComparatorFactory[numPrimaryKeys];
-        ISerializerDeserializerProvider serdeProvider = metadata.getFormat().getSerdeProvider();        
+        ISerializerDeserializerProvider serdeProvider = metadata.getFormat().getSerdeProvider();
         for (int i = 0; i < numPrimaryKeys; i++) {
             IAType keyType = itemType.getFieldType(partitioningKeys.get(i));
             primaryRecFields[i] = serdeProvider.getSerializerDeserializer(keyType);
