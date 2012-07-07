@@ -36,16 +36,12 @@ import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
-import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
-import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.data.IAWriterFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
@@ -77,10 +73,11 @@ public class AqlCompiledMetadataDeclarations {
         this.dataverseName = dataverseName;
         this.outputFile = outputFile;
         this.config = config;
-        if (stores == null && online)
+        if (stores == null && online) {
             this.stores = AsterixProperties.INSTANCE.getStores();
-        else
+        } else {
             this.stores = stores;
+        }
         this.types = types;
         this.typeDataGenMap = typeDataGenMap;
         this.writerFactory = writerFactory;
@@ -109,17 +106,16 @@ public class AqlCompiledMetadataDeclarations {
     }
 
     public void disconnectFromDataverse() throws AlgebricksException {
-        if (!isConnected)
+        if (!isConnected) {
             throw new AlgebricksException("You are not connected to any dataverse");
-        else {
-            dataverseName = null;
-            format = null;
-            isConnected = false;
         }
+        dataverseName = null;
+        format = null;
+        isConnected = false;
     }
 
     public boolean isConnectedToDataverse() {
-        return this.isConnected;
+        return isConnected;
     }
 
     public String getDataverseName() {
@@ -131,8 +127,9 @@ public class AqlCompiledMetadataDeclarations {
     }
 
     public IDataFormat getFormat() throws AlgebricksException {
-        if (!isConnected)
+        if (!isConnected) {
             throw new AlgebricksException("You need first to connect to a dataverse.");
+        }
         return format;
     }
 
@@ -190,8 +187,6 @@ public class AqlCompiledMetadataDeclarations {
         }
     }
     
-    // TODO: Check if this is correct. Not sure what the index name of the primary index is.
-    // TODO: Rename this to getPrimaryIndex().
     public Index getDatasetPrimaryIndex(String dataverseName, String datasetName) throws AlgebricksException {
         try {
             return metadataManager.getIndex(mdTxnCtx, dataverseName, datasetName, datasetName);
@@ -210,22 +205,6 @@ public class AqlCompiledMetadataDeclarations {
     
     public void setOutputFile(FileSplit outputFile) {
         this.outputFile = outputFile;
-    }
-
-    public List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> computePartitioningEvaluatorFactories(
-            List<String> partitioningExprs, ARecordType recType) {
-        List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> evalFactories = new ArrayList<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>>(
-                partitioningExprs.size());
-        for (String expr : partitioningExprs) {
-            Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFact = null;
-            try {
-                evalFact = format.partitioningEvaluatorFactory(recType, expr);
-            } catch (AlgebricksException e) {
-                throw new IllegalStateException(e);
-            }
-            evalFactories.add(evalFact);
-        }
-        return evalFactories;
     }
 
     public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
