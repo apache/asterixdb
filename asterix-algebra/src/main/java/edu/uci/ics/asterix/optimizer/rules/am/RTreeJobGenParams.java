@@ -20,13 +20,8 @@ public class RTreeJobGenParams extends AccessMethodJobGenParams {
     public RTreeJobGenParams() {
     }
     
-    // TODO: Call super c'tor.
     public RTreeJobGenParams(String indexName, IndexType indexType, String datasetName, boolean retainInput, boolean requiresBroadcast) {
-        this.indexName = indexName;
-        this.indexType = indexType;
-        this.datasetName = datasetName;
-        this.retainInput = retainInput;
-        this.requiresBroadcast = requiresBroadcast;
+        super(indexName, indexType, datasetName, retainInput, requiresBroadcast);
     }
     
     public void writeToFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {

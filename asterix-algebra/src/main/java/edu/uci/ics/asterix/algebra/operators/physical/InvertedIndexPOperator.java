@@ -3,7 +3,6 @@ package edu.uci.ics.asterix.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
@@ -84,12 +83,6 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
         AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
         AqlCompiledMetadataDeclarations metadata = metadataProvider.getMetadataDeclarations();
         Dataset dataset = metadata.findDataset(jobGenParams.getDatasetName());
-        if (dataset == null) {
-            throw new AlgebricksException("Unknown dataset " + jobGenParams.getDatasetName());
-        }
-        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-            throw new AlgebricksException("Trying to run inverted index search over external dataset (" + jobGenParams.getDatasetName() + ").");
-        }
         int[] keyIndexes = getKeyIndexes(jobGenParams.getKeyVarList(), inputSchemas);
         
         // Build runtime.

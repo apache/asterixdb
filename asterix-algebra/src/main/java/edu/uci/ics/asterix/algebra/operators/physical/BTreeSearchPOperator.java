@@ -3,8 +3,6 @@ package edu.uci.ics.asterix.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
-import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
@@ -13,7 +11,6 @@ import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.optimizer.rules.am.BTreeJobGenParams;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -61,21 +58,11 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
         }
         BTreeJobGenParams jobGenParams = new BTreeJobGenParams();
         jobGenParams.readFromFuncArgs(unnestFuncExpr.getArguments());
-        if (jobGenParams.getIndexType() != IndexType.BTREE) {
-            throw new NotImplementedException(jobGenParams.getIndexType() + " indexes are not implemented.");
-        }
         int[] lowKeyIndexes = getKeyIndexes(jobGenParams.getLowKeyVarList(), inputSchemas);
         int[] highKeyIndexes = getKeyIndexes(jobGenParams.getHighKeyVarList(), inputSchemas);
         AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
         AqlCompiledMetadataDeclarations metadata = metadataProvider.getMetadataDeclarations();
         Dataset dataset = metadata.findDataset(jobGenParams.getDatasetName());
-        if (dataset == null) {
-            throw new AlgebricksException("Unknown dataset " + jobGenParams.getDatasetName());
-        }
-        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-            throw new AlgebricksException("Trying to run btree search over external dataset ("
-                    + jobGenParams.getDatasetName() + ").");
-        }
         IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(op);
         List<LogicalVariable> outputVars = unnestMap.getVariables();
         if (jobGenParams.getRetainInput()) {
