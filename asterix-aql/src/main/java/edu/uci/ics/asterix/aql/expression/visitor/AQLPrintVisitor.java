@@ -6,7 +6,7 @@ import java.util.List;
 
 import edu.uci.ics.asterix.aql.base.Clause;
 import edu.uci.ics.asterix.aql.base.Expression;
-import edu.uci.ics.asterix.aql.base.ILiteral;
+import edu.uci.ics.asterix.aql.base.Literal;
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
@@ -103,9 +103,9 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
 
     @Override
     public void visit(LiteralExpr l, Integer step) {
-        ILiteral lc = l.getValue();
-        if (lc.getLiteralType().equals(ILiteral.Type.TRUE) || lc.getLiteralType().equals(ILiteral.Type.FALSE)
-                || lc.getLiteralType().equals(ILiteral.Type.NULL)) {
+    	Literal lc = l.getValue();
+        if (lc.getLiteralType().equals(Literal.Type.TRUE) || lc.getLiteralType().equals(Literal.Type.FALSE)
+                || lc.getLiteralType().equals(Literal.Type.NULL)) {
             out.println(skip(step) + "LiteralExpr [" + l.getValue().getLiteralType() + "]");
         } else {
             out.println(skip(step) + "LiteralExpr [" + l.getValue().getLiteralType() + "] ["

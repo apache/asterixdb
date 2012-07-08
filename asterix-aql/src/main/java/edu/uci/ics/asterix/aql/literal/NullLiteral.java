@@ -14,9 +14,9 @@
  */
 package edu.uci.ics.asterix.aql.literal;
 
-import edu.uci.ics.asterix.aql.base.ILiteral;
+import edu.uci.ics.asterix.aql.base.Literal;
 
-public class NullLiteral implements ILiteral {
+public class NullLiteral extends Literal {
 
     /**
      * 
@@ -39,11 +39,6 @@ public class NullLiteral implements ILiteral {
     }
 
     @Override
-    public String toString() {
-        return getStringValue();
-    }
-
-    @Override
     public boolean equals(Object obj) {
         return obj == INSTANCE;
     }
@@ -52,4 +47,9 @@ public class NullLiteral implements ILiteral {
     public int hashCode() {
         return (int) serialVersionUID;
     }
+
+    @Override
+    public Object getValue() {
+        return null;
+    }    
 }

@@ -12,23 +12,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.aql.base;
+package edu.uci.ics.asterix.aql.literal;
 
-import java.io.Serializable;
+import edu.uci.ics.asterix.aql.base.Literal;
 
-public interface ILiteral extends Serializable {
-    public enum Type {
-        STRING,
-        INTEGER,
-        NULL,
-        TRUE,
-        FALSE,
-        FLOAT,
-        DOUBLE
+public class LongIntegerLiteral extends Literal {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -8633520244871361967L;
+    private Long value;
+
+    public LongIntegerLiteral(Long value) {
+        super();
+        this.value = value;
     }
 
-    public Type getLiteralType();
+    @Override
+    public Long getValue() {
+        return value;
+    }
 
-    public String getStringValue();
+    public void setValue(Long value) {
+        this.value = value;
+    }
 
+    @Override
+    public Type getLiteralType() {
+        return Type.LONG;
+    }
 }

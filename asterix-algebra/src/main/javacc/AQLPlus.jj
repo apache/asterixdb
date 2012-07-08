@@ -20,8 +20,9 @@ import java.util.HashMap;
 import edu.uci.ics.asterix.aql.literal.FloatLiteral;
 import edu.uci.ics.asterix.aql.literal.DoubleLiteral;
 import edu.uci.ics.asterix.aql.literal.FalseLiteral;
-import edu.uci.ics.asterix.aql.base.ILiteral;
+import edu.uci.ics.asterix.aql.base.Literal;
 import edu.uci.ics.asterix.aql.literal.IntegerLiteral;
+import edu.uci.ics.asterix.aql.literal.LongIntegerLiteral;
 import edu.uci.ics.asterix.aql.literal.NullLiteral;
 import edu.uci.ics.asterix.aql.literal.StringLiteral;
 import edu.uci.ics.asterix.aql.literal.TrueLiteral;
@@ -778,8 +779,9 @@ int Index() throws ParseException:
 	{
 		if(expr.getKind() == Expression.Kind.LITERAL_EXPRESSION)
 		{
-			ILiteral lit = ((LiteralExpr)expr).getValue();
-			if(lit.getLiteralType() == ILiteral.Type.INTEGER) {
+			Literal lit = ((LiteralExpr)expr).getValue();
+			if(lit.getLiteralType() == Literal.Type.INTEGER || 
+ 			   lit.getLiteralType() == Literal.Type.LONG) {
 				idx = Integer.valueOf(lit.getStringValue());
 			}	
 			else {
@@ -809,7 +811,7 @@ Expression PrimaryExpr()throws ParseException:
   Expression expr = null;
 }
 {
-  //ILiteral | VariableRef | ListConstructor | RecordConstructor | FunctionCallExpr | ParenthesizedExpression
+  //Literal | VariableRef | ListConstructor | RecordConstructor | FunctionCallExpr | ParenthesizedExpression
 	(
 	  expr =Literal() 
 	   | expr = FunctionCallExpr()
@@ -846,7 +848,11 @@ Expression Literal() throws ParseException:
  	 | <INTEGER_LITERAL>
     {
       t= getToken(0);
-	  lit.setValue(new IntegerLiteral(new Integer(t.image)));
+	  try {
+	      lit.setValue(new IntegerLiteral(new Integer(t.image)));
+	  } catch(NumberFormatException ex) {
+	      lit.setValue(new LongIntegerLiteral(new Long(t.image)));
+	  }
 	}
      | < FLOAT_LITERAL >
     {

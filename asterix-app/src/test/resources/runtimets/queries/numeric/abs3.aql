@@ -1,0 +1,16 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/numeric_abs3.adm";
+
+
+let $c0 := double("-20.1")
+let $c1 := double("-20.56e-30")
+let $c2 := double("NaN")
+let $c3 := double("INF")
+let $c4 := double("-INF")
+let $c5 := double("-0.0")
+let $c6 := double("0.0")
+return {"d0": numeric-abs($c0), "d1": numeric-abs($c1),"d2": numeric-abs($c2),
+        "d3": numeric-abs($c3),"d4": numeric-abs($c4),"d5": numeric-abs($c5), "d6": numeric-abs($c6)}

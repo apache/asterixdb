@@ -1,0 +1,17 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/numeric_ceiling1.adm";
+
+
+let $c0 := int8("-20")
+let $c1 := int16("-23")
+let $c2 := int32("-29")
+let $c3 := int64("-21")
+let $c4 := int8("20")
+let $c5 := int16("22")
+let $c6 := int32("23")
+let $c7 := int64("27")
+return {"f0": numeric-ceiling($c0), "f1": numeric-ceiling($c1),"f2": numeric-ceiling($c2), "f3": numeric-ceiling($c3),
+	"f4": numeric-ceiling($c4),"f5": numeric-ceiling($c5) ,"f6": numeric-ceiling($c6), "f7": numeric-ceiling($c7)}
