@@ -40,6 +40,8 @@ public abstract class OrderedIndexDeleteTest extends OrderedIndexTestDriver {
             ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey)
             throws Exception {
         OrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys, leafType);
+        ctx.getIndex().create();
+        ctx.getIndex().open();
         for (int i = 0; i < numInsertRounds; i++) {
             // We assume all fieldSerdes are of the same type. Check the first
             // one to determine which field types to generate.

@@ -37,29 +37,19 @@ public class BTreeTestHarness {
     private static final long RANDOM_SEED = 50;
 
     protected final int pageSize;
-
     protected final int numPages;
-
     protected final int maxOpenFiles;
-
     protected final int hyracksFrameSize;
 
     protected IHyracksTaskContext ctx;
-
     protected IBufferCache bufferCache;
-
     protected IFileMapProvider fileMapProvider;
-
     protected FileReference file;
 
     protected final Random rnd = new Random();
-
     protected final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
-
     protected final String tmpDir = System.getProperty("java.io.tmpdir");
-
     protected final String sep = System.getProperty("file.separator");
-
     protected String fileName;
 
     public BTreeTestHarness() {

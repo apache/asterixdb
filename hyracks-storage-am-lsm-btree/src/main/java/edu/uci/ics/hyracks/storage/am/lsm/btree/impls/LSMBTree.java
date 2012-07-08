@@ -532,4 +532,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     public ILSMIOScheduler getIOScheduler() {
         return lsmHarness.getIOScheduler();
     }
+
+    public boolean isEmptyIndex() throws HyracksDataException {
+        return diskBTrees.isEmpty() && memBTree.isEmptyTree(memBTree.getInteriorFrameFactory().createFrame());
+    }
 }

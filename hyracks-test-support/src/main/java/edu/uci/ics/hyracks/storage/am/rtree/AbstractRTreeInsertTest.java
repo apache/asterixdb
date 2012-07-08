@@ -44,6 +44,8 @@ public abstract class AbstractRTreeInsertTest extends AbstractRTreeTestDriver {
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, ITupleReference key,
             RTreePolicyType rtreePolicyType) throws Exception {
         AbstractRTreeTestContext ctx = createTestContext(fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType);
+        ctx.getIndex().create();
+        ctx.getIndex().open();
         // We assume all fieldSerdes are of the same type. Check the first one
         // to determine which field types to generate.
         if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {

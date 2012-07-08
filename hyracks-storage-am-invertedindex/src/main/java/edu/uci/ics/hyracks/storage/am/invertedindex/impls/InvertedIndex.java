@@ -64,7 +64,7 @@ public class InvertedIndex implements IIndex {
     private int rootPageId = 0;
     private IBufferCache bufferCache;
     private IFileMapProvider fileMapProvider;
-    private int fileId;
+    private int fileId = -1;
     private FileReference file;
     private final ITypeTraits[] invListTypeTraits;
     private final IBinaryComparatorFactory[] invListCmpFactories;

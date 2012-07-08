@@ -56,8 +56,6 @@ public class RTreeTestContext extends AbstractRTreeTestContext {
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
         RTree rtree = RTreeUtils.createRTree(bufferCache, fileMapProvider, typeTraits, valueProviderFactories,
                 cmpFactories, rtreePolicyType, file);
-        rtree.create();
-        rtree.open();
         RTreeTestContext testCtx = new RTreeTestContext(fieldSerdes, rtree);
         return testCtx;
     }

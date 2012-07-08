@@ -375,4 +375,10 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
     public ILSMIOScheduler getIOScheduler() {
         return lsmHarness.getIOScheduler();
     }
+
+    public boolean isEmptyIndex() throws HyracksDataException {
+        return diskComponents.isEmpty()
+                && memComponent.btree.isEmptyTree(memComponent.btree.getInteriorFrameFactory().createFrame())
+                && memComponent.rtree.isEmptyTree(memComponent.rtree.getInteriorFrameFactory().createFrame());
+    }
 }

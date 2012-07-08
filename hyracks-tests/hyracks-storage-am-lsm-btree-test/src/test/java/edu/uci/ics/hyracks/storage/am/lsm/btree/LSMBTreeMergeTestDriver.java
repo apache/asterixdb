@@ -41,7 +41,8 @@ public abstract class LSMBTreeMergeTestDriver extends OrderedIndexTestDriver {
             ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey)
             throws Exception {
         OrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys, leafType);
-
+        ctx.getIndex().create();
+        ctx.getIndex().open();
         // Start off with one tree bulk loaded.
         // We assume all fieldSerdes are of the same type. Check the first one
         // to determine which field types to generate.
@@ -72,6 +73,8 @@ public abstract class LSMBTreeMergeTestDriver extends OrderedIndexTestDriver {
                 orderedIndexTestUtils.checkRangeSearch(ctx, prefixLowKey, prefixHighKey, true, true);
             }
         }
+        ctx.getIndex().close();
+        ctx.getIndex().destroy();
     }
 
     @Override

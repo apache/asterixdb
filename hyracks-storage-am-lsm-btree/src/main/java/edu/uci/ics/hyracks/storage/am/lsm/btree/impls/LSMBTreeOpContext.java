@@ -76,6 +76,7 @@ public final class LSMBTreeOpContext implements IIndexOpContext {
                 setMemBTreeAccessor();
                 return;
 
+            case UPSERT:
             case INSERT:
                 setInsertMode();
                 break;

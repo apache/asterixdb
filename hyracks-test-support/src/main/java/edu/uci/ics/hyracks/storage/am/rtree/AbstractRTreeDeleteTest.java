@@ -41,6 +41,8 @@ public abstract class AbstractRTreeDeleteTest extends AbstractRTreeTestDriver {
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, ITupleReference key,
             RTreePolicyType rtreePolicyType) throws Exception {
         AbstractRTreeTestContext ctx = createTestContext(fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType);
+        ctx.getIndex().create();
+        ctx.getIndex().open();
         for (int i = 0; i < numInsertRounds; i++) {
             // We assume all fieldSerdes are of the same type. Check the first
             // one to determine which field types to generate.
