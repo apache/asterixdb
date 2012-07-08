@@ -368,10 +368,18 @@ CreateIndexStatement CreateIndexStatement() throws ParseException:
   <RIGHTPAREN>
     ("type"
   		("btree" { cis.setIndexType(IndexType.BTREE); }
-  		| "keyword" { cis.setIndexType(IndexType.KEYWORD); }
-  		| "qgram" { cis.setIndexType(IndexType.QGRAM); } 
-  		| "rtree" { cis.setIndexType(IndexType.RTREE); }   		  		  
-		)  
+  		| "keyword" { cis.setIndexType(IndexType.WORD_INVIX); }  		
+  		| "rtree" { cis.setIndexType(IndexType.RTREE); }
+  		| "ngram"
+  		  <LEFTPAREN>
+  		  (<INTEGER_LITERAL>
+  		    {
+  		      cis.setIndexType(IndexType.NGRAM_INVIX);
+  		      cis.setGramLength(Integer.valueOf(token.image));
+  		    }
+  		  )
+  		  <RIGHTPAREN>	  		  
+		)
   	";"  	
   	| ";"
     )

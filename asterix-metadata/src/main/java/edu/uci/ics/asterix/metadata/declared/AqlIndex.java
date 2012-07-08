@@ -15,24 +15,26 @@
 
 package edu.uci.ics.asterix.metadata.declared;
 
+import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
 
 public class AqlIndex implements IDataSourceIndex<String, AqlSourceId> {
 
-    private final AqlCompiledIndexDecl acid;
+    private final Index index;
     private final AqlCompiledMetadataDeclarations acmd;
     private final String datasetName;
 
     // Every transactions needs to work with its own instance of an
     // AqlMetadataProvider.
-    public AqlIndex(AqlCompiledIndexDecl acid, AqlCompiledMetadataDeclarations acmd, String datasetName) {
-        this.acid = acid;
+    public AqlIndex(Index index, AqlCompiledMetadataDeclarations acmd, String datasetName) {
+        this.index = index;
         this.acmd = acmd;
         this.datasetName = datasetName;
     }
 
+    // TODO: Maybe Index can directly implement IDataSourceIndex<String, AqlSourceId>
     @Override
     public IDataSource<AqlSourceId> getDataSource() {
         try {
@@ -45,7 +47,7 @@ public class AqlIndex implements IDataSourceIndex<String, AqlSourceId> {
 
     @Override
     public String getId() {
-        return acid.getIndexName();
+        return index.getIndexName();
     }
 
 }

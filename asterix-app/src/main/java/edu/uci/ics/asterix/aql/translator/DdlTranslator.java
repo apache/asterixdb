@@ -242,7 +242,7 @@ public class DdlTranslator extends AbstractAqlTranslator {
                     } else {
                         MetadataManager.INSTANCE.addIndex(mdTxnCtx, new Index(compiledDeclarations.getDataverseName(),
                                 datasetName, indexName, stmtCreateIndex.getIndexType(),
-                                stmtCreateIndex.getFieldExprs(), false));
+                                stmtCreateIndex.getFieldExprs(), stmtCreateIndex.getGramLength(), false));
                         runCreateIndexJob(hcc, stmtCreateIndex);
                     }
                     break;
@@ -308,7 +308,7 @@ public class DdlTranslator extends AbstractAqlTranslator {
                         List<Dataset> datasets = MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dvName);
                         for (int j = 0; j < datasets.size(); j++) {
                             String datasetName = datasets.get(j).getDatasetName();
-                            DatasetType dsType = datasets.get(j).getType();
+                            DatasetType dsType = datasets.get(j).getDatasetType();
                             if (dsType == DatasetType.INTERNAL || dsType == DatasetType.FEED) {
                                 List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dvName,
                                         datasetName);
@@ -341,7 +341,7 @@ public class DdlTranslator extends AbstractAqlTranslator {
                         if (!stmtDelete.getIfExists())
                             throw new AlgebricksException("There is no dataset with this name " + datasetName + ".");
                     } else {
-                        if (ds.getType() == DatasetType.INTERNAL || ds.getType() == DatasetType.FEED) {
+                        if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED) {
                             List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx,
                                     compiledDeclarations.getDataverseName(), datasetName);
                             for (int j = 0; j < indexes.size(); j++) {
@@ -362,7 +362,7 @@ public class DdlTranslator extends AbstractAqlTranslator {
                             datasetName);
                     if (ds == null)
                         throw new AlgebricksException("There is no dataset with this name " + datasetName + ".");
-                    if (ds.getType() == DatasetType.INTERNAL || ds.getType() == DatasetType.FEED) {
+                    if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED) {
                         String indexName = stmtDelete.getIndexName().getValue();
                         Index idx = MetadataManager.INSTANCE.getIndex(mdTxnCtx,
                                 compiledDeclarations.getDataverseName(), datasetName, indexName);
@@ -487,7 +487,7 @@ public class DdlTranslator extends AbstractAqlTranslator {
         // For now we must still convert to a CompiledCreateIndexStatement here.
         CompiledCreateIndexStatement createIndexStmt = new CompiledCreateIndexStatement(stmtCreateIndex.getIndexName()
                 .getValue(), stmtCreateIndex.getDatasetName().getValue(), stmtCreateIndex.getFieldExprs(),
-                stmtCreateIndex.getIndexType());
+                stmtCreateIndex.getGramLength(), stmtCreateIndex.getIndexType());
         JobSpecification spec = IndexOperations.buildSecondaryIndexCreationJobSpec(createIndexStmt,
                 compiledDeclarations);
         if (spec == null) {
@@ -502,7 +502,7 @@ public class DdlTranslator extends AbstractAqlTranslator {
         CompiledDatasetDropStatement cds = new CompiledDatasetDropStatement(datasetName);
         Dataset ds = MetadataManager.INSTANCE
                 .getDataset(mdTxnCtx, compiledDeclarations.getDataverseName(), datasetName);
-        if (ds.getType() == DatasetType.INTERNAL || ds.getType() == DatasetType.FEED) {
+        if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED) {
             JobSpecification[] jobs = DatasetOperations.createDropDatasetJobSpec(cds, compiledDeclarations);
             for (JobSpecification job : jobs)
                 runJob(hcc, job);

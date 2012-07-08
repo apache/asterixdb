@@ -92,7 +92,7 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
 
         // write field 2
         listBuilder.reset((AOrderedListType) MetadataRecordTypes.FEED_DETAILS_RECORDTYPE.getFieldTypes()[2]);
-        for (String field : partitioningKey) {
+        for (String field : partitioningKeys) {
             itemValue.reset();
             aString.setValue(field);
             stringSerde.serialize(aString, itemValue.getDataOutput());
@@ -104,7 +104,7 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
 
         // write field 3
         listBuilder.reset((AOrderedListType) MetadataRecordTypes.FEED_DETAILS_RECORDTYPE.getFieldTypes()[3]);
-        for (String field : primaryKey) {
+        for (String field : primaryKeys) {
             itemValue.reset();
             aString.setValue(field);
             stringSerde.serialize(aString, itemValue.getDataOutput());

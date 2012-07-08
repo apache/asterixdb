@@ -1,0 +1,41 @@
+drop dataverse test if exists;
+  
+create dataverse test;
+use dataverse test;
+
+create type LineItemType as open {
+  l_orderkey: int32, 
+  l_partkey: int32, 
+  l_suppkey: int32, 
+  l_linenumber: int32, 
+  l_quantity: double, 
+  l_extendedprice: double,
+  l_discount: double, 
+  l_tax: double,
+  l_returnflag: string, 
+  l_linestatus: string, 
+  l_shipdate: string,
+  l_commitdate: string, 
+  l_receiptdate: string, 
+  l_shipinstruct: string, 
+  l_shipmode: string, 
+  l_comment: string
+}
+
+create dataset LineItem(LineItemType)
+  partitioned by key l_orderkey, l_linenumber;
+
+load dataset LineItem 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
+(("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+create index idx_LineItem_partkey on LineItem(l_linenumber);
+create index idx_LineItem_suppkey on LineItem(l_suppkey);
+
+write output to nc1:"rttest/index-selection_range-search-open.adm";
+      
+for $c in dataset('LineItem')
+where $c.l_suppkey < 100 and $c.l_suppkey>5
+order by $c.l_orderkey, $c.l_linenumber
+return $c 
+

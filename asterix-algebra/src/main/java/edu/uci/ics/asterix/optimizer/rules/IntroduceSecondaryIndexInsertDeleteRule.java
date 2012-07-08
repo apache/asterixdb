@@ -8,14 +8,13 @@ import org.apache.commons.lang3.mutable.MutableObject;
 
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledDatasetDecl;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl.IndexKind;
+import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
 import edu.uci.ics.asterix.metadata.declared.AqlIndex;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
-import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
+import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
@@ -80,8 +79,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             AssignOperator assignOp = (AssignOperator) op2;
             ILogicalExpression assignExpr = assignOp.getExpressions().get(0).getValue();
             if (assignExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) assignOp.getExpressions()
-                        .get(0).getValue();
+                ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) assignOp.getExpressions().get(0)
+                        .getValue();
                 fid = funcExpr.getFunctionIdentifier();
             }
         }
@@ -92,30 +91,32 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
         AqlCompiledMetadataDeclarations metadata = mp.getMetadataDeclarations();
         String datasetName = datasetSource.getId().getDatasetName();
-        AqlCompiledDatasetDecl adecl = metadata.findDataset(datasetName);
-        if (adecl == null) {
+        Dataset dataset = metadata.findDataset(datasetName);
+        if (dataset == null) {
             throw new AlgebricksException("Unknown dataset " + datasetName);
         }
-        if (adecl.getDatasetType() == DatasetType.EXTERNAL) {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             return false;
         }
 
         List<LogicalVariable> projectVars = new ArrayList<LogicalVariable>();
         VariableUtilities.getUsedVariables(op1, projectVars);
         // Create operators for secondary index insert/delete.
-        String itemTypeName = adecl.getItemTypeName();
+        String itemTypeName = dataset.getItemTypeName();
         IAType itemType = metadata.findType(itemTypeName);
         if (itemType.getTypeTag() != ATypeTag.RECORD) {
             throw new AlgebricksException("Only record types can be indexed.");
         }
         ARecordType recType = (ARecordType) itemType;
-        List<AqlCompiledIndexDecl> secondaryIndexes = DatasetUtils.getSecondaryIndexes(adecl);
-        if (secondaryIndexes.isEmpty()) {
-            return false;
-        }
+        List<Index> indexes = metadata.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
         ILogicalOperator currentTop = op1;
-        for (AqlCompiledIndexDecl index : secondaryIndexes) {
-            List<String> secondaryKeyFields = index.getFieldExprs();
+        boolean hasSecondaryIndex = false;
+        for (Index index : indexes) {
+            if (!index.isSecondaryIndex()) {
+                continue;
+            }
+            hasSecondaryIndex = true;
+            List<String> secondaryKeyFields = index.getKeyFieldNames();
             List<LogicalVariable> secondaryKeyVars = new ArrayList<LogicalVariable>();
             List<Mutable<ILogicalExpression>> expressions = new ArrayList<Mutable<ILogicalExpression>>();
             List<Mutable<ILogicalExpression>> secondaryExpressions = new ArrayList<Mutable<ILogicalExpression>>();
@@ -146,7 +147,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             project.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
             context.computeAndSetTypeEnvironmentForOperator(project);
             context.computeAndSetTypeEnvironmentForOperator(assign);
-            if (index.getKind() == IndexKind.BTREE) {
+            if (index.getIndexType() == IndexType.BTREE) {
                 for (LogicalVariable secondaryKeyVar : secondaryKeyVars) {
                     secondaryExpressions.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
                             secondaryKeyVar)));
@@ -160,9 +161,9 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(assign));
                 currentTop = indexUpdate;
                 context.computeAndSetTypeEnvironmentForOperator(indexUpdate);
-            } else if (index.getKind() == IndexKind.RTREE) {
-                Pair<IAType, Boolean> keyPairType = AqlCompiledIndexDecl.getNonNullableKeyFieldType(
-                        secondaryKeyFields.get(0), recType);
+            } else if (index.getIndexType() == IndexType.RTREE) {
+                Pair<IAType, Boolean> keyPairType = Index
+                        .getNonNullableKeyFieldType(secondaryKeyFields.get(0), recType);
                 IAType spatialType = keyPairType.first;
                 int dimension = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
                 int numKeys = dimension * 2;
@@ -199,11 +200,13 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 IndexInsertDeleteOperator indexUpdate = new IndexInsertDeleteOperator(dataSourceIndex,
                         insertOp.getPrimaryKeyExpressions(), secondaryExpressions, filterExpression,
                         insertOp.getOperation());
-                indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(assignCoordinates));                
-                currentTop = indexUpdate;                
+                indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(assignCoordinates));
+                currentTop = indexUpdate;
                 context.computeAndSetTypeEnvironmentForOperator(indexUpdate);
             }
-
+        }
+        if (!hasSecondaryIndex) {
+            return false;
         }
         op0.getInputs().clear();
         op0.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
@@ -219,7 +222,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             IAType secondaryKeyType = (IAType) typeEnv.getVarType(secondaryKeyVar);
             if (!isNullableType(secondaryKeyType) && !forceFilter) {
                 continue;
-            }            
+            }
             ScalarFunctionCallExpression isNullFuncExpr = new ScalarFunctionCallExpression(
                     FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.IS_NULL),
                     new MutableObject<ILogicalExpression>(new VariableReferenceExpression(secondaryKeyVar)));
@@ -242,10 +245,10 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         }
         return filterExpression;
     }
-    
+
     private boolean isNullableType(IAType type) {
         if (type.getTypeTag() == ATypeTag.UNION) {
-            return ((AUnionType)type).isNullableType();
+            return ((AUnionType) type).isNullableType();
         }
         return false;
     }

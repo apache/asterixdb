@@ -1,269 +1,222 @@
 package edu.uci.ics.asterix.file;
 
+import java.util.List;
+
+import edu.uci.ics.asterix.common.context.AsterixIndexRegistryProvider;
+import edu.uci.ics.asterix.common.context.AsterixStorageManagerInterface;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.metadata.entities.Index;
+import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.optimizer.rules.am.InvertedIndexAccessMethod;
+import edu.uci.ics.asterix.translator.DmlTranslator.CompiledCreateIndexStatement;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
+import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
+import edu.uci.ics.hyracks.algebricks.data.ISerializerDeserializerProvider;
+import edu.uci.ics.hyracks.algebricks.data.ITypeTraitProvider;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.invertedindex.dataflow.BinaryTokenizerOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.invertedindex.dataflow.InvertedIndexBulkLoadOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.invertedindex.dataflow.InvertedIndexCreateOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizerFactory;
 
 public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
-    
+
+    private IAType secondaryKeyType;
+    private ITypeTraits[] invListsTypeTraits;
+    private IBinaryComparatorFactory[] tokenComparatorFactories;
+    private ITypeTraits[] tokenTypeTraits;
+    private IBinaryTokenizerFactory tokenizerFactory;
+    private Pair<IFileSplitProvider, IFileSplitProvider> fileSplitProviders;
+    // For tokenization, sorting and loading. Represents <token, primary keys>.
+    private int numTokenKeyPairFields;
+    private IBinaryComparatorFactory[] tokenKeyPairComparatorFactories;
+    private RecordDescriptor tokenKeyPairRecDesc;
+
     protected SecondaryInvertedIndexCreator(PhysicalOptimizationConfig physOptConf) {
         super(physOptConf);
     }
 
     @Override
-    public JobSpecification buildCreationJobSpec() throws AsterixException, AlgebricksException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-    
-    @Override
-    // TODO: This code has been completely rewritten in the asterix-fuzzy branch. No tests currently rely
-    // on this code, so I didn't do any cleanup here.
-    public JobSpecification buildLoadingJobSpec() throws AsterixException, AlgebricksException {
-        /*
-        JobSpecification spec = new JobSpecification();
-
-        String primaryIndexName = createIndexStmt.getDatasetName();
-        String secondaryIndexName = createIndexStmt.getIndexName();
-
-        AqlCompiledDatasetDecl compiledDatasetDecl = metadata.findDataset(primaryIndexName);
-        if (compiledDatasetDecl == null) {
-            throw new AsterixException("Could not find dataset " + primaryIndexName);
+    @SuppressWarnings("rawtypes")
+    protected void setSecondaryRecDescAndComparators(CompiledCreateIndexStatement createIndexStmt)
+            throws AlgebricksException, AsterixException {
+        // Sanity checks.
+        if (numPrimaryKeys > 1) {
+            throw new AsterixException("Cannot create inverted index on dataset with composite primary key.");
         }
-
-        if (compiledDatasetDecl.getDatasetType() == DatasetType.EXTERNAL) {
-            throw new AsterixException("Cannot index an external dataset (" + primaryIndexName + ").");
+        if (numSecondaryKeys > 1) {
+            throw new AsterixException("Cannot create composite inverted index on multiple fields.");
         }
-        ARecordType itemType = (ARecordType) metadata.findType(compiledDatasetDecl.getItemTypeName());
-        ISerializerDeserializerProvider serdeProvider = metadata.getFormat().getSerdeProvider();
-        ISerializerDeserializer payloadSerde = serdeProvider.getSerializerDeserializer(itemType);
-
-        int numPrimaryKeys = DatasetUtils.getPartitioningFunctions(compiledDatasetDecl).size();
-
-        // sanity
-        if (numPrimaryKeys > 1)
-            throw new AsterixException("Cannot create inverted keyword index on dataset with composite primary key.");
-
-        // sanity
-        IAType fieldsToTokenizeType = AqlCompiledIndexDecl
-                .keyFieldType(createIndexStmt.getKeyFields().get(0), itemType);
-        for (String fieldName : createIndexStmt.getKeyFields()) {
-            IAType nextFieldToTokenizeType = AqlCompiledIndexDecl.keyFieldType(fieldName, itemType);
-            if (nextFieldToTokenizeType.getTypeTag() != fieldsToTokenizeType.getTypeTag()) {
-                throw new AsterixException(
-                        "Cannot create inverted keyword index. Fields to tokenize must be of the same type.");
-            }
-        }
-
-        // ---------- START GENERAL BTREE STUFF
-
-        IIndexRegistryProvider<IIndex> treeRegistryProvider = AsterixIndexRegistryProvider.INSTANCE;
-        IStorageManagerInterface storageManager = AsterixStorageManagerInterface.INSTANCE;
-
-        // ---------- END GENERAL BTREE STUFF
-
-        // ---------- START KEY PROVIDER OP
-
-        // TODO: should actually be empty tuple source
-        // build tuple containing low and high search keys
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(1); // just one dummy field
-        DataOutput dos = tb.getDataOutput();
-
-        try {
-            tb.reset();
-            IntegerSerializerDeserializer.INSTANCE.serialize(0, dos); // dummy
-            // field
-            tb.addFieldEndOffset();
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
-
-        ISerializerDeserializer[] keyRecDescSers = { IntegerSerializerDeserializer.INSTANCE };
-        RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
-
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> keyProviderSplitsAndConstraint = metadata
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(primaryIndexName, primaryIndexName);
-
-        ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
-                keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, keyProviderOp,
-                keyProviderSplitsAndConstraint.second);
-
-        // ---------- END KEY PROVIDER OP
-
-        // ---------- START PRIMARY INDEX SCAN
-
-        ISerializerDeserializer[] primaryRecFields = new ISerializerDeserializer[numPrimaryKeys + 1];
-        IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[numPrimaryKeys];
-        ITypeTraits[] primaryTypeTraits = new ITypeTraits[numPrimaryKeys + 1];
-        int i = 0;
-        for (Triple<IEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType : DatasetUtils
-                .getPartitioningFunctions(compiledDatasetDecl)) {
-            IAType keyType = evalFactoryAndType.third;
-            ISerializerDeserializer keySerde = serdeProvider.getSerializerDeserializer(keyType);
-            primaryRecFields[i] = keySerde;
-			primaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE
-					.getBinaryComparatorFactory(keyType, true);
-            primaryTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
-            ++i;
-        }
-        primaryRecFields[numPrimaryKeys] = payloadSerde;
-        primaryTypeTraits[numPrimaryKeys] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(itemType);
-
-        int[] lowKeyFields = null; // -infinity
-        int[] highKeyFields = null; // +infinity
-        RecordDescriptor primaryRecDesc = new RecordDescriptor(primaryRecFields);
-
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint = metadata
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(primaryIndexName, primaryIndexName);
-
-        BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, treeRegistryProvider, primarySplitsAndConstraint.first, primaryTypeTraits, primaryComparatorFactories, lowKeyFields,
-                highKeyFields, true, true, new BTreeDataflowHelperFactory(), NoOpOperationCallbackProvider.INSTANCE);
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, primarySearchOp,
-                primarySplitsAndConstraint.second);
-
-        // ---------- END PRIMARY INDEX SCAN
-
-        // ---------- START ASSIGN OP
-
+        // Prepare record descriptor used in the assign op, and the optional select op.
         List<String> secondaryKeyFields = createIndexStmt.getKeyFields();
-        int numSecondaryKeys = secondaryKeyFields.size();
+        secondaryFieldAccessEvalFactories = new ICopyEvaluatorFactory[numSecondaryKeys];
         ISerializerDeserializer[] secondaryRecFields = new ISerializerDeserializer[numPrimaryKeys + numSecondaryKeys];
-        IEvaluatorFactory[] evalFactories = new IEvaluatorFactory[numSecondaryKeys];
-        for (i = 0; i < numSecondaryKeys; i++) {
-            evalFactories[i] = metadata.getFormat().getFieldAccessEvaluatorFactory(itemType,
+        ITypeTraits[] secondaryTypeTraits = new ITypeTraits[numSecondaryKeys + numPrimaryKeys];
+        ISerializerDeserializerProvider serdeProvider = metadata.getFormat().getSerdeProvider();
+        ITypeTraitProvider typeTraitProvider = metadata.getFormat().getTypeTraitProvider();
+        for (int i = 0; i < numSecondaryKeys; i++) {
+            secondaryFieldAccessEvalFactories[i] = metadata.getFormat().getFieldAccessEvaluatorFactory(itemType,
                     secondaryKeyFields.get(i), numPrimaryKeys);
-            IAType keyType = AqlCompiledIndexDecl.keyFieldType(secondaryKeyFields.get(i), itemType);
-            ISerializerDeserializer keySerde = serdeProvider.getSerializerDeserializer(keyType);
+            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableKeyFieldType(secondaryKeyFields.get(i), itemType);
+            secondaryKeyType = keyTypePair.first;
+            anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;
+            ISerializerDeserializer keySerde = serdeProvider.getSerializerDeserializer(secondaryKeyType);
             secondaryRecFields[i] = keySerde;
+            secondaryTypeTraits[i] = typeTraitProvider.getTypeTrait(secondaryKeyType);
         }
-        // fill in serializers and comparators for primary index fields
-        for (i = 0; i < numPrimaryKeys; i++) {
-            secondaryRecFields[numSecondaryKeys + i] = primaryRecFields[i];
+        secondaryRecDesc = new RecordDescriptor(secondaryRecFields, secondaryTypeTraits);
+        // Comparators and type traits for tokens.
+        tokenComparatorFactories = new IBinaryComparatorFactory[numSecondaryKeys];
+        tokenTypeTraits = new ITypeTraits[numSecondaryKeys];
+        tokenComparatorFactories[0] = InvertedIndexAccessMethod.getTokenBinaryComparatorFactory(secondaryKeyType);
+        tokenTypeTraits[0] = InvertedIndexAccessMethod.getTokenTypeTrait(secondaryKeyType);
+        // Set tokenizer factory.
+        // TODO: We might want to expose the hashing option at the AQL level, 
+        // and add the choice to the index metadata.
+        tokenizerFactory = InvertedIndexAccessMethod.getBinaryTokenizerFactory(secondaryKeyType.getTypeTag(),
+                createIndexStmt.getIndexType(), createIndexStmt.getGramLength());
+        // Type traits for inverted-list elements. Inverted lists contain primary keys.
+        invListsTypeTraits = new ITypeTraits[numPrimaryKeys];
+        for (int i = 0; i < numPrimaryKeys; i++) {
+            invListsTypeTraits[i] = primaryRecDesc.getTypeTraits()[i];
         }
-        RecordDescriptor secondaryRecDesc = new RecordDescriptor(secondaryRecFields);
-
-        int[] outColumns = new int[numSecondaryKeys];
-        int[] projectionList = new int[numSecondaryKeys + numPrimaryKeys];
-        for (i = 0; i < numSecondaryKeys; i++) {
-            outColumns[i] = numPrimaryKeys + i + 1;
-        }
-        int projCount = 0;
-        for (i = 0; i < numSecondaryKeys; i++) {
-            projectionList[projCount++] = numPrimaryKeys + i + 1;
-        }
-        for (i = 0; i < numPrimaryKeys; i++) {
-            projectionList[projCount++] = i;
-        }
-
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> assignSplitsAndConstraint = metadata
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(primaryIndexName, primaryIndexName);
-
-        AssignRuntimeFactory assign = new AssignRuntimeFactory(outColumns, evalFactories, projectionList);
-        AlgebricksMetaOperatorDescriptor asterixAssignOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 1,
-                new IPushRuntimeFactory[] { assign }, new RecordDescriptor[] { secondaryRecDesc });
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, asterixAssignOp,
-                assignSplitsAndConstraint.second);
-
-        // ---------- END ASSIGN OP
-
-        // ---------- START TOKENIZER OP
-
-        int numTokenKeyPairFields = numPrimaryKeys + 1;
-
+        // Get file split providers for the BTree and inverted-list files.
+        fileSplitProviders = metadata.getInvertedIndexFileSplitProviders(secondaryFileSplitProvider);
+        // For tokenization, sorting and loading.
+        // One token + primary keys.
+        numTokenKeyPairFields = 1 + numPrimaryKeys;
         ISerializerDeserializer[] tokenKeyPairFields = new ISerializerDeserializer[numTokenKeyPairFields];
-        tokenKeyPairFields[0] = serdeProvider.getSerializerDeserializer(fieldsToTokenizeType);
-        for (i = 0; i < numPrimaryKeys; i++)
-            tokenKeyPairFields[i + 1] = secondaryRecFields[numSecondaryKeys + i];
-        RecordDescriptor tokenKeyPairRecDesc = new RecordDescriptor(tokenKeyPairFields);
-
-        int[] fieldsToTokenize = new int[numSecondaryKeys];
-        for (i = 0; i < numSecondaryKeys; i++)
-            fieldsToTokenize[i] = i;
-
-        int[] primaryKeyFields = new int[numPrimaryKeys];
-        for (i = 0; i < numPrimaryKeys; i++)
-            primaryKeyFields[i] = numSecondaryKeys + i;
-
-        IBinaryTokenizerFactory tokenizerFactory = AqlBinaryTokenizerFactoryProvider.INSTANCE
-                .getTokenizerFactory(fieldsToTokenizeType);
-        BinaryTokenizerOperatorDescriptor tokenizerOp = new BinaryTokenizerOperatorDescriptor(spec,
-                tokenKeyPairRecDesc, tokenizerFactory, fieldsToTokenize, primaryKeyFields);
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadata
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(primaryIndexName, secondaryIndexName);
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, tokenizerOp,
-                secondarySplitsAndConstraint.second);
-
-        // ---------- END TOKENIZER OP
-
-        // ---------- START EXTERNAL SORT OP
-
-        IBinaryComparatorFactory[] tokenKeyPairComparatorFactories = new IBinaryComparatorFactory[numTokenKeyPairFields];
-		tokenKeyPairComparatorFactories[0] = AqlBinaryComparatorFactoryProvider.INSTANCE
-				.getBinaryComparatorFactory(fieldsToTokenizeType, true);
-        for (i = 0; i < numPrimaryKeys; i++) {
+        ITypeTraits[] tokenKeyPairTypeTraits = new ITypeTraits[numTokenKeyPairFields];
+        tokenKeyPairComparatorFactories = new IBinaryComparatorFactory[numTokenKeyPairFields];
+        tokenKeyPairFields[0] = serdeProvider.getSerializerDeserializer(secondaryKeyType);
+        tokenKeyPairTypeTraits[0] = tokenTypeTraits[0];
+        tokenKeyPairComparatorFactories[0] = InvertedIndexAccessMethod
+                .getTokenBinaryComparatorFactory(secondaryKeyType);
+        for (int i = 0; i < numPrimaryKeys; i++) {
+            tokenKeyPairFields[i + 1] = primaryRecDesc.getFields()[i];
+            tokenKeyPairTypeTraits[i + 1] = primaryRecDesc.getTypeTraits()[i];
             tokenKeyPairComparatorFactories[i + 1] = primaryComparatorFactories[i];
         }
+        tokenKeyPairRecDesc = new RecordDescriptor(tokenKeyPairFields, tokenKeyPairTypeTraits);
+    }
 
-        // <token, primarykey a, primarykey b, etc.>
-        int[] sortFields = new int[numTokenKeyPairFields]; 
-        for (i = 0; i < numTokenKeyPairFields; i++) {
-            sortFields[i] = i;
-        }
-
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> sorterSplitsAndConstraint = metadata
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(primaryIndexName, primaryIndexName);
-
-        ExternalSortOperatorDescriptor sortOp = new ExternalSortOperatorDescriptor(spec,
-                physOptConf.getMaxFramesExternalSort(), sortFields, tokenKeyPairComparatorFactories,
-                secondaryRecDesc);
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, sortOp,
-                sorterSplitsAndConstraint.second);
-
-        // ---------- END EXTERNAL SORT OP
-
-        // ---------- START SECONDARY INDEX BULK LOAD
-
-        ITypeTraits[] secondaryTypeTraits = new ITypeTraits[numTokenKeyPairFields];
-        secondaryTypeTraits[0] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(fieldsToTokenizeType);
-        for (i = 0; i < numPrimaryKeys; i++)
-            secondaryTypeTraits[i + 1] = primaryTypeTraits[i];
-
-        int[] fieldPermutation = new int[numSecondaryKeys + numPrimaryKeys];
-        for (i = 0; i < numTokenKeyPairFields; i++)
-            fieldPermutation[i] = i;
-
-        TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = new TreeIndexBulkLoadOperatorDescriptor(
-                spec, storageManager, treeRegistryProvider,
-                secondarySplitsAndConstraint.first, secondaryTypeTraits,
-                tokenKeyPairComparatorFactories, fieldPermutation, 0.7f,
-                new BTreeDataflowHelperFactory(),
+    @Override
+    public JobSpecification buildCreationJobSpec() throws AsterixException, AlgebricksException {
+        JobSpecification spec = new JobSpecification();
+        InvertedIndexCreateOperatorDescriptor invIndexCreateOp = new InvertedIndexCreateOperatorDescriptor(spec,
+                AsterixStorageManagerInterface.INSTANCE, fileSplitProviders.first, fileSplitProviders.second,
+                AsterixIndexRegistryProvider.INSTANCE, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
+                primaryComparatorFactories, tokenizerFactory, new BTreeDataflowHelperFactory(),
                 NoOpOperationCallbackProvider.INSTANCE);
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryBulkLoadOp,
-                secondarySplitsAndConstraint.second);
-
-        // ---------- END SECONDARY INDEX BULK LOAD
-
-        // ---------- START CONNECT THE OPERATORS
-
-        spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primarySearchOp, 0);
-
-        spec.connect(new OneToOneConnectorDescriptor(spec), primarySearchOp, 0, asterixAssignOp, 0);
-
-        spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, tokenizerOp, 0);
-
-        spec.connect(new OneToOneConnectorDescriptor(spec), tokenizerOp, 0, sortOp, 0);
-
-        spec.connect(new OneToOneConnectorDescriptor(spec), sortOp, 0, secondaryBulkLoadOp, 0);
-
-        spec.addRoot(secondaryBulkLoadOp);
-
-        // ---------- END CONNECT THE OPERATORS
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexCreateOp,
+                secondaryPartitionConstraint);
+        spec.addRoot(invIndexCreateOp);
         spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
         return spec;
-        */
-        return null;
+    }
+
+    @Override
+    public JobSpecification buildLoadingJobSpec() throws AsterixException, AlgebricksException {
+        JobSpecification spec = new JobSpecification();
+
+        // Create dummy key provider for feeding the primary index scan. 
+        AbstractOperatorDescriptor keyProviderOp = createDummyKeyProviderOp(spec);
+
+        // Create primary index scan op.
+        BTreeSearchOperatorDescriptor primaryScanOp = createPrimaryIndexScanOp(spec);
+
+        // Assign op.
+        AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, primaryScanOp, numSecondaryKeys);
+
+        // If any of the secondary fields are nullable, then add a select op that filters nulls.
+        AlgebricksMetaOperatorDescriptor selectOp = null;
+        if (anySecondaryKeyIsNullable) {
+            selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys);
+        }
+
+        // Create a tokenizer op.
+        AbstractOperatorDescriptor tokenizerOp = createTokenizerOp(spec);
+
+        // Sort by token + primary keys.
+        ExternalSortOperatorDescriptor sortOp = createSortOp(spec, tokenKeyPairComparatorFactories, tokenKeyPairRecDesc);
+
+        // Create secondary inverted index bulk load op.
+        InvertedIndexBulkLoadOperatorDescriptor invIndexBulkLoadOp = createInvertedIndexBulkLoadOp(spec);
+
+        // Connect the operators.
+        spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
+        spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, asterixAssignOp, 0);
+        if (anySecondaryKeyIsNullable) {
+            spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
+            spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, tokenizerOp, 0);
+        } else {
+            spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, tokenizerOp, 0);
+        }
+        spec.connect(new OneToOneConnectorDescriptor(spec), tokenizerOp, 0, sortOp, 0);
+        spec.connect(new OneToOneConnectorDescriptor(spec), sortOp, 0, invIndexBulkLoadOp, 0);
+        spec.addRoot(invIndexBulkLoadOp);
+        spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+        return spec;
+    }
+
+    private AbstractOperatorDescriptor createTokenizerOp(JobSpecification spec) throws AlgebricksException {
+        int[] fieldsToTokenize = new int[numSecondaryKeys];
+        for (int i = 0; i < numSecondaryKeys; i++) {
+            fieldsToTokenize[i] = i;
+        }
+        int[] primaryKeyFields = new int[numPrimaryKeys];
+        for (int i = 0; i < numPrimaryKeys; i++) {
+            primaryKeyFields[i] = numSecondaryKeys + i;
+        }
+        BinaryTokenizerOperatorDescriptor tokenizerOp = new BinaryTokenizerOperatorDescriptor(spec,
+                tokenKeyPairRecDesc, tokenizerFactory, fieldsToTokenize, primaryKeyFields);
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, tokenizerOp,
+                primaryPartitionConstraint);
+        return tokenizerOp;
+    }
+
+    @Override
+    protected ExternalSortOperatorDescriptor createSortOp(JobSpecification spec,
+            IBinaryComparatorFactory[] secondaryComparatorFactories, RecordDescriptor secondaryRecDesc) {
+        // Sort on token and primary keys.
+        int[] sortFields = new int[numTokenKeyPairFields];
+        for (int i = 0; i < numTokenKeyPairFields; i++) {
+            sortFields[i] = i;
+        }
+        ExternalSortOperatorDescriptor sortOp = new ExternalSortOperatorDescriptor(spec,
+                physOptConf.getMaxFramesExternalSort(), sortFields, tokenKeyPairComparatorFactories, secondaryRecDesc);
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, sortOp, primaryPartitionConstraint);
+        return sortOp;
+    }
+
+    private InvertedIndexBulkLoadOperatorDescriptor createInvertedIndexBulkLoadOp(JobSpecification spec) {
+        int[] fieldPermutation = new int[numSecondaryKeys + numPrimaryKeys];
+        for (int i = 0; i < numTokenKeyPairFields; i++) {
+            fieldPermutation[i] = i;
+        }
+        InvertedIndexBulkLoadOperatorDescriptor invIndexBulkLoadOp = new InvertedIndexBulkLoadOperatorDescriptor(spec,
+                fieldPermutation, AsterixStorageManagerInterface.INSTANCE, fileSplitProviders.first,
+                fileSplitProviders.second, AsterixIndexRegistryProvider.INSTANCE, tokenTypeTraits,
+                tokenComparatorFactories, invListsTypeTraits, primaryComparatorFactories, tokenizerFactory,
+                new BTreeDataflowHelperFactory(), NoOpOperationCallbackProvider.INSTANCE);
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexBulkLoadOp,
+                secondaryPartitionConstraint);
+        return invIndexBulkLoadOp;
     }
 }

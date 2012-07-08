@@ -17,7 +17,7 @@ public class AqlTypeTraitProvider implements ITypeTraitProvider {
     private static final ITypeTraits THIRTYTWOBYTETYPETRAIT = new TypeTrait(32 + 1);
     private static final ITypeTraits TWENTYFOURBYTETYPETRAIT = new TypeTrait(24 + 1);
 
-    private static final ITypeTraits VARLENTYPETRAIT = new TypeTrait(false,-1);
+    private static final ITypeTraits VARLENTYPETRAIT = new TypeTrait(false, -1);
 
     public static final AqlTypeTraitProvider INSTANCE = new AqlTypeTraitProvider();
 
@@ -53,8 +53,6 @@ public class AqlTypeTraitProvider implements ITypeTraitProvider {
     }
 }
 
-
-
 class TypeTrait implements ITypeTraits {
 
     @Override
@@ -66,18 +64,17 @@ class TypeTrait implements ITypeTraits {
     public int getFixedLength() {
         return fixedLength;
     }
-   
+
     private boolean isFixedLength;
     private int fixedLength;
-    
-    public TypeTrait(boolean isFixedLength, int fixedLength){
+
+    public TypeTrait(boolean isFixedLength, int fixedLength) {
         this.isFixedLength = isFixedLength;
         this.fixedLength = fixedLength;
     }
-    
-    public TypeTrait(int fixedLength){
+
+    public TypeTrait(int fixedLength) {
         this.isFixedLength = true;
         this.fixedLength = fixedLength;
     }
 }
-

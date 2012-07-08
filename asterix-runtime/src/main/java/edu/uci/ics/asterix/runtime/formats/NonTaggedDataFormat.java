@@ -91,6 +91,8 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.CreatePolygonDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.CreateRectangleDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceCheckDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceListIsFilterable;
+import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceStringIsFilterable;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EmbedTypeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EndsWithDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.FieldAccessByIndexDescriptor;
@@ -119,6 +121,8 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.SimilarityJaccardCheckDe
 import edu.uci.ics.asterix.runtime.evaluators.functions.SimilarityJaccardDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SimilarityJaccardPrefixCheckDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SimilarityJaccardPrefixDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.SimilarityJaccardSortedCheckDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.SimilarityJaccardSortedDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SpatialAreaDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SpatialCellDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SpatialDistanceDescriptor;
@@ -305,9 +309,13 @@ public class NonTaggedDataFormat implements IDataFormat {
 
         temp.add(EditDistanceDescriptor.FACTORY);
         temp.add(EditDistanceCheckDescriptor.FACTORY);
+        temp.add(EditDistanceStringIsFilterable.FACTORY);
+        temp.add(EditDistanceListIsFilterable.FACTORY);
 
         temp.add(SimilarityJaccardDescriptor.FACTORY);
         temp.add(SimilarityJaccardCheckDescriptor.FACTORY);
+        temp.add(SimilarityJaccardSortedDescriptor.FACTORY);
+        temp.add(SimilarityJaccardSortedCheckDescriptor.FACTORY);
         temp.add(SimilarityJaccardPrefixDescriptor.FACTORY);
         temp.add(SimilarityJaccardPrefixCheckDescriptor.FACTORY);
 
