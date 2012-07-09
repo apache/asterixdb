@@ -91,4 +91,9 @@ public class BTreePrimaryIndexScanOperatorTest extends AbstractBTreeOperatorTest
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory() {
         return ((BTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory();
     }
+
+    @Override
+    public void cleanup() throws Exception {
+        destroyPrimaryIndex();
+    }
 }

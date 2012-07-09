@@ -16,7 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
@@ -68,59 +67,46 @@ public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePusha
 
     @Override
     public void initialize() throws HyracksDataException {
-        try {
-            IndexRegistry<IIndex> treeIndexRegistry = treeIndexRegistryProvider.getRegistry(ctx);
-            IBufferCache bufferCache = storageManager.getBufferCache(ctx);
-            IFileMapProvider fileMapProvider = storageManager.getFileMapProvider(ctx);
-            IIndexArtifactMap indexArtifactMap = storageManager.getIndexArtifactMap(ctx);
+        IndexRegistry<IIndex> treeIndexRegistry = treeIndexRegistryProvider.getRegistry(ctx);
+        IBufferCache bufferCache = storageManager.getBufferCache(ctx);
+        IFileMapProvider fileMapProvider = storageManager.getFileMapProvider(ctx);
+        IIndexArtifactMap indexArtifactMap = storageManager.getIndexArtifactMap(ctx);
 
-            FileReference f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
+        FileReference f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
 
-            //check whether the requested index instance already exists by retrieving indexRegistry with resourceId
-            //To do so, checking the index directory in the first ioDevice is sufficient.
+        //check whether the requested index instance already exists by retrieving indexRegistry with resourceId
+        //To do so, checking the index directory in the first ioDevice is sufficient.
 
-            //create a fullDir(= IODeviceDir + baseDir) for the requested index
-            IIOManager ioManager = ctx.getIOManager();
-            List<IODeviceHandle> ioDeviceHandles = ioManager.getIODevices();
-            String fullDir = ioDeviceHandles.get(0).getPath().toString();
-            if (!fullDir.endsWith(System.getProperty("file.separator"))) {
-                fullDir += System.getProperty("file.separator");
-            }
-            String baseDir = f.getFile().getPath();
-            if (!baseDir.endsWith(System.getProperty("file.separator"))) {
-                baseDir += System.getProperty("file.separator");
-            }
-            fullDir += baseDir;
-
-            //get the corresponding resourceId with the fullDir
-            long resourceId = indexArtifactMap.get(fullDir);
-
-            int indexFileId = -1;
-            synchronized (fileMapProvider) {
-                boolean fileIsMapped = fileMapProvider.isMapped(f);
-                if (!fileIsMapped) {
-                    throw new HyracksDataException("Cannot drop Tree with name " + f.toString()
-                            + ". No file mapping exists.");
-                }
-                indexFileId = fileMapProvider.lookupFileId(f);
-            }
-            // Unregister tree instance.
-            synchronized (treeIndexRegistry) {
-                treeIndexRegistry.unregister(resourceId);
-                indexArtifactMap.delete(baseDir, ioDeviceHandles);
-            }
-
-            // remove name to id mapping
-            bufferCache.deleteFile(indexFileId, false);
+        //create a fullDir(= IODeviceDir + baseDir) for the requested index
+        IIOManager ioManager = ctx.getIOManager();
+        List<IODeviceHandle> ioDeviceHandles = ioManager.getIODevices();
+        String fullDir = ioDeviceHandles.get(0).getPath().toString();
+        if (!fullDir.endsWith(System.getProperty("file.separator"))) {
+            fullDir += System.getProperty("file.separator");
         }
-        // TODO: for the time being we don't throw,
-        // with proper exception handling (no hanging job problem) we should
-        // throw
-        catch (Exception e) {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Tree Drop Operator Failed Due To Exception: " + e.getMessage());
-            }
+        String baseDir = f.getFile().getPath();
+        if (!baseDir.endsWith(System.getProperty("file.separator"))) {
+            baseDir += System.getProperty("file.separator");
         }
+        fullDir += baseDir;
+
+        //get the corresponding resourceId with the fullDir
+        long resourceId = indexArtifactMap.get(fullDir);
+        IIndex index;
+        // Unregister tree instance.
+        synchronized (treeIndexRegistry) {
+            index = treeIndexRegistry.get(resourceId);
+            if (index == null) {
+                throw new HyracksDataException("Cannot drop index with name " + f.toString()
+                        + " since it does not exist.");
+            }
+            treeIndexRegistry.unregister(resourceId);
+            indexArtifactMap.delete(baseDir, ioDeviceHandles);
+        }
+
+        // remove name to id mapping
+        index.close();
+        index.destroy();
     }
 
     @Override

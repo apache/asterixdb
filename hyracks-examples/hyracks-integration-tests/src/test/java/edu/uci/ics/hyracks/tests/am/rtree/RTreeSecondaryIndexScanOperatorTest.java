@@ -105,4 +105,10 @@ public class RTreeSecondaryIndexScanOperatorTest extends AbstractRTreeOperatorTe
         return ((RTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(secondaryValueProviderFactories,
                 rtreePolicyType, null);
     }
+    
+    @Override
+    public void cleanup() throws Exception {
+        destroyPrimaryIndex();
+        destroySecondaryIndex();
+    }
 }

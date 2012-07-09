@@ -112,4 +112,10 @@ public class BTreeSecondaryIndexSearchOperatorTest extends AbstractBTreeOperator
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory() {
         return ((BTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory();
     }
+    
+    @Override
+    public void cleanup() throws Exception {
+        destroyPrimaryIndex();
+        destroySecondaryIndex();
+    }
 }

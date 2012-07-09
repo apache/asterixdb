@@ -50,6 +50,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactor
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDropOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexInsertUpdateDeleteOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
@@ -294,8 +295,24 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
         runTest(spec);
     }
 
-    @After
-    public void cleanup() throws Exception {
-        testHelper.cleanup(primaryFileName, secondaryFileName);
+    protected void destroyPrimaryIndex() throws Exception {
+        JobSpecification spec = new JobSpecification();
+        TreeIndexDropOperatorDescriptor primaryDropOp = new TreeIndexDropOperatorDescriptor(spec, storageManager,
+                indexRegistryProvider, primarySplitProvider);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryDropOp, NC1_ID);
+        spec.addRoot(primaryDropOp);
+        runTest(spec);
     }
+
+    protected void destroySecondaryIndex() throws Exception {
+        JobSpecification spec = new JobSpecification();
+        TreeIndexDropOperatorDescriptor secondaryDropOp = new TreeIndexDropOperatorDescriptor(spec, storageManager,
+                indexRegistryProvider, secondarySplitProvider);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryDropOp, NC1_ID);
+        spec.addRoot(secondaryDropOp);
+        runTest(spec);
+    }
+
+    @After
+    public abstract void cleanup() throws Exception;
 }
