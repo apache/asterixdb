@@ -48,6 +48,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
@@ -73,6 +74,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     private final BTree memBTree;
     private final FileReference memBtreeFile = new FileReference(new File("memBtree"));
     private final InMemoryFreePageManager memFreePageManager;
+    private final AntimatterAwareTupleAcceptor acceptor = new AntimatterAwareTupleAcceptor();
 
     // On-disk components.    
     private final ILSMFileManager fileManager;
@@ -229,7 +231,11 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         ctx.memBTreeAccessor.search(memCursor, predicate);
         try {
             if (memCursor.hasNext()) {
-                throw new BTreeDuplicateKeyException("Failed to insert key since key already exists.");
+                memCursor.next();
+                LSMBTreeTupleReference lsmbtreeTuple = (LSMBTreeTupleReference) memCursor.getTuple();
+                if (!lsmbtreeTuple.isAntimatter()) {
+                    throw new BTreeDuplicateKeyException("Failed to insert key since key already exists.");
+                }
             }
         } finally {
             memCursor.close();
@@ -243,7 +249,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         } finally {
             searchCursor.close();
         }
-        ctx.memBTreeAccessor.insert(tuple);
+        ctx.memBTreeAccessor.upsertIfConditionElseInsert(tuple, acceptor);
 
         return true;
     }

@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITupleAcceptor;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNotUpdateableException;
@@ -375,10 +376,14 @@ public class BTree extends AbstractTreeIndex {
             throws Exception {
         boolean restartOp = false;
         ITupleReference beforeTuple = ctx.leafFrame.getBeforeTuple(tuple, targetTupleIndex);
-        if (beforeTuple == null) {
-            restartOp = insertLeaf(tuple, targetTupleIndex, pageId, ctx);
+        if (ctx.acceptor.accept(beforeTuple)) {
+            if (beforeTuple == null) {
+                restartOp = insertLeaf(tuple, targetTupleIndex, pageId, ctx);
+            } else {
+                restartOp = updateLeaf(tuple, targetTupleIndex, pageId, ctx);
+            }
         } else {
-            restartOp = updateLeaf(tuple, targetTupleIndex, pageId, ctx);
+            restartOp = insertLeaf(tuple, targetTupleIndex, pageId, ctx);
         }
         return restartOp;
     }
@@ -768,7 +773,13 @@ public class BTree extends AbstractTreeIndex {
 
         @Override
         public void upsert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+            upsertIfConditionElseInsert(tuple, UnconditionalTupleAcceptor.INSTANCE);
+        }
+
+        public void upsertIfConditionElseInsert(ITupleReference tuple, ITupleAcceptor acceptor)
+                throws HyracksDataException, TreeIndexException {
             ctx.reset(IndexOp.UPSERT);
+            ctx.acceptor = acceptor;
             btree.upsert(tuple, ctx);
         }
 

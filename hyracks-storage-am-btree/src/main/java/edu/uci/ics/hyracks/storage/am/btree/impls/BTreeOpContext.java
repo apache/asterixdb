@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.storage.am.btree.api.ITupleAcceptor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
@@ -49,6 +50,7 @@ public class BTreeOpContext implements IIndexOpContext {
     public boolean exceptionHandled;
     public IModificationOperationCallback modificationCallback;
     public ISearchOperationCallback searchCallback;
+    public ITupleAcceptor acceptor;
 
     public BTreeOpContext(ITreeIndexFrameFactory leafFrameFactory, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexMetaDataFrame metaFrame, IBinaryComparatorFactory[] cmpFactories,
