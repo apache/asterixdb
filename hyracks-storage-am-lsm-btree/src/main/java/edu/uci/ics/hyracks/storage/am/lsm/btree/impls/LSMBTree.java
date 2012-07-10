@@ -228,6 +228,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         IIndexCursor memCursor = new BTreeRangeSearchCursor(ctx.memBTreeOpCtx.leafFrame, false);
         RangePredicate predicate = new RangePredicate(tuple, tuple, true, true, comparator, comparator);
 
+        // first check the inmemory component
         ctx.memBTreeAccessor.search(memCursor, predicate);
         try {
             if (memCursor.hasNext()) {
@@ -235,12 +236,17 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
                 LSMBTreeTupleReference lsmbtreeTuple = (LSMBTreeTupleReference) memCursor.getTuple();
                 if (!lsmbtreeTuple.isAntimatter()) {
                     throw new BTreeDuplicateKeyException("Failed to insert key since key already exists.");
+                } else {
+                    memCursor.close();
+                    ctx.memBTreeAccessor.upsertIfConditionElseInsert(tuple, acceptor);
+                    return true;
                 }
             }
         } finally {
             memCursor.close();
         }
 
+        // the key was not in the inmemory component, so check the disk components
         lsmHarness.search(searchCursor, predicate, ctx, false);
         try {
             if (searchCursor.hasNext()) {
