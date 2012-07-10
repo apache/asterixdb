@@ -2,6 +2,7 @@ package edu.uci.ics.hyracks.dataflow.common.data.accessors;
 
 import java.io.DataOutput;
 import java.io.DataOutputStream;
+import java.io.IOException;
 
 import edu.uci.ics.hyracks.data.std.api.IValueReference;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
@@ -37,5 +38,18 @@ public class ArrayBackedValueStorage implements IValueReference, IDataOutputProv
     @Override
     public int getLength() {
         return baaos.size();
+    }
+
+    public void append(IValueReference value) {
+        try {
+            dos.write(value.getByteArray(), value.getStartOffset(), value.getLength());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void assign(IValueReference value) {
+        reset();
+        append(value);
     }
 }

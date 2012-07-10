@@ -56,8 +56,8 @@ public final class ShortPointable extends AbstractPointable implements IHashable
     }
 
     public static void setShort(byte[] bytes, int start, short value) {
-        bytes[start] = (byte) ((value >>> 24) & 0xFF);
-        bytes[start + 1] = (byte) ((value >>> 16) & 0xFF);
+        bytes[start] = (byte) ((value >>> 8) & 0xFF);
+        bytes[start + 1] = (byte) ((value >>> 0) & 0xFF);
     }
 
     public short getShort() {

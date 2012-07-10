@@ -104,6 +104,7 @@
     <module>hyracks-documentation</module>
     <module>hyracks-hadoop-compat</module>
     <module>hyracks-algebricks</module>
+    <!--module>hyracks-yarn</module-->
     <module>hyracks-maven-plugins</module>
   </modules>
 </project>

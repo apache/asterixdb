@@ -114,7 +114,7 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
         }
 
         @Override
-        public synchronized void run() {
+        public void run() {
             PartitionId pid = pc.getPartitionId();
             MaterializedPartitionWriter mpw = new MaterializedPartitionWriter(ctx, manager, pid, taId, executor);
             IInputChannel channel = pc.getInputChannel();
@@ -123,6 +123,14 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
                 channel.open();
                 mpw.open();
                 while (true) {
+                    int nAvailableFrames;
+                    boolean eos;
+                    boolean failed;
+                    synchronized (this) {
+                        nAvailableFrames = this.nAvailableFrames;
+                        eos = this.eos;
+                        failed = this.failed;
+                    }
                     if (nAvailableFrames > 0) {
                         ByteBuffer buffer = channel.getNextBuffer();
                         --nAvailableFrames;
@@ -143,7 +151,7 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
                 mpw.close();
                 channel.close();
                 delegate.addPartitions(Collections.singleton(new PartitionChannel(pid,
-                        new MaterializedPartitionInputChannel(ctx, 5, pid, manager))));
+                        new MaterializedPartitionInputChannel(ctx, 1, pid, manager))));
             } catch (HyracksException e) {
             }
         }
