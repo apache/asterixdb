@@ -200,4 +200,20 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         }
         return h;
     }
+
+    public static void toString(StringBuilder buffer, byte[] bytes, int start) {
+        int utfLen = getUTFLength(bytes, start);
+        int offset = 2;
+        while (utfLen > 0) {
+            char c = charAt(bytes, start + offset);
+            buffer.append(c);
+            int cLen = UTF8StringPointable.getModifiedUTF8Len(c);
+            offset += cLen;
+            utfLen -= cLen;
+        }
+    }
+
+    public void toString(StringBuilder buffer) {
+        toString(buffer, bytes, start);
+    }
 }
