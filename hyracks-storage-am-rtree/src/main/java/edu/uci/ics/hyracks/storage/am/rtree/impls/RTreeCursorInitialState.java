@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class RTreeCursorInitialState implements ICursorInitialState {
@@ -25,6 +26,7 @@ public class RTreeCursorInitialState implements ICursorInitialState {
     private int rootPage;
     private ICachedPage page; // for disk order scan
     private ISearchOperationCallback searchCallback;
+    private MultiComparator originalKeyCmp;
 
     public RTreeCursorInitialState(PathList pathList, int rootPage, ISearchOperationCallback searchCallback) {
         this.pathList = pathList;
@@ -59,5 +61,15 @@ public class RTreeCursorInitialState implements ICursorInitialState {
     @Override
     public void setSearchOperationCallback(ISearchOperationCallback searchCallback) {
         this.searchCallback = searchCallback;
+    }
+
+    @Override
+    public MultiComparator getOriginalKeyComparator() {
+        return originalKeyCmp;
+    }
+
+    @Override
+    public void setOriginialKeyComparator(MultiComparator originalCmp) {
+        this.originalKeyCmp = originalCmp;
     }
 }

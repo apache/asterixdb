@@ -24,6 +24,7 @@ import java.util.Random;
 import java.util.TreeSet;
 import java.util.logging.Level;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -47,6 +48,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.AbstractBTreeTest;
+import edu.uci.ics.hyracks.storage.am.common.TestOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
@@ -55,7 +57,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -107,8 +108,8 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-        ITreeIndexAccessor indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
+        ITreeIndexAccessor indexAccessor = btree.createAccessor(TestOperationCallback.INSTANCE,
+                TestOperationCallback.INSTANCE);
 
         // generate keys
         int numKeys = 50;
@@ -143,10 +144,14 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         int maxSearchKey = 100;
 
         // forward searches
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, false, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false);
+        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
+                true, false));
+        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false,
+                true, false));
+        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
+                false, false));
+        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
+                true, false));
 
         btree.close();
         btree.destroy();
@@ -182,8 +187,8 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-        ITreeIndexAccessor indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
+        ITreeIndexAccessor indexAccessor = btree.createAccessor(TestOperationCallback.INSTANCE,
+                TestOperationCallback.INSTANCE);
 
         // generate keys
         int numKeys = 50;
@@ -215,10 +220,14 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         int maxSearchKey = 100;
 
         // forward searches
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, false, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false);
+        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
+                true, false));
+        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false,
+                true, false));
+        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
+                false, false));
+        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
+                true, false));
 
         btree.close();
         btree.destroy();
@@ -254,8 +263,8 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-        ITreeIndexAccessor indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
+        ITreeIndexAccessor indexAccessor = btree.createAccessor(TestOperationCallback.INSTANCE,
+                TestOperationCallback.INSTANCE);
 
         // generate keys
         int numKeys = 50;
@@ -287,10 +296,14 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         int maxSearchKey = 100;
 
         // forward searches
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, false, false);
-        performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false);
+        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
+                true, false));
+        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false,
+                true, false));
+        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
+                false, false));
+        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
+                true, false));
 
         btree.close();
         btree.destroy();
@@ -352,8 +365,8 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
 
                 ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame, false);
                 RangePredicate rangePred = createRangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive);
-                ITreeIndexAccessor indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE,
-                        NoOpOperationCallback.INSTANCE);
+                ITreeIndexAccessor indexAccessor = btree.createAccessor(TestOperationCallback.INSTANCE,
+                        TestOperationCallback.INSTANCE);
                 indexAccessor.search(rangeCursor, rangePred);
 
                 try {

@@ -20,15 +20,13 @@ import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 
 /**
- * Dummy operation callback that simply does nothing. Mainly, intended to be
- * used in non-transaction access method testing.
+ * Dummy operation callback that simply does nothing.
  */
 public enum NoOpOperationCallback implements IModificationOperationCallback, ISearchOperationCallback {
     INSTANCE;
 
     @Override
     public boolean proceed(ITupleReference tuple) {
-        // Always proceed.
         return true;
     }
 

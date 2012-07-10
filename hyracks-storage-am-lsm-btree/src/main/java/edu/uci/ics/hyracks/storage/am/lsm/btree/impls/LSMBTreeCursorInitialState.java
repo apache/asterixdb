@@ -28,7 +28,7 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
 
     private final int numBTrees;
     private final ITreeIndexFrameFactory leafFrameFactory;
-    private final MultiComparator cmp;
+    private MultiComparator cmp;
     private final boolean includeMemComponent;
     private final AtomicInteger searcherfRefCount;
     private final LSMHarness lsmHarness;
@@ -88,5 +88,15 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
     @Override
     public void setSearchOperationCallback(ISearchOperationCallback searchCallback) {
         this.searchCallback = searchCallback;
+    }
+
+    @Override
+    public MultiComparator getOriginalKeyComparator() {
+        return cmp;
+    }
+
+    @Override
+    public void setOriginialKeyComparator(MultiComparator originalCmp) {
+        this.cmp = originalCmp;
     }
 }

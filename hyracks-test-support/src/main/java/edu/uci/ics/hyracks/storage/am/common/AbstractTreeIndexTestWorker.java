@@ -25,28 +25,28 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleBatch;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 
 public abstract class AbstractTreeIndexTestWorker extends Thread implements ITreeIndexTestWorker {
     private Random rnd = new Random();
     private final DataGenThread dataGen;
     private final TestOperationSelector opSelector;
     private final int numBatches;
-    
+
     protected final IIndexAccessor indexAccessor;
-    
-    public AbstractTreeIndexTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, ITreeIndex index, int numBatches) {
+
+    public AbstractTreeIndexTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, ITreeIndex index,
+            int numBatches) {
         this.dataGen = dataGen;
         this.opSelector = opSelector;
         this.numBatches = numBatches;
-        indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        indexAccessor = index.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
     }
-    
+
     @Override
     public void run() {
         try {
             for (int i = 0; i < numBatches; i++) {
-                TupleBatch batch = dataGen.getBatch();     
+                TupleBatch batch = dataGen.getBatch();
                 for (int j = 0; j < batch.size(); j++) {
                     TestOperation op = opSelector.getOp(rnd.nextInt());
                     ITupleReference tuple = batch.get(j);
@@ -58,7 +58,7 @@ public abstract class AbstractTreeIndexTestWorker extends Thread implements ITre
             e.printStackTrace();
         }
     }
-    
+
     protected void consumeCursorTuples(IIndexCursor cursor) throws HyracksDataException {
         try {
             while (cursor.hasNext()) {

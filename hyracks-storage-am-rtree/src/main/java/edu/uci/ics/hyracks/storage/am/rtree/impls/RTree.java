@@ -769,6 +769,7 @@ public class RTree extends AbstractTreeIndex {
             cursor.setCurrentPageId(currentPageId);
             cursor.setMaxPageId(maxPageId);
             ctx.cursorInitialState.setSearchOperationCallback(ctx.searchCallback);
+            ctx.cursorInitialState.setOriginialKeyComparator(ctx.cmp);
             ctx.cursorInitialState.setPage(page);
             cursor.open(ctx.cursorInitialState, searchPred);
         } catch (Exception e) {

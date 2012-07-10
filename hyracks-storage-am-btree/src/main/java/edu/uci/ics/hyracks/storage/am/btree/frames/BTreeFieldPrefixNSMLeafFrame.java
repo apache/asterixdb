@@ -441,7 +441,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     public ISlotManager getSlotManager() {
-        return null;
+        return slotManager;
     }
 
     @Override

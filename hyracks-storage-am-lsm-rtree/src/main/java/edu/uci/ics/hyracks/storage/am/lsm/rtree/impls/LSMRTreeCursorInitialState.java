@@ -130,4 +130,13 @@ public class LSMRTreeCursorInitialState implements ICursorInitialState {
         this.searchCallback = searchCallback;
     }
 
+    @Override
+    public MultiComparator getOriginalKeyComparator() {
+        return null;
+    }
+
+    @Override
+    public void setOriginialKeyComparator(MultiComparator originalCmp) {
+    }
+
 }

@@ -349,8 +349,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         ListIterator<Object> diskBTreesIter = diskComponents.listIterator();
         while (diskBTreesIter.hasNext()) {
             BTree diskBTree = (BTree) diskBTreesIter.next();
-            diskBTreeAccessors[diskBTreeIx] = diskBTree.createAccessor(NoOpOperationCallback.INSTANCE,
-                    NoOpOperationCallback.INSTANCE);
+            diskBTreeAccessors[diskBTreeIx] = diskBTree.createAccessor(ctx.modificationCallback, ctx.searchCallback);
             diskBTreeAccessors[diskBTreeIx].search(lsmTreeCursor.getCursor(cursorIx), pred);
             cursorIx++;
             diskBTreeIx++;

@@ -67,7 +67,8 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
                 .createIndexDataflowHelper(opDesc, ctx, partition);
         invIndexDataflowHelper = new InvertedIndexDataflowHelper(btreeDataflowHelper, opDesc, ctx, partition);
         this.queryField = queryField;
-        this.searchPred = new InvertedIndexSearchPredicate(opDesc.getTokenizerFactory().createTokenizer(), searchModifier);
+        this.searchPred = new InvertedIndexSearchPredicate(opDesc.getTokenizerFactory().createTokenizer(),
+                searchModifier);
         this.recordDescProvider = recordDescProvider;
         this.retainInput = invIndexDataflowHelper.getOperatorDescriptor().getRetainInput();
     }
@@ -110,7 +111,6 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
         appender.reset(writeBuffer, true);
 
         indexAccessor = invIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-        //InvertedIndex.InvertedIndexAccessor accessor =  
         resultCursor = indexAccessor.createSearchCursor();
         writer.open();
     }
@@ -121,7 +121,7 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
             tb.reset();
             if (retainInput) {
                 for (int i = 0; i < tuple.getFieldCount(); i++) {
-                	dos.write(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
+                    dos.write(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
                     tb.addFieldEndOffset();
                 }
             }

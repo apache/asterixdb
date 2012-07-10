@@ -89,6 +89,7 @@ public class BTree extends AbstractTreeIndex {
             cursor.setMaxPageId(maxPageId);
             ctx.cursorInitialState.setPage(page);
             ctx.cursorInitialState.setSearchOperationCallback(ctx.searchCallback);
+            ctx.cursorInitialState.setOriginialKeyComparator(ctx.cmp);
             cursor.open(ctx.cursorInitialState, diskOrderScanPred);
         } catch (Exception e) {
             page.releaseReadLatch();
@@ -625,6 +626,7 @@ public class BTree extends AbstractTreeIndex {
                     }
                     case SEARCH: {
                         ctx.cursorInitialState.setSearchOperationCallback(ctx.searchCallback);
+                        ctx.cursorInitialState.setOriginialKeyComparator(ctx.cmp);
                         ctx.cursorInitialState.setPage(node);
                         ctx.cursorInitialState.setPageId(pageId);
                         ctx.cursor.open(ctx.cursorInitialState, ctx.pred);

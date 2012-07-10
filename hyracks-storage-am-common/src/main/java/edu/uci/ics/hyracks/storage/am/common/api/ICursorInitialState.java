@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.common.api;
 
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ICursorInitialState {
@@ -25,4 +26,8 @@ public interface ICursorInitialState {
     public ISearchOperationCallback getSearchOperationCallback();
 
     public void setSearchOperationCallback(ISearchOperationCallback searchCallback);
+
+    public MultiComparator getOriginalKeyComparator();
+
+    public void setOriginialKeyComparator(MultiComparator originalCmp);
 }
