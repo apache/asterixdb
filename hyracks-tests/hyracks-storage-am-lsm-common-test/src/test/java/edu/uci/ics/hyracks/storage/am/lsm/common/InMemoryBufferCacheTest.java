@@ -37,6 +37,7 @@ public class InMemoryBufferCacheTest {
     public void test01() throws Exception {
         InMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), PAGE_SIZE, NUM_PAGES,
                 new TransientFileMapManager());
+        memBufferCache.open();
         int dummyFileId = 0;
         // Pin all pages, and make sure they return unique ICachedPages.
         // We expect no overflow pages.
@@ -58,5 +59,6 @@ public class InMemoryBufferCacheTest {
             pinnedPages.add(page);
             assertEquals(i + 1, memBufferCache.getNumOverflowPages());
         }
+        memBufferCache.close();
     }
 }

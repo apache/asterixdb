@@ -63,6 +63,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexComponentFinalizer;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
+import edu.uci.ics.hyracks.storage.common.buffercache.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMBTree implements ILSMIndex, ITreeIndex {
@@ -127,7 +128,6 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
             throw new HyracksDataException("Failed to create since index is already open.");
         }
 
-        memBTree.create();
         fileManager.deleteDirs();
         fileManager.createDirs();
     }
@@ -146,6 +146,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
             return;
         }
 
+        ((IInMemoryBufferCache) memBTree.getBufferCache()).open();
+        memBTree.create();
         memBTree.open();
         List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(componentFinalizer);
         for (Object o : validFileNames) {
@@ -169,7 +171,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         }
         diskBTrees.clear();
         memBTree.close();
-
+        memBTree.destroy();
+        ((IInMemoryBufferCache) memBTree.getBufferCache()).close();
         isOpen = false;
     }
 

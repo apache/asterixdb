@@ -23,28 +23,34 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCacheInternal;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPageInternal;
+import edu.uci.ics.hyracks.storage.common.buffercache.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class InMemoryBufferCache implements IBufferCacheInternal {
+public class InMemoryBufferCache implements IInMemoryBufferCache {
     protected final ICacheMemoryAllocator allocator;
     protected final IFileMapManager fileMapManager;
     protected final int pageSize;
-    protected final CachedPage[] pages;
+    protected final int numPages;
     protected final List<CachedPage> overflowPages = new ArrayList<CachedPage>();
-
+    protected CachedPage[] pages;
+    
     public InMemoryBufferCache(ICacheMemoryAllocator allocator, int pageSize, int numPages,
             IFileMapManager fileMapManager) {
         this.allocator = allocator;
         this.fileMapManager = fileMapManager;
         this.pageSize = pageSize;
+        this.numPages = numPages;
+    }
+
+    @Override
+    public void open() {
+        pages = new CachedPage[numPages];
         ByteBuffer[] buffers = allocator.allocate(pageSize, numPages);
-        pages = new CachedPage[buffers.length];
         for (int i = 0; i < buffers.length; ++i) {
             pages[i] = new CachedPage(i, buffers[i]);
         }
@@ -127,7 +133,9 @@ public class InMemoryBufferCache implements IBufferCacheInternal {
 
     @Override
     public void close() {
-        // Do nothing.
+        for (int i = 0; i < numPages; ++i) {
+            pages[i] = null;
+        }
     }
 
     public class CachedPage implements ICachedPageInternal {

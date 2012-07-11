@@ -52,6 +52,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
+import edu.uci.ics.hyracks.storage.common.buffercache.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
@@ -156,8 +157,6 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
 
         fileManager.deleteDirs();
         fileManager.createDirs();
-        memComponent.getRTree().create();
-        memComponent.getBTree().create();
     }
 
     @Override
@@ -166,6 +165,9 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
             return;
         }
 
+        ((InMemoryBufferCache) memComponent.getRTree().getBufferCache()).open();
+        memComponent.getRTree().create();
+        memComponent.getBTree().create();
         memComponent.getRTree().open();
         memComponent.getBTree().open();
         isOpen = true;
@@ -181,6 +183,9 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
 
         memComponent.getRTree().close();
         memComponent.getBTree().close();
+        memComponent.getRTree().destroy();
+        memComponent.getBTree().destroy();
+        ((InMemoryBufferCache) memComponent.getRTree().getBufferCache()).close();
     }
 
     @Override
