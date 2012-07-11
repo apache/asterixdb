@@ -17,8 +17,8 @@ public class ARecordType extends AbstractComplexType {
     private String[] fieldNames;
     private IAType[] fieldTypes;
     private boolean isOpen;
-    private transient final List<IRecordTypeAnnotation> annotations = new ArrayList<IRecordTypeAnnotation>();
-    private transient final Map<String, Integer> typeMap = new HashMap<String, Integer>();
+    private final List<IRecordTypeAnnotation> annotations = new ArrayList<IRecordTypeAnnotation>();
+    private final Map<String, Integer> typeMap = new HashMap<String, Integer>();
 
     public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen) {
         super(typeName);
