@@ -63,7 +63,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexComponentFinalizer;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMBTree implements ILSMIndex, ITreeIndex {
@@ -146,7 +145,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
             return;
         }
 
-        ((IInMemoryBufferCache) memBTree.getBufferCache()).open();
+        ((InMemoryBufferCache) memBTree.getBufferCache()).open();
         memBTree.create();
         memBTree.open();
         List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(componentFinalizer);
@@ -172,7 +171,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         diskBTrees.clear();
         memBTree.close();
         memBTree.destroy();
-        ((IInMemoryBufferCache) memBTree.getBufferCache()).close();
+        ((InMemoryBufferCache) memBTree.getBufferCache()).close();
         isOpen = false;
     }
 
