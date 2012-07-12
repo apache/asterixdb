@@ -184,8 +184,7 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier LOCAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "agg-local-avg", 1);
 
-    public final static FunctionIdentifier SCALAR_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "avg", 1
-            );
+    public final static FunctionIdentifier SCALAR_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "avg", 1);
     public final static FunctionIdentifier SCALAR_COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "count",
             1);
     public final static FunctionIdentifier SCALAR_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sum", 1);
@@ -264,43 +263,43 @@ public class AsterixBuiltinFunctions {
 
     // constructors:
     public final static FunctionIdentifier BOOLEAN_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "boolean", 1, false);
+            "boolean", 1);
     public final static FunctionIdentifier NULL_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "null", 1, false);
+            "null", 1);
     public final static FunctionIdentifier STRING_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "string", 1, false);
+            "string", 1);
     public final static FunctionIdentifier INT8_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "int8", 1, false);
+            "int8", 1);
     public final static FunctionIdentifier INT16_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "int16", 1, false);
+            "int16", 1);
     public final static FunctionIdentifier INT32_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "int32", 1, false);
+            "int32", 1);
     public final static FunctionIdentifier INT64_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "int64", 1, false);
+            "int64", 1);
     public final static FunctionIdentifier FLOAT_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "float", 1, false);
+            "float", 1);
     public final static FunctionIdentifier DOUBLE_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "double", 1, false);
+            "double", 1);
     public final static FunctionIdentifier POINT_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "point", 1, false);
+            "point", 1);
     public final static FunctionIdentifier POINT3D_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "point3d", 1, false);
+            "point3d", 1);
     public final static FunctionIdentifier LINE_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "line", 1, false);
+            "line", 1);
     public final static FunctionIdentifier CIRCLE_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "circle", 1, false);
+            "circle", 1);
     public final static FunctionIdentifier RECTANGLE_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "rectangle", 1, false);
+            "rectangle", 1);
     public final static FunctionIdentifier POLYGON_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "polygon", 1, false);
+            "polygon", 1);
     public final static FunctionIdentifier TIME_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "time", 1, false);
+            "time", 1);
     public final static FunctionIdentifier DATE_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "date", 1, false);
+            "date", 1);
     public final static FunctionIdentifier DATETIME_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "datetime", 1, false);
+            "datetime", 1);
     public final static FunctionIdentifier DURATION_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "duration", 1, false);
+            "duration", 1);
 
     // spatial
     public final static FunctionIdentifier CREATE_POINT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -325,8 +324,8 @@ public class AsterixBuiltinFunctions {
             "spatial-cell", 4);
     public final static FunctionIdentifier SWITCH_CASE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "switch-case", FunctionIdentifier.VARARGS);
-    public final static FunctionIdentifier REG_EXP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "reg-exp", 2,
-            true);
+    public final static FunctionIdentifier REG_EXP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "reg-exp", 2);
+
     public final static FunctionIdentifier INJECT_FAILURE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "inject-failure", 2);
     public final static FunctionIdentifier CAST_RECORD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -347,10 +346,10 @@ public class AsterixBuiltinFunctions {
     public static IFunctionInfo getAsterixFunctionInfo(FunctionIdentifier fid) {
         IFunctionInfo finfo = asterixFunctionIdToInfo.get(fid);
         if (finfo == null) {
-            finfo = new AsterixFunctionInfo(fid, fid.isBuiltin());
-         //   if (fid.isBuiltin()) {
-                asterixFunctionIdToInfo.put(fid, finfo);
-          //  }
+            finfo = new AsterixFunctionInfo(fid);
+            //   if (fid.isBuiltin()) {
+            asterixFunctionIdToInfo.put(fid, finfo);
+            //  }
         }
         return finfo;
     }

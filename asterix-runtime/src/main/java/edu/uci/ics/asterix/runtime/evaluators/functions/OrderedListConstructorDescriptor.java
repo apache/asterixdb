@@ -22,7 +22,7 @@ public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDyna
 
     private static final long serialVersionUID = 1L;
     private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "ordered-list-constructor", FunctionIdentifier.VARARGS, true);
+            "ordered-list-constructor", FunctionIdentifier.VARARGS);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new OrderedListConstructorDescriptor();

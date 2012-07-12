@@ -21,7 +21,7 @@ public class InjectFailureDescriptor extends AbstractScalarFunctionDynamicDescri
 
     private static final long serialVersionUID = 1L;
     private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "inject-failure", 2, true);
+            "inject-failure", 2);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new InjectFailureDescriptor();
@@ -55,7 +55,8 @@ public class InjectFailureDescriptor extends AbstractScalarFunctionDynamicDescri
                             // evaluator the failure condition
                             argOut.reset();
                             evals[1].evaluate(tuple);
-                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]);
+                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                                    .deserialize(argOut.getByteArray()[0]);
                             if (typeTag == ATypeTag.BOOLEAN) {
                                 boolean argResult = ABooleanSerializerDeserializer.getBoolean(argOut.getByteArray(), 1);
                                 if (argResult)
@@ -65,7 +66,8 @@ public class InjectFailureDescriptor extends AbstractScalarFunctionDynamicDescri
                             // evaluate the real evaluator
                             argOut.reset();
                             evals[0].evaluate(tuple);
-                            output.getDataOutput().write(argOut.getByteArray(), argOut.getStartOffset(), argOut.getLength());
+                            output.getDataOutput().write(argOut.getByteArray(), argOut.getStartOffset(),
+                                    argOut.getLength());
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
                         }

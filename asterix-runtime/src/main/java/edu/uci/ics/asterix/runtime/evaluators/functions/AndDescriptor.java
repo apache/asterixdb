@@ -24,7 +24,7 @@ public class AndDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS,
-            "and", FunctionIdentifier.VARARGS, true);
+            "and", FunctionIdentifier.VARARGS);
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {

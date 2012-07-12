@@ -26,7 +26,7 @@ public class AsterixFunctionInfo implements IFunctionInfo {
                 asterixFunction.getArity());
     }
 
-    public AsterixFunctionInfo(FunctionIdentifier functionIdentifier, boolean isBuiltin) {
+    public AsterixFunctionInfo(FunctionIdentifier functionIdentifier) {
         this.functionIdentifier = functionIdentifier;
     }
 

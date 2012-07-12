@@ -28,7 +28,7 @@ public class CreateCircleDescriptor extends AbstractScalarFunctionDynamicDescrip
 
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "create-circle",
-            2, true);
+            2);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new CreateCircleDescriptor();
@@ -68,7 +68,8 @@ public class CreateCircleDescriptor extends AbstractScalarFunctionDynamicDescrip
                                     APointSerializerDeserializer.getCoordinateOffset(Coordinate.X)),
                                     ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                             APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y)));
-                            aCircle.setValue(aPoint, ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(), 1));
+                            aCircle.setValue(aPoint,
+                                    ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(), 1));
                             circleSerde.serialize(aCircle, out);
                         } catch (IOException e1) {
                             throw new AlgebricksException(e1);

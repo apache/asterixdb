@@ -21,13 +21,13 @@ public class HashedWordTokensDescriptor extends AbstractScalarFunctionDynamicDes
 
     private static final long serialVersionUID = 1L;
     private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "hashed-word-tokens", 1, true);
+            "hashed-word-tokens", 1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new HashedWordTokensDescriptor();
         }
     };
-    
+
     @Override
     public FunctionIdentifier getIdentifier() {
         return FID;

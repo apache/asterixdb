@@ -28,7 +28,7 @@ public class SimilarityJaccardPrefixCheckDescriptor extends AbstractScalarFuncti
     private static final long serialVersionUID = 1L;
 
     private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "similarity-jaccard-prefix-check", 6, true);
+            "similarity-jaccard-prefix-check", 6);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SimilarityJaccardPrefixCheckDescriptor();

@@ -39,7 +39,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class LikeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "like", 2, true);
+    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "like", 2);
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -100,8 +100,8 @@ public class LikeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                 first = false;
                                 newPattern = true;
                             } else {
-                                int c = strComp.compare(array0.getByteArray(), array0.getStartOffset(), array0.getLength(),
-                                        lastPattern.getByteArray(), 0, lastPattern.size());
+                                int c = strComp.compare(array0.getByteArray(), array0.getStartOffset(),
+                                        array0.getLength(), lastPattern.getByteArray(), 0, lastPattern.size());
                                 if (c != 0) {
                                     newPattern = true;
                                 }

@@ -28,7 +28,7 @@ public class EditDistanceCheckDescriptor extends AbstractScalarFunctionDynamicDe
 
     private static final long serialVersionUID = 1L;
     private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "edit-distance-check", 3, true);
+            "edit-distance-check", 3);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new EditDistanceCheckDescriptor();

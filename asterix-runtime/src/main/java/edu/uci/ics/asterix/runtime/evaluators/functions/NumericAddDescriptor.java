@@ -38,7 +38,7 @@ public class NumericAddDescriptor extends AbstractScalarFunctionDynamicDescripto
 
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS,
-            "numeric-add", 2, true);
+            "numeric-add", 2);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new NumericAddDescriptor();
@@ -127,11 +127,10 @@ public class NumericAddDescriptor extends AbstractScalarFunctionDynamicDescripto
                                         return;
                                     }
                                     default: {
-                                        throw new NotImplementedException(i == 0 ? "Left"
-                                                : "Right"
-                                                        + " Operand of Addition can not be "
-                                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
-                                                                .getByteArray()[0]));
+                                        throw new NotImplementedException(i == 0 ? "Left" : "Right"
+                                                + " Operand of Addition can not be "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
+                                                        .getByteArray()[0]));
                                     }
                                 }
                             }

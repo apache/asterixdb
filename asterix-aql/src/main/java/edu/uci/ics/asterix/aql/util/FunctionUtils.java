@@ -77,11 +77,11 @@ public class FunctionUtils {
     public static IFunctionInfo getFunctionInfo(MetadataTransactionContext mdTxnCtx, String dataverseName,
             AsterixFunction asterixFunction) throws MetadataException {
         FunctionIdentifier fid = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-                asterixFunction.getFunctionName(), asterixFunction.getArity(), true);
+                asterixFunction.getFunctionName(), asterixFunction.getArity());
         IFunctionInfo finfo = AsterixBuiltinFunctions.getAsterixFunctionInfo(fid);
         if (fid == null) {
             fid = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, asterixFunction.getFunctionName(),
-                    asterixFunction.getArity(), true);
+                    asterixFunction.getArity());
         }
         if (fid == null) {
             Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, dataverseName,

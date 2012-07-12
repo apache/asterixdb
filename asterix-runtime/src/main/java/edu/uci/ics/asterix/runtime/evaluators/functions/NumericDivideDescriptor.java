@@ -38,7 +38,7 @@ public class NumericDivideDescriptor extends AbstractScalarFunctionDynamicDescri
 
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "numeric-divide",
-            2, true);
+            2);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new NumericDivideDescriptor();
@@ -127,11 +127,10 @@ public class NumericDivideDescriptor extends AbstractScalarFunctionDynamicDescri
                                         return;
                                     }
                                     default: {
-                                        throw new NotImplementedException(i == 0 ? "Left"
-                                                : "Right"
-                                                        + " Operand of Division can not be "
-                                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
-                                                                .getByteArray()[0]));
+                                        throw new NotImplementedException(i == 0 ? "Left" : "Right"
+                                                + " Operand of Division can not be "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
+                                                        .getByteArray()[0]));
                                     }
                                 }
                             }
