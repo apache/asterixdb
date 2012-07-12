@@ -1865,12 +1865,9 @@ Clause LetClause() throws ParseException:
 	extendCurrentScope();
 }
 {
-    "let" varExp = Variable()
+    "let" varExp = Variable() ":=" beExp = Expression()
     {
       getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
-	}
-     ":=" beExp = Expression()
-    {
       lc.setVarExpr(varExp);
       lc.setBeExpr(beExp);
       return lc;
