@@ -84,12 +84,10 @@ public class FunctionUtils {
                     asterixFunction.getArity(), true);
         }
         if (fid == null) {
-            Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, dataverseName, asterixFunction
-                    .getFunctionName(), asterixFunction.getArity());
+            Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, dataverseName,
+                    asterixFunction.getFunctionName(), asterixFunction.getArity());
             if (function != null) {
-                finfo = new AsterixFunctionInfo(dataverseName, asterixFunction, false);
-                // todo: for external functions, we shall construct another kind of function info (that extends AsterixFunctionInfo)
-                // and has additional information.
+                finfo = new AsterixFunctionInfo(dataverseName, asterixFunction);
             }
         }
         return finfo; // could be null
