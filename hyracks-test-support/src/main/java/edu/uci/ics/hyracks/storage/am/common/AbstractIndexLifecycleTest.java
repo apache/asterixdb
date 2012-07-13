@@ -14,10 +14,6 @@ public abstract class AbstractIndexLifecycleTest {
 
     protected IIndex index;
 
-    protected TreeIndexTestUtils titu;
-
-    protected ITreeIndexTestContext<? extends CheckTuple> testCtx;
-
     protected abstract boolean persistentStateExists() throws Exception;
 
     protected abstract boolean isEmptyIndex() throws Exception;
@@ -43,18 +39,8 @@ public abstract class AbstractIndexLifecycleTest {
         index.activate();
         Assert.assertTrue(isEmptyIndex());
 
-        // insert some stuff
-        titu.insertIntTuples(testCtx, 10, getRandom());
-
         index.clear();
-        testCtx.getCheckTuples().clear();
         Assert.assertTrue(isEmptyIndex());
-
-        // check that the inserted stuff is not there
-        titu.checkScan(testCtx);
-
-        // insert more stuff
-        titu.insertIntTuples(testCtx, 10, getRandom());
 
         // Double close is valid
         index.deactivate();
@@ -62,11 +48,6 @@ public abstract class AbstractIndexLifecycleTest {
 
         // Reopen and reclose is valid
         index.activate();
-
-        // make sure the stuff we inserted is still there
-        // TODO: re-enable when LSM index's close() is implemented properly
-        // titu.checkScan(testCtx);
-
         index.deactivate();
 
         // Double destroy is valid

@@ -6,8 +6,9 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.common.AbstractIndexLifecycleTest;
+import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
+import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
@@ -16,6 +17,8 @@ public class LSMBTreeLifecycleTest extends AbstractIndexLifecycleTest {
 
     private final ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
     private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();
+
+    private ITreeIndexTestContext<? extends CheckTuple> testCtx;
 
     @Override
     protected boolean persistentStateExists() throws Exception {
@@ -41,7 +44,6 @@ public class LSMBTreeLifecycleTest extends AbstractIndexLifecycleTest {
                 harness.getDiskFileMapProvider(), fieldSerdes, fieldSerdes.length, harness.getFlushController(),
                 harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler());
         index = testCtx.getIndex();
-        titu = new OrderedIndexTestUtils();
     }
 
     @Override

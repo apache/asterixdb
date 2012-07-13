@@ -7,6 +7,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.AbstractIndexLifecycleTest;
+import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
+import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
@@ -25,6 +27,7 @@ public class RTreeLifecycleTest extends AbstractIndexLifecycleTest {
             .createPrimitiveValueProviderFactories(4, IntegerPointable.FACTORY);
     private final int numKeys = 4;
 
+    private ITreeIndexTestContext<? extends CheckTuple> testCtx;
     private ITreeIndexFrame frame = null;
 
     @Override
@@ -33,7 +36,6 @@ public class RTreeLifecycleTest extends AbstractIndexLifecycleTest {
         testCtx = RTreeTestContext.create(harness.getBufferCache(), harness.getFileMapProvider(),
                 harness.getFileReference(), fieldSerdes, valueProviderFactories, numKeys, RTreePolicyType.RTREE);
         index = testCtx.getIndex();
-        titu = new RTreeTestUtils();
     }
 
     @Override

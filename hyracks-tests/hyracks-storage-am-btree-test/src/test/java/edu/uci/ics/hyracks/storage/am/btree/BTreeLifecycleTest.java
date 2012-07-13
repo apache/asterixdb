@@ -10,6 +10,8 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.common.AbstractIndexLifecycleTest;
+import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
+import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 
 public class BTreeLifecycleTest extends AbstractIndexLifecycleTest {
@@ -19,13 +21,14 @@ public class BTreeLifecycleTest extends AbstractIndexLifecycleTest {
 
     private ITreeIndexFrame frame = null;
 
+    private ITreeIndexTestContext<? extends CheckTuple> testCtx;
+
     @Override
     public void setup() throws Exception {
         harness.setUp();
         testCtx = BTreeTestContext.create(harness.getBufferCache(), harness.getFileMapProvider(),
                 harness.getFileReference(), fieldSerdes, fieldSerdes.length, BTreeLeafFrameType.REGULAR_NSM);
         index = testCtx.getIndex();
-        titu = new OrderedIndexTestUtils();
     }
 
     @Override

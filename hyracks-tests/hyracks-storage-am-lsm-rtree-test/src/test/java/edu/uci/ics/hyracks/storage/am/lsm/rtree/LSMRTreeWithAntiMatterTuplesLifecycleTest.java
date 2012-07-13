@@ -8,11 +8,12 @@ import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.AbstractIndexLifecycleTest;
+import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
+import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeWithAntiMatterTuples;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeWithAntiMatterTuplesTestContext;
-import edu.uci.ics.hyracks.storage.am.rtree.RTreeTestUtils;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 
@@ -26,6 +27,8 @@ public class LSMRTreeWithAntiMatterTuplesLifecycleTest extends AbstractIndexLife
     private final int numKeys = 4;
 
     private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
+
+    private ITreeIndexTestContext<? extends CheckTuple> testCtx;
 
     @Override
     protected boolean persistentStateExists() throws Exception {
@@ -52,7 +55,6 @@ public class LSMRTreeWithAntiMatterTuplesLifecycleTest extends AbstractIndexLife
                 numKeys, RTreePolicyType.RTREE, harness.getFlushController(), harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler());
         index = testCtx.getIndex();
-        titu = new RTreeTestUtils();
     }
 
     @Override
