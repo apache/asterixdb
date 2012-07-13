@@ -36,24 +36,12 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.FixedSizeElementInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.ITokenFactory;
-import edu.uci.ics.hyracks.storage.am.invertedindex.util.InvertedIndexUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
@@ -69,44 +57,14 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
     protected IBufferCache bufferCache;
     protected IFileMapProvider fmp;
 
-    // --- BTREE ---
-
-    // create file refs
-    protected FileReference btreeFile = new FileReference(new File(btreeFileName));
-    protected int btreeFileId;
-
-    // declare token type traits
-    protected ITypeTraits[] tokenTypeTraits = new ITypeTraits[] { UTF8StringPointable.TYPE_TRAITS };
-    protected ITypeTraits[] btreeTypeTraits = InvertedIndexUtils.getBTreeTypeTraits(tokenTypeTraits);
-
-    // declare btree keys
-    protected int btreeKeyFieldCount = 1;
-    protected IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
-
-    // btree frame factories
-    protected TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(btreeTypeTraits);
-    protected ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
-    protected ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
-    protected ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-
-    // btree frames
-    protected ITreeIndexFrame leafFrame = leafFrameFactory.createFrame();
-    protected ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
-
-    protected IFreePageManager freePageManager;
-
-    protected BTree btree;
-
-    // --- INVERTED INDEX ---
-
     protected FileReference invListsFile = new FileReference(new File(invListsFileName));
-    protected int invListsFileId;
 
-    protected int invListFields = 1;
-    protected ITypeTraits[] invListTypeTraits = new ITypeTraits[invListFields];
-
-    protected int invListKeys = 1;
-    protected IBinaryComparatorFactory[] invListCmpFactories = new IBinaryComparatorFactory[invListKeys];
+    protected ITypeTraits[] tokenTypeTraits = new ITypeTraits[] { UTF8StringPointable.TYPE_TRAITS };
+    protected IBinaryComparatorFactory[] tokenCmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
+            .of(UTF8StringPointable.FACTORY) };
+    protected ITypeTraits[] invListTypeTraits = new ITypeTraits[] { IntegerPointable.TYPE_TRAITS };
+    protected IBinaryComparatorFactory[] invListCmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
+            .of(IntegerPointable.FACTORY) };
 
     protected InvertedIndex invIndex;
 
@@ -147,28 +105,11 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(taskCtx);
         fmp = TestStorageManagerComponentHolder.getFileMapProvider(taskCtx);
 
-        // --- BTREE ---
-
-        btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
-
-        freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
-
-        btree = new BTree(bufferCache, fmp, freePageManager, interiorFrameFactory, leafFrameFactory, btreeCmpFactories,
-                btreeTypeTraits.length, btreeFile);
-
-        btree.create();
-        btree.activate();
-
-        // --- INVERTED INDEX ---
-
         setTokenizer();
 
-        invListTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
-        invListCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
-        invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories, invListBuilder, fmp,
-                invListsFile);
+        invIndex = new InvertedIndex(bufferCache, fmp, invListBuilder, invListTypeTraits, invListCmpFactories,
+                tokenTypeTraits, tokenCmpFactories, invListsFile);
         invIndex.create();
         invIndex.activate();
 
@@ -177,11 +118,9 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
 
     @After
     public void deinit() throws HyracksDataException {
-        AbstractInvIndexTest.tearDown();
-        btree.deactivate();
-        btree.destroy();
         invIndex.deactivate();
         invIndex.destroy();
         bufferCache.close();
+        AbstractInvIndexTest.tearDown();
     }
 }

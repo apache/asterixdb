@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.impls;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
@@ -27,8 +28,11 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
+import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
@@ -45,6 +49,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearcher;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
+import edu.uci.ics.hyracks.storage.am.invertedindex.util.InvertedIndexUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
@@ -74,15 +79,23 @@ public class InvertedIndex implements IIndex {
 
     private boolean isOpen = false;
 
-    public InvertedIndex(IBufferCache bufferCache, BTree btree, ITypeTraits[] invListTypeTraits,
-            IBinaryComparatorFactory[] invListCmpFactories, IInvertedListBuilder invListBuilder,
-            IFileMapProvider fileMapProvider, FileReference file) {
+    public InvertedIndex(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
+            IInvertedListBuilder invListBuilder, ITypeTraits[] invListTypeTraits,
+            IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
+            IBinaryComparatorFactory[] tokenCmpFactories, FileReference file) throws HyracksDataException {
         this.bufferCache = bufferCache;
         this.fileMapProvider = fileMapProvider;
-        this.btree = btree;
+        this.invListBuilder = invListBuilder;
+
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
-        this.invListBuilder = invListBuilder;
+        try {
+            this.btree = BTreeUtils.createBTree(bufferCache, fileMapProvider,
+                    InvertedIndexUtils.getBTreeTypeTraits(tokenTypeTraits), tokenCmpFactories,
+                    BTreeLeafFrameType.REGULAR_NSM, new FileReference(new File(file.getFile().getPath() + "_btree")));
+        } catch (BTreeException e) {
+            throw new HyracksDataException(e);
+        }
         this.numTokenFields = btree.getComparatorFactories().length;
         this.numInvListKeys = invListCmpFactories.length;
         this.file = file;
@@ -93,6 +106,7 @@ public class InvertedIndex implements IIndex {
         if (isOpen) {
             throw new HyracksDataException("Failed to create since index is already open.");
         }
+        btree.create();
 
         boolean fileIsMapped = false;
         synchronized (fileMapProvider) {
@@ -121,6 +135,7 @@ public class InvertedIndex implements IIndex {
             return;
         }
 
+        btree.activate();
         boolean fileIsMapped = false;
         synchronized (fileMapProvider) {
             fileIsMapped = fileMapProvider.isMapped(file);
@@ -149,6 +164,7 @@ public class InvertedIndex implements IIndex {
             return;
         }
 
+        btree.deactivate();
         bufferCache.closeFile(fileId);
 
         isOpen = false;
@@ -160,6 +176,7 @@ public class InvertedIndex implements IIndex {
             throw new HyracksDataException("Failed to destroy since index is already open.");
         }
 
+        btree.destroy();
         file.getFile().delete();
         if (fileId == -1) {
             return;

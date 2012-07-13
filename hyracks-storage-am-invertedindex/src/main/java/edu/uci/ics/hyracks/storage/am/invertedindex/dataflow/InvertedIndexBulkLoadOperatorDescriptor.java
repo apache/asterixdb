@@ -40,11 +40,11 @@ public class InvertedIndexBulkLoadOperatorDescriptor extends AbstractInvertedInd
             IFileSplitProvider invListsFileSplitProvider, IIndexRegistryProvider<IIndex> indexRegistryProvider,
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenComparatorFactories,
             ITypeTraits[] invListsTypeTraits, IBinaryComparatorFactory[] invListComparatorFactories,
-            IBinaryTokenizerFactory tokenizerFactory, IIndexDataflowHelperFactory btreeDataflowHelperFactory,
+            IBinaryTokenizerFactory tokenizerFactory, IIndexDataflowHelperFactory invertedIndexDataflowHelperFactory,
             IOperationCallbackProvider opCallbackProvider) {
         super(spec, 1, 0, null, storageManager, btreeFileSplitProvider, invListsFileSplitProvider,
                 indexRegistryProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
-                invListComparatorFactories, tokenizerFactory, btreeDataflowHelperFactory, false,
+                invListComparatorFactories, tokenizerFactory, invertedIndexDataflowHelperFactory, false,
                 opCallbackProvider);
         this.fieldPermutation = fieldPermutation;
     }

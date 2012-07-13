@@ -31,7 +31,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
@@ -39,7 +38,6 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndexSearchPre
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.OccurrenceThresholdPanicException;
 
 public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
-    private final TreeIndexDataflowHelper btreeDataflowHelper;
     private final InvertedIndexDataflowHelper invIndexDataflowHelper;
     private final int queryField;
     private FrameTupleAccessor accessor;
@@ -63,9 +61,7 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
             IHyracksTaskContext ctx, int partition, int queryField, IInvertedIndexSearchModifier searchModifier,
             IRecordDescriptorProvider recordDescProvider) {
         this.opDesc = opDesc;
-        btreeDataflowHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
-                .createIndexDataflowHelper(opDesc, ctx, partition);
-        invIndexDataflowHelper = new InvertedIndexDataflowHelper(btreeDataflowHelper, opDesc, ctx, partition);
+        this.invIndexDataflowHelper = new InvertedIndexDataflowHelper(opDesc, ctx, partition);
         this.queryField = queryField;
         this.searchPred = new InvertedIndexSearchPredicate(opDesc.getTokenizerFactory().createTokenizer(),
                 searchModifier);
@@ -76,20 +72,9 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
     @Override
     public void open() throws HyracksDataException {
         RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
-        accessor = new FrameTupleAccessor(btreeDataflowHelper.getHyracksTaskContext().getFrameSize(), inputRecDesc);
+        accessor = new FrameTupleAccessor(invIndexDataflowHelper.getHyracksTaskContext().getFrameSize(), inputRecDesc);
         tuple = new FrameTupleReference();
-        // BTree.
-        try {
-            btreeDataflowHelper.init(false);
-        } catch (Exception e) {
-            // Cleanup in case of failure/
-            btreeDataflowHelper.deinit();
-            if (e instanceof HyracksDataException) {
-                throw (HyracksDataException) e;
-            } else {
-                throw new HyracksDataException(e);
-            }
-        }
+
         // Inverted Index.
         try {
             invIndexDataflowHelper.init(false);
@@ -104,10 +89,10 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
             }
         }
 
-        writeBuffer = btreeDataflowHelper.getHyracksTaskContext().allocateFrame();
+        writeBuffer = invIndexDataflowHelper.getHyracksTaskContext().allocateFrame();
         tb = new ArrayTupleBuilder(recordDesc.getFieldCount());
         dos = tb.getDataOutput();
-        appender = new FrameTupleAppender(btreeDataflowHelper.getHyracksTaskContext().getFrameSize());
+        appender = new FrameTupleAppender(invIndexDataflowHelper.getHyracksTaskContext().getFrameSize());
         appender.reset(writeBuffer, true);
 
         indexAccessor = invIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
@@ -177,11 +162,7 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
             }
             writer.close();
         } finally {
-            try {
-                btreeDataflowHelper.deinit();
-            } finally {
-                invIndexDataflowHelper.deinit();
-            }
+            invIndexDataflowHelper.deinit();
         }
     }
 }

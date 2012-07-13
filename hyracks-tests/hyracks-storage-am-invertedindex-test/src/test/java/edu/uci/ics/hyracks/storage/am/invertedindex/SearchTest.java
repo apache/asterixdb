@@ -62,9 +62,9 @@ public class SearchTest extends AbstractInvIndexSearchTest {
     @Before
     public void start() throws Exception {
         super.start();
-        btreeBinCmps = new IBinaryComparator[btreeCmpFactories.length];
-        for (int i = 0; i < btreeCmpFactories.length; i++) {
-            btreeBinCmps[i] = btreeCmpFactories[i].createBinaryComparator();
+        btreeBinCmps = new IBinaryComparator[tokenCmpFactories.length];
+        for (int i = 0; i < tokenCmpFactories.length; i++) {
+            btreeBinCmps[i] = tokenCmpFactories[i].createBinaryComparator();
         }
         generateDataStrings();
         loadData();

@@ -21,19 +21,13 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
-import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizerFactory;
-import edu.uci.ics.hyracks.storage.am.invertedindex.util.InvertedIndexUtils;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor
@@ -46,13 +40,10 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     protected final IIndexRegistryProvider<IIndex> indexRegistryProvider;
     protected final boolean retainInput;
     protected final IOperationCallbackProvider opCallbackProvider;
-    
+
     // Btree.
-    protected final ITreeIndexFrameFactory btreeInteriorFrameFactory;
-    protected final ITreeIndexFrameFactory btreeLeafFrameFactory;
-    protected final ITypeTraits[] btreeTypeTraits;
+    protected final ITypeTraits[] tokenTypeTraits;
     protected final IBinaryComparatorFactory[] btreeComparatorFactories;
-    protected final IIndexDataflowHelperFactory btreeDataflowHelperFactory;
     protected final IFileSplitProvider btreeFileSplitProvider;
 
     // Inverted index.
@@ -60,6 +51,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     protected final IBinaryComparatorFactory[] invListComparatorFactories;
     protected final IBinaryTokenizerFactory tokenizerFactory;
     protected final IFileSplitProvider invListsFileSplitProvider;
+    protected final IIndexDataflowHelperFactory invertedIndexDataflowHelperFactory;
 
     public AbstractInvertedIndexOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
@@ -67,7 +59,8 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
             IIndexRegistryProvider<IIndex> indexRegistryProvider, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTraits[] invListsTypeTraits,
             IBinaryComparatorFactory[] invListComparatorFactories, IBinaryTokenizerFactory tokenizerFactory,
-            IIndexDataflowHelperFactory btreeDataflowHelperFactory, boolean retainInput, IOperationCallbackProvider opCallbackProvider) {
+            IIndexDataflowHelperFactory invertedIndexDataflowHelperFactory, boolean retainInput,
+            IOperationCallbackProvider opCallbackProvider) {
         super(spec, inputArity, outputArity);
 
         // General.
@@ -75,14 +68,10 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
         this.indexRegistryProvider = indexRegistryProvider;
         this.retainInput = retainInput;
         this.opCallbackProvider = opCallbackProvider;
-        
+
         // Btree.
-        this.btreeTypeTraits = InvertedIndexUtils.getBTreeTypeTraits(tokenTypeTraits);
-        ITreeIndexTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(btreeTypeTraits);
-        this.btreeInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
-        this.btreeLeafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
+        this.tokenTypeTraits = tokenTypeTraits;
         this.btreeComparatorFactories = tokenComparatorFactories;
-        this.btreeDataflowHelperFactory = btreeDataflowHelperFactory;
         this.btreeFileSplitProvider = btreeFileSplitProvider;
 
         // Inverted index.
@@ -90,6 +79,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
         this.invListComparatorFactories = invListComparatorFactories;
         this.tokenizerFactory = tokenizerFactory;
         this.invListsFileSplitProvider = invListsFileSplitProvider;
+        this.invertedIndexDataflowHelperFactory = invertedIndexDataflowHelperFactory;
 
         if (outputArity > 0) {
             recordDescriptors[0] = recDesc;
@@ -97,10 +87,15 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     }
 
     @Override
+    public IIndexDataflowHelperFactory getIndexDataflowHelperFactory() {
+        return invertedIndexDataflowHelperFactory;
+    }
+
+    @Override
     public IFileSplitProvider getFileSplitProvider() {
         return btreeFileSplitProvider;
     }
-    
+
     @Override
     public IFileSplitProvider getInvListsFileSplitProvider() {
         return invListsFileSplitProvider;
@@ -113,7 +108,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
 
     @Override
     public ITypeTraits[] getTreeIndexTypeTraits() {
-        return btreeTypeTraits;
+        return tokenTypeTraits;
     }
 
     @Override
@@ -135,7 +130,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     public IBinaryTokenizerFactory getTokenizerFactory() {
         return tokenizerFactory;
     }
-    
+
     @Override
     public ITypeTraits[] getInvListsTypeTraits() {
         return invListsTypeTraits;
@@ -145,24 +140,19 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     public IIndexRegistryProvider<IIndex> getIndexRegistryProvider() {
         return indexRegistryProvider;
     }
-    
-    @Override
-    public IIndexDataflowHelperFactory getIndexDataflowHelperFactory() {
-        return btreeDataflowHelperFactory;
-    }
-    
+
     @Override
     public boolean getRetainInput() {
-    	return retainInput;
+        return retainInput;
     }
-    
+
     @Override
     public IOperationCallbackProvider getOpCallbackProvider() {
-    	return opCallbackProvider;
+        return opCallbackProvider;
     }
-    
+
     @Override
-	public ITupleFilterFactory getTupleFilterFactory() {
-		return null;
-	}
+    public ITupleFilterFactory getTupleFilterFactory() {
+        return null;
+    }
 }

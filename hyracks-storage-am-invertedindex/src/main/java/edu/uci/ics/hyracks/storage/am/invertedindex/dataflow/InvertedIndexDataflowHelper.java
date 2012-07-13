@@ -18,23 +18,18 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.FixedSizeElementInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 
 public final class InvertedIndexDataflowHelper extends IndexDataflowHelper {
-    private final TreeIndexDataflowHelper btreeDataflowHelper;
 
-    public InvertedIndexDataflowHelper(TreeIndexDataflowHelper btreeDataflowHelper, IIndexOperatorDescriptor opDesc,
-            IHyracksTaskContext ctx, int partition) {
+    public InvertedIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition) {
         super(opDesc, ctx, partition);
-        this.btreeDataflowHelper = btreeDataflowHelper;
     }
 
     public FileReference getFilereference() {
@@ -46,13 +41,12 @@ public final class InvertedIndexDataflowHelper extends IndexDataflowHelper {
     @Override
     public IIndex createIndexInstance() throws HyracksDataException {
         IInvertedIndexOperatorDescriptor invIndexOpDesc = (IInvertedIndexOperatorDescriptor) opDesc;
-        // Assumes btreeDataflowHelper.init() has already been called.
-        BTree btree = (BTree) btreeDataflowHelper.getIndex();
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(
                 invIndexOpDesc.getInvListsTypeTraits());
-        return new InvertedIndex(opDesc.getStorageManager().getBufferCache(ctx), btree,
-                invIndexOpDesc.getInvListsTypeTraits(), invIndexOpDesc.getInvListsComparatorFactories(),
-                invListBuilder, opDesc.getStorageManager().getFileMapProvider(ctx), opDesc.getFileSplitProvider()
-                        .getFileSplits()[partition].getLocalFile());
+        return new InvertedIndex(opDesc.getStorageManager().getBufferCache(ctx), opDesc.getStorageManager()
+                .getFileMapProvider(ctx), invListBuilder, invIndexOpDesc.getInvListsTypeTraits(),
+                invIndexOpDesc.getInvListsComparatorFactories(), invIndexOpDesc.getTreeIndexTypeTraits(),
+                invIndexOpDesc.getTreeIndexComparatorFactories(),
+                opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile());
     }
 }

@@ -44,30 +44,18 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.FixedSizeElementInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.FixedSizeElementInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
-import edu.uci.ics.hyracks.storage.am.invertedindex.util.InvertedIndexUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
@@ -89,38 +77,17 @@ public class BulkLoadTest extends AbstractInvIndexTest {
      */
     @Test
     public void singleFieldPayloadTest() throws Exception {
-
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(stageletCtx);
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(stageletCtx);
 
-        // create file refs
-        FileReference btreeFile = new FileReference(new File(btreeFileName));
-
         FileReference invListsFile = new FileReference(new File(invListsFileName));
 
-        // Declare token type traits, and compute BTree type traits.
         ITypeTraits[] tokenTypeTraits = new ITypeTraits[] { UTF8StringPointable.TYPE_TRAITS };
-        ITypeTraits[] btreeTypeTraits = InvertedIndexUtils.getBTreeTypeTraits(tokenTypeTraits);
 
-        // declare btree keys
-        int keyFieldCount = 1;
-        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
-        cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
+                .of(UTF8StringPointable.FACTORY) };
 
-        TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(btreeTypeTraits);
-        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
-        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
-        ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-
-        ITreeIndexFrame leafFrame = leafFrameFactory.createFrame();
-
-        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
-
-        BTree btree = new BTree(bufferCache, fmp, freePageManager, interiorFrameFactory, leafFrameFactory,
-                cmpFactories, btreeTypeTraits.length, btreeFile);
-        btree.create();
-        btree.activate();
         int invListFields = 1;
         ITypeTraits[] invListTypeTraits = new ITypeTraits[invListFields];
         invListTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
@@ -130,8 +97,8 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         invListCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
-        InvertedIndex invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories,
-                invListBuilder, fmp, invListsFile);
+        InvertedIndex invIndex = new InvertedIndex(bufferCache, fmp, invListBuilder, invListTypeTraits,
+                invListCmpFactories, tokenTypeTraits, cmpFactories, invListsFile);
         invIndex.create();
         invIndex.activate();
 
@@ -203,7 +170,9 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
         // ------- START VERIFICATION -----------
 
-        ITreeIndexCursor btreeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) leafFrame, false);
+        ITreeIndexAccessor btreeAccessor = invIndex.getBTree().createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
+        ITreeIndexCursor btreeCursor = (ITreeIndexCursor) btreeAccessor.createSearchCursor();
         FrameTupleReference searchKey = new FrameTupleReference();
         MultiComparator btreeCmp = MultiComparator.create(cmpFactories);
         RangePredicate btreePred = new RangePredicate(searchKey, searchKey, true, true, btreeCmp, btreeCmp);
@@ -218,9 +187,6 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         DataOutput tokenDos = tokenTupleBuilder.getDataOutput();
         IFrameTupleAccessor tokenAccessor = new FrameTupleAccessor(stageletCtx.getFrameSize(), tokenRecDesc);
         tokenAccessor.reset(frame);
-
-        ITreeIndexAccessor btreeAccessor = invIndex.getBTree().createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
 
         // verify created inverted lists one-by-one
         for (int i = 0; i < tokens.size(); i++) {
@@ -277,8 +243,6 @@ public class BulkLoadTest extends AbstractInvIndexTest {
             invListCursor.unpinPages();
         }
 
-        btree.deactivate();
-        btree.destroy();
         invIndex.deactivate();
         invIndex.destroy();
         bufferCache.close();
