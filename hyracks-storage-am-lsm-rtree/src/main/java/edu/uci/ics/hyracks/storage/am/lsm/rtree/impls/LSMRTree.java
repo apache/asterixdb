@@ -88,8 +88,8 @@ public class LSMRTree extends AbstractLSMRTree {
      * @throws HyracksDataException
      */
     @Override
-    public synchronized void open() throws HyracksDataException {
-        super.open();
+    public synchronized void activate() throws HyracksDataException {
+        super.activate();
         List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(componentFinalizer);
         for (Object o : validFileNames) {
             LSMRTreeFileNameComponent component = (LSMRTreeFileNameComponent) o;
@@ -103,16 +103,16 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
-    public synchronized void close() throws HyracksDataException {
+    public synchronized void deactivate() throws HyracksDataException {
         for (Object o : diskComponents) {
             LSMRTreeComponent diskComponent = (LSMRTreeComponent) o;
             RTree rtree = diskComponent.getRTree();
             BTree btree = diskComponent.getBTree();
-            rtree.close();
-            btree.close();
+            rtree.deactivate();
+            btree.deactivate();
         }
         diskComponents.clear();
-        super.close();
+        super.deactivate();
     }
 
     @Override
@@ -129,8 +129,8 @@ public class LSMRTree extends AbstractLSMRTree {
     public synchronized void clear() throws HyracksDataException {
         for (Object o : diskComponents) {
             LSMRTreeComponent component = (LSMRTreeComponent) o;
-            component.getBTree().close();
-            component.getRTree().close();
+            component.getBTree().deactivate();
+            component.getRTree().deactivate();
             component.getBTree().destroy();
             component.getRTree().destroy();
         }
@@ -316,11 +316,11 @@ public class LSMRTree extends AbstractLSMRTree {
             LSMRTreeComponent component = (LSMRTreeComponent) o;
             BTree oldBTree = component.getBTree();
             FileReference btreeFileRef = diskFileMapProvider.lookupFileName(oldBTree.getFileId());
-            oldBTree.close();
+            oldBTree.deactivate();
             btreeFileRef.getFile().delete();
             RTree oldRTree = component.getRTree();
             FileReference rtreeFileRef = diskFileMapProvider.lookupFileName(oldRTree.getFileId());
-            oldRTree.close();
+            oldRTree.deactivate();
             rtreeFileRef.getFile().delete();
         }
     }

@@ -116,7 +116,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         }
     }
 
-    public synchronized void open() throws HyracksDataException {
+    public synchronized void activate() throws HyracksDataException {
         if (isOpen) {
             return;
         }
@@ -147,7 +147,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         isOpen = true;
     }
 
-    public synchronized void close() throws HyracksDataException {
+    public synchronized void deactivate() throws HyracksDataException {
         if (!isOpen) {
             return;
         }

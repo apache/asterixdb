@@ -36,7 +36,7 @@ public class TreeIndexComponentFinalizer implements ILSMComponentFinalizer {
     public boolean isValid(Object lsmComponent) throws HyracksDataException {
         ITreeIndex treeIndex = (ITreeIndex) lsmComponent;
         IBufferCache bufferCache = treeIndex.getBufferCache();
-        treeIndex.open();
+        treeIndex.activate();
         try {
             int metadataPage = treeIndex.getFreePageManager().getFirstMetadataPage();
             ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory()
@@ -52,7 +52,7 @@ public class TreeIndexComponentFinalizer implements ILSMComponentFinalizer {
                 bufferCache.unpin(page);
             }
         } finally {
-            treeIndex.close();
+            treeIndex.deactivate();
         }
     }
 

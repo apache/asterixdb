@@ -159,7 +159,7 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
     }
 
     @Override
-    public synchronized void open() throws HyracksDataException {
+    public synchronized void activate() throws HyracksDataException {
         if (isOpen) {
             return;
         }
@@ -167,21 +167,21 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
         ((InMemoryBufferCache) memComponent.getRTree().getBufferCache()).open();
         memComponent.getRTree().create();
         memComponent.getBTree().create();
-        memComponent.getRTree().open();
-        memComponent.getBTree().open();
+        memComponent.getRTree().activate();
+        memComponent.getBTree().activate();
         isOpen = true;
     }
 
     @Override
-    public synchronized void close() throws HyracksDataException {
+    public synchronized void deactivate() throws HyracksDataException {
         if (!isOpen) {
             return;
         }
 
         isOpen = false;
 
-        memComponent.getRTree().close();
-        memComponent.getBTree().close();
+        memComponent.getRTree().deactivate();
+        memComponent.getBTree().deactivate();
         memComponent.getRTree().destroy();
         memComponent.getBTree().destroy();
         ((InMemoryBufferCache) memComponent.getRTree().getBufferCache()).close();
@@ -193,8 +193,8 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
             throw new HyracksDataException("Failed to destroy since index is already open.");
         }
 
-        memComponent.getRTree().close();
-        memComponent.getBTree().close();
+        memComponent.getRTree().deactivate();
+        memComponent.getBTree().deactivate();
         fileManager.deleteDirs();
     }
 
@@ -217,7 +217,7 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
             diskTree.create();
         }
         // Tree will be closed during cleanup of merge().
-        diskTree.open();
+        diskTree.activate();
         return diskTree;
     }
 

@@ -105,7 +105,7 @@ public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePusha
         }
 
         // remove name to id mapping
-        index.close();
+        index.deactivate();
         index.destroy();
     }
 

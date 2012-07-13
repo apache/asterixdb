@@ -39,8 +39,8 @@ public abstract class AbstractIndexLifecycleTest {
         Assert.assertTrue(persistentStateExists());
 
         // Double open is valid
-        index.open();
-        index.open();
+        index.activate();
+        index.activate();
         Assert.assertTrue(isEmptyIndex());
 
         // insert some stuff
@@ -57,17 +57,17 @@ public abstract class AbstractIndexLifecycleTest {
         titu.insertIntTuples(testCtx, 10, getRandom());
 
         // Double close is valid
-        index.close();
-        index.close();
+        index.deactivate();
+        index.deactivate();
 
         // Reopen and reclose is valid
-        index.open();
+        index.activate();
 
         // make sure the stuff we inserted is still there
         // TODO: re-enable when LSM index's close() is implemented properly
         // titu.checkScan(testCtx);
 
-        index.close();
+        index.deactivate();
 
         // Double destroy is valid
         index.destroy();
@@ -79,14 +79,14 @@ public abstract class AbstractIndexLifecycleTest {
     @Test(expected = HyracksDataException.class)
     public void invalidSequenceTest1() throws Exception {
         index.create();
-        index.open();
+        index.activate();
         index.create();
     }
 
     @Test(expected = HyracksDataException.class)
     public void invalidSequenceTest2() throws Exception {
         index.create();
-        index.open();
+        index.activate();
         index.destroy();
     }
 

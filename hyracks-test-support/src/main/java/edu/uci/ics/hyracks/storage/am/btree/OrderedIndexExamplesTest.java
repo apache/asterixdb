@@ -82,7 +82,7 @@ public abstract class OrderedIndexExamplesTest {
 
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
         treeIndex.create();
-        treeIndex.open();
+        treeIndex.activate();
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -127,7 +127,7 @@ public abstract class OrderedIndexExamplesTest {
 
         rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
 
-        treeIndex.close();
+        treeIndex.deactivate();
         treeIndex.destroy();
     }
 
@@ -161,7 +161,7 @@ public abstract class OrderedIndexExamplesTest {
 
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
         treeIndex.create();
-        treeIndex.open();
+        treeIndex.activate();
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -208,7 +208,7 @@ public abstract class OrderedIndexExamplesTest {
         // Prefix-Range search in [-3, 3]
         rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
 
-        treeIndex.close();
+        treeIndex.deactivate();
         treeIndex.destroy();
     }
 
@@ -239,7 +239,7 @@ public abstract class OrderedIndexExamplesTest {
 
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
         treeIndex.create();
-        treeIndex.open();
+        treeIndex.activate();
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -286,7 +286,7 @@ public abstract class OrderedIndexExamplesTest {
 
         rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
 
-        treeIndex.close();
+        treeIndex.deactivate();
         treeIndex.destroy();
     }
 
@@ -318,7 +318,7 @@ public abstract class OrderedIndexExamplesTest {
 
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
         treeIndex.create();
-        treeIndex.open();
+        treeIndex.activate();
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
@@ -387,7 +387,7 @@ public abstract class OrderedIndexExamplesTest {
                 break;
             }
         }
-        treeIndex.close();
+        treeIndex.deactivate();
         treeIndex.destroy();
     }
 
@@ -419,7 +419,7 @@ public abstract class OrderedIndexExamplesTest {
 
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
         treeIndex.create();
-        treeIndex.open();
+        treeIndex.activate();
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Inserting into tree...");
@@ -473,7 +473,7 @@ public abstract class OrderedIndexExamplesTest {
             // Do another scan after a round of updates.
             orderedScan(indexAccessor, fieldSerdes);
         }
-        treeIndex.close();
+        treeIndex.deactivate();
         treeIndex.destroy();
     }
 
@@ -505,7 +505,7 @@ public abstract class OrderedIndexExamplesTest {
 
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
         treeIndex.create();
-        treeIndex.open();
+        treeIndex.activate();
 
         // Load sorted records.
         int ins = 100000;
@@ -542,7 +542,7 @@ public abstract class OrderedIndexExamplesTest {
         // Prefix-Range search in [44444, 44500]
         rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
 
-        treeIndex.close();
+        treeIndex.deactivate();
         treeIndex.destroy();
     }
 

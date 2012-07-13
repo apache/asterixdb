@@ -39,18 +39,9 @@ public interface IIndex {
      */
     public void create() throws HyracksDataException;
 
-    /**
-     * Opens the index backed by the given file id.
-     * 
-     * @param fileReference
-     *            The file id backing this index.
-     */
-    public void open() throws HyracksDataException;
+    public void activate() throws HyracksDataException;
 
-    /**
-     * Closes the index.
-     */
-    public void close() throws HyracksDataException;
+    public void deactivate() throws HyracksDataException;
 
     public void destroy() throws HyracksDataException;
 

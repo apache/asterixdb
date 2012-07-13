@@ -120,7 +120,7 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
         RTree rtree = new RTree(bufferCache, harness.getFileMapProvider(), freePageManager, interiorFrameFactory,
                 leafFrameFactory, cmpFactories, fieldCount, harness.getFileReference());
         rtree.create();
-        rtree.open();
+        rtree.activate();
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
@@ -171,7 +171,7 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
 
         rTreeTestUtils.checkExpectedResults(searchCursor, expectedResult, fieldSerdes, keyFieldCount, null);
 
-        rtree.close();
+        rtree.deactivate();
         rtree.destroy();
     }
 

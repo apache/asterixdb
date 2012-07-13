@@ -116,7 +116,7 @@ public class InvertedIndex implements IIndex {
     }
 
     @Override
-    public synchronized void open() throws HyracksDataException {
+    public synchronized void activate() throws HyracksDataException {
         if (isOpen) {
             return;
         }
@@ -144,7 +144,7 @@ public class InvertedIndex implements IIndex {
     }
 
     @Override
-    public synchronized void close() throws HyracksDataException {
+    public synchronized void deactivate() throws HyracksDataException {
         if (!isOpen) {
             return;
         }

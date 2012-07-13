@@ -45,7 +45,7 @@ public abstract class OrderedIndexUpsertTest extends OrderedIndexTestDriver {
             throws Exception {
         OrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys, leafType);
         ctx.getIndex().create();
-        ctx.getIndex().open();
+        ctx.getIndex().activate();
         // We assume all fieldSerdes are of the same type. Check the first one
         // to determine which field types to generate.
         if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
@@ -62,7 +62,7 @@ public abstract class OrderedIndexUpsertTest extends OrderedIndexTestDriver {
         if (prefixLowKey != null && prefixHighKey != null) {
             orderedIndexTestUtils.checkRangeSearch(ctx, prefixLowKey, prefixHighKey, true, true);
         }
-        ctx.getIndex().close();
+        ctx.getIndex().deactivate();
         ctx.getIndex().destroy();
     }
 

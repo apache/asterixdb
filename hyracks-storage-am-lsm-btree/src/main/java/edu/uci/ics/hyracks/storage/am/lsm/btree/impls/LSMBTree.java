@@ -140,14 +140,14 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
      * @throws HyracksDataException
      */
     @Override
-    public synchronized void open() throws HyracksDataException {
+    public synchronized void activate() throws HyracksDataException {
         if (isOpen) {
             return;
         }
 
         ((InMemoryBufferCache) memBTree.getBufferCache()).open();
         memBTree.create();
-        memBTree.open();
+        memBTree.activate();
         List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(componentFinalizer);
         for (Object o : validFileNames) {
             String fileName = (String) o;
@@ -159,17 +159,17 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     }
 
     @Override
-    public synchronized void close() throws HyracksDataException {
+    public synchronized void deactivate() throws HyracksDataException {
         if (!isOpen) {
             return;
         }
 
         for (Object o : diskBTrees) {
             BTree btree = (BTree) o;
-            btree.close();
+            btree.deactivate();
         }
         diskBTrees.clear();
-        memBTree.close();
+        memBTree.deactivate();
         memBTree.destroy();
         ((InMemoryBufferCache) memBTree.getBufferCache()).close();
         isOpen = false;
@@ -198,7 +198,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         memBTree.clear();
         for (Object o : diskBTrees) {
             BTree btree = (BTree) o;
-            btree.close();
+            btree.deactivate();
             btree.destroy();
         }
         diskBTrees.clear();
@@ -327,7 +327,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
             diskBTree.create();
         }
         // BTree will be closed during cleanup of merge().
-        diskBTree.open();
+        diskBTree.activate();
         return diskBTree;
     }
 
@@ -408,7 +408,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         for (Object o : mergedComponents) {
             BTree oldBTree = (BTree) o;
             FileReference fileRef = diskFileMapProvider.lookupFileName(oldBTree.getFileId());
-            oldBTree.close();
+            oldBTree.deactivate();
             fileRef.getFile().delete();
         }
     }

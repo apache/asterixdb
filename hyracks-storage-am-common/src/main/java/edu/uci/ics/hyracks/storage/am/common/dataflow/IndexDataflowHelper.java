@@ -90,7 +90,7 @@ public abstract class IndexDataflowHelper {
                 }
             }
             if (register) {
-                index.open();
+                index.activate();
                 indexRegistry.register(resourceId, index);
             }
         }

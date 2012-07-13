@@ -43,7 +43,7 @@ public class TreeIndexMultiThreadTestDriver {
 
     public void init(FileReference file) throws HyracksDataException {
         index.create();
-        index.open();
+        index.activate();
     }
 
     public long[] run(int numThreads, int numRepeats, int numOps, int batchSize) throws InterruptedException,
@@ -80,7 +80,7 @@ public class TreeIndexMultiThreadTestDriver {
     }
 
     public void deinit() throws HyracksDataException {
-        index.close();
+        index.deactivate();
     }
 
     // To allow subclasses to override the data gen params.

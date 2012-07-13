@@ -40,7 +40,7 @@ public abstract class AbstractRTreeBulkLoadTest extends AbstractRTreeTestDriver 
             RTreePolicyType rtreePolicyType) throws Exception {
         AbstractRTreeTestContext ctx = createTestContext(fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType);
         ctx.getIndex().create();
-        ctx.getIndex().open();
+        ctx.getIndex().activate();
         for (int i = 0; i < bulkLoadRounds; i++) {
             // We assume all fieldSerdes are of the same type. Check the first
             // one to determine which field types to generate.
@@ -54,7 +54,7 @@ public abstract class AbstractRTreeBulkLoadTest extends AbstractRTreeTestDriver 
             rTreeTestUtils.checkDiskOrderScan(ctx);
             rTreeTestUtils.checkRangeSearch(ctx, key);
         }
-        ctx.getIndex().close();
+        ctx.getIndex().deactivate();
         ctx.getIndex().destroy();
     }
 

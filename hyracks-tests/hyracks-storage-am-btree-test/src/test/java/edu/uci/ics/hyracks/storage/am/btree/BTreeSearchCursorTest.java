@@ -103,7 +103,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         BTree btree = new BTree(bufferCache, harness.getFileMapProvider(), freePageManager, interiorFrameFactory,
                 leafFrameFactory, cmpFactories, fieldCount, harness.getFileReference());
         btree.create();
-        btree.open();
+        btree.activate();
 
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
@@ -153,7 +153,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
                 true, false));
 
-        btree.close();
+        btree.deactivate();
         btree.destroy();
     }
 
@@ -182,7 +182,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         BTree btree = new BTree(bufferCache, harness.getFileMapProvider(), freePageManager, interiorFrameFactory,
                 leafFrameFactory, cmpFactories, fieldCount, harness.getFileReference());
         btree.create();
-        btree.open();
+        btree.activate();
 
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
@@ -229,7 +229,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
                 true, false));
 
-        btree.close();
+        btree.deactivate();
         btree.destroy();
     }
 
@@ -258,7 +258,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         BTree btree = new BTree(bufferCache, harness.getFileMapProvider(), freePageManager, interiorFrameFactory,
                 leafFrameFactory, cmpFactories, fieldCount, harness.getFileReference());
         btree.create();
-        btree.open();
+        btree.activate();
 
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
@@ -305,7 +305,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
                 true, false));
 
-        btree.close();
+        btree.deactivate();
         btree.destroy();
     }
 

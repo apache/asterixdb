@@ -84,7 +84,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
         BTree btree = new BTree(bufferCache, fmp, freePageManager, interiorFrameFactory, leafFrameFactory,
                 cmpFactories, fieldCount, harness.getFileReference());
         btree.create();
-        btree.open();
+        btree.activate();
 
         Random rnd = new Random();
         rnd.setSeed(50);
@@ -153,7 +153,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
                 fileId);
         bufferCacheWarmup.warmup(leafFrame, metaFrame, new int[] { 1, 2 }, new int[] { 2, 5 });
 
-        btree.close();
+        btree.deactivate();
         btree.destroy();
         bufferCache.close();
     }

@@ -44,7 +44,7 @@ public abstract class OrderedIndexUpdateTest extends OrderedIndexTestDriver {
         }
         OrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys, leafType);
         ctx.getIndex().create();
-        ctx.getIndex().open();
+        ctx.getIndex().activate();
         // We assume all fieldSerdes are of the same type. Check the first one
         // to determine which field types to generate.
         if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {

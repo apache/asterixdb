@@ -157,7 +157,7 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
                 btreeTypeTraits.length, btreeFile);
 
         btree.create();
-        btree.open();
+        btree.activate();
 
         // --- INVERTED INDEX ---
 
@@ -170,7 +170,7 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
         invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories, invListBuilder, fmp,
                 invListsFile);
         invIndex.create();
-        invIndex.open();
+        invIndex.activate();
 
         rnd.setSeed(50);
     }
@@ -178,9 +178,9 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
     @After
     public void deinit() throws HyracksDataException {
         AbstractInvIndexTest.tearDown();
-        btree.close();
+        btree.deactivate();
         btree.destroy();
-        invIndex.close();
+        invIndex.deactivate();
         invIndex.destroy();
         bufferCache.close();
     }

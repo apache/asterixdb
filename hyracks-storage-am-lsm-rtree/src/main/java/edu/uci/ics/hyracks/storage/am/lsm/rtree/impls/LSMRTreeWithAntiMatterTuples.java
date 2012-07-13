@@ -93,8 +93,8 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
      * @throws HyracksDataException
      */
     @Override
-    public synchronized void open() throws HyracksDataException {
-        super.open();
+    public synchronized void activate() throws HyracksDataException {
+        super.activate();
         List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(componentFinalizer);
         for (Object o : validFileNames) {
             String fileName = (String) o;
@@ -105,13 +105,13 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     }
 
     @Override
-    public synchronized void close() throws HyracksDataException {
+    public synchronized void deactivate() throws HyracksDataException {
         for (Object o : diskComponents) {
             RTree rtree = (RTree) o;
-            rtree.close();
+            rtree.deactivate();
         }
         diskComponents.clear();
-        super.close();
+        super.deactivate();
     }
 
     @Override
@@ -127,7 +127,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     public synchronized void clear() throws HyracksDataException {
         for (Object o : diskComponents) {
             RTree rtree = (RTree) o;
-            rtree.close();
+            rtree.deactivate();
             rtree.destroy();
         }
         diskComponents.clear();
@@ -319,7 +319,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         for (Object o : mergedComponents) {
             RTree oldRTree = (RTree) o;
             FileReference fileRef = diskFileMapProvider.lookupFileName(oldRTree.getFileId());
-            oldRTree.close();
+            oldRTree.deactivate();
             fileRef.getFile().delete();
         }
     }

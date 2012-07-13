@@ -45,7 +45,7 @@ public abstract class AbstractRTreeInsertTest extends AbstractRTreeTestDriver {
             RTreePolicyType rtreePolicyType) throws Exception {
         AbstractRTreeTestContext ctx = createTestContext(fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType);
         ctx.getIndex().create();
-        ctx.getIndex().open();
+        ctx.getIndex().activate();
         // We assume all fieldSerdes are of the same type. Check the first one
         // to determine which field types to generate.
         if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
@@ -57,7 +57,7 @@ public abstract class AbstractRTreeInsertTest extends AbstractRTreeTestDriver {
         rTreeTestUtils.checkScan(ctx);
         rTreeTestUtils.checkDiskOrderScan(ctx);
         rTreeTestUtils.checkRangeSearch(ctx, key);
-        ctx.getIndex().close();
+        ctx.getIndex().deactivate();
         ctx.getIndex().destroy();
     }
 

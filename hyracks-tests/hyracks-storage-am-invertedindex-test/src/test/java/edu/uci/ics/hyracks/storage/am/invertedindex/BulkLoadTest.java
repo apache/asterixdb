@@ -120,7 +120,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         BTree btree = new BTree(bufferCache, fmp, freePageManager, interiorFrameFactory, leafFrameFactory,
                 cmpFactories, btreeTypeTraits.length, btreeFile);
         btree.create();
-        btree.open();
+        btree.activate();
         int invListFields = 1;
         ITypeTraits[] invListTypeTraits = new ITypeTraits[invListFields];
         invListTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
@@ -133,7 +133,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         InvertedIndex invIndex = new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories,
                 invListBuilder, fmp, invListsFile);
         invIndex.create();
-        invIndex.open();
+        invIndex.activate();
 
         Random rnd = new Random();
         rnd.setSeed(50);
@@ -277,9 +277,9 @@ public class BulkLoadTest extends AbstractInvIndexTest {
             invListCursor.unpinPages();
         }
 
-        btree.close();
+        btree.deactivate();
         btree.destroy();
-        invIndex.close();
+        invIndex.deactivate();
         invIndex.destroy();
         bufferCache.close();
     }

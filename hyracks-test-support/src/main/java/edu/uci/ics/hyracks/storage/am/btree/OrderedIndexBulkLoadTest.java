@@ -39,7 +39,7 @@ public abstract class OrderedIndexBulkLoadTest extends OrderedIndexTestDriver {
             throws Exception {
         OrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys, leafType);
         ctx.getIndex().create();
-        ctx.getIndex().open();
+        ctx.getIndex().activate();
         for (int i = 0; i < bulkLoadRounds; i++) {
             // We assume all fieldSerdes are of the same type. Check the first
             // one
@@ -57,7 +57,7 @@ public abstract class OrderedIndexBulkLoadTest extends OrderedIndexTestDriver {
                 orderedIndexTestUtils.checkRangeSearch(ctx, prefixLowKey, prefixHighKey, true, true);
             }
         }
-        ctx.getIndex().close();
+        ctx.getIndex().deactivate();
         ctx.getIndex().destroy();
     }
 

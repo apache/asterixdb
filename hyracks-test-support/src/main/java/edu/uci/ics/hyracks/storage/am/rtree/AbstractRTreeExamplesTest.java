@@ -109,7 +109,7 @@ public abstract class AbstractRTreeExamplesTest {
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
                 valueProviderFactories, RTreePolicyType.RTREE);
         treeIndex.create();
-        treeIndex.open();
+        treeIndex.activate();
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -157,7 +157,7 @@ public abstract class AbstractRTreeExamplesTest {
 
         rangeSearch(rtreeCmpFactories, indexAccessor, fieldSerdes, key);
 
-        treeIndex.close();
+        treeIndex.deactivate();
         treeIndex.destroy();
     }
 
@@ -217,7 +217,7 @@ public abstract class AbstractRTreeExamplesTest {
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
                 valueProviderFactories, RTreePolicyType.RTREE);
         treeIndex.create();
-        treeIndex.open();
+        treeIndex.activate();
 
         long start = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -267,7 +267,7 @@ public abstract class AbstractRTreeExamplesTest {
 
         rangeSearch(rtreeCmpFactories, indexAccessor, fieldSerdes, key);
 
-        treeIndex.close();
+        treeIndex.deactivate();
         treeIndex.destroy();
     }
 
@@ -317,7 +317,7 @@ public abstract class AbstractRTreeExamplesTest {
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
                 valueProviderFactories, RTreePolicyType.RTREE);
         treeIndex.create();
-        treeIndex.open();
+        treeIndex.activate();
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
@@ -398,7 +398,7 @@ public abstract class AbstractRTreeExamplesTest {
                 break;
             }
         }
-        treeIndex.close();
+        treeIndex.deactivate();
         treeIndex.destroy();
     }
 
@@ -449,7 +449,7 @@ public abstract class AbstractRTreeExamplesTest {
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
                 valueProviderFactories, RTreePolicyType.RTREE);
         treeIndex.create();
-        treeIndex.open();
+        treeIndex.activate();
 
         // Load records.
         int numInserts = 10000;
@@ -490,7 +490,7 @@ public abstract class AbstractRTreeExamplesTest {
 
         rangeSearch(rtreeCmpFactories, indexAccessor, fieldSerdes, key);
 
-        treeIndex.close();
+        treeIndex.deactivate();
         treeIndex.destroy();
     }
 

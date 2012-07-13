@@ -41,7 +41,7 @@ public abstract class OrderedIndexDeleteTest extends OrderedIndexTestDriver {
             throws Exception {
         OrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys, leafType);
         ctx.getIndex().create();
-        ctx.getIndex().open();
+        ctx.getIndex().activate();
         for (int i = 0; i < numInsertRounds; i++) {
             // We assume all fieldSerdes are of the same type. Check the first
             // one to determine which field types to generate.
@@ -63,7 +63,7 @@ public abstract class OrderedIndexDeleteTest extends OrderedIndexTestDriver {
                 }
             }
         }
-        ctx.getIndex().close();
+        ctx.getIndex().deactivate();
         ctx.getIndex().destroy();
     }
 

@@ -44,7 +44,7 @@ public abstract class LSMRTreeMergeTestDriver extends AbstractRTreeTestDriver {
 
         AbstractRTreeTestContext ctx = createTestContext(fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType);
         ctx.getIndex().create();
-        ctx.getIndex().open();
+        ctx.getIndex().activate();
         // Start off with one tree bulk loaded.
         // We assume all fieldSerdes are of the same type. Check the first one
         // to determine which field types to generate.
@@ -71,7 +71,7 @@ public abstract class LSMRTreeMergeTestDriver extends AbstractRTreeTestDriver {
             rTreeTestUtils.checkDiskOrderScan(ctx);
             rTreeTestUtils.checkRangeSearch(ctx, key);
         }
-        ctx.getIndex().close();
+        ctx.getIndex().deactivate();
         ctx.getIndex().destroy();
     }
 

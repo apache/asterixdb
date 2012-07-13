@@ -67,7 +67,7 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
         BTree btree = new BTree(bufferCache, harness.getFileMapProvider(), freePageManager, interiorFrameFactory,
                 leafFrameFactory, cmpFactories, fieldCount, harness.getFileReference());
         btree.create();
-        btree.open();
+        btree.activate();
 
         Random rnd = new Random();
         rnd.setSeed(50);
@@ -150,7 +150,7 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
         } finally {
             scanCursor.close();
         }
-        btree.close();
+        btree.deactivate();
         btree.destroy();
     }
 }
