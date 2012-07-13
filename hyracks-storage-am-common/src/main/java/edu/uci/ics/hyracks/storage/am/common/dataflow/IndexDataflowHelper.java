@@ -17,61 +17,59 @@ package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.io.IODeviceHandle;
-import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
 
-public abstract class IndexDataflowHelper {
-    protected final int partition;
+public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
+
     protected final IIndexOperatorDescriptor opDesc;
     protected final IHyracksTaskContext ctx;
     protected final IIndexArtifactMap indexArtifactMap;
+    protected final IndexRegistry<IIndex> indexRegistry;
+    protected final FileReference file;
 
     protected IIndex index;
-    protected long resourceID = -1;
+    protected String baseDir;
+    protected String fullDir;
 
     public IndexDataflowHelper(IIndexOperatorDescriptor opDesc, final IHyracksTaskContext ctx, int partition) {
         this.opDesc = opDesc;
         this.ctx = ctx;
-        this.partition = partition;
         this.indexArtifactMap = opDesc.getStorageManager().getIndexArtifactMap(ctx);
-    }
+        this.indexRegistry = opDesc.getIndexRegistryProvider().getRegistry(ctx);
+        this.file = opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile();
 
-    public void init(boolean forceCreate) throws HyracksDataException {
-        IndexRegistry<IIndex> indexRegistry = opDesc.getIndexRegistryProvider().getRegistry(ctx);
-        FileReference file = getFilereference();
-        List<IODeviceHandle> ioDeviceHandles = ctx.getIOManager().getIODevices();
-        String fullDir = ioDeviceHandles.get(0).getPath().toString();
+        fullDir = ctx.getIOManager().getIODevices().get(0).getPath().toString();
         if (!fullDir.endsWith(File.separator)) {
             fullDir += File.separator;
         }
-        String baseDir = file.getFile().getPath();
+        baseDir = file.getFile().getPath();
         if (!baseDir.endsWith(File.separator)) {
             baseDir += File.separator;
         }
         fullDir += baseDir;
+    }
 
-        resourceID = indexArtifactMap.get(fullDir);
-
+    public void init(boolean forceCreate) throws HyracksDataException {
+        long resourceID = getResourceID();
         // Create new index instance and register it.
         synchronized (indexRegistry) {
             // Check if the index has already been registered.
             boolean register = false;
             index = indexRegistry.get(resourceID);
             if (index == null) {
-                index = createIndexInstance();
+                index = getIndexInstance();
                 register = true;
             }
             if (forceCreate) {
                 index.create();
                 // Create new resourceId
                 try {
-                    resourceID = indexArtifactMap.create(baseDir, ioDeviceHandles);
+                    resourceID = indexArtifactMap.create(baseDir, ctx.getIOManager().getIODevices());
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }
@@ -83,29 +81,18 @@ public abstract class IndexDataflowHelper {
         }
     }
 
-    public abstract IIndex createIndexInstance() throws HyracksDataException;
+    public abstract IIndex getIndexInstance() throws HyracksDataException;
 
-    public FileReference getFilereference() {
-        IFileSplitProvider fileSplitProvider = opDesc.getFileSplitProvider();
-        return fileSplitProvider.getFileSplits()[partition].getLocalFile();
-    }
-
-    public void deinit() throws HyracksDataException {
+    @Override
+    public FileReference getFileReference() {
+        return file;
     }
 
     public IIndex getIndex() {
         return index;
     }
 
-    public IHyracksTaskContext getHyracksTaskContext() {
-        return ctx;
-    }
-
-    public IIndexOperatorDescriptor getOperatorDescriptor() {
-        return opDesc;
-    }
-
     public long getResourceID() {
-        return resourceID;
+        return indexArtifactMap.get(fullDir);
     }
 }

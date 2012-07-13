@@ -44,12 +44,7 @@ public class InvertedIndexCreateOperatorNodePushable extends AbstractOperatorNod
 
     @Override
     public void initialize() throws HyracksDataException {
-        // Inverted Index.
-        try {
-            invIndexDataflowHelper.init(true);
-        } finally {
-            invIndexDataflowHelper.deinit();
-        }
+        invIndexDataflowHelper.init(true);
     }
 
     @Override

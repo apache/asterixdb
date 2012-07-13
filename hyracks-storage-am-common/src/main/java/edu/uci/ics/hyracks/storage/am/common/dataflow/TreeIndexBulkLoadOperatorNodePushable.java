@@ -26,6 +26,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 
 public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
+    private final AbstractTreeIndexOperatorDescriptor opDesc;
+    private final IHyracksTaskContext ctx;
     private float fillFactor;
     private final TreeIndexDataflowHelper treeIndexHelper;
     private FrameTupleAccessor accessor;
@@ -38,8 +40,10 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
 
     public TreeIndexBulkLoadOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, int[] fieldPermutation, float fillFactor, IRecordDescriptorProvider recordDescProvider) {
-        treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
-                opDesc, ctx, partition);
+        this.opDesc = opDesc;
+        this.ctx = ctx;
+        this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
+                .createIndexDataflowHelper(opDesc, ctx, partition);
         this.fillFactor = fillFactor;
         this.recordDescProvider = recordDescProvider;
         tuple.setFieldPermutation(fieldPermutation);
@@ -47,18 +51,14 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
 
     @Override
     public void open() throws HyracksDataException {
-        AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexHelper
-                .getOperatorDescriptor();
         RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
-        accessor = new FrameTupleAccessor(treeIndexHelper.getHyracksTaskContext().getFrameSize(), recDesc);
+        accessor = new FrameTupleAccessor(ctx.getFrameSize(), recDesc);
         try {
             treeIndexHelper.init(false);
             treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
             bulkLoader = treeIndex.createBulkLoader(fillFactor);
         } catch (Exception e) {
             // cleanup in case of failure
-            System.out.println("help");
-            treeIndexHelper.deinit();
             throw new HyracksDataException(e);
         }
     }
@@ -79,8 +79,6 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
             bulkLoader.end();
         } catch (Exception e) {
             throw new HyracksDataException(e);
-        } finally {
-            treeIndexHelper.deinit();
         }
     }
 

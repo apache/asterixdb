@@ -16,8 +16,6 @@ package edu.uci.ics.hyracks.storage.am.invertedindex.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
@@ -32,21 +30,14 @@ public final class InvertedIndexDataflowHelper extends IndexDataflowHelper {
         super(opDesc, ctx, partition);
     }
 
-    public FileReference getFilereference() {
-        AbstractInvertedIndexOperatorDescriptor invIndexOpDesc = (AbstractInvertedIndexOperatorDescriptor) opDesc;
-        IFileSplitProvider fileSplitProvider = invIndexOpDesc.getInvListsFileSplitProvider();
-        return fileSplitProvider.getFileSplits()[partition].getLocalFile();
-    }
-
     @Override
-    public IIndex createIndexInstance() throws HyracksDataException {
+    public IIndex getIndexInstance() throws HyracksDataException {
         IInvertedIndexOperatorDescriptor invIndexOpDesc = (IInvertedIndexOperatorDescriptor) opDesc;
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(
                 invIndexOpDesc.getInvListsTypeTraits());
         return new InvertedIndex(opDesc.getStorageManager().getBufferCache(ctx), opDesc.getStorageManager()
                 .getFileMapProvider(ctx), invListBuilder, invIndexOpDesc.getInvListsTypeTraits(),
                 invIndexOpDesc.getInvListsComparatorFactories(), invIndexOpDesc.getTreeIndexTypeTraits(),
-                invIndexOpDesc.getTreeIndexComparatorFactories(),
-                opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile());
+                invIndexOpDesc.getTreeIndexComparatorFactories(), file);
     }
 }

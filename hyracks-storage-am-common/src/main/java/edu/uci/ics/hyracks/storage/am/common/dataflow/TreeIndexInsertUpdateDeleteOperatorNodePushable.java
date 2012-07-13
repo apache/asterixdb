@@ -33,6 +33,8 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 
 public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
+    private final AbstractTreeIndexOperatorDescriptor opDesc;
+    private final IHyracksTaskContext ctx;
     private final TreeIndexDataflowHelper treeIndexHelper;
     private FrameTupleAccessor accessor;
     private final IRecordDescriptorProvider recordDescProvider;
@@ -47,6 +49,8 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
     public TreeIndexInsertUpdateDeleteOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition, int[] fieldPermutation,
             IRecordDescriptorProvider recordDescProvider, IndexOp op) {
+        this.opDesc = opDesc;
+        this.ctx = ctx;
         this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
                 .createIndexDataflowHelper(opDesc, ctx, partition);
         this.recordDescProvider = recordDescProvider;
@@ -56,11 +60,9 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
 
     @Override
     public void open() throws HyracksDataException {
-        AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexHelper
-                .getOperatorDescriptor();
         RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
-        accessor = new FrameTupleAccessor(treeIndexHelper.getHyracksTaskContext().getFrameSize(), inputRecDesc);
-        writeBuffer = treeIndexHelper.getHyracksTaskContext().allocateFrame();
+        accessor = new FrameTupleAccessor(ctx.getFrameSize(), inputRecDesc);
+        writeBuffer = ctx.allocateFrame();
         writer.open();
         try {
             treeIndexHelper.init(false);
@@ -74,8 +76,6 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
                 frameTuple = new FrameTupleReference();
             }
         } catch (Exception e) {
-            // cleanup in case of failure
-            treeIndexHelper.deinit();
             throw new HyracksDataException(e);
         }
     }
@@ -130,11 +130,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
 
     @Override
     public void close() throws HyracksDataException {
-        try {
-            writer.close();
-        } finally {
-            treeIndexHelper.deinit();
-        }
+        writer.close();
     }
 
     @Override

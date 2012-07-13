@@ -46,11 +46,7 @@ public class TreeIndexCreateOperatorNodePushable extends AbstractOperatorNodePus
 
     @Override
     public void initialize() throws HyracksDataException {
-        try {
-        	treeIndexHelper.init(true);
-        } finally {
-        	treeIndexHelper.deinit();
-        }
+        treeIndexHelper.init(true);
     }
 
     @Override

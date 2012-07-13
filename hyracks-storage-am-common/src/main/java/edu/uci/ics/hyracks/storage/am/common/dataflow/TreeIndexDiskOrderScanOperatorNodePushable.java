@@ -33,12 +33,14 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 
 public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
     private final AbstractTreeIndexOperatorDescriptor opDesc;
+    private final IHyracksTaskContext ctx;
     private final TreeIndexDataflowHelper treeIndexHelper;
     private ITreeIndex treeIndex;
 
     public TreeIndexDiskOrderScanOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition) {
         this.opDesc = opDesc;
+        this.ctx = ctx;
         this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
                 .createIndexDataflowHelper(opDesc, ctx, partition);
     }
@@ -58,9 +60,8 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
             try {
                 indexAccessor.diskOrderScan(cursor);
                 int fieldCount = treeIndex.getFieldCount();
-                ByteBuffer frame = treeIndexHelper.getHyracksTaskContext().allocateFrame();
-                FrameTupleAppender appender = new FrameTupleAppender(treeIndexHelper.getHyracksTaskContext()
-                        .getFrameSize());
+                ByteBuffer frame = ctx.allocateFrame();
+                FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
                 appender.reset(frame, true);
                 ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
                 DataOutput dos = tb.getDataOutput();
@@ -101,6 +102,5 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
 
     @Override
     public void deinitialize() throws HyracksDataException {
-        treeIndexHelper.deinit();
     }
 }

@@ -17,8 +17,6 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
@@ -66,15 +64,10 @@ public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
     }
 
     @Override
-    public ITreeIndex createIndexInstance() throws HyracksDataException {
+    public ITreeIndex getIndexInstance() throws HyracksDataException {
         ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
         InMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), memPageSize,
                 memNumPages, new TransientFileMapManager());
-        IFileSplitProvider fileSplitProvider = opDesc.getFileSplitProvider();
-        FileReference file = fileSplitProvider.getFileSplits()[partition].getLocalFile();
-        if (file.getFile().exists() && !file.getFile().isDirectory()) {
-            file.delete();
-        }
         InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(memNumPages, metaDataFrameFactory);
         return LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ctx.getIOManager(), file, opDesc
                 .getStorageManager().getBufferCache(ctx), opDesc.getStorageManager().getFileMapProvider(ctx),

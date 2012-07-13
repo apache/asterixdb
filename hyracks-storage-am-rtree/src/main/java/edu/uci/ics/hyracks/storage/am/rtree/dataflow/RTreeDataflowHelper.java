@@ -37,10 +37,9 @@ public class RTreeDataflowHelper extends TreeIndexDataflowHelper {
     }
 
     @Override
-    public ITreeIndex createIndexInstance() throws HyracksDataException {
+    public ITreeIndex getIndexInstance() throws HyracksDataException {
         return RTreeUtils.createRTree(treeOpDesc.getStorageManager().getBufferCache(ctx), treeOpDesc
                 .getStorageManager().getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(),
-                valueProviderFactories, treeOpDesc.getTreeIndexComparatorFactories(), rtreePolicyType, treeOpDesc
-                        .getFileSplitProvider().getFileSplits()[partition].getLocalFile());
+                valueProviderFactories, treeOpDesc.getTreeIndexComparatorFactories(), rtreePolicyType, file);
     }
 }
