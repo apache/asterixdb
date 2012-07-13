@@ -15,67 +15,54 @@
 
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
 
 public abstract class IndexDataflowHelper {
-    protected IIndex index;
-    protected int indexFileId = -1;
-
     protected final int partition;
     protected final IIndexOperatorDescriptor opDesc;
     protected final IHyracksTaskContext ctx;
-    protected transient IModificationOperationCallback modificationOperationCallback;
-    protected transient ISearchOperationCallback searchOperationCallback;
+    protected final IIndexArtifactMap indexArtifactMap;
+
+    protected IIndex index;
+    protected long resourceID = -1;
 
     public IndexDataflowHelper(IIndexOperatorDescriptor opDesc, final IHyracksTaskContext ctx, int partition) {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.partition = partition;
+        this.indexArtifactMap = opDesc.getStorageManager().getIndexArtifactMap(ctx);
     }
 
     public void init(boolean forceCreate) throws HyracksDataException {
         IndexRegistry<IIndex> indexRegistry = opDesc.getIndexRegistryProvider().getRegistry(ctx);
-        IIndexArtifactMap indexArtifactMap = opDesc.getStorageManager().getIndexArtifactMap(ctx);
-        FileReference fileRef = getFilereference();
-
-        // check whether the requested index instance already exists by
-        // retrieving indexRegistry with resourceId
-        // To do so, checking the index directory in the first ioDevice is
-        // sufficient.
-
-        // create a fullDir(= IODeviceDir + baseDir) for the requested index
-        IIOManager ioManager = ctx.getIOManager();
-        List<IODeviceHandle> ioDeviceHandles = ioManager.getIODevices();
+        FileReference file = getFilereference();
+        List<IODeviceHandle> ioDeviceHandles = ctx.getIOManager().getIODevices();
         String fullDir = ioDeviceHandles.get(0).getPath().toString();
-        if (!fullDir.endsWith(System.getProperty("file.separator"))) {
-            fullDir += System.getProperty("file.separator");
+        if (!fullDir.endsWith(File.separator)) {
+            fullDir += File.separator;
         }
-        String baseDir = fileRef.getFile().getPath();
-        if (!baseDir.endsWith(System.getProperty("file.separator"))) {
-            baseDir += System.getProperty("file.separator");
+        String baseDir = file.getFile().getPath();
+        if (!baseDir.endsWith(File.separator)) {
+            baseDir += File.separator;
         }
         fullDir += baseDir;
 
-        // get the corresponding resourceId with the fullDir
-        long resourceId = indexArtifactMap.get(fullDir);
+        resourceID = indexArtifactMap.get(fullDir);
 
         // Create new index instance and register it.
         synchronized (indexRegistry) {
             // Check if the index has already been registered.
             boolean register = false;
-            index = indexRegistry.get(resourceId);
+            index = indexRegistry.get(resourceID);
             if (index == null) {
                 index = createIndexInstance();
                 register = true;
@@ -84,20 +71,16 @@ public abstract class IndexDataflowHelper {
                 index.create();
                 // Create new resourceId
                 try {
-                    resourceId = indexArtifactMap.create(baseDir, ioDeviceHandles);
+                    resourceID = indexArtifactMap.create(baseDir, ioDeviceHandles);
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }
             }
             if (register) {
                 index.activate();
-                indexRegistry.register(resourceId, index);
+                indexRegistry.register(resourceID, index);
             }
         }
-
-        //set operationCallback object
-        modificationOperationCallback = opDesc.getOpCallbackProvider().getModificationOperationCallback(resourceId);
-        searchOperationCallback = opDesc.getOpCallbackProvider().getSearchOperationCallback(resourceId);
     }
 
     public abstract IIndex createIndexInstance() throws HyracksDataException;
@@ -122,20 +105,7 @@ public abstract class IndexDataflowHelper {
         return opDesc;
     }
 
-    public int getIndexFileId() {
-        return indexFileId;
+    public long getResourceID() {
+        return resourceID;
     }
-
-    public IOperationCallbackProvider getOpCallbackProvider() {
-        return opDesc.getOpCallbackProvider();
-    }
-
-    public IModificationOperationCallback getModificationOperationCallback() {
-        return modificationOperationCallback;
-    }
-
-    public ISearchOperationCallback getSearchOperationCallback() {
-        return searchOperationCallback;
-    }
-
 }
