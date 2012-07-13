@@ -59,7 +59,6 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
     protected IPhysicalOperator physicalOperator;
     private final Map<String, Object> annotations = new HashMap<String, Object>();
     private boolean bJobGenEnabled = true;
-    private Object hostQueryContext;
 
     final protected List<Mutable<ILogicalOperator>> inputs;
     // protected List<LogicalOperatorReference> outputs;
@@ -166,14 +165,6 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
 
     public boolean isJobGenEnabled() {
         return bJobGenEnabled;
-    }
-
-    public void setHostQueryContext(Object context) {
-        this.hostQueryContext = context;
-    }
-
-    public Object getHostQueryContext() {
-        return hostQueryContext;
     }
 
     @Override

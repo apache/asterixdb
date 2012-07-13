@@ -18,6 +18,8 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.channels.IInputChannel;
 import edu.uci.ics.hyracks.api.channels.IInputChannelMonitor;
@@ -83,33 +85,34 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
     private class PartitionWriter implements Runnable, IInputChannelMonitor {
         private PartitionChannel pc;
 
-        private int nAvailableFrames;
+        private final AtomicInteger nAvailableFrames;
 
-        private boolean eos;
+        private final AtomicBoolean eos;
 
-        private boolean failed;
+        private final AtomicBoolean failed;
 
         public PartitionWriter(PartitionChannel pc) {
             this.pc = pc;
-            nAvailableFrames = 0;
-            eos = false;
+            nAvailableFrames = new AtomicInteger(0);
+            eos = new AtomicBoolean(false);
+            failed = new AtomicBoolean(false);
         }
 
         @Override
         public synchronized void notifyFailure(IInputChannel channel) {
-            failed = true;
+            failed.set(true);
             notifyAll();
         }
 
         @Override
         public synchronized void notifyDataAvailability(IInputChannel channel, int nFrames) {
-            nAvailableFrames += nFrames;
+            nAvailableFrames.addAndGet(nFrames);
             notifyAll();
         }
 
         @Override
         public synchronized void notifyEndOfStream(IInputChannel channel) {
-            eos = true;
+            eos.set(true);
             notifyAll();
         }
 
@@ -123,26 +126,22 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
                 channel.open();
                 mpw.open();
                 while (true) {
-                    int nAvailableFrames;
-                    boolean eos;
-                    boolean failed;
-                    synchronized (this) {
-                        nAvailableFrames = this.nAvailableFrames;
-                        eos = this.eos;
-                        failed = this.failed;
-                    }
-                    if (nAvailableFrames > 0) {
+                    if (nAvailableFrames.get() > 0) {
                         ByteBuffer buffer = channel.getNextBuffer();
-                        --nAvailableFrames;
+                        nAvailableFrames.decrementAndGet();
                         mpw.nextFrame(buffer);
                         channel.recycleBuffer(buffer);
-                    } else if (eos) {
+                    } else if (eos.get()) {
                         break;
-                    } else if (failed) {
+                    } else if (failed.get()) {
                         throw new HyracksDataException("Failure occurred on input");
                     } else {
                         try {
-                            wait();
+                            synchronized (this) {
+                                if (nAvailableFrames.get() <= 0 && !eos.get() && !failed.get()) {
+                                    wait();
+                                }
+                            }
                         } catch (InterruptedException e) {
                             throw new HyracksDataException(e);
                         }

@@ -89,8 +89,4 @@ public interface ILogicalOperator {
     public IPhysicalPropertiesVector getDeliveredPhysicalProperties();
 
     public void computeDeliveredPhysicalProperties(IOptimizationContext context) throws AlgebricksException;
-
-    public void setHostQueryContext(Object context);
-
-    public Object getHostQueryContext();
 }
