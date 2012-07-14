@@ -18,6 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -29,6 +30,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -115,6 +117,21 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
         // The assign now just "renames" the variable to make sure the upstream plan still works.
         srcAssignExprRef.setValue(new VariableReferenceExpression(aggVar));
 
+        // Create a new assign for a TRUE variable.
+        LogicalVariable trueVar = context.newVar();
+        AssignOperator trueAssignOp = new AssignOperator(trueVar, new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
+        
+        ILogicalOperator aggInput = aggOp.getInputs().get(0).getValue();
+        aggOp.getInputs().get(0).setValue(trueAssignOp);
+        trueAssignOp.getInputs().add(new MutableObject<ILogicalOperator>(aggInput));
+        
+        // Set partitioning variable.
+        aggOp.setPartitioningVariable(trueVar);
+        
+        context.computeAndSetTypeEnvironmentForOperator(trueAssignOp);
+        context.computeAndSetTypeEnvironmentForOperator(aggOp);
+        context.computeAndSetTypeEnvironmentForOperator(assignOp);
+        
         return true;
     }
 }
