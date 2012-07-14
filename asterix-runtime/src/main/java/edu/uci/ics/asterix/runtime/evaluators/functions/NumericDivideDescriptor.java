@@ -10,12 +10,12 @@ public class NumericDivideDescriptor extends AbstractNumericArithmeticEval {
 
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "numeric-divide",
-            2, true);
+            2);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new NumericDivideDescriptor();
         }
-    };    
+    };
 
     @Override
     public FunctionIdentifier getIdentifier() {
@@ -24,7 +24,7 @@ public class NumericDivideDescriptor extends AbstractNumericArithmeticEval {
 
     @Override
     protected long evaluateInteger(long lhs, long rhs) throws HyracksDataException {
-        if(rhs == 0)
+        if (rhs == 0)
             throw new HyracksDataException("Divide by Zero.");
         return lhs / rhs;
     }

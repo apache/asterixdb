@@ -25,66 +25,64 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- *
  * @author Xiaoyu Ma
  */
 public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "codepoint-to-string", 1,
-            true);
+    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "codepoint-to-string", 1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new CodePointToStringDescriptor();
         }
-    };    
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
+    };
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
-    private final static byte [] currentUTF8 = new byte[6];
-    private final byte stringTypeTag = ATypeTag.STRING.serialize();    
+    private final static byte[] currentUTF8 = new byte[6];
+    private final byte stringTypeTag = ATypeTag.STRING.serialize();
 
     @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
         return new ICopyEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
-            
+
             private int codePointToUTF8(int c) {
                 if (c < 0x80) {
-                    currentUTF8[0] = (byte)(c & 0x7F /*mask 7 lsb: 0b1111111 */);
+                    currentUTF8[0] = (byte) (c & 0x7F /*mask 7 lsb: 0b1111111 */);
                     return 1;
                 } else if (c < 0x0800) {
-                    currentUTF8[0] = (byte)(c >> 6  & 0x1F | 0xC0);
-                    currentUTF8[1] = (byte)(c       & 0x3F | 0x80);
+                    currentUTF8[0] = (byte) (c >> 6 & 0x1F | 0xC0);
+                    currentUTF8[1] = (byte) (c & 0x3F | 0x80);
                     return 2;
                 } else if (c < 0x010000) {
-                    currentUTF8[0] = (byte)(c >> 12 & 0x0F | 0xE0);
-                    currentUTF8[1] = (byte)(c >> 6  & 0x3F | 0x80);
-                    currentUTF8[2] = (byte)(c       & 0x3F | 0x80);
+                    currentUTF8[0] = (byte) (c >> 12 & 0x0F | 0xE0);
+                    currentUTF8[1] = (byte) (c >> 6 & 0x3F | 0x80);
+                    currentUTF8[2] = (byte) (c & 0x3F | 0x80);
                     return 3;
                 } else if (c < 0x200000) {
-                    currentUTF8[0] = (byte)(c >> 18 & 0x07 | 0xF0);
-                    currentUTF8[1] = (byte)(c >> 12 & 0x3F | 0x80);
-                    currentUTF8[2] = (byte)(c >> 6  & 0x3F | 0x80);
-                    currentUTF8[3] = (byte)(c       & 0x3F | 0x80);
+                    currentUTF8[0] = (byte) (c >> 18 & 0x07 | 0xF0);
+                    currentUTF8[1] = (byte) (c >> 12 & 0x3F | 0x80);
+                    currentUTF8[2] = (byte) (c >> 6 & 0x3F | 0x80);
+                    currentUTF8[3] = (byte) (c & 0x3F | 0x80);
                     return 4;
                 } else if (c < 0x4000000) {
-                    currentUTF8[0] = (byte)(c >> 24 & 0x03 | 0xF8);
-                    currentUTF8[1] = (byte)(c >> 18 & 0x3F | 0x80);
-                    currentUTF8[2] = (byte)(c >> 12 & 0x3F | 0x80);
-                    currentUTF8[3] = (byte)(c >> 6  & 0x3F | 0x80);
-                    currentUTF8[4] = (byte)(c       & 0x3F | 0x80);
+                    currentUTF8[0] = (byte) (c >> 24 & 0x03 | 0xF8);
+                    currentUTF8[1] = (byte) (c >> 18 & 0x3F | 0x80);
+                    currentUTF8[2] = (byte) (c >> 12 & 0x3F | 0x80);
+                    currentUTF8[3] = (byte) (c >> 6 & 0x3F | 0x80);
+                    currentUTF8[4] = (byte) (c & 0x3F | 0x80);
                     return 5;
                 } else if (c < 0x80000000) {
-                    currentUTF8[0] = (byte)(c >> 30 & 0x01 | 0xFC);
-                    currentUTF8[1] = (byte)(c >> 24 & 0x3F | 0x80);
-                    currentUTF8[2] = (byte)(c >> 18 & 0x3F | 0x80);
-                    currentUTF8[3] = (byte)(c >> 12 & 0x3F | 0x80);
-                    currentUTF8[4] = (byte)(c >> 6  & 0x3F | 0x80);
-                    currentUTF8[5] = (byte)(c       & 0x3F | 0x80);
+                    currentUTF8[0] = (byte) (c >> 30 & 0x01 | 0xFC);
+                    currentUTF8[1] = (byte) (c >> 24 & 0x3F | 0x80);
+                    currentUTF8[2] = (byte) (c >> 18 & 0x3F | 0x80);
+                    currentUTF8[3] = (byte) (c >> 12 & 0x3F | 0x80);
+                    currentUTF8[4] = (byte) (c >> 6 & 0x3F | 0x80);
+                    currentUTF8[5] = (byte) (c & 0x3F | 0x80);
                     return 6;
-                } 
+                }
                 return 0;
             }
 
@@ -97,7 +95,8 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                     private ArrayBackedValueStorage outInputList = new ArrayBackedValueStorage();
                     private ICopyEvaluator evalList = listEvalFactory.createEvaluator(outInputList);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);           
+                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -118,20 +117,22 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                                 // calculate length first
                                 int utf_8_len = 0;
                                 for (int i = 0; i < size; i++) {
-                                    int itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serOrderedList, i);
+                                    int itemOffset = AOrderedListSerializerDeserializer
+                                            .getItemOffset(serOrderedList, i);
                                     int codePoint = AInt32SerializerDeserializer.getInt(serOrderedList, itemOffset);
                                     utf_8_len += codePointToUTF8(codePoint);
                                 }
                                 out.writeByte(stringTypeTag);
-                                StringUtils.writeUTF8Len(utf_8_len, out);                                
+                                StringUtils.writeUTF8Len(utf_8_len, out);
                                 for (int i = 0; i < size; i++) {
-                                    int itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serOrderedList, i);
+                                    int itemOffset = AOrderedListSerializerDeserializer
+                                            .getItemOffset(serOrderedList, i);
                                     int codePoint = AInt32SerializerDeserializer.getInt(serOrderedList, itemOffset);
                                     utf_8_len = codePointToUTF8(codePoint);
-                                    for(int j = 0; j < utf_8_len; j++) {
+                                    for (int j = 0; j < utf_8_len; j++) {
                                         out.writeByte(currentUTF8[j]);
                                     }
-                                }                                
+                                }
                             } catch (AsterixException ex) {
                                 throw new AlgebricksException(ex);
                             }

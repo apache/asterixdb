@@ -4,6 +4,12 @@
  */
 package edu.uci.ics.asterix.runtime.evaluators.functions;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.common.utils.UTF8CharSequence;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
@@ -13,10 +19,8 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
@@ -25,26 +29,20 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
- *
  * @author Xiaoyu Ma
  */
 public class StringMatchesWithFlagDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "matches2", 2,
-            true);
+    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "matches2", 2);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new StringMatchesWithFlagDescriptor();
         }
     };
+
     @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
 
@@ -65,54 +63,54 @@ public class StringMatchesWithFlagDescriptor extends AbstractScalarFunctionDynam
                     private int flags = 0;
                     private ByteArrayAccessibleOutputStream lastPattern = new ByteArrayAccessibleOutputStream();
                     private ByteArrayAccessibleOutputStream lastFlags = new ByteArrayAccessibleOutputStream();
-                    private IBinaryComparator strComp = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(BuiltinType.ASTRING, true).createBinaryComparator();
+                    private IBinaryComparator strComp = AqlBinaryComparatorFactoryProvider.INSTANCE
+                            .getBinaryComparatorFactory(BuiltinType.ASTRING, true).createBinaryComparator();
                     private UTF8CharSequence carSeq = new UTF8CharSequence();
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
-                    
+                    private ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.ASTRING);
 
                     @Override
-                    protected boolean compute(byte[] b0, int l0, int s0,
-                            byte[] b1, int l1, int s1, byte[] b2, int l2, int s2,
-                            ArrayBackedValueStorage array0, ArrayBackedValueStorage array1)
+                    protected boolean compute(byte[] b0, int l0, int s0, byte[] b1, int l1, int s1, byte[] b2, int l2,
+                            int s2, ArrayBackedValueStorage array0, ArrayBackedValueStorage array1)
                             throws AlgebricksException {
                         try {
                             boolean newPattern = false;
                             boolean newFlags = false;
-                            
+
                             AString astrPattern;
                             AString astrFlags;
-                            
+
                             if (pattern == null) {
                                 newPattern = true;
                                 newFlags = true;
                             } else {
-                                int c = strComp.compare(b1, s1, l1,
-                                        lastPattern.getByteArray(), 0, lastPattern.size());
+                                int c = strComp.compare(b1, s1, l1, lastPattern.getByteArray(), 0, lastPattern.size());
                                 if (c != 0) {
                                     newPattern = true;
-                                } 
-                                
-                                c = strComp.compare(b2, s2, l2,
-                                        lastFlags.getByteArray(), 0, lastFlags.size());
+                                }
+
+                                c = strComp.compare(b2, s2, l2, lastFlags.getByteArray(), 0, lastFlags.size());
                                 if (c != 0) {
                                     newFlags = true;
-                                }                                 
+                                }
                             }
                             if (newPattern) {
                                 lastPattern.reset();
-                                lastPattern.write(b1, s1, l1);                                
+                                lastPattern.write(b1, s1, l1);
                                 // ! object creation !
-                                DataInputStream di = new DataInputStream(new ByteArrayInputStream(lastPattern.getByteArray()));
+                                DataInputStream di = new DataInputStream(new ByteArrayInputStream(
+                                        lastPattern.getByteArray()));
                                 astrPattern = (AString) stringSerde.deserialize(di);
                                 // strPattern = toRegex(astrPattern);
                                 strPattern = astrPattern.getStringValue();
-                            }                        
+                            }
                             if (newFlags) {
                                 lastFlags.reset();
-                                lastFlags.write(b2, s2, l2);                                
+                                lastFlags.write(b2, s2, l2);
                                 // ! object creation !
-                                DataInputStream di = new DataInputStream(new ByteArrayInputStream(lastFlags.getByteArray()));
+                                DataInputStream di = new DataInputStream(new ByteArrayInputStream(
+                                        lastFlags.getByteArray()));
                                 astrFlags = (AString) stringSerde.deserialize(di);
                                 flags = toFlag(astrFlags);
                             }

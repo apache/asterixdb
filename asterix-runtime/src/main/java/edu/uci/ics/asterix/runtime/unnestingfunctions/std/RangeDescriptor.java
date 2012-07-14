@@ -26,13 +26,13 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
 
     private static final long serialVersionUID = 1L;
 
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "range", 2, true);
+    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "range", 2);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new RangeDescriptor();
         }
     };
-    
+
     @Override
     public FunctionIdentifier getIdentifier() {
         return FID;

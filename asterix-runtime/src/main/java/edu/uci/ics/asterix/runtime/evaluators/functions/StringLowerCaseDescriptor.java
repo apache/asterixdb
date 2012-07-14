@@ -10,7 +10,6 @@ import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -23,14 +22,12 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- *
  * @author Xiaoyu Ma
  */
 public class StringLowerCaseDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "lowercase", 1,
-            true);
+    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "lowercase", 1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new StringLowerCaseDescriptor();
@@ -53,7 +50,7 @@ public class StringLowerCaseDescriptor extends AbstractScalarFunctionDynamicDesc
                     private ICopyEvaluator eval = args[0].createEvaluator(outInput);
                     private String errorMessage = "This is not an instance of string";
                     private final byte stt = ATypeTag.STRING.serialize();
-                    
+
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
@@ -65,14 +62,14 @@ public class StringLowerCaseDescriptor extends AbstractScalarFunctionDynamicDesc
                             outInput.reset();
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
-                            
+
                             if (serString[0] == SER_STRING_TYPE_TAG) {
                                 byte[] bytes = outInput.getByteArray();
                                 int len = UTF8StringPointable.getUTFLength(bytes, 1);
-                                
+
                                 out.writeByte(stt);
                                 StringUtils.writeUTF8Len(len, out);
-                                
+
                                 int pos = 3;
                                 while (pos < len + 3) {
                                     char c1 = UTF8StringPointable.charAt(bytes, pos);
@@ -97,5 +94,5 @@ public class StringLowerCaseDescriptor extends AbstractScalarFunctionDynamicDesc
     public FunctionIdentifier getIdentifier() {
         return FID;
     }
-    
+
 }

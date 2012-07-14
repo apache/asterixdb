@@ -38,7 +38,7 @@ public class NumericSubtractDescriptor extends AbstractScalarFunctionDynamicDesc
 
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "numeric-subtract", 2, true);
+            "numeric-subtract", 2);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new NumericSubtractDescriptor();
@@ -127,11 +127,10 @@ public class NumericSubtractDescriptor extends AbstractScalarFunctionDynamicDesc
                                         return;
                                     }
                                     default: {
-                                        throw new NotImplementedException(i == 0 ? "Left"
-                                                : "Right"
-                                                        + " Operand of Substraction can not be "
-                                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
-                                                                .getByteArray()[0]));
+                                        throw new NotImplementedException(i == 0 ? "Left" : "Right"
+                                                + " Operand of Substraction can not be "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
+                                                        .getByteArray()[0]));
                                     }
                                 }
                             }

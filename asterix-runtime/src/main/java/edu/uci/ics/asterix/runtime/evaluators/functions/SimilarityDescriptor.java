@@ -35,8 +35,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "similarity", 7,
-            true);
+    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "similarity", 7);
 
     private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
     private final static byte SER_UNORDEREDLIST_TYPE_TAG = ATypeTag.UNORDEREDLIST.serialize();
@@ -122,8 +121,8 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
 
                             int lengthTokens1;
                             if (serList[0] == SER_ORDEREDLIST_TYPE_TAG) {
-                                lengthTokens1 = AOrderedListSerializerDeserializer
-                                        .getNumberOfItems(inputVal.getByteArray());
+                                lengthTokens1 = AOrderedListSerializerDeserializer.getNumberOfItems(inputVal
+                                        .getByteArray());
                                 // read tokens
                                 for (i = 0; i < lengthTokens1; i++) {
                                     int itemOffset;
@@ -166,8 +165,8 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
 
                             int lengthTokens2;
                             if (serList[0] == SER_ORDEREDLIST_TYPE_TAG) {
-                                lengthTokens2 = AOrderedListSerializerDeserializer
-                                        .getNumberOfItems(inputVal.getByteArray());
+                                lengthTokens2 = AOrderedListSerializerDeserializer.getNumberOfItems(inputVal
+                                        .getByteArray());
                                 // read tokens
                                 for (i = 0; i < lengthTokens2; i++) {
                                     int itemOffset;

@@ -10,12 +10,13 @@ public class NumericMultiplyDescriptor extends AbstractNumericArithmeticEval {
 
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "numeric-multiply", 2, true);
+            "numeric-multiply", 2);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new NumericMultiplyDescriptor();
         }
     };
+
     @Override
     public FunctionIdentifier getIdentifier() {
         return FID;
@@ -27,10 +28,9 @@ public class NumericMultiplyDescriptor extends AbstractNumericArithmeticEval {
         int signRhs = rhs > 0 ? 1 : (rhs < 0 ? -1 : 0);
         long maximum = signLhs == signRhs ? Long.MAX_VALUE : Long.MIN_VALUE;
 
-        if (lhs != 0 && (rhs > 0 && rhs > maximum / lhs ||
-                       rhs < 0 && rhs < maximum / lhs))
+        if (lhs != 0 && (rhs > 0 && rhs > maximum / lhs || rhs < 0 && rhs < maximum / lhs))
             throw new HyracksDataException("Overflow Happened.");
-        
+
         return lhs * rhs;
     }
 
@@ -40,10 +40,9 @@ public class NumericMultiplyDescriptor extends AbstractNumericArithmeticEval {
         int signRhs = rhs > 0 ? 1 : (rhs < 0 ? -1 : 0);
         double maximum = signLhs == signRhs ? Double.MAX_VALUE : -Double.MAX_VALUE;
 
-        if (lhs != 0 && (rhs > 0 && rhs > maximum / lhs ||
-                       rhs < 0 && rhs < maximum / lhs))
+        if (lhs != 0 && (rhs > 0 && rhs > maximum / lhs || rhs < 0 && rhs < maximum / lhs))
             throw new HyracksDataException("Overflow Happened.");
-        
+
         return lhs * rhs;
     }
 }

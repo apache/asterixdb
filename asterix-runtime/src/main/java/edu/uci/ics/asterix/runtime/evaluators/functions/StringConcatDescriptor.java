@@ -13,7 +13,6 @@ import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -26,29 +25,27 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- *
  * @author Xiaoyu Ma
  */
 public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "string-concat", 1,
-            true);
+    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "string-concat",
+            1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new StringConcatDescriptor();
         }
-    };    
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
+    };
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
-    private final byte stringTypeTag = ATypeTag.STRING.serialize();    
+    private final byte stringTypeTag = ATypeTag.STRING.serialize();
 
     @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
         return new ICopyEvaluatorFactory() {
 
-            private static final long serialVersionUID = 1L;        
+            private static final long serialVersionUID = 1L;
 
             @Override
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
@@ -59,7 +56,8 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                     private ArrayBackedValueStorage outInputList = new ArrayBackedValueStorage();
                     private ICopyEvaluator evalList = listEvalFactory.createEvaluator(outInputList);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);           
+                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -80,18 +78,20 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                 // calculate length first
                                 int utf_8_len = 0;
                                 for (int i = 0; i < size; i++) {
-                                    int itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serOrderedList, i);                                                                        
-                                    utf_8_len += UTF8StringPointable.getUTFLength(serOrderedList, itemOffset);                                    
-                                }                               
+                                    int itemOffset = AOrderedListSerializerDeserializer
+                                            .getItemOffset(serOrderedList, i);
+                                    utf_8_len += UTF8StringPointable.getUTFLength(serOrderedList, itemOffset);
+                                }
                                 out.writeByte(stringTypeTag);
-                                StringUtils.writeUTF8Len(utf_8_len, out);                                                                 
+                                StringUtils.writeUTF8Len(utf_8_len, out);
                                 for (int i = 0; i < size; i++) {
-                                    int itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serOrderedList, i);
-                                    utf_8_len = UTF8StringPointable.getUTFLength(serOrderedList, itemOffset);        
-                                    for(int j = 0; j < utf_8_len; j++) {
+                                    int itemOffset = AOrderedListSerializerDeserializer
+                                            .getItemOffset(serOrderedList, i);
+                                    utf_8_len = UTF8StringPointable.getUTFLength(serOrderedList, itemOffset);
+                                    for (int j = 0; j < utf_8_len; j++) {
                                         out.writeByte(serOrderedList[2 + itemOffset + j]);
                                     }
-                                }                                
+                                }
                             } catch (AsterixException ex) {
                                 throw new AlgebricksException(ex);
                             }

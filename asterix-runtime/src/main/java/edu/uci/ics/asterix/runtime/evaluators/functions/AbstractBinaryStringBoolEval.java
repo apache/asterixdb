@@ -25,8 +25,9 @@ public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
     private ArrayBackedValueStorage array1 = new ArrayBackedValueStorage();
     private ICopyEvaluator evalLeft;
     private ICopyEvaluator evalRight;
-    @SuppressWarnings("unchecked")
-    private ISerializerDeserializer boolSerde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
+    @SuppressWarnings({ "rawtypes" })
+    private ISerializerDeserializer boolSerde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     public AbstractBinaryStringBoolEval(DataOutput dout, ICopyEvaluatorFactory evalLeftFactory,
             ICopyEvaluatorFactory evalRightFactory) throws AlgebricksException {
@@ -44,16 +45,14 @@ public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
         evalRight.evaluate(tuple);
 
         try {
-            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG
-                    && array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG && array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
                 try {
                     boolSerde.serialize(ABoolean.TRUE, dout);
                 } catch (HyracksDataException ex) {
                     Logger.getLogger(AbstractBinaryStringBoolEval.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 return;
-            } else if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG
-                    || array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+            } else if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG || array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
                 boolSerde.serialize(ABoolean.FALSE, dout);
                 return;
             }
@@ -69,9 +68,7 @@ public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
 
         int lStart = array0.getStartOffset();
         int rStart = array1.getStartOffset();
-        ABoolean res = compute(b1, lLen, lStart,
-                b2, rLen, rStart,
-                array0, array1) ? ABoolean.TRUE : ABoolean.FALSE;
+        ABoolean res = compute(b1, lLen, lStart, b2, rLen, rStart, array0, array1) ? ABoolean.TRUE : ABoolean.FALSE;
         try {
             boolSerde.serialize(res, dout);
         } catch (HyracksDataException e) {
@@ -79,17 +76,15 @@ public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
         }
     }
 
-    protected abstract boolean compute(byte[] lBytes, int lLen, int lStart,
-            byte[] rBytes, int rLen, int rStart, 
-            ArrayBackedValueStorage array0, ArrayBackedValueStorage array1)  throws AlgebricksException;
+    protected abstract boolean compute(byte[] lBytes, int lLen, int lStart, byte[] rBytes, int rLen, int rStart,
+            ArrayBackedValueStorage array0, ArrayBackedValueStorage array1) throws AlgebricksException;
 
     protected String toRegex(AString pattern) {
         StringBuilder sb = new StringBuilder();
         String str = pattern.getStringValue();
         for (int i = 0; i < str.length(); i++) {
             char c = str.charAt(i);
-            if (c == '\\' && (i < str.length() - 1)
-                    && (str.charAt(i + 1) == '_' || str.charAt(i + 1) == '%')) {
+            if (c == '\\' && (i < str.length() - 1) && (str.charAt(i + 1) == '_' || str.charAt(i + 1) == '%')) {
                 sb.append(str.charAt(i + 1));
                 ++i;
             } else if (c == '%') {
@@ -105,9 +100,10 @@ public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
         }
         return sb.toString();
     }
-    
-    private final static char[] reservedRegexChars = new char[] { '\\', '(', ')', '[', ']', '{', '}', '.', '^', '$', '*', '|' };
+
+    private final static char[] reservedRegexChars = new char[] { '\\', '(', ')', '[', ']', '{', '}', '.', '^', '$',
+            '*', '|' };
     static {
         Arrays.sort(reservedRegexChars);
-    }    
+    }
 }

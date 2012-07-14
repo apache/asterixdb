@@ -77,19 +77,17 @@ public class FunctionUtils {
     public static IFunctionInfo getFunctionInfo(MetadataTransactionContext mdTxnCtx, String dataverseName,
             AsterixFunction asterixFunction) throws MetadataException {
         FunctionIdentifier fid = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-                asterixFunction.getFunctionName(), asterixFunction.getArity(), true);
+                asterixFunction.getFunctionName(), asterixFunction.getArity());
         IFunctionInfo finfo = AsterixBuiltinFunctions.getAsterixFunctionInfo(fid);
         if (fid == null) {
             fid = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, asterixFunction.getFunctionName(),
-                    asterixFunction.getArity(), true);
+                    asterixFunction.getArity());
         }
         if (fid == null) {
-            Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, dataverseName, asterixFunction
-                    .getFunctionName(), asterixFunction.getArity());
+            Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, dataverseName,
+                    asterixFunction.getFunctionName(), asterixFunction.getArity());
             if (function != null) {
-                finfo = new AsterixFunctionInfo(dataverseName, asterixFunction, false);
-                // todo: for external functions, we shall construct another kind of function info (that extends AsterixFunctionInfo)
-                // and has additional information.
+                finfo = new AsterixFunctionInfo(dataverseName, asterixFunction);
             }
         }
         return finfo; // could be null

@@ -29,7 +29,7 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
 
     private static final long serialVersionUID = 1L;
     private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "any-collection-member", 1, true);
+            "any-collection-member", 1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new AnyCollectionMemberDescriptor();

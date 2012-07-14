@@ -32,3 +32,8 @@ open-closed/open-closed-30
 open-closed/heterog-list02
 open-closed/heterog-list03
 open-closed/c2c
+quantifiers/somesat_03.aql
+quantifiers/somesat_04.aql
+quantifiers/somesat_05.aql
+quantifiers/everysat_02.aql
+quantifiers/everysat_03.aql

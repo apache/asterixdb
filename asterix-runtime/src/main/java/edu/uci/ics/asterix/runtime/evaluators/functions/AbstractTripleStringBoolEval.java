@@ -17,7 +17,6 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 
 /**
- *
  * @author Xiaoyu Ma
  */
 public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
@@ -30,11 +29,12 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
     private ICopyEvaluator eval0;
     private ICopyEvaluator eval1;
     private ICopyEvaluator eval2;
-    @SuppressWarnings("unchecked")
-    private ISerializerDeserializer boolSerde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
+    @SuppressWarnings("rawtypes")
+    private ISerializerDeserializer boolSerde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
-    public AbstractTripleStringBoolEval(DataOutput dout, ICopyEvaluatorFactory eval0,
-            ICopyEvaluatorFactory eval1, ICopyEvaluatorFactory eval2) throws AlgebricksException {
+    public AbstractTripleStringBoolEval(DataOutput dout, ICopyEvaluatorFactory eval0, ICopyEvaluatorFactory eval1,
+            ICopyEvaluatorFactory eval2) throws AlgebricksException {
         this.dout = dout;
         this.eval0 = eval0.createEvaluator(array0);
         this.eval1 = eval1.createEvaluator(array1);
@@ -52,12 +52,10 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
         eval2.evaluate(tuple);
 
         try {
-            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG
-                    && array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG && array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
                 boolSerde.serialize(ABoolean.TRUE, dout);
                 return;
-            } else if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG
-                    || array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+            } else if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG || array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
                 boolSerde.serialize(ABoolean.FALSE, dout);
                 return;
             }
@@ -77,9 +75,8 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
         int s1 = array1.getStartOffset();
         int s2 = array2.getStartOffset();
 
-        ABoolean res = compute(b0, len0, s0,
-                b1, len1, s1, b2, len2, s2,
-                array0, array1) ? ABoolean.TRUE : ABoolean.FALSE;
+        ABoolean res = compute(b0, len0, s0, b1, len1, s1, b2, len2, s2, array0, array1) ? ABoolean.TRUE
+                : ABoolean.FALSE;
         try {
             boolSerde.serialize(res, dout);
         } catch (HyracksDataException e) {
@@ -87,8 +84,7 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
         }
     }
 
-    protected abstract boolean compute(byte[] b0, int l0, int s0,
-            byte[] b1, int l1, int s1, byte[] b2, int l2, int s2,
+    protected abstract boolean compute(byte[] b0, int l0, int s0, byte[] b1, int l1, int s1, byte[] b2, int l2, int s2,
             ArrayBackedValueStorage array0, ArrayBackedValueStorage array1) throws AlgebricksException;
 
     protected String toRegex(AString pattern) {
@@ -96,8 +92,7 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
         String str = pattern.getStringValue();
         for (int i = 0; i < str.length(); i++) {
             char c = str.charAt(i);
-            if (c == '\\' && (i < str.length() - 1)
-                    && (str.charAt(i + 1) == '_' || str.charAt(i + 1) == '%')) {
+            if (c == '\\' && (i < str.length() - 1) && (str.charAt(i + 1) == '_' || str.charAt(i + 1) == '%')) {
                 sb.append(str.charAt(i + 1));
                 ++i;
             } else if (c == '%') {
@@ -113,13 +108,13 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
         }
         return sb.toString();
     }
-    
+
     protected int toFlag(AString pattern) {
         String str = pattern.getStringValue();
         int flag = 0;
         for (int i = 0; i < str.length(); i++) {
             char c = str.charAt(i);
-            switch(c) {
+            switch (c) {
                 case 's':
                     flag |= Pattern.DOTALL;
                     break;
@@ -135,9 +130,10 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
             }
         }
         return flag;
-    }    
-    
-    private final static char[] reservedRegexChars = new char[]{'\\', '(', ')', '[', ']', '{', '}', '.', '^', '$', '*', '|'};
+    }
+
+    private final static char[] reservedRegexChars = new char[] { '\\', '(', ')', '[', ']', '{', '}', '.', '^', '$',
+            '*', '|' };
 
     static {
         Arrays.sort(reservedRegexChars);

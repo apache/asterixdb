@@ -22,7 +22,7 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
 
     private static final long serialVersionUID = 1L;
     private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "unordered-list-constructor", FunctionIdentifier.VARARGS, true);
+            "unordered-list-constructor", FunctionIdentifier.VARARGS);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new UnorderedListConstructorDescriptor();

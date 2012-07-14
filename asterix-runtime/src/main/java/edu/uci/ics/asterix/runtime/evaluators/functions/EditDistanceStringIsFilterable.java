@@ -34,7 +34,7 @@ public class EditDistanceStringIsFilterable extends AbstractScalarFunctionDynami
 
     private static final long serialVersionUID = 1L;
     private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "edit-distance-string-is-filterable", 4, true);
+            "edit-distance-string-is-filterable", 4);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new EditDistanceStringIsFilterable();
@@ -59,15 +59,15 @@ public class EditDistanceStringIsFilterable extends AbstractScalarFunctionDynami
     }
 
     private static class EditDistanceStringIsFilterableEvaluator implements ICopyEvaluator {
-    	
+
         protected final ArrayBackedValueStorage argBuf = new ArrayBackedValueStorage();
         protected final IDataOutputProvider output;
-        
+
         protected final ICopyEvaluator stringEval;
         protected final ICopyEvaluator edThreshEval;
         protected final ICopyEvaluator gramLenEval;
-        protected final ICopyEvaluator usePrePostEval;        
-    	
+        protected final ICopyEvaluator usePrePostEval;
+
         @SuppressWarnings("unchecked")
         private final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.ABOOLEAN);
@@ -76,59 +76,63 @@ public class EditDistanceStringIsFilterable extends AbstractScalarFunctionDynami
                 throws AlgebricksException {
             this.output = output;
             stringEval = args[0].createEvaluator(argBuf);
-        	edThreshEval = args[1].createEvaluator(argBuf);
-        	gramLenEval = args[2].createEvaluator(argBuf);
-        	usePrePostEval = args[3].createEvaluator(argBuf);
+            edThreshEval = args[1].createEvaluator(argBuf);
+            gramLenEval = args[2].createEvaluator(argBuf);
+            usePrePostEval = args[3].createEvaluator(argBuf);
         }
 
-		@Override
-		public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-			ATypeTag typeTag = null;
-			
-			// Check type and compute string length.
-			argBuf.reset();
-			stringEval.evaluate(tuple);
-			typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
-			if (!typeTag.equals(ATypeTag.STRING)) {
-				throw new AlgebricksException("Expected type 'STRING' as first argument. Encountered '" + typeTag.toString() + "'.");
-			}
-			int utf8Length = UTF8StringPointable.getUTFLength(argBuf.getByteArray(), 1); 
-			int pos = 3;
-			int strLen = 0;	        
-	        int end = pos + utf8Length;
-	        while (pos < end) {
-	        	strLen++;
-	            pos += UTF8StringPointable.charSize(argBuf.getByteArray(), pos);
-	        }
-			
-	        // Check type and extract edit-distance threshold.
-	        argBuf.reset();
-	        edThreshEval.evaluate(tuple);
-			typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
-			if (!typeTag.equals(ATypeTag.INT32)) {
-				throw new AlgebricksException("Expected type 'INT32' as second argument. Encountered '" + typeTag.toString() + "'.");
-			}
-			int edThresh = IntegerSerializerDeserializer.getInt(argBuf.getByteArray(), 1);
-			
-	        // Check type and extract gram length.
-			argBuf.reset();
-			gramLenEval.evaluate(tuple);
-			typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
-			if (!typeTag.equals(ATypeTag.INT32)) {
-				throw new AlgebricksException("Expected type 'INT32' as third argument. Encountered '" + typeTag.toString() + "'.");
-			}
-			int gramLen = IntegerSerializerDeserializer.getInt(argBuf.getByteArray(), 1);
-			
-			// Check type and extract usePrePost flag.
-			argBuf.reset();
-			usePrePostEval.evaluate(tuple);
-			typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
-			if (!typeTag.equals(ATypeTag.BOOLEAN)) {
-				throw new AlgebricksException("Expected type 'BOOLEAN' as fourth argument. Encountered '" + typeTag.toString() + "'.");
-			}
-			boolean usePrePost = BooleanSerializerDeserializer.getBoolean(argBuf.getByteArray(), 1);
-			
-			// Compute result.			
+        @Override
+        public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+            ATypeTag typeTag = null;
+
+            // Check type and compute string length.
+            argBuf.reset();
+            stringEval.evaluate(tuple);
+            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
+            if (!typeTag.equals(ATypeTag.STRING)) {
+                throw new AlgebricksException("Expected type 'STRING' as first argument. Encountered '"
+                        + typeTag.toString() + "'.");
+            }
+            int utf8Length = UTF8StringPointable.getUTFLength(argBuf.getByteArray(), 1);
+            int pos = 3;
+            int strLen = 0;
+            int end = pos + utf8Length;
+            while (pos < end) {
+                strLen++;
+                pos += UTF8StringPointable.charSize(argBuf.getByteArray(), pos);
+            }
+
+            // Check type and extract edit-distance threshold.
+            argBuf.reset();
+            edThreshEval.evaluate(tuple);
+            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
+            if (!typeTag.equals(ATypeTag.INT32)) {
+                throw new AlgebricksException("Expected type 'INT32' as second argument. Encountered '"
+                        + typeTag.toString() + "'.");
+            }
+            int edThresh = IntegerSerializerDeserializer.getInt(argBuf.getByteArray(), 1);
+
+            // Check type and extract gram length.
+            argBuf.reset();
+            gramLenEval.evaluate(tuple);
+            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
+            if (!typeTag.equals(ATypeTag.INT32)) {
+                throw new AlgebricksException("Expected type 'INT32' as third argument. Encountered '"
+                        + typeTag.toString() + "'.");
+            }
+            int gramLen = IntegerSerializerDeserializer.getInt(argBuf.getByteArray(), 1);
+
+            // Check type and extract usePrePost flag.
+            argBuf.reset();
+            usePrePostEval.evaluate(tuple);
+            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
+            if (!typeTag.equals(ATypeTag.BOOLEAN)) {
+                throw new AlgebricksException("Expected type 'BOOLEAN' as fourth argument. Encountered '"
+                        + typeTag.toString() + "'.");
+            }
+            boolean usePrePost = BooleanSerializerDeserializer.getBoolean(argBuf.getByteArray(), 1);
+
+            // Compute result.			
             int numGrams = (usePrePost) ? strLen + gramLen - 1 : strLen - gramLen + 1;
             int lowerBound = numGrams - edThresh * gramLen;
             try {
@@ -140,6 +144,6 @@ public class EditDistanceStringIsFilterable extends AbstractScalarFunctionDynami
             } catch (IOException e) {
                 throw new AlgebricksException(e);
             }
-		}
+        }
     }
 }

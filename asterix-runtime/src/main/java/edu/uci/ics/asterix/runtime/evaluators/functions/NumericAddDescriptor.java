@@ -10,30 +10,28 @@ public class NumericAddDescriptor extends AbstractNumericArithmeticEval {
 
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS,
-            "numeric-add", 2, true);
+            "numeric-add", 2);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new NumericAddDescriptor();
         }
-    };    
+    };
 
     @Override
     public FunctionIdentifier getIdentifier() {
         return FID;
     }
 
-    
     @Override
-    protected long evaluateInteger(long x, long y)  throws HyracksDataException {
-        long z = x + y;  
-        if (x > 0) {  
-            if (y > 0 && z < 0)  
-                throw new ArithmeticException("Overflow adding " + x + " + " + y);  
-        } else if (y < 0 && z > 0)  
-            throw new ArithmeticException("Overflow adding " + x + " + " + y);  
-        return z;  
-    }    
-
+    protected long evaluateInteger(long x, long y) throws HyracksDataException {
+        long z = x + y;
+        if (x > 0) {
+            if (y > 0 && z < 0)
+                throw new ArithmeticException("Overflow adding " + x + " + " + y);
+        } else if (y < 0 && z > 0)
+            throw new ArithmeticException("Overflow adding " + x + " + " + y);
+        return z;
+    }
 
     @Override
     protected double evaluateDouble(double lhs, double rhs) throws HyracksDataException {

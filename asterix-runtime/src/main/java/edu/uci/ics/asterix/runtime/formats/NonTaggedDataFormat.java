@@ -109,6 +109,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.LikeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NotDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericAddDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericDivideDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericModuloDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericMultiplyDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericSubtractDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericUnaryMinusDescriptor;
@@ -260,6 +261,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(NumericDivideDescriptor.FACTORY);
         temp.add(NumericMultiplyDescriptor.FACTORY);
         temp.add(NumericSubtractDescriptor.FACTORY);
+        temp.add(NumericModuloDescriptor.FACTORY);
         temp.add(IsNullDescriptor.FACTORY);
         temp.add(NotDescriptor.FACTORY);
         temp.add(LenDescriptor.FACTORY);

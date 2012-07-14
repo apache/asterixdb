@@ -5,7 +5,6 @@
  */
 package edu.uci.ics.asterix.runtime.evaluators.functions;
 
-
 import java.io.DataOutput;
 
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
@@ -41,19 +40,19 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class NumericRoundDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "numeric-round", 1, true);
+    private static final long serialVersionUID = 1L;
+    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "numeric-round",
+            1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new NumericRoundDescriptor();
         }
-    };    
+    };
+
     @Override
     public FunctionIdentifier getIdentifier() {
         return FID;
-    }    
-    
+    }
 
     @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
@@ -75,14 +74,14 @@ public class NumericRoundDescriptor extends AbstractScalarFunctionDynamicDescrip
                     private byte serInt64TypeTag = ATypeTag.INT64.serialize();
                     private byte serFloatTypeTag = ATypeTag.FLOAT.serialize();
                     private byte serDoubleTypeTag = ATypeTag.DOUBLE.serialize();
-                    
+
                     private AMutableDouble aDouble = new AMutableDouble(0);
                     private AMutableFloat aFloat = new AMutableFloat(0);
                     private AMutableInt64 aInt64 = new AMutableInt64(0);
                     private AMutableInt32 aInt32 = new AMutableInt32(0);
                     private AMutableInt16 aInt16 = new AMutableInt16((short) 0);
                     private AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
-                    @SuppressWarnings("unchecked")
+                    @SuppressWarnings("rawtypes")
                     private ISerializerDeserializer serde;
 
                     @SuppressWarnings("unchecked")
@@ -98,40 +97,40 @@ public class NumericRoundDescriptor extends AbstractScalarFunctionDynamicDescrip
                             } else if (argOut.getByteArray()[0] == serInt8TypeTag) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT8);
-                                byte val = (byte)AInt8SerializerDeserializer.getByte(argOut.getByteArray(), 1);
+                                byte val = (byte) AInt8SerializerDeserializer.getByte(argOut.getByteArray(), 1);
                                 aInt8.setValue(val);
                                 serde.serialize(aInt8, out);
                             } else if (argOut.getByteArray()[0] == serInt16TypeTag) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT16);
-                                short val = (short)AInt16SerializerDeserializer.getShort(argOut.getByteArray(), 1);
+                                short val = (short) AInt16SerializerDeserializer.getShort(argOut.getByteArray(), 1);
                                 aInt16.setValue(val);
                                 serde.serialize(aInt16, out);
                             } else if (argOut.getByteArray()[0] == serInt32TypeTag) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT32);
-                                int val = (int)AInt32SerializerDeserializer.getInt(argOut.getByteArray(), 1);
+                                int val = (int) AInt32SerializerDeserializer.getInt(argOut.getByteArray(), 1);
                                 aInt32.setValue(val);
                                 serde.serialize(aInt32, out);
                             } else if (argOut.getByteArray()[0] == serInt64TypeTag) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT64);
-                                long val = (long)AInt64SerializerDeserializer.getLong(argOut.getByteArray(), 1);
-                                aInt64.setValue(val);                                
+                                long val = (long) AInt64SerializerDeserializer.getLong(argOut.getByteArray(), 1);
+                                aInt64.setValue(val);
                                 serde.serialize(aInt64, out);
                             } else if (argOut.getByteArray()[0] == serFloatTypeTag) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AFLOAT);
-                                float val = (float)AFloatSerializerDeserializer.getFloat(argOut.getByteArray(), 1);
+                                float val = (float) AFloatSerializerDeserializer.getFloat(argOut.getByteArray(), 1);
                                 val = Math.round(val);
-                                aFloat.setValue(val);                                 
+                                aFloat.setValue(val);
                                 serde.serialize(aFloat, out);
                             } else if (argOut.getByteArray()[0] == serDoubleTypeTag) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.ADOUBLE);
-                                double val = (double)ADoubleSerializerDeserializer.getDouble(argOut.getByteArray(), 1);
+                                double val = (double) ADoubleSerializerDeserializer.getDouble(argOut.getByteArray(), 1);
                                 val = Math.round(val);
-                                aDouble.setValue(val);                                     
+                                aDouble.setValue(val);
                                 serde.serialize(aDouble, out);
                             } else {
                                 throw new NotImplementedException("Numeric Round is not implemented for "
