@@ -20,8 +20,10 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class AsterixAppRuntimeContext {
+    private static final int DEFAULT_BUFFER_CACHE_PAGE_SIZE = 32768;
+
     private final INCApplicationContext ncApplicationContext;
-    
+
     private IndexRegistry<IIndex> indexRegistry;
     private IFileMapManager fileMapManager;
     private IBufferCache bufferCache;
@@ -52,7 +54,7 @@ public class AsterixAppRuntimeContext {
     }
 
     private int getBufferCachePageSize() {
-        int pageSize = ncApplicationContext.getRootContext().getFrameSize();
+        int pageSize = DEFAULT_BUFFER_CACHE_PAGE_SIZE;
         String pageSizeStr = System.getProperty(GlobalConfig.BUFFER_CACHE_PAGE_SIZE_PROPERTY, null);
         if (pageSizeStr != null) {
             try {
