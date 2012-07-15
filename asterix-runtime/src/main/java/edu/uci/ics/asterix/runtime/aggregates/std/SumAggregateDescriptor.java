@@ -185,6 +185,9 @@ public class SumAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
                                 aInt8.setValue((byte) sum);
                                 serde.serialize(aInt8, out);
                             } else {
+                            	serde = AqlSerializerDeserializerProvider.INSTANCE
+                                        .getSerializerDeserializer(BuiltinType.ANULL);
+                                serde.serialize(ANull.NULL, out);
                                 GlobalConfig.ASTERIX_LOGGER.fine("SUM aggregate ran over empty input.");
                             }
 
