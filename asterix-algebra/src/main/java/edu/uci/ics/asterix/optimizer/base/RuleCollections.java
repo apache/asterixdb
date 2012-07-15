@@ -63,6 +63,7 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.InsertOuterJoinRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.InsertProjectBeforeUnionRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroHashPartitionMergeExchange;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroJoinInsideSubplanRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceCombinerRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceGroupByForSubplanRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IsolateHyracksOperatorsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PullSelectOutOfEqJoin;
@@ -168,7 +169,7 @@ public final class RuleCollections {
         consolidation.add(new ConsolidateSelectsRule());
         consolidation.add(new ConsolidateAssignsRule());
         consolidation.add(new InlineAssignIntoAggregateRule());
-        //consolidation.add(new IntroduceCombinerRule());
+        consolidation.add(new IntroduceCombinerRule());
         consolidation.add(new CountVarToCountOneRule());
         consolidation.add(new IntroduceSelectAccessMethodRule());
         consolidation.add(new IntroduceJoinAccessMethodRule());
