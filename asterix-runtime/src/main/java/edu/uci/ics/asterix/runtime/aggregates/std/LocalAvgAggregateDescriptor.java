@@ -48,7 +48,7 @@ public class LocalAvgAggregateDescriptor extends AbstractAggregateFunctionDynami
 
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-avg",
-            1, true);
+            1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new LocalAvgAggregateDescriptor();
@@ -120,8 +120,8 @@ public class LocalAvgAggregateDescriptor extends AbstractAggregateFunctionDynami
                         eval.evaluate(tuple);
                         if (inputVal.getLength() > 0) {
                             ++count;
-                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                                    .deserialize(inputVal.getByteArray()[0]);
+                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal
+                                    .getByteArray()[0]);
                             switch (typeTag) {
                                 case INT8: {
                                     byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);

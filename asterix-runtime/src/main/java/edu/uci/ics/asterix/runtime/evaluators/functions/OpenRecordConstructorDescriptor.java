@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     protected static final FunctionIdentifier FID_OPEN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "open-record-constructor", FunctionIdentifier.VARARGS, true);
+            "open-record-constructor", FunctionIdentifier.VARARGS);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new OpenRecordConstructorDescriptor();

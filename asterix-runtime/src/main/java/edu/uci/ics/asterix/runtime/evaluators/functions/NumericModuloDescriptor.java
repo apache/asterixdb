@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2012 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
@@ -34,14 +48,16 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorag
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class NumericDivideDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+/**
+ * @author kisskys
+ */
+public class NumericModuloDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "numeric-divide",
-            2);
+    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "numeric-mod", 2);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new NumericDivideDescriptor();
+            return new NumericModuloDescriptor();
         }
     };
 
@@ -128,7 +144,7 @@ public class NumericDivideDescriptor extends AbstractScalarFunctionDynamicDescri
                                     }
                                     default: {
                                         throw new NotImplementedException(i == 0 ? "Left" : "Right"
-                                                + " Operand of Division can not be "
+                                                + " Operand of Modulo can not be "
                                                 + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
                                                         .getByteArray()[0]));
                                     }
@@ -138,32 +154,32 @@ public class NumericDivideDescriptor extends AbstractScalarFunctionDynamicDescri
                             if (metDouble) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.ADOUBLE);
-                                aDouble.setValue(operands[0] / operands[1]);
+                                aDouble.setValue(operands[0] % operands[1]);
                                 serde.serialize(aDouble, out);
                             } else if (metFloat) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AFLOAT);
-                                aFloat.setValue((float) (operands[0] / operands[1]));
+                                aFloat.setValue((float) (operands[0] % operands[1]));
                                 serde.serialize(aFloat, out);
                             } else if (metInt64) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT64);
-                                aInt64.setValue((long) (operands[0] / operands[1]));
+                                aInt64.setValue((long) (operands[0] % operands[1]));
                                 serde.serialize(aInt64, out);
                             } else if (metInt32) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT32);
-                                aInt32.setValue((int) (operands[0] / operands[1]));
+                                aInt32.setValue((int) (operands[0] % operands[1]));
                                 serde.serialize(aInt32, out);
                             } else if (metInt16) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT16);
-                                aInt16.setValue((short) (operands[0] / operands[1]));
+                                aInt16.setValue((short) (operands[0] % operands[1]));
                                 serde.serialize(aInt16, out);
                             } else if (metInt8) {
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT8);
-                                aInt8.setValue((byte) (operands[0] / operands[1]));
+                                aInt8.setValue((byte) (operands[0] % operands[1]));
                                 serde.serialize(aInt8, out);
                             }
 

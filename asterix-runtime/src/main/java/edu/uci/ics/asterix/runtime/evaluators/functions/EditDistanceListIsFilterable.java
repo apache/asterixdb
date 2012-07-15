@@ -34,7 +34,7 @@ public class EditDistanceListIsFilterable extends AbstractScalarFunctionDynamicD
 
     private static final long serialVersionUID = 1L;
     private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "edit-distance-list-is-filterable", 2, true);
+            "edit-distance-list-is-filterable", 2);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new EditDistanceListIsFilterable();
@@ -59,13 +59,13 @@ public class EditDistanceListIsFilterable extends AbstractScalarFunctionDynamicD
     }
 
     private static class EditDistanceListIsFilterableEvaluator implements ICopyEvaluator {
-    	
+
         protected final ArrayBackedValueStorage argBuf = new ArrayBackedValueStorage();
         protected final IDataOutputProvider output;
-        
+
         protected final ICopyEvaluator listEval;
         protected final ICopyEvaluator edThreshEval;
-    	
+
         @SuppressWarnings("unchecked")
         private final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.ABOOLEAN);
@@ -74,42 +74,45 @@ public class EditDistanceListIsFilterable extends AbstractScalarFunctionDynamicD
                 throws AlgebricksException {
             this.output = output;
             listEval = args[0].createEvaluator(argBuf);
-        	edThreshEval = args[1].createEvaluator(argBuf);
+            edThreshEval = args[1].createEvaluator(argBuf);
         }
 
-		@Override
-		public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-			ATypeTag typeTag = null;
-			
-			// Check type and compute string length.
-			argBuf.reset();
-			listEval.evaluate(tuple);
-			typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
-			int listLen = 0;
-			switch (typeTag) {
-			    case UNORDEREDLIST: {
-			        listLen = AUnorderedListSerializerDeserializer.getNumberOfItems(argBuf.getByteArray(), 0);
-			        break;
-			    }
-			    case ORDEREDLIST: {
-			        listLen = AOrderedListSerializerDeserializer.getNumberOfItems(argBuf.getByteArray(), 0);
-			        break;
-			    }
-			    default: {
-			        throw new AlgebricksException("Expected type 'ORDEREDLIST' or 'UNORDEREDLIST' as first argument. Encountered '" + typeTag.toString() + "'.");
-			    }
-			}
-			
-	        // Check type and extract edit-distance threshold.
-	        argBuf.reset();
-	        edThreshEval.evaluate(tuple);
-			typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
-			if (!typeTag.equals(ATypeTag.INT32)) {
-				throw new AlgebricksException("Expected type 'INT32' as second argument. Encountered '" + typeTag.toString() + "'.");
-			}
-			int edThresh = IntegerSerializerDeserializer.getInt(argBuf.getByteArray(), 1);
-			
-			// Compute result.
+        @Override
+        public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+            ATypeTag typeTag = null;
+
+            // Check type and compute string length.
+            argBuf.reset();
+            listEval.evaluate(tuple);
+            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
+            int listLen = 0;
+            switch (typeTag) {
+                case UNORDEREDLIST: {
+                    listLen = AUnorderedListSerializerDeserializer.getNumberOfItems(argBuf.getByteArray(), 0);
+                    break;
+                }
+                case ORDEREDLIST: {
+                    listLen = AOrderedListSerializerDeserializer.getNumberOfItems(argBuf.getByteArray(), 0);
+                    break;
+                }
+                default: {
+                    throw new AlgebricksException(
+                            "Expected type 'ORDEREDLIST' or 'UNORDEREDLIST' as first argument. Encountered '"
+                                    + typeTag.toString() + "'.");
+                }
+            }
+
+            // Check type and extract edit-distance threshold.
+            argBuf.reset();
+            edThreshEval.evaluate(tuple);
+            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
+            if (!typeTag.equals(ATypeTag.INT32)) {
+                throw new AlgebricksException("Expected type 'INT32' as second argument. Encountered '"
+                        + typeTag.toString() + "'.");
+            }
+            int edThresh = IntegerSerializerDeserializer.getInt(argBuf.getByteArray(), 1);
+
+            // Compute result.
             int lowerBound = listLen - edThresh;
             try {
                 if (lowerBound <= 0) {
@@ -120,6 +123,6 @@ public class EditDistanceListIsFilterable extends AbstractScalarFunctionDynamicD
             } catch (IOException e) {
                 throw new AlgebricksException(e);
             }
-		}
+        }
     }
 }

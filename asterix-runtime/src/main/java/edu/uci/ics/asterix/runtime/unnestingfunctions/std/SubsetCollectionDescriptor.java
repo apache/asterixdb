@@ -32,12 +32,12 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
 
     private static final long serialVersionUID = 1L;
     private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "subset-collection", 3, true);
+            "subset-collection", 3);
 
     private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
     private final static byte SER_UNORDEREDLIST_TYPE_TAG = ATypeTag.UNORDEREDLIST.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SubsetCollectionDescriptor();
@@ -51,7 +51,8 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyUnnestingFunction createUnnestingFunction(IDataOutputProvider provider) throws AlgebricksException {
+            public ICopyUnnestingFunction createUnnestingFunction(IDataOutputProvider provider)
+                    throws AlgebricksException {
 
                 final DataOutput out = provider.getDataOutput();
 

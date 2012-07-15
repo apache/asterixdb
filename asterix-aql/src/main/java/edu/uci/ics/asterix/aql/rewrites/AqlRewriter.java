@@ -83,7 +83,9 @@ public final class AqlRewriter {
     private String dataverseName;
 
     private enum DfsColor {
-        WHITE, GRAY, BLACK
+        WHITE,
+        GRAY,
+        BLACK
     }
 
     public AqlRewriter(Query topExpr, int varCounter, MetadataTransactionContext txnContext, String dataverseName) {
@@ -156,15 +158,15 @@ public final class AqlRewriter {
         List<AsterixFunction> functionCalls = getFunctionCalls(expression);
         for (AsterixFunction funId : functionCalls) {
             if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-                    funId.getFunctionName(), false))) {
+                    funId.getFunctionName()))) {
                 continue;
             }
 
-            if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS,
-                    funId.getFunctionName(), false))) {
+            if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(
+                    AlgebricksBuiltinFunctions.ALGEBRICKS_NS, funId.getFunctionName()))) {
                 continue;
             }
-            
+
             if (declaredFunctions != null && declaredFunctions.contains(funId)) {
                 continue;
             }
@@ -179,8 +181,8 @@ public final class AqlRewriter {
     }
 
     private FunctionDecl getFunctionDecl(AsterixFunction funId) throws AsterixException {
-        Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, dataverseName, funId.getFunctionName(), funId
-                .getArity());
+        Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, dataverseName, funId.getFunctionName(),
+                funId.getArity());
         if (function == null) {
             throw new AsterixException(" unknown function " + funId);
         }
