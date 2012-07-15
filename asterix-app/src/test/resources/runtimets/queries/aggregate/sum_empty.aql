@@ -1,0 +1,16 @@
+/*
+ * Description    : Tests that the sum aggregation correctly returns null for an empty stream.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/aggregate_sum_empty.adm";
+
+sum(
+ for $x in [1, 2, 3]
+ where $x > 10
+ return $x
+)

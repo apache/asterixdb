@@ -1,0 +1,23 @@
+/*
+ * Description    : Tests that existential quantification returns true/false correctly.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/quantifiers_somesat_03.adm";
+
+let $x := [
+some $x in [false,false] satisfies $x,
+some $x in [true,false] satisfies $x,
+some $x in [false,true] satisfies $x,
+some $x in [true,true] satisfies $x,
+some $x in [false,false] satisfies not($x),
+some $x in [true,false] satisfies not($x),
+some $x in [false,true] satisfies not($x),
+some $x in [true,true] satisfies not($x)
+]
+for $i in $x
+return $i
