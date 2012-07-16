@@ -70,7 +70,7 @@ public class BTreePrimaryIndexScanOperatorTest extends AbstractBTreeOperatorTest
         int[] highKeyFields = null; // + infinity
 
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, indexRegistryProvider, primarySplitProvider, primaryTypeTraits,
+                storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits,
                 primaryComparatorFactories, lowKeyFields, highKeyFields, true, true, dataflowHelperFactory, false,
                 NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);

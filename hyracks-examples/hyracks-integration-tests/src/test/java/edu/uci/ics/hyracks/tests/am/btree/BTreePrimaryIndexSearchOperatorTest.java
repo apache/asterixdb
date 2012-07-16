@@ -75,8 +75,8 @@ public class BTreePrimaryIndexSearchOperatorTest extends AbstractBTreeOperatorTe
         int[] highKeyFields = { 1 };
 
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, indexRegistryProvider, primarySplitProvider, primaryTypeTraits,
-                primaryComparatorFactories, lowKeyFields, highKeyFields, true, true, dataflowHelperFactory, false,
+                storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
+                lowKeyFields, highKeyFields, true, true, dataflowHelperFactory, false,
                 NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 
@@ -96,7 +96,7 @@ public class BTreePrimaryIndexSearchOperatorTest extends AbstractBTreeOperatorTe
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory() {
         return ((BTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory();
     }
-    
+
     @Override
     public void cleanup() throws Exception {
         destroyPrimaryIndex();

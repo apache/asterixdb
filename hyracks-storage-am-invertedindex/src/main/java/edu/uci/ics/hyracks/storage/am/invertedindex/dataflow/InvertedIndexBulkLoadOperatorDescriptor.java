@@ -22,10 +22,9 @@ import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
@@ -37,13 +36,13 @@ public class InvertedIndexBulkLoadOperatorDescriptor extends AbstractInvertedInd
 
     public InvertedIndexBulkLoadOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] fieldPermutation,
             IStorageManagerInterface storageManager, IFileSplitProvider btreeFileSplitProvider,
-            IFileSplitProvider invListsFileSplitProvider, IIndexRegistryProvider<IIndex> indexRegistryProvider,
+            IFileSplitProvider invListsFileSplitProvider, IIndexLifecycleManagerProvider lifecycleManagerProvider,
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenComparatorFactories,
             ITypeTraits[] invListsTypeTraits, IBinaryComparatorFactory[] invListComparatorFactories,
             IBinaryTokenizerFactory tokenizerFactory, IIndexDataflowHelperFactory invertedIndexDataflowHelperFactory,
             IOperationCallbackProvider opCallbackProvider) {
         super(spec, 1, 0, null, storageManager, btreeFileSplitProvider, invListsFileSplitProvider,
-                indexRegistryProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
+                lifecycleManagerProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
                 invListComparatorFactories, tokenizerFactory, invertedIndexDataflowHelperFactory, false,
                 opCallbackProvider);
         this.fieldPermutation = fieldPermutation;

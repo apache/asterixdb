@@ -17,32 +17,29 @@ package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
-public class TreeIndexDropOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
+public class TreeIndexDropOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
 
-    private IStorageManagerInterface storageManager;
-    private IIndexRegistryProvider<IIndex> treeIndexRegistryProvider;
-    private IFileSplitProvider fileSplitProvider;
-
     public TreeIndexDropOperatorDescriptor(IOperatorDescriptorRegistry spec, IStorageManagerInterface storageManager,
-            IIndexRegistryProvider<IIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider) {
-        super(spec, 0, 0);
-        this.storageManager = storageManager;
-        this.treeIndexRegistryProvider = treeIndexRegistryProvider;
-        this.fileSplitProvider = fileSplitProvider;
+            IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
+            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories,
+            IIndexDataflowHelperFactory dataflowHelperFactory) {
+        super(spec, 0, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
+                comparatorFactories, dataflowHelperFactory, null, false, null);
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new TreeIndexDropOperatorNodePushable(ctx, storageManager, treeIndexRegistryProvider, fileSplitProvider,
-                partition);
+        return new TreeIndexDropOperatorNodePushable(this, ctx, partition);
     }
 }

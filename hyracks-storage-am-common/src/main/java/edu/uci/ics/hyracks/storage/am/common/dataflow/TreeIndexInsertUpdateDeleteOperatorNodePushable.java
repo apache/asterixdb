@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilter;
@@ -35,6 +36,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
     private final AbstractTreeIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
+    private final IIndexLifecycleManager lcManager;
     private final TreeIndexDataflowHelper treeIndexHelper;
     private FrameTupleAccessor accessor;
     private final IRecordDescriptorProvider recordDescProvider;
@@ -51,6 +53,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
             IRecordDescriptorProvider recordDescProvider, IndexOp op) {
         this.opDesc = opDesc;
         this.ctx = ctx;
+        this.lcManager = opDesc.getLifecycleManagerProvider().getLifecycleManager(ctx);
         this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
                 .createIndexDataflowHelper(opDesc, ctx, partition);
         this.recordDescProvider = recordDescProvider;
@@ -64,9 +67,8 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         accessor = new FrameTupleAccessor(ctx.getFrameSize(), inputRecDesc);
         writeBuffer = ctx.allocateFrame();
         writer.open();
+        ITreeIndex treeIndex = (ITreeIndex) lcManager.open(treeIndexHelper);
         try {
-            treeIndexHelper.init(false);
-            ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
             modCallback = opDesc.getOpCallbackProvider().getModificationOperationCallback(
                     treeIndexHelper.getResourceID());
             indexAccessor = treeIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
@@ -76,6 +78,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
                 frameTuple = new FrameTupleReference();
             }
         } catch (Exception e) {
+            lcManager.close(treeIndexHelper);
             throw new HyracksDataException(e);
         }
     }
@@ -130,7 +133,12 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
 
     @Override
     public void close() throws HyracksDataException {
-        writer.close();
+        try {
+            writer.close();
+        } finally {
+            lcManager.close(treeIndexHelper);
+        }
+
     }
 
     @Override

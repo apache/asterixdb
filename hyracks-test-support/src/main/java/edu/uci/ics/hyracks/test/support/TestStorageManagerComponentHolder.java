@@ -23,8 +23,11 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
+import edu.uci.ics.hyracks.storage.common.TransientIndexArtifactMap;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -34,7 +37,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
-import edu.uci.ics.hyracks.storage.common.smi.TransientFileMapManager;
+import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
 
 public class TestStorageManagerComponentHolder {
     private static IBufferCache bufferCache;
@@ -42,6 +45,7 @@ public class TestStorageManagerComponentHolder {
     private static IndexRegistry<IIndex> indexRegistry;
     private static IOManager ioManager;
     private static IIndexArtifactMap indexArtifactMap;
+    private static IIndexLifecycleManager lcManager;
 
     private static int pageSize;
     private static int numPages;
@@ -55,6 +59,14 @@ public class TestStorageManagerComponentHolder {
         fileMapProvider = null;
         indexRegistry = null;
         indexArtifactMap = null;
+        lcManager = null;
+    }
+
+    public synchronized static IIndexLifecycleManager getIndexLifecycleManager(IHyracksTaskContext ctx) {
+        if (lcManager == null) {
+            lcManager = new IndexLifecycleManager();
+        }
+        return lcManager;
     }
 
     public synchronized static IBufferCache getBufferCache(IHyracksTaskContext ctx) {
@@ -93,7 +105,7 @@ public class TestStorageManagerComponentHolder {
 
     public synchronized static IIndexArtifactMap getIndexArtifactMap(IHyracksTaskContext ctx) {
         if (indexArtifactMap == null) {
-            indexArtifactMap = new TestIndexArtifactMap();
+            indexArtifactMap = new TransientIndexArtifactMap();
         }
         return indexArtifactMap;
     }

@@ -1,11 +1,10 @@
-package edu.uci.ics.hyracks.storage.common.smi;
+package edu.uci.ics.hyracks.storage.common.file;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 
 public class TransientFileMapManager implements IFileMapManager {
     private static final long serialVersionUID = 1L;

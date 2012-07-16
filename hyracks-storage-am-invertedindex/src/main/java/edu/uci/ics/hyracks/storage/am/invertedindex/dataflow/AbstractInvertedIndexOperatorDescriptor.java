@@ -21,11 +21,10 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
@@ -37,7 +36,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
 
     // General.
     protected final IStorageManagerInterface storageManager;
-    protected final IIndexRegistryProvider<IIndex> indexRegistryProvider;
+    protected final IIndexLifecycleManagerProvider lifecycleManagerProvider;
     protected final boolean retainInput;
     protected final IOperationCallbackProvider opCallbackProvider;
 
@@ -56,7 +55,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     public AbstractInvertedIndexOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
             IFileSplitProvider btreeFileSplitProvider, IFileSplitProvider invListsFileSplitProvider,
-            IIndexRegistryProvider<IIndex> indexRegistryProvider, ITypeTraits[] tokenTypeTraits,
+            IIndexLifecycleManagerProvider lifecycleManagerProvider, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTraits[] invListsTypeTraits,
             IBinaryComparatorFactory[] invListComparatorFactories, IBinaryTokenizerFactory tokenizerFactory,
             IIndexDataflowHelperFactory invertedIndexDataflowHelperFactory, boolean retainInput,
@@ -65,7 +64,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
 
         // General.
         this.storageManager = storageManager;
-        this.indexRegistryProvider = indexRegistryProvider;
+        this.lifecycleManagerProvider = lifecycleManagerProvider;
         this.retainInput = retainInput;
         this.opCallbackProvider = opCallbackProvider;
 
@@ -122,6 +121,11 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     }
 
     @Override
+    public IIndexLifecycleManagerProvider getLifecycleManagerProvider() {
+        return lifecycleManagerProvider;
+    }
+
+    @Override
     public IBinaryComparatorFactory[] getInvListsComparatorFactories() {
         return invListComparatorFactories;
     }
@@ -134,11 +138,6 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     @Override
     public ITypeTraits[] getInvListsTypeTraits() {
         return invListsTypeTraits;
-    }
-
-    @Override
-    public IIndexRegistryProvider<IIndex> getIndexRegistryProvider() {
-        return indexRegistryProvider;
     }
 
     @Override

@@ -33,12 +33,11 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializer
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
-import edu.uci.ics.hyracks.examples.btree.helper.IndexRegistryProvider;
+import edu.uci.ics.hyracks.examples.btree.helper.IndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.examples.btree.helper.StorageManagerInterface;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDiskOrderScanOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
@@ -93,7 +92,7 @@ public class SecondaryIndexBulkLoadExample {
 
         String[] splitNCs = options.ncs.split(",");
 
-        IIndexRegistryProvider<IIndex> indexRegistryProvider = IndexRegistryProvider.INSTANCE;
+        IIndexLifecycleManagerProvider lcManagerProvider = IndexLifecycleManagerProvider.INSTANCE;
         IStorageManagerInterface storageManager = StorageManagerInterface.INSTANCE;
 
         // schema of tuples that we are retrieving from the primary index
@@ -122,7 +121,7 @@ public class SecondaryIndexBulkLoadExample {
         IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
         IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory();
         TreeIndexDiskOrderScanOperatorDescriptor btreeScanOp = new TreeIndexDiskOrderScanOperatorDescriptor(spec,
-                recDesc, storageManager, indexRegistryProvider, primarySplitProvider, primaryTypeTraits,
+                recDesc, storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits,
                 dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         JobHelper.createPartitionConstraint(spec, btreeScanOp, splitNCs);
 
@@ -144,7 +143,7 @@ public class SecondaryIndexBulkLoadExample {
         int[] fieldPermutation = { 1, 0 };
         IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.secondaryBTreeName);
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManager, indexRegistryProvider, btreeSplitProvider, secondaryTypeTraits, comparatorFactories,
+                storageManager, lcManagerProvider, btreeSplitProvider, secondaryTypeTraits, comparatorFactories,
                 fieldPermutation, 0.7f, dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         JobHelper.createPartitionConstraint(spec, btreeBulkLoad, splitNCs);
 

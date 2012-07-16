@@ -15,40 +15,26 @@
 
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
-import java.util.List;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.io.IIOManager;
-import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
-import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
-import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
-import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 
 public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePushable {
     private static final Logger LOGGER = Logger.getLogger(TreeIndexDropOperatorNodePushable.class.getName());
 
-    private final IHyracksTaskContext ctx;
-    private IIndexRegistryProvider<IIndex> treeIndexRegistryProvider;
-    private IStorageManagerInterface storageManager;
-    private IFileSplitProvider fileSplitProvider;
-    private int partition;
+    private final TreeIndexDataflowHelper treeIndexHelper;
+    private final IIndexLifecycleManager lcManager;
 
-    public TreeIndexDropOperatorNodePushable(IHyracksTaskContext ctx, IStorageManagerInterface storageManager,
-            IIndexRegistryProvider<IIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider,
+    public TreeIndexDropOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
-        this.ctx = ctx;
-        this.storageManager = storageManager;
-        this.treeIndexRegistryProvider = treeIndexRegistryProvider;
-        this.fileSplitProvider = fileSplitProvider;
-        this.partition = partition;
+        this.lcManager = opDesc.getLifecycleManagerProvider().getLifecycleManager(ctx);
+        this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
+                .createIndexDataflowHelper(opDesc, ctx, partition);
     }
 
     @Override
@@ -67,46 +53,7 @@ public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePusha
 
     @Override
     public void initialize() throws HyracksDataException {
-        IndexRegistry<IIndex> treeIndexRegistry = treeIndexRegistryProvider.getRegistry(ctx);
-        IBufferCache bufferCache = storageManager.getBufferCache(ctx);
-        IFileMapProvider fileMapProvider = storageManager.getFileMapProvider(ctx);
-        IIndexArtifactMap indexArtifactMap = storageManager.getIndexArtifactMap(ctx);
-
-        FileReference f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
-
-        //check whether the requested index instance already exists by retrieving indexRegistry with resourceId
-        //To do so, checking the index directory in the first ioDevice is sufficient.
-
-        //create a fullDir(= IODeviceDir + baseDir) for the requested index
-        IIOManager ioManager = ctx.getIOManager();
-        List<IODeviceHandle> ioDeviceHandles = ioManager.getIODevices();
-        String fullDir = ioDeviceHandles.get(0).getPath().toString();
-        if (!fullDir.endsWith(System.getProperty("file.separator"))) {
-            fullDir += System.getProperty("file.separator");
-        }
-        String baseDir = f.getFile().getPath();
-        if (!baseDir.endsWith(System.getProperty("file.separator"))) {
-            baseDir += System.getProperty("file.separator");
-        }
-        fullDir += baseDir;
-
-        //get the corresponding resourceId with the fullDir
-        long resourceId = indexArtifactMap.get(fullDir);
-        IIndex index;
-        // Unregister tree instance.
-        synchronized (treeIndexRegistry) {
-            index = treeIndexRegistry.get(resourceId);
-            if (index == null) {
-                throw new HyracksDataException("Cannot drop index with name " + f.toString()
-                        + " since it does not exist.");
-            }
-            treeIndexRegistry.unregister(resourceId);
-            indexArtifactMap.delete(baseDir, ioDeviceHandles);
-        }
-
-        // remove name to id mapping
-        index.deactivate();
-        index.destroy();
+        lcManager.destroy(treeIndexHelper);
     }
 
     @Override

@@ -35,7 +35,7 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractBTreeOperatorTes
     @Before
     public void setup() throws Exception {
         super.setup();
-	createPrimaryIndex();
+        createPrimaryIndex();
         loadPrimaryIndex();
     }
 
@@ -44,7 +44,7 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractBTreeOperatorTes
         JobSpecification spec = new JobSpecification();
 
         TreeIndexStatsOperatorDescriptor primaryStatsOp = new TreeIndexStatsOperatorDescriptor(spec, storageManager,
-                indexRegistryProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
+                lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
                 dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryStatsOp, NC1_ID);
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
@@ -61,7 +61,7 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractBTreeOperatorTes
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory() {
         return ((BTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory();
     }
-    
+
     @Override
     public void cleanup() throws Exception {
         destroyPrimaryIndex();

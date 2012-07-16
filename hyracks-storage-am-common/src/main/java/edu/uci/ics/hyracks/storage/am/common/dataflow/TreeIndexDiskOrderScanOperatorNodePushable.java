@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
@@ -34,6 +35,7 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
     private final AbstractTreeIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
+    private final IIndexLifecycleManager lcManager;
     private final TreeIndexDataflowHelper treeIndexHelper;
     private ITreeIndex treeIndex;
 
@@ -41,15 +43,15 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
             IHyracksTaskContext ctx, int partition) {
         this.opDesc = opDesc;
         this.ctx = ctx;
+        this.lcManager = opDesc.getLifecycleManagerProvider().getLifecycleManager(ctx);
         this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
                 .createIndexDataflowHelper(opDesc, ctx, partition);
     }
 
     @Override
     public void initialize() throws HyracksDataException {
+        treeIndex = (ITreeIndex) lcManager.open(treeIndexHelper);
         try {
-            treeIndexHelper.init(false);
-            treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
             ITreeIndexFrame cursorFrame = treeIndex.getLeafFrameFactory().createFrame();
             ITreeIndexCursor cursor = treeIndexHelper.createDiskOrderScanCursor(cursorFrame);
             ISearchOperationCallback searchCallback = opDesc.getOpCallbackProvider().getSearchOperationCallback(
@@ -95,12 +97,12 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
                 writer.close();
             }
         } catch (Exception e) {
-            deinitialize();
             throw new HyracksDataException(e);
         }
     }
 
     @Override
     public void deinitialize() throws HyracksDataException {
+        lcManager.close(treeIndexHelper);
     }
 }

@@ -40,12 +40,11 @@ import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import edu.uci.ics.hyracks.examples.btree.helper.DataGenOperatorDescriptor;
-import edu.uci.ics.hyracks.examples.btree.helper.IndexRegistryProvider;
+import edu.uci.ics.hyracks.examples.btree.helper.IndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.examples.btree.helper.StorageManagerInterface;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
@@ -141,7 +140,7 @@ public class PrimaryIndexBulkLoadExample {
         typeTraits[3] = UTF8StringPointable.TYPE_TRAITS;
 
         // create providers for B-Tree
-        IIndexRegistryProvider<IIndex> indexRegistryProvider = IndexRegistryProvider.INSTANCE;
+        IIndexLifecycleManagerProvider lcManagerProvider = IndexLifecycleManagerProvider.INSTANCE;
         IStorageManagerInterface storageManager = StorageManagerInterface.INSTANCE;
 
         // the B-Tree expects its keyfields to be at the front of its input
@@ -152,7 +151,7 @@ public class PrimaryIndexBulkLoadExample {
         IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName);
         IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory();
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManager, indexRegistryProvider, btreeSplitProvider, typeTraits, comparatorFactories,
+                storageManager, lcManagerProvider, btreeSplitProvider, typeTraits, comparatorFactories,
                 fieldPermutation, 0.7f, dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         JobHelper.createPartitionConstraint(spec, btreeBulkLoad, splitNCs);
 

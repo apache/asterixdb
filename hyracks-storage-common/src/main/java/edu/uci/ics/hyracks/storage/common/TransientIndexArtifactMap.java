@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-
-package edu.uci.ics.hyracks.examples.btree.helper;
+package edu.uci.ics.hyracks.storage.common;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
 
@@ -31,19 +31,12 @@ public class TransientIndexArtifactMap implements IIndexArtifactMap {
     @Override
     public long create(String baseDir, List<IODeviceHandle> IODeviceHandles) throws IOException {
         long resourceId = counter++;
-        String fullDir;
         synchronized (name2IdMap) {
-            for (IODeviceHandle dev : IODeviceHandles) {
-                fullDir = dev.getPath().toString();
-                if (!fullDir.endsWith(System.getProperty("file.separator"))) {
-                    fullDir += System.getProperty("file.separator");
-                }
-                fullDir += baseDir;
-                if (name2IdMap.containsKey(fullDir)) {
-                    throw new IOException();
-                }
-                name2IdMap.put(fullDir, resourceId);
+            if (name2IdMap.containsKey(baseDir)) {
+                throw new HyracksDataException("Failed to create artifact for " + baseDir
+                        + ". Artifact already exists.");
             }
+            name2IdMap.put(baseDir, resourceId);
         }
         return resourceId;
     }
@@ -53,11 +46,11 @@ public class TransientIndexArtifactMap implements IIndexArtifactMap {
      * When there is no corresponding id in name2IdMap, return -1;
      */
     @Override
-    public long get(String fullDir) {
+    public long get(String baseDir) {
         Long resourceId = -1L;
 
         synchronized (name2IdMap) {
-            resourceId = name2IdMap.get(fullDir);
+            resourceId = name2IdMap.get(baseDir);
         }
 
         if (resourceId == null) {
@@ -69,16 +62,8 @@ public class TransientIndexArtifactMap implements IIndexArtifactMap {
 
     @Override
     public void delete(String baseDir, List<IODeviceHandle> IODeviceHandles) {
-        String fullDir;
         synchronized (name2IdMap) {
-            for (IODeviceHandle dev : IODeviceHandles) {
-                fullDir = dev.getPath().toString();
-                if (!fullDir.endsWith(System.getProperty("file.separator"))) {
-                    fullDir += System.getProperty("file.separator");
-                }
-                fullDir += baseDir;
-                name2IdMap.remove(fullDir);
-            }
+            name2IdMap.remove(baseDir);
         }
     }
 }

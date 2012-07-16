@@ -15,9 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
-import java.io.File;
-import java.io.IOException;
-
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -29,56 +26,15 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
     protected final IIndexOperatorDescriptor opDesc;
     protected final IHyracksTaskContext ctx;
     protected final IIndexArtifactMap indexArtifactMap;
-    protected final IndexRegistry<IIndex> indexRegistry;
     protected final FileReference file;
 
     protected IIndex index;
-    protected String baseDir;
-    protected String fullDir;
 
     public IndexDataflowHelper(IIndexOperatorDescriptor opDesc, final IHyracksTaskContext ctx, int partition) {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.indexArtifactMap = opDesc.getStorageManager().getIndexArtifactMap(ctx);
-        this.indexRegistry = opDesc.getIndexRegistryProvider().getRegistry(ctx);
         this.file = opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile();
-
-        fullDir = ctx.getIOManager().getIODevices().get(0).getPath().toString();
-        if (!fullDir.endsWith(File.separator)) {
-            fullDir += File.separator;
-        }
-        baseDir = file.getFile().getPath();
-        if (!baseDir.endsWith(File.separator)) {
-            baseDir += File.separator;
-        }
-        fullDir += baseDir;
-    }
-
-    public void init(boolean forceCreate) throws HyracksDataException {
-        long resourceID = getResourceID();
-        // Create new index instance and register it.
-        synchronized (indexRegistry) {
-            // Check if the index has already been registered.
-            boolean register = false;
-            index = indexRegistry.get(resourceID);
-            if (index == null) {
-                index = getIndexInstance();
-                register = true;
-            }
-            if (forceCreate) {
-                index.create();
-                // Create new resourceId
-                try {
-                    resourceID = indexArtifactMap.create(baseDir, ctx.getIOManager().getIODevices());
-                } catch (IOException e) {
-                    throw new HyracksDataException(e);
-                }
-            }
-            if (register) {
-                index.activate();
-                indexRegistry.register(resourceID, index);
-            }
-        }
     }
 
     public abstract IIndex getIndexInstance() throws HyracksDataException;
@@ -93,6 +49,14 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
     }
 
     public long getResourceID() {
-        return indexArtifactMap.get(fullDir);
+        return indexArtifactMap.get(file.getFile().getPath());
+    }
+
+    public IIndexOperatorDescriptor getOperatorDescriptor() {
+        return opDesc;
+    }
+
+    public IHyracksTaskContext getHyracksTaskContext() {
+        return ctx;
     }
 }

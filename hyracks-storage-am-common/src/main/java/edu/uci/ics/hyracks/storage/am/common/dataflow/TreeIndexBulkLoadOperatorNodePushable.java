@@ -23,11 +23,13 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 
 public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
     private final AbstractTreeIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
+    private final IIndexLifecycleManager lcManager;
     private float fillFactor;
     private final TreeIndexDataflowHelper treeIndexHelper;
     private FrameTupleAccessor accessor;
@@ -42,6 +44,7 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
             int partition, int[] fieldPermutation, float fillFactor, IRecordDescriptorProvider recordDescProvider) {
         this.opDesc = opDesc;
         this.ctx = ctx;
+        this.lcManager = opDesc.getLifecycleManagerProvider().getLifecycleManager(ctx);
         this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
                 .createIndexDataflowHelper(opDesc, ctx, partition);
         this.fillFactor = fillFactor;
@@ -53,12 +56,11 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
     public void open() throws HyracksDataException {
         RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         accessor = new FrameTupleAccessor(ctx.getFrameSize(), recDesc);
+        treeIndex = (ITreeIndex) lcManager.open(treeIndexHelper);
         try {
-            treeIndexHelper.init(false);
-            treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
             bulkLoader = treeIndex.createBulkLoader(fillFactor);
         } catch (Exception e) {
-            // cleanup in case of failure
+            lcManager.close(treeIndexHelper);
             throw new HyracksDataException(e);
         }
     }
@@ -79,6 +81,8 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
             bulkLoader.end();
         } catch (Exception e) {
             throw new HyracksDataException(e);
+        } finally {
+            lcManager.close(treeIndexHelper);
         }
     }
 
