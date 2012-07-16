@@ -20,7 +20,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactor
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushControllerProvider;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOSchedulerProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
 
@@ -31,11 +31,11 @@ public class LSMBTreeDataflowHelperFactory implements IIndexDataflowHelperFactor
     private final ILSMFlushControllerProvider flushControllerProvider;
     private final ILSMMergePolicyProvider mergePolicyProvider;
     private final ILSMOperationTrackerProvider opTrackerProvider;
-    private final ILSMIOSchedulerProvider ioSchedulerProvider;
+    private final ILSMIOOperationSchedulerProvider ioSchedulerProvider;
 
     public LSMBTreeDataflowHelperFactory(ILSMFlushControllerProvider flushControllerProvider,
             ILSMMergePolicyProvider mergePolicyProvider, ILSMOperationTrackerProvider opTrackerProvider,
-            ILSMIOSchedulerProvider ioSchedulerProvider) {
+            ILSMIOOperationSchedulerProvider ioSchedulerProvider) {
         this.flushControllerProvider = flushControllerProvider;
         this.mergePolicyProvider = mergePolicyProvider;
         this.opTrackerProvider = opTrackerProvider;

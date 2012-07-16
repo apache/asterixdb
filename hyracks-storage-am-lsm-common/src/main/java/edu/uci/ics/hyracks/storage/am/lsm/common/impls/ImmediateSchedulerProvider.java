@@ -1,9 +1,9 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOSchedulerProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 
-public enum ImmediateSchedulerProvider implements ILSMIOSchedulerProvider {
+public enum ImmediateSchedulerProvider implements ILSMIOOperationSchedulerProvider {
     INSTANCE;
 
     @Override
