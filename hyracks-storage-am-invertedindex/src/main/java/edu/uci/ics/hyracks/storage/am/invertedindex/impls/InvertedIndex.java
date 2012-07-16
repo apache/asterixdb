@@ -448,11 +448,6 @@ public class InvertedIndex implements IIndex {
         private final int FRAME_SIZE = 32768;
 
         @Override
-        public ByteBuffer allocateFrame() {
-            return ByteBuffer.allocate(FRAME_SIZE);
-        }
-
-        @Override
         public int getFrameSize() {
             return FRAME_SIZE;
         }
@@ -460,6 +455,11 @@ public class InvertedIndex implements IIndex {
         @Override
         public IIOManager getIOManager() {
             return null;
+        }
+
+        @Override
+        public ByteBuffer allocateFrame() {
+            return ByteBuffer.allocate(FRAME_SIZE);
         }
     }
 

@@ -37,6 +37,8 @@ public class ActivityClusterGraph implements Serializable {
 
     private final Map<ConnectorDescriptorId, ActivityCluster> connectorMap;
 
+    private int frameSize;
+
     private int maxReattempts;
 
     private IJobletEventListenerFactory jobletEventListenerFactory;
@@ -48,6 +50,7 @@ public class ActivityClusterGraph implements Serializable {
         activityClusterMap = new HashMap<ActivityClusterId, ActivityCluster>();
         activityMap = new HashMap<ActivityId, ActivityCluster>();
         connectorMap = new HashMap<ConnectorDescriptorId, ActivityCluster>();
+        frameSize = 32768;
     }
 
     public Map<ActivityId, ActivityCluster> getActivityMap() {
@@ -77,6 +80,14 @@ public class ActivityClusterGraph implements Serializable {
 
     public int getVersion() {
         return version;
+    }
+
+    public void setFrameSize(int frameSize) {
+        this.frameSize = frameSize;
+    }
+
+    public int getFrameSize() {
+        return frameSize;
     }
 
     public void setMaxReattempts(int maxReattempts) {

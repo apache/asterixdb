@@ -19,7 +19,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.net.buffers.IBufferAcceptor;
 import edu.uci.ics.hyracks.net.protocols.muxdemux.ChannelControlBlock;
@@ -27,17 +27,23 @@ import edu.uci.ics.hyracks.net.protocols.muxdemux.ChannelControlBlock;
 public class NetworkOutputChannel implements IFrameWriter {
     private final ChannelControlBlock ccb;
 
+    private final int nBuffers;
+
     private final Deque<ByteBuffer> emptyStack;
 
     private boolean aborted;
 
-    public NetworkOutputChannel(IHyracksRootContext ctx, ChannelControlBlock ccb, int nBuffers) {
+    public NetworkOutputChannel(ChannelControlBlock ccb, int nBuffers) {
         this.ccb = ccb;
+        this.nBuffers = nBuffers;
         emptyStack = new ArrayDeque<ByteBuffer>(nBuffers);
+        ccb.getWriteInterface().setEmptyBufferAcceptor(new WriteEmptyBufferAcceptor());
+    }
+
+    public void setTaskContext(IHyracksTaskContext ctx) {
         for (int i = 0; i < nBuffers; ++i) {
             emptyStack.push(ByteBuffer.allocateDirect(ctx.getFrameSize()));
         }
-        ccb.getWriteInterface().setEmptyBufferAcceptor(new WriteEmptyBufferAcceptor());
     }
 
     @Override

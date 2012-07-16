@@ -14,33 +14,18 @@
  */
 package edu.uci.ics.hyracks.control.nc.runtime;
 
-import java.nio.ByteBuffer;
-
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 
 public class RootHyracksContext implements IHyracksRootContext {
-    private final int frameSize;
-
     private final IIOManager ioManager;
 
-    public RootHyracksContext(int frameSize, IIOManager ioManager) {
-        this.frameSize = frameSize;
+    public RootHyracksContext(IIOManager ioManager) {
         this.ioManager = ioManager;
-    }
-
-    @Override
-    public int getFrameSize() {
-        return frameSize;
     }
 
     @Override
     public IIOManager getIOManager() {
         return ioManager;
-    }
-
-    @Override
-    public ByteBuffer allocateFrame() {
-        return ByteBuffer.allocate(frameSize);
     }
 }

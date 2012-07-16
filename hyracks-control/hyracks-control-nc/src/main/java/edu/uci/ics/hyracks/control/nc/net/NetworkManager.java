@@ -23,12 +23,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
-import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
-import edu.uci.ics.hyracks.control.nc.partitions.IPartitionRequestListener;
+import edu.uci.ics.hyracks.control.nc.partitions.PartitionManager;
 import edu.uci.ics.hyracks.net.buffers.ICloseableBufferAcceptor;
 import edu.uci.ics.hyracks.net.exceptions.NetException;
 import edu.uci.ics.hyracks.net.protocols.muxdemux.ChannelControlBlock;
@@ -44,18 +43,14 @@ public class NetworkManager {
 
     static final int INITIAL_MESSAGE_SIZE = 20;
 
-    private final IHyracksRootContext ctx;
-
-    private final IPartitionRequestListener partitionRequestListener;
+    private final PartitionManager partitionManager;
 
     private final MuxDemux md;
 
     private NetworkAddress networkAddress;
 
-    public NetworkManager(IHyracksRootContext ctx, InetAddress inetAddress,
-            IPartitionRequestListener partitionRequestListener, int nThreads) throws IOException {
-        this.ctx = ctx;
-        this.partitionRequestListener = partitionRequestListener;
+    public NetworkManager(InetAddress inetAddress, PartitionManager partitionManager, int nThreads) throws IOException {
+        this.partitionManager = partitionManager;
         md = new MuxDemux(new InetSocketAddress(inetAddress, 0), new ChannelOpenListener(), nThreads,
                 MAX_CONNECTION_ATTEMPTS);
     }
@@ -102,9 +97,9 @@ public class NetworkManager {
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.fine("Received initial partition request: " + pid + " on channel: " + ccb);
             }
-            noc = new NetworkOutputChannel(ctx, ccb, 5);
+            noc = new NetworkOutputChannel(ccb, 1);
             try {
-                partitionRequestListener.registerPartitionRequest(pid, noc);
+                partitionManager.registerPartitionRequest(pid, noc);
             } catch (HyracksException e) {
                 noc.abort();
             }

@@ -19,9 +19,9 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 
 public interface IHyracksCommonContext {
-    public ByteBuffer allocateFrame();
-
     public int getFrameSize();
 
     public IIOManager getIOManager();
+
+    public ByteBuffer allocateFrame();
 }

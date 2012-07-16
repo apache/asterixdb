@@ -56,6 +56,8 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     private IConnectorPolicyAssignmentPolicy connectorPolicyAssignmentPolicy;
 
+    private int frameSize;
+
     private int maxReattempts;
 
     private IJobletEventListenerFactory jobletEventListenerFactory;
@@ -77,6 +79,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
         userConstraints = new HashSet<Constraint>();
         operatorIdCounter = 0;
         connectorIdCounter = 0;
+        frameSize = 32768;
         maxReattempts = 2;
     }
 
@@ -208,6 +211,14 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     public void setConnectorPolicyAssignmentPolicy(IConnectorPolicyAssignmentPolicy connectorPolicyAssignmentPolicy) {
         this.connectorPolicyAssignmentPolicy = connectorPolicyAssignmentPolicy;
+    }
+
+    public void setFrameSize(int frameSize) {
+        this.frameSize = frameSize;
+    }
+
+    public int getFrameSize() {
+        return frameSize;
     }
 
     public void setMaxReattempts(int maxReattempts) {

@@ -26,7 +26,7 @@ import edu.uci.ics.hyracks.api.channels.IInputChannelMonitor;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
 import edu.uci.ics.hyracks.api.comm.PartitionChannel;
-import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -35,7 +35,7 @@ import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 
 public class ReceiveSideMaterializingCollector implements IPartitionCollector {
-    private final IHyracksRootContext ctx;
+    private final IHyracksTaskContext ctx;
 
     private PartitionManager manager;
 
@@ -45,7 +45,7 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
 
     private final Executor executor;
 
-    public ReceiveSideMaterializingCollector(IHyracksRootContext ctx, PartitionManager manager,
+    public ReceiveSideMaterializingCollector(IHyracksTaskContext ctx, PartitionManager manager,
             IPartitionCollector collector, TaskAttemptId taId, Executor executor) {
         this.ctx = ctx;
         this.manager = manager;
@@ -123,7 +123,7 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
             IInputChannel channel = pc.getInputChannel();
             try {
                 channel.registerMonitor(this);
-                channel.open();
+                channel.open(ctx);
                 mpw.open();
                 while (true) {
                     if (nAvailableFrames.get() > 0) {
@@ -150,7 +150,7 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
                 mpw.close();
                 channel.close();
                 delegate.addPartitions(Collections.singleton(new PartitionChannel(pid,
-                        new MaterializedPartitionInputChannel(ctx, 1, pid, manager))));
+                        new MaterializedPartitionInputChannel(1, pid, manager))));
             } catch (HyracksException e) {
             }
         }

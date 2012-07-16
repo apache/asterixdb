@@ -187,34 +187,32 @@ public class StartTasksWork extends AbstractWork {
         IPartitionCollector collector = conn.createPartitionCollector(task, recordDesc, partition,
                 td.getInputPartitionCounts()[i], td.getPartitionCount());
         if (cPolicy.materializeOnReceiveSide()) {
-            return new ReceiveSideMaterializingCollector(ncs.getRootContext(), ncs.getPartitionManager(), collector,
+            return new ReceiveSideMaterializingCollector(task, ncs.getPartitionManager(), collector,
                     task.getTaskAttemptId(), ncs.getExecutor());
         } else {
             return collector;
         }
     }
 
-    private IPartitionWriterFactory createPartitionWriterFactory(IHyracksTaskContext ctx, IConnectorPolicy cPolicy,
-            final JobId jobId, final IConnectorDescriptor conn, final int senderIndex, final TaskAttemptId taId,
-            EnumSet<JobFlag> flags) {
+    private IPartitionWriterFactory createPartitionWriterFactory(final IHyracksTaskContext ctx,
+            IConnectorPolicy cPolicy, final JobId jobId, final IConnectorDescriptor conn, final int senderIndex,
+            final TaskAttemptId taId, EnumSet<JobFlag> flags) {
         IPartitionWriterFactory factory;
         if (cPolicy.materializeOnSendSide()) {
             if (cPolicy.consumerWaitsForProducerToFinish()) {
                 factory = new IPartitionWriterFactory() {
                     @Override
                     public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
-                        return new MaterializedPartitionWriter(ncs.getRootContext(), ncs.getPartitionManager(),
-                                new PartitionId(jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId,
-                                ncs.getExecutor());
+                        return new MaterializedPartitionWriter(ctx, ncs.getPartitionManager(), new PartitionId(jobId,
+                                conn.getConnectorId(), senderIndex, receiverIndex), taId, ncs.getExecutor());
                     }
                 };
             } else {
                 factory = new IPartitionWriterFactory() {
                     @Override
                     public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
-                        return new MaterializingPipelinedPartition(ncs.getRootContext(), ncs.getPartitionManager(),
-                                new PartitionId(jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId,
-                                ncs.getExecutor());
+                        return new MaterializingPipelinedPartition(ctx, ncs.getPartitionManager(), new PartitionId(
+                                jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId, ncs.getExecutor());
                     }
                 };
             }
@@ -222,7 +220,7 @@ public class StartTasksWork extends AbstractWork {
             factory = new IPartitionWriterFactory() {
                 @Override
                 public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
-                    return new PipelinedPartition(ncs.getPartitionManager(), new PartitionId(jobId,
+                    return new PipelinedPartition(ctx, ncs.getPartitionManager(), new PartitionId(jobId,
                             conn.getConnectorId(), senderIndex, receiverIndex), taId);
                 }
             };

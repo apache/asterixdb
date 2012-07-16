@@ -80,6 +80,8 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final IJobletEventListener jobletEventListener;
 
+    private final int frameSize;
+
     private JobStatus cleanupStatus;
 
     private boolean cleanupPending;
@@ -89,6 +91,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         this.nodeController = nodeController;
         this.appCtx = appCtx;
         this.jobId = jobId;
+        this.frameSize = acg.getFrameSize();
         this.acg = acg;
         partitionRequestMap = new HashMap<PartitionId, IPartitionCollector>();
         env = new OperatorEnvironmentImpl(nodeController.getId());
@@ -201,18 +204,15 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         });
     }
 
-    @Override
-    public ByteBuffer allocateFrame() {
-        return appCtx.getRootContext().allocateFrame();
+    ByteBuffer allocateFrame() {
+        return ByteBuffer.allocate(getFrameSize());
     }
 
-    @Override
-    public int getFrameSize() {
-        return appCtx.getRootContext().getFrameSize();
+    int getFrameSize() {
+        return frameSize;
     }
 
-    @Override
-    public IIOManager getIOManager() {
+    IIOManager getIOManager() {
         return appCtx.getRootContext().getIOManager();
     }
 
