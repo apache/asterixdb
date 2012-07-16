@@ -22,8 +22,6 @@ public class AsterixHyracksIntegrationUtil {
 
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
 
-    public static final int FRAME_SIZE = 32768;
-
     private static ClusterControllerService cc;
     private static NodeControllerService nc1;
     private static NodeControllerService nc2;
@@ -46,7 +44,6 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig1.clusterNetIPAddress = "127.0.0.1";
         ncConfig1.dataIPAddress = "127.0.0.1";
         ncConfig1.nodeId = NC1_ID;
-        ncConfig1.frameSize = FRAME_SIZE;
         nc1 = new NodeControllerService(ncConfig1);
         nc1.start();
 
@@ -56,7 +53,6 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig2.clusterNetIPAddress = "127.0.0.1";
         ncConfig2.dataIPAddress = "127.0.0.1";
         ncConfig2.nodeId = NC2_ID;
-        ncConfig2.frameSize = FRAME_SIZE;
         nc2 = new NodeControllerService(ncConfig2);
         nc2.start();
 
