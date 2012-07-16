@@ -52,7 +52,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
@@ -103,7 +103,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
             TreeFactory<BTree> diskBTreeFactory, TreeFactory<BTree> bulkLoadBTreeFactory,
             IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
             ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            ILSMIOScheduler ioScheduler) {
+            ILSMIOOperationScheduler ioScheduler) {
         memBTree = new BTree(memBufferCache, ((InMemoryBufferCache) memBufferCache).getFileMapProvider(),
                 memFreePageManager, interiorFrameFactory, insertLeafFrameFactory, cmpFactories, fieldCount,
                 memBtreeFile);
@@ -542,7 +542,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     }
 
     @Override
-    public ILSMIOScheduler getIOScheduler() {
+    public ILSMIOOperationScheduler getIOScheduler() {
         return lsmHarness.getIOScheduler();
     }
 

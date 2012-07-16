@@ -65,5 +65,5 @@ public interface ILSMHarness extends IIndex {
 
     public ILSMOperationTracker getOperationTracker();
 
-    public ILSMIOScheduler getIOScheduler();
+    public ILSMIOOperationScheduler getIOScheduler();
 }

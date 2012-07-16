@@ -32,7 +32,7 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
@@ -68,7 +68,7 @@ public class LSMBTreeTestHarness {
     protected InMemoryBufferCache memBufferCache;
     protected InMemoryFreePageManager memFreePageManager;
     protected IHyracksTaskContext ctx;
-    protected ILSMIOScheduler ioScheduler;
+    protected ILSMIOOperationScheduler ioScheduler;
     protected ILSMFlushController flushController;
     protected ILSMMergePolicy mergePolicy;
     protected ILSMOperationTracker opTracker;
@@ -121,7 +121,6 @@ public class LSMBTreeTestHarness {
     }
 
     public void tearDown() throws HyracksDataException {
-        ioScheduler.shutdown();
         diskBufferCache.close();
         for (IODeviceHandle dev : ioManager.getIODevices()) {
             File dir = new File(dev.getPath(), onDiskDir);
@@ -197,7 +196,7 @@ public class LSMBTreeTestHarness {
         return rnd;
     }
 
-    public ILSMIOScheduler getIOScheduler() {
+    public ILSMIOOperationScheduler getIOScheduler() {
         return ioScheduler;
     }
 

@@ -28,15 +28,14 @@ public class RefCountingOperationTracker implements ILSMOperationTracker {
     }
 
     @Override
-    public void threadExit(ILSMIndex index) {
+    public void threadExit(final ILSMIndex index) {
         synchronized (this) {
             threadRefCount--;
 
             // Flush will only be handled by last exiting thread.
             if (index.getFlushController().getFlushStatus(index) && threadRefCount == 0) {
-                index.getIOScheduler().scheduleFlush(index);
+                index.getIOScheduler().scheduleOperation(new LSMFlushOperation(index));
             }
         }
     }
-
 }

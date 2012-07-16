@@ -29,7 +29,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
@@ -67,10 +67,10 @@ public class LSMHarness {
     private final ILSMFlushController flushController;
     private final ILSMMergePolicy mergePolicy;
     private final ILSMOperationTracker opTracker;
-    private final ILSMIOScheduler ioScheduler;
+    private final ILSMIOOperationScheduler ioScheduler;
 
     public LSMHarness(ILSMIndex lsmIndex, ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
-            ILSMOperationTracker opTracker, ILSMIOScheduler ioScheduler) {
+            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler) {
         this.lsmIndex = lsmIndex;
         this.opTracker = opTracker;
         this.flushController = flushController;
@@ -243,7 +243,7 @@ public class LSMHarness {
         return opTracker;
     }
 
-    public ILSMIOScheduler getIOScheduler() {
+    public ILSMIOOperationScheduler getIOScheduler() {
         return ioScheduler;
     }
 }

@@ -34,7 +34,7 @@ import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushController;
@@ -66,7 +66,7 @@ public class LSMTreeRunner implements IExperimentRunner {
 
     protected final int numBatches;
     protected final LSMBTree lsmtree;
-    protected final ILSMIOScheduler ioScheduler;
+    protected final ILSMIOOperationScheduler ioScheduler;
     protected IBufferCache memBufferCache;
     private final int onDiskPageSize;
     private final int onDiskNumPages;
@@ -132,7 +132,6 @@ public class LSMTreeRunner implements IExperimentRunner {
 
     @Override
     public void deinit() throws Exception {
-        ioScheduler.shutdown();
         bufferCache.closeFile(lsmtreeFileId);
         bufferCache.close();
         memBufferCache.closeFile(lsmtreeFileId);
