@@ -9,14 +9,14 @@
                 -- PRE_CLUSTERED_GROUP_BY[$$27]  |PARTITIONED|
                         {
                           -- AGGREGATE  |LOCAL|
-                            -- IN_MEMORY_STABLE_SORT [$$5(ASC)]  |LOCAL|
+                            -- IN_MEMORY_STABLE_SORT [$$4(ASC)]  |LOCAL|
                               -- STREAM_SELECT  |LOCAL|
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                         }
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- IN_MEMORY_HASH_JOIN [$$3][$$8]  |PARTITIONED|
+                        -- IN_MEMORY_HASH_JOIN [$$2][$$7]  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- STREAM_PROJECT  |PARTITIONED|
                               -- UNNEST  |PARTITIONED|
@@ -29,8 +29,8 @@
                           -- BROADCAST_EXCHANGE  |PARTITIONED|
                             -- RUNNING_AGGREGATE  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
-                                -- SORT_MERGE_EXCHANGE [$$28(ASC), $$8(ASC) ]  |PARTITIONED|
-                                  -- STABLE_SORT [$$28(ASC), $$8(ASC)]  |LOCAL|
+                                -- SORT_MERGE_EXCHANGE [$$28(ASC), $$7(ASC) ]  |PARTITIONED|
+                                  -- STABLE_SORT [$$28(ASC), $$7(ASC)]  |LOCAL|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- EXTERNAL_GROUP_BY[$$36]  |PARTITIONED|
                                               {
@@ -38,7 +38,7 @@
                                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                                               }
                                         -- HASH_PARTITION_EXCHANGE [$$36]  |PARTITIONED|
-                                          -- EXTERNAL_GROUP_BY[$$7]  |LOCAL|
+                                          -- EXTERNAL_GROUP_BY[$$6]  |LOCAL|
                                                   {
                                                     -- AGGREGATE  |LOCAL|
                                                       -- NESTED_TUPLE_SOURCE  |LOCAL|
