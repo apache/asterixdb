@@ -407,9 +407,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     public void cleanUpAfterMerge(List<Object> mergedComponents) throws HyracksDataException {
         for (Object o : mergedComponents) {
             BTree oldBTree = (BTree) o;
-            FileReference fileRef = diskFileMapProvider.lookupFileName(oldBTree.getFileId());
             oldBTree.deactivate();
-            fileRef.getFile().delete();
+            oldBTree.destroy();
         }
     }
 
