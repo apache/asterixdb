@@ -177,6 +177,7 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-avg", 1);
     public final static FunctionIdentifier COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-count", 1);
     public final static FunctionIdentifier SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sum", 1);
+    public final static FunctionIdentifier LOCAL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sum", 1);
     public final static FunctionIdentifier MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-max", 1);
     public final static FunctionIdentifier MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-min", 1);
     public final static FunctionIdentifier GLOBAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -202,6 +203,8 @@ public class AsterixBuiltinFunctions {
             "count-serial", 1);
     public final static FunctionIdentifier SERIAL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "sum-serial", 1);
+    public final static FunctionIdentifier SERIAL_LOCAL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "local-sum-serial", 1);
     public final static FunctionIdentifier SERIAL_GLOBAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "global-avg-serial", 1);
     public final static FunctionIdentifier SERIAL_LOCAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -488,6 +491,7 @@ public class AsterixBuiltinFunctions {
         add(SERIAL_GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
         add(SERIAL_LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
         add(SERIAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
+        add(SERIAL_LOCAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
         add(SIMILARITY_JACCARD, AFloatTypeComputer.INSTANCE);
         add(SIMILARITY_JACCARD_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
         add(SIMILARITY_JACCARD_SORTED, AFloatTypeComputer.INSTANCE);
@@ -539,6 +543,7 @@ public class AsterixBuiltinFunctions {
         });
         add(SUBSTRING, AStringTypeComputer.INSTANCE);
         add(SUM, NonTaggedSumTypeComputer.INSTANCE);
+        add(LOCAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
         add(SWITCH_CASE, NonTaggedSwitchCaseComputer.INSTANCE);
         add(REG_EXP, ABooleanTypeComputer.INSTANCE);
         add(INJECT_FAILURE, InjectFailureTypeComputer.INSTANCE);
@@ -596,7 +601,7 @@ public class AsterixBuiltinFunctions {
         addGlobalAgg(MIN, MIN);
 
         addAgg(SUM);
-        addLocalAgg(SUM, SUM);
+        addLocalAgg(SUM, LOCAL_SUM);
         addGlobalAgg(SUM, SUM);
 
         addAgg(LISTIFY);
@@ -605,6 +610,7 @@ public class AsterixBuiltinFunctions {
         addSerialAgg(AVG, SERIAL_AVG);
         addSerialAgg(COUNT, SERIAL_COUNT);
         addSerialAgg(SUM, SERIAL_SUM);
+        addSerialAgg(LOCAL_SUM, SERIAL_LOCAL_SUM);
         addSerialAgg(LOCAL_AVG, SERIAL_LOCAL_AVG);
         addSerialAgg(GLOBAL_AVG, SERIAL_GLOBAL_AVG);
 
@@ -619,7 +625,8 @@ public class AsterixBuiltinFunctions {
         addGlobalAgg(SERIAL_AVG, SERIAL_GLOBAL_AVG);
 
         addAgg(SERIAL_SUM);
-        addLocalAgg(SERIAL_SUM, SERIAL_SUM);
+        addAgg(SERIAL_LOCAL_SUM);
+        addLocalAgg(SERIAL_SUM, SERIAL_LOCAL_SUM);
         addGlobalAgg(SERIAL_SUM, SERIAL_SUM);
     }
 

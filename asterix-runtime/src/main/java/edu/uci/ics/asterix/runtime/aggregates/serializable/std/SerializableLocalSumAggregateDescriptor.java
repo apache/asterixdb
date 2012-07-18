@@ -10,13 +10,14 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunction;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunctionFactory;
 
-public class SerializableSumAggregateDescriptor extends AbstractSerializableAggregateFunctionDynamicDescriptor {
-
+public class SerializableLocalSumAggregateDescriptor extends AbstractSerializableAggregateFunctionDynamicDescriptor {
+    
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sum-serial", 1);
+    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "local-sum-serial", 1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new SerializableSumAggregateDescriptor();
+            return new SerializableLocalSumAggregateDescriptor();
         }
     };
 
@@ -29,11 +30,11 @@ public class SerializableSumAggregateDescriptor extends AbstractSerializableAggr
     public ICopySerializableAggregateFunctionFactory createAggregateFunctionFactory(final ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
         return new ICopySerializableAggregateFunctionFactory() {
-            private static final long serialVersionUID = 1L;           
+            private static final long serialVersionUID = 1L;
 
             @Override
             public ICopySerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
-                return new SerializableSumAggregateFunction(args, false);
+                return new SerializableSumAggregateFunction(args, true);
             }
         };
     }

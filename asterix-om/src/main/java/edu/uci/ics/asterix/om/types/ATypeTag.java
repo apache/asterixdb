@@ -23,7 +23,7 @@ public enum ATypeTag implements IEnumSerializer {
     FLOAT(11),
     DOUBLE(12),
     STRING(13),
-    NULL(14),
+    NULL(14),    
     BOOLEAN(15),
     DATETIME(16),
     DATE(17),
@@ -42,7 +42,8 @@ public enum ATypeTag implements IEnumSerializer {
     LINE(30),
     POLYGON(31),
     CIRCLE(32),
-    RECTANGLE(33);
+    RECTANGLE(33),
+    SYSTEM_NULL(34);
 
     private byte value;
 

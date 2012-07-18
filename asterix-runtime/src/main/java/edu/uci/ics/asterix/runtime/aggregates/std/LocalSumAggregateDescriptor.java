@@ -11,13 +11,14 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 
-public class SumAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
+public class LocalSumAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sum", 1);
+    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sum",
+            1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new SumAggregateDescriptor();
+            return new LocalSumAggregateDescriptor();
         }
     };
 
@@ -35,7 +36,7 @@ public class SumAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
             @Override
             public ICopyAggregateFunction createAggregateFunction(final IDataOutputProvider provider)
                     throws AlgebricksException {
-                return new SumAggregateFunction(args, provider, false);
+                return new SumAggregateFunction(args, provider, true);
             };
         };
     }

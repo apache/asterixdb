@@ -45,11 +45,13 @@ import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableAvgAg
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableCountAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableGlobalAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableLocalAvgAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableLocalSumAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableSumAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.AvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.CountAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.GlobalAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.LocalAvgAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.std.LocalSumAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.MaxAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.MinAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.SumAggregateDescriptor;
@@ -253,6 +255,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(LocalAvgAggregateDescriptor.FACTORY);
         temp.add(GlobalAvgAggregateDescriptor.FACTORY);
         temp.add(SumAggregateDescriptor.FACTORY);
+        temp.add(LocalSumAggregateDescriptor.FACTORY);
         temp.add(MaxAggregateDescriptor.FACTORY);
         temp.add(MinAggregateDescriptor.FACTORY);
 
@@ -262,6 +265,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(SerializableLocalAvgAggregateDescriptor.FACTORY);
         temp.add(SerializableGlobalAvgAggregateDescriptor.FACTORY);
         temp.add(SerializableSumAggregateDescriptor.FACTORY);
+        temp.add(SerializableLocalSumAggregateDescriptor.FACTORY);
 
         // new functions - constructors
         temp.add(ABooleanConstructorDescriptor.FACTORY);
