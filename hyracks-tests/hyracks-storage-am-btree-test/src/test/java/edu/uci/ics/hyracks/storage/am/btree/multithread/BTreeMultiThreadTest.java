@@ -33,9 +33,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 
 public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
-    private BTreeTestHarness harness = new BTreeTestHarness();
-
-    private BTreeTestWorkerFactory workerFactory = new BTreeTestWorkerFactory();
+    private final BTreeTestHarness harness = new BTreeTestHarness();
+    private final BTreeTestWorkerFactory workerFactory = new BTreeTestWorkerFactory();
 
     @Override
     protected void setUp() throws HyracksDataException {

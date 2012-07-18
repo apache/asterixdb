@@ -50,7 +50,8 @@ public class BTreeStatsTest extends AbstractBTreeTest {
     private static final int NUM_PAGES = 1000;
     private static final int MAX_OPEN_FILES = 10;
     private static final int HYRACKS_FRAME_SIZE = 128;
-    private IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
+
+    private final IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 
     @Test
     public void test01() throws Exception {

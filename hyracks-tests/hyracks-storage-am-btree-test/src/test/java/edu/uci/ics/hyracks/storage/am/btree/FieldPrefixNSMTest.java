@@ -50,10 +50,9 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-@SuppressWarnings("rawtypes")
 public class FieldPrefixNSMTest extends AbstractBTreeTest {
 
-    private static final int PAGE_SIZE = 32768; // 32K
+    private static final int PAGE_SIZE = 32768;
     private static final int NUM_PAGES = 40;
     private static final int MAX_OPEN_FILES = 10;
     private static final int HYRACKS_FRAME_SIZE = 128;
@@ -75,6 +74,7 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
         ArrayTupleBuilder tb = new ArrayTupleBuilder(3);
         DataOutput dos = tb.getDataOutput();
 
+        @SuppressWarnings("rawtypes")
         ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
@@ -117,6 +117,7 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
         MultiComparator cmp = new MultiComparator(cmps);
 
         // just for printing
+        @SuppressWarnings("rawtypes")
         ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
 

@@ -25,10 +25,11 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexSearchOperatorNod
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class BTreeSearchOperatorNodePushable extends TreeIndexSearchOperatorNodePushable {
+    protected final boolean lowKeyInclusive;
+    protected final boolean highKeyInclusive;
+
     protected PermutingFrameTupleReference lowKey;
     protected PermutingFrameTupleReference highKey;
-    protected boolean lowKeyInclusive;
-    protected boolean highKeyInclusive;
     protected MultiComparator lowKeySearchCmp;
     protected MultiComparator highKeySearchCmp;
 

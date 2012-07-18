@@ -34,7 +34,6 @@ import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
-@SuppressWarnings("rawtypes")
 public class BTreeUpdateSearchTest extends AbstractBTreeTest {
 
     // Update scan test on fixed-length tuples.
@@ -53,6 +52,7 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
         cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
+        @SuppressWarnings("rawtypes")
         ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE };
 

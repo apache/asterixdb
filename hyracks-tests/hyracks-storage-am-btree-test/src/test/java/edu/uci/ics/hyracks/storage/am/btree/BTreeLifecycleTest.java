@@ -17,10 +17,12 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 public class BTreeLifecycleTest extends AbstractIndexLifecycleTest {
     private final BTreeTestHarness harness = new BTreeTestHarness();
 
+    @SuppressWarnings("rawtypes")
     private final ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
 
     private ITreeIndexFrame frame = null;
 
+    @SuppressWarnings("rawtypes")
     private ITreeIndexTestContext<? extends CheckTuple> testCtx;
 
     @Override

@@ -61,7 +61,6 @@ public class BTree extends AbstractTreeIndex {
     public static final float DEFAULT_FILL_FACTOR = 0.7f;
 
     private final static long RESTART_OP = Long.MIN_VALUE;
-
     private final static int MAX_RESTARTS = 10;
 
     private final ReadWriteLock treeLatch;
@@ -303,7 +302,7 @@ public class BTree extends AbstractTreeIndex {
 
             // Perform an update (delete + insert) if the updateTupleIndex != -1
             if (updateTupleIndex != -1) {
-                ITupleReference beforeTuple = ctx.leafFrame.getBeforeTuple(tuple, updateTupleIndex);
+                ITupleReference beforeTuple = ctx.leafFrame.getMatchingKeyTuple(tuple, updateTupleIndex);
                 ctx.modificationCallback.found(beforeTuple);
                 ctx.leafFrame.delete(tuple, updateTupleIndex);
             } else {
@@ -319,10 +318,6 @@ public class BTree extends AbstractTreeIndex {
             rightFrame.setNextLeaf(ctx.leafFrame.getNextLeaf());
             ctx.leafFrame.setNextLeaf(rightPageId);
 
-            // TODO: we just use increasing numbers as pageLsn,
-            // we
-            // should tie this together with the LogManager and
-            // TransactionManager
             rightFrame.setPageLsn(rightFrame.getPageLsn() + 1);
             ctx.leafFrame.setPageLsn(ctx.leafFrame.getPageLsn() + 1);
 
@@ -340,7 +335,7 @@ public class BTree extends AbstractTreeIndex {
     private boolean updateLeaf(ITupleReference tuple, int oldTupleIndex, int pageId, BTreeOpContext ctx)
             throws Exception {
         FrameOpSpaceStatus spaceStatus = ctx.leafFrame.hasSpaceUpdate(tuple, oldTupleIndex);
-        ITupleReference beforeTuple = ctx.leafFrame.getBeforeTuple(tuple, oldTupleIndex);
+        ITupleReference beforeTuple = ctx.leafFrame.getMatchingKeyTuple(tuple, oldTupleIndex);
         boolean restartOp = false;
         switch (spaceStatus) {
             case SUFFICIENT_INPLACE_SPACE: {
@@ -376,7 +371,7 @@ public class BTree extends AbstractTreeIndex {
     private boolean upsertLeaf(ITupleReference tuple, int targetTupleIndex, int pageId, BTreeOpContext ctx)
             throws Exception {
         boolean restartOp = false;
-        ITupleReference beforeTuple = ctx.leafFrame.getBeforeTuple(tuple, targetTupleIndex);
+        ITupleReference beforeTuple = ctx.leafFrame.getMatchingKeyTuple(tuple, targetTupleIndex);
         if (ctx.acceptor.accept(beforeTuple)) {
             if (beforeTuple == null) {
                 restartOp = insertLeaf(tuple, targetTupleIndex, pageId, ctx);
@@ -411,9 +406,6 @@ public class BTree extends AbstractTreeIndex {
                     ctx.smPages.add(rightPageId);
                     ctx.interiorFrame.setSmFlag(true);
                     rightFrame.setSmFlag(true);
-                    // TODO: we just use increasing numbers as pageLsn, we
-                    // should tie this together with the LogManager and
-                    // TransactionManager
                     rightFrame.setPageLsn(rightFrame.getPageLsn() + 1);
                     ctx.interiorFrame.setPageLsn(ctx.interiorFrame.getPageLsn() + 1);
 
@@ -452,7 +444,7 @@ public class BTree extends AbstractTreeIndex {
             throw new BTreeNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
         }
         int tupleIndex = ctx.leafFrame.findDeleteTupleIndex(tuple);
-        ITupleReference beforeTuple = ctx.leafFrame.getBeforeTuple(tuple, tupleIndex);
+        ITupleReference beforeTuple = ctx.leafFrame.getMatchingKeyTuple(tuple, tupleIndex);
         ctx.modificationCallback.found(beforeTuple);
         ctx.leafFrame.delete(tuple, tupleIndex);
         return false;

@@ -33,6 +33,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFrame {
     protected static final int nextLeafOff = smFlagOff + 1;
+
     private MultiComparator cmp;
 
     public BTreeNSMLeafFrame(ITreeIndexTupleWriter tupleWriter) {
@@ -86,12 +87,12 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
 
     @Override
-    public ITupleReference getBeforeTuple(ITupleReference tuple, int targetTupleIndex) throws TreeIndexException {
+    public ITupleReference getMatchingKeyTuple(ITupleReference searchTuple, int targetTupleIndex) {
         // Examine the tuple index to determine whether it is valid or not.
         if (targetTupleIndex != slotManager.getGreatestKeyIndicator()) {
             // We need to check the key to determine whether it's an insert or an update/delete
             frameTuple.resetByTupleIndex(this, targetTupleIndex);
-            if (cmp.compare(tuple, frameTuple) == 0) {
+            if (cmp.compare(searchTuple, frameTuple) == 0) {
                 // The keys match, it's an update/delete
                 return frameTuple;
             }

@@ -24,13 +24,21 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPoli
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public interface IBTreeLeafFrame extends IBTreeFrame {
+    public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference pageTuple, MultiComparator cmp,
+            FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) throws HyracksDataException;
+
+    public int findUpdateTupleIndex(ITupleReference tuple) throws TreeIndexException;
+
+    public int findUpsertTupleIndex(ITupleReference tuple) throws TreeIndexException;
+
+    /**
+     * @param searchTuple the tuple to match 
+     * @param targetTupleIndex the index of the tuple to check
+     * @return the tuple at targetTupleIndex if its keys match searchTuple's keys, otherwise null 
+     */
+    public ITupleReference getMatchingKeyTuple(ITupleReference searchTuple, int targetTupleIndex);
+
     public void setNextLeaf(int nextPage);
 
     public int getNextLeaf();
-
-    public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference pageTuple, MultiComparator cmp,
-            FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) throws HyracksDataException;
-    
-    public int findUpsertTupleIndex(ITupleReference tuple) throws TreeIndexException;
-    public ITupleReference getBeforeTuple(ITupleReference tuple, int targetTupleIndex) throws TreeIndexException;
 }

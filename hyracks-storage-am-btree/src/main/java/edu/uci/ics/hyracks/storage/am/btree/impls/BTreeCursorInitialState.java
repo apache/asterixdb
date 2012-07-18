@@ -7,13 +7,10 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class BTreeCursorInitialState implements ICursorInitialState {
 
-    private ICachedPage page;
-    
     // This is only used by the LSM-RTree
     private int pageId;
-
+    private ICachedPage page;
     private ISearchOperationCallback searchCallback;
-    
     private MultiComparator originalKeyCmp;
 
     public BTreeCursorInitialState(ICachedPage page, ISearchOperationCallback searchCallback) {

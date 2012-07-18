@@ -26,14 +26,13 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
 
-@SuppressWarnings("rawtypes")
 public class BTreeBulkLoadTest extends OrderedIndexBulkLoadTest {
+
+    private final BTreeTestHarness harness = new BTreeTestHarness();
 
     public BTreeBulkLoadTest() {
         super(BTreeTestHarness.LEAF_FRAMES_TO_TEST, 1);
     }
-
-    private final BTreeTestHarness harness = new BTreeTestHarness();
 
     @Before
     public void setUp() throws HyracksDataException {
@@ -45,6 +44,7 @@ public class BTreeBulkLoadTest extends OrderedIndexBulkLoadTest {
         harness.tearDown();
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     protected OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
             BTreeLeafFrameType leafType) throws Exception {

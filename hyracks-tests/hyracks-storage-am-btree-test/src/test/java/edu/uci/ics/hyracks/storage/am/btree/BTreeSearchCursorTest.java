@@ -53,7 +53,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
@@ -62,15 +61,11 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public class BTreeSearchCursorTest extends AbstractBTreeTest {
-    // Declare fields
-    int fieldCount = 2;
-    ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
-
-    TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
-    ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-    ITreeIndexMetaDataFrame metaFrame = metaFrameFactory.createFrame();
-
-    Random rnd = new Random(50);
+    private final int fieldCount = 2;
+    private final ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
+    private final TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
+    private final ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
+    private final Random rnd = new Random(50);
 
     @Before
     public void setUp() throws HyracksDataException {
@@ -137,8 +132,6 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
                 e.printStackTrace();
             }
         }
-
-        // btree.printTree(leafFrame, interiorFrame, recDescSers);
 
         int minSearchKey = -100;
         int maxSearchKey = 100;
@@ -214,8 +207,6 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
             }
         }
 
-        // btree.printTree(leafFrame, interiorFrame, recDescSers);
-
         int minSearchKey = -100;
         int maxSearchKey = 100;
 
@@ -289,8 +280,6 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
                 e.printStackTrace();
             }
         }
-
-        // btree.printTree(leafFrame, interiorFrame, recDescSers);
 
         int minSearchKey = -100;
         int maxSearchKey = 100;

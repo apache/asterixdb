@@ -22,29 +22,28 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
-// a slot consists of two fields:
-// first field is 1 byte, it indicates the slot number of a prefix tuple
-// we call the first field prefixSlotOff
-// second field is 3 bytes, it points to the start offset of a tuple
-// we call the second field tupleOff
-
-// we distinguish between two slot types:
-// prefix slots that point to prefix tuples, 
-// a frame is assumed to have a field numPrefixTuples
-// tuple slots that point to data tuples
-// a frame is assumed to have a field numTuples
-// a tuple slot contains a tuple pointer and a pointer to a prefix slot (prefix slot number) 
-
-// INSERT procedure
-// a tuple insertion may use an existing prefix tuple 
-// a tuple insertion may never create a new prefix tuple
-// modifying the prefix slots would be extremely expensive because: 
-// potentially all tuples slots would have to change their prefix slot pointers
-// all prefixes are recomputed during a reorg or compaction
-
+/**
+ *  A slot consists of two fields. The first field is 1 byte and it indicates the slot number of 
+ *  a prefix tuple that is called the first field prefixSlotOff. The second field is 3 bytes and 
+ *  it points to the start offset of a tuple that is called the second field tupleOff.
+ *  
+ *  We distinguish between two slot types:
+ *      1) prefix slots that point to prefix tuples (a frame is assumed to have a field numPrefixTuples)
+ *      2) tuple slots that point to data tuples (a frame is assumed to have a field numTuples)
+ *      
+ *  A tuple slot contains a tuple pointer and a pointer to a prefix slot (prefix slot number).
+ *  
+ *  INSERT procedure:
+ *      - A tuple insertion may use an existing prefix tuple
+ *      - A tuple insertion may never create a new prefix tuple
+ *  
+ *  Modifying the prefix slots would be extremely expensive because potentially all tuples slots 
+ *  would have to change their prefix slot pointers. All prefixes are recomputed during a reorg 
+ *  or compaction.
+ */
 public interface IPrefixSlotManager extends ISlotManager {
     // TODO: Clean up interface after extending ISlotManager.
-	
+
     public int decodeFirstSlotField(int slot);
 
     public int decodeSecondSlotField(int slot);
@@ -57,7 +56,9 @@ public interface IPrefixSlotManager extends ISlotManager {
 
     public int insertSlot(int slot, int tupleOff);
 
-    // returns prefix slot number, returns TUPLE_UNCOMPRESSED if none found
+    /** 
+     * @return the prefix slot number or FieldPrefixSlotManager.TUPLE_UNCOMPRESSED if none found
+     */
     public int findPrefix(ITupleReference tuple, ITreeIndexTupleReference framePrefixTuple);
 
     public int getTupleSlotStartOff();
@@ -78,6 +79,6 @@ public interface IPrefixSlotManager extends ISlotManager {
 
     // functions for testing
     public void setPrefixSlot(int tupleIndex, int slot);
-    
+
     public void setMultiComparator(MultiComparator cmp);
 }
