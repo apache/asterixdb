@@ -22,6 +22,7 @@ public class AsterixHyracksIntegrationUtil {
 
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
 
+
     private static ClusterControllerService cc;
     private static NodeControllerService nc1;
     private static NodeControllerService nc2;

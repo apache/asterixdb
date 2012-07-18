@@ -21,9 +21,8 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class AsterixAppRuntimeContext {
     private static final int DEFAULT_BUFFER_CACHE_PAGE_SIZE = 32768;
-
     private final INCApplicationContext ncApplicationContext;
-
+    
     private IndexRegistry<IIndex> indexRegistry;
     private IFileMapManager fileMapManager;
     private IBufferCache bufferCache;

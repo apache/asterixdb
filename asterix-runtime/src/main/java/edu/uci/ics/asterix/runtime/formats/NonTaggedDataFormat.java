@@ -134,6 +134,28 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.SwitchCaseDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.UnorderedListConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.WordTokensDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.YearDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericAbsDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericCeilingDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericFloorDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundHalfToEvenDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundHalfToEven2Descriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringEqualDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringStartWithDescrtiptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringEndWithDescrtiptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringMatchesDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringLowerCaseDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringMatchesWithFlagDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringReplaceDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringReplaceWithFlagsDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringLengthDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.Substring2Descriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.SubstringBeforeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.SubstringAfterDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringToCodePointDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.CodePointToStringDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringConcatDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringJoinDescriptor;
 import edu.uci.ics.asterix.runtime.operators.file.AdmSchemafullRecordParserFactory;
 import edu.uci.ics.asterix.runtime.operators.file.NtDelimitedDataTupleParserFactory;
 import edu.uci.ics.asterix.runtime.runningaggregates.std.TidRunningAggregateDescriptor;
@@ -245,6 +267,31 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(LenDescriptor.FACTORY);
         temp.add(NonEmptyStreamAggregateDescriptor.FACTORY);
         temp.add(RangeDescriptor.FACTORY);
+
+// Xiaoyu Ma add for numeric unary functions
+        temp.add(NumericAbsDescriptor.FACTORY);
+        temp.add(NumericCeilingDescriptor.FACTORY);
+        temp.add(NumericFloorDescriptor.FACTORY);
+        temp.add(NumericRoundDescriptor.FACTORY);
+        temp.add(NumericRoundHalfToEvenDescriptor.FACTORY);
+        temp.add(NumericRoundHalfToEven2Descriptor.FACTORY);
+        // String functions
+        temp.add(StringEqualDescriptor.FACTORY);
+        temp.add(StringStartWithDescrtiptor.FACTORY);    
+        temp.add(StringEndWithDescrtiptor.FACTORY);       
+        temp.add(StringMatchesDescriptor.FACTORY);    
+        temp.add(StringLowerCaseDescriptor.FACTORY);   
+        temp.add(StringMatchesWithFlagDescriptor.FACTORY);
+        temp.add(StringReplaceDescriptor.FACTORY);      
+        temp.add(StringReplaceWithFlagsDescriptor.FACTORY);    
+        temp.add(StringLengthDescriptor.FACTORY);        
+        temp.add(Substring2Descriptor.FACTORY);    
+        temp.add(SubstringBeforeDescriptor.FACTORY); 
+        temp.add(SubstringAfterDescriptor.FACTORY); 
+        temp.add(StringToCodePointDescriptor.FACTORY);         
+        temp.add(CodePointToStringDescriptor.FACTORY); 
+        temp.add(StringConcatDescriptor.FACTORY);         
+        temp.add(StringJoinDescriptor.FACTORY);      
 
         // aggregates
         temp.add(ListifyAggregateDescriptor.FACTORY);

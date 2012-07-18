@@ -389,9 +389,9 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator
 			break;
 		}
 		default: {
+			v = context.newVar(lc.getVarExpr());
 			Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = aqlExprToAlgExpression(
 					lc.getBindingExpr(), tupSource);
-			v = context.newVar(lc.getVarExpr());
 			returnedOp = new AssignOperator(v,
 					new MutableObject<ILogicalExpression>(eo.first));
 			returnedOp.getInputs().add(eo.second);

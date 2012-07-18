@@ -1,0 +1,10 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/numeric_round-half-to-even4.adm";
+
+
+let $c0 := double("1.5")
+let $c1 := double("2.5")
+return {"d0": numeric-round-half-to-even($c0), "d1": numeric-round-half-to-even($c1)}

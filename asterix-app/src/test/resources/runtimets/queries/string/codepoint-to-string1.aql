@@ -1,0 +1,9 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/string_codepoint-to-string1.adm";
+
+let $x :=  [20013, 25991, 23383, 31526]
+let $c := codepoint-to-string($x)
+return {"result1": $c}
