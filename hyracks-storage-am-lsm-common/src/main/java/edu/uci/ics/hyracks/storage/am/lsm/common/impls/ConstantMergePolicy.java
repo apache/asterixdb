@@ -1,7 +1,11 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 
 public class ConstantMergePolicy implements ILSMMergePolicy {
@@ -16,9 +20,19 @@ public class ConstantMergePolicy implements ILSMMergePolicy {
     }
 
     @Override
-    public void diskComponentAdded(final ILSMIndex index, int totalNumDiskComponents) {
+    public void diskComponentAdded(final ILSMIndex index, int totalNumDiskComponents) throws HyracksDataException {
         if (totalNumDiskComponents >= threshold) {
-            ioScheduler.scheduleOperation(new LSMMergeOperation(index));
+            ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
+                    NoOpOperationCallback.INSTANCE);
+            ILSMIOOperation op;
+            try {
+                op = accessor.createMergeOperation(NoOpIOOperationCallback.INSTANCE);
+                if (op != null) {
+                    ioScheduler.scheduleOperation(op);
+                }
+            } catch (LSMMergeInProgressException e) {
+                // Do nothing
+            }
         }
     }
 }

@@ -43,13 +43,16 @@ public interface ILSMIndex extends IIndex {
     public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOpContext ictx,
             boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, IndexException;
 
-    public Object merge(List<Object> mergedComponents) throws HyracksDataException, IndexException;
+    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException;
+
+    public Object merge(List<Object> mergedComponents, ILSMIOOperation operation) throws HyracksDataException,
+            IndexException;
 
     public void addMergedComponent(Object newComponent, List<Object> mergedComponents);
 
     public void cleanUpAfterMerge(List<Object> mergedComponents) throws HyracksDataException;
 
-    public Object flush() throws HyracksDataException, IndexException;
+    public Object flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
 
     public void addFlushedComponent(Object index);
 

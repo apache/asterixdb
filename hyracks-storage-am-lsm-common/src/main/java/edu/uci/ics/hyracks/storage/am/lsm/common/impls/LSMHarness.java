@@ -29,6 +29,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -101,11 +103,11 @@ public class LSMHarness {
         }
     }
 
-    public void flush() throws HyracksDataException, IndexException {
+    public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Flushing LSM-Tree.");
         }
-        Object newComponent = lsmIndex.flush();
+        Object newComponent = lsmIndex.flush(operation);
 
         // The implementation of this call must take any necessary steps to make
         // the new component permanent, and mark it as valid (usually this means
@@ -150,12 +152,21 @@ public class LSMHarness {
         return diskComponentSnapshot;
     }
 
-    public void merge() throws HyracksDataException, IndexException {
+    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws LSMMergeInProgressException,
+            HyracksDataException {
         if (!isMerging.compareAndSet(false, true)) {
             throw new LSMMergeInProgressException(
                     "Merge already in progress. Only one merge process allowed at a time.");
         }
 
+        ILSMIOOperation mergeOp = lsmIndex.createMergeOperation(callback);
+        if (mergeOp == null) {
+            isMerging.set(false);
+        }
+        return mergeOp;
+    }
+
+    public void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Merging LSM-Tree.");
         }
@@ -165,7 +176,7 @@ public class LSMHarness {
         AtomicInteger localSearcherRefCount = searcherRefCount;
 
         List<Object> mergedComponents = new ArrayList<Object>();
-        Object newComponent = lsmIndex.merge(mergedComponents);
+        Object newComponent = lsmIndex.merge(mergedComponents, operation);
 
         // No merge happened.
         if (newComponent == null) {
@@ -245,5 +256,9 @@ public class LSMHarness {
 
     public ILSMIOOperationScheduler getIOScheduler() {
         return ioScheduler;
+    }
+
+    public ILSMIndex getIndex() {
+        return lsmIndex;
     }
 }

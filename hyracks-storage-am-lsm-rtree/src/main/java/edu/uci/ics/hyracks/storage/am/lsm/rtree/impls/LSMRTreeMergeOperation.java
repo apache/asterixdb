@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,27 +9,28 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.impls.AbstractTreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.AbstractLSMRTree.LSMRTreeComponent;
 
-public class LSMMergeOperation implements ILSMIOOperation {
-
+public class LSMRTreeMergeOperation implements ILSMIOOperation {
     private final ILSMIndex index;
     private final List<Object> mergingComponents;
     private final ITreeIndexCursor cursor;
-    private final FileReference mergeTarget;
+    private final FileReference rtreeMergeTarget;
+    private final FileReference btreeMergeTarget;
     private final ILSMIOOperationCallback callback;
 
-    public LSMMergeOperation(ILSMIndex index, List<Object> mergingComponents, ITreeIndexCursor cursor,
-            FileReference mergeTarget, ILSMIOOperationCallback callback) {
+    public LSMRTreeMergeOperation(ILSMIndex index, List<Object> mergingComponents, ITreeIndexCursor cursor,
+            FileReference rtreeMergeTarget, FileReference btreeMergeTarget, ILSMIOOperationCallback callback) {
         this.index = index;
         this.mergingComponents = mergingComponents;
         this.cursor = cursor;
-        this.mergeTarget = mergeTarget;
+        this.rtreeMergeTarget = rtreeMergeTarget;
+        this.btreeMergeTarget = btreeMergeTarget;
         this.callback = callback;
     }
 
@@ -37,15 +38,15 @@ public class LSMMergeOperation implements ILSMIOOperation {
     public List<IODeviceHandle> getReadDevices() {
         List<IODeviceHandle> devs = new ArrayList<IODeviceHandle>();
         for (Object o : mergingComponents) {
-            AbstractTreeIndex idx = (AbstractTreeIndex) o;
-            devs.add(idx.getFileReference().getDevideHandle());
+            LSMRTreeComponent component = (LSMRTreeComponent) o;
+            devs.add(component.getRTree().getFileReference().getDevideHandle());
         }
         return devs;
     }
 
     @Override
     public List<IODeviceHandle> getWriteDevices() {
-        return Collections.singletonList(mergeTarget.getDevideHandle());
+        return Collections.singletonList(rtreeMergeTarget.getDevideHandle());
     }
 
     @Override
@@ -60,8 +61,12 @@ public class LSMMergeOperation implements ILSMIOOperation {
         return callback;
     }
 
-    public FileReference getMergeTarget() {
-        return mergeTarget;
+    public FileReference getRTreeMergeTarget() {
+        return rtreeMergeTarget;
+    }
+
+    public FileReference getBTreeMergeTarget() {
+        return btreeMergeTarget;
     }
 
     public ITreeIndexCursor getCursor() {
@@ -71,4 +76,5 @@ public class LSMMergeOperation implements ILSMIOOperation {
     public List<Object> getMergingComponents() {
         return mergingComponents;
     }
+
 }

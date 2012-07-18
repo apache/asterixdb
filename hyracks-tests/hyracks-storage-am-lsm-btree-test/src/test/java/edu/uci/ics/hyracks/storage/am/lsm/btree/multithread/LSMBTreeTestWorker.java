@@ -33,29 +33,31 @@ import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree.LSMBTreeIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeInProgressException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 
 public class LSMBTreeTestWorker extends AbstractTreeIndexTestWorker {
-    
+
     private final LSMBTree lsmBTree;
     private final int numKeyFields;
     private final ArrayTupleBuilder deleteTb;
     private final ArrayTupleReference deleteTuple = new ArrayTupleReference();
-    
+
     public LSMBTreeTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, ITreeIndex index, int numBatches) {
         super(dataGen, opSelector, index, numBatches);
         lsmBTree = (LSMBTree) index;
         numKeyFields = lsmBTree.getComparatorFactories().length;
         deleteTb = new ArrayTupleBuilder(numKeyFields);
     }
-    
+
     @Override
-    public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, IndexException {        
+    public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, IndexException {
         LSMBTreeIndexAccessor accessor = (LSMBTreeIndexAccessor) indexAccessor;
         IIndexCursor searchCursor = accessor.createSearchCursor();
         MultiComparator cmp = accessor.getMultiComparator();
         RangePredicate rangePred = new RangePredicate(tuple, tuple, true, true, cmp, cmp);
-        
+
         switch (op) {
             case INSERT:
                 try {
@@ -64,7 +66,7 @@ public class LSMBTreeTestWorker extends AbstractTreeIndexTestWorker {
                     // Ignore duplicate keys, since we get random tuples.
                 }
                 break;
-                
+
             case DELETE:
                 // Create a tuple reference with only key fields.
                 deleteTb.reset();
@@ -78,8 +80,8 @@ public class LSMBTreeTestWorker extends AbstractTreeIndexTestWorker {
                     // Ignore non-existant keys, since we get random tuples.
                 }
                 break;
-                
-            case UPDATE: 
+
+            case UPDATE:
                 try {
                     accessor.update(tuple);
                 } catch (BTreeNonExistentKeyException e) {
@@ -88,15 +90,15 @@ public class LSMBTreeTestWorker extends AbstractTreeIndexTestWorker {
                     // Ignore not updateable exception due to numKeys == numFields.
                 }
                 break;
-                
-            case POINT_SEARCH: 
+
+            case POINT_SEARCH:
                 searchCursor.reset();
                 rangePred.setLowKey(tuple, true);
                 rangePred.setHighKey(tuple, true);
                 accessor.search(searchCursor, rangePred);
                 consumeCursorTuples(searchCursor);
                 break;
-                
+
             case SCAN:
                 searchCursor.reset();
                 rangePred.setLowKey(null, true);
@@ -104,10 +106,13 @@ public class LSMBTreeTestWorker extends AbstractTreeIndexTestWorker {
                 accessor.search(searchCursor, rangePred);
                 consumeCursorTuples(searchCursor);
                 break;
-                
+
             case MERGE:
                 try {
-                    accessor.merge();
+                    ILSMIOOperation ioop = accessor.createMergeOperation(NoOpIOOperationCallback.INSTANCE);
+                    if (ioop != null) {
+                        accessor.merge(ioop);
+                    }
                 } catch (LSMMergeInProgressException e) {
                     // Ignore ongoing merges. Do an insert instead.
                     try {
@@ -117,7 +122,7 @@ public class LSMBTreeTestWorker extends AbstractTreeIndexTestWorker {
                     }
                 }
                 break;
-                
+
             default:
                 throw new HyracksDataException("Op " + op.toString() + " not supported.");
         }

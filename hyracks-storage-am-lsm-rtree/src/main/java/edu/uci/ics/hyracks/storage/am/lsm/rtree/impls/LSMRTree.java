@@ -43,6 +43,8 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
@@ -183,7 +185,8 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
-    public Object flush() throws HyracksDataException, IndexException {
+    public Object flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
+        LSMRTreeFlushOperation flushOp = (LSMRTreeFlushOperation) operation;
         // Renaming order is critical because we use assume ordering when we
         // read the file names when we open the tree.
         // The RTree should be renamed before the BTree.
@@ -194,9 +197,7 @@ public class LSMRTree extends AbstractLSMRTree {
         RTreeSearchCursor rtreeScanCursor = (RTreeSearchCursor) memRTreeAccessor.createSearchCursor();
         SearchPredicate rtreeNullPredicate = new SearchPredicate(null, null);
         memRTreeAccessor.search(rtreeScanCursor, rtreeNullPredicate);
-        LSMRTreeFileNameComponent fileNames = (LSMRTreeFileNameComponent) fileManager.getRelFlushFileName();
-        FileReference rtreeFile = fileManager.createFlushFile(fileNames.getRTreeFileName());
-        RTree diskRTree = (RTree) createDiskTree(diskRTreeFactory, rtreeFile, true);
+        RTree diskRTree = (RTree) createDiskTree(diskRTreeFactory, flushOp.getRTreeFlushTarget(), true);
         IIndexBulkLoader rTreeBulkloader;
         ITreeIndexCursor cursor;
 
@@ -247,8 +248,7 @@ public class LSMRTree extends AbstractLSMRTree {
         IIndexCursor btreeScanCursor = memBTreeAccessor.createSearchCursor();
         RangePredicate btreeNullPredicate = new RangePredicate(null, null, true, true, null, null);
         memBTreeAccessor.search(btreeScanCursor, btreeNullPredicate);
-        FileReference btreeFile = fileManager.createFlushFile(fileNames.getBTreeFileName());
-        BTree diskBTree = (BTree) createDiskTree(diskBTreeFactory, btreeFile, true);
+        BTree diskBTree = (BTree) createDiskTree(diskBTreeFactory, flushOp.getBTreeFlushTarget(), true);
 
         // BulkLoad the tuples from the in-memory tree into the new disk BTree.
         IIndexBulkLoader bTreeBulkloader = diskBTree.createBulkLoader(1.0f);
@@ -266,18 +266,11 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
-    public Object merge(List<Object> mergedComponents) throws HyracksDataException, IndexException {
-        // Renaming order is critical because we use assume ordering when we
-        // read the file names when we open the tree.
-        // The RTree should be renamed before the BTree.
-
-        IIndexOpContext ctx = createOpContext();
-        ITreeIndexCursor cursor;
-        cursor = new LSMRTreeSortedCursor(linearizer);
-        ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
-        // Scan the RTrees, ignoring the in-memory RTree.
-        List<Object> mergingComponents = lsmHarness.search(cursor, rtreeSearchPred, ctx, false);
-        mergedComponents.addAll(mergingComponents);
+    public Object merge(List<Object> mergedComponents, ILSMIOOperation operation) throws HyracksDataException,
+            IndexException {
+        LSMRTreeMergeOperation mergeOp = (LSMRTreeMergeOperation) operation;
+        ITreeIndexCursor cursor = mergeOp.getCursor();
+        mergedComponents.addAll(mergeOp.getMergingComponents());
 
         // Nothing to merge.
         if (mergedComponents.size() <= 1) {
@@ -286,11 +279,8 @@ public class LSMRTree extends AbstractLSMRTree {
         }
 
         // Bulk load the tuples from all on-disk RTrees into the new RTree.
-        LSMRTreeFileNameComponent fileNames = getMergeTargetFileName(mergingComponents);
-        FileReference rtreeFile = fileManager.createMergeFile(fileNames.getRTreeFileName());
-        FileReference btreeFile = fileManager.createMergeFile(fileNames.getBTreeFileName());
-        RTree mergedRTree = (RTree) createDiskTree(diskRTreeFactory, rtreeFile, true);
-        BTree mergedBTree = (BTree) createDiskTree(diskBTreeFactory, btreeFile, true);
+        RTree mergedRTree = (RTree) createDiskTree(diskRTreeFactory, mergeOp.getRTreeMergeTarget(), true);
+        BTree mergedBTree = (BTree) createDiskTree(diskBTreeFactory, mergeOp.getBTreeMergeTarget(), true);
 
         IIndexBulkLoader bulkloader = mergedRTree.createBulkLoader(1.0f);
         try {
@@ -326,6 +316,35 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
+    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException {
+        // Renaming order is critical because we use assume ordering when we
+        // read the file names when we open the tree.
+        // The RTree should be renamed before the BTree.
+        IIndexOpContext ctx = createOpContext();
+        ITreeIndexCursor cursor;
+        cursor = new LSMRTreeSortedCursor(linearizer);
+        ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
+        // Scan the RTrees, ignoring the in-memory RTree.
+        List<Object> mergingComponents;
+        try {
+            mergingComponents = lsmHarness.search(cursor, rtreeSearchPred, ctx, false);
+        } catch (IndexException e) {
+            throw new HyracksDataException(e);
+        }
+        // Nothing to merge.
+        if (mergingComponents.size() <= 1) {
+            cursor.close();
+            return null;
+        }
+        LSMRTreeFileNameComponent fileNames = getMergeTargetFileName(mergingComponents);
+        FileReference rtreeFile = fileManager.createMergeFile(fileNames.getRTreeFileName());
+        FileReference btreeFile = fileManager.createMergeFile(fileNames.getBTreeFileName());
+
+        return new LSMRTreeMergeOperation(lsmHarness.getIndex(), mergingComponents, cursor, rtreeFile, btreeFile,
+                callback);
+    }
+
+    @Override
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
         return new LSMRTreeAccessor(lsmHarness, createOpContext());
@@ -344,6 +363,14 @@ public class LSMRTree extends AbstractLSMRTree {
         public MultiComparator getMultiComparator() {
             LSMRTreeOpContext concreteCtx = (LSMRTreeOpContext) ctx;
             return concreteCtx.rtreeOpContext.cmp;
+        }
+
+        @Override
+        public ILSMIOOperation createFlushOperation(ILSMIOOperationCallback callback) {
+            LSMRTreeFileNameComponent fileNames = (LSMRTreeFileNameComponent) fileManager.getRelFlushFileName();
+            FileReference rtreeFile = fileManager.createFlushFile(fileNames.getRTreeFileName());
+            FileReference btreeFile = fileManager.createFlushFile(fileNames.getBTreeFileName());
+            return new LSMRTreeFlushOperation(lsmHarness.getIndex(), rtreeFile, btreeFile, callback);
         }
     }
 

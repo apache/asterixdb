@@ -22,6 +22,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 
 public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
@@ -51,7 +53,7 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
         ctx.reset(IndexOp.DELETE);
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
     }
-    
+
     @Override
     public void upsert(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.reset(IndexOp.UPSERT);
@@ -65,18 +67,24 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     }
 
     @Override
-    public void flush() throws HyracksDataException, IndexException {
-        lsmHarness.flush();
+    public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
+        lsmHarness.flush(operation);
     }
 
     @Override
-    public void merge() throws HyracksDataException, IndexException {
-        lsmHarness.merge();
+    public void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException {
+        lsmHarness.merge(operation);
     }
-    
+
     @Override
     public void physicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.reset(IndexOp.PHYSICALDELETE);
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
+    }
+
+    @Override
+    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
+            LSMMergeInProgressException {
+        return lsmHarness.createMergeOperation(callback);
     }
 }

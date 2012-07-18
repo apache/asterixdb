@@ -44,11 +44,15 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMFlushOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexComponentFinalizer;
@@ -134,23 +138,6 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         super.clear();
     }
 
-    private RTree createFlushTarget() throws HyracksDataException {
-        String relFlushFileName = (String) fileManager.getRelFlushFileName();
-        FileReference fileRef = fileManager.createFlushFile(relFlushFileName);
-        return (RTree) createDiskTree(diskRTreeFactory, fileRef, true);
-    }
-
-    private RTree createMergeTarget(List<Object> mergingDiskRTrees) throws HyracksDataException {
-        RTree firstRTree = (RTree) mergingDiskRTrees.get(0);
-        RTree lastRTree = (RTree) mergingDiskRTrees.get(mergingDiskRTrees.size() - 1);
-        FileReference firstFile = diskFileMapProvider.lookupFileName(firstRTree.getFileId());
-        FileReference lastFile = diskFileMapProvider.lookupFileName(lastRTree.getFileId());
-        String relMergeFileName = (String) fileManager.getRelMergeFileName(firstFile.getFile().getName(), lastFile
-                .getFile().getName());
-        FileReference fileRef = fileManager.createMergeFile(relMergeFileName);
-        return (RTree) createDiskTree(diskRTreeFactory, fileRef, true);
-    }
-
     public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOpContext ictx,
             boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, IndexException {
         LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;
@@ -191,7 +178,8 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     }
 
     @Override
-    public ITreeIndex flush() throws HyracksDataException, IndexException {
+    public ITreeIndex flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
+        LSMFlushOperation flushOp = (LSMFlushOperation) operation;
         // Renaming order is critical because we use assume ordering when we
         // read the file names when we open the tree.
         // The RTree should be renamed before the BTree.
@@ -202,7 +190,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         RTreeSearchCursor rtreeScanCursor = (RTreeSearchCursor) memRTreeAccessor.createSearchCursor();
         SearchPredicate rtreeNullPredicate = new SearchPredicate(null, null);
         memRTreeAccessor.search(rtreeScanCursor, rtreeNullPredicate);
-        RTree diskRTree = createFlushTarget();
+        RTree diskRTree = (RTree) createDiskTree(diskRTreeFactory, flushOp.getFlushTarget(), true);
 
         // scan the memory BTree
         ITreeIndexAccessor memBTreeAccessor = memComponent.getBTree().createAccessor(NoOpOperationCallback.INSTANCE,
@@ -282,15 +270,11 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     }
 
     @Override
-    public ITreeIndex merge(List<Object> mergedComponents) throws HyracksDataException, IndexException {
-        LSMRTreeOpContext ctx = createOpContext();
-        ITreeIndexCursor cursor = new LSMRTreeWithAntiMatterTuplesSearchCursor();
-        ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
-        // Ordered scan, ignoring the in-memory RTree.
-        // We get back a snapshot of the on-disk RTrees that are going to be
-        // merged now, so we can clean them up after the merge has completed.
-        List<Object> mergingDiskRTrees = lsmHarness.search(cursor, (SearchPredicate) rtreeSearchPred, ctx, false);
-        mergedComponents.addAll(mergingDiskRTrees);
+    public ITreeIndex merge(List<Object> mergedComponents, ILSMIOOperation operation) throws HyracksDataException,
+            IndexException {
+        LSMMergeOperation mergeOp = (LSMMergeOperation) operation;
+        ITreeIndexCursor cursor = mergeOp.getCursor();
+        mergedComponents.addAll(mergeOp.getMergingComponents());
 
         // Nothing to merge.
         if (mergedComponents.size() <= 1) {
@@ -299,7 +283,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         }
 
         // Bulk load the tuples from all on-disk RTrees into the new RTree.
-        RTree mergedRTree = createMergeTarget(mergingDiskRTrees);
+        RTree mergedRTree = (RTree) createDiskTree(diskRTreeFactory, mergeOp.getMergeTarget(), true);
         IIndexBulkLoader bulkloader = mergedRTree.createBulkLoader(1.0f);
         try {
             while (cursor.hasNext()) {
@@ -344,6 +328,13 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             LSMRTreeOpContext concreteCtx = (LSMRTreeOpContext) ctx;
             return concreteCtx.rtreeOpContext.cmp;
         }
+
+        @Override
+        public ILSMIOOperation createFlushOperation(ILSMIOOperationCallback callback) {
+            String relFlushFileName = (String) fileManager.getRelFlushFileName();
+            FileReference fileRef = fileManager.createFlushFile(relFlushFileName);
+            return new LSMFlushOperation(lsmHarness.getIndex(), fileRef, callback);
+        }
     }
 
     @Override
@@ -383,5 +374,34 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             lsmHarness.addBulkLoadedComponent(diskRTree);
         }
 
+    }
+
+    @Override
+    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException {
+        LSMRTreeOpContext ctx = createOpContext();
+        ITreeIndexCursor cursor = new LSMRTreeWithAntiMatterTuplesSearchCursor();
+        ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
+        // Ordered scan, ignoring the in-memory RTree.
+        // We get back a snapshot of the on-disk RTrees that are going to be
+        // merged now, so we can clean them up after the merge has completed.
+        List<Object> mergingDiskRTrees;
+        try {
+            mergingDiskRTrees = lsmHarness.search(cursor, (SearchPredicate) rtreeSearchPred, ctx, false);
+            if (mergingDiskRTrees.size() <= 1) {
+                cursor.close();
+                return null;
+            }
+        } catch (IndexException e) {
+            throw new HyracksDataException(e);
+        }
+
+        RTree firstRTree = (RTree) mergingDiskRTrees.get(0);
+        RTree lastRTree = (RTree) mergingDiskRTrees.get(mergingDiskRTrees.size() - 1);
+        FileReference firstFile = diskFileMapProvider.lookupFileName(firstRTree.getFileId());
+        FileReference lastFile = diskFileMapProvider.lookupFileName(lastRTree.getFileId());
+        String relMergeFileName = (String) fileManager.getRelMergeFileName(firstFile.getFile().getName(), lastFile
+                .getFile().getName());
+        FileReference fileRef = fileManager.createMergeFile(relMergeFileName);
+        return new LSMMergeOperation(lsmHarness.getIndex(), mergingDiskRTrees, cursor, fileRef, callback);
     }
 }

@@ -52,13 +52,17 @@ import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMFlushOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexComponentFinalizer;
@@ -263,14 +267,15 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     }
 
     @Override
-    public ITreeIndex flush() throws HyracksDataException, IndexException {
+    public ITreeIndex flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
+        LSMFlushOperation flushOp = (LSMFlushOperation) operation;
         // Bulk load a new on-disk BTree from the in-memory BTree.        
         RangePredicate nullPred = new RangePredicate(null, null, true, true, null, null);
         ITreeIndexAccessor memBTreeAccessor = memBTree.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
         IIndexCursor scanCursor = memBTreeAccessor.createSearchCursor();
         memBTreeAccessor.search(scanCursor, nullPred);
-        BTree diskBTree = createFlushTarget();
+        BTree diskBTree = createDiskBTree(diskBTreeFactory, flushOp.getFlushTarget(), true);
         // Bulk load the tuples from the in-memory BTree into the new disk BTree.
         IIndexBulkLoader bulkLoader = diskBTree.createBulkLoader(1.0f);
         try {
@@ -300,23 +305,6 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         String relFlushFileName = (String) fileManager.getRelFlushFileName();
         FileReference fileRef = fileManager.createFlushFile(relFlushFileName);
         return createDiskBTree(bulkLoadBTreeFactory, fileRef, true);
-    }
-
-    private BTree createFlushTarget() throws HyracksDataException {
-        String relFlushFileName = (String) fileManager.getRelFlushFileName();
-        FileReference fileRef = fileManager.createFlushFile(relFlushFileName);
-        return createDiskBTree(diskBTreeFactory, fileRef, true);
-    }
-
-    private BTree createMergeTarget(List<Object> mergingDiskBTrees) throws HyracksDataException {
-        BTree firstBTree = (BTree) mergingDiskBTrees.get(0);
-        BTree lastBTree = (BTree) mergingDiskBTrees.get(mergingDiskBTrees.size() - 1);
-        FileReference firstFile = diskFileMapProvider.lookupFileName(firstBTree.getFileId());
-        FileReference lastFile = diskFileMapProvider.lookupFileName(lastBTree.getFileId());
-        String relMergeFileName = (String) fileManager.getRelMergeFileName(firstFile.getFile().getName(), lastFile
-                .getFile().getName());
-        FileReference fileRef = fileManager.createMergeFile(relMergeFileName);
-        return createDiskBTree(diskBTreeFactory, fileRef, true);
     }
 
     private BTree createDiskBTree(TreeFactory<BTree> factory, FileReference fileRef, boolean createBTree)
@@ -365,15 +353,12 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         lsmTreeCursor.initPriorityQueue();
     }
 
-    public ITreeIndex merge(List<Object> mergedComponents) throws HyracksDataException, IndexException {
-        LSMBTreeOpContext ctx = createOpContext(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-        ITreeIndexCursor cursor = new LSMBTreeRangeSearchCursor();
-        RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
-        // Ordered scan, ignoring the in-memory BTree.
-        // We get back a snapshot of the on-disk BTrees that are going to be
-        // merged now, so we can clean them up after the merge has completed.
-        List<Object> mergingDiskBTrees = lsmHarness.search(cursor, (RangePredicate) rangePred, ctx, false);
-        mergedComponents.addAll(mergingDiskBTrees);
+    public ITreeIndex merge(List<Object> mergedComponents, ILSMIOOperation operation) throws HyracksDataException,
+            IndexException {
+        LSMMergeOperation mergeOp = (LSMMergeOperation) operation;
+        ITreeIndexCursor cursor = mergeOp.getCursor();
+
+        mergedComponents.addAll(mergeOp.getMergingComponents());
 
         // Nothing to merge.
         if (mergedComponents.size() <= 1) {
@@ -382,7 +367,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         }
 
         // Bulk load the tuples from all on-disk BTrees into the new BTree.
-        BTree mergedBTree = createMergeTarget(mergingDiskBTrees);
+        BTree mergedBTree = createDiskBTree(diskBTreeFactory, mergeOp.getMergeTarget(), true);
         IIndexBulkLoader bulkLoader = mergedBTree.createBulkLoader(1.0f);
         try {
             while (cursor.hasNext()) {
@@ -518,6 +503,41 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
             LSMBTreeOpContext concreteCtx = (LSMBTreeOpContext) ctx;
             return concreteCtx.cmp;
         }
+
+        @Override
+        public ILSMIOOperation createFlushOperation(ILSMIOOperationCallback callback) {
+            String relFlushFileName = (String) fileManager.getRelFlushFileName();
+            FileReference fileRef = fileManager.createFlushFile(relFlushFileName);
+            return new LSMFlushOperation(lsmHarness.getIndex(), fileRef, callback);
+        }
+    }
+
+    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException {
+        LSMBTreeOpContext ctx = createOpContext(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        ITreeIndexCursor cursor = new LSMBTreeRangeSearchCursor();
+        RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
+        // Ordered scan, ignoring the in-memory BTree.
+        // We get back a snapshot of the on-disk BTrees that are going to be
+        // merged now, so we can clean them up after the merge has completed.
+        List<Object> mergingDiskBTrees;
+        try {
+            mergingDiskBTrees = lsmHarness.search(cursor, (RangePredicate) rangePred, ctx, false);
+            if (mergingDiskBTrees.size() <= 1) {
+                cursor.close();
+                return null;
+            }
+        } catch (IndexException e) {
+            throw new HyracksDataException(e);
+        }
+
+        BTree firstBTree = (BTree) mergingDiskBTrees.get(0);
+        BTree lastBTree = (BTree) mergingDiskBTrees.get(mergingDiskBTrees.size() - 1);
+        FileReference firstFile = diskFileMapProvider.lookupFileName(firstBTree.getFileId());
+        FileReference lastFile = diskFileMapProvider.lookupFileName(lastBTree.getFileId());
+        String relMergeFileName = (String) fileManager.getRelMergeFileName(firstFile.getFile().getName(), lastFile
+                .getFile().getName());
+        FileReference fileRef = fileManager.createMergeFile(relMergeFileName);
+        return new LSMMergeOperation(lsmHarness.getIndex(), mergingDiskBTrees, cursor, fileRef, callback);
     }
 
     @Override

@@ -21,7 +21,9 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDese
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeTestDriver;
 import edu.uci.ics.hyracks.storage.am.rtree.RTreeTestUtils;
@@ -33,7 +35,7 @@ public abstract class LSMRTreeMergeTestDriver extends AbstractRTreeTestDriver {
     private final RTreeTestUtils rTreeTestUtils;
 
     public LSMRTreeMergeTestDriver(boolean testRstarPolicy) {
-    	super(testRstarPolicy);
+        super(testRstarPolicy);
         this.rTreeTestUtils = new RTreeTestUtils();
     }
 
@@ -65,7 +67,10 @@ public abstract class LSMRTreeMergeTestDriver extends AbstractRTreeTestDriver {
             }
 
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) ctx.getIndexAccessor();
-            accessor.merge();
+            ILSMIOOperation mergeOperation = accessor.createMergeOperation(NoOpIOOperationCallback.INSTANCE);
+            if (mergeOperation != null) {
+                accessor.merge(mergeOperation);
+            }
 
             rTreeTestUtils.checkScan(ctx);
             rTreeTestUtils.checkDiskOrderScan(ctx);

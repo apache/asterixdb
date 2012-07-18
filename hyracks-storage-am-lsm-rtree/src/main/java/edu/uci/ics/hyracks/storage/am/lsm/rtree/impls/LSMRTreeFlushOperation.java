@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import java.util.Collections;
 import java.util.List;
@@ -13,15 +13,18 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 
-public class LSMFlushOperation implements ILSMIOOperation {
+public class LSMRTreeFlushOperation implements ILSMIOOperation {
 
     private final ILSMIndex index;
-    private final FileReference flushTarget;
+    private final FileReference rtreeFlushTarget;
+    private final FileReference btreeFlushTarget;
     private final ILSMIOOperationCallback callback;
 
-    public LSMFlushOperation(ILSMIndex index, FileReference flushTarget, ILSMIOOperationCallback callback) {
+    public LSMRTreeFlushOperation(ILSMIndex index, FileReference rtreeFlushTarget, FileReference btreeFlushTarget,
+            ILSMIOOperationCallback callback) {
         this.index = index;
-        this.flushTarget = flushTarget;
+        this.rtreeFlushTarget = rtreeFlushTarget;
+        this.btreeFlushTarget = btreeFlushTarget;
         this.callback = callback;
     }
 
@@ -32,7 +35,7 @@ public class LSMFlushOperation implements ILSMIOOperation {
 
     @Override
     public List<IODeviceHandle> getWriteDevices() {
-        return Collections.singletonList(flushTarget.getDevideHandle());
+        return Collections.singletonList(rtreeFlushTarget.getDevideHandle());
     }
 
     @Override
@@ -47,8 +50,11 @@ public class LSMFlushOperation implements ILSMIOOperation {
         return callback;
     }
 
-    public FileReference getFlushTarget() {
-        return flushTarget;
+    public FileReference getRTreeFlushTarget() {
+        return rtreeFlushTarget;
     }
 
+    public FileReference getBTreeFlushTarget() {
+        return btreeFlushTarget;
+    }
 }

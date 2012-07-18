@@ -60,10 +60,10 @@ public interface ITreeIndex extends IIndex {
      */
     public IBinaryComparatorFactory[] getComparatorFactories();
 
- 	/**
-	 * @param fillFactor
- 	 * @throws TreeIndexException if the user tries to instantiate a second bulk
-	 * loader
- 	 */
-	public IIndexBulkLoader createBulkLoader(float fillFactor) throws TreeIndexException;
+    /**
+     * @param fillFactor
+     * @throws TreeIndexException if the user tries to instantiate a second bulk
+     * loader
+     */
+    public IIndexBulkLoader createBulkLoader(float fillFactor) throws TreeIndexException;
 }

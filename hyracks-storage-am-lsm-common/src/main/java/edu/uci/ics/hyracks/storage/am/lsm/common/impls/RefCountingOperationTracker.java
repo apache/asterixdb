@@ -1,6 +1,8 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 
 public class RefCountingOperationTracker implements ILSMOperationTracker {
@@ -34,7 +36,10 @@ public class RefCountingOperationTracker implements ILSMOperationTracker {
 
             // Flush will only be handled by last exiting thread.
             if (index.getFlushController().getFlushStatus(index) && threadRefCount == 0) {
-                index.getIOScheduler().scheduleOperation(new LSMFlushOperation(index));
+                ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
+                        NoOpOperationCallback.INSTANCE);
+                index.getIOScheduler().scheduleOperation(
+                        accessor.createFlushOperation(NoOpIOOperationCallback.INSTANCE));
             }
         }
     }
