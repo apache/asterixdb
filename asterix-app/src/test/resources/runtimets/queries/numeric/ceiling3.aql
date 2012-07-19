@@ -1,0 +1,16 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/numeric_ceiling3.adm";
+
+
+let $c0 := double("20.1")
+let $c1 := double("-20.56e-30")
+let $c2 := double("NaN")
+let $c3 := double("INF")
+let $c4 := double("-INF")
+let $c5 := double("-0.0")
+let $c6 := double("0.0")
+return {"d0": numeric-ceiling($c0), "d1": numeric-ceiling($c1),"d2": numeric-ceiling($c2),
+        "d3": numeric-ceiling($c3),"d4": numeric-ceiling($c4),"d5": numeric-ceiling($c5), "d6": numeric-ceiling($c6)}

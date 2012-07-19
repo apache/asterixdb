@@ -1,0 +1,8 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/string_start-with1.adm";
+
+let $c1 := start-with("start","st")
+return {"result1": $c1}

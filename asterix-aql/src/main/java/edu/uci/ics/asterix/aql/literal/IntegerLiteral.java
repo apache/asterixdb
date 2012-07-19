@@ -14,9 +14,9 @@
  */
 package edu.uci.ics.asterix.aql.literal;
 
-import edu.uci.ics.asterix.aql.base.ILiteral;
+import edu.uci.ics.asterix.aql.base.Literal;
 
-public class IntegerLiteral implements ILiteral {
+public class IntegerLiteral extends Literal {
     /**
      * 
      */
@@ -37,32 +37,7 @@ public class IntegerLiteral implements ILiteral {
     }
 
     @Override
-    public String toString() {
-        return getStringValue();
-    }
-
-    @Override
     public Type getLiteralType() {
         return Type.INTEGER;
     }
-
-    @Override
-    public String getStringValue() {
-        return value.toString();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof IntegerLiteral)) {
-            return false;
-        }
-        IntegerLiteral i = (IntegerLiteral) obj;
-        return value.equals(i.getValue());
-    }
-
-    @Override
-    public int hashCode() {
-        return value;
-    }
-
 }

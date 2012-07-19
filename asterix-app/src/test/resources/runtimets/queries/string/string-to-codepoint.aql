@@ -1,0 +1,9 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/string_string-to-codepoint.adm";
+
+let $x :=  "abcd"
+let $c := string-to-codepoint($x)
+return {"result1": $c}

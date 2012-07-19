@@ -1,26 +1,26 @@
 package edu.uci.ics.asterix.aql.expression;
 
 import edu.uci.ics.asterix.aql.base.Expression;
-import edu.uci.ics.asterix.aql.base.ILiteral;
+import edu.uci.ics.asterix.aql.base.Literal;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public class LiteralExpr implements Expression {
-    private ILiteral value;
+    private Literal value;
 
     public LiteralExpr() {
     }
 
-    public LiteralExpr(ILiteral value) {
+    public LiteralExpr(Literal value) {
         this.value = value;
     }
 
-    public ILiteral getValue() {
+    public Literal getValue() {
         return value;
     }
 
-    public void setValue(ILiteral value) {
+    public void setValue(Literal value) {
         this.value = value;
     }
 
