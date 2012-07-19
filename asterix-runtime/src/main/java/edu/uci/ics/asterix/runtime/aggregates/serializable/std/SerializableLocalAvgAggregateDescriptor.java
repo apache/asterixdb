@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
@@ -177,27 +176,25 @@ public class SerializableLocalAvgAggregateDescriptor extends AbstractSerializabl
                         if (recordEval == null)
                             recordEval = new ClosedRecordConstructorEval(recType,
                                     new ICopyEvaluator[] { evalSum, evalCount }, avgBytes, result);
-                        if (count == 0) {
-                            if (GlobalConfig.DEBUG) {
-                                GlobalConfig.ASTERIX_LOGGER.finest("AVG aggregate ran over empty input.");
+                        try {
+                            if (count == 0) {
+                                result.writeByte(ATypeTag.SYSTEM_NULL.serialize());
+                                return;
                             }
-                        } else {
-                            try {
-                                if (metNull) {
-                                    sumBytes.reset();
-                                    nullSerde.serialize(ANull.NULL, sumBytesOutput);
-                                } else {
-                                    sumBytes.reset();
-                                    aDouble.setValue(sum);
-                                    doubleSerde.serialize(aDouble, sumBytesOutput);
-                                }
-                                countBytes.reset();
-                                aInt64.setValue(count);
-                                int64Serde.serialize(aInt64, countBytesOutput);
-                                recordEval.evaluate(null);
-                            } catch (IOException e) {
-                                throw new AlgebricksException(e);
+                            if (metNull) {
+                                sumBytes.reset();
+                                nullSerde.serialize(ANull.NULL, sumBytesOutput);
+                            } else {
+                                sumBytes.reset();
+                                aDouble.setValue(sum);
+                                doubleSerde.serialize(aDouble, sumBytesOutput);
                             }
+                            countBytes.reset();
+                            aInt64.setValue(count);
+                            int64Serde.serialize(aInt64, countBytesOutput);
+                            recordEval.evaluate(null);
+                        } catch (IOException e) {
+                            throw new AlgebricksException(e);
                         }
                     }
 
