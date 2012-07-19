@@ -43,10 +43,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.Va
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
- * When aggregates appear w/o group-by, a default group by a constant is
- * introduced.
+ * Pushes aggregate functions into a stand alone aggregate operator (no group by). 
  */
-
 public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewriteRule {
 
     @Override
@@ -79,6 +77,17 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
         if (aggOp.getVariables().size() != 1) {
             return false;
         }
+
+        // Make sure the agg expr is a listify.
+        ILogicalExpression aggExpr = aggOp.getExpressions().get(0).getValue();
+        if (aggExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return false;
+        }
+        AbstractFunctionCallExpression origAggFuncExpr = (AbstractFunctionCallExpression) aggExpr;
+        if (origAggFuncExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.LISTIFY) {
+            return false;
+        }
+        
         LogicalVariable aggVar = aggOp.getVariables().get(0);
         List<LogicalVariable> used = new LinkedList<LogicalVariable>();
         VariableUtilities.getUsedVariables(assignOp, used);
