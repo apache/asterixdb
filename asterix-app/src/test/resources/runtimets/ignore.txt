@@ -10,7 +10,6 @@ fuzzyjoin/dblp-aqlplus_1.aql
 fuzzyjoin/dblp-csx-dblp-aqlplus_1.aql
 fuzzyjoin/user-vis-int-vis-user-lot-aqlplus_1.aql
 subset-collection/04.aql
-quantifiers/everysat_01.aql
 custord/freq-clerk.aql
 custord/denorm-cust-order_01.aql
 custord/denorm-cust-order_03.aql
@@ -35,5 +34,4 @@ open-closed/c2c
 quantifiers/somesat_03.aql
 quantifiers/somesat_04.aql
 quantifiers/somesat_05.aql
-quantifiers/everysat_02.aql
 quantifiers/everysat_03.aql

@@ -57,6 +57,7 @@ import edu.uci.ics.asterix.runtime.aggregates.std.LocalSumAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.MaxAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.MinAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.SumAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.stream.EmptyStreamAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.stream.NonEmptyStreamAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.common.CreateMBREvalFactory;
 import edu.uci.ics.asterix.runtime.evaluators.common.FieldAccessByIndexEvalFactory;
@@ -269,6 +270,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(IsNullDescriptor.FACTORY);
         temp.add(NotDescriptor.FACTORY);
         temp.add(LenDescriptor.FACTORY);
+        temp.add(EmptyStreamAggregateDescriptor.FACTORY);
         temp.add(NonEmptyStreamAggregateDescriptor.FACTORY);
         temp.add(RangeDescriptor.FACTORY);
 
