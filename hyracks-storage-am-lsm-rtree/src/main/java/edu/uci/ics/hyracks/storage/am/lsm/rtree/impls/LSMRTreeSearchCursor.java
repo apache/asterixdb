@@ -18,7 +18,6 @@ package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
-import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
@@ -26,16 +25,29 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor implements ITreeIndexCursor {
 
     private int currentCursror;
-    private ISearchOperationCallback searchCallback;
 
     public LSMRTreeSearchCursor() {
         currentCursror = 0;
     }
 
     @Override
-    public void reset() {
+    public void reset() throws HyracksDataException {
+        if (!open) {
+            return;
+        }
+
         currentCursror = 0;
         foundNext = false;
+        try {
+            for (int i = 0; i < numberOfTrees; i++) {
+                rtreeCursors[i].close();
+                btreeCursors[i].close();
+            }
+            rtreeCursors = null;
+            btreeCursors = null;
+        } finally {
+            lsmHarness.closeSearchCursor(searcherRefCount, includeMemRTree);
+        }
     }
 
     private void searchNextCursor() throws HyracksDataException {

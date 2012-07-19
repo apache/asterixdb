@@ -29,6 +29,7 @@ public abstract class LSMRTreeAbstractCursor {
 
     public abstract void reset() throws HyracksDataException;
 
+    protected boolean open = false;
     protected BTreeRangeSearchCursor[] btreeCursors;
     protected ITreeIndexAccessor[] diskRTreeAccessors;
     protected ITreeIndexAccessor[] diskBTreeAccessors;
@@ -37,9 +38,9 @@ public abstract class LSMRTreeAbstractCursor {
     protected SearchPredicate rtreeSearchPredicate;
     protected RangePredicate btreeRangePredicate;
     protected ITupleReference frameTuple;
-    private AtomicInteger searcherRefCount;
-    private boolean includeMemRTree;
-    private LSMHarness lsmHarness;
+    protected AtomicInteger searcherRefCount;
+    protected boolean includeMemRTree;
+    protected LSMHarness lsmHarness;
     protected boolean foundNext;
 
     public LSMRTreeAbstractCursor() {
@@ -73,6 +74,8 @@ public abstract class LSMRTreeAbstractCursor {
         }
         rtreeSearchPredicate = (SearchPredicate) searchPred;
         btreeRangePredicate = new RangePredicate(null, null, true, true, btreeCmp, btreeCmp);
+
+        open = true;
     }
 
     public ICachedPage getPage() {
@@ -81,16 +84,24 @@ public abstract class LSMRTreeAbstractCursor {
     }
 
     public void close() throws HyracksDataException {
+        if (!open) {
+            return;
+        }
+
         try {
-            for (int i = 0; i < numberOfTrees; i++) {
-                rtreeCursors[i].close();
-                btreeCursors[i].close();
+            if (rtreeCursors != null && btreeCursors != null) {
+                for (int i = 0; i < numberOfTrees; i++) {
+                    rtreeCursors[i].close();
+                    btreeCursors[i].close();
+                }
             }
             rtreeCursors = null;
             btreeCursors = null;
         } finally {
             lsmHarness.closeSearchCursor(searcherRefCount, includeMemRTree);
         }
+
+        open = false;
     }
 
     public void setBufferCache(IBufferCache bufferCache) {

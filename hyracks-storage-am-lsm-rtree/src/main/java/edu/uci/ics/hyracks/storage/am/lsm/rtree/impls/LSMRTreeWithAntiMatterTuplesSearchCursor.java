@@ -80,7 +80,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMTreeSearchCurso
             memBTreeAccessor = lsmInitialState.getBTreeAccessors()[0];
             btreeRangePredicate = new RangePredicate(null, null, true, true, btreeCmp, btreeCmp);
         }
-        searcherfRefCount = lsmInitialState.getSearcherRefCount();
+        searcherRefCount = lsmInitialState.getSearcherRefCount();
         lsmHarness = lsmInitialState.getLSMHarness();
         comparatorFields = lsmInitialState.getComparatorFields();
         setPriorityQueueComparator();

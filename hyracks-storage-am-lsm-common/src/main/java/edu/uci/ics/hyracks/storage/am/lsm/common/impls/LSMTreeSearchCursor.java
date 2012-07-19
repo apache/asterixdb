@@ -35,7 +35,7 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
     protected PriorityQueueElement reusedElement;
     protected boolean needPush;
     protected boolean includeMemComponent;
-    protected AtomicInteger searcherfRefCount;
+    protected AtomicInteger searcherRefCount;
     protected LSMHarness lsmHarness;
 
     public LSMTreeSearchCursor() {
@@ -48,9 +48,24 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void reset() {
+    public void reset() throws HyracksDataException {
         outputElement = null;
         needPush = false;
+
+        if (outputPriorityQueue != null) {
+            outputPriorityQueue.clear();
+        }
+
+        if (rangeCursors != null) {
+            for (int i = 0; i < rangeCursors.length; i++) {
+                rangeCursors[i].reset();
+            }
+        }
+        rangeCursors = null;
+
+        if (searcherRefCount != null) {
+            lsmHarness.closeSearchCursor(searcherRefCount, includeMemComponent);
+        }
     }
 
     @Override
@@ -85,7 +100,7 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
             }
             rangeCursors = null;
         } finally {
-            lsmHarness.closeSearchCursor(searcherfRefCount, includeMemComponent);
+            lsmHarness.closeSearchCursor(searcherRefCount, includeMemComponent);
         }
     }
 

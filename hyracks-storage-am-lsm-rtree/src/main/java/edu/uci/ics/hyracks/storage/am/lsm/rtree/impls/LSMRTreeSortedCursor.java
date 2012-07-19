@@ -37,6 +37,10 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor implements ITre
 
     @Override
     public void reset() throws HyracksDataException {
+        if (!open) {
+            return;
+        }
+
         depletedRtreeCursors = new boolean[numberOfTrees];
         foundNext = false;
         for (int i = 0; i < numberOfTrees; i++) {
@@ -52,6 +56,8 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor implements ITre
                 depletedRtreeCursors[i] = true;
             }
         }
+
+        lsmHarness.closeSearchCursor(searcherRefCount, includeMemRTree);
     }
 
     @Override
