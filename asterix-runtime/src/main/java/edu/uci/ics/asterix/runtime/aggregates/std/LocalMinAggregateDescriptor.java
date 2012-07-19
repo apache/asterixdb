@@ -11,13 +11,14 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
 
-public class MinAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
+public class LocalMinAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-min", 1);
+    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-min",
+            1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new MinAggregateDescriptor();
+            return new LocalMinAggregateDescriptor();
         }
     };
 
@@ -35,7 +36,7 @@ public class MinAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
             @Override
             public ICopyAggregateFunction createAggregateFunction(final IDataOutputProvider provider)
                     throws AlgebricksException {
-                return new MinAggregateFunction(args, provider, false);
+                return new MinAggregateFunction(args, provider, true);
             }
         };
     }

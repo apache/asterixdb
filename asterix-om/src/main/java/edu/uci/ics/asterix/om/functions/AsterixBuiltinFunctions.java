@@ -236,7 +236,9 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sum", 1);
     public final static FunctionIdentifier LOCAL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sum", 1);
     public final static FunctionIdentifier MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-max", 1);
+    public final static FunctionIdentifier LOCAL_MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-max", 1);
     public final static FunctionIdentifier MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-min", 1);
+    public final static FunctionIdentifier LOCAL_MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-min", 1);
     public final static FunctionIdentifier GLOBAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "agg-global-avg", 1);
     public final static FunctionIdentifier LOCAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -517,7 +519,9 @@ public class AsterixBuiltinFunctions {
         add(MAKE_FIELD_INDEX_HANDLE, null); // TODO
         add(MAKE_FIELD_NAME_HANDLE, null); // TODO
         add(MAX, NonTaggedSumTypeComputer.INSTANCE);
+        add(LOCAL_MAX, NonTaggedSumTypeComputer.INSTANCE);
         add(MIN, NonTaggedSumTypeComputer.INSTANCE);
+        add(LOCAL_MIN, NonTaggedSumTypeComputer.INSTANCE);
         add(NON_EMPTY_STREAM, ABooleanTypeComputer.INSTANCE);
         add(NULL_CONSTRUCTOR, ANullTypeComputer.INSTANCE);
         add(NUMERIC_UNARY_MINUS, NonTaggedUnaryMinusTypeComputer.INSTANCE);
@@ -676,14 +680,16 @@ public class AsterixBuiltinFunctions {
         addGlobalAgg(COUNT, SUM);
 
         addAgg(MAX);
-        addLocalAgg(MAX, MAX);
+        addAgg(LOCAL_MAX);
+        addLocalAgg(MAX, LOCAL_MAX);
         addGlobalAgg(MAX, MAX);
 
         addAgg(MIN);
-        addLocalAgg(MIN, MIN);
+        addLocalAgg(MIN, LOCAL_MIN);
         addGlobalAgg(MIN, MIN);
 
         addAgg(SUM);
+        addAgg(LOCAL_SUM);
         addLocalAgg(SUM, LOCAL_SUM);
         addGlobalAgg(SUM, SUM);
 

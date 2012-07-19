@@ -38,7 +38,3 @@ quantifiers/somesat_05.aql
 quantifiers/everysat_02.aql
 quantifiers/everysat_03.aql
 aggregate/avg_empty_02.aql
-aggregate/min_empty_01.aql
-aggregate/min_empty_02.aql
-aggregate/max_empty_01.aql
-aggregate/max_empty_02.aql

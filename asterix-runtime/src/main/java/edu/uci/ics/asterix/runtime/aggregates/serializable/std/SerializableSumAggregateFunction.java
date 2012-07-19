@@ -57,7 +57,6 @@ public class SerializableSumAggregateFunction implements ICopySerializableAggreg
             state.writeBoolean(false);
             state.writeBoolean(false);
             state.writeBoolean(false);
-            state.writeBoolean(false);
             state.writeDouble(0.0);
         } catch (IOException e) {
             throw new AlgebricksException(e);
@@ -75,7 +74,6 @@ public class SerializableSumAggregateFunction implements ICopySerializableAggreg
         boolean metFloats = BufferSerDeUtil.getBoolean(state, pos++);
         boolean metDoubles = BufferSerDeUtil.getBoolean(state, pos++);
         boolean metNull = BufferSerDeUtil.getBoolean(state, pos++);
-        boolean metSystemNull = BufferSerDeUtil.getBoolean(state, pos++);
         double sum = BufferSerDeUtil.getDouble(state, pos);
 
         inputVal.reset();
@@ -125,7 +123,6 @@ public class SerializableSumAggregateFunction implements ICopySerializableAggreg
                     break;
                 }
                 case SYSTEM_NULL: {
-                    metSystemNull = true;
                     // For global aggregates simply ignore system null here,
                     // but if all input value are system null, then we should return
                     // null in finish().
@@ -149,7 +146,6 @@ public class SerializableSumAggregateFunction implements ICopySerializableAggreg
         BufferSerDeUtil.writeBoolean(metFloats, state, pos++);
         BufferSerDeUtil.writeBoolean(metDoubles, state, pos++);
         BufferSerDeUtil.writeBoolean(metNull, state, pos++);
-        BufferSerDeUtil.writeBoolean(metSystemNull, state, pos++);
         BufferSerDeUtil.writeDouble(sum, state, pos);
     }
 
@@ -164,7 +160,6 @@ public class SerializableSumAggregateFunction implements ICopySerializableAggreg
         boolean metFloats = BufferSerDeUtil.getBoolean(state, pos++);
         boolean metDoubles = BufferSerDeUtil.getBoolean(state, pos++);
         boolean metNull = BufferSerDeUtil.getBoolean(state, pos++);
-        boolean metSystemNull = BufferSerDeUtil.getBoolean(state, pos++);
         double sum = BufferSerDeUtil.getDouble(state, pos);
         try {
             if (metNull) {
@@ -201,10 +196,6 @@ public class SerializableSumAggregateFunction implements ICopySerializableAggreg
                         .getSerializerDeserializer(BuiltinType.AINT8);
                 aInt8.setValue((byte) sum);
                 serde.serialize(aInt8, out);
-            } else if (metSystemNull) {
-                // All input values must have been of type system null.
-                serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
-                serde.serialize(ANull.NULL, out);
             } else {
                 // Empty stream. For local agg return system null. For global agg return null.
                 if (isLocalAgg) {
@@ -214,7 +205,6 @@ public class SerializableSumAggregateFunction implements ICopySerializableAggreg
                     serde.serialize(ANull.NULL, out);
                 }
             }
-
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
