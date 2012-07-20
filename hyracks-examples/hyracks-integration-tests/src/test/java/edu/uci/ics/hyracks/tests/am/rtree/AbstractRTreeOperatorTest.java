@@ -317,7 +317,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryInsertOp, NC1_ID);
 
         // secondary index
-        int[] secondaryFieldPermutation = { 6, 7, 8, 9, 0 };
+        int[] secondaryFieldPermutation = { 9, 10, 11, 12, 0 };
         TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsertOp = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, ordersDesc, storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
                 secondaryComparatorFactories, secondaryFieldPermutation, IndexOp.INSERT, rtreeDataflowHelperFactory,
