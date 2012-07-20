@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -46,7 +47,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
  * During a merge, all operations (except another merge) can proceed concurrently.
  * A merge and a flush can proceed concurrently.
  */
-public class LSMHarness {
+public class LSMHarness implements ILSMHarness {
     protected final Logger LOGGER = Logger.getLogger(LSMHarness.class.getName());
     protected static final long AFTER_MERGE_CLEANUP_SLEEP = 100;
 
@@ -221,6 +222,7 @@ public class LSMHarness {
         isMerging.set(false);
     }
 
+    @Override
     public void closeSearchCursor(AtomicInteger searcherRefCount, boolean includeMemComponent)
             throws HyracksDataException {
         // If the in-memory Tree was not included in the search, then we don't
@@ -261,4 +263,5 @@ public class LSMHarness {
     public ILSMIndex getIndex() {
         return lsmIndex;
     }
+
 }

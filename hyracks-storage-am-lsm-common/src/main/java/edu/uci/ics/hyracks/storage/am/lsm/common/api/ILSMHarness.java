@@ -24,42 +24,24 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 
-/**
- * Methods to be implemented by an LSM index, which are called from {@link LSMHarness}.
- * The implementations of the methods below should be thread agnostic.
- * Synchronization of LSM operations like updates/searches/flushes/merges are
- * done by the {@link LSMHarness}. For example, a flush() implementation should only
- * create and return the new on-disk component, ignoring the fact that
- * concurrent searches/updates/merges may be ongoing.
- */
-public interface ILSMHarness extends IIndex {
-    public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
+public interface ILSMHarness {
+    public void insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
             IndexException;
 
-    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOpContext ictx,
-            boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, IndexException;
+    public List<Object> search(IIndexCursor cursor, ISearchPredicate pred, IIndexOpContext ctx,
+            boolean includeMemComponent) throws HyracksDataException, IndexException;
 
-    public Object merge(List<Object> mergedComponents) throws HyracksDataException, IndexException;
+    public void closeSearchCursor(AtomicInteger searcherRefCount, boolean includeMemComponent)
+            throws HyracksDataException;
 
-    public void addMergedComponent(Object newComponent, List<Object> mergedComponents);
+    public void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException;
 
-    public void cleanUpAfterMerge(List<Object> mergedComponents) throws HyracksDataException;
+    public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
 
-    public Object flush() throws HyracksDataException, IndexException;
-
-    public void addFlushedComponent(Object index);
-
-    public InMemoryFreePageManager getInMemoryFreePageManager();
-
-    public void resetInMemoryComponent() throws HyracksDataException;
-
-    public List<Object> getDiskComponents();
-
-    public ILSMComponentFinalizer getComponentFinalizer();
+    public void addBulkLoadedComponent(Object index) throws HyracksDataException;
+    
+    public ILSMIndex getIndex();
 
     public ILSMFlushController getFlushController();
 
