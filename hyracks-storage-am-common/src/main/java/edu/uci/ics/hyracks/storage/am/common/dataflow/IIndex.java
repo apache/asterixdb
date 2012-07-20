@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.common.dataflow;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
@@ -25,58 +26,101 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 /**
- * Interface describing the operations common to all index structures. Indexes
+ * This interface describes the operations common to all indexes. Indexes
  * implementing this interface can easily reuse existing index operators for
- * dataflow. Users must perform operations on an IIndex via an IIndexAccessor.
+ * dataflow. Users must perform operations on an via an {@link IIndexAccessor}.
+ * 
+ * During dataflow, the lifecycle of IIndexes are handled through an 
+ * {@link IIndexLifecycleManager}.
  */
 public interface IIndex {
+
     /**
-     * Initializes the persistent state of an index, e.g., the root page, and
-     * metadata pages.
+     * Initializes the persistent state of an index. 
      * 
-     * @throws HyracksDataException
-     *             If the BufferCache throws while un/pinning or un/latching.
+     * An index cannot be created if it is in the activated state.
+     * Calling create on an index that is deactivated has the effect of clearing the index.
+     * 
+     * @throws HyracksDataException 
+     *          if there is an error in the BufferCache while (un)pinning pages, (un)latching pages, 
+     *          creating files, or deleting files
+     *          
+     *          if the index is in the activated state
      */
     public void create() throws HyracksDataException;
 
+    /**
+     * Initializes the index's operational state. An index in the activated state may perform 
+     * operations via an {@link IIndexAccessor}.
+     * 
+     * @throws HyracksDataException
+     *          if there is a problem in the BufferCache while (un)pinning pages, (un)latching pages, 
+     *          creating files, or deleting files
+     */
     public void activate() throws HyracksDataException;
 
-    public void deactivate() throws HyracksDataException;
-
-    public void destroy() throws HyracksDataException;
-
+    /**
+     * Resets the operational state of the index. Calling clear has the same logical effect 
+     * as calling deactivate(), destroy(), create(), then activate(), but not necessarily the 
+     * same physical effect.
+     * 
+     * @throws HyracksDataException
+     *          if there is a problem in the BufferCache while (un)pinning pages, (un)latching pages, 
+     *          creating files, or deleting files
+     *          
+     *          if the index is not in the activated state
+     */
     public void clear() throws HyracksDataException;
 
     /**
-     * Creates an index accessor for performing operations on this index.
-     * (insert/delete/update/search/diskorderscan). An IIndexAccessor is not
-     * thread safe, but different IIndexAccessors can concurrently operate
-     * on the same IIndex
+     * Deinitializes the index's operational state. An index in the deactivated state may not 
+     * perform operations.
      * 
-     * @returns IIndexAccessor An accessor for this tree.
-     * @param modificationCallback
-     *            TODO
-     * @param searchCallback
-     *            TODO
+     * @throws HyracksDataException
+     *          if there is a problem in the BufferCache while (un)pinning pages, (un)latching pages, 
+     *          creating files, or deleting files
+     */
+    public void deactivate() throws HyracksDataException;
+
+    /**
+     * Removes the persistent state of an index. 
+     * 
+     * An index cannot be destroyed if it is in the activated state.
+     * 
+     * @throws HyracksDataException 
+     *          if there is an error in the BufferCache while (un)pinning pages, (un)latching pages, 
+     *          creating files, or deleting files
+     *          
+     *          if the index is already activated
+     */
+    public void destroy() throws HyracksDataException;
+
+    /**
+     * Creates an {@link IIndexAccessor} for performing operations on this index.
+     * An IIndexAccessor is not thread safe, but different IIndexAccessors can concurrently operate
+     * on the same {@link IIndex}.
+     * 
+     * @returns IIndexAccessor an accessor for this {@link IIndex}
+     * @param modificationCallback the callback to be used for modification operations
+     * @param searchCallback the callback to be used for search operations
      */
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback);
 
     /**
-     * @param fillFactor
-     *            TODO
+     * @param fillFactor the fill factor for the bulk-loaded index or index component
      * @throws IndexException
-     *             TODO
+     *          if the index is required to be non-empty but is not
      */
     public IIndexBulkLoader createBulkLoader(float fillFactor) throws IndexException;
 
     /**
-     * @return BufferCache underlying this index.
+     * @return the {@link IBufferCache} underlying this index.
      */
     public IBufferCache getBufferCache();
 
     /**
-     * @return An enum of the concrete type of this index.
+     * @return the {@link IndexType} of this index.
      */
     public IndexType getIndexType();
 }

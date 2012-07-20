@@ -100,7 +100,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     private final ITreeIndexFrameFactory deleteLeafFrameFactory;
     private final IBinaryComparatorFactory[] cmpFactories;
 
-    private boolean isOpen = false;
+    private boolean isActivated = false;
 
     public LSMBTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
@@ -128,25 +128,17 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
 
     @Override
     public synchronized void create() throws HyracksDataException {
-        if (isOpen) {
-            throw new HyracksDataException("Failed to create since index is already open.");
+        if (isActivated) {
+            throw new HyracksDataException("Failed to create the index since it is activated.");
         }
 
         fileManager.deleteDirs();
         fileManager.createDirs();
     }
 
-    /**
-     * Opens LSMBTree, cleaning up invalid files from base dir, and registering
-     * all valid files as on-disk BTrees.
-     * 
-     * @param fileReference
-     *            Dummy file id used for in-memory BTree.
-     * @throws HyracksDataException
-     */
     @Override
     public synchronized void activate() throws HyracksDataException {
-        if (isOpen) {
+        if (isActivated) {
             return;
         }
 
@@ -160,12 +152,12 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
             BTree btree = createDiskBTree(diskBTreeFactory, fileRef, false);
             diskBTrees.add(btree);
         }
-        isOpen = true;
+        isActivated = true;
     }
 
     @Override
     public synchronized void deactivate() throws HyracksDataException {
-        if (!isOpen) {
+        if (!isActivated) {
             return;
         }
 
@@ -186,13 +178,13 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         memBTree.deactivate();
         memBTree.destroy();
         ((InMemoryBufferCache) memBTree.getBufferCache()).close();
-        isOpen = false;
+        isActivated = false;
     }
 
     @Override
     public void destroy() throws HyracksDataException {
-        if (isOpen) {
-            throw new HyracksDataException("Failed to destroy since index is already open.");
+        if (isActivated) {
+            throw new HyracksDataException("Failed to destroy the index since it is activated.");
         }
 
         for (Object o : diskBTrees) {
@@ -205,8 +197,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
 
     @Override
     public void clear() throws HyracksDataException {
-        if (!isOpen) {
-            throw new HyracksDataException("Failed to clear since index is not open.");
+        if (!isActivated) {
+            throw new HyracksDataException("Failed to clear the index since it is not activated.");
         }
 
         memBTree.clear();

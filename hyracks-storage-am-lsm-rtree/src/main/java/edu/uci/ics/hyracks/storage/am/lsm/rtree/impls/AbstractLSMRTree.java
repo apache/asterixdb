@@ -115,7 +115,7 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
     protected final ITreeIndexFrameFactory rtreeLeafFrameFactory;
     protected final ITreeIndexFrameFactory btreeLeafFrameFactory;
 
-    private boolean isOpen = false;
+    private boolean isActivated = false;
 
     public AbstractLSMRTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
@@ -152,8 +152,8 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
 
     @Override
     public synchronized void create() throws HyracksDataException {
-        if (isOpen) {
-            throw new HyracksDataException("Failed to create since index is already open.");
+        if (isActivated) {
+            throw new HyracksDataException("Failed to create the index since it is activated.");
         }
 
         fileManager.deleteDirs();
@@ -162,7 +162,7 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
 
     @Override
     public synchronized void activate() throws HyracksDataException {
-        if (isOpen) {
+        if (isActivated) {
             return;
         }
 
@@ -171,17 +171,17 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
         memComponent.getBTree().create();
         memComponent.getRTree().activate();
         memComponent.getBTree().activate();
-        isOpen = true;
+        isActivated = true;
     }
 
     @Override
     public synchronized void deactivate() throws HyracksDataException {
-        if (!isOpen) {
+        if (!isActivated) {
             return;
         }
 
-        isOpen = false;
-        
+        isActivated = false;
+
         BlockingIOOperationCallback cb = new BlockingIOOperationCallback();
         ILSMIndexAccessor accessor = (ILSMIndexAccessor) createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
@@ -201,8 +201,8 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
 
     @Override
     public synchronized void destroy() throws HyracksDataException {
-        if (isOpen) {
-            throw new HyracksDataException("Failed to destroy since index is already open.");
+        if (isActivated) {
+            throw new HyracksDataException("Failed to destroy the index since it is activated.");
         }
 
         memComponent.getRTree().deactivate();
@@ -212,8 +212,8 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
 
     @Override
     public synchronized void clear() throws HyracksDataException {
-        if (!isOpen) {
-            throw new HyracksDataException("Failed to clear since index is not open.");
+        if (!isActivated) {
+            throw new HyracksDataException("Failed to clear the index since it is not activated.");
         }
 
         memComponent.getRTree().clear();

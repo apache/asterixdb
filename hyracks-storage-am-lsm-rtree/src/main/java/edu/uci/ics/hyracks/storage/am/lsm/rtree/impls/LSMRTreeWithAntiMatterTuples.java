@@ -88,14 +88,6 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
 
     }
 
-    /**
-     * Opens LSMRTree, cleaning up invalid files from base dir, and registering
-     * all valid files as on-disk RTrees and BTrees.
-     * 
-     * @param fileReference
-     *            Dummy file id.
-     * @throws HyracksDataException
-     */
     @Override
     public synchronized void activate() throws HyracksDataException {
         super.activate();

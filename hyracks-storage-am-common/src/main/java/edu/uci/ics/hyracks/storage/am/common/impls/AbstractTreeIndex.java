@@ -54,7 +54,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     protected FileReference file;
     protected int fileId = -1;
 
-    private boolean isOpen = false;
+    private boolean isActivated = false;
 
     public AbstractTreeIndex(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             IFreePageManager freePageManager, ITreeIndexFrameFactory interiorFrameFactory,
@@ -71,8 +71,8 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     }
 
     public synchronized void create() throws HyracksDataException {
-        if (isOpen) {
-            throw new HyracksDataException("Failed to create since index is already open.");
+        if (isActivated) {
+            throw new HyracksDataException("Failed to create the index since it is activated.");
         }
 
         boolean fileIsMapped = false;
@@ -117,7 +117,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     }
 
     public synchronized void activate() throws HyracksDataException {
-        if (isOpen) {
+        if (isActivated) {
             return;
         }
 
@@ -144,23 +144,23 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         // TODO: Should probably have some way to check that the tree is physically consistent
         // or that the file we just opened actually is a tree
 
-        isOpen = true;
+        isActivated = true;
     }
 
     public synchronized void deactivate() throws HyracksDataException {
-        if (!isOpen) {
+        if (!isActivated) {
             return;
         }
 
         bufferCache.closeFile(fileId);
         freePageManager.close();
 
-        isOpen = false;
+        isActivated = false;
     }
 
     public synchronized void destroy() throws HyracksDataException {
-        if (isOpen) {
-            throw new HyracksDataException("Failed to destroy since index is already open.");
+        if (isActivated) {
+            throw new HyracksDataException("Failed to destroy the index since it is activated.");
         }
 
         file.getFile().delete();
@@ -173,8 +173,8 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     }
 
     public synchronized void clear() throws HyracksDataException {
-        if (!isOpen) {
-            throw new HyracksDataException("Failed to clear since index is not open.");
+        if (!isActivated) {
+            throw new HyracksDataException("Failed to clear the index since it is not activated.");
         }
 
         initEmptyTree();
