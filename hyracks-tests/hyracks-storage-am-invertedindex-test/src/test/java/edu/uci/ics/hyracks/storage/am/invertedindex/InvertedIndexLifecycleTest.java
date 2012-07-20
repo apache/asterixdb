@@ -1,7 +1,5 @@
 package edu.uci.ics.hyracks.storage.am.invertedindex;
 
-import java.util.Random;
-
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
@@ -33,11 +31,6 @@ public class InvertedIndexLifecycleTest extends AbstractIndexLifecycleTest {
     }
 
     @Override
-    protected Random getRandom() {
-        return harness.getRandom();
-    }
-
-    @Override
     public void setup() throws Exception {
         harness.setUp();
         ITypeTraits[] tokenTypeTraits = new ITypeTraits[] { UTF8StringPointable.TYPE_TRAITS };
@@ -57,5 +50,20 @@ public class InvertedIndexLifecycleTest extends AbstractIndexLifecycleTest {
         index.deactivate();
         index.destroy();
         harness.tearDown();
+    }
+
+    @Override
+    protected void performInsertions() throws Exception {
+        // Do nothing.
+    }
+
+    @Override
+    protected void checkInsertions() throws Exception {
+        // Do nothing.
+    }
+
+    @Override
+    protected void clearCheckableInsertions() throws Exception {
+        // Do nothing.
     }
 }

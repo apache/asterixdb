@@ -1,7 +1,5 @@
 package edu.uci.ics.hyracks.storage.am.lsm.rtree;
 
-import java.util.Random;
-
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
@@ -10,15 +8,18 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 import edu.uci.ics.hyracks.storage.am.common.AbstractIndexLifecycleTest;
 import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
 import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestContext;
+import edu.uci.ics.hyracks.storage.am.common.TreeIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTree;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
+import edu.uci.ics.hyracks.storage.am.rtree.RTreeTestUtils;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 
 public class LSMRTreeLifecycleTest extends AbstractIndexLifecycleTest {
 
+    @SuppressWarnings("rawtypes")
     private final ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
             IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
             IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
@@ -27,7 +28,9 @@ public class LSMRTreeLifecycleTest extends AbstractIndexLifecycleTest {
     private final int numKeys = 4;
 
     private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
+    private final TreeIndexTestUtils titu = new RTreeTestUtils();
 
+    @SuppressWarnings("rawtypes")
     private ITreeIndexTestContext<? extends CheckTuple> testCtx;
 
     @Override
@@ -65,8 +68,17 @@ public class LSMRTreeLifecycleTest extends AbstractIndexLifecycleTest {
     }
 
     @Override
-    protected Random getRandom() {
-        return harness.getRandom();
+    protected void performInsertions() throws Exception {
+        titu.insertIntTuples(testCtx, 10, harness.getRandom());
     }
 
+    @Override
+    protected void checkInsertions() throws Exception {
+        titu.checkScan(testCtx);
+    }
+
+    @Override
+    protected void clearCheckableInsertions() throws Exception {
+        testCtx.getCheckTuples().clear();
+    }
 }

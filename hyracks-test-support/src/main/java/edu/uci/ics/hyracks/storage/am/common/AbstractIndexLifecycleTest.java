@@ -1,7 +1,5 @@
 package edu.uci.ics.hyracks.storage.am.common;
 
-import java.util.Random;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -18,7 +16,11 @@ public abstract class AbstractIndexLifecycleTest {
 
     protected abstract boolean isEmptyIndex() throws Exception;
 
-    protected abstract Random getRandom();
+    protected abstract void performInsertions() throws Exception;
+
+    protected abstract void checkInsertions() throws Exception;
+
+    protected abstract void clearCheckableInsertions() throws Exception;
 
     @Before
     public abstract void setup() throws Exception;
@@ -39,15 +41,25 @@ public abstract class AbstractIndexLifecycleTest {
         index.activate();
         Assert.assertTrue(isEmptyIndex());
 
+        // Insert some stuff
+        performInsertions();
+        checkInsertions();
+
+        // Check that the inserted stuff isn't there
+        clearCheckableInsertions();
         index.clear();
         Assert.assertTrue(isEmptyIndex());
+
+        // Insert more stuff
+        performInsertions();
 
         // Double close is valid
         index.deactivate();
         index.deactivate();
 
-        // Reopen and reclose is valid
+        // Check that the inserted stuff is still there
         index.activate();
+        checkInsertions();
         index.deactivate();
 
         // Double destroy is valid

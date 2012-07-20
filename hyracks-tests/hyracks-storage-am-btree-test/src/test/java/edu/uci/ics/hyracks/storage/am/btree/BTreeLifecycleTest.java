@@ -1,7 +1,5 @@
 package edu.uci.ics.hyracks.storage.am.btree;
 
-import java.util.Random;
-
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -12,10 +10,12 @@ import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.common.AbstractIndexLifecycleTest;
 import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
 import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestContext;
+import edu.uci.ics.hyracks.storage.am.common.TreeIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 
 public class BTreeLifecycleTest extends AbstractIndexLifecycleTest {
     private final BTreeTestHarness harness = new BTreeTestHarness();
+    private final TreeIndexTestUtils titu = new OrderedIndexTestUtils();
 
     @SuppressWarnings("rawtypes")
     private final ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
@@ -55,7 +55,17 @@ public class BTreeLifecycleTest extends AbstractIndexLifecycleTest {
     }
 
     @Override
-    protected Random getRandom() {
-        return harness.getRandom();
+    protected void performInsertions() throws Exception {
+        titu.insertIntTuples(testCtx, 10, harness.getRandom());
+    }
+
+    @Override
+    protected void checkInsertions() throws Exception {
+        titu.checkScan(testCtx);
+    }
+
+    @Override
+    protected void clearCheckableInsertions() throws Exception {
+        testCtx.getCheckTuples().clear();
     }
 }
