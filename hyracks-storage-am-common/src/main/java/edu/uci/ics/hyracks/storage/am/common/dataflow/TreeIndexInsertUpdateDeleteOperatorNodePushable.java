@@ -97,7 +97,6 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
                 }
                 tuple.reset(accessor, i);
 
-                modCallback.before(tuple);
                 switch (op) {
                     case INSERT: {
                         indexAccessor.insert(tuple);

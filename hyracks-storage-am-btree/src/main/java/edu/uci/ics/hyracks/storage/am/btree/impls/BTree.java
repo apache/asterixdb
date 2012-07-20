@@ -214,12 +214,12 @@ public class BTree extends AbstractTreeIndex {
     }
 
     private void insert(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
-        ctx.modificationCallback.commence(tuple);
+        ctx.modificationCallback.before(tuple);
         insertUpdateOrDelete(tuple, ctx);
     }
 
     private void upsert(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
-        ctx.modificationCallback.commence(tuple);
+        ctx.modificationCallback.before(tuple);
         insertUpdateOrDelete(tuple, ctx);
     }
 
@@ -230,12 +230,12 @@ public class BTree extends AbstractTreeIndex {
         if (fieldCount == ctx.cmp.getKeyFieldCount()) {
             throw new BTreeNotUpdateableException("Cannot perform updates when the entire tuple forms the key.");
         }
-        ctx.modificationCallback.commence(tuple);
+        ctx.modificationCallback.before(tuple);
         insertUpdateOrDelete(tuple, ctx);
     }
 
     private void delete(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
-        ctx.modificationCallback.commence(tuple);
+        ctx.modificationCallback.before(tuple);
         insertUpdateOrDelete(tuple, ctx);
     }
 

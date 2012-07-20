@@ -153,7 +153,7 @@ public class RTree extends AbstractTreeIndex {
         ctx.splitKey.reset();
         ctx.splitKey.getLeftTuple().setFieldCount(cmpFactories.length);
         ctx.splitKey.getRightTuple().setFieldCount(cmpFactories.length);
-        ctx.modificationCallback.commence(tuple);
+        ctx.modificationCallback.before(tuple);
 
         int maxFieldPos = cmpFactories.length / 2;
         for (int i = 0; i < maxFieldPos; i++) {

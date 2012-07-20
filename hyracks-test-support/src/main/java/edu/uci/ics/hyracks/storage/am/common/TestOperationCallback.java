@@ -38,11 +38,6 @@ public enum TestOperationCallback implements ISearchOperationCallback, IModifica
     }
 
     @Override
-    public void commence(ITupleReference tuple) {
-        // Do nothing.        
-    }
-
-    @Override
     public void found(ITupleReference tuple) {
         // Do nothing.        
     }
