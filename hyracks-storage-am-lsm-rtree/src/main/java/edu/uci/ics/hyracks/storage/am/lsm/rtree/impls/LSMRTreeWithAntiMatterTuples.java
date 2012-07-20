@@ -110,12 +110,12 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
 
     @Override
     public synchronized void deactivate() throws HyracksDataException {
+        super.deactivate();
         for (Object o : diskComponents) {
             RTree rtree = (RTree) o;
             rtree.deactivate();
         }
         diskComponents.clear();
-        super.deactivate();
     }
 
     @Override

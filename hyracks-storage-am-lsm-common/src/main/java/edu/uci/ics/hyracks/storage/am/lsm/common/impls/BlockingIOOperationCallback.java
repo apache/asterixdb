@@ -4,13 +4,22 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 
 public class BlockingIOOperationCallback implements ILSMIOOperationCallback {
 
+    private boolean notified = false;
+
     @Override
-    public void callback() {
+    public synchronized void callback() {
         this.notifyAll();
+        notified = true;
     }
 
-    public void block() throws InterruptedException {
-        this.wait();
+    public synchronized void waitForIO() throws InterruptedException {
+        if (!notified) {
+            this.wait();
+        }
+    }
+
+    public synchronized void reset() {
+        notified = false;
     }
 
 }

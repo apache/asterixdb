@@ -42,10 +42,12 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
@@ -179,6 +181,16 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
         }
 
         isOpen = false;
+        
+        BlockingIOOperationCallback cb = new BlockingIOOperationCallback();
+        ILSMIndexAccessor accessor = (ILSMIndexAccessor) createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
+        lsmHarness.getIOScheduler().scheduleOperation(accessor.createFlushOperation(cb));
+        try {
+            cb.waitForIO();
+        } catch (InterruptedException e) {
+            throw new HyracksDataException(e);
+        }
 
         memComponent.getRTree().deactivate();
         memComponent.getBTree().deactivate();

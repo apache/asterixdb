@@ -136,6 +136,15 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMTreeSearchCurso
         }
 
     }
+    
+    @Override
+    public void reset() throws HyracksDataException {
+        if (includeMemComponent) {
+            memRTreeCursor.reset();
+            memBTreeCursor.reset();
+        }
+        super.reset();
+    }
 
     @Override
     public void close() throws HyracksDataException {

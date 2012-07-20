@@ -106,6 +106,7 @@ public class LSMRTree extends AbstractLSMRTree {
 
     @Override
     public synchronized void deactivate() throws HyracksDataException {
+        super.deactivate();
         for (Object o : diskComponents) {
             LSMRTreeComponent diskComponent = (LSMRTreeComponent) o;
             RTree rtree = diskComponent.getRTree();
@@ -114,7 +115,6 @@ public class LSMRTree extends AbstractLSMRTree {
             btree.deactivate();
         }
         diskComponents.clear();
-        super.deactivate();
     }
 
     @Override

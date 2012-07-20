@@ -37,27 +37,27 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor implements ITre
 
     @Override
     public void reset() throws HyracksDataException {
-        if (!open) {
-            return;
-        }
-
         depletedRtreeCursors = new boolean[numberOfTrees];
         foundNext = false;
-        for (int i = 0; i < numberOfTrees; i++) {
-            rtreeCursors[i].reset();
-            try {
-                diskRTreeAccessors[i].search(rtreeCursors[i], rtreeSearchPredicate);
-            } catch (IndexException e) {
-                throw new HyracksDataException(e);
+        try {
+            for (int i = 0; i < numberOfTrees; i++) {
+                rtreeCursors[i].reset();
+                try {
+                    diskRTreeAccessors[i].search(rtreeCursors[i], rtreeSearchPredicate);
+                } catch (IndexException e) {
+                    throw new HyracksDataException(e);
+                }
+                if (rtreeCursors[i].hasNext()) {
+                    rtreeCursors[i].next();
+                } else {
+                    depletedRtreeCursors[i] = true;
+                }
             }
-            if (rtreeCursors[i].hasNext()) {
-                rtreeCursors[i].next();
-            } else {
-                depletedRtreeCursors[i] = true;
+        } finally {
+            if (open) {
+                lsmHarness.closeSearchCursor(searcherRefCount, includeMemRTree);
             }
         }
-
-        lsmHarness.closeSearchCursor(searcherRefCount, includeMemRTree);
     }
 
     @Override
@@ -131,6 +131,21 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor implements ITre
     @Override
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         super.open(initialState, searchPred);
-        reset();
+
+        depletedRtreeCursors = new boolean[numberOfTrees];
+        foundNext = false;
+        for (int i = 0; i < numberOfTrees; i++) {
+            rtreeCursors[i].reset();
+            try {
+                diskRTreeAccessors[i].search(rtreeCursors[i], rtreeSearchPredicate);
+            } catch (IndexException e) {
+                throw new HyracksDataException(e);
+            }
+            if (rtreeCursors[i].hasNext()) {
+                rtreeCursors[i].next();
+            } else {
+                depletedRtreeCursors[i] = true;
+            }
+        }
     }
 }
