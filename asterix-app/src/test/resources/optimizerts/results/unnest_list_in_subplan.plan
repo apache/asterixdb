@@ -14,8 +14,8 @@
                 -- HASH_PARTITION_EXCHANGE [$$20]  |PARTITIONED|
                   -- STREAM_PROJECT  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- HYBRID_HASH_JOIN [$$4][$$22]  |PARTITIONED|
-                        -- HASH_PARTITION_EXCHANGE [$$4]  |PARTITIONED|
+                      -- HYBRID_HASH_JOIN [$$3][$$22]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$3]  |PARTITIONED|
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- UNNEST  |PARTITIONED|
                               -- ASSIGN  |PARTITIONED|

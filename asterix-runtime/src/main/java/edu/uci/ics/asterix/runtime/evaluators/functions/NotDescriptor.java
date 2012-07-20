@@ -26,7 +26,7 @@ public class NotDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS,
-            "not", 1, true);
+            "not", 1);
 
     private final static byte SER_BOOLEAN_TYPE_TAG = ATypeTag.BOOLEAN.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();

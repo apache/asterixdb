@@ -19,7 +19,7 @@ public class SwitchCaseDescriptor extends AbstractScalarFunctionDynamicDescripto
 
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "switch-case",
-            FunctionIdentifier.VARARGS, true);
+            FunctionIdentifier.VARARGS);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SwitchCaseDescriptor();
@@ -79,7 +79,8 @@ public class SwitchCaseDescriptor extends AbstractScalarFunctionDynamicDescripto
                             // the default case
                             argOut.reset();
                             evals[n - 1].evaluate(tuple);
-                            output.getDataOutput().write(argOut.getByteArray(), argOut.getStartOffset(), argOut.getLength());
+                            output.getDataOutput().write(argOut.getByteArray(), argOut.getStartOffset(),
+                                    argOut.getLength());
                         } catch (HyracksDataException hde) {
                             throw new AlgebricksException(hde);
                         } catch (IOException ioe) {

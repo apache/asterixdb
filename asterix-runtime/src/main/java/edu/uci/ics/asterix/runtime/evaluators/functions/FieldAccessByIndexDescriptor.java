@@ -13,13 +13,13 @@ public class FieldAccessByIndexDescriptor extends AbstractScalarFunctionDynamicD
 
     private static final long serialVersionUID = 1L;
     private static final FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "field-access-by-index", 2, true);
+            "field-access-by-index", 2);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new FieldAccessByIndexDescriptor();
         }
     };
-    
+
     private ARecordType recType;
 
     public void reset(ARecordType recType) {

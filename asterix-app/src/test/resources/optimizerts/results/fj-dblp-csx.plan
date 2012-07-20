@@ -24,12 +24,12 @@
                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
                                       }
                                 -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                                  -- STABLE_SORT [$$46(ASC), $$6(ASC)]  |LOCAL|
+                                  -- STABLE_SORT [$$46(ASC), $$5(ASC)]  |LOCAL|
                                     -- HASH_PARTITION_EXCHANGE [$$46]  |PARTITIONED|
                                       -- STREAM_PROJECT  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- HYBRID_HASH_JOIN [$$4][$$26]  |PARTITIONED|
-                                            -- HASH_PARTITION_EXCHANGE [$$4]  |PARTITIONED|
+                                          -- HYBRID_HASH_JOIN [$$3][$$26]  |PARTITIONED|
+                                            -- HASH_PARTITION_EXCHANGE [$$3]  |PARTITIONED|
                                               -- STREAM_PROJECT  |PARTITIONED|
                                                 -- UNNEST  |PARTITIONED|
                                                   -- ASSIGN  |PARTITIONED|
@@ -63,12 +63,12 @@
                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
                                       }
                                 -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                                  -- STABLE_SORT [$$47(ASC), $$15(ASC)]  |LOCAL|
+                                  -- STABLE_SORT [$$47(ASC), $$14(ASC)]  |LOCAL|
                                     -- HASH_PARTITION_EXCHANGE [$$47]  |PARTITIONED|
                                       -- STREAM_PROJECT  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- HYBRID_HASH_JOIN [$$13][$$35]  |PARTITIONED|
-                                            -- HASH_PARTITION_EXCHANGE [$$13]  |PARTITIONED|
+                                          -- HYBRID_HASH_JOIN [$$12][$$35]  |PARTITIONED|
+                                            -- HASH_PARTITION_EXCHANGE [$$12]  |PARTITIONED|
                                               -- STREAM_PROJECT  |PARTITIONED|
                                                 -- UNNEST  |PARTITIONED|
                                                   -- ASSIGN  |PARTITIONED|
