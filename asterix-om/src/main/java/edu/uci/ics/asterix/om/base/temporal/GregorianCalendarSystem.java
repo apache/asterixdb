@@ -36,7 +36,17 @@ package edu.uci.ics.asterix.om.base.temporal;
  */
 public class GregorianCalendarSystem implements ICalendarSystem {
 
-    public static final int YEAR = 0, MONTH = 1, DAY = 2, HOUR = 3, MINUTE = 4, SECOND = 5, MILLISECOND = 6;
+    public enum Fields {
+        YEAR,
+        MONTH,
+        DAY,
+        HOUR,
+        MINUTE,
+        SECOND,
+        MILLISECOND
+    };
+
+    //public static final int YEAR = 0, MONTH = 1, DAY = 2, HOUR = 3, MINUTE = 4, SECOND = 5, MILLISECOND = 6;
 
     public static final int[] DAYS_OF_MONTH_ORDI = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
     public static final int[] DAYS_OF_MONTH_LEAP = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
@@ -128,6 +138,13 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
     /**
      * Check whether the given time zone value is a valid time zone following the gregorian calendar system.
+     * <p/>
+     * The valid timezone is within the range of:<br/>
+     * - Hours: UTC -12 (Y, or Yankee Time Zone) to UTC +14 (LINT, or Line Islands Time) <br/>
+     * - Minutes: currently the available minutes include 00, 30 and 45.
+     * <p/>
+     * Reference: http://www.timeanddate.com/library/abbreviations/timezones/
+     * <p/>
      * 
      * @param timezone
      * @return
@@ -206,9 +223,9 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      */
     public int getChronon(int hour, int min, int sec, int millis, int timezone) {
         // Added milliseconds for all fields but month and day
-        int ora = (hour - timezone / 4) * CHRONON_OF_HOUR + (min - (timezone % 4) * 15) * CHRONON_OF_MINUTE + sec
-                * CHRONON_OF_SECOND + millis;
-        return ora;
+        int chrononTime = (hour - timezone / 4) * CHRONON_OF_HOUR + (min - (timezone % 4) * 15) * CHRONON_OF_MINUTE
+                + sec * CHRONON_OF_SECOND + millis;
+        return chrononTime;
     }
 
     /**
@@ -224,7 +241,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * @param untilField
      */
     public void getExtendStringRepWithTimezoneUntilField(long chrononTime, int timezone, StringBuilder sbder,
-            int startField, int untilField) {
+            Fields startField, Fields untilField) {
 
         int year = getYear(chrononTime);
         int month = getMonthOfYear(chrononTime, year);
@@ -232,39 +249,39 @@ public class GregorianCalendarSystem implements ICalendarSystem {
         switch (startField) {
             case YEAR:
                 sbder.append(String.format(year < 0 ? "%05d" : "%04d", year));
-                if (untilField == YEAR) {
+                if (untilField == Fields.YEAR) {
                     return;
                 }
             case MONTH:
-                if (startField != MONTH)
+                if (startField != Fields.MONTH)
                     sbder.append("-");
                 sbder.append(String.format("%02d", month));
-                if (untilField == MONTH) {
+                if (untilField == Fields.MONTH) {
                     return;
                 }
             case DAY:
-                if (startField != DAY)
+                if (startField != Fields.DAY)
                     sbder.append("-");
                 sbder.append(String.format("%02d", getDayOfMonthYear(chrononTime, year, month)));
-                if (untilField == DAY) {
+                if (untilField == Fields.DAY) {
                     break;
                 }
             case HOUR:
-                if (startField != HOUR)
+                if (startField != Fields.HOUR)
                     sbder.append("T");
                 sbder.append(String.format("%02d", getHourOfDay(chrononTime)));
-                if (untilField == HOUR) {
+                if (untilField == Fields.HOUR) {
                     break;
                 }
             case MINUTE:
-                if (startField != MINUTE)
+                if (startField != Fields.MINUTE)
                     sbder.append(":");
                 sbder.append(String.format("%02d", getMinOfHour(chrononTime)));
-                if (untilField == MINUTE) {
+                if (untilField == Fields.MINUTE) {
                     break;
                 }
             case SECOND:
-                if (startField != SECOND)
+                if (startField != Fields.SECOND)
                     sbder.append(":");
                 sbder.append(String.format("%02d", getSecOfMin(chrononTime)));
                 // add millisecond as the precision fields of a second
@@ -272,7 +289,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
                 break;
         }
 
-        if (timezone == 0) {
+        if (untilField.compareTo(Fields.DAY) > 0) {
             sbder.append("Z");
         } else {
             short tzMin = (short) ((timezone % 4) * 15);
@@ -289,35 +306,35 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * @param timezone
      * @param sbder
      */
-    public void getBasicStringRepWithTimezoneUntiField(long chrononTime, int timezone, StringBuilder sbder,
-            int startField, int untilField) {
+    public void getBasicStringRepWithTimezoneUntilField(long chrononTime, int timezone, StringBuilder sbder,
+            Fields startField, Fields untilField) {
         int year = getYear(chrononTime);
         int month = getMonthOfYear(chrononTime, year);
 
         switch (startField) {
             case YEAR:
                 sbder.append(String.format(year < 0 ? "%05d" : "%04d", year));
-                if (untilField == YEAR) {
+                if (untilField == Fields.YEAR) {
                     return;
                 }
             case MONTH:
                 sbder.append(String.format("%02d", month));
-                if (untilField == MONTH) {
+                if (untilField == Fields.MONTH) {
                     return;
                 }
             case DAY:
                 sbder.append(String.format("%02d", getDayOfMonthYear(chrononTime, year, month)));
-                if (untilField == DAY) {
+                if (untilField == Fields.DAY) {
                     break;
                 }
             case HOUR:
                 sbder.append(String.format("%02d", getHourOfDay(chrononTime)));
-                if (untilField == HOUR) {
+                if (untilField == Fields.HOUR) {
                     break;
                 }
             case MINUTE:
                 sbder.append(String.format("%02d", getMinOfHour(chrononTime)));
-                if (untilField == MINUTE) {
+                if (untilField == Fields.MINUTE) {
                     break;
                 }
             case SECOND:
@@ -327,7 +344,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
                 break;
         }
 
-        if (timezone == 0) {
+        if (untilField.compareTo(Fields.DAY) > 0) {
             sbder.append("Z");
         } else {
             short tzMin = (short) ((timezone % 4) * 15);
@@ -335,6 +352,52 @@ public class GregorianCalendarSystem implements ICalendarSystem {
             sbder.append((tzHr >= 0 ? "+" : "-")).append(String.format("%02d", (tzHr < 0 ? -tzHr : tzHr)))
                     .append(String.format("%02d", tzMin));
         }
+    }
+
+    /**
+     * Get the extended string representation of the given months and milliseconds (duration) time. *
+     * <p/>
+     * The extended and simple string representation is like:<br/>
+     * [-]PnYnMnDTnHnMnS
+     * 
+     * @param milliseconds
+     * @param months
+     * @param sbder
+     */
+
+    public void getDurationExtendStringRepWithTimezoneUntilField(long milliseconds, int months, StringBuilder sbder) {
+
+        boolean positive = true;
+
+        // set the negative flag. "||" is necessary in case that months field is not there (so it is 0)
+        if (months < 0 || milliseconds < 0) {
+            months *= -1;
+            milliseconds *= -1;
+            positive = false;
+        }
+
+        int month = getDurationMonth(months);
+        int year = getDurationYear(months);
+        int millisecond = getDurationMillisecond(milliseconds);
+        int second = getDurationSecond(milliseconds);
+        int minute = getDurationMinute(milliseconds);
+        int hour = getDurationHour(milliseconds);
+        int day = getDurationDay(milliseconds);
+
+        if (!positive) {
+            sbder.append("-");
+        }
+        sbder.append("P");
+        sbder.append((year != 0) ? year + "Y" : "");
+        sbder.append((month != 0) ? month + "M" : "");
+        sbder.append((day != 0) ? day + "D" : "");
+        sbder.append((hour != 0 || minute != 0 || second != 0 || millisecond != 0) ? "T" : "");
+        sbder.append((hour != 0) ? hour + "H" : "");
+        sbder.append((minute != 0) ? minute + "M" : "");
+        sbder.append((second != 0 || millisecond != 0) ? second : "");
+        if (millisecond > 0)
+            sbder.append("." + millisecond);
+        sbder.append((second != 0 || millisecond != 0) ? "S" : "");
     }
 
     /**
@@ -443,71 +506,69 @@ public class GregorianCalendarSystem implements ICalendarSystem {
         // There are 86400000 milliseconds per day, but divided by 1024 is
         // 84375. There are 84375 (128/125)seconds per day.
 
-        
-//    	if (isleap_year==true)
-//    		if (i < 182 * 84375 /*Days before the end of June*/)
-//    			if (i < 91 * 84375 /*Days before the end of March*/)
-//    				if (i < 31 * 84375 /*Days before the end of January*/)
-//    					Month is 1
-//    				else if (i < 60 * 84375 /*Days before the end of February of leap year*/)
-//    					Month is 2
-//    				else
-//    					Month is 3
-//    			else
-//    				if (i < 121 * 84375 /*Days before the end of April*/)
-//    					Month is 4
-//    				else if (i < 152 * 84375 /*Days before the end of May*/)
-//    					Month is 5
-//    				else
-//    					Month is 6
-//    		else
-//    			if (i < 274 * 84375 /*Days before the end of September*/)
-//    				if (i < 213 * 84375 /*Days before the end of July*/)
-//    					Month is 7
-//    				else if (i < 244 * 84375 /*Days before the end of August*/)
-//    					Month is 8
-//    				else
-//    					Month is 9
-//    			else
-//    				if (i < 305 * 84375 /*Days before the end of October*/)
-//    					Month is 10
-//    				else if (i < 335 * 84375 /*Days before the end of November*/)
-//    					Month is 11
-//    				else
-//    					Month is 12
-//    	else /*Not a leap year*/
-//    		if (i < 181 * 84375 /*Days before the end of June*/)
-//    			if (i < 90 * 84375 /*Days before the end of March*/)
-//    				if (i < 31 * 84375 /*Days before the end of January*/)
-//    					Month is 1
-//    				else if (i < 59 * 84375 /*Days before the end of February of NON leap year*/)
-//    					Month is 2
-//    				else
-//    					Month is 3
-//    			else
-//    				if (i < 120 * 84375 /*Days before the end of April*/)
-//    					Month is 4
-//    				else if (i < 151 * 84375 /*Days before the end of May*/)
-//    					Month is 5
-//    				else
-//    					Month is 6
-//    		else
-//    			if (i < 273 * 84375 /*Days before the end of September*/)
-//    				if (i < 213 * 84375 /*Days before the end of July*/)
-//    					Month is 7
-//    				else if (i < 243 * 84375 /*Days before the end of August*/)
-//    					Month is 8
-//    				else
-//    					Month is 9
-//    			else
-//    				if (i < 304 * 84375 /*Days before the end of October*/)
-//    					Month is 10
-//    				else if (i < 334 * 84375 /*Days before the end of November*/)
-//    					Month is 11
-//    				else
-//    					Month is 12
-        
-        
+        //    	if (isleap_year==true)
+        //    		if (i < 182 * 84375 /*Days before the end of June*/)
+        //    			if (i < 91 * 84375 /*Days before the end of March*/)
+        //    				if (i < 31 * 84375 /*Days before the end of January*/)
+        //    					Month is 1
+        //    				else if (i < 60 * 84375 /*Days before the end of February of leap year*/)
+        //    					Month is 2
+        //    				else
+        //    					Month is 3
+        //    			else
+        //    				if (i < 121 * 84375 /*Days before the end of April*/)
+        //    					Month is 4
+        //    				else if (i < 152 * 84375 /*Days before the end of May*/)
+        //    					Month is 5
+        //    				else
+        //    					Month is 6
+        //    		else
+        //    			if (i < 274 * 84375 /*Days before the end of September*/)
+        //    				if (i < 213 * 84375 /*Days before the end of July*/)
+        //    					Month is 7
+        //    				else if (i < 244 * 84375 /*Days before the end of August*/)
+        //    					Month is 8
+        //    				else
+        //    					Month is 9
+        //    			else
+        //    				if (i < 305 * 84375 /*Days before the end of October*/)
+        //    					Month is 10
+        //    				else if (i < 335 * 84375 /*Days before the end of November*/)
+        //    					Month is 11
+        //    				else
+        //    					Month is 12
+        //    	else /*Not a leap year*/
+        //    		if (i < 181 * 84375 /*Days before the end of June*/)
+        //    			if (i < 90 * 84375 /*Days before the end of March*/)
+        //    				if (i < 31 * 84375 /*Days before the end of January*/)
+        //    					Month is 1
+        //    				else if (i < 59 * 84375 /*Days before the end of February of NON leap year*/)
+        //    					Month is 2
+        //    				else
+        //    					Month is 3
+        //    			else
+        //    				if (i < 120 * 84375 /*Days before the end of April*/)
+        //    					Month is 4
+        //    				else if (i < 151 * 84375 /*Days before the end of May*/)
+        //    					Month is 5
+        //    				else
+        //    					Month is 6
+        //    		else
+        //    			if (i < 273 * 84375 /*Days before the end of September*/)
+        //    				if (i < 213 * 84375 /*Days before the end of July*/)
+        //    					Month is 7
+        //    				else if (i < 243 * 84375 /*Days before the end of August*/)
+        //    					Month is 8
+        //    				else
+        //    					Month is 9
+        //    			else
+        //    				if (i < 304 * 84375 /*Days before the end of October*/)
+        //    					Month is 10
+        //    				else if (i < 334 * 84375 /*Days before the end of November*/)
+        //    					Month is 11
+        //    				else
+        //    					Month is 12
+
         return (isLeapYear(year)) ? ((i < 182 * 84375) ? ((i < 91 * 84375) ? ((i < 31 * 84375) ? 1
                 : (i < 60 * 84375) ? 2 : 3) : ((i < 121 * 84375) ? 4 : (i < 152 * 84375) ? 5 : 6))
                 : ((i < 274 * 84375) ? ((i < 213 * 84375) ? 7 : (i < 244 * 84375) ? 8 : 9) : ((i < 305 * 84375) ? 10
@@ -613,5 +674,33 @@ public class GregorianCalendarSystem implements ICalendarSystem {
             ms += 1000;
         }
         return ms;
+    }
+
+    public int getDurationMonth(int months) {
+        return (months % 12);
+    }
+
+    public int getDurationYear(int months) {
+        return (months / 12);
+    }
+
+    public int getDurationMillisecond(long milliseconds) {
+        return (int) (milliseconds % 1000);
+    }
+
+    public int getDurationSecond(long milliseconds) {
+        return (int) ((milliseconds % 60000) / 1000);
+    }
+
+    public int getDurationMinute(long milliseconds) {
+        return (int) ((milliseconds % 3600000) / 60000);
+    }
+
+    public int getDurationHour(long milliseconds) {
+        return (int) ((milliseconds % (86400000)) / 3600000);
+    }
+
+    public int getDurationDay(long milliseconds) {
+        return (int) (milliseconds / (86400000));
     }
 }

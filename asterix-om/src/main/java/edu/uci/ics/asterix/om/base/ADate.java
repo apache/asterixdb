@@ -11,6 +11,9 @@ import edu.uci.ics.asterix.om.visitors.IOMVisitor;
  */
 public class ADate implements IAObject {
 
+    /**
+     * the number of full calendar days since the 1970-01-01 represented by the date value.
+     */
     protected int chrononTimeInDay;
 
     private static long CHRONON_OF_DAY = 24 * 60 * 60 * 1000;
@@ -56,7 +59,7 @@ public class ADate implements IAObject {
         StringBuilder sbder = new StringBuilder();
         sbder.append("ADate: { ");
         GregorianCalendarSystem.getInstance().getExtendStringRepWithTimezoneUntilField(
-                chrononTimeInDay * CHRONON_OF_DAY, 0, sbder, GregorianCalendarSystem.YEAR, GregorianCalendarSystem.DAY);
+                chrononTimeInDay * CHRONON_OF_DAY, 0, sbder, GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.DAY);
         sbder.append(" }");
         return sbder.toString();
     }

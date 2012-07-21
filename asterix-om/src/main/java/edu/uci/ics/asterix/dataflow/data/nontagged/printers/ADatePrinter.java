@@ -31,14 +31,7 @@ public class ADatePrinter implements IPrinter {
 
         ps.print("date(\"");
         ps.append(String.format(year < 0 ? "%05d" : "%04d", year)).append("-").append(String.format("%02d", month))
-                .append("-").append(String.format("%02d", calendar.getDayOfMonthYear(chrononTime, year, month)))
-                .append("Z");
+                .append("-").append(String.format("%02d", calendar.getDayOfMonthYear(chrononTime, year, month)));
         ps.print("\")");
-        //        int year = AInt16SerializerDeserializer.getShort(b, s + 1) >> 1;
-        //        int month = (AInt16SerializerDeserializer.getShort(b, s + 1) & 0x0001) * 8 + ((b[s + 3] >> 5) & 0x07);
-        //        int day = b[s + 3] & 0x1f;
-        //        byte timezone = b[s + 4];
-        //        ps.format("date(\"" + (year < 0 ? "%+05d" : "%04d") + "-%02d-%02d%+03d:%02d\")", year, month, day,
-        //                timezone / 4, timezone % 4 * ((timezone >= 0) ? 15 : -15));
     }
 }

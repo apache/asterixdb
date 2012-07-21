@@ -90,12 +90,12 @@ public class ADateTime implements IAObject {
         StringBuilder sbder = new StringBuilder();
         sbder.append("ADateTime: { ");
         GregorianCalendarSystem.getInstance().getExtendStringRepWithTimezoneUntilField(chrononTime, 0, sbder,
-                GregorianCalendarSystem.YEAR, GregorianCalendarSystem.MILLISECOND);
+                GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND);
         sbder.append(" }");
         return sbder.toString();
     }
 
-    public long getChrnonoTime() {
+    public long getChrononTime() {
         return chrononTime;
     }
 

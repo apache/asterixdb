@@ -20,14 +20,14 @@ public class ATimePrinter implements IPrinter {
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
         int time = AInt32SerializerDeserializer.getInt(b, s + 1);
-    	GregorianCalendarSystem calendar = GregorianCalendarSystem.getInstance();        
+        GregorianCalendarSystem calendar = GregorianCalendarSystem.getInstance();
         ps.print("time(\"");
-        
+
         ps.append(String.format("%02d", calendar.getHourOfDay(time))).append(":")
-        .append(String.format("%02d", calendar.getMinOfHour(time))).append(":")
-        .append(String.format("%02d", calendar.getSecOfMin(time))).append(".")
-        .append(String.format("%03d", calendar.getMillisOfSec(time))).append("Z");
-        
+                .append(String.format("%02d", calendar.getMinOfHour(time))).append(":")
+                .append(String.format("%02d", calendar.getSecOfMin(time))).append(".")
+                .append(String.format("%03d", calendar.getMillisOfSec(time))).append("Z");
+
         ps.print("\")");
     }
 

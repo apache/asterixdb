@@ -1,13 +1,40 @@
 package edu.uci.ics.asterix.om.base;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.visitors.IOMVisitor;
 
+/**
+ * ADuration type represents time duration (unanchored time length) values.
+ * <p/>
+ * An ADuration value may contain the same fields as the {@link ADateTime}: <br/>
+ * - year;<br/>
+ * - month;<br/>
+ * - day;<br/>
+ * - hour; <br/>
+ * - minute; <br/>
+ * - second; <br/>
+ * - millisecond. <br/>
+ * Compared with {@link ADateTime}, a field in a duration value does not have the limited domain requirement. A duration field is valid as far as the value of the field is an integer.
+ * </p>
+ * We also support negative durations, which is not specified by ISO 8601, but has been
+ * supported by XML spec to enable the arithmetic operations between time instances.
+ * <p/>
+ * Internally, an ADuration value is stored as two fields: an integer field as the number of months for the YEAR and MONTH fields, and a long integer field as the number of milliseconds for the other fields.
+ * <p/>
+ */
 public class ADuration implements IAObject {
 
+    /**
+     * number of full months represented by the year-month part
+     */
     protected int chrononInMonth;
+
+    /**
+     * number of milliseconds represented by the part other than the year and month
+     */
     protected long chrononInMillisecond;
 
     public ADuration(int months, long seconds) {
@@ -56,6 +83,15 @@ public class ADuration implements IAObject {
     @Override
     public int hash() {
         return hashCode();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sbder = new StringBuilder();
+        sbder.append("ADuration: {");
+        GregorianCalendarSystem.getInstance().getDurationExtendStringRepWithTimezoneUntilField(chrononInMillisecond, chrononInMonth, sbder);
+        sbder.append(" }");
+        return sbder.toString();
     }
 
 }

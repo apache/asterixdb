@@ -8,10 +8,13 @@ import edu.uci.ics.asterix.om.visitors.IOMVisitor;
 
 public class ATime implements IAObject {
 
+    /**
+     * number of milliseconds since the beginning of a day represented by this time value
+     */
     protected int chrononTime;
 
-    public ATime(int ora) {
-        this.chrononTime = ora;
+    public ATime(int chrononTime) {
+        this.chrononTime = chrononTime;
     }
 
     @Override
@@ -71,13 +74,13 @@ public class ATime implements IAObject {
         StringBuilder sbder = new StringBuilder();
         sbder.append("ATime: { ");
         GregorianCalendarSystem.getInstance().getExtendStringRepWithTimezoneUntilField(chrononTime, 0, sbder,
-                GregorianCalendarSystem.HOUR, GregorianCalendarSystem.MILLISECOND);
+                GregorianCalendarSystem.Fields.HOUR, GregorianCalendarSystem.Fields.MILLISECOND);
         sbder.append(" }");
         return sbder.toString();
 
     }
 
-    public int getOra() {
+    public int getChrononTime() {
         return chrononTime;
     }
 
