@@ -21,12 +21,13 @@ import java.util.List;
 import java.util.Set;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
+import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSourcePropertiesProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
@@ -41,12 +42,11 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 
 public class AqlDataSource implements IDataSource<AqlSourceId> {
 
     private AqlSourceId id;
-    private AqlCompiledDatasetDecl adecl;
+    private Dataset dataset;
     private IAType[] schemaTypes;
     private INodeDomain domain;
     private AqlDataSourceType datasourceType;
@@ -58,14 +58,14 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
         EXTERNAL_FEED
     }
 
-    public AqlDataSource(AqlSourceId id, AqlCompiledDatasetDecl adecl, IAType itemType, AqlDataSourceType datasourceType)
+    public AqlDataSource(AqlSourceId id, Dataset dataset, IAType itemType, AqlDataSourceType datasourceType)
             throws AlgebricksException {
         this.id = id;
-        this.adecl = adecl;
+        this.dataset = dataset;
         this.datasourceType = datasourceType;
         switch (datasourceType) {
             case FEED:
-                initFeedDataset(itemType, adecl);
+                initFeedDataset(itemType, dataset);
             case INTERNAL: {
                 initInternalDataset(itemType);
                 break;
@@ -81,12 +81,12 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
         }
     }
 
-    public AqlDataSource(AqlSourceId id, AqlCompiledDatasetDecl adecl, IAType itemType) throws AlgebricksException {
+    public AqlDataSource(AqlSourceId id, Dataset dataset, IAType itemType) throws AlgebricksException {
         this.id = id;
-        this.adecl = adecl;
-        switch (adecl.getDatasetType()) {
+        this.dataset = dataset;
+        switch (dataset.getDatasetType()) {
             case FEED:
-                initFeedDataset(itemType, adecl);
+                initFeedDataset(itemType, dataset);
                 break;
             case INTERNAL:
                 initInternalDataset(itemType);
@@ -101,32 +101,32 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
         }
     }
 
+    // TODO: Seems like initFeedDataset() could simply call this method.
     private void initInternalDataset(IAType itemType) {
-        List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
-                .getPartitioningFunctions(adecl);
-        int n = partitioningFunctions.size();
+        List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+        ARecordType recordType = (ARecordType) itemType;
+        int n = partitioningKeys.size();
         schemaTypes = new IAType[n + 1];
         for (int i = 0; i < n; i++) {
-            schemaTypes[i] = partitioningFunctions.get(i).third;
+            schemaTypes[i] = recordType.getFieldType(partitioningKeys.get(i));
         }
         schemaTypes[n] = itemType;
-        domain = new AsterixNodeGroupDomain(DatasetUtils.getNodegroupName(adecl));
+        domain = new AsterixNodeGroupDomain(DatasetUtils.getNodegroupName(dataset));
     }
 
-    private void initFeedDataset(IAType itemType, AqlCompiledDatasetDecl decl) {
-
-        if (decl.getAqlCompiledDatasetDetails() instanceof AqlCompiledExternalDatasetDetails) {
+    private void initFeedDataset(IAType itemType, Dataset dataset) {
+        if (dataset.getDatasetDetails() instanceof ExternalDatasetDetails) {
             initExternalDataset(itemType);
         } else {
-            List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningFunctions = DatasetUtils
-                    .getPartitioningFunctions(adecl);
-            int n = partitioningFunctions.size();
+            List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+            int n = partitioningKeys.size();
             schemaTypes = new IAType[n + 1];
+            ARecordType recordType = (ARecordType) itemType;
             for (int i = 0; i < n; i++) {
-                schemaTypes[i] = partitioningFunctions.get(i).third;
+                schemaTypes[i] = recordType.getFieldType(partitioningKeys.get(i));
             }
             schemaTypes[n] = itemType;
-            domain = new AsterixNodeGroupDomain(DatasetUtils.getNodegroupName(adecl));
+            domain = new AsterixNodeGroupDomain(DatasetUtils.getNodegroupName(dataset));
         }
     }
 
@@ -152,8 +152,8 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
         return id;
     }
 
-    public AqlCompiledDatasetDecl getCompiledDatasetDecl() {
-        return adecl;
+    public Dataset getDataset() {
+        return dataset;
     }
 
     @Override
@@ -170,7 +170,7 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
 
     @Override
     public IDataSourcePropertiesProvider getPropertiesProvider() {
-        return new AqlDataSourcePartitioningProvider(adecl.getDatasetType(), domain);
+        return new AqlDataSourcePartitioningProvider(dataset.getDatasetType(), domain);
     }
 
     @Override

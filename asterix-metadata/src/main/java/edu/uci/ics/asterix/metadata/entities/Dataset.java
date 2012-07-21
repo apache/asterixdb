@@ -30,16 +30,16 @@ public class Dataset implements IMetadataEntity {
     private final String dataverseName;
     // Enforced to be unique within a dataverse.
     private final String datasetName;
-    // Type of values stored in this dataset.
-    private final String datatypeName;
+    // Type of items stored in this dataset.
+    private final String itemTypeName;
     private final DatasetType datasetType;
     private IDatasetDetails datasetDetails;
 
-    public Dataset(String dataverseName, String datasetName, String datatypeName, IDatasetDetails datasetDetails,
+    public Dataset(String dataverseName, String datasetName, String itemTypeName, IDatasetDetails datasetDetails,
             DatasetType datasetType) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
-        this.datatypeName = datatypeName;
+        this.itemTypeName = itemTypeName;
         this.datasetType = datasetType;
         this.datasetDetails = datasetDetails;
     }
@@ -52,11 +52,11 @@ public class Dataset implements IMetadataEntity {
         return datasetName;
     }
 
-    public String getDatatypeName() {
-        return datatypeName;
+    public String getItemTypeName() {
+        return itemTypeName;
     }
 
-    public DatasetType getType() {
+    public DatasetType getDatasetType() {
         return datasetType;
     }
 

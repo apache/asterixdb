@@ -23,7 +23,6 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.annotations.TypeDataGen;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
-import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.metadata.MetadataException;
@@ -31,25 +30,18 @@ import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.api.IMetadataManager;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl.IndexKind;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
-import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
-import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
-import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
-import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.data.IAWriterFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
@@ -81,10 +73,11 @@ public class AqlCompiledMetadataDeclarations {
         this.dataverseName = dataverseName;
         this.outputFile = outputFile;
         this.config = config;
-        if (stores == null && online)
+        if (stores == null && online) {
             this.stores = AsterixProperties.INSTANCE.getStores();
-        else
+        } else {
             this.stores = stores;
+        }
         this.types = types;
         this.typeDataGenMap = typeDataGenMap;
         this.writerFactory = writerFactory;
@@ -113,17 +106,16 @@ public class AqlCompiledMetadataDeclarations {
     }
 
     public void disconnectFromDataverse() throws AlgebricksException {
-        if (!isConnected)
+        if (!isConnected) {
             throw new AlgebricksException("You are not connected to any dataverse");
-        else {
-            dataverseName = null;
-            format = null;
-            isConnected = false;
         }
+        dataverseName = null;
+        format = null;
+        isConnected = false;
     }
 
     public boolean isConnectedToDataverse() {
-        return this.isConnected;
+        return isConnected;
     }
 
     public String getDataverseName() {
@@ -135,8 +127,9 @@ public class AqlCompiledMetadataDeclarations {
     }
 
     public IDataFormat getFormat() throws AlgebricksException {
-        if (!isConnected)
+        if (!isConnected) {
             throw new AlgebricksException("You need first to connect to a dataverse.");
+        }
         return format;
     }
 
@@ -157,8 +150,13 @@ public class AqlCompiledMetadataDeclarations {
         return type.getDatatype();
     }
 
-    public List<String> findNodeGroupNodeNames(String nodeGroupName) throws AlgebricksException, MetadataException {
-        NodeGroup ng = metadataManager.getNodegroup(mdTxnCtx, nodeGroupName);
+    public List<String> findNodeGroupNodeNames(String nodeGroupName) throws AlgebricksException {
+        NodeGroup ng;
+        try {
+            ng = metadataManager.getNodegroup(mdTxnCtx, nodeGroupName);
+        } catch (MetadataException e) {
+            throw new AlgebricksException(e);
+        }
         if (ng == null) {
             throw new AlgebricksException("No node group with this name " + nodeGroupName);
         }
@@ -173,90 +171,44 @@ public class AqlCompiledMetadataDeclarations {
         return stores;
     }
 
-    public AqlCompiledDatasetDecl findDataset(String datasetName) {
+    public Dataset findDataset(String datasetName) throws AlgebricksException {
         try {
-            Dataset datasetRecord = this.metadataManager.getDataset(mdTxnCtx, dataverseName, datasetName);
-            if (datasetRecord == null) {
-                return null;
-            }
-
-            IAqlCompiledDatasetDetails acdd = null;
-            switch (datasetRecord.getType()) {
-                case FEED:
-                case INTERNAL: {
-                    String typeName = datasetRecord.getDatatypeName();
-                    InternalDatasetDetails id = (InternalDatasetDetails) datasetRecord.getDatasetDetails();
-                    ARecordType recType = (ARecordType) findType(typeName);
-                    List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> partitioningEvalFactories = computePartitioningEvaluatorFactories(
-                            id.getPartitioningKey(), recType);
-                    List<Index> indexRecord = this.metadataManager.getDatasetIndexes(mdTxnCtx, dataverseName,
-                            datasetName);
-                    AqlCompiledIndexDecl primaryIndex = null;
-                    List<AqlCompiledIndexDecl> secondaryIndexes = new ArrayList<AqlCompiledIndexDecl>();
-                    for (int i = 0; i < indexRecord.size(); i++) {
-                        Index rec = indexRecord.get(i);
-                        if (rec.isPrimaryIndex()) {
-                            primaryIndex = new AqlCompiledIndexDecl(rec.getIndexName(), IndexKind.BTREE,
-                                    rec.getKeyFieldNames());
-                        } else {
-                            secondaryIndexes.add(new AqlCompiledIndexDecl(rec.getIndexName(),
-                                    rec.getIndexType() == IndexType.BTREE ? IndexKind.BTREE : IndexKind.RTREE, rec
-                                            .getKeyFieldNames()));
-                        }
-                    }
-
-                    if (datasetRecord.getType() == DatasetType.INTERNAL) {
-                        acdd = new AqlCompiledInternalDatasetDetails(id.getPartitioningKey(),
-                                partitioningEvalFactories, id.getNodeGroupName(), primaryIndex, secondaryIndexes);
-                    } else {
-                        acdd = new AqlCompiledFeedDatasetDetails(id.getPartitioningKey(), partitioningEvalFactories,
-                                id.getNodeGroupName(), primaryIndex, secondaryIndexes,
-                                ((FeedDatasetDetails) id).getAdapter(), ((FeedDatasetDetails) id).getProperties(),
-                                ((FeedDatasetDetails) id).getFunctionIdentifier(), ((FeedDatasetDetails) id)
-                                        .getFeedState().toString());
-                    }
-                    break;
-                }
-
-                case EXTERNAL: {
-                    acdd = new AqlCompiledExternalDatasetDetails(
-                            ((ExternalDatasetDetails) datasetRecord.getDatasetDetails()).getAdapter(),
-                            ((ExternalDatasetDetails) datasetRecord.getDatasetDetails()).getProperties());
-                    break;
-                }
-
-            }
-            AqlCompiledDatasetDecl dataset = new AqlCompiledDatasetDecl(datasetRecord.getDatasetName(),
-                    datasetRecord.getDatatypeName(), datasetRecord.getType(), acdd);
-            return dataset;
-
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
+            return metadataManager.getDataset(mdTxnCtx, dataverseName, datasetName);
+        } catch (MetadataException e) {
+            throw new AlgebricksException(e);
         }
     }
 
+    public List<Index> getDatasetIndexes(String dataverseName, String datasetName) throws AlgebricksException {
+    	try {
+            return metadataManager.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
+        } catch (MetadataException e) {
+            throw new AlgebricksException(e);
+        }
+    }
+    
+    public Index getDatasetPrimaryIndex(String dataverseName, String datasetName) throws AlgebricksException {
+        try {
+            return metadataManager.getIndex(mdTxnCtx, dataverseName, datasetName, datasetName);
+        } catch (MetadataException e) {
+            throw new AlgebricksException(e);
+        }
+    }
+
+    public Index getIndex(String dataverseName, String datasetName, String indexName) throws AlgebricksException {
+        try {
+            return metadataManager.getIndex(mdTxnCtx, dataverseName, datasetName, indexName);
+        } catch (MetadataException e) {
+            throw new AlgebricksException(e);
+        }
+    }
+    
     public void setOutputFile(FileSplit outputFile) {
         this.outputFile = outputFile;
     }
 
-    public List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> computePartitioningEvaluatorFactories(
-            List<String> partitioningExprs, ARecordType recType) {
-        List<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>> evalFactories = new ArrayList<Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>>(
-                partitioningExprs.size());
-        for (String expr : partitioningExprs) {
-            Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFact = null;
-            try {
-                evalFact = format.partitioningEvaluatorFactory(recType, expr);
-            } catch (AlgebricksException e) {
-                throw new IllegalStateException(e);
-            }
-            evalFactories.add(evalFact);
-        }
-        return evalFactories;
-    }
-
-	public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
-            String datasetName, String targetIdxName) throws AlgebricksException, MetadataException {
+    public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
+            String datasetName, String targetIdxName) throws AlgebricksException {
         FileSplit[] splits = splitsForInternalOrFeedDataset(datasetName, targetIdxName);
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(splits);
         String[] loc = new String[splits.length];
@@ -267,24 +219,36 @@ public class AqlCompiledMetadataDeclarations {
         return new Pair<IFileSplitProvider, AlgebricksPartitionConstraint>(splitProvider, pc);
     }
 
+    public Pair<IFileSplitProvider, IFileSplitProvider> getInvertedIndexFileSplitProviders(
+            IFileSplitProvider splitProvider) {
+        int numSplits = splitProvider.getFileSplits().length;
+        FileSplit[] btreeSplits = new FileSplit[numSplits];
+        FileSplit[] invListsSplits = new FileSplit[numSplits];
+        for (int i = 0; i < numSplits; i++) {
+            String nodeName = splitProvider.getFileSplits()[i].getNodeName();
+            String path = splitProvider.getFileSplits()[i].getLocalFile().getFile().getPath();
+            btreeSplits[i] = new FileSplit(nodeName, path + "_$btree");
+            invListsSplits[i] = new FileSplit(nodeName, path + "_$invlists");
+        }
+        return new Pair<IFileSplitProvider, IFileSplitProvider>(new ConstantFileSplitProvider(btreeSplits),
+                new ConstantFileSplitProvider(invListsSplits));
+    }
+
     private FileSplit[] splitsForInternalOrFeedDataset(String datasetName, String targetIdxName)
-            throws AlgebricksException, MetadataException {
+            throws AlgebricksException {
 
         File relPathFile = new File(getRelativePath(datasetName + "_idx_" + targetIdxName));
-        AqlCompiledDatasetDecl adecl = findDataset(datasetName);
-        if (adecl.getDatasetType() != DatasetType.INTERNAL & adecl.getDatasetType() != DatasetType.FEED) {
+        Dataset dataset = findDataset(datasetName);
+        if (dataset.getDatasetType() != DatasetType.INTERNAL & dataset.getDatasetType() != DatasetType.FEED) {
             throw new AlgebricksException("Not an internal or feed dataset");
         }
-        AqlCompiledInternalDatasetDetails compiledDatasetDetails = (AqlCompiledInternalDatasetDetails) adecl
-                .getAqlCompiledDatasetDetails();
-        List<String> nodeGroup = findNodeGroupNodeNames(compiledDatasetDetails.getNodegroupName());
-
+        InternalDatasetDetails datasetDetails = (InternalDatasetDetails) dataset.getDatasetDetails();
+        List<String> nodeGroup = findNodeGroupNodeNames(datasetDetails.getNodeGroupName());
         if (nodeGroup == null) {
-            throw new AlgebricksException("Couldn't find node group " + compiledDatasetDetails.getNodegroupName());
+            throw new AlgebricksException("Couldn't find node group " + datasetDetails.getNodeGroupName());
         }
 
         List<FileSplit> splitArray = new ArrayList<FileSplit>();
-
         for (String nd : nodeGroup) {
             String[] nodeStores = stores.get(nd);
             if (nodeStores == null) {

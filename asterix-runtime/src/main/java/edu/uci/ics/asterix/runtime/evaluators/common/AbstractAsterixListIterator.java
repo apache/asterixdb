@@ -17,6 +17,9 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
     protected int startOff = -1;
     protected IBinaryComparator cmp;
 
+    // Ignore case for strings. Defaults to true.
+    protected final boolean ignoreCase = true;
+
     @Override
     public int compare(IListIterator cmpIter) {
         return cmp.compare(data, pos, -1, cmpIter.getData(), cmpIter.getPos(), -1);
@@ -80,7 +83,16 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
                 break;
             }
             case STRING: {
-                cmp = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
+                if (ignoreCase) {
+                    cmp = AqlBinaryComparatorFactoryProvider.UTF8STRING_LOWERCASE_POINTABLE_INSTANCE
+                            .createBinaryComparator();
+                } else {
+                    cmp = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
+                }
+                break;
+            }
+            default: {
+                cmp = null;
                 break;
             }
         }

@@ -2,7 +2,6 @@ drop dataverse fuzzyjoin if exists;
 create dataverse fuzzyjoin;
 use dataverse fuzzyjoin;
 
-
 create type AddressType as closed {
  street: string,
  city: string,
@@ -12,21 +11,22 @@ create type AddressType as closed {
 
 create type UserType as open{
  name: string,
- interests: <string>,
+ interests: {{string}},
  address: AddressType,
- member_of: <
+ member_of: {{
   {
     sig_id: int32,
     chapter_name: string,
     member_since: date
   }
->
+}}
 }
 
+create dataset User(UserType) partitioned by key name;
 
-create dataset User(UserType)
- partitioned by key name;
-load dataset User from nc1:'data/events/tiny/user.adm';
+load dataset User
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/events/tiny/user.adm"),("format"="adm"));
 
 write output to nc1:'rttest/fuzzyjoin_events-users-aqlplus_1.adm';
 

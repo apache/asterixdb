@@ -20,7 +20,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDes
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 
 public class SecondaryBTreeCreator extends SecondaryIndexCreator {
-    
+
     protected SecondaryBTreeCreator(PhysicalOptimizationConfig physOptConf) {
         super(physOptConf);
     }
@@ -38,29 +38,28 @@ public class SecondaryBTreeCreator extends SecondaryIndexCreator {
         spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
         return spec;
     }
-    
+
     @Override
     public JobSpecification buildLoadingJobSpec() throws AsterixException, AlgebricksException {
         JobSpecification spec = new JobSpecification();
-        
+
         // Create dummy key provider for feeding the primary index scan. 
         AbstractOperatorDescriptor keyProviderOp = createDummyKeyProviderOp(spec);
-        
+
         // Create primary index scan op.
         BTreeSearchOperatorDescriptor primaryScanOp = createPrimaryIndexScanOp(spec);
-        
+
         // Assign op.
         AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, primaryScanOp, numSecondaryKeys);
-        
+
         // If any of the secondary fields are nullable, then add a select op that filters nulls.
         AlgebricksMetaOperatorDescriptor selectOp = null;
         if (anySecondaryKeyIsNullable) {
             selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys);
         }
-        
+
         // Sort by secondary keys.
         ExternalSortOperatorDescriptor sortOp = createSortOp(spec, secondaryComparatorFactories, secondaryRecDesc);
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, sortOp, primaryPartitionConstraint);
 
         // Create secondary BTree bulk load op.
         TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(spec, numSecondaryKeys,
@@ -68,7 +67,7 @@ public class SecondaryBTreeCreator extends SecondaryIndexCreator {
 
         // Connect the operators.
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
-        spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, asterixAssignOp, 0);        
+        spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, asterixAssignOp, 0);
         if (anySecondaryKeyIsNullable) {
             spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
             spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, sortOp, 0);

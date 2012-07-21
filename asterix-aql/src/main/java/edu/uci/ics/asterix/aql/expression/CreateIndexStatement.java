@@ -18,7 +18,18 @@ public class CreateIndexStatement implements Statement {
     private IndexType indexType = IndexType.BTREE;
     private boolean ifNotExists;
 
+    // Specific to NGram indexes.
+    private int gramLength;
+
     public CreateIndexStatement() {
+    }
+
+    public void setGramLength(int gramLength) {
+        this.gramLength = gramLength;
+    }
+
+    public int getGramLength() {
+        return gramLength;
     }
 
     public void setNeedToCreate(boolean needToCreate) {

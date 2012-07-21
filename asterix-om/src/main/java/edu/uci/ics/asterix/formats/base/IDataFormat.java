@@ -1,6 +1,5 @@
 package edu.uci.ics.asterix.formats.base;
 
-
 import edu.uci.ics.asterix.common.parse.IParseFileSplitsDecl;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -12,10 +11,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IAlgebricksConsta
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
-import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspector;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
-import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspector;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import edu.uci.ics.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.ISerializerDeserializerProvider;
@@ -35,9 +34,9 @@ public interface IDataFormat {
 
     public ITypeTraitProvider getTypeTraitProvider();
 
-    public IBinaryBooleanInspector getBinaryBooleanInspector();
+    public IBinaryBooleanInspectorFactory getBinaryBooleanInspectorFactory();
 
-    public IBinaryIntegerInspector getBinaryIntegerInspector();
+    public IBinaryIntegerInspectorFactory getBinaryIntegerInspectorFactory();
 
     public IPrinterFactoryProvider getPrinterFactoryProvider();
 

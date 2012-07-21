@@ -91,7 +91,7 @@ public class MetadataNode implements IMetadataNode {
     private MetadataNode() {
         super();
     }
-    
+
     public void initialize(AsterixAppRuntimeContext runtimeContext) {
         this.transactionProvider = runtimeContext.getTransactionProvider();
         this.indexRegistry = runtimeContext.getIndexRegistry();
@@ -152,7 +152,7 @@ public class MetadataNode implements IMetadataNode {
             DatasetTupleTranslator tupleReaderWriter = new DatasetTupleTranslator(true);
             ITupleReference datasetTuple = tupleReaderWriter.getTupleFromMetadataEntity(dataset);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.DATASET_DATASET, datasetTuple);
-            if (dataset.getType() == DatasetType.INTERNAL || dataset.getType() == DatasetType.FEED) {
+            if (dataset.getDatasetType() == DatasetType.INTERNAL || dataset.getDatasetType() == DatasetType.FEED) {
                 // Add the primary index for the dataset.
                 InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
                 Index primaryIndex = new Index(dataset.getDataverseName(), dataset.getDatasetName(),
@@ -163,7 +163,7 @@ public class MetadataNode implements IMetadataNode {
                 insertTupleIntoIndex(txnId, MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, nodeGroupTuple);
             }
             // Add entry in datatype secondary index.
-            ITupleReference dataTypeTuple = createTuple(dataset.getDataverseName(), dataset.getDatatypeName(),
+            ITupleReference dataTypeTuple = createTuple(dataset.getDataverseName(), dataset.getItemTypeName(),
                     dataset.getDatasetName());
             insertTupleIntoIndex(txnId, MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX, dataTypeTuple);
         } catch (BTreeDuplicateKeyException e) {
@@ -320,7 +320,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference datasetTuple = getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.DATASET_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.DATASET_DATASET, datasetTuple);
             // Delete entry from secondary index 'group'.
-            if (dataset.getType() == DatasetType.INTERNAL || dataset.getType() == DatasetType.FEED) {
+            if (dataset.getDatasetType() == DatasetType.INTERNAL || dataset.getDatasetType() == DatasetType.FEED) {
                 InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
                 ITupleReference groupNameSearchKey = createTuple(id.getNodeGroupName(), dataverseName, datasetName);
                 // Searches the index for the tuple to be deleted. Acquires an S
@@ -330,14 +330,14 @@ public class MetadataNode implements IMetadataNode {
                 deleteTupleFromIndex(txnId, MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, groupNameTuple);
             }
             // Delete entry from secondary index 'type'.
-            ITupleReference dataTypeSearchKey = createTuple(dataverseName, dataset.getDatatypeName(), datasetName);
+            ITupleReference dataTypeSearchKey = createTuple(dataverseName, dataset.getItemTypeName(), datasetName);
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the DATATYPENAME_ON_DATASET_INDEX index.
             ITupleReference dataTypeTuple = getTupleToBeDeleted(txnId,
                     MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX, dataTypeSearchKey);
             deleteTupleFromIndex(txnId, MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX, dataTypeTuple);
             // Delete entry(s) from the 'indexes' dataset.
-            if (dataset.getType() == DatasetType.INTERNAL || dataset.getType() == DatasetType.FEED) {
+            if (dataset.getDatasetType() == DatasetType.INTERNAL || dataset.getDatasetType() == DatasetType.FEED) {
                 List<Index> datasetIndexes = getDatasetIndexes(txnId, dataverseName, datasetName);
                 for (Index index : datasetIndexes) {
                     dropIndex(txnId, dataverseName, datasetName, index.getIndexName());

@@ -6,7 +6,7 @@
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             -- BTREE_SEARCH  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                -- STABLE_SORT [$$13(ASC)]  |LOCAL|
+                -- STABLE_SORT [$$14(ASC)]  |LOCAL|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

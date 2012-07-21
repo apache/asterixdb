@@ -104,7 +104,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
     private static final JobGenContext _jobGenCtx = new JobGenContext(null, null, null,
             AqlSerializerDeserializerProvider.INSTANCE, AqlBinaryHashFunctionFactoryProvider.INSTANCE,
             AqlBinaryComparatorFactoryProvider.INSTANCE, AqlTypeTraitProvider.INSTANCE,
-            AqlBinaryBooleanInspectorImpl.INSTANCE, AqlBinaryIntegerInspector.INSTANCE,
+            AqlBinaryBooleanInspectorImpl.FACTORY, AqlBinaryIntegerInspector.FACTORY,
             AqlPrinterFactoryProvider.INSTANCE, AqlNullWriterFactory.INSTANCE, null,
             new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(AqlLogicalExpressionJobGen.INSTANCE),
             AqlExpressionTypeComputer.INSTANCE, AqlNullableTypeComputer.INSTANCE, null, null, null,
@@ -180,7 +180,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             }
             IScalarEvaluatorFactory fact = _jobGenCtx.getExpressionRuntimeProvider().createEvaluatorFactory(expr,
                     _emptyTypeEnv, _emptySchemas, _jobGenCtx);
-            IScalarEvaluator eval = fact.createScalarEvaluator();
+            IScalarEvaluator eval = fact.createScalarEvaluator(null);
             eval.evaluate(null, p);
             Object t = _emptyTypeEnv.getType(expr);
 

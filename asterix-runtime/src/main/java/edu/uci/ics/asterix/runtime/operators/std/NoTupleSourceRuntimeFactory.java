@@ -16,8 +16,8 @@ package edu.uci.ics.asterix.runtime.operators.std;
 
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.context.RuntimeContext;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputSourcePushRuntime;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class NoTupleSourceRuntimeFactory implements IPushRuntimeFactory {
@@ -30,7 +30,7 @@ public class NoTupleSourceRuntimeFactory implements IPushRuntimeFactory {
     }
 
     @Override
-    public IPushRuntime createPushRuntime(final RuntimeContext context) {
+    public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) {
         return new AbstractOneInputSourcePushRuntime() {
 
             @Override

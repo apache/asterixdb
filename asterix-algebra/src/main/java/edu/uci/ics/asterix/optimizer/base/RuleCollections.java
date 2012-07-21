@@ -29,9 +29,7 @@ import edu.uci.ics.asterix.optimizer.rules.FuzzyEqRule;
 import edu.uci.ics.asterix.optimizer.rules.FuzzyJoinRule;
 import edu.uci.ics.asterix.optimizer.rules.IfElseToSwitchCaseFunctionRule;
 import edu.uci.ics.asterix.optimizer.rules.InlineAssignIntoAggregateRule;
-import edu.uci.ics.asterix.optimizer.rules.IntroduceBTreeIndexSearchRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceDynamicTypeCastRule;
-import edu.uci.ics.asterix.optimizer.rules.IntroduceRTreeIndexSearchRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceStaticTypeCastRule;
 import edu.uci.ics.asterix.optimizer.rules.LoadRecordFieldsRule;
@@ -44,11 +42,15 @@ import edu.uci.ics.asterix.optimizer.rules.PushProperJoinThroughProduct;
 import edu.uci.ics.asterix.optimizer.rules.RemoveRedundantListifyRule;
 import edu.uci.ics.asterix.optimizer.rules.SetAsterixPhysicalOperatorsRule;
 import edu.uci.ics.asterix.optimizer.rules.SetClosedRecordConstructorsRule;
+import edu.uci.ics.asterix.optimizer.rules.SimilarityCheckRule;
 import edu.uci.ics.asterix.optimizer.rules.UnnestToDataScanRule;
+import edu.uci.ics.asterix.optimizer.rules.am.IntroduceJoinAccessMethodRule;
+import edu.uci.ics.asterix.optimizer.rules.am.IntroduceSelectAccessMethodRule;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.BreakSelectIntoConjunctsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ComplexJoinInferenceRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.ComplexUnnestToProductRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ConsolidateAssignsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ConsolidateSelectsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.EliminateSubplanRule;
@@ -106,6 +108,8 @@ public final class RuleCollections {
         normalization.add(new ConstantFoldingRule());
         normalization.add(new UnnestToDataScanRule());
         normalization.add(new IfElseToSwitchCaseFunctionRule());
+        normalization.add(new FuzzyEqRule());
+        normalization.add(new SimilarityCheckRule());
         return normalization;
     }
 
@@ -116,6 +120,7 @@ public final class RuleCollections {
         condPushDownAndJoinInference.add(new PushDieUpRule());
         condPushDownAndJoinInference.add(new RemoveRedundantListifyRule());
         condPushDownAndJoinInference.add(new SimpleUnnestToProductRule());
+        condPushDownAndJoinInference.add(new ComplexUnnestToProductRule());
         condPushDownAndJoinInference.add(new ComplexJoinInferenceRule());
         condPushDownAndJoinInference.add(new PushSelectIntoJoinRule());
         condPushDownAndJoinInference.add(new IntroJoinInsideSubplanRule());
@@ -155,7 +160,6 @@ public final class RuleCollections {
         List<IAlgebraicRewriteRule> fuzzy = new LinkedList<IAlgebraicRewriteRule>();
         fuzzy.add(new FuzzyJoinRule());
         fuzzy.add(new InferTypesRule());
-        fuzzy.add(new FuzzyEqRule());
         return fuzzy;
     }
 
@@ -166,8 +170,8 @@ public final class RuleCollections {
         consolidation.add(new InlineAssignIntoAggregateRule());
         consolidation.add(new IntroduceCombinerRule());
         consolidation.add(new CountVarToCountOneRule());
-        consolidation.add(new IntroduceBTreeIndexSearchRule());
-        consolidation.add(new IntroduceRTreeIndexSearchRule());
+        consolidation.add(new IntroduceSelectAccessMethodRule());
+        consolidation.add(new IntroduceJoinAccessMethodRule());
         consolidation.add(new RemoveUnusedAssignAndAggregateRule());
         consolidation.add(new IntroduceSecondaryIndexInsertDeleteRule());
         return consolidation;

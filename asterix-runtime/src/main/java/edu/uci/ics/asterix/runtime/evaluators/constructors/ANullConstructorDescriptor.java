@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class ANullConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "null", 1, false);
+    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "null", 1);
     private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -48,7 +48,7 @@ public class ANullConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                     private String errorMessage = "This can not be an instance of null";
                     private final byte[] NULL = { 0, 4, 'n', 'u', 'l', 'l' };
                     IBinaryComparator utf8BinaryComparator = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
-                    .createBinaryComparator();
+                            .createBinaryComparator();
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);

@@ -120,7 +120,7 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
 
     public static int getItemOffset(byte[] serOrderedList, int offset, int itemIndex) throws AsterixException {
         if (serOrderedList[offset] == ATypeTag.ORDEREDLIST.serialize()) {
-            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[1]);
+            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[offset + 1]);
             switch (typeTag) {
                 case STRING:
                 case RECORD:

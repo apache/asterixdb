@@ -1,0 +1,17 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/numeric_floor0.adm";
+
+
+let $c0 := int8("-0")
+let $c1 := int16("-0")
+let $c2 := int32("-0")
+let $c3 := int64("-0")
+let $c4 := int8("0")
+let $c5 := int16("0")
+let $c6 := int32("0")
+let $c7 := int64("0")
+return {"f0": numeric-floor($c0), "f1": numeric-floor($c1),"f2": numeric-floor($c2), "f3": numeric-floor($c3),
+	"f4": numeric-floor($c4),"f5": numeric-floor($c5) ,"f6": numeric-floor($c6), "f7": numeric-floor($c7)}

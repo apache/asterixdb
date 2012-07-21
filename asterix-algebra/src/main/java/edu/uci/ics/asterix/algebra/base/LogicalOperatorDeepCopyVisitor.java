@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DieOperator
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -48,8 +49,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteResult
 import edu.uci.ics.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
-
-
 
 public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogicalOperator, ILogicalOperator> {
     private final Counter counter;
@@ -376,6 +375,12 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
 
     @Override
     public ILogicalOperator visitSinkOperator(SinkOperator op, ILogicalOperator arg) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ILogicalOperator visitExtensionOperator(ExtensionOperator op, ILogicalOperator arg)
+            throws AlgebricksException {
         throw new UnsupportedOperationException();
     }
 }

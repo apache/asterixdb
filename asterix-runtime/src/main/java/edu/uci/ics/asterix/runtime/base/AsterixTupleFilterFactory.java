@@ -16,8 +16,9 @@
 package edu.uci.ics.asterix.runtime.base;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspector;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilter;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 
@@ -25,18 +26,18 @@ public class AsterixTupleFilterFactory implements ITupleFilterFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private final IBinaryBooleanInspector boolInspector;
+    private final IBinaryBooleanInspectorFactory boolInspectorFactory;
     private final IScalarEvaluatorFactory evalFactory;
 
-    public AsterixTupleFilterFactory(IScalarEvaluatorFactory evalFactory, IBinaryBooleanInspector boolInspector)
-            throws AlgebricksException {
+    public AsterixTupleFilterFactory(IScalarEvaluatorFactory evalFactory,
+            IBinaryBooleanInspectorFactory boolInspectorFactory) throws AlgebricksException {
         this.evalFactory = evalFactory;
-        this.boolInspector = boolInspector;
+        this.boolInspectorFactory = boolInspectorFactory;
     }
 
     @Override
-    public ITupleFilter createTupleFilter() throws Exception {
-        return new AsterixTupleFilter(evalFactory, boolInspector);
+    public ITupleFilter createTupleFilter(IHyracksTaskContext ctx) throws Exception {
+        return new AsterixTupleFilter(ctx, evalFactory, boolInspectorFactory.createBinaryBooleanInspector(ctx));
     }
 
 }

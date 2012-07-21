@@ -22,8 +22,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
 import edu.uci.ics.asterix.api.java.AsterixJavaClient;
-import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.config.GlobalConfig;import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.test.base.AsterixTestHelper;
 import edu.uci.ics.asterix.test.common.TestHelper;
 

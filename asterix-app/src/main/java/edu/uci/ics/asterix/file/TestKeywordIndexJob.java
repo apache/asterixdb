@@ -146,7 +146,7 @@ public class TestKeywordIndexJob {
         BTreeSearchOperatorDescriptor secondarySearchOp = new BTreeSearchOperatorDescriptor(spec, secondaryRecDesc,
                 storageManager, indexRegistryProvider, secondarySplitProvider, secondaryTypeTraits,
                 secondaryComparatorFactories, lowKeyFields, highKeyFields, true, true,
-                new BTreeDataflowHelperFactory(), NoOpOperationCallbackProvider.INSTANCE);
+                new BTreeDataflowHelperFactory(), false, NoOpOperationCallbackProvider.INSTANCE);
         String[] secondarySearchOpLocationConstraint = new String[nodeGroup.size()];
         for (int p = 0; p < nodeGroup.size(); p++) {
             secondarySearchOpLocationConstraint[p] = nodeGroup.get(p);
@@ -218,10 +218,9 @@ public class TestKeywordIndexJob {
 
         TestKeywordIndexJob tij = new TestKeywordIndexJob();
         JobSpecification jobSpec = tij.createJobSpec();
-        JobId jobId = hcc.createJob("asterix", jobSpec);
 
         long start = System.currentTimeMillis();
-        hcc.start(jobId);
+        JobId jobId = hcc.startJob("asterix", jobSpec);
         hcc.waitForCompletion(jobId);
         long end = System.currentTimeMillis();
         System.err.println(start + " " + end + " " + (end - start));

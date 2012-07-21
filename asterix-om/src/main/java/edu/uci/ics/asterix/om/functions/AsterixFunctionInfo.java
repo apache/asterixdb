@@ -20,15 +20,13 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 public class AsterixFunctionInfo implements IFunctionInfo {
 
     private final FunctionIdentifier functionIdentifier;
-    
 
-    public AsterixFunctionInfo(String namespace, AsterixFunction asterixFunction, boolean isBuiltin) {
+    public AsterixFunctionInfo(String namespace, AsterixFunction asterixFunction) {
         this.functionIdentifier = new FunctionIdentifier(namespace, asterixFunction.getFunctionName(),
-                asterixFunction.getArity(), isBuiltin);
+                asterixFunction.getArity());
     }
 
-    public AsterixFunctionInfo(FunctionIdentifier functionIdentifier,
-            boolean isBuiltin) {
+    public AsterixFunctionInfo(FunctionIdentifier functionIdentifier) {
         this.functionIdentifier = functionIdentifier;
     }
 

@@ -38,7 +38,7 @@ public class NumericUnaryMinusDescriptor extends AbstractScalarFunctionDynamicDe
 
     private static final long serialVersionUID = 1L;
     private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "numeric-unary-minus", 1, true);
+            "numeric-unary-minus", 1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new NumericUnaryMinusDescriptor();

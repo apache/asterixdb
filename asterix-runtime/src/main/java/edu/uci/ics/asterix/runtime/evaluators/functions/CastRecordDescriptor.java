@@ -23,7 +23,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class CastRecordDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     protected static final FunctionIdentifier FID_CAST = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "cast-record", 1, true);
+            "cast-record", 1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new CastRecordDescriptor();

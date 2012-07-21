@@ -12,7 +12,7 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 public class ClosedRecordConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     protected static final FunctionIdentifier FID_CLOSED = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "closed-record-constructor", FunctionIdentifier.VARARGS, true);
+            "closed-record-constructor", FunctionIdentifier.VARARGS);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new ClosedRecordConstructorDescriptor();

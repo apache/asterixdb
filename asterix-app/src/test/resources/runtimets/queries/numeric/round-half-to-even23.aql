@@ -1,0 +1,16 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/numeric_round-half-to-even23.adm";
+
+
+let $c0 := double("0.555")
+let $c1 := double("0.322")
+let $c2 := double("NaN")
+let $c3 := double("INF")
+let $c4 := double("-INF")
+let $c5 := double("-0.0")
+let $c6 := double("0.0")
+return {"d0": numeric-round-half-to-even2($c0,2), "d1": numeric-round-half-to-even2($c1,2),"d2": numeric-round-half-to-even2($c2,3),
+        "d3": numeric-round-half-to-even2($c3,4),"d4": numeric-round-half-to-even2($c4,5),"d5": numeric-round-half-to-even2($c5,6), "d6": numeric-round-half-to-even2($c6,0)}

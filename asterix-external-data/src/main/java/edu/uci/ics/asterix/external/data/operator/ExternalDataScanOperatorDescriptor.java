@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.external.data.operator;
 
 import java.util.Map;
 
-import edu.uci.ics.asterix.external.data.adapter.api.IDatasourceAdapter;
 import edu.uci.ics.asterix.external.data.adapter.api.IDatasourceReadAdapter;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
@@ -26,7 +25,6 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
@@ -37,7 +35,7 @@ public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOp
     private final String adapter;
     private final Map<String, String> adapterConfiguration;
     private final IAType atype;
-    private  IDatasourceReadAdapter datasourceReadAdapter;
+    private IDatasourceReadAdapter datasourceReadAdapter;
 
     public ExternalDataScanOperatorDescriptor(JobSpecification spec, String adapter, Map<String, String> arguments,
             IAType atype, RecordDescriptor rDesc) {
@@ -49,9 +47,8 @@ public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOp
     }
 
     @Override
-    public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, JobActivityGraph plan,
-            ICCApplicationContext appCtx) {
-        
+    public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, ICCApplicationContext appCtx) {
+
         /*
         Comment: The following code is commented out. This is because constraints are being set at compile time so that they can 
         be propagated to upstream Asterix operators. Hyracks has to provide a way to propagate constraints to upstream operators.
@@ -106,8 +103,8 @@ public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOp
             }
         };
     }
-    
-    public void setDatasourceAdapter(IDatasourceReadAdapter adapterInstance){
+
+    public void setDatasourceAdapter(IDatasourceReadAdapter adapterInstance) {
         this.datasourceReadAdapter = adapterInstance;
     }
 }

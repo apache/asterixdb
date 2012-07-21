@@ -91,6 +91,8 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.CreatePolygonDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.CreateRectangleDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceCheckDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceListIsFilterable;
+import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceStringIsFilterable;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EmbedTypeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EndsWithDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.FieldAccessByIndexDescriptor;
@@ -107,6 +109,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.LikeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NotDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericAddDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericDivideDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericModuloDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericMultiplyDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericSubtractDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericUnaryMinusDescriptor;
@@ -119,6 +122,8 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.SimilarityJaccardCheckDe
 import edu.uci.ics.asterix.runtime.evaluators.functions.SimilarityJaccardDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SimilarityJaccardPrefixCheckDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SimilarityJaccardPrefixDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.SimilarityJaccardSortedCheckDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.SimilarityJaccardSortedDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SpatialAreaDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SpatialCellDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SpatialDistanceDescriptor;
@@ -129,6 +134,28 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.SwitchCaseDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.UnorderedListConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.WordTokensDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.YearDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericAbsDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericCeilingDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericFloorDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundHalfToEvenDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundHalfToEven2Descriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringEqualDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringStartWithDescrtiptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringEndWithDescrtiptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringMatchesDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringLowerCaseDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringMatchesWithFlagDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringReplaceDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringReplaceWithFlagsDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringLengthDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.Substring2Descriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.SubstringBeforeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.SubstringAfterDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringToCodePointDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.CodePointToStringDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringConcatDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringJoinDescriptor;
 import edu.uci.ics.asterix.runtime.operators.file.AdmSchemafullRecordParserFactory;
 import edu.uci.ics.asterix.runtime.operators.file.NtDelimitedDataTupleParserFactory;
 import edu.uci.ics.asterix.runtime.runningaggregates.std.TidRunningAggregateDescriptor;
@@ -151,10 +178,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCal
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
-import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspector;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
-import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspector;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import edu.uci.ics.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.ISerializerDeserializerProvider;
@@ -234,11 +261,37 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(NumericDivideDescriptor.FACTORY);
         temp.add(NumericMultiplyDescriptor.FACTORY);
         temp.add(NumericSubtractDescriptor.FACTORY);
+        temp.add(NumericModuloDescriptor.FACTORY);
         temp.add(IsNullDescriptor.FACTORY);
         temp.add(NotDescriptor.FACTORY);
         temp.add(LenDescriptor.FACTORY);
         temp.add(NonEmptyStreamAggregateDescriptor.FACTORY);
         temp.add(RangeDescriptor.FACTORY);
+
+// Xiaoyu Ma add for numeric unary functions
+        temp.add(NumericAbsDescriptor.FACTORY);
+        temp.add(NumericCeilingDescriptor.FACTORY);
+        temp.add(NumericFloorDescriptor.FACTORY);
+        temp.add(NumericRoundDescriptor.FACTORY);
+        temp.add(NumericRoundHalfToEvenDescriptor.FACTORY);
+        temp.add(NumericRoundHalfToEven2Descriptor.FACTORY);
+        // String functions
+        temp.add(StringEqualDescriptor.FACTORY);
+        temp.add(StringStartWithDescrtiptor.FACTORY);    
+        temp.add(StringEndWithDescrtiptor.FACTORY);       
+        temp.add(StringMatchesDescriptor.FACTORY);    
+        temp.add(StringLowerCaseDescriptor.FACTORY);   
+        temp.add(StringMatchesWithFlagDescriptor.FACTORY);
+        temp.add(StringReplaceDescriptor.FACTORY);      
+        temp.add(StringReplaceWithFlagsDescriptor.FACTORY);    
+        temp.add(StringLengthDescriptor.FACTORY);        
+        temp.add(Substring2Descriptor.FACTORY);    
+        temp.add(SubstringBeforeDescriptor.FACTORY); 
+        temp.add(SubstringAfterDescriptor.FACTORY); 
+        temp.add(StringToCodePointDescriptor.FACTORY);         
+        temp.add(CodePointToStringDescriptor.FACTORY); 
+        temp.add(StringConcatDescriptor.FACTORY);         
+        temp.add(StringJoinDescriptor.FACTORY);      
 
         // aggregates
         temp.add(ListifyAggregateDescriptor.FACTORY);
@@ -305,9 +358,13 @@ public class NonTaggedDataFormat implements IDataFormat {
 
         temp.add(EditDistanceDescriptor.FACTORY);
         temp.add(EditDistanceCheckDescriptor.FACTORY);
+        temp.add(EditDistanceStringIsFilterable.FACTORY);
+        temp.add(EditDistanceListIsFilterable.FACTORY);
 
         temp.add(SimilarityJaccardDescriptor.FACTORY);
         temp.add(SimilarityJaccardCheckDescriptor.FACTORY);
+        temp.add(SimilarityJaccardSortedDescriptor.FACTORY);
+        temp.add(SimilarityJaccardSortedCheckDescriptor.FACTORY);
         temp.add(SimilarityJaccardPrefixDescriptor.FACTORY);
         temp.add(SimilarityJaccardPrefixCheckDescriptor.FACTORY);
 
@@ -324,8 +381,8 @@ public class NonTaggedDataFormat implements IDataFormat {
     }
 
     @Override
-    public IBinaryBooleanInspector getBinaryBooleanInspector() {
-        return AqlBinaryBooleanInspectorImpl.INSTANCE;
+    public IBinaryBooleanInspectorFactory getBinaryBooleanInspectorFactory() {
+        return AqlBinaryBooleanInspectorImpl.FACTORY;
     }
 
     @Override
@@ -442,8 +499,8 @@ public class NonTaggedDataFormat implements IDataFormat {
                         new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
                         new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
                                 new AInt32(i)))));
-                return new Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>(evalFactory, partitionFun,
-                        recType.getFieldTypes()[i]);
+                return new Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>(evalFactory,
+                        partitionFun, recType.getFieldTypes()[i]);
             }
         }
         throw new AlgebricksException("Could not find field " + fldName + " in the schema.");
@@ -573,8 +630,8 @@ public class NonTaggedDataFormat implements IDataFormat {
     }
 
     @Override
-    public IBinaryIntegerInspector getBinaryIntegerInspector() {
-        return AqlBinaryIntegerInspector.INSTANCE;
+    public IBinaryIntegerInspectorFactory getBinaryIntegerInspectorFactory() {
+        return AqlBinaryIntegerInspector.FACTORY;
     }
 
     @Override

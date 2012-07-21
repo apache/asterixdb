@@ -1,0 +1,8 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/string_end-with4.adm";
+
+let $c1 := end-with("ends","ss")
+return {"result1": $c1}
