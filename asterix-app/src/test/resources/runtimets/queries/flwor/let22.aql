@@ -1,0 +1,8 @@
+/*
+ * Description     : Test length of null returned by len() function  
+ * Expected Result : Success
+ * Date            : 23rd July 2012
+ */
+
+let $a := [null]
+return len($a)

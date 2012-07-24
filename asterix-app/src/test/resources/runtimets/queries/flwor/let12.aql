@@ -1,0 +1,10 @@
+/*
+ * Description     :  Test let clause
+ * Expected Result :  Success
+ * Date            :  6th July 2012 
+ */
+
+let $a := 1 
+let $b := $a
+let $c := $a+$b 
+return ($c)
