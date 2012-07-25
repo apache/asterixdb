@@ -97,7 +97,7 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
                 pp = pv1.getPartitioningProperty();
             }
         } else {
-            pp = null;
+        	pp = IPartitioningProperty.UNPARTITIONED;
         }
 
         List<ILocalStructuralProperty> localProps = new LinkedList<ILocalStructuralProperty>();

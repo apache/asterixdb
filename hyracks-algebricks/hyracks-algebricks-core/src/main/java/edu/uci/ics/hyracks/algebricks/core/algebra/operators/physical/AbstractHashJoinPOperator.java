@@ -75,7 +75,7 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                 pp = pv0.getPartitioningProperty();
             }
         } else {
-            pp = null;
+            pp = IPartitioningProperty.UNPARTITIONED;
         }
         this.deliveredProperties = new StructuralPropertiesVector(pp, deliveredLocalProperties(iop, context));
     }

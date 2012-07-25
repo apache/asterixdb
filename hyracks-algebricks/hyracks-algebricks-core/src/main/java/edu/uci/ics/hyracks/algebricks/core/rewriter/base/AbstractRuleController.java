@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.algebricks.core.rewriter.base;
 
 import java.util.Collection;
+import java.util.logging.Level;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
@@ -61,19 +62,31 @@ public abstract class AbstractRuleController {
         return rewriteOperatorRef(opRef, rule, true, false);
     }
 
-    private void printRuleApplication(IAlgebraicRewriteRule rule, Mutable<ILogicalOperator> opRef)
+    private String getPlanString(Mutable<ILogicalOperator> opRef) throws AlgebricksException {
+        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isLoggable(Level.FINE)) {
+            StringBuilder sb = new StringBuilder();
+            PlanPrettyPrinter.printOperator((AbstractLogicalOperator) opRef.getValue(), sb, pvisitor, 0);
+            return sb.toString();
+        }
+        return null;
+    }
+
+    private void printRuleApplication(IAlgebraicRewriteRule rule, String beforePlan, String afterPlan)
             throws AlgebricksException {
-        AlgebricksConfig.ALGEBRICKS_LOGGER.fine(">>>> Rule " + rule.getClass() + " fired.\n");
-        StringBuilder sb = new StringBuilder();
-        PlanPrettyPrinter.printOperator((AbstractLogicalOperator) opRef.getValue(), sb, pvisitor, 0);
-        AlgebricksConfig.ALGEBRICKS_LOGGER.fine(sb.toString());
+        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isLoggable(Level.FINE)) {
+            AlgebricksConfig.ALGEBRICKS_LOGGER.fine(">>>> Rule " + rule.getClass() + " fired.\n");
+            AlgebricksConfig.ALGEBRICKS_LOGGER.fine(">>>> Before plan\n" + beforePlan + "\n");
+            AlgebricksConfig.ALGEBRICKS_LOGGER.fine(">>>> After plan\n" + afterPlan + "\n");
+        }
     }
 
     protected boolean rewriteOperatorRef(Mutable<ILogicalOperator> opRef, IAlgebraicRewriteRule rule,
             boolean enterNestedPlans, boolean fullDFS) throws AlgebricksException {
 
+        String preBeforePlan = getPlanString(opRef);
         if (rule.rewritePre(opRef, context)) {
-            printRuleApplication(rule, opRef);
+            String preAfterPlan = getPlanString(opRef);
+            printRuleApplication(rule, preBeforePlan, preAfterPlan);
             return true;
         }
         boolean rewritten = false;
@@ -105,8 +118,10 @@ public abstract class AbstractRuleController {
             }
         }
 
+        String postBeforePlan = getPlanString(opRef);
         if (rule.rewritePost(opRef, context)) {
-            printRuleApplication(rule, opRef);
+            String postAfterPlan = getPlanString(opRef);
+            printRuleApplication(rule, postBeforePlan, postAfterPlan);
             return true;
         }
 

@@ -37,10 +37,9 @@ public class BufferCache implements IBufferCacheInternal {
     private static final Logger LOGGER = Logger.getLogger(BufferCache.class.getName());
     private static final int MAP_FACTOR = 2;
 
-    private static final int MAX_VICTIMIZATION_TRY_COUNT = 5;
-    private static final int MAX_WAIT_FOR_CLEANER_THREAD_TIME = 1000 * 60;
-    private static final int MIN_CLEANED_COUNT_DIFF = 4;
-
+    private static final int MIN_CLEANED_COUNT_DIFF = 3;
+    private static final int PIN_MAX_WAIT_TIME = 50;
+    
     private final int maxOpenFiles;
 
     private final IIOManager ioManager;
@@ -111,7 +110,6 @@ public class BufferCache implements IBufferCacheInternal {
     @Override
     public ICachedPage tryPin(long dpid) throws HyracksDataException {
         pinSanityCheck(dpid);
-
         CachedPage cPage = null;
         int hash = hash(dpid);
         CacheBucket bucket = pageMap[hash];
@@ -129,28 +127,27 @@ public class BufferCache implements IBufferCacheInternal {
         } finally {
             bucket.bucketLock.unlock();
         }
-
         return cPage;
     }
 
     @Override
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
         pinSanityCheck(dpid);
-
         CachedPage cPage = findPage(dpid, newPage);
-        if (cPage == null) {
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine(dumpState());
-            }
-            throw new HyracksDataException("Failed to pin page " + BufferedFileHandle.getFileId(dpid) + ":"
-                    + BufferedFileHandle.getPageId(dpid) + " because all pages are pinned.");
-        }
         if (!newPage) {
-            // Resolve race of multiple threads trying to read the page from disk.
-            synchronized (cPage) {
-                if (!cPage.valid) {
-                    read(cPage);
+            if (!cPage.valid) {
+                /*
+                 * We got a buffer and we have pinned it. But its invalid. If its a new page, we just mark it as valid
+                 * and return. Or else, while we hold the page lock, we get a write latch on the data and start a read.
+                 */
+                cPage.acquireWriteLatch(false);
+                try {
+                    if (!cPage.valid) {
+                        read(cPage);
+                    }
                     cPage.valid = true;
+                } finally {
+                    cPage.releaseWriteLatch();
                 }
             }
         } else {
@@ -161,14 +158,12 @@ public class BufferCache implements IBufferCacheInternal {
     }
 
     private CachedPage findPage(long dpid, boolean newPage) {
-        int victimizationTryCount = 0;
         while (true) {
             int startCleanedCount = cleanerThread.cleanedCount;
 
             CachedPage cPage = null;
             /*
-             * Hash dpid to get a bucket and then check if the page exists in
-             * the bucket.
+             * Hash dpid to get a bucket and then check if the page exists in the bucket.
              */
             int hash = hash(dpid);
             CacheBucket bucket = pageMap[hash];
@@ -186,38 +181,29 @@ public class BufferCache implements IBufferCacheInternal {
                 bucket.bucketLock.unlock();
             }
             /*
-             * If we got here, the page was not in the hash table. Now we ask
-             * the page replacement strategy to find us a victim.
+             * If we got here, the page was not in the hash table. Now we ask the page replacement strategy to find us a victim.
              */
             CachedPage victim = (CachedPage) pageReplacementStrategy.findVictim();
             if (victim != null) {
                 /*
-                 * We have a victim with the following invariants. 1. The dpid
-                 * on the CachedPage may or may not be valid. 2. We have a pin
-                 * on the CachedPage. We have to deal with three cases here.
-                 * Case 1: The dpid on the CachedPage is invalid (-1). This
-                 * indicates that this buffer has never been used. So we are the
-                 * only ones holding it. Get a lock on the required dpid's hash
-                 * bucket, check if someone inserted the page we want into the
-                 * table. If so, decrement the pincount on the victim and return
-                 * the winner page in the table. If such a winner does not
-                 * exist, insert the victim and return it. Case 2: The dpid on
-                 * the CachedPage is valid. Case 2a: The current dpid and
-                 * required dpid hash to the same bucket. Get the bucket lock,
-                 * check that the victim is still at pinCount == 1 If so check
-                 * if there is a winning CachedPage with the required dpid. If
-                 * so, decrement the pinCount on the victim and return the
-                 * winner. If not, update the contents of the CachedPage to hold
-                 * the required dpid and return it. If the picCount on the
-                 * victim was != 1 or CachedPage was dirty someone used the
-                 * victim for its old contents -- Decrement the pinCount and
-                 * retry. Case 2b: The current dpid and required dpid hash to
-                 * different buckets. Get the two bucket locks in the order of
-                 * the bucket indexes (Ordering prevents deadlocks). Check for
-                 * the existence of a winner in the new bucket and for potential
-                 * use of the victim (pinCount != 1). If everything looks good,
-                 * remove the CachedPage from the old bucket, and add it to the
-                 * new bucket and update its header with the new dpid.
+                 * We have a victim with the following invariants.
+                 * 1. The dpid on the CachedPage may or may not be valid.
+                 * 2. We have a pin on the CachedPage. We have to deal with three cases here.
+                 *  Case 1: The dpid on the CachedPage is invalid (-1). This indicates that this buffer has never been used.
+                 *  So we are the only ones holding it. Get a lock on the required dpid's hash bucket, check if someone inserted
+                 *  the page we want into the table. If so, decrement the pincount on the victim and return the winner page in the
+                 *  table. If such a winner does not exist, insert the victim and return it.
+                 *  Case 2: The dpid on the CachedPage is valid.
+                 *      Case 2a: The current dpid and required dpid hash to the same bucket.
+                 *      Get the bucket lock, check that the victim is still at pinCount == 1 If so check if there is a winning
+                 *      CachedPage with the required dpid. If so, decrement the pinCount on the victim and return the winner.
+                 *      If not, update the contents of the CachedPage to hold the required dpid and return it. If the picCount
+                 *      on the victim was != 1 or CachedPage was dirty someone used the victim for its old contents -- Decrement
+                 *      the pinCount and retry.
+                 *  Case 2b: The current dpid and required dpid hash to different buckets. Get the two bucket locks in the order
+                 *  of the bucket indexes (Ordering prevents deadlocks). Check for the existence of a winner in the new bucket
+                 *  and for potential use of the victim (pinCount != 1). If everything looks good, remove the CachedPage from
+                 *  the old bucket, and add it to the new bucket and update its header with the new dpid.
                  */
                 if (victim.dpid < 0) {
                     /*
@@ -313,14 +299,6 @@ public class BufferCache implements IBufferCacheInternal {
                     return victim;
                 }
             }
-            /*
-             * Victimization failed -- all pages pinned? wait a bit, increment
-             * victimizationTryCount and loop around. Give up after
-             * MAX_VICTIMIZATION_TRY_COUNT trys.
-             */
-            if (++victimizationTryCount >= MAX_VICTIMIZATION_TRY_COUNT) {
-                return null;
-            }
             synchronized (cleanerThread) {
                 cleanerThread.notifyAll();
             }
@@ -333,7 +311,7 @@ public class BufferCache implements IBufferCacheInternal {
             }
             synchronized (cleanerThread.cleanNotification) {
                 try {
-                    cleanerThread.cleanNotification.wait(MAX_WAIT_FOR_CLEANER_THREAD_TIME);
+                    cleanerThread.cleanNotification.wait(PIN_MAX_WAIT_TIME);
                 } catch (InterruptedException e) {
                     // Do nothing
                 }
@@ -658,8 +636,7 @@ public class BufferCache implements IBufferCacheInternal {
                             }
                             fileInfoMap.remove(entryFileId);
                             unreferencedFileFound = true;
-                            // for-each iterator is invalid because we changed
-                            // fileInfoMap
+                            // for-each iterator is invalid because we changed fileInfoMap
                             break;
                         }
                     }
@@ -793,7 +770,7 @@ public class BufferCache implements IBufferCacheInternal {
             } finally {
                 fileMapManager.unregisterFile(fileId);
                 if (fInfo != null) {
-                    // Mark the fInfo as deleted,
+                    // Mark the fInfo as deleted, 
                     // such that when its pages are reclaimed in openFile(),
                     // the pages are not flushed to disk but only invalidates.
                     ioManager.close(fInfo.getFileHandle());
