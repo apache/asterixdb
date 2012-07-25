@@ -127,7 +127,7 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
     	Mutable<ILogicalExpression> simFuncExprRef = null;
     	ScalarFunctionCallExpression simCheckFuncExpr = null;
     	AssignOperator matchingAssign = null;
-    	for (int i = 0; i < assigns.size(); i++) {
+     	for (int i = 0; i < assigns.size(); i++) {
     		AssignOperator assign = assigns.get(i);
     		for (int j = 0; j < assign.getVariables().size(); j++) {
     			// Check if variables match.
@@ -252,6 +252,10 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
             similarityArgs.add(new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(edThresh))));
             simCheckFuncExpr = new ScalarFunctionCallExpression(
                     FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK), similarityArgs);
+        }
+        // Preserve all annotations.
+        if (simCheckFuncExpr != null) {
+        	simCheckFuncExpr.getAnnotations().putAll(funcExpr.getAnnotations());
         }
         return simCheckFuncExpr;
     }

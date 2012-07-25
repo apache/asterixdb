@@ -33,6 +33,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -46,6 +47,11 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class FuzzyJoinRule implements IAlgebraicRewriteRule {
 
+	private static HashSet<FunctionIdentifier> simFuncs = new HashSet<FunctionIdentifier>();
+    static {
+        simFuncs.add(AsterixBuiltinFunctions.SIMILARITY_JACCARD_CHECK);
+    }
+	
     private static final String AQLPLUS = ""
             //
             // -- - Stage 3 - --
@@ -133,20 +139,30 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        // find fuzzy join condition
+        // Find GET_ITEM function.
         AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) op;
         Mutable<ILogicalExpression> expRef = joinOp.getCondition();
-        Mutable<ILogicalExpression> fuzzyExpRef = getSimilarityExpression(expRef);
-        if (fuzzyExpRef == null) {
+        Mutable<ILogicalExpression> getItemExprRef = getSimilarityExpression(expRef);
+        if (getItemExprRef == null) {
             return false;
         }
-
-        AbstractFunctionCallExpression funcExp = (AbstractFunctionCallExpression) fuzzyExpRef.getValue();
+        // Check if the GET_ITEM function is on one of the supported similarity-check functions.
+        AbstractFunctionCallExpression getItemFuncExpr = (AbstractFunctionCallExpression) getItemExprRef.getValue();
+        Mutable<ILogicalExpression> argRef = getItemFuncExpr.getArguments().get(0);
+    	AbstractFunctionCallExpression simFuncExpr = (AbstractFunctionCallExpression) argRef.getValue();
+        if (!simFuncs.contains(simFuncExpr.getFunctionIdentifier())) {
+        	return false;
+        }
+        // Skip this rule based on annotations.
+        if (simFuncExpr.getAnnotations().containsKey(IndexedNLJoinExpressionAnnotation.INSTANCE)) {
+        	return false;
+        }
+        
         List<Mutable<ILogicalOperator>> inputOps = joinOp.getInputs();
         ILogicalOperator leftInputOp = inputOps.get(0).getValue();
         ILogicalOperator rightInputOp = inputOps.get(1).getValue();
 
-        List<Mutable<ILogicalExpression>> inputExps = funcExp.getArguments();
+        List<Mutable<ILogicalExpression>> inputExps = simFuncExpr.getArguments();
 
         ILogicalExpression inputExp0 = inputExps.get(0).getValue();
         ILogicalExpression inputExp1 = inputExps.get(1).getValue();
@@ -315,9 +331,9 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         ILogicalOperator outputOp = plan.getRoots().get(0).getValue();
 
         SelectOperator extraSelect = null;
-        if (fuzzyExpRef != expRef) {
+        if (getItemExprRef != expRef) {
             // more than one join condition
-            fuzzyExpRef.setValue(ConstantExpression.TRUE);
+            getItemExprRef.setValue(ConstantExpression.TRUE);
             switch (joinOp.getJoinKind()) {
                 case INNER: {
                     extraSelect = new SelectOperator(expRef);
@@ -343,19 +359,19 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         return true;
     }
 
-    /*
-     * look for FUZZY_EQ function call
+    /**
+     * Look for GET_ITEM function call.
      */
     private Mutable<ILogicalExpression> getSimilarityExpression(Mutable<ILogicalExpression> expRef) {
         ILogicalExpression exp = expRef.getValue();
         if (exp.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-            AbstractFunctionCallExpression funcExp = (AbstractFunctionCallExpression) exp;
-            if (funcExp.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FUZZY_EQ)) {
-                return expRef;
-            } else if (funcExp.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.AND)
-                    || funcExp.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.OR)) {
+            AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) exp;
+            if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.GET_ITEM)) {
+            	return expRef;
+            }
+            if (funcExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.AND)) {
                 for (int i = 0; i < 2; i++) {
-                    Mutable<ILogicalExpression> expRefRet = getSimilarityExpression(funcExp.getArguments().get(i));
+                    Mutable<ILogicalExpression> expRefRet = getSimilarityExpression(funcExpr.getArguments().get(i));
                     if (expRefRet != null) {
                         return expRefRet;
                     }

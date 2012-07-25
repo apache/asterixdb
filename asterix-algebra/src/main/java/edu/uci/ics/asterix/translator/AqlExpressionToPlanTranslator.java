@@ -115,6 +115,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AggregateFunction
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation.BroadcastSide;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
@@ -577,6 +578,12 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator
 			f = new ScalarFunctionCallExpression(
 					FunctionUtils.getFunctionInfo(fi), args);
 		}
+		// Put hints into function call expr.
+		if (fcall.hasHints()) {
+			for (IExpressionAnnotation hint : fcall.getHints()) {
+				f.getAnnotations().put(hint, hint);
+			}
+		}
 		AssignOperator op = new AssignOperator(v,
 				new MutableObject<ILogicalExpression>(f));
 		if (topOp != null) {
@@ -828,6 +835,14 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator
 			}
 		}
 
+		// Add hints as annotations.
+		if (op.hasHints() && currExpr instanceof AbstractFunctionCallExpression) {
+			AbstractFunctionCallExpression currFuncExpr = (AbstractFunctionCallExpression) currExpr;
+			for (IExpressionAnnotation hint : op.getHints()) {
+				currFuncExpr.getAnnotations().put(hint, hint);
+			}
+		}
+		
 		LogicalVariable assignedVar = context.newVar();
 		AssignOperator a = new AssignOperator(assignedVar,
 				new MutableObject<ILogicalExpression>(currExpr));
