@@ -20,6 +20,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
@@ -37,6 +40,7 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
     protected boolean includeMemComponent;
     protected AtomicInteger searcherRefCount;
     protected LSMHarness lsmHarness;
+    protected ISearchOperationCallback searchCallback;
 
     public LSMTreeSearchCursor() {
         outputElement = null;
@@ -133,8 +137,7 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
         while (!outputPriorityQueue.isEmpty() || needPush == true) {
             if (!outputPriorityQueue.isEmpty()) {
                 PriorityQueueElement checkElement = outputPriorityQueue.peek();
-                // If there is no previous tuple or the previous tuple can be
-                // ignored
+                // If there is no previous tuple or the previous tuple can be ignored
                 if (outputElement == null) {
                     // Test the tuple is a delete tuple or not
                     if (((ILSMTreeTupleReference) checkElement.getTuple()).isAntimatter() == true) {
@@ -160,8 +163,7 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
                         // int treeNum = reusedElement.getTreeNum();
                         pushIntoPriorityQueue(reusedElement.getCursorIndex());
                     } else {
-                        // If the previous tuple and the head tuple are
-                        // different
+                        // If the previous tuple and the head tuple are different
                         // the info of previous tuple is useless
                         if (needPush == true) {
                             reusedElement = outputElement;
@@ -206,5 +208,10 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
             this.tuple = tuple;
             this.cursorIndex = cursorIndex;
         }
+    }
+
+    @Override
+    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
+        searchCallback = initialState.getSearchOperationCallback();
     }
 }

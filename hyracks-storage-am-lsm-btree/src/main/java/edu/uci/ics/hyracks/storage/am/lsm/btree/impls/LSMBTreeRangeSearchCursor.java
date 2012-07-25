@@ -16,21 +16,27 @@
 package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.PriorityQueue;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
-import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeSearchCursor;
 
 public class LSMBTreeRangeSearchCursor extends LSMTreeSearchCursor {
     private PriorityQueueComparator pqCmp;
-    private ISearchOperationCallback searchCallback;
+    private IIndexAccessor memBTreeAccessor;
+    private RangePredicate predicate;
+    private RangePredicate reusablePred = new RangePredicate(null, null, true, true, null, null);
 
     public LSMBTreeRangeSearchCursor() {
         outputElement = null;
@@ -52,9 +58,86 @@ public class LSMBTreeRangeSearchCursor extends LSMTreeSearchCursor {
     }
 
     @Override
+    public boolean hasNext() throws HyracksDataException {
+        checkPriorityQueue();
+        PriorityQueueElement pqHead = outputPriorityQueue.peek();
+        if (pqHead == null) {
+            // pq is empty
+            return false;
+        }
+
+        if (searchCallback.proceed(pqHead.getTuple())) {
+            // if proceed is successful, then there's no need for doing the "unlatch dance"
+            return true;
+        }
+
+        if (includeMemComponent) {
+            PriorityQueueElement inMemElement = null;
+            boolean inMemElementFound = false;
+
+            // scan the PQ for the in-memory component's element
+            if (outputElement != null && outputElement.getCursorIndex() == 0) {
+                inMemElement = outputElement;
+            } else {
+                Iterator<PriorityQueueElement> it = outputPriorityQueue.iterator();
+                while (it.hasNext()) {
+                    inMemElement = it.next();
+                    if (inMemElement.getCursorIndex() == 0) {
+                        inMemElementFound = true;
+                        outputPriorityQueue.remove(inMemElement);
+                        break;
+                    }
+                }
+            }
+
+            if (!inMemElementFound && inMemElement != null) {
+                searchCallback.reconcile(pqHead.getTuple());
+                return true;
+            }
+
+            // copy the in-mem tuple
+            ITupleReference inMemTuple = TupleUtils.copyTuple(inMemElement.getTuple());
+            // unlatch
+            rangeCursors[0].reset();
+            // reconcile
+            if (pqHead.getCursorIndex() == 0) {
+                searchCallback.reconcile(inMemTuple);
+            } else {
+                searchCallback.reconcile(pqHead.getTuple());
+            }
+
+            reusablePred.setLowKey(inMemTuple, true);
+            reusablePred.setLowKeyComparator(cmp);
+            reusablePred.setHighKey(predicate.getHighKey(), predicate.isHighKeyInclusive());
+            reusablePred.setHighKeyComparator(predicate.getHighKeyComparator());
+            try {
+                memBTreeAccessor.search(rangeCursors[0], reusablePred);
+            } catch (IndexException e) {
+                throw new HyracksDataException(e);
+            }
+
+            // todo: make lsmbtreetuplereference copy
+            if (rangeCursors[0].hasNext()) {
+                rangeCursors[0].next();
+                inMemElement.reset(rangeCursors[0].getTuple(), 0);
+                if (inMemElementFound) {
+                    outputPriorityQueue.offer(inMemElement);
+                }
+            } else {
+                rangeCursors[0].close();
+            }
+        } else {
+            searchCallback.reconcile(pqHead.getTuple());
+        }
+
+        return true;
+        //        return !outputPriorityQueue.isEmpty();
+    }
+
+    @Override
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
+        super.open(initialState, searchPred);
         LSMBTreeCursorInitialState lsmInitialState = (LSMBTreeCursorInitialState) initialState;
-        searchCallback = lsmInitialState.getSearchOperationCallback();
         cmp = lsmInitialState.getCmp();
         int numBTrees = lsmInitialState.getNumBTrees();
         rangeCursors = new BTreeRangeSearchCursor[numBTrees];
@@ -65,6 +148,8 @@ public class LSMBTreeRangeSearchCursor extends LSMTreeSearchCursor {
         includeMemComponent = lsmInitialState.getIncludeMemComponent();
         searcherRefCount = lsmInitialState.getSearcherRefCount();
         lsmHarness = lsmInitialState.getLSMHarness();
+        memBTreeAccessor = lsmInitialState.getMemBTreeAccessor();
+        predicate = (RangePredicate) lsmInitialState.getSearchPredicate();
         setPriorityQueueComparator();
     }
 

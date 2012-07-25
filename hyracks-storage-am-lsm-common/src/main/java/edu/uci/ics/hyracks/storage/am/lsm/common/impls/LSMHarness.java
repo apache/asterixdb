@@ -185,6 +185,13 @@ public class LSMHarness implements ILSMHarness {
             return;
         }
 
+        // TODO: Move this to just before the merge cleanup and remove latching on disk components
+        // The implementation of this call must take any necessary steps to make
+        // the new component permanent, and mark it as valid (usually this means
+        // forcing all pages of the tree to disk, possibly with some extra
+        // information to mark the tree as valid).
+        lsmIndex.getComponentFinalizer().finalize(newComponent);
+
         // Remove the old Trees from the list, and add the new merged Tree(s).
         // Also, swap the searchRefCount.
         synchronized (diskComponentsSync) {
@@ -209,12 +216,6 @@ public class LSMHarness implements ILSMHarness {
                 throw new HyracksDataException(e);
             }
         }
-
-        // The implementation of this call must take any necessary steps to make
-        // the new component permanent, and mark it as valid (usually this means
-        // forcing all pages of the tree to disk, possibly with some extra
-        // information to mark the tree as valid).
-        lsmIndex.getComponentFinalizer().finalize(newComponent);
 
         // Cleanup. At this point we have guaranteed that no searchers are
         // touching the old on-disk Trees (localSearcherRefCount == 0).

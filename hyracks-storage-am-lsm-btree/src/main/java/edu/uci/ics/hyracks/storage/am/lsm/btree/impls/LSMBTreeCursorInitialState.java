@@ -18,7 +18,9 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
@@ -33,11 +35,13 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
     private final AtomicInteger searcherfRefCount;
     private final LSMHarness lsmHarness;
 
+    private final IIndexAccessor memBtreeAccessor;
+    private final ISearchPredicate predicate;
     private ISearchOperationCallback searchCallback;
 
     public LSMBTreeCursorInitialState(int numBTrees, ITreeIndexFrameFactory leafFrameFactory, MultiComparator cmp,
             boolean includeMemComponent, AtomicInteger searcherfRefCount, LSMHarness lsmHarness,
-            ISearchOperationCallback searchCallback) {
+            IIndexAccessor memBtreeAccessor, ISearchPredicate predicate, ISearchOperationCallback searchCallback) {
         this.numBTrees = numBTrees;
         this.leafFrameFactory = leafFrameFactory;
         this.cmp = cmp;
@@ -45,6 +49,8 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
         this.searcherfRefCount = searcherfRefCount;
         this.lsmHarness = lsmHarness;
         this.searchCallback = searchCallback;
+        this.memBtreeAccessor = memBtreeAccessor;
+        this.predicate = predicate;
     }
 
     public int getNumBTrees() {
@@ -88,6 +94,14 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
     @Override
     public void setSearchOperationCallback(ISearchOperationCallback searchCallback) {
         this.searchCallback = searchCallback;
+    }
+
+    public IIndexAccessor getMemBTreeAccessor() {
+        return memBtreeAccessor;
+    }
+
+    public ISearchPredicate getSearchPredicate() {
+        return predicate;
     }
 
     @Override

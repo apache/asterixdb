@@ -194,6 +194,8 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
                 if (originalKeyCmp.compare(reconciliationTuple, frameTuple) == 0) {
                     if (highKey == null || tupleIndex <= stopTupleIndex) {
                         return true;
+                    } else {
+                        return false;
                     }
 
                 } else { // otherwise do the opCallback dance again with the new tuple we found
