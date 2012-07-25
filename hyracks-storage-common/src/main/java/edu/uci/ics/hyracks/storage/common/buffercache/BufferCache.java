@@ -39,7 +39,7 @@ public class BufferCache implements IBufferCacheInternal {
 
     private static final int MIN_CLEANED_COUNT_DIFF = 3;
     private static final int PIN_MAX_WAIT_TIME = 50;
-    
+
     private final int maxOpenFiles;
 
     private final IIOManager ioManager;
@@ -133,21 +133,21 @@ public class BufferCache implements IBufferCacheInternal {
     @Override
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
         pinSanityCheck(dpid);
+
         CachedPage cPage = findPage(dpid, newPage);
+        if (cPage == null) {
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.fine(dumpState());
+            }
+            throw new HyracksDataException("Failed to pin page " + BufferedFileHandle.getFileId(dpid) + ":"
+                    + BufferedFileHandle.getPageId(dpid) + " because all pages are pinned.");
+        }
         if (!newPage) {
-            if (!cPage.valid) {
-                /*
-                 * We got a buffer and we have pinned it. But its invalid. If its a new page, we just mark it as valid
-                 * and return. Or else, while we hold the page lock, we get a write latch on the data and start a read.
-                 */
-                cPage.acquireWriteLatch(false);
-                try {
-                    if (!cPage.valid) {
-                        read(cPage);
-                    }
+            // Resolve race of multiple threads trying to read the page from disk.
+            synchronized (cPage) {
+                if (!cPage.valid) {
+                    read(cPage);
                     cPage.valid = true;
-                } finally {
-                    cPage.releaseWriteLatch();
                 }
             }
         } else {
