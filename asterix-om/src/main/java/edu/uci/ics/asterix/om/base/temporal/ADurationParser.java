@@ -30,78 +30,90 @@ public class ADurationParser {
             positive = false;
         }
 
-        if (charAccessor.getCharAt(offset++) != 'P')
+        if (charAccessor.getCharAt(offset++) != 'P') {
             throw new Exception(errorMessage);
+        }
 
         for (; offset < charAccessor.getLength(); offset++) {
-            if (charAccessor.getCharAt(offset) >= '0' && charAccessor.getCharAt(offset) <= '9')
+            if (charAccessor.getCharAt(offset) >= '0' && charAccessor.getCharAt(offset) <= '9') {
                 // accumulate the digit fields
                 value = value * 10 + charAccessor.getCharAt(offset) - '0';
-            else {
+            } else {
                 switch (charAccessor.getCharAt(offset)) {
                     case 'Y':
                         if (state.compareTo(State.YEAR) < 0) {
                             year = value;
                             state = State.YEAR;
-                        } else
+                        } else {
                             throw new Exception(errorMessage);
+                        }
                         break;
                     case 'M':
                         if (state.compareTo(State.TIME) < 0) {
                             if (state.compareTo(State.MONTH) < 0) {
                                 month = value;
                                 state = State.MONTH;
-                            } else
+                            } else {
                                 throw new Exception(errorMessage);
+                            }
                         } else if (state.compareTo(State.MIN) < 0) {
                             minute = value;
                             state = State.MIN;
-                        } else
+                        } else {
                             throw new Exception(errorMessage);
+                        }
                         break;
                     case 'D':
                         if (state.compareTo(State.DAY) < 0) {
                             day = value;
                             state = State.DAY;
-                        } else
+                        } else {
                             throw new Exception(errorMessage);
+                        }
                         break;
                     case 'T':
                         if (state.compareTo(State.TIME) < 0) {
                             state = State.TIME;
-                        } else
+                        } else {
                             throw new Exception(errorMessage);
+                        }
                         break;
 
                     case 'H':
                         if (state.compareTo(State.HOUR) < 0) {
                             hour = value;
                             state = State.HOUR;
-                        } else
+                        } else {
                             throw new Exception(errorMessage);
+                        }
                         break;
                     case '.':
                         if (state.compareTo(State.MILLISEC) < 0) {
                             int i = 1;
                             for (; offset + i < charAccessor.getLength(); i++) {
-                                if (charAccessor.getCharAt(offset + i) >= '0' && charAccessor.getCharAt(offset + i) <= '9') {
-                                    if (i < 4)
+                                if (charAccessor.getCharAt(offset + i) >= '0'
+                                        && charAccessor.getCharAt(offset + i) <= '9') {
+                                    if (i < 4) {
                                         millisecond = millisecond * 10 + (charAccessor.getCharAt(offset + i) - '0');
-                                    else
+                                    } else {
                                         throw new Exception(errorMessage);
-                                } else
+                                    }
+                                } else {
                                     break;
+                                }
                             }
                             offset += i;
                             state = State.MILLISEC;
-                        } else
+                        } else {
                             throw new Exception(errorMessage);
+                        }
                     case 'S':
                         if (state.compareTo(State.SEC) < 0) {
                             second = value;
                             state = State.SEC;
-                        } else
+                        } else {
                             throw new Exception(errorMessage);
+                        }
                         break;
                     default:
                         throw new Exception(errorMessage);
@@ -111,12 +123,14 @@ public class ADurationParser {
             }
         }
 
-        if (state.compareTo(State.TIME) == 0)
+        if (state.compareTo(State.TIME) == 0) {
             throw new Exception(errorMessage);
+        }
 
         short temp = 1;
-        if (!positive)
+        if (!positive) {
             temp = -1;
+        }
 
         aDuration.setValue(temp * (year * 12 + month), temp
                 * (day * 24 * 3600 * 1000L + 3600 * 1000L * hour + 60 * minute * 1000L + second * 1000L + millisecond));

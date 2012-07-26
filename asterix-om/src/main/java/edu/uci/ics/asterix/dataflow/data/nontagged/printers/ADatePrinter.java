@@ -10,11 +10,10 @@ import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 public class ADatePrinter implements IPrinter {
 
     private static final long serialVersionUID = 1L;
-
     private static long CHRONON_OF_DAY = 24 * 60 * 60 * 1000;
-
     public static final ADatePrinter INSTANCE = new ADatePrinter();
-
+    private static final GregorianCalendarSystem gCalInstance = GregorianCalendarSystem.getInstance();
+    
     @Override
     public void init() {
 
@@ -24,14 +23,12 @@ public class ADatePrinter implements IPrinter {
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
         long chrononTime = AInt32SerializerDeserializer.getInt(b, s + 1) * CHRONON_OF_DAY;
 
-        GregorianCalendarSystem calendar = GregorianCalendarSystem.getInstance();
-
-        int year = calendar.getYear(chrononTime);
-        int month = calendar.getMonthOfYear(chrononTime, year);
+        int year = gCalInstance.getYear(chrononTime);
+        int month = gCalInstance.getMonthOfYear(chrononTime, year);
 
         ps.print("date(\"");
         ps.append(String.format(year < 0 ? "%05d" : "%04d", year)).append("-").append(String.format("%02d", month))
-                .append("-").append(String.format("%02d", calendar.getDayOfMonthYear(chrononTime, year, month)));
+                .append("-").append(String.format("%02d", gCalInstance.getDayOfMonthYear(chrononTime, year, month)));
         ps.print("\")");
     }
 }

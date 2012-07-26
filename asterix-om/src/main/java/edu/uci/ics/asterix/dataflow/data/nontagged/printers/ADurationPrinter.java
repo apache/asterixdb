@@ -60,8 +60,9 @@ public class ADurationPrinter implements IPrinter {
                 WriteValueTools.writeInt(day, ps);
                 ps.print("D");
             }
-            if (hour != 0 || minute != 0 || second != 0 || millisecond != 0)
+            if (hour != 0 || minute != 0 || second != 0 || millisecond != 0) {
                 ps.print("T");
+            }
             if (hour != 0) {
                 WriteValueTools.writeInt(hour, ps);
                 ps.print("H");
@@ -70,14 +71,16 @@ public class ADurationPrinter implements IPrinter {
                 WriteValueTools.writeInt(minute, ps);
                 ps.print("M");
             }
-            if (second != 0 || millisecond != 0)
+            if (second != 0 || millisecond != 0) {
                 WriteValueTools.writeInt(second, ps);
+            }
             if (millisecond > 0) {
                 ps.print(".");
                 WriteValueTools.writeInt(millisecond, ps);
             }
-            if (second != 0 || millisecond != 0)
+            if (second != 0 || millisecond != 0) {
                 ps.print("S");
+            }
             ps.print("\")");
         } catch (IOException e) {
             throw new AlgebricksException(e);

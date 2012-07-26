@@ -55,7 +55,7 @@ public class ATimeSerializerDeserializer implements ISerializerDeserializer<ATim
             charAccessor.reset(time, 0);
             chrononTimeInMs = ADateAndTimeParser.parseTimePart(charAccessor);
         } catch (Exception e) {
-            throw new HyracksDataException(e.getMessage());
+            throw new HyracksDataException(e);
         }
 
         aTime.setValue(chrononTimeInMs);

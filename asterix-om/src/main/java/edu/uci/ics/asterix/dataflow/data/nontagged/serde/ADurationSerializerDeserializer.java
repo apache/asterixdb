@@ -53,7 +53,7 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
 
             durationSerde.serialize(aDuration, out);
         } catch (Exception e) {
-            throw new HyracksDataException(e.getMessage());
+            throw new HyracksDataException(e);
         }
     }
 }

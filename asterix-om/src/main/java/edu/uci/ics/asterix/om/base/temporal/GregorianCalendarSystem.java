@@ -109,30 +109,40 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      */
     public boolean validate(int year, int month, int day, int hour, int min, int sec, int millis) {
         // Check whether each field is within the value domain
-        if (year < FIELD_MINS[0] || year > FIELD_MAXS[0])
+        if (year < FIELD_MINS[0] || year > FIELD_MAXS[0]) {
             return false;
-        if (month < FIELD_MINS[1] || month > FIELD_MAXS[1])
+        }
+        if (month < FIELD_MINS[1] || month > FIELD_MAXS[1]) {
             return false;
-        if (day < FIELD_MINS[2] || day > FIELD_MAXS[2])
+        }
+        if (day < FIELD_MINS[2] || day > FIELD_MAXS[2]) {
             return false;
-        if (hour < FIELD_MINS[3] || hour > FIELD_MAXS[3])
+        }
+        if (hour < FIELD_MINS[3] || hour > FIELD_MAXS[3]) {
             return false;
-        if (min < FIELD_MINS[4] || min > FIELD_MAXS[4])
+        }
+        if (min < FIELD_MINS[4] || min > FIELD_MAXS[4]) {
             return false;
-        if (sec < FIELD_MINS[5] || sec > FIELD_MAXS[5])
+        }
+        if (sec < FIELD_MINS[5] || sec > FIELD_MAXS[5]) {
             return false;
-        if (millis < FIELD_MINS[6] || millis > FIELD_MAXS[6])
+        }
+        if (millis < FIELD_MINS[6] || millis > FIELD_MAXS[6]) {
             return false;
+        }
 
         // Check whether leap month.
-        if (month == 2)
+        if (month == 2) {
             if (isLeapYear(year)) {
-                if (month > DAYS_OF_MONTH_LEAP[1])
+                if (month > DAYS_OF_MONTH_LEAP[1]) {
                     return false;
+                }
             } else {
-                if (month > DAYS_OF_MONTH_ORDI[1])
+                if (month > DAYS_OF_MONTH_ORDI[1]) {
                     return false;
+                }
             }
+        }
         return true;
     }
 
@@ -253,36 +263,41 @@ public class GregorianCalendarSystem implements ICalendarSystem {
                     return;
                 }
             case MONTH:
-                if (startField != Fields.MONTH)
+                if (startField != Fields.MONTH) {
                     sbder.append("-");
+                }
                 sbder.append(String.format("%02d", month));
                 if (untilField == Fields.MONTH) {
                     return;
                 }
             case DAY:
-                if (startField != Fields.DAY)
+                if (startField != Fields.DAY) {
                     sbder.append("-");
+                }
                 sbder.append(String.format("%02d", getDayOfMonthYear(chrononTime, year, month)));
                 if (untilField == Fields.DAY) {
                     break;
                 }
             case HOUR:
-                if (startField != Fields.HOUR)
+                if (startField != Fields.HOUR) {
                     sbder.append("T");
+                }
                 sbder.append(String.format("%02d", getHourOfDay(chrononTime)));
                 if (untilField == Fields.HOUR) {
                     break;
                 }
             case MINUTE:
-                if (startField != Fields.MINUTE)
+                if (startField != Fields.MINUTE) {
                     sbder.append(":");
+                }
                 sbder.append(String.format("%02d", getMinOfHour(chrononTime)));
                 if (untilField == Fields.MINUTE) {
                     break;
                 }
             case SECOND:
-                if (startField != Fields.SECOND)
+                if (startField != Fields.SECOND) {
                     sbder.append(":");
+                }
                 sbder.append(String.format("%02d", getSecOfMin(chrononTime)));
                 // add millisecond as the precision fields of a second
                 sbder.append(".").append(String.format("%03d", getMillisOfSec(chrononTime)));
@@ -395,8 +410,9 @@ public class GregorianCalendarSystem implements ICalendarSystem {
         sbder.append((hour != 0) ? hour + "H" : "");
         sbder.append((minute != 0) ? minute + "M" : "");
         sbder.append((second != 0 || millisecond != 0) ? second : "");
-        if (millisecond > 0)
+        if (millisecond > 0) {
             sbder.append("." + millisecond);
+        }
         sbder.append((second != 0 || millisecond != 0) ? "S" : "");
     }
 
@@ -506,38 +522,43 @@ public class GregorianCalendarSystem implements ICalendarSystem {
         // There are 86400000 milliseconds per day, but divided by 1024 is
         // 84375. There are 84375 (128/125)seconds per day.
 
-        int temp = 0;
+        int leap = 0;
 
-        if (isLeapYear(year) == true)
-            temp = 1;
+        if (isLeapYear(year) == true) {
+            leap = 1; //Adding one day for the leap years
+        }
 
-        if (i < (181 + temp) * 84375 /*Days before the end of June*/)
-            if (i < (90 + temp) * 84375 /*Days before the end of March*/)
-                if (i < 31 * 84375 /*Days before the end of January*/)
+        if (i < (181 + leap) * 84375) { /*Days before the end of June*/
+            if (i < (90 + leap) * 84375) { /*Days before the end of March*/
+                if (i < 31 * 84375) { /*Days before the end of January*/
                     return 1;
-                else if (i < (59 + temp) * 84375 /*Days before the end of February of leap year*/)
+                } else if (i < (59 + leap) * 84375) { /*Days before the end of February*/
                     return 2;
-                else
+                } else {
                     return 3;
-            else if (i < (120 + temp) * 84375 /*Days before the end of April*/)
+                }
+            } else if (i < (120 + leap) * 84375) { /*Days before the end of April*/
                 return 4;
-            else if (i < (151 + temp) * 84375 /*Days before the end of May*/)
+            } else if (i < (151 + leap) * 84375) { /*Days before the end of May*/
                 return 5;
-            else
+            } else {
                 return 6;
-        else if (i < (273 + temp) * 84375 /*Days before the end of September*/)
-            if (i < (212 + temp) * 84375 /*Days before the end of July*/)
+            }
+        } else if (i < (273 + leap) * 84375) { /*Days before the end of September*/
+            if (i < (212 + leap) * 84375) { /*Days before the end of July*/
                 return 7;
-            else if (i < (243 + temp) * 84375 /*Days before the end of August*/)
+            } else if (i < (243 + leap) * 84375) { /*Days before the end of August*/
                 return 8;
-            else
+            } else {
                 return 9;
-        else if (i < (304 + temp) * 84375 /*Days before the end of October*/)
+            }
+        } else if (i < (304 + leap) * 84375) { /*Days before the end of October*/
             return 10;
-        else if (i < (334 + temp) * 84375 /*Days before the end of November*/)
+        } else if (i < (334 + leap) * 84375) { /*Days before the end of November*/
             return 11;
-        else
+        } else {
             return 12;
+        }
     }
 
     /**

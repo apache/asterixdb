@@ -75,8 +75,9 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                                 short timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
 
                                 if (charAccessor.getCharAt(timeOffset + 10) != 'T'
-                                        && charAccessor.getCharAt(timeOffset + 8) != 'T')
+                                        && charAccessor.getCharAt(timeOffset + 8) != 'T') {
                                     throw new AlgebricksException(errorMessage + ": missing T");
+                                }
 
                                 // if extended form 11, else 9
                                 timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11)
@@ -90,14 +91,15 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
 
                                 aDateTime.setValue(chrononTimeInMs);
                                 datetimeSerde.serialize(aDateTime, out);
-                            } else if (serString[0] == SER_NULL_TYPE_TAG)
+                            } else if (serString[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
-                            else
+                            } else {
                                 throw new AlgebricksException(errorMessage);
+                            }
                         } catch (IOException e1) {
                             throw new AlgebricksException(errorMessage);
-                        } catch (Exception e) {
-                            throw new AlgebricksException(e.getMessage());
+                        } catch (Exception e2) {
+                            throw new AlgebricksException(e2);
                         }
                     }
                 };

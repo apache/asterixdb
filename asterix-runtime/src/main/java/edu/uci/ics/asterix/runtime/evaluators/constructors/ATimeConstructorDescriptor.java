@@ -74,14 +74,15 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                                 aTime.setValue(chrononTimeInMs);
                                 timeSerde.serialize(aTime, out);
 
-                            } else if (serString[0] == SER_NULL_TYPE_TAG)
+                            } else if (serString[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
-                            else
+                            } else {
                                 throw new AlgebricksException(errorMessage);
+                            }
                         } catch (IOException e1) {
                             throw new AlgebricksException(errorMessage);
-                        } catch (Exception e) {
-                            throw new AlgebricksException(e.getMessage());
+                        } catch (Exception e2) {
+                            throw new AlgebricksException(e2);
                         }
                     }
                 };

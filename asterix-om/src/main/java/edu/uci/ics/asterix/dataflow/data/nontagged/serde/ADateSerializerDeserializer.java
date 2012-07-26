@@ -53,12 +53,13 @@ public class ADateSerializerDeserializer implements ISerializerDeserializer<ADat
             charAccessor.reset(date, 0);
             chrononTimeInMs = ADateAndTimeParser.parseDatePart(charAccessor, true);
         } catch (Exception e) {
-            throw new HyracksDataException(e.getMessage());
+            throw new HyracksDataException(e);
         }
 
         short temp = 0;
-        if (chrononTimeInMs < 0 && chrononTimeInMs % GregorianCalendarSystem.CHRONON_OF_DAY != 0)
+        if (chrononTimeInMs < 0 && chrononTimeInMs % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
             temp = 1;
+        }
         aDate.setValue((int) (chrononTimeInMs / GregorianCalendarSystem.CHRONON_OF_DAY) - temp);
 
         dateSerde.serialize(aDate, out);

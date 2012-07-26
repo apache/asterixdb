@@ -34,12 +34,15 @@ public class ADateAndTimeParser {
         }
 
         if ((isDateOnly) && charAccessor.getCharAt(offset + 4) == '-' || (!isDateOnly)
-                && charAccessor.getCharAt(offset + 13) == ':')
+                && charAccessor.getCharAt(offset + 13) == ':') {
             isExtendedForm = true;
+        }
 
-        if (isExtendedForm)
-            if (charAccessor.getCharAt(offset + 4) != '-' || charAccessor.getCharAt(offset + 7) != '-')
+        if (isExtendedForm) {
+            if (charAccessor.getCharAt(offset + 4) != '-' || charAccessor.getCharAt(offset + 7) != '-') {
                 throw new Exception(dateErrorMessage);
+            }
+        }
 
         // year
         for (int i = 0; i < 4; i++) {
@@ -88,8 +91,9 @@ public class ADateAndTimeParser {
 
         offset += 2;
 
-        if (!positive)
+        if (!positive) {
             year *= -1;
+        }
 
         if (isDateOnly && length > offset) {
             throw new Exception(dateErrorMessage);
@@ -117,9 +121,9 @@ public class ADateAndTimeParser {
             isExtendedForm = true;
         }
 
-        if (isExtendedForm && (charAccessor.getCharAt(offset + 2) != ':' || charAccessor.getCharAt(offset + 5) != ':'))
+        if (isExtendedForm && (charAccessor.getCharAt(offset + 2) != ':' || charAccessor.getCharAt(offset + 5) != ':')) {
             throw new Exception(timeErrorMessage);
-
+        }
         // hour
         for (int i = 0; i < 2; i++) {
             if ((charAccessor.getCharAt(offset + i) >= '0' && charAccessor.getCharAt(offset + i) <= '9')) {
@@ -196,18 +200,19 @@ public class ADateAndTimeParser {
         if (length > offset) {
             if (charAccessor.getCharAt(offset) != 'Z') {
                 if ((charAccessor.getCharAt(offset) != '+' && charAccessor.getCharAt(offset) != '-')
-                        || (isExtendedForm && charAccessor.getCharAt(offset + 3) != ':'))
+                        || (isExtendedForm && charAccessor.getCharAt(offset + 3) != ':')) {
                     throw new Exception(timeErrorMessage);
+                }
 
                 short timezoneHour = 0;
                 short timezoneMinute = 0;
 
                 for (int i = 0; i < 2; i++) {
-                    if ((charAccessor.getCharAt(offset + 1 + i) >= '0' && charAccessor.getCharAt(offset + 1 + i) <= '9'))
+                    if ((charAccessor.getCharAt(offset + 1 + i) >= '0' && charAccessor.getCharAt(offset + 1 + i) <= '9')) {
                         timezoneHour = (short) (timezoneHour * 10 + charAccessor.getCharAt(offset + 1 + i) - '0');
-                    else
+                    } else {
                         throw new Exception(timeErrorMessage);
-
+                    }
                 }
 
                 if (timezoneHour < GregorianCalendarSystem.TIMEZONE_HOUR_MIN
@@ -219,11 +224,12 @@ public class ADateAndTimeParser {
 
                 for (int i = 0; i < 2; i++) {
                     if ((charAccessor.getCharAt(offset + temp_offset + 3 + i) >= '0' && charAccessor.getCharAt(offset
-                            + temp_offset + 3 + i) <= '9'))
+                            + temp_offset + 3 + i) <= '9')) {
                         timezoneMinute = (short) (timezoneMinute * 10
                                 + charAccessor.getCharAt(offset + temp_offset + 3 + i) - '0');
-                    else
+                    } else {
                         throw new Exception(timeErrorMessage);
+                    }
                 }
 
                 if (timezoneMinute < GregorianCalendarSystem.TIMEZONE_MIN_MIN
@@ -231,11 +237,11 @@ public class ADateAndTimeParser {
                     throw new Exception(timeErrorMessage + ": time zone minute " + timezoneMinute);
                 }
 
-                if (charAccessor.getCharAt(offset) == '-')
+                if (charAccessor.getCharAt(offset) == '-') {
                     timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-                else
+                } else {
                     timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
-
+                }
             }
         }
 

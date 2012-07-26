@@ -57,8 +57,9 @@ public class ADateTimeSerializerDeserializer implements ISerializerDeserializer<
             // +1 if it is negative (-)
             short timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
 
-            if (charAccessor.getCharAt(timeOffset + 10) != 'T' && charAccessor.getCharAt(timeOffset + 8) != 'T')
+            if (charAccessor.getCharAt(timeOffset + 10) != 'T' && charAccessor.getCharAt(timeOffset + 8) != 'T') {
                 throw new AlgebricksException(errorMessage + ": missing T");
+            }
 
             // if extended form 11, else 9
             timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11) : (short) (9);
@@ -69,7 +70,7 @@ public class ADateTimeSerializerDeserializer implements ISerializerDeserializer<
 
             chrononTimeInMs += ADateAndTimeParser.parseTimePart(charAccessor);
         } catch (Exception e) {
-            throw new HyracksDataException(e.getMessage());
+            throw new HyracksDataException(e);
         }
         aDateTime.setValue(chrononTimeInMs);
 

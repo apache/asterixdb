@@ -59,7 +59,8 @@ public class ADate implements IAObject {
         StringBuilder sbder = new StringBuilder();
         sbder.append("ADate: { ");
         GregorianCalendarSystem.getInstance().getExtendStringRepWithTimezoneUntilField(
-                chrononTimeInDay * CHRONON_OF_DAY, 0, sbder, GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.DAY);
+                chrononTimeInDay * CHRONON_OF_DAY, 0, sbder, GregorianCalendarSystem.Fields.YEAR,
+                GregorianCalendarSystem.Fields.DAY);
         sbder.append(" }");
         return sbder.toString();
     }

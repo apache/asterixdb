@@ -76,21 +76,22 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
 
                                 short temp = 0;
                                 if (chrononTimeInMs < 0
-                                        && chrononTimeInMs % GregorianCalendarSystem.CHRONON_OF_DAY != 0)
+                                        && chrononTimeInMs % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
                                     temp = 1;
+                                }
 
                                 aDate.setValue((int) (chrononTimeInMs / GregorianCalendarSystem.CHRONON_OF_DAY) - temp);
 
                                 dateSerde.serialize(aDate, out);
-                            } else if (serString[0] == SER_NULL_TYPE_TAG)
+                            } else if (serString[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
-                            else
+                            } else {
                                 throw new AlgebricksException(errorMessage);
-
+                            }
                         } catch (IOException e1) {
                             throw new AlgebricksException(errorMessage);
                         } catch (Exception e2) {
-                            throw new AlgebricksException(e2.getMessage());
+                            throw new AlgebricksException(e2);
                         }
                     }
                 };

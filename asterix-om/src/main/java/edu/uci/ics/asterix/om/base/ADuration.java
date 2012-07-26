@@ -89,7 +89,8 @@ public class ADuration implements IAObject {
     public String toString() {
         StringBuilder sbder = new StringBuilder();
         sbder.append("ADuration: {");
-        GregorianCalendarSystem.getInstance().getDurationExtendStringRepWithTimezoneUntilField(chrononInMillisecond, chrononInMonth, sbder);
+        GregorianCalendarSystem.getInstance().getDurationExtendStringRepWithTimezoneUntilField(chrononInMillisecond,
+                chrononInMonth, sbder);
         sbder.append(" }");
         return sbder.toString();
     }
