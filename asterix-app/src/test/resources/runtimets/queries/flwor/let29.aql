@@ -1,0 +1,8 @@
+/*
+ * Description     : Test let clause and double literals
+ * Expected Result : Success
+ * Date            : 24th July 2012
+ */
+
+let $a := [137.8932,.98781,436.219,.89217,-234.324]
+return $a
