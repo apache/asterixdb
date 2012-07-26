@@ -1,6 +1,6 @@
 package edu.uci.ics.asterix.runtime.util;
 
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
+import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 
 /**
  * This class extends ByteArrayAccessibleOutputStream to allow reset to a given

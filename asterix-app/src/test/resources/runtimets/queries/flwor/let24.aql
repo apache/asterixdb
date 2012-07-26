@@ -1,0 +1,20 @@
+/*
+ *  Description     : Test let clause
+ *  Expected Result : Success
+ *  Date            : 23rd July 2012
+ */
+
+/*
+ * m - closed record
+ * n - closed record with null
+ * o - open data
+ * p - open data with null
+ * q - nested record
+ */
+
+let $m := {"name":"Holmes S","age":25,"sex":"M"}
+let $n := {"name":"Bob","age":35,"sex":null}
+let $o := {{"John",45,"M"}}
+let $p := {{"Optional data goes here",null}}
+let $q := { "id":1345,"test":{"name":"Federer","age":35},"foo":"foo" }
+return { "m":$m,"n":$n,"o":$o, "p":$p,"q":$q }

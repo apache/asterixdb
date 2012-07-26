@@ -1,0 +1,31 @@
+/*
+ * Description      :   Add numeric values with a null value, sum() aggregate function must return null.
+ * Expected result  :   Success
+ * Date             :   July 20th 2012
+ */
+
+write output to nc1:"rttest/aggregate_sum_numeric_null.adm";
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as open {
+id:int32,
+sal:int32?
+}
+
+create dataset tdst(TestType) partitioned by key id;
+
+// In AQL
+// sum(numeric + null) => null
+
+insert into dataset tdst({"id":123,"sal":345});
+insert into dataset tdst({"id":113,"sal":335});
+insert into dataset tdst({"id":163,"sal":315});
+insert into dataset tdst({"id":161,"sal":365});
+insert into dataset tdst({"id":173,"sal":385});
+insert into dataset tdst({"id":183,"sal":null});
+
+sum(for $l in dataset('tdst')
+return $l.sal)
