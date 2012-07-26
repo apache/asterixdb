@@ -1,0 +1,40 @@
+/*
+ * Description     : Insert from source dataset into target dataset
+ * Expected Result : Success
+ * Date            : 25th July 2012
+ * Issue #         : Issue 76
+ */
+
+drop dataverse testdv2 if exists;
+create dataverse testdv2;
+use dataverse testdv2;
+
+write output to nc1:"rttest/dml_insert-src-dst-01.adm";
+
+create type testtype01 as closed {
+  id: string,
+  name: string?
+}
+
+create type testtype02 as closed {
+  id: string
+}
+
+create dataset testds01(testtype01) partitioned by key id;
+create dataset testds02(testtype02) partitioned by key id;
+
+insert into dataset testds01 ({ "id": "001" });
+insert into dataset testds01 ({ "id": "002", "name": "John Doe" });
+
+insert into dataset testds02 ({ "id": "003" });
+insert into dataset testds02 ({ "id": "004" });
+insert into dataset testds02 ({ "id": "005" });
+
+insert into dataset testds01(
+for $d in dataset("testds02")
+return $d
+);
+
+for $d in dataset("testds01")
+order by $d.id
+return $d
