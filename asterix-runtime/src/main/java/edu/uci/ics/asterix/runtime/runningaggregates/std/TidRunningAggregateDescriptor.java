@@ -17,7 +17,7 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyRunningAggregateFunction
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyRunningAggregateFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class TidRunningAggregateDescriptor extends AbstractRunningAggregateFunctionDynamicDescriptor {
