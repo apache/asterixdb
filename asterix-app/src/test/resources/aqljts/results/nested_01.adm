@@ -30,4 +30,4 @@ AbstractCollectionType:
 ARecordType: 
 field: t
 AbstractCollectionType: 
-ADateTime: { 2011-9-16:11:0:0:0:0:0 }
+ADateTime: { 2011-09-16T11:00:00.000Z }

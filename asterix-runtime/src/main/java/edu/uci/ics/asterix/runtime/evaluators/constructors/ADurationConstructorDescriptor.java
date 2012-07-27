@@ -1,13 +1,28 @@
+/*
+ * Copyright 2009-2011 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.runtime.evaluators.constructors;
 
 import java.io.DataOutput;
-import java.io.IOException;
 
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADuration;
 import edu.uci.ics.asterix.om.base.AMutableDuration;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.base.temporal.ADurationParser;
+import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -18,8 +33,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -28,6 +43,9 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "duration", 1);
     private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+
+    private final static ByteArrayCharSequenceAccessor charAccessor = new ByteArrayCharSequenceAccessor();
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new ADurationConstructorDescriptor();
@@ -47,10 +65,6 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
 
                     private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(outInput);
-                    private int offset;
-                    private int value = 0, hour = 0, minute = 0, second = 0, year = 0, month = 0, day = 0;
-                    private boolean isYear = true, isMonth = true, isDay = true, isHour = true, isMinute = true,
-                            isSecond = true, isTime = false, timeItem = true, positive = true;
                     private String errorMessage = "This can not be an instance of duration";
                     private AMutableDuration aDuration = new AMutableDuration(0, 0);
                     @SuppressWarnings("unchecked")
@@ -67,120 +81,21 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
                             outInput.reset();
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
+
                             if (serString[0] == SER_STRING_TYPE_TAG) {
-                                offset = 3;
-                                if (serString[offset] == '-') {
-                                    offset++;
-                                    positive = false;
-                                }
-                                if (serString[offset++] != 'D')
-                                    throw new AlgebricksException(errorMessage);
 
-                                for (; offset < outInput.getLength(); offset++) {
-                                    if (serString[offset] >= '0' && serString[offset] <= '9')
-                                        value = value * 10 + serString[offset] - '0';
-                                    else {
-                                        switch (serString[offset]) {
-                                            case 'Y':
-                                                if (isYear) {
-                                                    year = value;
-                                                    isYear = false;
-                                                } else
-                                                    throw new AlgebricksException(errorMessage);
-                                                break;
-                                            case 'M':
-                                                if (!isTime) {
-                                                    if (isMonth) {
-                                                        if (value < 0 || value > 11)
-                                                            throw new AlgebricksException(errorMessage);
-                                                        else {
-                                                            month = value;
-                                                            isMonth = false;
-                                                        }
-                                                    } else
-                                                        throw new AlgebricksException(errorMessage);
-                                                } else if (isMinute) {
-                                                    if (value < 0 || value > 59)
-                                                        throw new AlgebricksException(errorMessage);
-                                                    else {
-                                                        minute = value;
-                                                        isMinute = false;
-                                                        timeItem = false;
-                                                    }
-                                                } else
-                                                    throw new AlgebricksException(errorMessage);
-                                                break;
-                                            case 'D':
-                                                if (isDay) {
-                                                    if (value < 0 || value > 30)
-                                                        throw new AlgebricksException(errorMessage);
-                                                    else {
-                                                        day = value;
-                                                        isDay = false;
-                                                    }
-                                                } else
-                                                    throw new AlgebricksException(errorMessage);
-                                                break;
-                                            case 'T':
-                                                if (!isTime) {
-                                                    isTime = true;
-                                                    timeItem = true;
-                                                } else
-                                                    throw new AlgebricksException(errorMessage);
-                                                break;
+                                charAccessor.reset(serString, 3, 0);
 
-                                            case 'H':
-                                                if (isHour) {
-                                                    if (value < 0 || value > 23)
-                                                        throw new AlgebricksException(errorMessage);
-                                                    else {
-                                                        hour = value;
-                                                        isHour = false;
-                                                        timeItem = false;
-                                                    }
-                                                } else
-                                                    throw new AlgebricksException(errorMessage);
-                                                break;
-                                            case 'S':
-                                                if (isSecond) {
-                                                    if (value < 0 || value > 59)
-                                                        throw new AlgebricksException(errorMessage);
-                                                    else {
-                                                        second = value;
-                                                        isSecond = false;
-                                                        timeItem = false;
-                                                    }
-                                                } else
-                                                    throw new AlgebricksException(errorMessage);
-                                                break;
-                                            default:
-                                                throw new AlgebricksException(errorMessage);
+                                ADurationParser.parse(charAccessor, aDuration);
 
-                                        }
-                                        value = 0;
-                                    }
-                                }
-
-                                if (isTime && timeItem)
-                                    throw new AlgebricksException(errorMessage);
-
-                                if (isYear && isMonth && isDay && !isTime)
-                                    throw new AlgebricksException(errorMessage);
-
-                                if (positive)
-                                    aDuration.setValue(year * 12 + month, day * 24 * 3600 + 3600 * hour + 60 * minute
-                                            + second);
-                                else
-                                    aDuration.setValue(-1 * (year * 12 + month), -1
-                                            * (day * 24 * 3600 + 3600 * hour + 60 * minute + second));
                                 durationSerde.serialize(aDuration, out);
-                            } else if (serString[0] == SER_NULL_TYPE_TAG)
+                            } else if (serString[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
-                            else
+                            } else {
                                 throw new AlgebricksException(errorMessage);
-
-                        } catch (IOException e1) {
-                            throw new AlgebricksException(errorMessage);
+                            }
+                        } catch (Exception e1) {
+                            throw new AlgebricksException(e1);
                         }
                     }
                 };

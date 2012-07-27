@@ -5,8 +5,8 @@
     "sponsoring_sigs": [ { "sig_id": 14, "chapter_name": "San Clemente" }, 
                          { "sig_id": 14, "chapter_name": "Laguna Beach" } ],
     "interest_keywords": {{ "art", "landscape", "nature", "vernissage" }},
-    "start_time": datetime( "2011-02-23T18:00:00:000-08:00" ),
-    "end_time": datetime( "2011-02-23T21:00:00:000-08:00" ) 
+    "start_time": datetime( "2011-02-23T18:00:00.000-08:00" ),
+    "end_time": datetime( "2011-02-23T21:00:00.000-08:00" ) 
   }
   { 
     "event_id": 941, 
@@ -16,8 +16,8 @@
     "sponsoring_sigs": [ { "sig_id": 31, "chapter_name": "Huntington Beach" } ],
     "interest_keywords": {{ "scuba", "diving", "aquatics" }},
     "price": 40.00,
-    "start_time": datetime( "2010-10-16T09:00:00:000-08:00" ),
-    "end_time": datetime( "2010-10-16T12:00:00:000-08:00" )
+    "start_time": datetime( "2010-10-16T09:00:00.000-08:00" ),
+    "end_time": datetime( "2010-10-16T12:00:00.000-08:00" )
   }
   { 
     "event_id": 1042, 
@@ -26,7 +26,7 @@
     "sponsoring_sigs": [ { "sig_id": 14, "chapter_name": "Laguna Beach" } ],
     "interest_keywords": {{ "architecture", "photography" }},
     "price": 10.00,
-    "start_time": datetime( "2011-02-23T17:00:00:000-08:00" ),
-    "end_time": datetime( "2011-02-23T19:00:00:000-08:00" ) 
+    "start_time": datetime( "2011-02-23T17:00:00.000-08:00" ),
+    "end_time": datetime( "2011-02-23T19:00:00.000-08:00" ) 
   } 
   

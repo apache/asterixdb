@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2011 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
@@ -7,7 +21,10 @@ import java.io.IOException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADateTime;
 import edu.uci.ics.asterix.om.base.AMutableDateTime;
+import edu.uci.ics.asterix.om.base.temporal.ADateAndTimeParser;
+import edu.uci.ics.asterix.om.base.temporal.StringCharSequenceAccessor;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
@@ -17,15 +34,10 @@ public class ADateTimeSerializerDeserializer implements ISerializerDeserializer<
 
     public static final ADateTimeSerializerDeserializer INSTANCE = new ADateTimeSerializerDeserializer();
     @SuppressWarnings("unchecked")
-    private static ISerializerDeserializer<ADateTime> datetimeSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private static final ISerializerDeserializer<ADateTime> datetimeSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ADATETIME);
-    private static AMutableDateTime aDateTime = new AMutableDateTime(0, 0, 0, 0, 0, 0, 0, 0, 0);
-    private static String errorMessage = " can not be an instance of datetime";
 
-    private int time;
-    private byte timezone;
-    private short year;
-    private byte monthAndDay;
+    private static final String errorMessage = "This can not be an instance of datetime";
 
     private ADateTimeSerializerDeserializer() {
     }
@@ -33,14 +45,7 @@ public class ADateTimeSerializerDeserializer implements ISerializerDeserializer<
     @Override
     public ADateTime deserialize(DataInput in) throws HyracksDataException {
         try {
-            year = in.readShort();
-            monthAndDay = in.readByte();
-            timezone = in.readByte();
-            time = in.readInt();
-
-            return new ADateTime(year >> 1, (year & 0x0001) * 8 + ((monthAndDay >> 5) & 0x07), monthAndDay & 0x1f,
-                    (short) ((time) * 20 % 216000000 / 3600000), (short) ((time) * 20 % 3600000 / 60000),
-                    (short) ((time) * 20 % 60000 / 1000), (short) ((time) * 20 % 1000), (short) 0, timezone);
+            return new ADateTime(in.readLong());
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
@@ -49,92 +54,40 @@ public class ADateTimeSerializerDeserializer implements ISerializerDeserializer<
     @Override
     public void serialize(ADateTime instance, DataOutput out) throws HyracksDataException {
         try {
-            out.writeByte((byte) ((instance.getYear() << 1) >> 8));
-            out.writeByte((byte) ((byte) ((instance.getYear() << 1) & 0x00ff) + (byte) (instance.getMonth() >> 3)));
-            out.writeByte((byte) ((instance.getMonth() << 5) | (instance.getDay())));
-            out.writeByte((byte) instance.getTimeZone());
-            out.writeInt((((((instance.getHours() * 60) + instance.getMinutes()) * 60) + instance.getSeconds()) * 1000 + instance
-                    .getMilliseconds()) / 20);
+            out.writeLong(instance.getChrononTime());
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
     }
 
     public static void parse(String datetime, DataOutput out) throws HyracksDataException {
-        boolean positive = true;
-        int offset = 0;
-        byte timezonePart = 0;
+        AMutableDateTime aDateTime = new AMutableDateTime(0L);
 
-        if (datetime.charAt(offset) == '-') {
-            offset++;
-            positive = false;
-        }
+        long chrononTimeInMs = 0;
+        try {
+            StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
+            charAccessor.reset(datetime, 0);
 
-        if (datetime.charAt(offset + 4) != '-' || datetime.charAt(offset + 7) != '-')
-            throw new HyracksDataException(datetime + errorMessage);
+            // +1 if it is negative (-)
+            short timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
 
-        short year = Short.parseShort(datetime.substring(offset, offset + 4));
-        short month = Short.parseShort(datetime.substring(offset + 5, offset + 7));
-        short day = Short.parseShort(datetime.substring(offset + 8, offset + 10));
-
-        if (year < 0 || year > 9999 || month < 0 || month > 12 || day < 0 || day > 31)
-            throw new HyracksDataException(datetime + errorMessage);
-
-        if (!positive)
-            year *= -1;
-
-        if (datetime.charAt(offset + 10) != 'T')
-            throw new HyracksDataException(datetime + errorMessage);
-
-        offset += 11;
-
-        if (datetime.charAt(offset + 2) != ':' || datetime.charAt(offset + 5) != ':')
-            throw new HyracksDataException(datetime + errorMessage);
-
-        short hour = Short.parseShort(datetime.substring(offset, offset + 2));
-        short minute = Short.parseShort(datetime.substring(offset + 3, offset + 5));
-        short second = Short.parseShort(datetime.substring(offset + 6, offset + 8));
-        short msecond = 0;
-
-        if (datetime.length() > offset + 8 && datetime.charAt(offset + 8) == ':') {
-            msecond = Short.parseShort(datetime.substring(offset + 9, offset + 12));
-            if (hour < 0 || hour > 24 || minute < 0 || minute > 59 || second < 0 || second > 59 || msecond < 0
-                    || msecond > 999 || (hour == 24 && (minute != 0 || second != 0 || msecond != 0)))
-                throw new HyracksDataException(datetime + errorMessage);
-            offset += 12;
-        } else {
-            if (hour < 0 || hour > 24 || minute < 0 || minute > 59 || second < 0 || second > 59
-                    || (hour == 24 && (minute != 0 || second != 0)))
-                throw new HyracksDataException(datetime + errorMessage);
-            offset += 8;
-        }
-
-        short timezoneHour = 0, timezoneMinute = 0;
-        if (datetime.length() > offset) {
-            if (datetime.charAt(offset) == 'Z')
-                timezonePart = 0;
-            else {
-                if ((datetime.charAt(offset) != '+' && datetime.charAt(offset) != '-')
-                        || (datetime.charAt(offset + 3) != ':'))
-                    throw new HyracksDataException(datetime + errorMessage);
-
-                timezoneHour = Short.parseShort(datetime.substring(offset + 1, offset + 3));
-                timezoneMinute = Short.parseShort(datetime.substring(offset + 4, offset + 6));
-
-                if (timezoneHour < 0
-                        || timezoneHour > 24
-                        || (timezoneHour == 24 && timezoneMinute != 0)
-                        || (timezoneMinute != 0 && timezoneMinute != 15 && timezoneMinute != 30 && timezoneMinute != 45))
-                    throw new HyracksDataException(datetime + errorMessage);
-
-                if (datetime.charAt(offset) == '-')
-                    timezonePart = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-                else
-                    timezonePart = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
+            if (charAccessor.getCharAt(timeOffset + 10) != 'T' && charAccessor.getCharAt(timeOffset + 8) != 'T') {
+                throw new AlgebricksException(errorMessage + ": missing T");
             }
 
+            // if extended form 11, else 9
+            timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11) : (short) (9);
+
+            chrononTimeInMs = ADateAndTimeParser.parseDatePart(charAccessor, false);
+
+            charAccessor.reset(datetime, timeOffset);
+
+            chrononTimeInMs += ADateAndTimeParser.parseTimePart(charAccessor);
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
         }
-        aDateTime.setValue(year, month, day, hour, minute, second, msecond, 0, timezonePart);
+        aDateTime.setValue(chrononTimeInMs);
+
         datetimeSerde.serialize(aDateTime, out);
     }
 }
