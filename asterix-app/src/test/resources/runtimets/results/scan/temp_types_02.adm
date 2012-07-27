@@ -1,4 +1,4 @@
-{ "id": 10, "date": date("2011-01-27+00:00"), "time": time("12:20:30:000+00:00"), "datetime": datetime("1951-12-27T12:20:30:000+00:00"), "duration": duration("D30Y10M15DT10H30M50S") }
-{ "id": 20, "date": date("2011-01-27-05:00"), "time": time("12:20:30:980-05:00"), "datetime": datetime("1951-12-27T12:20:30:240-08:45"), "duration": duration("D0Y10M15DT10H0M50S") }
-{ "id": 30, "date": date("-2011-01-27-05:00"), "time": time("12:20:30:980+00:00"), "datetime": datetime("-1951-12-27T12:20:30:240-08:15"), "duration": duration("-D0Y0M0DT0H0M50S") }
-{ "id": 40, "date": date("-2011-01-27+00:00"), "time": time("12:20:30:000+00:00"), "datetime": datetime("-1951-12-27T12:20:30:240+00:00"), "duration": duration("-D0Y10M0DT0H0M0S") }
+{ "id": 10, "date": date("2011-01-27"), "time": time("12:20:30.000Z"), "datetime": datetime("1951-12-27T12:20:30.000+00:00"), "duration": duration("P30Y10M15DT10H30M50S") }
+{ "id": 20, "date": date("2011-01-27"), "time": time("17:20:30.999Z"), "datetime": datetime("1951-12-27T12:20:30.240-08:45"), "duration": duration("P10M15DT10H50S") }
+{ "id": 30, "date": date("-2011-01-27"), "time": time("12:20:30.999Z"), "datetime": datetime("-1951-12-27T12:20:30.240-08:15"), "duration": duration("-PT50S") }
+{ "id": 40, "date": date("-2011-01-27"), "time": time("12:20:30.000Z"), "datetime": datetime("-1951-12-27T12:20:30.240+00:00"), "duration": duration("-P10M") }

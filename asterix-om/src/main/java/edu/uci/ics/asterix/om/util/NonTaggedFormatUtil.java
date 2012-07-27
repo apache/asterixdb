@@ -90,8 +90,9 @@ public final class NonTaggedFormatUtil {
             case INT64:
             case DOUBLE:
             case DATETIME:
-            case DURATION:
                 return 8;
+            case DURATION:
+                return 12;
             case POINT:
                 return 16;
             case POINT3D:

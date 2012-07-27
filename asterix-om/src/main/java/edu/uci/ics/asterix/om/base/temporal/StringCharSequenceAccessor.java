@@ -12,17 +12,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.base;
+package edu.uci.ics.asterix.om.base.temporal;
 
-public class AMutableLine extends ALine {
+public class StringCharSequenceAccessor implements ICharSequenceAccessor<String> {
 
-    public AMutableLine(APoint p1, APoint p2) {
-        super(p1, p2);
+    private String string;
+    private int offset;
+
+    @Override
+    public char getCharAt(int index) {
+        return string.charAt(index + offset);
     }
 
-    public void setValue(APoint p1, APoint p2) {
-        this.p1 = p1;
-        this.p2 = p2;
+    public void reset(String obj, int offset) {
+        string = obj;
+        this.offset = offset;
+    }
+
+    @Override
+    public int getLength() {
+        return string.length() - offset;
     }
 
 }
