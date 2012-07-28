@@ -41,6 +41,7 @@ import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.scalar.ScalarCountAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableCountAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableGlobalAvgAggregateDescriptor;
@@ -320,6 +321,9 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(SerializableSumAggregateDescriptor.FACTORY);
         temp.add(SerializableLocalSumAggregateDescriptor.FACTORY);
 
+        // scalar aggregates
+        temp.add(ScalarCountAggregateDescriptor.FACTORY);
+        
         // new functions - constructors
         temp.add(ABooleanConstructorDescriptor.FACTORY);
         temp.add(ANullConstructorDescriptor.FACTORY);
@@ -528,7 +532,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         typeInference(expr, fd, context);
         return fd;
     }
-
+    
     private void typeInference(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
             throws AlgebricksException {
         if (fd.getIdentifier().equals(AsterixBuiltinFunctions.LISTIFY)) {
