@@ -4,28 +4,22 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.asterix.common.functions.FunctionDescriptorTag;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
-import edu.uci.ics.asterix.runtime.base.IAggregateFunctionDynamicDescriptor;
-import edu.uci.ics.asterix.runtime.base.IRunningAggregateFunctionDynamicDescriptor;
-import edu.uci.ics.asterix.runtime.base.IScalarFunctionDynamicDescriptor;
-import edu.uci.ics.asterix.runtime.base.ISerializableAggregateFunctionDynamicDescriptor;
-import edu.uci.ics.asterix.runtime.base.IUnnestingFunctionDynamicDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.comparisons.ComparisonEvalFactory;
 import edu.uci.ics.asterix.runtime.formats.FormatUtils;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ILogicalExpressionJobGen;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.StatefulFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
@@ -53,79 +47,25 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
             IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
             throws AlgebricksException {
         ICopyEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
-        IFunctionDescriptor fd;
-        AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-        AqlCompiledMetadataDeclarations compiledDecls = mp.getMetadataDeclarations();
-        try {
-            fd = compiledDecls.getFormat().resolveFunction(expr, env);
-        } catch (AlgebricksException e) {
-            throw new AlgebricksException(e);
-        }
+        IFunctionDescriptor fd = getFunctionDescriptor(expr, env, context);
         switch (fd.getFunctionDescriptorTag()) {
-            case SCALAR: {
-                throw new AlgebricksException(
-                        "Trying to create an aggregate from a scalar evaluator function descriptor. (fi="
-                                + expr.getFunctionIdentifier() + ")");
-            }
-            case AGGREGATE: {
-                IAggregateFunctionDynamicDescriptor afdd = (IAggregateFunctionDynamicDescriptor) fd;
-                return afdd.createAggregateFunctionFactory(args);
-            }
-            case SERIALAGGREGATE: {
-                // temporal hack
+            case SERIALAGGREGATE:
                 return null;
-            }
-            case RUNNINGAGGREGATE: {
-                throw new AlgebricksException(
-                        "Trying to create an aggregate from a running aggregate function descriptor.");
-            }
-            case UNNEST: {
-                throw new AlgebricksException(
-                        "Trying to create an aggregate from an unnesting aggregate function descriptor.");
-            }
-
-            default: {
-                throw new IllegalStateException(fd.getFunctionDescriptorTag().toString());
-            }
+            case AGGREGATE:
+                return fd.createAggregateFunctionFactory(args);
+            default:
+                throw new IllegalStateException("Invalid function descriptor " + fd.getFunctionDescriptorTag()
+                        + " expected " + FunctionDescriptorTag.SERIALAGGREGATE + " or "
+                        + FunctionDescriptorTag.AGGREGATE);
         }
-
     }
 
     @Override
-    public ICopyRunningAggregateFunctionFactory createRunningAggregateFunctionFactory(StatefulFunctionCallExpression expr,
-            IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
-            throws AlgebricksException {
+    public ICopyRunningAggregateFunctionFactory createRunningAggregateFunctionFactory(
+            StatefulFunctionCallExpression expr, IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas,
+            JobGenContext context) throws AlgebricksException {
         ICopyEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
-        IFunctionDescriptor fd;
-        AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-        AqlCompiledMetadataDeclarations compiledDecls = mp.getMetadataDeclarations();
-        try {
-            fd = compiledDecls.getFormat().resolveFunction(expr, env);
-        } catch (AlgebricksException e) {
-            throw new AlgebricksException(e);
-        }
-        switch (fd.getFunctionDescriptorTag()) {
-            case SCALAR: {
-                throw new AlgebricksException(
-                        "Trying to create a running aggregate from a scalar evaluator function descriptor. (fi="
-                                + expr.getFunctionIdentifier() + ")");
-            }
-            case AGGREGATE: {
-                throw new AlgebricksException(
-                        "Trying to create a running aggregate from an aggregate function descriptor.");
-            }
-            case UNNEST: {
-                throw new AlgebricksException(
-                        "Trying to create a running aggregate from an unnesting function descriptor.");
-            }
-            case RUNNINGAGGREGATE: {
-                IRunningAggregateFunctionDynamicDescriptor rafdd = (IRunningAggregateFunctionDynamicDescriptor) fd;
-                return rafdd.createRunningAggregateFunctionFactory(args);
-            }
-            default: {
-                throw new IllegalStateException();
-            }
-        }
+        return getFunctionDescriptor(expr, env, context).createRunningAggregateFunctionFactory(args);
     }
 
     @Override
@@ -133,52 +73,33 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
             IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
             throws AlgebricksException {
         ICopyEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
-        IFunctionDescriptor fd;
-        AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-        AqlCompiledMetadataDeclarations compiledDecls = mp.getMetadataDeclarations();
-        try {
-            fd = compiledDecls.getFormat().resolveFunction(expr, env);
-        } catch (AlgebricksException e) {
-            throw new AlgebricksException(e);
-        }
-        switch (fd.getFunctionDescriptorTag()) {
-            case UNNEST: {
-                IUnnestingFunctionDynamicDescriptor ufdd = (IUnnestingFunctionDynamicDescriptor) fd;
-                return ufdd.createUnnestingFunctionFactory(args);
-            }
-            default: {
-                throw new AlgebricksException("Trying to create an unnesting function descriptor from a "
-                        + fd.getFunctionDescriptorTag() + ". (fid=" + expr.getFunctionIdentifier() + ")");
-            }
-        }
+        return getFunctionDescriptor(expr, env, context).createUnnestingFunctionFactory(args);
     }
 
     @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(ILogicalExpression expr, IVariableTypeEnvironment env,
             IOperatorSchema[] inputSchemas, JobGenContext context) throws AlgebricksException {
+        ICopyEvaluatorFactory copyEvaluatorFactory = null;
         switch (expr.getExpressionTag()) {
             case VARIABLE: {
                 VariableReferenceExpression v = (VariableReferenceExpression) expr;
-                return createVariableEvaluatorFactory(v, inputSchemas, context);
+                copyEvaluatorFactory = createVariableEvaluatorFactory(v, inputSchemas, context);
+                return copyEvaluatorFactory;
             }
             case CONSTANT: {
                 ConstantExpression c = (ConstantExpression) expr;
-                return createConstantEvaluatorFactory(c, inputSchemas, context);
+                copyEvaluatorFactory = createConstantEvaluatorFactory(c, inputSchemas, context);
+                return copyEvaluatorFactory;
             }
             case FUNCTION_CALL: {
-                AbstractFunctionCallExpression fun = (AbstractFunctionCallExpression) expr;
-                if (fun.getKind() == FunctionKind.SCALAR) {
-                    ScalarFunctionCallExpression scalar = (ScalarFunctionCallExpression) fun;
-                    return createScalarFunctionEvaluatorFactory(scalar, env, inputSchemas, context);
-                } else {
-                    throw new AlgebricksException("Cannot create evaluator for function " + fun + " of kind "
-                            + fun.getKind());
-                }
+                copyEvaluatorFactory = createScalarFunctionEvaluatorFactory((AbstractFunctionCallExpression) expr, env,
+                        inputSchemas, context);
+                return copyEvaluatorFactory;
             }
-            default: {
+            default:
                 throw new IllegalStateException();
-            }
         }
+
     }
 
     private ICopyEvaluatorFactory createVariableEvaluatorFactory(VariableReferenceExpression expr,
@@ -203,31 +124,15 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
             return new ComparisonEvalFactory(args[0], args[1], ck);
         }
 
-        IFunctionDescriptor fd;
-
+        IFunctionDescriptor fd = null;
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
         IDataFormat format = mp == null ? FormatUtils.getDefaultFormat() : mp.getMetadataDeclarations().getFormat();
-        try {
-            fd = format.resolveFunction(expr, env);
-        } catch (AlgebricksException e) {
-            throw new AlgebricksException(e);
-        }
-
-        switch (fd.getFunctionDescriptorTag()) {
-            case SCALAR: {
-                IScalarFunctionDynamicDescriptor sfdd = (IScalarFunctionDynamicDescriptor) fd;
-                return sfdd.createEvaluatorFactory(args);
-            }
-            default: {
-                throw new AlgebricksException("Trying to create a scalar function descriptor from a "
-                        + fd.getFunctionDescriptorTag() + ". (fid=" + fi + ")");
-            }
-        }
-
+        fd = format.resolveFunction(expr, env);
+        return fd.createEvaluatorFactory(args);
     }
 
-    private ICopyEvaluatorFactory createConstantEvaluatorFactory(ConstantExpression expr, IOperatorSchema[] inputSchemas,
-            JobGenContext context) throws AlgebricksException {
+    private ICopyEvaluatorFactory createConstantEvaluatorFactory(ConstantExpression expr,
+            IOperatorSchema[] inputSchemas, JobGenContext context) throws AlgebricksException {
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
         IDataFormat format = mp == null ? FormatUtils.getDefaultFormat() : mp.getMetadataDeclarations().getFormat();
         return format.getConstantEvalFactory(expr.getValue());
@@ -250,27 +155,15 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
             AggregateFunctionCallExpression expr, IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas,
             JobGenContext context) throws AlgebricksException {
         ICopyEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
-        IFunctionDescriptor fd;
-        AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-        AqlCompiledMetadataDeclarations compiledDecls = mp.getMetadataDeclarations();
-        try {
-            fd = compiledDecls.getFormat().resolveFunction(expr, env);
-        } catch (AlgebricksException e) {
-            throw new AlgebricksException(e);
-        }
+        IFunctionDescriptor fd = getFunctionDescriptor(expr, env, context);
+
         switch (fd.getFunctionDescriptorTag()) {
-            case SCALAR: {
-                throw new AlgebricksException(
-                        "Trying to create an aggregate from a scalar evaluator function descriptor. (fi="
-                                + expr.getFunctionIdentifier() + ")");
-            }
             case AGGREGATE: {
                 if (AsterixBuiltinFunctions.isAggregateFunctionSerializable(fd.getIdentifier())) {
                     AggregateFunctionCallExpression serialAggExpr = AsterixBuiltinFunctions
                             .makeSerializableAggregateFunctionExpression(fd.getIdentifier(), expr.getArguments());
-                    ISerializableAggregateFunctionDynamicDescriptor afdd = (ISerializableAggregateFunctionDynamicDescriptor) compiledDecls
-                            .getFormat().resolveFunction(serialAggExpr, env);
-                    return afdd.createAggregateFunctionFactory(args);
+                    IFunctionDescriptor afdd = getFunctionDescriptor(serialAggExpr, env, context);
+                    return afdd.createSerializableAggregateFunctionFactory(args);
                 } else {
                     throw new AlgebricksException(
                             "Trying to create a serializable aggregate from a non-serializable aggregate function descriptor. (fi="
@@ -278,22 +171,23 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
                 }
             }
             case SERIALAGGREGATE: {
-                ISerializableAggregateFunctionDynamicDescriptor afdd = (ISerializableAggregateFunctionDynamicDescriptor) fd;
-                return afdd.createAggregateFunctionFactory(args);
-            }
-            case RUNNINGAGGREGATE: {
-                throw new AlgebricksException(
-                        "Trying to create an aggregate from a running aggregate function descriptor.");
-            }
-            case UNNEST: {
-                throw new AlgebricksException(
-                        "Trying to create an aggregate from an unnesting aggregate function descriptor.");
+                return fd.createSerializableAggregateFunctionFactory(args);
             }
 
-            default: {
-                throw new IllegalStateException();
-            }
+            default:
+                throw new IllegalStateException("Invalid function descriptor " + fd.getFunctionDescriptorTag()
+                        + " expected " + FunctionDescriptorTag.SERIALAGGREGATE + " or "
+                        + FunctionDescriptorTag.AGGREGATE);
         }
+    }
+
+    private IFunctionDescriptor getFunctionDescriptor(AbstractFunctionCallExpression expr,
+            IVariableTypeEnvironment env, JobGenContext context) throws AlgebricksException {
+        IFunctionDescriptor fd;
+        AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
+        AqlCompiledMetadataDeclarations compiledDecls = mp.getMetadataDeclarations();
+        fd = compiledDecls.getFormat().resolveFunction(expr, env);
+        return fd;
     }
 
 }

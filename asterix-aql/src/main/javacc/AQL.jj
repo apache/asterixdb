@@ -598,7 +598,7 @@ DatasetDecl DatasetDeclaration(DatasetType datasetType) throws ParseException :
     	itemTypeName = new Identifier(token.image);
   	}
   	< RIGHTPAREN >
-  )?
+  )
   {
   	  if(datasetType == DatasetType.INTERNAL) {
       	idd = InternalDatasetDeclaration();
@@ -860,6 +860,7 @@ TypeDecl TypeDeclaration(boolean dgen, String hint) throws ParseException:
   )?
   "as"
   ( typeExpr = TypeExpr() )
+  (";")?
   {
     long numValues = -1;
     String filename = null;
@@ -1143,11 +1144,12 @@ Query Query()throws ParseException:
 }
 {
     expr = Expression()
-
+    (";")?
     {
       query.setBody(expr);
       return query;
     }
+     
 }
 
 
