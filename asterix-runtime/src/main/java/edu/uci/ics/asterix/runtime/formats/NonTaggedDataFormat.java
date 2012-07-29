@@ -41,7 +41,11 @@ import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.scalar.ScalarAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.scalar.ScalarCountAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.scalar.ScalarMaxAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.scalar.ScalarMinAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.scalar.ScalarSumAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableCountAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableGlobalAvgAggregateDescriptor;
@@ -323,6 +327,10 @@ public class NonTaggedDataFormat implements IDataFormat {
 
         // scalar aggregates
         temp.add(ScalarCountAggregateDescriptor.FACTORY);
+        temp.add(ScalarAvgAggregateDescriptor.FACTORY);
+        temp.add(ScalarSumAggregateDescriptor.FACTORY);
+        temp.add(ScalarMaxAggregateDescriptor.FACTORY);
+        temp.add(ScalarMinAggregateDescriptor.FACTORY);
         
         // new functions - constructors
         temp.add(ABooleanConstructorDescriptor.FACTORY);

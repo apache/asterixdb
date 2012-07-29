@@ -5,12 +5,12 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SingleFieldFrameTupleReference implements IFrameTupleReference {
 
-    private byte[] fildData;
+    private byte[] fieldData;
     private int start;
     private int length;
     
-    public void reset(byte[] fildData, int start, int length) {
-        this.fildData = fildData;
+    public void reset(byte[] fieldData, int start, int length) {
+        this.fieldData = fieldData;
         this.start = start;
         this.length = length;
     }
@@ -22,7 +22,7 @@ public class SingleFieldFrameTupleReference implements IFrameTupleReference {
 
     @Override
     public byte[] getFieldData(int fIdx) {
-        return fildData;
+        return fieldData;
     }
 
     @Override
