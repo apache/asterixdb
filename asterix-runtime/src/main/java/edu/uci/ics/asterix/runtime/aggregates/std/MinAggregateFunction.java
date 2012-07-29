@@ -8,12 +8,14 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeseria
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AMutableDouble;
 import edu.uci.ics.asterix.om.base.AMutableFloat;
 import edu.uci.ics.asterix.om.base.AMutableInt16;
 import edu.uci.ics.asterix.om.base.AMutableInt32;
 import edu.uci.ics.asterix.om.base.AMutableInt64;
+import edu.uci.ics.asterix.om.base.AMutableInt8;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
@@ -34,6 +36,7 @@ public class MinAggregateFunction implements ICopyAggregateFunction {
 	private ICopyEvaluator eval;
 	private boolean metInt8s, metInt16s, metInt32s, metInt64s, metFloats,
 			metDoubles, metNull;
+	private byte byteVal = Byte.MAX_VALUE;
 	private short shortVal = Short.MAX_VALUE;
 	private int intVal = Integer.MAX_VALUE;
 	private long longVal = Long.MAX_VALUE;
@@ -45,6 +48,7 @@ public class MinAggregateFunction implements ICopyAggregateFunction {
 	private AMutableInt64 aInt64 = new AMutableInt64(0);
 	private AMutableInt32 aInt32 = new AMutableInt32(0);
 	private AMutableInt16 aInt16 = new AMutableInt16((short) 0);
+	private AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
 	@SuppressWarnings("rawtypes")
 	private ISerializerDeserializer serde;
 	private final boolean isLocalAgg;
@@ -58,7 +62,8 @@ public class MinAggregateFunction implements ICopyAggregateFunction {
 	
 	@Override
 	public void init() {
-		shortVal = Short.MAX_VALUE;
+	    byteVal = Byte.MAX_VALUE;
+	    shortVal = Short.MAX_VALUE;
 		intVal = Integer.MAX_VALUE;
 		longVal = Long.MAX_VALUE;
 		floatVal = Float.MAX_VALUE;
@@ -83,8 +88,10 @@ public class MinAggregateFunction implements ICopyAggregateFunction {
 			switch (typeTag) {
 			case INT8: {
 				metInt8s = true;
-				throw new NotImplementedException(
-						"no implementation for int8's comparator");
+                byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);
+                if (val < byteVal)
+                    byteVal = val;
+                break;
 			}
 			case INT16: {
 				metInt16s = true;
@@ -92,8 +99,7 @@ public class MinAggregateFunction implements ICopyAggregateFunction {
 						inputVal.getByteArray(), 1);
 				if (val < shortVal)
 					shortVal = val;
-				throw new NotImplementedException(
-						"no implementation for int16's comparator");
+				break;
 			}
 			case INT32: {
 				metInt32s = true;
@@ -182,8 +188,10 @@ public class MinAggregateFunction implements ICopyAggregateFunction {
 				aInt16.setValue(shortVal);
 				serde.serialize(aInt16, out);
 			} else if (metInt8s) {
-				throw new NotImplementedException(
-						"no implementation for int8's comparator");
+			    serde = AqlSerializerDeserializerProvider.INSTANCE
+                        .getSerializerDeserializer(BuiltinType.AINT8);
+                aInt8.setValue(byteVal);
+                serde.serialize(aInt8, out);
 			} else {
                 // Empty stream. For local agg return system null. For global agg return null.
                 if (isLocalAgg) {
