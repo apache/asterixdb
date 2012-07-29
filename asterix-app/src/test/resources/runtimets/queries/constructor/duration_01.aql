@@ -4,13 +4,17 @@ use dataverse test;
 
 write output to nc1:"rttest/constructor_duration_01.adm";
 
-let $c1 := duration("D30Y10M25DT13H12M50S")
-let $c2 := duration("D25DT13H12M50S")
-let $c3 := duration("DT13H12M50S")
-let $c4 := duration("D30YT12MS")
-let $c5 := duration("DT13H")
-let $c6 := duration("-D30Y10M25DT13H12M50S")
-let $c7 := duration("-D25DT13H12M50S")
-let $c8 := duration("-DT13H50S")
-return {"duration1": $c1, "duration2": $c2, "duration3": $c3, "duration4": $c4, "duration5": $c5, "duration6": $c6, "duration7": $c7, "duration8": $c8}
+let $c1 := duration("P30Y10M25DT13H12M50S")
+let $c2 := duration("P25DT13H12M50S")
+let $c3 := duration("PT13H12M50S")
+let $c4 := duration("P30YT12MS")
+let $c5 := duration("PT13H")
+let $c6 := duration("-P30Y10M25DT13H12M50S")
+let $c7 := duration("-P25DT13H12M50S")
+let $c8 := duration("-PT13H50S")
+let $c9 := duration("P120D")
+let $c10 := duration("-P28M")
+let $c11 := duration("PT29M90.937S")
+let $c12 := duration("P300Y15M60DT300H98M482.435S")
+return {"duration1": $c1, "duration2": $c2, "duration3": $c3, "duration4": $c4, "duration5": $c5, "duration6": $c6, "duration7": $c7, "duration8": $c8, "duration9": $c9, "duration10": $c10, "duration11": $c11, "duration12": $c12}
 
