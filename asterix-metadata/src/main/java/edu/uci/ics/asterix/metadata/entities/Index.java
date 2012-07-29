@@ -123,4 +123,27 @@ public class Index implements Serializable {
         }
         throw new AlgebricksException("Could not find field " + expr + " in the schema.");
     }
+    
+    @Override
+    public int hashCode() {
+    	return indexName.hashCode() ^ datasetName.hashCode() ^ dataverseName.hashCode();
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+    	if (!(other instanceof Index)) {
+    		return false;
+    	}
+    	Index otherIndex = (Index) other;
+    	if (!indexName.equals(otherIndex.getIndexName())) {
+    		return false;
+    	}
+    	if (!datasetName.equals(otherIndex.getDatasetName())) {
+    		return false;
+    	}
+    	if (!dataverseName.equals(otherIndex.getDataverseName())) {
+    		return false;
+    	}
+    	return true;
+    }
 }

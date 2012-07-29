@@ -1,6 +1,7 @@
 package edu.uci.ics.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -116,6 +117,9 @@ public class BTreeAccessMethod implements IAccessMethod {
         // If we can't figure out how to integrate a certain funcExpr into the current predicate, we just bail by setting this flag.
         boolean couldntFigureOut = false;
         boolean doneWithExprs = false;
+        // TODO: For now don't consider prefix searches.
+        BitSet setLowKeys = new BitSet(numSecondaryKeys);
+        BitSet setHighKeys = new BitSet(numSecondaryKeys);
         // Go through the func exprs listed as optimizable by the chosen index, 
         // and formulate a range predicate on the secondary-index keys.
         for (Integer exprIndex : exprList) {
@@ -132,11 +136,17 @@ public class BTreeAccessMethod implements IAccessMethod {
                         lowKeyLimits[keyPos] = highKeyLimits[keyPos] = limit;
                         lowKeyInclusive[keyPos] = highKeyInclusive[keyPos] = true;
                         lowKeyConstants[keyPos] = highKeyConstants[keyPos] = optFuncExpr.getConstantVal(0);
+                        setLowKeys.set(keyPos);
+                        setHighKeys.set(keyPos);
                     } else {
                         couldntFigureOut = true;
                     }
-                    // Mmmm, we would need an inference system here.
-                    doneWithExprs = true;
+                    // TODO: For now don't consider prefix searches.
+                    // If high and low keys are set, we exit for now.
+                    if (setLowKeys.cardinality() == numSecondaryKeys
+                            && setHighKeys.cardinality() == numSecondaryKeys) {
+                    	doneWithExprs = true;
+                    }             
                     break;
                 }
                 case HIGH_EXCLUSIVE: {
