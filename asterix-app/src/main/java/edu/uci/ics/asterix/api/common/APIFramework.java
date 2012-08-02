@@ -469,30 +469,36 @@ public class APIFramework {
         ICompiler compiler = compilerFactory.createCompiler(planAndMetadata.getPlan(),
                 planAndMetadata.getMetadataProvider(), t.getVarCounter());
         if (pc.isOptimize()) {
-        	compiler.optimize();
+        	compiler.optimize();        	
         	if (pc.isPrintOptimizedLogicalPlanParam()) {
-        		switch (pdf) {
-        		case HTML: {
-        			out.println("<H1>Optimized logical plan:</H1>");
-        			out.println("<PRE>");
-        			break;
-        		}
-        		case TEXT: {
-        			out.println("----------Optimized plan ");
-        			break;
-        		}
-        		}
-
-        		if (q != null) {
+        		if (pc.isPrintPhysicalOpsOnly()) {
+        			// For Optimizer tests.
         			StringBuilder buffer = new StringBuilder();
-        			PlanPrettyPrinter.printPlan(planAndMetadata.getPlan(), buffer, pvisitor, 0);
+        			PlanPrettyPrinter.printPhysicalOps(planAndMetadata.getPlan(), buffer, 0);
         			out.print(buffer);
-        		}
-        		switch (pdf) {
-        		case HTML: {
-        			out.println("</PRE>");
-        			break;
-        		}
+        		} else {
+        			switch (pdf) {
+        			case HTML: {
+        				out.println("<H1>Optimized logical plan:</H1>");
+        				out.println("<PRE>");
+        				break;
+        			}
+        			case TEXT: {
+        				out.println("----------Optimized plan ");
+        				break;
+        			}
+        			}
+        			if (q != null) {
+        				StringBuilder buffer = new StringBuilder();
+        				PlanPrettyPrinter.printPlan(planAndMetadata.getPlan(), buffer, pvisitor, 0);
+        				out.print(buffer);
+        			}
+        			switch (pdf) {
+        			case HTML: {
+        				out.println("</PRE>");
+        				break;
+        			}
+        			}
         		}
         	}
         }
