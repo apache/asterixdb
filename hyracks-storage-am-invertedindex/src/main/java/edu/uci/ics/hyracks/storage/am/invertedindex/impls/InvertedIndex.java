@@ -471,4 +471,9 @@ public class InvertedIndex implements IIndex {
             throw new IndexException(e);
         }
     }
+
+    @Override
+    public void validate() throws HyracksDataException {
+        throw new UnsupportedOperationException("Validation not implemented for Inverted Indexes.");
+    }
 }

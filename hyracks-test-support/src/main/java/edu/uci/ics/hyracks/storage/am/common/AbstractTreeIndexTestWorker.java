@@ -27,7 +27,7 @@ import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleBatch;
 
 public abstract class AbstractTreeIndexTestWorker extends Thread implements ITreeIndexTestWorker {
-    private Random rnd = new Random();
+    private final Random rnd;
     private final DataGenThread dataGen;
     private final TestOperationSelector opSelector;
     private final int numBatches;
@@ -39,7 +39,8 @@ public abstract class AbstractTreeIndexTestWorker extends Thread implements ITre
         this.dataGen = dataGen;
         this.opSelector = opSelector;
         this.numBatches = numBatches;
-        indexAccessor = index.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
+        this.rnd = new Random();
+        this.indexAccessor = index.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
     }
 
     @Override

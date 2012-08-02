@@ -61,10 +61,6 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
         return leafFrameFactory;
     }
 
-    public MultiComparator getCmp() {
-        return cmp;
-    }
-
     @Override
     public ICachedPage getPage() {
         return null;

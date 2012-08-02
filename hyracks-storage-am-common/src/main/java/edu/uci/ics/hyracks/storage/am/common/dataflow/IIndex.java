@@ -115,6 +115,15 @@ public interface IIndex {
     public IIndexBulkLoader createBulkLoader(float fillFactor) throws IndexException;
 
     /**
+     * Ensures that all pages (and tuples) of the index are logically consistent.
+     * An assertion error is thrown if validation fails.
+     * 
+     * @throws HyracksDataException
+     *          if there is an error performing validation
+     */
+    public void validate() throws HyracksDataException;
+
+    /**
      * @return the {@link IBufferCache} underlying this index.
      */
     public IBufferCache getBufferCache();

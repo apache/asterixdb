@@ -127,6 +127,7 @@ public abstract class OrderedIndexExamplesTest {
 
         rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
 
+        treeIndex.validate();
         treeIndex.deactivate();
         treeIndex.destroy();
     }
@@ -208,6 +209,7 @@ public abstract class OrderedIndexExamplesTest {
         // Prefix-Range search in [-3, 3]
         rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
 
+        treeIndex.validate();
         treeIndex.deactivate();
         treeIndex.destroy();
     }
@@ -258,7 +260,7 @@ public abstract class OrderedIndexExamplesTest {
             TupleUtils.createTuple(tb, tuple, fieldSerdes, f0, f1);
             if (LOGGER.isLoggable(Level.INFO)) {
                 if (i % 1000 == 0) {
-                    LOGGER.info("Inserting " + f0 + " " + f1);
+                    LOGGER.info("Inserting[" + i + "] " + f0 + " " + f1);
                 }
             }
             try {
@@ -286,6 +288,7 @@ public abstract class OrderedIndexExamplesTest {
 
         rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
 
+        treeIndex.validate();
         treeIndex.deactivate();
         treeIndex.destroy();
     }
@@ -387,6 +390,7 @@ public abstract class OrderedIndexExamplesTest {
                 break;
             }
         }
+        treeIndex.validate();
         treeIndex.deactivate();
         treeIndex.destroy();
     }
@@ -473,6 +477,7 @@ public abstract class OrderedIndexExamplesTest {
             // Do another scan after a round of updates.
             orderedScan(indexAccessor, fieldSerdes);
         }
+        treeIndex.validate();
         treeIndex.deactivate();
         treeIndex.destroy();
     }
@@ -542,6 +547,7 @@ public abstract class OrderedIndexExamplesTest {
         // Prefix-Range search in [44444, 44500]
         rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
 
+        treeIndex.validate();
         treeIndex.deactivate();
         treeIndex.destroy();
     }

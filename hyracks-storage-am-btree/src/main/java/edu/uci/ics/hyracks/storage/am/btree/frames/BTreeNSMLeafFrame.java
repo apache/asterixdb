@@ -17,10 +17,12 @@ package edu.uci.ics.hyracks.storage.am.btree.frames;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext.PageValidationInfo;
 import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
@@ -36,8 +38,11 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
 
     private MultiComparator cmp;
 
+    private final ITreeIndexTupleReference previousFt;
+
     public BTreeNSMLeafFrame(ITreeIndexTupleWriter tupleWriter) {
         super(tupleWriter, new OrderedSlotManager());
+        previousFt = tupleWriter.createTupleReference();
     }
 
     @Override
@@ -224,5 +229,24 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     @Override
     public void setMultiComparator(MultiComparator cmp) {
         this.cmp = cmp;
+    }
+
+    public void validate(PageValidationInfo pvi) throws HyracksDataException {
+        int tupleCount = getTupleCount();
+        for (int i = 0; i < tupleCount; i++) {
+            frameTuple.resetByTupleIndex(this, i);
+            if (!pvi.isLowRangeNull) {
+                assert cmp.compare(pvi.lowRangeTuple, frameTuple) < 0;
+            }
+
+            if (!pvi.isHighRangeNull) {
+                assert cmp.compare(pvi.highRangeTuple, frameTuple) >= 0;
+            }
+
+            if (i > 0) {
+                previousFt.resetByTupleIndex(this, i - 1);
+                assert cmp.compare(previousFt, frameTuple) < 0;
+            }
+        }
     }
 }

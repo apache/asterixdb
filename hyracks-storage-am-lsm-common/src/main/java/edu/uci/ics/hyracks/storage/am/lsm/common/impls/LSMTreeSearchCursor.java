@@ -20,9 +20,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
-import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
@@ -30,17 +27,14 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
+    protected PriorityQueueElement outputElement;
     protected ITreeIndexCursor[] rangeCursors;
     protected PriorityQueue<PriorityQueueElement> outputPriorityQueue;
     protected MultiComparator cmp;
-
-    protected PriorityQueueElement outputElement;
-    protected PriorityQueueElement reusedElement;
     protected boolean needPush;
     protected boolean includeMemComponent;
     protected AtomicInteger searcherRefCount;
     protected LSMHarness lsmHarness;
-    protected ISearchOperationCallback searchCallback;
 
     public LSMTreeSearchCursor() {
         outputElement = null;
@@ -123,12 +117,16 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
         return (ITupleReference) outputElement.getTuple();
     }
 
-    protected void pushIntoPriorityQueue(int cursorIndex) throws HyracksDataException {
+    protected boolean pushIntoPriorityQueue(PriorityQueueElement e) throws HyracksDataException {
+        int cursorIndex = e.getCursorIndex();
         if (rangeCursors[cursorIndex].hasNext()) {
             rangeCursors[cursorIndex].next();
-            reusedElement.reset(rangeCursors[cursorIndex].getTuple(), cursorIndex);
-            outputPriorityQueue.offer(reusedElement);
+            e.reset(rangeCursors[cursorIndex].getTuple());
+            outputPriorityQueue.offer(e);
+            return true;
         }
+        rangeCursors[cursorIndex].close();
+        return false;
     }
 
     protected abstract int compare(MultiComparator cmp, ITupleReference tupleA, ITupleReference tupleB);
@@ -159,15 +157,13 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
                         // the tree of head tuple
 
                         // the head element of PQ is useless now
-                        reusedElement = outputPriorityQueue.poll();
-                        // int treeNum = reusedElement.getTreeNum();
-                        pushIntoPriorityQueue(reusedElement.getCursorIndex());
+                        PriorityQueueElement e = outputPriorityQueue.poll();
+                        pushIntoPriorityQueue(e);
                     } else {
                         // If the previous tuple and the head tuple are different
                         // the info of previous tuple is useless
                         if (needPush == true) {
-                            reusedElement = outputElement;
-                            pushIntoPriorityQueue(outputElement.getCursorIndex());
+                            pushIntoPriorityQueue(outputElement);
                             needPush = false;
                         }
                         outputElement = null;
@@ -175,8 +171,7 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
                 }
             } else {
                 // the priority queue is empty and needPush
-                reusedElement = outputElement;
-                pushIntoPriorityQueue(outputElement.getCursorIndex());
+                pushIntoPriorityQueue(outputElement);
                 needPush = false;
                 outputElement = null;
             }
@@ -190,10 +185,11 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
 
     public class PriorityQueueElement {
         private ITupleReference tuple;
-        private int cursorIndex;
+        private final int cursorIndex;
 
-        public PriorityQueueElement(ITupleReference tuple, int cursorIndex) {
-            reset(tuple, cursorIndex);
+        public PriorityQueueElement(int cursorIndex) {
+            tuple = null;
+            this.cursorIndex = cursorIndex;
         }
 
         public ITupleReference getTuple() {
@@ -204,14 +200,8 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
             return cursorIndex;
         }
 
-        public void reset(ITupleReference tuple, int cursorIndex) {
+        public void reset(ITupleReference tuple) {
             this.tuple = tuple;
-            this.cursorIndex = cursorIndex;
         }
-    }
-
-    @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
-        searchCallback = initialState.getSearchOperationCallback();
     }
 }

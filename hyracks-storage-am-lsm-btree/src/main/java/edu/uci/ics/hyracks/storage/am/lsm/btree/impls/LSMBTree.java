@@ -328,8 +328,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         int numDiskBTrees = diskComponents.size();
         int numBTrees = (includeMemComponent) ? numDiskBTrees + 1 : numDiskBTrees;
         LSMBTreeCursorInitialState initialState = new LSMBTreeCursorInitialState(numBTrees, insertLeafFrameFactory,
-                ctx.cmp, includeMemComponent, searcherRefCount, lsmHarness, memBTree.createAccessor(
-                        NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE), pred, ctx.searchCallback);
+                ctx.cmp, includeMemComponent, searcherRefCount, lsmHarness, ctx.memBTreeAccessor, pred,
+                ctx.searchCallback);
         lsmTreeCursor.open(initialState, pred);
 
         int cursorIx;
@@ -571,5 +571,14 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
 
     public boolean isEmptyIndex() throws HyracksDataException {
         return diskBTrees.isEmpty() && memBTree.isEmptyTree(memBTree.getInteriorFrameFactory().createFrame());
+    }
+
+    @Override
+    public void validate() throws HyracksDataException {
+        memBTree.validate();
+        for (Object o : diskBTrees) {
+            BTree btree = (BTree) o;
+            btree.validate();
+        }
     }
 }

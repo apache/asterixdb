@@ -135,6 +135,7 @@ public class InMemoryBufferCache implements IBufferCacheInternal {
         for (int i = 0; i < numPages; ++i) {
             pages[i] = null;
         }
+        overflowPages.clear();
     }
 
     public class CachedPage implements ICachedPageInternal {

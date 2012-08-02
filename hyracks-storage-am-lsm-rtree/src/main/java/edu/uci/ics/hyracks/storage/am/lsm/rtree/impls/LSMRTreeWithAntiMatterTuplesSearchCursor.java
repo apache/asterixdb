@@ -49,12 +49,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMTreeSearchCurso
         int pqInitSize = (rangeCursors.length > 0) ? rangeCursors.length : 1;
         outputPriorityQueue = new PriorityQueue<PriorityQueueElement>(pqInitSize, pqCmp);
         for (int i = 0; i < rangeCursors.length; i++) {
-            PriorityQueueElement element;
-            if (rangeCursors[i].hasNext()) {
-                rangeCursors[i].next();
-                element = new PriorityQueueElement(rangeCursors[i].getTuple(), i);
-                outputPriorityQueue.offer(element);
-            }
+            pushIntoPriorityQueue(new PriorityQueueElement(i));
         }
         checkPriorityQueue();
     }
@@ -136,7 +131,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMTreeSearchCurso
         }
 
     }
-    
+
     @Override
     public void reset() throws HyracksDataException {
         if (includeMemComponent) {

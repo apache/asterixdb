@@ -397,4 +397,8 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
                 && memComponent.btree.isEmptyTree(memComponent.btree.getInteriorFrameFactory().createFrame())
                 && memComponent.rtree.isEmptyTree(memComponent.rtree.getInteriorFrameFactory().createFrame());
     }
+
+    public void validate() throws HyracksDataException {
+        throw new UnsupportedOperationException("Validation not implemented for LSM R-Trees.");
+    }
 }

@@ -16,14 +16,18 @@
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -46,9 +50,12 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     private int tupleIndex = 0;
     private int stopTupleIndex;
 
+    private final RangePredicate reusablePredicate;
+    private final ArrayTupleReference reconciliationTuple;
+    private IIndexAccessor accessor;
     private ISearchOperationCallback searchCb;
-    private ITupleReference reconciliationTuple;
     private MultiComparator originalKeyCmp;
+    private ArrayTupleBuilder tupleBuilder;
 
     private FindTupleMode lowKeyFtm;
     private FindTupleMode highKeyFtm;
@@ -65,6 +72,8 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         this.frame = frame;
         this.frameTuple = frame.createTupleReference();
         this.exclusiveLatchNodes = exclusiveLatchNodes;
+        this.reusablePredicate = new RangePredicate();
+        this.reconciliationTuple = new ArrayTupleReference();
     }
 
     @Override
@@ -136,16 +145,21 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
             }
         }
 
+        if (tupleIndex > stopTupleIndex) {
+            return false;
+        }
+
         frameTuple.resetByTupleIndex(frame, tupleIndex);
         while (true) {
             if (searchCb.proceed(frameTuple)) {
-                if (highKey == null || tupleIndex <= stopTupleIndex) {
-                    return true;
-                }
-                return false;
+                return true;
             } else {
                 // copy the tuple before we unlatch/unpin
-                reconciliationTuple = TupleUtils.copyTuple(frameTuple);
+                if (tupleBuilder == null) {
+                    tupleBuilder = new ArrayTupleBuilder(originalKeyCmp.getKeyFieldCount());
+                }
+                TupleUtils.copyTuple(tupleBuilder, frameTuple, originalKeyCmp.getKeyFieldCount());
+                reconciliationTuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
 
                 // unlatch/unpin
                 if (exclusiveLatchNodes) {
@@ -154,53 +168,27 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
                     page.releaseReadLatch();
                 }
                 bufferCache.unpin(page);
+                page = null;
 
                 // reconcile
                 searchCb.reconcile(reconciliationTuple);
 
-                // relatch/repin
-                page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-                if (exclusiveLatchNodes) {
-                    page.acquireWriteLatch();
-                } else {
-                    page.acquireReadLatch();
+                // retraverse the index looking for the reconciled key
+                reusablePredicate.setLowKey(reconciliationTuple, true);
+                try {
+                    accessor.search(this, reusablePredicate);
+                } catch (IndexException e) {
+                    throw new HyracksDataException(e);
                 }
-                frame.setPage(page);
 
-                // validate the tuple or continue the search if the tuple is invalidated
-                while (true) {
-                    tupleIndex = frame.findTupleIndex(reconciliationTuple, frameTuple, originalKeyCmp,
-                            FindTupleMode.INCLUSIVE, FindTupleNoExactMatchPolicy.HIGHER_KEY);
-
-                    if (tupleIndex >= frame.getTupleCount()
-                            || tupleIndex == frame.getSlotManager().getGreatestKeyIndicator()) {
-                        nextLeafPage = frame.getNextLeaf();
-                        if (nextLeafPage < 0) {
-                            return false;
-                        }
-                        fetchNextLeafPage(nextLeafPage);
-                        continue;
-                    }
-                    break;
-                }
-                stopTupleIndex = getHighKeyIndex();
-                if (stopTupleIndex < 0) {
+                if (stopTupleIndex < 0 || tupleIndex > stopTupleIndex) {
                     return false;
                 }
 
+                // see if we found the tuple we reconciled on
                 frameTuple.resetByTupleIndex(frame, tupleIndex);
-
-                // see if we found the tuple we were looking for
                 if (originalKeyCmp.compare(reconciliationTuple, frameTuple) == 0) {
-                    if (highKey == null || tupleIndex <= stopTupleIndex) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-
-                } else { // otherwise do the opCallback dance again with the new tuple we found
-                    reconciliationTuple = null;
-                    continue;
+                    return true;
                 }
             }
         }
@@ -256,6 +244,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
             }
             bufferCache.unpin(page);
         }
+        accessor = ((BTreeCursorInitialState) initialState).getAccessor();
         searchCb = initialState.getSearchOperationCallback();
         originalKeyCmp = initialState.getOriginalKeyComparator();
         pageId = ((BTreeCursorInitialState) initialState).getPageId();
@@ -267,6 +256,10 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         highKeyCmp = pred.getHighKeyComparator();
         lowKey = pred.getLowKey();
         highKey = pred.getHighKey();
+
+        reusablePredicate.setLowKeyComparator(originalKeyCmp);
+        reusablePredicate.setHighKeyComparator(pred.getHighKeyComparator());
+        reusablePredicate.setHighKey(pred.getHighKey(), pred.isHighKeyInclusive());
 
         lowKeyFtm = FindTupleMode.EXCLUSIVE;
         if (pred.lowKeyInclusive) {

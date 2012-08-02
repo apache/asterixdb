@@ -97,6 +97,7 @@ public abstract class OrderedIndexMultiThreadTest {
                 conf.ops, conf.opProbs);
         driver.init(getFileReference());
         long[] times = driver.run(numThreads, 1, NUM_OPERATIONS, batchSize);
+        index.validate();
         driver.deinit();
 
         if (LOGGER.isLoggable(Level.INFO)) {

@@ -62,6 +62,7 @@ public abstract class OrderedIndexUpsertTest extends OrderedIndexTestDriver {
         if (prefixLowKey != null && prefixHighKey != null) {
             orderedIndexTestUtils.checkRangeSearch(ctx, prefixLowKey, prefixHighKey, true, true);
         }
+        ctx.getIndex().validate();
         ctx.getIndex().deactivate();
         ctx.getIndex().destroy();
     }

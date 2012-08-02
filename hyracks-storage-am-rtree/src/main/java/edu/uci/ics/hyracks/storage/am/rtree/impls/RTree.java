@@ -969,4 +969,9 @@ public class RTree extends AbstractTreeIndex {
             leafFrame.setPage(nodeFrontiers.get(0).page);
         }
     }
+
+    @Override
+    public void validate() throws HyracksDataException {
+        throw new UnsupportedOperationException("Validation not implemented for R-Trees.");
+    }
 }

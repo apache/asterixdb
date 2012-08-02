@@ -63,6 +63,10 @@ public abstract class OrderedIndexUpdateTest extends OrderedIndexTestDriver {
                 orderedIndexTestUtils.checkRangeSearch(ctx, prefixLowKey, prefixHighKey, true, true);
             }
         }
+
+        ctx.getIndex().validate();
+        ctx.getIndex().deactivate();
+        ctx.getIndex().destroy();
     }
 
     @Override

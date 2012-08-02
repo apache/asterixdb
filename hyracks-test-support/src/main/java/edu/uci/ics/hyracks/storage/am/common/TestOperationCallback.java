@@ -18,13 +18,8 @@ public enum TestOperationCallback implements ISearchOperationCallback, IModifica
 
     @Override
     public boolean proceed(ITupleReference tuple) {
-        // Fail ~10% of the time
-        int i = random.nextInt(100);
-        if (i < 10) {
-            return false;
-        } else {
-            return true;
-        }
+        // Always fail
+        return false;
     }
 
     @Override

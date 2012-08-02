@@ -1,6 +1,7 @@
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -12,9 +13,16 @@ public class BTreeCursorInitialState implements ICursorInitialState {
     private ICachedPage page;
     private ISearchOperationCallback searchCallback;
     private MultiComparator originalKeyCmp;
+    private final IIndexAccessor accessor;
 
-    public BTreeCursorInitialState(ICachedPage page, ISearchOperationCallback searchCallback) {
+    public BTreeCursorInitialState(ICachedPage page, ISearchOperationCallback searchCallback, IIndexAccessor accessor) {
         this.page = page;
+        this.searchCallback = searchCallback;
+        this.accessor = accessor;
+    }
+    
+    public IIndexAccessor getAccessor() {
+        return accessor;
     }
 
     public ICachedPage getPage() {

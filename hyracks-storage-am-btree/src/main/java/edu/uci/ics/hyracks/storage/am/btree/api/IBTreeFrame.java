@@ -15,7 +15,9 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.api;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext.PageValidationInfo;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 
@@ -29,4 +31,6 @@ public interface IBTreeFrame extends ITreeIndexFrame {
     public void setSmFlag(boolean smFlag);
 
     public boolean getSmFlag();
+
+    public void validate(PageValidationInfo pvi) throws HyracksDataException;
 }

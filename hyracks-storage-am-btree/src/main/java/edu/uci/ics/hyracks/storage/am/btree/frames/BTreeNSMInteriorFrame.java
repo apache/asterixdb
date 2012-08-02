@@ -19,9 +19,11 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext.PageValidationInfo;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
@@ -41,12 +43,14 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     private static final int childPtrSize = 4;
 
     private final ITreeIndexTupleReference cmpFrameTuple;
+    private final ITreeIndexTupleReference previousFt;
 
     private MultiComparator cmp;
 
     public BTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter) {
         super(tupleWriter, new OrderedSlotManager());
         cmpFrameTuple = tupleWriter.createTupleReference();
+        previousFt = tupleWriter.createTupleReference();
     }
 
     @Override
@@ -267,7 +271,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     }
 
     @Override
-    public int getChildPageId(RangePredicate pred) {
+    public int getChildPageId(RangePredicate pred) throws HyracksDataException {
         // Trivial case where there is only a child pointer (and no key).
         if (buf.getInt(tupleCountOff) == 0) {
             return buf.getInt(rightLeafOff);
@@ -318,6 +322,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         slotOff -= slotManager.getSlotSize();
         frameTuple.resetByTupleOffset(buf, slotManager.getTupleOff(slotOff));
         int childPageOff = getLeftChildPageOff(frameTuple);
+
         return buf.getInt(childPageOff);
     }
 
@@ -373,6 +378,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         this.cmp = cmp;
         cmpFrameTuple.setFieldCount(cmp.getKeyFieldCount());
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
+        previousFt.setFieldCount(cmp.getKeyFieldCount());
     }
 
     @Override
@@ -402,5 +408,24 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
                 ret.add(buf.getInt(rightLeafOff));
         }
         return ret;
+    }
+
+    public void validate(PageValidationInfo pvi) throws HyracksDataException {
+        int tupleCount = getTupleCount();
+        for (int i = 0; i < tupleCount; i++) {
+            frameTuple.resetByTupleIndex(this, i);
+            if (!pvi.isLowRangeNull) {
+                assert cmp.compare(pvi.lowRangeTuple, frameTuple) < 0;
+            }
+
+            if (!pvi.isHighRangeNull) {
+                assert cmp.compare(pvi.highRangeTuple, frameTuple) >= 0;
+            }
+
+            if (i > 0) {
+                previousFt.resetByTupleIndex(this, i - 1);
+                assert cmp.compare(previousFt, frameTuple) < 0;
+            }
+        }
     }
 }

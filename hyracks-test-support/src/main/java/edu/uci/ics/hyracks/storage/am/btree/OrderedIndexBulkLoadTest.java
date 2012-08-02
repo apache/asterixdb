@@ -57,6 +57,8 @@ public abstract class OrderedIndexBulkLoadTest extends OrderedIndexTestDriver {
                 orderedIndexTestUtils.checkRangeSearch(ctx, prefixLowKey, prefixHighKey, true, true);
             }
         }
+
+        ctx.getIndex().validate();
         ctx.getIndex().deactivate();
         ctx.getIndex().destroy();
     }
