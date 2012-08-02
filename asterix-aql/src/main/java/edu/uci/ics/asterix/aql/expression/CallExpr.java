@@ -2,17 +2,18 @@ package edu.uci.ics.asterix.aql.expression;
 
 import java.util.List;
 
+import edu.uci.ics.asterix.aql.base.AbstractExpression;
 import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.functions.AsterixFunction;
 
-public class CallExpr implements Expression {
+public class CallExpr extends AbstractExpression {
     private AsterixFunction ident;
     private List<Expression> exprList;
-    private boolean isBuiltin;
-
+    private boolean isBuiltin;    
+    
     public CallExpr() {
     }
 
@@ -32,7 +33,7 @@ public class CallExpr implements Expression {
     public List<Expression> getExprList() {
         return exprList;
     }
-
+          
     public void setExprList(List<Expression> exprList) {
         this.exprList = exprList;
     }
