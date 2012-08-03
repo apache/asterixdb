@@ -9,6 +9,7 @@ import java.util.Set;
 import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.dataflow.data.common.AqlNullableTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ABooleanTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ACircleTypeComputer;
@@ -530,7 +531,7 @@ public class AsterixBuiltinFunctions {
 
         add(STRING_TO_CODEPOINT, OrderedListOfAInt32TypeComputer.INSTANCE);
         add(CODEPOINT_TO_STRING, AStringTypeComputer.INSTANCE);
-        add(STRING_CONCAT, AStringTypeComputer.INSTANCE);
+        add(STRING_CONCAT, OptionalAStringTypeComputer.INSTANCE);        
         add(SUBSTRING2, Substring2TypeComputer.INSTANCE);
         add(STRING_LENGTH, UnaryStringInt32OrNullTypeComputer.INSTANCE);
         add(STRING_LOWERCASE, UnaryStringOrNullTypeComputer.INSTANCE);
