@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
@@ -89,7 +90,8 @@ public final class LSMBTreeOpContext implements IIndexOpContext {
 
     private void setMemBTreeAccessor() {
         if (memBTreeAccessor == null) {
-            memBTreeAccessor = (BTree.BTreeAccessor) memBTree.createAccessor(modificationCallback, searchCallback);
+            memBTreeAccessor = (BTree.BTreeAccessor) memBTree.createAccessor(modificationCallback,
+                    NoOpOperationCallback.INSTANCE);
             memBTreeOpCtx = memBTreeAccessor.getOpContext();
         }
     }

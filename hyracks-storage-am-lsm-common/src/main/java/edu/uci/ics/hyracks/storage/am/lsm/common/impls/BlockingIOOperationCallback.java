@@ -16,10 +16,6 @@ public class BlockingIOOperationCallback implements ILSMIOOperationCallback {
         if (!notified) {
             this.wait();
         }
-    }
-
-    public synchronized void reset() {
         notified = false;
     }
-
 }

@@ -68,7 +68,7 @@ public class LSMBTreeRangeSearchCursor extends LSMTreeSearchCursor {
             // PQ is empty
             return false;
         }
-        
+
         assert outputElement == null;
 
         if (searchCallback.proceed(pqHead.getTuple())) {
@@ -125,6 +125,7 @@ public class LSMBTreeRangeSearchCursor extends LSMTreeSearchCursor {
             if (!pushIntoPriorityQueue(inMemElement)) {
                 return !outputPriorityQueue.isEmpty();
             }
+            checkPriorityQueue();
         } else {
             searchCallback.reconcile(pqHead.getTuple());
         }
