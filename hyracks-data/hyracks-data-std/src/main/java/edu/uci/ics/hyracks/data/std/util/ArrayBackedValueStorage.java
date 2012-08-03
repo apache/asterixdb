@@ -1,13 +1,13 @@
-package edu.uci.ics.hyracks.dataflow.common.data.accessors;
+package edu.uci.ics.hyracks.data.std.util;
 
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import edu.uci.ics.hyracks.data.std.api.IMutableValueStorage;
 import edu.uci.ics.hyracks.data.std.api.IValueReference;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
 
-public class ArrayBackedValueStorage implements IValueReference, IDataOutputProvider {
+public class ArrayBackedValueStorage implements IMutableValueStorage {
     private final ByteArrayAccessibleOutputStream baaos;
     private final DataOutputStream dos;
 
@@ -16,6 +16,7 @@ public class ArrayBackedValueStorage implements IValueReference, IDataOutputProv
         dos = new DataOutputStream(baaos);
     }
 
+    @Override
     public void reset() {
         baaos.reset();
     }

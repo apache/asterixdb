@@ -6,7 +6,7 @@ import java.io.DataOutputStream;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.algebricks.data.utils.WriteValueTools;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
+import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 
 public class WriteValueTest {
 
