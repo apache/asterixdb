@@ -126,7 +126,7 @@ public class OptimizerTest {
             AsterixJavaClient asterix = new AsterixJavaClient(
                     AsterixHyracksIntegrationUtil.getHyracksClientConnection(), query, plan);
             try {
-                asterix.compile(true, false, false, false, true, true, false);
+                asterix.compile(true, false, false, true, true, true, false);
             } catch (AsterixException e) {
                 plan.close();
                 query.close();

@@ -140,6 +140,8 @@ public class FuzzyEqRule implements IAlgebraicRewriteRule {
             FunctionIdentifier simFunctionIdentifier = FuzzyUtils.getFunctionIdentifier(simFuncName);
             ScalarFunctionCallExpression similarityExp = new ScalarFunctionCallExpression(
                     FunctionUtils.getFunctionInfo(simFunctionIdentifier), similarityArgs);
+            // Add annotations from the original fuzzy-eq function.
+            similarityExp.getAnnotations().putAll(funcExp.getAnnotations());
             ArrayList<Mutable<ILogicalExpression>> cmpArgs = new ArrayList<Mutable<ILogicalExpression>>();
             cmpArgs.add(new MutableObject<ILogicalExpression>(similarityExp));
             IAObject simThreshold = FuzzyUtils.getSimThreshold(aqlMetadata, simFuncName);

@@ -133,12 +133,19 @@ public class GlobalAvgAggregateDescriptor extends AbstractAggregateFunctionDynam
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serBytes[0]));
                             }
                         }
-                        int offset1 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, 0, 1, false);
+                                               
+                        // The record length helps us determine whether the input record fields are nullable.
+                        int recordLength = ARecordSerializerDeserializer.getRecordLength(serBytes, 1);
+                        int nullBitmapSize = 1;
+                        if (recordLength == 29) {
+                            nullBitmapSize = 0;
+                        }
+                        int offset1 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, 0, nullBitmapSize, false);
                         if (offset1 == 0) // the sum is null
                             metNull = true;
                         else
                             globalSum += ADoubleSerializerDeserializer.getDouble(serBytes, offset1);
-                        int offset2 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, 1, 1, false);
+                        int offset2 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, 1, nullBitmapSize, false);
                         if (offset2 != 0) // the count is not null
                             globalCount += AInt32SerializerDeserializer.getInt(serBytes, offset2);
 

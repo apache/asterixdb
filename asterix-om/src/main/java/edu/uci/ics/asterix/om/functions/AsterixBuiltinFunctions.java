@@ -434,7 +434,7 @@ public class AsterixBuiltinFunctions {
 
         // and then, Asterix builtin functions
         add(ANY_COLLECTION_MEMBER, NonTaggedCollectionMemberResultType.INSTANCE);
-        add(AVG, OptionalADoubleTypeComputer.INSTANCE);
+        addPrivateFunction(AVG, OptionalADoubleTypeComputer.INSTANCE);
         add(BOOLEAN_CONSTRUCTOR, UnaryBooleanOrNullFunctionTypeComputer.INSTANCE);
         add(CARET, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
         add(CIRCLE_CONSTRUCTOR, OptionalACircleTypeComputer.INSTANCE);
@@ -456,7 +456,7 @@ public class AsterixBuiltinFunctions {
             }
         });
         add(CONTAINS, ABooleanTypeComputer.INSTANCE);
-        add(COUNT, AInt32TypeComputer.INSTANCE);
+        addPrivateFunction(COUNT, AInt32TypeComputer.INSTANCE);
         add(COUNTHASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         add(COUNTHASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         add(CREATE_CIRCLE, ACircleTypeComputer.INSTANCE);
@@ -491,7 +491,7 @@ public class AsterixBuiltinFunctions {
         add(GET_HANDLE, null); // TODO
         add(GET_ITEM, NonTaggedGetItemResultType.INSTANCE);
         add(GET_DATA, null); // TODO
-        add(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
+        addPrivateFunction(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
         add(GRAM_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE);
         add(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
         add(HASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
@@ -512,7 +512,7 @@ public class AsterixBuiltinFunctions {
         add(LIKE, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
         add(LINE_CONSTRUCTOR, OptionalALineTypeComputer.INSTANCE);
         add(LISTIFY, OrderedListConstructorResultType.INSTANCE);
-        add(LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
+        addPrivateFunction(LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
         add(MAKE_FIELD_INDEX_HANDLE, null); // TODO
         add(MAKE_FIELD_NAME_HANDLE, null); // TODO
         add(MAX, NonTaggedSumTypeComputer.INSTANCE);
@@ -537,7 +537,7 @@ public class AsterixBuiltinFunctions {
 
         add(STRING_TO_CODEPOINT, OrderedListOfAInt32TypeComputer.INSTANCE);
         add(CODEPOINT_TO_STRING, AStringTypeComputer.INSTANCE);
-        add(STRING_CONCAT, AStringTypeComputer.INSTANCE);
+        add(STRING_CONCAT, OptionalAStringTypeComputer.INSTANCE);        
         add(SUBSTRING2, Substring2TypeComputer.INSTANCE);
         add(STRING_LENGTH, UnaryStringInt32OrNullTypeComputer.INSTANCE);
         add(STRING_LOWERCASE, UnaryStringOrNullTypeComputer.INSTANCE);
@@ -625,7 +625,7 @@ public class AsterixBuiltinFunctions {
             }
         });
         add(SUBSTRING, SubstringTypeComputer.INSTANCE);
-        add(SUM, NonTaggedSumTypeComputer.INSTANCE);
+        addPrivateFunction(SUM, NonTaggedSumTypeComputer.INSTANCE);
         add(LOCAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
         add(SWITCH_CASE, NonTaggedSwitchCaseComputer.INSTANCE);
         add(REG_EXP, ABooleanTypeComputer.INSTANCE);
@@ -827,6 +827,13 @@ public class AsterixBuiltinFunctions {
         builtinFunctionsSet.put(functionInfo, functionInfo);
         funTypeComputer.put(functionInfo, typeComputer);
         asterixFunctionIdToInfo.put(fi, functionInfo);
+    }
+
+    private static IFunctionInfo addPrivateFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer) {
+        IFunctionInfo functionInfo = getAsterixFunctionInfo(fi);
+        builtinFunctionsSet.put(functionInfo, functionInfo);
+        funTypeComputer.put(functionInfo, typeComputer);
+        return functionInfo;
     }
 
     private static void addAgg(FunctionIdentifier fi) {

@@ -44,5 +44,5 @@ set simthreshold '0.7f';
 
 for $a in dataset('Customers')
 for $b in dataset('Customers2')
-where $a.interests ~= $b.interests and $a.cid < $b.cid
+where $a.interests /*+ indexnl */ ~= $b.interests and $a.cid < $b.cid
 return {"arec": $a, "brec": $b }

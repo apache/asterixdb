@@ -1,0 +1,15 @@
+/*
+ * Description    : Test concat-string function with nulls in the list which is passed as an argument.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/string_concat_02.adm";
+
+let $a := string-concat([null])
+let $b := string-concat([null, "foo"])
+let $c := string-concat(["foo", null])
+return {"a": $a, "b": $b, "c": $c}

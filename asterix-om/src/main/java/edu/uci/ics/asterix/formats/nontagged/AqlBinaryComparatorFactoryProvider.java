@@ -2,6 +2,7 @@ package edu.uci.ics.asterix.formats.nontagged;
 
 import java.io.Serializable;
 
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ADateTimeAscBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AObjectDescBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.BooleanBinaryComparatorFactory;
@@ -55,7 +56,7 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
     public IBinaryComparatorFactory getBinaryComparatorFactory(Object type, boolean ascending) {
         if (type == null) {
             return anyBinaryComparatorFactory(ascending);
-        }
+        }        
         IAType aqlType = (IAType) type;
         switch (aqlType.getTypeTag()) {
             case ANY:
@@ -99,6 +100,9 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
             }
             case RECTANGLE: {
                 return addOffset(RectangleBinaryComparatorFactory.INSTANCE, ascending);
+            }
+            case DATETIME: {
+            	return addOffset(ADateTimeAscBinaryComparatorFactory.INSTANCE, ascending);
             }
             default: {
                 throw new NotImplementedException("No binary comparator factory implemented for type "

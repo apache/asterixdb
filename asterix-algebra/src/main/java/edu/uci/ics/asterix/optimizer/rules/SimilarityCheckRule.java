@@ -7,8 +7,10 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
+import edu.uci.ics.asterix.om.base.ADouble;
 import edu.uci.ics.asterix.om.base.AFloat;
 import edu.uci.ics.asterix.om.base.AInt32;
+import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -127,7 +129,7 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
     	Mutable<ILogicalExpression> simFuncExprRef = null;
     	ScalarFunctionCallExpression simCheckFuncExpr = null;
     	AssignOperator matchingAssign = null;
-    	for (int i = 0; i < assigns.size(); i++) {
+     	for (int i = 0; i < assigns.size(); i++) {
     		AssignOperator assign = assigns.get(i);
     		for (int j = 0; j < assign.getVariables().size(); j++) {
     			// Check if variables match.
@@ -216,12 +218,21 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
         ScalarFunctionCallExpression simCheckFuncExpr = null; 
         // Look for jaccard function call, and GE or GT.
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.SIMILARITY_JACCARD) {
-            AFloat aFloat = (AFloat) constVal.getObject();
-            AFloat jaccThresh;
-            if (normFuncIdent == AlgebricksBuiltinFunctions.GE) {
-                jaccThresh = aFloat;
+            IAObject jaccThresh;
+            if (normFuncIdent == AlgebricksBuiltinFunctions.GE) {                
+                if (constVal.getObject() instanceof AFloat) {
+                    jaccThresh = constVal.getObject();                    
+                } else {
+                    jaccThresh = new AFloat((float)((ADouble) constVal.getObject()).getDoubleValue());
+                }
             } else if (normFuncIdent == AlgebricksBuiltinFunctions.GT) {
-                float f = aFloat.getFloatValue() + Float.MIN_VALUE;
+                float threshVal = 0.0f;            
+                if (constVal.getObject() instanceof AFloat) {
+                    threshVal = ((AFloat) constVal.getObject()).getFloatValue();
+                } else {
+                    threshVal = (float)((ADouble) constVal.getObject()).getDoubleValue();                    
+                }
+                float f = threshVal + Float.MIN_VALUE;
                 if (f > 1.0f) f = 1.0f;
                 jaccThresh = new AFloat(f);
             } else {
@@ -252,6 +263,10 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
             similarityArgs.add(new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(edThresh))));
             simCheckFuncExpr = new ScalarFunctionCallExpression(
                     FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK), similarityArgs);
+        }
+        // Preserve all annotations.
+        if (simCheckFuncExpr != null) {
+        	simCheckFuncExpr.getAnnotations().putAll(funcExpr.getAnnotations());
         }
         return simCheckFuncExpr;
     }
