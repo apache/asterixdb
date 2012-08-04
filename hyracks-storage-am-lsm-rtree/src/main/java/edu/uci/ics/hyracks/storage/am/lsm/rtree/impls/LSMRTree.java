@@ -228,7 +228,7 @@ public class LSMRTree extends AbstractLSMRTree {
         if (!isEmpty) {
             rTreeTupleSorter.sort();
         }
-        rTreeBulkloader = diskRTree.createBulkLoader(1.0f);
+        rTreeBulkloader = diskRTree.createBulkLoader(1.0f, false);
         cursor = rTreeTupleSorter;
 
         try {
@@ -251,7 +251,7 @@ public class LSMRTree extends AbstractLSMRTree {
         BTree diskBTree = (BTree) createDiskTree(diskBTreeFactory, flushOp.getBTreeFlushTarget(), true);
 
         // BulkLoad the tuples from the in-memory tree into the new disk BTree.
-        IIndexBulkLoader bTreeBulkloader = diskBTree.createBulkLoader(1.0f);
+        IIndexBulkLoader bTreeBulkloader = diskBTree.createBulkLoader(1.0f, false);
         try {
             while (btreeScanCursor.hasNext()) {
                 btreeScanCursor.next();
@@ -282,7 +282,7 @@ public class LSMRTree extends AbstractLSMRTree {
         RTree mergedRTree = (RTree) createDiskTree(diskRTreeFactory, mergeOp.getRTreeMergeTarget(), true);
         BTree mergedBTree = (BTree) createDiskTree(diskBTreeFactory, mergeOp.getBTreeMergeTarget(), true);
 
-        IIndexBulkLoader bulkloader = mergedRTree.createBulkLoader(1.0f);
+        IIndexBulkLoader bulkloader = mergedRTree.createBulkLoader(1.0f, false);
         try {
             while (cursor.hasNext()) {
                 cursor.next();
@@ -295,7 +295,7 @@ public class LSMRTree extends AbstractLSMRTree {
         bulkloader.end();
 
         // Load an empty BTree tree.
-        mergedBTree.createBulkLoader(1.0f).end();
+        mergedBTree.createBulkLoader(1.0f, false).end();
 
         return new LSMRTreeComponent(mergedRTree, mergedBTree);
     }
@@ -375,8 +375,8 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillLevel) throws TreeIndexException {
-        return new LSMRTreeBulkLoader(fillLevel);
+    public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput) throws TreeIndexException {
+    	return new LSMRTreeBulkLoader(fillLevel, verifyInput);
     }
 
     public class LSMRTreeBulkLoader implements IIndexBulkLoader {
@@ -384,7 +384,7 @@ public class LSMRTree extends AbstractLSMRTree {
         private final BTree diskBTree;
         private final RTreeBulkLoader bulkLoader;
 
-        public LSMRTreeBulkLoader(float fillFactor) throws TreeIndexException {
+        public LSMRTreeBulkLoader(float fillFactor, boolean verifyInput) throws TreeIndexException {
             // Note that by using a flush target file name, we state that the
             // new bulk loaded tree is "newer" than any other merged tree.
             try {
@@ -400,7 +400,7 @@ public class LSMRTree extends AbstractLSMRTree {
                 throw new TreeIndexException(e);
             }
 
-            bulkLoader = (RTreeBulkLoader) diskRTree.createBulkLoader(fillFactor);
+            bulkLoader = (RTreeBulkLoader) diskRTree.createBulkLoader(fillFactor, verifyInput);
         }
 
         @Override

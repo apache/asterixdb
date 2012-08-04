@@ -137,7 +137,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         int addProb = 0;
         int addProbStep = 10;
 
-        IIndexBulkLoader bulkLoader = invIndex.createBulkLoader(BTree.DEFAULT_FILL_FACTOR);
+        IIndexBulkLoader bulkLoader = invIndex.createBulkLoader(BTree.DEFAULT_FILL_FACTOR, false);
 
         for (int i = 0; i < tokens.size(); i++) {
 

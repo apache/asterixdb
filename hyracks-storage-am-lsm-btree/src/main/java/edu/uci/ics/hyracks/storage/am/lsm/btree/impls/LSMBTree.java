@@ -279,7 +279,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         memBTreeAccessor.search(scanCursor, nullPred);
         BTree diskBTree = createDiskBTree(diskBTreeFactory, flushOp.getFlushTarget(), true);
         // Bulk load the tuples from the in-memory BTree into the new disk BTree.
-        IIndexBulkLoader bulkLoader = diskBTree.createBulkLoader(1.0f);
+        IIndexBulkLoader bulkLoader = diskBTree.createBulkLoader(1.0f, false);
         try {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
@@ -372,7 +372,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
 
         // Bulk load the tuples from all on-disk BTrees into the new BTree.
         BTree mergedBTree = createDiskBTree(diskBTreeFactory, mergeOp.getMergeTarget(), true);
-        IIndexBulkLoader bulkLoader = mergedBTree.createBulkLoader(1.0f);
+        IIndexBulkLoader bulkLoader = mergedBTree.createBulkLoader(1.0f, false);
         try {
             while (cursor.hasNext()) {
                 cursor.next();
@@ -412,25 +412,25 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillLevel) throws TreeIndexException {
-        return new LSMBTreeBulkLoader(fillLevel);
+    public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput) throws TreeIndexException {
+        return new LSMBTreeBulkLoader(fillLevel, verifyInput);
     }
 
     public class LSMBTreeBulkLoader implements IIndexBulkLoader {
         private final BTree diskBTree;
         private final BTreeBulkLoader bulkLoader;
 
-        public LSMBTreeBulkLoader(float fillFactor) throws TreeIndexException {
+        public LSMBTreeBulkLoader(float fillFactor, boolean verifyInput) throws TreeIndexException {
             try {
                 diskBTree = createBulkLoadTarget();
             } catch (HyracksDataException e) {
                 throw new TreeIndexException(e);
             }
-            bulkLoader = (BTreeBulkLoader) diskBTree.createBulkLoader(0.7f);
+            bulkLoader = (BTreeBulkLoader) diskBTree.createBulkLoader(1.0f, verifyInput);
         }
 
         @Override
-        public void add(ITupleReference tuple) throws HyracksDataException {
+        public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
             bulkLoader.add(tuple);
         }
 

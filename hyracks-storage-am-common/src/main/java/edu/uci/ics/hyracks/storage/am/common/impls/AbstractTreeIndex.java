@@ -244,8 +244,6 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         return fieldCount;
     }
 
-    public abstract IIndexBulkLoader createBulkLoader(float fillFactor) throws TreeIndexException;
-
     public abstract class AbstractTreeIndexBulkLoader implements IIndexBulkLoader {
         protected final MultiComparator cmp;
         protected final int slotSize;
@@ -290,7 +288,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
             nodeFrontiers.add(leafFrontier);
         }
 
-        public abstract void add(ITupleReference tuple) throws HyracksDataException;
+        public abstract void add(ITupleReference tuple) throws IndexException, HyracksDataException;
 
         @Override
         public void end() throws HyracksDataException {

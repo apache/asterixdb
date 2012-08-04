@@ -9,17 +9,20 @@ public interface IIndexBulkLoader {
      * 
      * @param tuple
      *            Tuple to be inserted.
+     * @throws IndexException
+     *             If the input stream is invalid for bulk loading (e.g., is not sorted).
      * @throws HyracksDataException
      *             If the BufferCache throws while un/pinning or un/latching.
      */
-    public void add(ITupleReference tuple) throws HyracksDataException;
+    public void add(ITupleReference tuple) throws IndexException, HyracksDataException;
 
     /**
      * Finalize the bulk loading operation in the given context.
      * 
+     * @throws IndexException
      * @throws HyracksDataException
      *             If the BufferCache throws while un/pinning or un/latching.
      */
-    public void end() throws HyracksDataException;
+    public void end() throws IndexException, HyracksDataException;
 
 }

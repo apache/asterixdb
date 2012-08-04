@@ -25,12 +25,14 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodeP
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
     private final AbstractTreeIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
     private final IIndexLifecycleManager lcManager;
-    private float fillFactor;
+    private final float fillFactor;
+    private final boolean verifyInput;
     private final TreeIndexDataflowHelper treeIndexHelper;
     private FrameTupleAccessor accessor;
     private IIndexBulkLoader bulkLoader;
@@ -41,13 +43,14 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
     private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 
     public TreeIndexBulkLoadOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, int[] fieldPermutation, float fillFactor, IRecordDescriptorProvider recordDescProvider) {
+            int partition, int[] fieldPermutation, float fillFactor, boolean verifyInput, IRecordDescriptorProvider recordDescProvider) {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.lcManager = opDesc.getLifecycleManagerProvider().getLifecycleManager(ctx);
         this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
                 .createIndexDataflowHelper(opDesc, ctx, partition);
         this.fillFactor = fillFactor;
+        this.verifyInput = verifyInput;
         this.recordDescProvider = recordDescProvider;
         tuple.setFieldPermutation(fieldPermutation);
     }
@@ -58,7 +61,7 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
         accessor = new FrameTupleAccessor(ctx.getFrameSize(), recDesc);
         treeIndex = (ITreeIndex) lcManager.open(treeIndexHelper);
         try {
-            bulkLoader = treeIndex.createBulkLoader(fillFactor);
+            bulkLoader = treeIndex.createBulkLoader(fillFactor, verifyInput);
         } catch (Exception e) {
             lcManager.close(treeIndexHelper);
             throw new HyracksDataException(e);
@@ -71,7 +74,11 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
         int tupleCount = accessor.getTupleCount();
         for (int i = 0; i < tupleCount; i++) {
             tuple.reset(accessor, i);
-            bulkLoader.add(tuple);
+            try {
+				bulkLoader.add(tuple);
+			} catch (IndexException e) {
+				throw new HyracksDataException(e);
+			}
         }
     }
 

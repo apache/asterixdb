@@ -852,10 +852,11 @@ public class RTree extends AbstractTreeIndex {
                     "The RTree does not support the notion of keys, therefore upsert does not make sense.");
         }
     }
-
+    
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillFactor) throws TreeIndexException {
-        try {
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws TreeIndexException {
+        // TODO: verifyInput currently does nothing.
+    	try {
             return new RTreeBulkLoader(fillFactor);
         } catch (HyracksDataException e) {
             throw new TreeIndexException(e);

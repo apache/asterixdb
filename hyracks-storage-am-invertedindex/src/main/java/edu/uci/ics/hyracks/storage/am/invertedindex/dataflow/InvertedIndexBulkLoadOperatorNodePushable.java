@@ -59,7 +59,7 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
 
         invIndex = (InvertedIndex) lcManager.open(invIndexDataflowHelper);
         try {
-            bulkLoader = invIndex.createBulkLoader(BTree.DEFAULT_FILL_FACTOR);
+            bulkLoader = invIndex.createBulkLoader(BTree.DEFAULT_FILL_FACTOR, false);
         } catch (IndexException e) {
             lcManager.close(invIndexDataflowHelper);
             throw new HyracksDataException(e);
@@ -72,7 +72,11 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
         int tupleCount = accessor.getTupleCount();
         for (int i = 0; i < tupleCount; i++) {
             tuple.reset(accessor, i);
-            bulkLoader.add(tuple);
+            try {
+				bulkLoader.add(tuple);
+			} catch (IndexException e) {
+				throw new HyracksDataException(e);
+			}
         }
     }
 
@@ -80,6 +84,8 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
     public void close() throws HyracksDataException {
         try {
             bulkLoader.end();
+        } catch (IndexException e) {
+        	throw new HyracksDataException(e);
         } finally {
             lcManager.close(invIndexDataflowHelper);
         }

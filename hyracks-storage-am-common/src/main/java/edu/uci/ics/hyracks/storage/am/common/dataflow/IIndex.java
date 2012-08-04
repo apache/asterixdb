@@ -108,13 +108,6 @@ public interface IIndex {
             ISearchOperationCallback searchCallback);
 
     /**
-     * @param fillFactor the fill factor for the bulk-loaded index or index component
-     * @throws IndexException
-     *          if the index is required to be non-empty but is not
-     */
-    public IIndexBulkLoader createBulkLoader(float fillFactor) throws IndexException;
-
-    /**
      * Ensures that all pages (and tuples) of the index are logically consistent.
      * An assertion error is thrown if validation fails.
      * 
@@ -132,4 +125,11 @@ public interface IIndex {
      * @return the {@link IndexType} of this index.
      */
     public IndexType getIndexType();
+    
+    /**
+     * @param fillFactor
+     * @param verifyInput
+     * @throws IndexException
+     */
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws IndexException;
 }

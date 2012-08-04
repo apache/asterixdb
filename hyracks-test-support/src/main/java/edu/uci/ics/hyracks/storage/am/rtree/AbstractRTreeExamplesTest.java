@@ -457,7 +457,7 @@ public abstract class AbstractRTreeExamplesTest {
             LOGGER.info("Bulk loading " + numInserts + " tuples");
         }
         long start = System.currentTimeMillis();
-        IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f);
+        IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, false);
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 

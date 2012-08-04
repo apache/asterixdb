@@ -260,7 +260,7 @@ public class InvertedIndex implements IIndex {
         private final MultiComparator tokenCmp;
         private final MultiComparator invListCmp;
 
-        public InvertedIndexBulkLoader(float btreeFillFactor, int startPageId, int fileId) throws IndexException,
+        public InvertedIndexBulkLoader(float btreeFillFactor, boolean verifyInput, int startPageId, int fileId) throws IndexException,
                 HyracksDataException {
             this.tokenCmp = MultiComparator.create(btree.getComparatorFactories());
             this.invListCmp = MultiComparator.create(invListCmpFactories);
@@ -268,7 +268,7 @@ public class InvertedIndex implements IIndex {
             this.btreeTupleReference = new ArrayTupleReference();
             this.lastTupleBuilder = new ArrayTupleBuilder(numTokenFields + numInvListKeys);
             this.lastTuple = new ArrayTupleReference();
-            this.btreeBulkloader = btree.createBulkLoader(btreeFillFactor);
+            this.btreeBulkloader = btree.createBulkLoader(btreeFillFactor, verifyInput);
             currentPageId = startPageId;
             currentPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
             currentPage.acquireWriteLatch();
@@ -283,7 +283,7 @@ public class InvertedIndex implements IIndex {
             currentPage.acquireWriteLatch();
         }
 
-        private void createAndInsertBTreeTuple() throws HyracksDataException {
+        private void createAndInsertBTreeTuple() throws IndexException, HyracksDataException {
             // Build tuple.        
             btreeTupleBuilder.reset();
             btreeTupleBuilder.addField(lastTuple.getFieldData(0), lastTuple.getFieldStart(0),
@@ -306,7 +306,7 @@ public class InvertedIndex implements IIndex {
          * Key fields of inverted list are fixed size.
          */
         @Override
-        public void add(ITupleReference tuple) throws HyracksDataException {
+        public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
             boolean firstElement = lastTupleBuilder.getSize() == 0;
             boolean startNewList = firstElement;
             if (!firstElement) {
@@ -354,7 +354,7 @@ public class InvertedIndex implements IIndex {
         }
 
         @Override
-        public void end() throws HyracksDataException {
+        public void end() throws IndexException, HyracksDataException {
             createAndInsertBTreeTuple();
             btreeBulkloader.end();
 
@@ -464,9 +464,9 @@ public class InvertedIndex implements IIndex {
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillFactor) throws IndexException {
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws IndexException {
         try {
-            return new InvertedIndexBulkLoader(fillFactor, rootPageId, fileId);
+            return new InvertedIndexBulkLoader(fillFactor, verifyInput, rootPageId, fileId);
         } catch (HyracksDataException e) {
             throw new IndexException(e);
         }

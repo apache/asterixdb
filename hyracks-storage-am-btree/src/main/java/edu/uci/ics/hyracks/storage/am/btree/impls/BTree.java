@@ -35,6 +35,7 @@ import edu.uci.ics.hyracks.storage.am.btree.api.ITupleAcceptor;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNotUpdateableException;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeUnsortedInputException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext.PageValidationInfo;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
@@ -49,6 +50,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
@@ -908,9 +910,9 @@ public class BTree extends AbstractTreeIndex {
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillFactor) throws TreeIndexException {
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyinput) throws TreeIndexException {
         try {
-            return new BTreeBulkLoader(fillFactor);
+            return new BTreeBulkLoader(fillFactor, verifyinput);
         } catch (HyracksDataException e) {
             throw new TreeIndexException(e);
         }
@@ -918,15 +920,17 @@ public class BTree extends AbstractTreeIndex {
 
     public class BTreeBulkLoader extends AbstractTreeIndex.AbstractTreeIndexBulkLoader {
         protected final ISplitKey splitKey;
+        protected final boolean verifyInput;
 
-        public BTreeBulkLoader(float fillFactor) throws TreeIndexException, HyracksDataException {
+        public BTreeBulkLoader(float fillFactor, boolean verifyInput) throws TreeIndexException, HyracksDataException {
             super(fillFactor);
+            this.verifyInput = verifyInput;
             splitKey = new BTreeSplitKey(leafFrame.getTupleWriter().createTupleReference());
             splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         }
 
         @Override
-        public void add(ITupleReference tuple) throws HyracksDataException {
+        public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
             NodeFrontier leafFrontier = nodeFrontiers.get(0);
 
             int spaceNeeded = tupleWriter.bytesRequired(tuple) + slotSize;
@@ -940,6 +944,12 @@ public class BTree extends AbstractTreeIndex {
 
             if (spaceUsed + spaceNeeded > leafMaxBytes) {
                 leafFrontier.lastTuple.resetByTupleIndex(leafFrame, leafFrame.getTupleCount() - 1);
+                if (verifyInput) {
+                	// New tuple should be strictly greater than last tuple.
+                	if (cmp.compare(tuple, leafFrontier.lastTuple) != 1) {
+                		throw new BTreeUnsortedInputException("Input stream given to BTree bulk load is not sorted.");
+                	}
+                }
                 int splitKeySize = tupleWriter.bytesRequired(leafFrontier.lastTuple, 0, cmp.getKeyFieldCount());
                 splitKey.initData(splitKeySize);
                 tupleWriter.writeTupleFields(leafFrontier.lastTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer()
@@ -960,6 +970,14 @@ public class BTree extends AbstractTreeIndex {
                 leafFrontier.page.acquireWriteLatch();
                 leafFrame.setPage(leafFrontier.page);
                 leafFrame.initBuffer((byte) 0);
+            } else {
+            	if (verifyInput && leafFrame.getTupleCount() > 0) {            		
+            		leafFrontier.lastTuple.resetByTupleIndex(leafFrame, leafFrame.getTupleCount() - 1);
+            		// New tuple should be strictly greater than last tuple.
+            		if (cmp.compare(tuple, leafFrontier.lastTuple) != 1) {
+            			throw new BTreeUnsortedInputException("Input stream given to BTree bulk load is not sorted.");
+            		}
+            	}
             }
 
             leafFrame.setPage(leafFrontier.page);

@@ -518,7 +518,7 @@ public abstract class OrderedIndexExamplesTest {
             LOGGER.info("Bulk loading " + ins + " tuples");
         }
         long start = System.currentTimeMillis();
-        IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f);
+        IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, false);
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         for (int i = 0; i < ins; i++) {

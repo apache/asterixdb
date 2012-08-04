@@ -32,22 +32,25 @@ public class TreeIndexBulkLoadOperatorDescriptor extends AbstractTreeIndexOperat
 
     private final int[] fieldPermutation;
     private final float fillFactor;
+    private final boolean verifyInput;
 
     public TreeIndexBulkLoadOperatorDescriptor(IOperatorDescriptorRegistry spec,
             IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
             IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation, float fillFactor,
-            IIndexDataflowHelperFactory dataflowHelperFactory, IOperationCallbackProvider opCallbackProvider) {
+            boolean verifyInput, IIndexDataflowHelperFactory dataflowHelperFactory,
+            IOperationCallbackProvider opCallbackProvider) {
         super(spec, 1, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, dataflowHelperFactory, null, false, opCallbackProvider);
         this.fieldPermutation = fieldPermutation;
         this.fillFactor = fillFactor;
+        this.verifyInput = verifyInput;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
         return new TreeIndexBulkLoadOperatorNodePushable(this, ctx, partition, fieldPermutation, fillFactor,
-                recordDescProvider);
+        		verifyInput, recordDescProvider);
     }
 }

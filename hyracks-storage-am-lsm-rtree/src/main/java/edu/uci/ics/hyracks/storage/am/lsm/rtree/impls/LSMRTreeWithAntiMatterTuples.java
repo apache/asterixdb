@@ -240,7 +240,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             bTreeTupleSorter.sort();
         }
 
-        IIndexBulkLoader rTreeBulkloader = diskRTree.createBulkLoader(1.0f);
+        IIndexBulkLoader rTreeBulkloader = diskRTree.createBulkLoader(1.0f, false);
         LSMRTreeFlushCursor cursor = new LSMRTreeFlushCursor(rTreeTupleSorter, bTreeTupleSorter, comparatorFields,
                 linearizerArray);
         cursor.open(null, null);
@@ -276,7 +276,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
 
         // Bulk load the tuples from all on-disk RTrees into the new RTree.
         RTree mergedRTree = (RTree) createDiskTree(diskRTreeFactory, mergeOp.getMergeTarget(), true);
-        IIndexBulkLoader bulkloader = mergedRTree.createBulkLoader(1.0f);
+        IIndexBulkLoader bulkloader = mergedRTree.createBulkLoader(1.0f, false);
         try {
             while (cursor.hasNext()) {
                 cursor.next();
@@ -330,8 +330,8 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillLevel) throws TreeIndexException {
-        return new LSMRTreeWithAntiMatterTuplesBulkLoader(fillLevel);
+    public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput) throws TreeIndexException {
+        return new LSMRTreeWithAntiMatterTuplesBulkLoader(fillLevel, verifyInput);
     }
 
     private RTree createBulkLoadTarget() throws HyracksDataException {
@@ -344,7 +344,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         private final RTree diskRTree;
         private final RTreeBulkLoader bulkLoader;
 
-        public LSMRTreeWithAntiMatterTuplesBulkLoader(float fillFactor) throws TreeIndexException {
+        public LSMRTreeWithAntiMatterTuplesBulkLoader(float fillFactor, boolean verifyInput) throws TreeIndexException {
             // Note that by using a flush target file name, we state that the
             // new bulk loaded tree is "newer" than any other merged tree.
             try {
@@ -352,7 +352,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             } catch (HyracksDataException e) {
                 throw new TreeIndexException(e);
             }
-            bulkLoader = (RTreeBulkLoader) diskRTree.createBulkLoader(fillFactor);
+            bulkLoader = (RTreeBulkLoader) diskRTree.createBulkLoader(fillFactor, verifyInput);
         }
 
         @Override

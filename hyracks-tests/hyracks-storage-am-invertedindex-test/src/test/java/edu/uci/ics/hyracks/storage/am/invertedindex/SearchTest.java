@@ -152,7 +152,7 @@ public class SearchTest extends AbstractInvIndexSearchTest {
         Collections.sort(pairs);
 
         // bulk load index
-        IIndexBulkLoader bulkLoader = invIndex.createBulkLoader(BTree.DEFAULT_FILL_FACTOR);
+        IIndexBulkLoader bulkLoader = invIndex.createBulkLoader(BTree.DEFAULT_FILL_FACTOR, false);
 
         for (TokenIdPair t : pairs) {
             tb.reset();
