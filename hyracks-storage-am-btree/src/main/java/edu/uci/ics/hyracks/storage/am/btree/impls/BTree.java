@@ -945,10 +945,7 @@ public class BTree extends AbstractTreeIndex {
             if (spaceUsed + spaceNeeded > leafMaxBytes) {
                 leafFrontier.lastTuple.resetByTupleIndex(leafFrame, leafFrame.getTupleCount() - 1);
                 if (verifyInput) {
-                	// New tuple should be strictly greater than last tuple.
-                	if (cmp.compare(tuple, leafFrontier.lastTuple) != 1) {
-                		throw new BTreeUnsortedInputException("Input stream given to BTree bulk load is not sorted.");
-                	}
+                    verifyInputTuple(tuple, leafFrontier.lastTuple);
                 }
                 int splitKeySize = tupleWriter.bytesRequired(leafFrontier.lastTuple, 0, cmp.getKeyFieldCount());
                 splitKey.initData(splitKeySize);
@@ -971,12 +968,9 @@ public class BTree extends AbstractTreeIndex {
                 leafFrame.setPage(leafFrontier.page);
                 leafFrame.initBuffer((byte) 0);
             } else {
-            	if (verifyInput && leafFrame.getTupleCount() > 0) {            		
+            	if (verifyInput && leafFrame.getTupleCount() > 0) {   
             		leafFrontier.lastTuple.resetByTupleIndex(leafFrame, leafFrame.getTupleCount() - 1);
-            		// New tuple should be strictly greater than last tuple.
-            		if (cmp.compare(tuple, leafFrontier.lastTuple) != 1) {
-            			throw new BTreeUnsortedInputException("Input stream given to BTree bulk load is not sorted.");
-            		}
+            		verifyInputTuple(tuple, leafFrontier.lastTuple);
             	}
             }
 
@@ -984,6 +978,19 @@ public class BTree extends AbstractTreeIndex {
             ((IBTreeLeafFrame) leafFrame).insertSorted(tuple);
         }
 
+        protected void verifyInputTuple(ITupleReference tuple, ITupleReference prevTuple) throws IndexException,
+                HyracksDataException {
+            // New tuple should be strictly greater than last tuple.
+            if (cmp.compare(tuple, prevTuple) != 1) {
+                // Unpin and unlatch pages.
+                for (NodeFrontier nodeFrontier : nodeFrontiers) {
+                    nodeFrontier.page.releaseWriteLatch();
+                    bufferCache.unpin(nodeFrontier.page);
+                }
+                throw new BTreeUnsortedInputException("Input stream given to BTree bulk load is not sorted.");
+            }
+        }
+        
         protected void propagateBulk(int level) throws HyracksDataException {
             if (splitKey.getBuffer() == null)
                 return;

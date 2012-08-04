@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.btree;
 
+import static org.junit.Assert.fail;
+
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,6 +35,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeUnsortedInputException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationCallback;
@@ -60,7 +63,7 @@ public abstract class OrderedIndexExamplesTest {
      * field. Fill index with random values using insertions (not bulk load).
      * Perform scans and range search.
      */
-    @Test
+    //@Test
     public void fixedLengthKeyValueExample() throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Fixed-Length Key,Value Example.");
@@ -138,7 +141,7 @@ public abstract class OrderedIndexExamplesTest {
      * value field. Fill index with random values using insertions (not bulk
      * load) Perform scans and range search.
      */
-    @Test
+    //@Test
     public void twoFixedLengthKeysOneFixedLengthValueExample() throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Composite Key Test");
@@ -219,7 +222,7 @@ public abstract class OrderedIndexExamplesTest {
      * field and one variable-length value field. Fill BTree with random values
      * using insertions (not bulk load) Perform ordered scans and range search.
      */
-    @Test
+    //@Test
     public void varLenKeyValueExample() throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Variable-Length Key,Value Example");
@@ -299,7 +302,7 @@ public abstract class OrderedIndexExamplesTest {
      * value field. Fill B-tree with random values using insertions, then delete
      * entries one-by-one. Repeat procedure a few times on same BTree.
      */
-    @Test
+    //@Test
     public void deleteExample() throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Deletion Example");
@@ -401,7 +404,7 @@ public abstract class OrderedIndexExamplesTest {
      * value field. Fill B-tree with random values using insertions, then update
      * entries one-by-one. Repeat procedure a few times on same BTree.
      */
-    @Test
+    //@Test
     public void updateExample() throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Update example");
@@ -487,7 +490,7 @@ public abstract class OrderedIndexExamplesTest {
      * Load a tree with 100,000 tuples. BTree has a composite key to "simulate"
      * non-unique index creation.
      */
-    @Test
+    //@Test
     public void bulkLoadExample() throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Bulk load example");
@@ -550,6 +553,70 @@ public abstract class OrderedIndexExamplesTest {
         treeIndex.validate();
         treeIndex.deactivate();
         treeIndex.destroy();
+    }
+    
+    /**
+     * Bulk load failure example.
+     * Repeatedly loads a tree with 1,000 tuples, of which one tuple at each possible position
+     * does not conform to the expected order. We expect the bulk load to fail with an exception.
+     */
+    @Test
+    public void bulkOrderVerificationExample() throws Exception {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Bulk load order verification example");
+        }
+        // Declare fields.
+        int fieldCount = 2;
+        ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
+        typeTraits[0] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[1] = IntegerPointable.TYPE_TRAITS;
+
+        // declare keys
+        int keyFieldCount = 1;
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+
+        Random rnd = new Random();
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
+        ArrayTupleReference tuple = new ArrayTupleReference();
+        int ins = 1000;
+        for (int i = 1; i < ins; i++) {
+        	ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
+            treeIndex.create();
+            treeIndex.activate();
+
+            // Load sorted records, and expect to fail at tuple i.
+            IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, true);
+            for (int j = 0; j < ins; j++) {
+            	if (j > i) {
+            		fail("Bulk load failure test unexpectedly succeeded past tuple: " + j);
+            	}
+            	int key = j;
+            	if (j == i) {
+            		int swapElementCase = Math.abs(rnd.nextInt()) % 2;
+            		if (swapElementCase == 0) {
+            			// Element equal to previous element.
+            			key--;
+            		} else {
+            			// Element smaller than previous element.
+            			key -= Math.abs(Math.random() % (ins-1)) + 1;
+            		}
+            	}
+            	TupleUtils.createIntegerTuple(tb, tuple, key, 5);
+            	try {
+            		bulkLoader.add(tuple);
+            	} catch (BTreeUnsortedInputException e) {
+            		if (j != i) {
+            			fail("Unexpected exception: " + e.getMessage());
+            		}
+            		// Success.
+            		break;
+            	}
+            }            
+
+            treeIndex.deactivate();
+            treeIndex.destroy();
+        }
     }
 
     private void orderedScan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes) throws Exception {
