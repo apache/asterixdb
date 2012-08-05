@@ -260,8 +260,8 @@ public class InvertedIndex implements IIndex {
         private final MultiComparator tokenCmp;
         private final MultiComparator invListCmp;
 
-        public InvertedIndexBulkLoader(float btreeFillFactor, boolean verifyInput, int startPageId, int fileId) throws IndexException,
-                HyracksDataException {
+        public InvertedIndexBulkLoader(float btreeFillFactor, boolean verifyInput, int startPageId, int fileId)
+                throws IndexException, HyracksDataException {
             this.tokenCmp = MultiComparator.create(btree.getComparatorFactories());
             this.invListCmp = MultiComparator.create(invListCmpFactories);
             this.btreeTupleBuilder = new ArrayTupleBuilder(btree.getFieldCount());
@@ -475,5 +475,10 @@ public class InvertedIndex implements IIndex {
     @Override
     public void validate() throws HyracksDataException {
         throw new UnsupportedOperationException("Validation not implemented for Inverted Indexes.");
+    }
+
+    @Override
+    public long getInMemorySize() {
+        return 0;
     }
 }

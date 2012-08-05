@@ -401,4 +401,10 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
     public void validate() throws HyracksDataException {
         throw new UnsupportedOperationException("Validation not implemented for LSM R-Trees.");
     }
+
+    @Override
+    public long getInMemorySize() {
+        InMemoryBufferCache memBufferCache = (InMemoryBufferCache) memComponent.rtree.getBufferCache();
+        return memBufferCache.getNumPages() * memBufferCache.getPageSize();
+    }
 }

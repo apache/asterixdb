@@ -1,6 +1,7 @@
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,117 +13,138 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
 
 public class IndexLifecycleManager implements IIndexLifecycleManager {
+    private static final long DEFAULT_MEMORY_BUDGET = 1024 * 1024 * 100; // 100 megabytes
 
-    private final IndexRegistry<IIndex> indexRegistry;
-    private final Map<Long, Integer> refCountMap = new HashMap<Long, Integer>();
+    private final Map<Long, IndexInfo> indexInfos;
+    private final long memoryBudget;
+
+    private long memoryUsed;
 
     public IndexLifecycleManager() {
-        this.indexRegistry = new IndexRegistry<IIndex>();
+        this(DEFAULT_MEMORY_BUDGET);
+    }
+
+    public IndexLifecycleManager(long memoryBudget) {
+        this.indexInfos = new HashMap<Long, IndexInfo>();
+        this.memoryBudget = memoryBudget;
+        this.memoryUsed = 0;
     }
 
     @Override
-    public void create(IIndexDataflowHelper helper) throws HyracksDataException {
+    public synchronized void create(IIndexDataflowHelper helper) throws HyracksDataException {
         IHyracksTaskContext ctx = helper.getHyracksTaskContext();
         IIOManager ioManager = ctx.getIOManager();
         IIndexArtifactMap indexArtifactMap = helper.getOperatorDescriptor().getStorageManager()
                 .getIndexArtifactMap(ctx);
+        IIndex index = helper.getIndexInstance();
 
-        IIndex index;
-        synchronized (indexRegistry) {
-            long resourceID = helper.getResourceID();
-            index = indexRegistry.get(resourceID);
-
-            boolean generateResourceID = false;
-            boolean register = false;
-            if (index == null) {
-                generateResourceID = true;
-                register = true;
-                index = helper.getIndexInstance();
+        boolean generateResourceID = helper.getResourceID() == -1 ? true : false;
+        if (generateResourceID) {
+            try {
+                indexArtifactMap.create(helper.getFileReference().getFile().getPath(), ioManager.getIODevices());
+            } catch (IOException e) {
+                throw new HyracksDataException(e);
             }
+        }
 
-            index.create();
+        index.create();
+    }
 
-            if (generateResourceID) {
-                try {
-                    resourceID = indexArtifactMap.create(helper.getFileReference().getFile().getPath(),
-                            ioManager.getIODevices());
-                } catch (IOException e) {
-                    throw new HyracksDataException(e);
+    @Override
+    public synchronized void destroy(IIndexDataflowHelper helper) throws HyracksDataException {
+        IHyracksTaskContext ctx = helper.getHyracksTaskContext();
+        IIOManager ioManager = ctx.getIOManager();
+        IIndexArtifactMap indexArtifactMap = helper.getOperatorDescriptor().getStorageManager()
+                .getIndexArtifactMap(ctx);
+        IIndex index = helper.getIndexInstance();
+
+        indexArtifactMap.delete(helper.getFileReference().getFile().getPath(), ioManager.getIODevices());
+        index.destroy();
+    }
+
+    @Override
+    public synchronized IIndex open(IIndexDataflowHelper helper) throws HyracksDataException {
+        long resourceID = helper.getResourceID();
+        IndexInfo info = indexInfos.get(resourceID);
+
+        if (info == null) {
+            IIndex index = helper.getIndexInstance();
+            if (memoryUsed + index.getInMemorySize() > memoryBudget) {
+                if (!evictCandidateIndex()) {
+                    throw new HyracksDataException("Cannot activate index since memory budget would be exceeded.");
                 }
             }
-            if (register) {
-                indexRegistry.register(resourceID, index);
-                refCountMap.put(resourceID, 0);
-            }
-        }
-    }
 
-    @Override
-    public void destroy(IIndexDataflowHelper helper) throws HyracksDataException {
-        IHyracksTaskContext ctx = helper.getHyracksTaskContext();
-        IIOManager ioManager = ctx.getIOManager();
-        IIndexArtifactMap indexArtifactMap = helper.getOperatorDescriptor().getStorageManager()
-                .getIndexArtifactMap(ctx);
-
-        IIndex index;
-        long resourceID = helper.getResourceID();
-
-        synchronized (indexRegistry) {
-            index = indexRegistry.get(resourceID);
-            if (index == null) {
-                index = helper.getIndexInstance();
-            }
-            indexArtifactMap.delete(helper.getFileReference().getFile().getPath(), ioManager.getIODevices());
-            indexRegistry.unregister(resourceID);
-            index.destroy();
-            refCountMap.remove(resourceID);
-        }
-    }
-
-    @Override
-    public IIndex open(IIndexDataflowHelper helper) throws HyracksDataException {
-        IIndex index;
-        long resourceID = helper.getResourceID();
-
-        synchronized (indexRegistry) {
-            index = indexRegistry.get(resourceID);
-
-            boolean register = false;
-            if (index == null) {
-                refCountMap.put(resourceID, 1);
-                register = true;
-                index = helper.getIndexInstance();
-            } else {
-                int count = refCountMap.get(resourceID);
-                refCountMap.put(resourceID, ++count);
-            }
+            info = new IndexInfo(index, resourceID);
+            indexInfos.put(resourceID, info);
             index.activate();
-
-            if (register) {
-                indexRegistry.register(resourceID, index);
-            }
+            memoryUsed += index.getInMemorySize();
         }
-        return index;
+
+        info.touch();
+        return info.index;
+    }
+
+    private boolean evictCandidateIndex() throws HyracksDataException {
+        IndexInfo info = Collections.min(indexInfos.values());
+        if (info.referenceCount != 0) {
+            return false;
+        }
+
+        info.index.deactivate();
+        indexInfos.remove(info.resourceID);
+
+        return true;
     }
 
     @Override
-    public void close(IIndexDataflowHelper helper) throws HyracksDataException {
-        IIndex index;
-        long resourceID = helper.getResourceID();
-
-        synchronized (indexRegistry) {
-            index = indexRegistry.get(resourceID);
-            int count = refCountMap.get(resourceID);
-            refCountMap.put(resourceID, --count);
-            if (index == null) {
-                throw new IllegalStateException("Trying to close an index that was not registered.");
-            }
-
-            if (count == 0) {
-                indexRegistry.unregister(resourceID);
-                index.deactivate();
-            }
-        }
+    public synchronized void close(IIndexDataflowHelper helper) throws HyracksDataException {
+        indexInfos.get(helper.getResourceID()).untouch();
     }
 
+    private class IndexInfo implements Comparable<IndexInfo> {
+        private final IIndex index;
+        private final long resourceID;
+        private int referenceCount;
+        private long lastAccess;
+
+        public IndexInfo(IIndex index, long resourceID) {
+            this.index = index;
+            this.resourceID = resourceID;
+            this.lastAccess = -1;
+            this.referenceCount = 0;
+        }
+
+        public void touch() {
+            lastAccess = System.currentTimeMillis();
+            referenceCount++;
+        }
+
+        public void untouch() {
+            lastAccess = System.currentTimeMillis();
+            referenceCount--;
+        }
+
+        @Override
+        public int compareTo(IndexInfo i) {
+            // sort by (referenceCount, lastAccess), ascending
+            if (referenceCount < i.referenceCount) {
+                return -1;
+            } else if (referenceCount > i.referenceCount) {
+                return 1;
+            } else {
+                if (lastAccess < i.lastAccess) {
+                    return -1;
+                } else if (lastAccess > i.lastAccess) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+        }
+
+        public String toString() {
+            return "{lastAccess: " + lastAccess + ", refCount: " + referenceCount + "}";
+        }
+    }
 }

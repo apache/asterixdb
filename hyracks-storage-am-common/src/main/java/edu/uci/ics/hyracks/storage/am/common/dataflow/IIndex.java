@@ -127,6 +127,11 @@ public interface IIndex {
     public IndexType getIndexType();
     
     /**
+     * @return the size, in bytes, of pre-allocated memory space that this index was allotted.
+     */
+    public long getInMemorySize();
+    
+    /**
      * @param fillFactor
      * @param verifyInput
      * @throws IndexException

@@ -89,7 +89,7 @@ public class InMemoryBufferCache implements IBufferCacheInternal {
 
     @Override
     public int getNumPages() {
-        return pages.length;
+        return numPages;
     }
 
     @Override
