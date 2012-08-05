@@ -63,7 +63,7 @@ public abstract class OrderedIndexExamplesTest {
      * field. Fill index with random values using insertions (not bulk load).
      * Perform scans and range search.
      */
-    //@Test
+    @Test
     public void fixedLengthKeyValueExample() throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Fixed-Length Key,Value Example.");
@@ -141,7 +141,7 @@ public abstract class OrderedIndexExamplesTest {
      * value field. Fill index with random values using insertions (not bulk
      * load) Perform scans and range search.
      */
-    //@Test
+    @Test
     public void twoFixedLengthKeysOneFixedLengthValueExample() throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Composite Key Test");
@@ -222,7 +222,7 @@ public abstract class OrderedIndexExamplesTest {
      * field and one variable-length value field. Fill BTree with random values
      * using insertions (not bulk load) Perform ordered scans and range search.
      */
-    //@Test
+    @Test
     public void varLenKeyValueExample() throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Variable-Length Key,Value Example");
@@ -302,7 +302,7 @@ public abstract class OrderedIndexExamplesTest {
      * value field. Fill B-tree with random values using insertions, then delete
      * entries one-by-one. Repeat procedure a few times on same BTree.
      */
-    //@Test
+    @Test
     public void deleteExample() throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Deletion Example");
@@ -404,7 +404,7 @@ public abstract class OrderedIndexExamplesTest {
      * value field. Fill B-tree with random values using insertions, then update
      * entries one-by-one. Repeat procedure a few times on same BTree.
      */
-    //@Test
+    @Test
     public void updateExample() throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Update example");
@@ -490,7 +490,7 @@ public abstract class OrderedIndexExamplesTest {
      * Load a tree with 100,000 tuples. BTree has a composite key to "simulate"
      * non-unique index creation.
      */
-    //@Test
+    @Test
     public void bulkLoadExample() throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Bulk load example");

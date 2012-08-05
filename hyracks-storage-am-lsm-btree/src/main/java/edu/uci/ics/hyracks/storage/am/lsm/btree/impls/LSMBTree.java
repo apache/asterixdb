@@ -431,9 +431,25 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
 
         @Override
         public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
-            bulkLoader.add(tuple);
+        	try {
+        		bulkLoader.add(tuple);
+        	} catch (IndexException e) {
+        		handleException();
+        		throw e;
+        	} catch (HyracksDataException e) {
+        		handleException();
+        		throw e;
+        	} catch (RuntimeException e) {
+                handleException();
+                throw e;
+            }
         }
 
+        protected void handleException() throws HyracksDataException {
+        	diskBTree.deactivate();
+    		diskBTree.destroy();
+        }
+        
         @Override
         public void end() throws HyracksDataException {
             bulkLoader.end();

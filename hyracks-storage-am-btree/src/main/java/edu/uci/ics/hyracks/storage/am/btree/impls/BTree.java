@@ -931,63 +931,77 @@ public class BTree extends AbstractTreeIndex {
 
         @Override
         public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
-            NodeFrontier leafFrontier = nodeFrontiers.get(0);
+            try {
+                NodeFrontier leafFrontier = nodeFrontiers.get(0);
 
-            int spaceNeeded = tupleWriter.bytesRequired(tuple) + slotSize;
-            int spaceUsed = leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace();
+                int spaceNeeded = tupleWriter.bytesRequired(tuple) + slotSize;
+                int spaceUsed = leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace();
 
-            // try to free space by compression
-            if (spaceUsed + spaceNeeded > leafMaxBytes) {
-                leafFrame.compress();
-                spaceUsed = leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace();
-            }
-
-            if (spaceUsed + spaceNeeded > leafMaxBytes) {
-                leafFrontier.lastTuple.resetByTupleIndex(leafFrame, leafFrame.getTupleCount() - 1);
-                if (verifyInput) {
-                    verifyInputTuple(tuple, leafFrontier.lastTuple);
+                // try to free space by compression
+                if (spaceUsed + spaceNeeded > leafMaxBytes) {
+                    leafFrame.compress();
+                    spaceUsed = leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace();
                 }
-                int splitKeySize = tupleWriter.bytesRequired(leafFrontier.lastTuple, 0, cmp.getKeyFieldCount());
-                splitKey.initData(splitKeySize);
-                tupleWriter.writeTupleFields(leafFrontier.lastTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer()
-                        .array(), 0);
-                splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer(), 0);
-                splitKey.setLeftPage(leafFrontier.pageId);
-                leafFrontier.pageId = freePageManager.getFreePage(metaFrame);
 
-                ((IBTreeLeafFrame) leafFrame).setNextLeaf(leafFrontier.pageId);
-                leafFrontier.page.releaseWriteLatch();
-                bufferCache.unpin(leafFrontier.page);
+                if (spaceUsed + spaceNeeded > leafMaxBytes) {
+                    leafFrontier.lastTuple.resetByTupleIndex(leafFrame, leafFrame.getTupleCount() - 1);
+                    if (verifyInput) {
+                        verifyInputTuple(tuple, leafFrontier.lastTuple);
+                    }
+                    int splitKeySize = tupleWriter.bytesRequired(leafFrontier.lastTuple, 0, cmp.getKeyFieldCount());
+                    splitKey.initData(splitKeySize);
+                    tupleWriter.writeTupleFields(leafFrontier.lastTuple, 0, cmp.getKeyFieldCount(), splitKey
+                            .getBuffer().array(), 0);
+                    splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer(), 0);
+                    splitKey.setLeftPage(leafFrontier.pageId);
+                    leafFrontier.pageId = freePageManager.getFreePage(metaFrame);
 
-                splitKey.setRightPage(leafFrontier.pageId);
-                propagateBulk(1);
+                    ((IBTreeLeafFrame) leafFrame).setNextLeaf(leafFrontier.pageId);
+                    leafFrontier.page.releaseWriteLatch();
+                    bufferCache.unpin(leafFrontier.page);
 
-                leafFrontier.page = bufferCache
-                        .pin(BufferedFileHandle.getDiskPageId(fileId, leafFrontier.pageId), true);
-                leafFrontier.page.acquireWriteLatch();
+                    splitKey.setRightPage(leafFrontier.pageId);
+                    propagateBulk(1);
+
+                    leafFrontier.page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, leafFrontier.pageId),
+                            true);
+                    leafFrontier.page.acquireWriteLatch();
+                    leafFrame.setPage(leafFrontier.page);
+                    leafFrame.initBuffer((byte) 0);
+                } else {
+                    if (verifyInput && leafFrame.getTupleCount() > 0) {
+                        leafFrontier.lastTuple.resetByTupleIndex(leafFrame, leafFrame.getTupleCount() - 1);
+                        verifyInputTuple(tuple, leafFrontier.lastTuple);
+                    }
+                }
+
                 leafFrame.setPage(leafFrontier.page);
-                leafFrame.initBuffer((byte) 0);
-            } else {
-            	if (verifyInput && leafFrame.getTupleCount() > 0) {   
-            		leafFrontier.lastTuple.resetByTupleIndex(leafFrame, leafFrame.getTupleCount() - 1);
-            		verifyInputTuple(tuple, leafFrontier.lastTuple);
-            	}
+                ((IBTreeLeafFrame) leafFrame).insertSorted(tuple);
+            } catch (IndexException e) {
+                handleException();
+                throw e;
+            } catch (HyracksDataException e) {
+                handleException();
+                throw e;
+            } catch (RuntimeException e) {
+                handleException();
+                throw e;
             }
-
-            leafFrame.setPage(leafFrontier.page);
-            ((IBTreeLeafFrame) leafFrame).insertSorted(tuple);
         }
 
         protected void verifyInputTuple(ITupleReference tuple, ITupleReference prevTuple) throws IndexException,
                 HyracksDataException {
             // New tuple should be strictly greater than last tuple.
             if (cmp.compare(tuple, prevTuple) != 1) {
-                // Unpin and unlatch pages.
-                for (NodeFrontier nodeFrontier : nodeFrontiers) {
-                    nodeFrontier.page.releaseWriteLatch();
-                    bufferCache.unpin(nodeFrontier.page);
-                }
                 throw new BTreeUnsortedInputException("Input stream given to BTree bulk load is not sorted.");
+            }
+        }
+        
+        protected void handleException() throws HyracksDataException {
+            // Unlatch and unpin pages.
+            for (NodeFrontier nodeFrontier : nodeFrontiers) {
+                nodeFrontier.page.releaseWriteLatch();
+                bufferCache.unpin(nodeFrontier.page);
             }
         }
         
