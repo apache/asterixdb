@@ -170,10 +170,10 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
                         if (count == 0) {
                             GlobalConfig.ASTERIX_LOGGER.fine("AVG aggregate ran over empty input.");
                             try {
-								nullSerde.serialize(ANull.NULL, out);
-							} catch (HyracksDataException e) {
-								throw new AlgebricksException(e);
-							}
+                                nullSerde.serialize(ANull.NULL, out);
+                            } catch (HyracksDataException e) {
+                                throw new AlgebricksException(e);
+                            }
                         } else {
                             try {
                                 if (metNull)

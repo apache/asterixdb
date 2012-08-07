@@ -26,7 +26,7 @@ public abstract class AbstractScalarAggregateDescriptor extends AbstractScalarFu
             @Override
             public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
                 // The aggregate function will get a SingleFieldFrameTupleReference that points to the result of the ScanCollection.
-                // The list-item will always reside in the first filed (column) of the SingleFieldFrameTupleReference.
+                // The list-item will always reside in the first field (column) of the SingleFieldFrameTupleReference.
                 ICopyEvaluatorFactory[] aggFuncArgs = new ICopyEvaluatorFactory[1];
                 aggFuncArgs[0] = new ColumnAccessEvalFactory(0);
                 // Create aggregate function from this scalar version.

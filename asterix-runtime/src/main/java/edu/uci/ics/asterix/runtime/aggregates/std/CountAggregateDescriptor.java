@@ -38,7 +38,7 @@ public class CountAggregateDescriptor extends AbstractAggregateFunctionDynamicDe
 
             @Override
             public ICopyAggregateFunction createAggregateFunction(IDataOutputProvider provider) throws AlgebricksException {
-                return new CountAggregateFunction(provider);
+                return new CountAggregateFunction(args, provider);
             }
         };
     }

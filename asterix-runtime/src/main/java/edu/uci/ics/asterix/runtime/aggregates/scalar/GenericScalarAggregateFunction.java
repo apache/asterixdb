@@ -31,6 +31,7 @@ public class GenericScalarAggregateFunction implements ICopyEvaluator {
     @Override
     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
         scanCollection.init(tuple);
+        aggFunc.init();
         while (scanCollection.step()) {
             itemTuple.reset(listItemOut.getByteArray(), 0, listItemOut.getLength());
             aggFunc.step(itemTuple);
