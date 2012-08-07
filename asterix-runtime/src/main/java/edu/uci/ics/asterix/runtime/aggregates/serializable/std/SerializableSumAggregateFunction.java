@@ -65,16 +65,14 @@ public class SerializableSumAggregateFunction implements ICopySerializableAggreg
         inputVal.reset();
         eval.evaluate(tuple);
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]);
-        if (typeTag == ATypeTag.NULL) {
+        if (typeTag == ATypeTag.NULL || aggType == ATypeTag.NULL) {
             aggType = ATypeTag.NULL;
-        }
-        if (aggType == ATypeTag.NULL) {
             return;
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
         } else if (typeTag != ATypeTag.SYSTEM_NULL && typeTag != aggType) {
             throw new AlgebricksException("Unexpected type " + typeTag
-                    + " in sum-aggregation input stream. Expected type " + aggType + ".");
+                    + " in aggregation input stream. Expected type " + aggType + ".");
         }
         switch (typeTag) {
             case INT8: {
