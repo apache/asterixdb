@@ -24,6 +24,7 @@ import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.ATime;
 import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
 import edu.uci.ics.asterix.om.base.temporal.ADateAndTimeParser;
+import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -84,6 +85,10 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                             if (serString[0] == SER_STRING_TYPE_TAG) {
                                 charAccessor.reset(serString, 3, 0);
                                 int chrononTimeInMs = ADateAndTimeParser.parseTimePart(charAccessor);
+
+                                if (chrononTimeInMs < 0) {
+                                    chrononTimeInMs += GregorianCalendarSystem.CHRONON_OF_DAY;
+                                }
 
                                 aTime.setValue(chrononTimeInMs);
                                 timeSerde.serialize(aTime, out);

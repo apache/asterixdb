@@ -258,6 +258,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
         switch (startField) {
             case YEAR:
+            default:
                 sbder.append(String.format(year < 0 ? "%05d" : "%04d", year));
                 if (untilField == Fields.YEAR) {
                     return;
@@ -328,6 +329,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
         switch (startField) {
             case YEAR:
+            default:
                 sbder.append(String.format(year < 0 ? "%05d" : "%04d", year));
                 if (untilField == Fields.YEAR) {
                     return;
