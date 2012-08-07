@@ -1,0 +1,12 @@
+/*
+ * Description      :  Test return clause of the FLWOR expression
+ *                  :  Tes if expression then expression else expression in the return clause
+ * Expected Result  :  Success
+ * Date             :  26th July 2012
+ */
+
+write output to nc1:"rttest/flwor_ret-04.adm";
+
+
+let $a := 12345
+return (if($a > 999) then "GREATER" else "LESSER") 
