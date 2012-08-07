@@ -65,9 +65,6 @@ public class SumAggregateFunction implements ICopyAggregateFunction {
         inputVal.reset();
         eval.evaluate(tuple);
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]);
-        if (typeTag == ATypeTag.NULL) {
-            aggType = ATypeTag.NULL;
-        }
         if (typeTag == ATypeTag.NULL || aggType == ATypeTag.NULL) {
             aggType = ATypeTag.NULL;
             return;

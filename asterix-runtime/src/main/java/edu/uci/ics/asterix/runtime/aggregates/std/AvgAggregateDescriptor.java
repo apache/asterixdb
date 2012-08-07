@@ -116,19 +116,21 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
                     @Override
                     public void step(IFrameTupleReference tuple) throws AlgebricksException {
                         inputVal.reset();
-                        eval.evaluate(tuple);
-                        ++count;
+                        eval.evaluate(tuple);                        
                         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                                 .deserialize(inputVal.getByteArray()[0]);
                         if (typeTag == ATypeTag.NULL || aggType == ATypeTag.NULL) {
                             aggType = ATypeTag.NULL;
                             return;
-                        } else if (aggType == ATypeTag.SYSTEM_NULL) {
+                        } else if (aggType == ATypeTag.SYSTEM_NULL) {                           
                             aggType = typeTag;
                         } else if (typeTag != ATypeTag.SYSTEM_NULL && typeTag != aggType) {
                             throw new AlgebricksException("Unexpected type " + typeTag
                                     + " in aggregation input stream. Expected type " + aggType + ".");
                         }
+                        if (typeTag != ATypeTag.SYSTEM_NULL) {
+                            ++count;
+                        }                        
                         switch (typeTag) {
                             case INT8: {
                                 byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);

@@ -6,7 +6,6 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ADateTimeAscBinar
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AObjectDescBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.BooleanBinaryComparatorFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.LongBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.RectangleBinaryComparatorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -15,17 +14,26 @@ import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.BytePointable;
 import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
 import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
+import edu.uci.ics.hyracks.data.std.primitive.LongPointable;
+import edu.uci.ics.hyracks.data.std.primitive.ShortPointable;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
 public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFactoryProvider, Serializable {
 
     private static final long serialVersionUID = 1L;
     public static final AqlBinaryComparatorFactoryProvider INSTANCE = new AqlBinaryComparatorFactoryProvider();
+    public static final PointableBinaryComparatorFactory BYTE_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
+            BytePointable.FACTORY);
+    public static final PointableBinaryComparatorFactory SHORT_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
+            ShortPointable.FACTORY);
     public static final PointableBinaryComparatorFactory INTEGER_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
             IntegerPointable.FACTORY);
+    public static final PointableBinaryComparatorFactory LONG_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
+            LongPointable.FACTORY);
     public static final PointableBinaryComparatorFactory FLOAT_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
             FloatPointable.FACTORY);
     public static final PointableBinaryComparatorFactory DOUBLE_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
@@ -58,7 +66,11 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
             return anyBinaryComparatorFactory(ascending);
         }        
         IAType aqlType = (IAType) type;
-        switch (aqlType.getTypeTag()) {
+        return getBinaryComparatorFactory(aqlType.getTypeTag(), ascending);
+    }
+    
+    public IBinaryComparatorFactory getBinaryComparatorFactory(ATypeTag type, boolean ascending) {
+        switch (type) {
             case ANY:
             case UNION: { // we could do smth better for nullable fields
                 return anyBinaryComparatorFactory(ascending);
@@ -83,11 +95,17 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
             case BOOLEAN: {
                 return addOffset(BooleanBinaryComparatorFactory.INSTANCE, ascending);
             }
+            case INT8: {
+                return addOffset(BYTE_POINTABLE_INSTANCE, ascending);
+            }
+            case INT16: {
+                return addOffset(SHORT_POINTABLE_INSTANCE, ascending);
+            }
             case INT32: {
                 return addOffset(INTEGER_POINTABLE_INSTANCE, ascending);
             }
             case INT64: {
-                return addOffset(LongBinaryComparatorFactory.INSTANCE, ascending);
+                return addOffset(LONG_POINTABLE_INSTANCE, ascending);
             }
             case FLOAT: {
                 return addOffset(FLOAT_POINTABLE_INSTANCE, ascending);
@@ -101,12 +119,14 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
             case RECTANGLE: {
                 return addOffset(RectangleBinaryComparatorFactory.INSTANCE, ascending);
             }
+            case DATE:
+            case TIME:
             case DATETIME: {
-            	return addOffset(ADateTimeAscBinaryComparatorFactory.INSTANCE, ascending);
+                return addOffset(ADateTimeAscBinaryComparatorFactory.INSTANCE, ascending);
             }
             default: {
                 throw new NotImplementedException("No binary comparator factory implemented for type "
-                        + aqlType.getTypeTag() + " .");
+                        + type + " .");
             }
         }
     }

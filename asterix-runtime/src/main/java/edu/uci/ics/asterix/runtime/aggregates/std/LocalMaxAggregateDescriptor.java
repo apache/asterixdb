@@ -36,7 +36,7 @@ public class LocalMaxAggregateDescriptor extends AbstractAggregateFunctionDynami
             @Override
             public ICopyAggregateFunction createAggregateFunction(final IDataOutputProvider provider)
                     throws AlgebricksException {
-                return new MaxAggregateFunction(args, provider, true);
+                return new MinMaxAggregateFunction(args, provider, false, true);
             }
         };
     }
