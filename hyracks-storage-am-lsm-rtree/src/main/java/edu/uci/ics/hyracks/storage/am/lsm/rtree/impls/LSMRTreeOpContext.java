@@ -52,7 +52,7 @@ public final class LSMRTreeOpContext implements IIndexOpContext {
         this.modificationCallback = modificationCallback;
         this.searchCallback = searchCallback;
         this.rtreeOpContext = new RTreeOpContext(rtreeLeafFrame, rtreeInteriorFrame, rtreeMetaFrame, rtreeCmpFactories,
-                rTreeHeightHint, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                rTreeHeightHint, NoOpOperationCallback.INSTANCE);
         this.btreeOpContext = new BTreeOpContext(memBtreeAccessor, btreeLeafFrameFactory, btreeInteriorFrameFactory,
                 btreeMetaFrame, btreeCmpFactories, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
     }

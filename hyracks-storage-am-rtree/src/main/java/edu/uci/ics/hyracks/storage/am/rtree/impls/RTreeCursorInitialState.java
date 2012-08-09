@@ -25,10 +25,9 @@ public class RTreeCursorInitialState implements ICursorInitialState {
     private PathList pathList;
     private int rootPage;
     private ICachedPage page; // for disk order scan
-    private ISearchOperationCallback searchCallback;
     private MultiComparator originalKeyCmp;
 
-    public RTreeCursorInitialState(PathList pathList, int rootPage, ISearchOperationCallback searchCallback) {
+    public RTreeCursorInitialState(PathList pathList, int rootPage) {
         this.pathList = pathList;
         this.rootPage = rootPage;
     }
@@ -54,16 +53,6 @@ public class RTreeCursorInitialState implements ICursorInitialState {
     }
 
     @Override
-    public ISearchOperationCallback getSearchOperationCallback() {
-        return searchCallback;
-    }
-
-    @Override
-    public void setSearchOperationCallback(ISearchOperationCallback searchCallback) {
-        this.searchCallback = searchCallback;
-    }
-
-    @Override
     public MultiComparator getOriginalKeyComparator() {
         return originalKeyCmp;
     }
@@ -71,5 +60,15 @@ public class RTreeCursorInitialState implements ICursorInitialState {
     @Override
     public void setOriginialKeyComparator(MultiComparator originalCmp) {
         this.originalKeyCmp = originalCmp;
+    }
+
+    @Override
+    public ISearchOperationCallback getSearchOperationCallback() {
+        return null;
+    }
+
+    @Override
+    public void setSearchOperationCallback(ISearchOperationCallback searchCallback) {
+        // Do nothing
     }
 }

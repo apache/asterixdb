@@ -24,9 +24,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 import edu.uci.ics.hyracks.storage.common.TransientIndexArtifactMap;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
@@ -42,7 +40,6 @@ import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
 public class TestStorageManagerComponentHolder {
     private static IBufferCache bufferCache;
     private static IFileMapProvider fileMapProvider;
-    private static IndexRegistry<IIndex> indexRegistry;
     private static IOManager ioManager;
     private static IIndexArtifactMap indexArtifactMap;
     private static IIndexLifecycleManager lcManager;
@@ -57,7 +54,6 @@ public class TestStorageManagerComponentHolder {
         TestStorageManagerComponentHolder.maxOpenFiles = maxOpenFiles;
         bufferCache = null;
         fileMapProvider = null;
-        indexRegistry = null;
         indexArtifactMap = null;
         lcManager = null;
     }
@@ -85,13 +81,6 @@ public class TestStorageManagerComponentHolder {
             fileMapProvider = new TransientFileMapManager();
         }
         return fileMapProvider;
-    }
-
-    public synchronized static IndexRegistry<IIndex> getIndexRegistry(IHyracksTaskContext ctx) {
-        if (indexRegistry == null) {
-            indexRegistry = new IndexRegistry<IIndex>();
-        }
-        return indexRegistry;
     }
 
     public synchronized static IOManager getIOManager() throws HyracksException {
