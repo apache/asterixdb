@@ -21,7 +21,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
@@ -50,17 +49,15 @@ public class RTreeOpContext implements IIndexOpContext {
     public ArrayList<ICachedPage> LSNUpdates;
 
     public final IModificationOperationCallback modificationCallback;
-    public final ISearchOperationCallback searchCallback;
 
     public RTreeOpContext(IRTreeLeafFrame leafFrame, IRTreeInteriorFrame interiorFrame,
             ITreeIndexMetaDataFrame metaFrame, IBinaryComparatorFactory[] cmpFactories, int treeHeightHint,
-            IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback) {
+            IModificationOperationCallback modificationCallback) {
         this.cmp = MultiComparator.create(cmpFactories);
         this.interiorFrame = interiorFrame;
         this.leafFrame = leafFrame;
         this.metaFrame = metaFrame;
         this.modificationCallback = modificationCallback;
-        this.searchCallback = searchCallback;
         pathList = new PathList(treeHeightHint, treeHeightHint);
         NSNUpdates = new ArrayList<ICachedPage>();
         LSNUpdates = new ArrayList<ICachedPage>();
@@ -100,7 +97,7 @@ public class RTreeOpContext implements IIndexOpContext {
             }
         }
         if (cursorInitialState == null) {
-            cursorInitialState = new RTreeCursorInitialState(pathList, 1, searchCallback);
+            cursorInitialState = new RTreeCursorInitialState(pathList, 1);
         }
         this.op = newOp;
     }

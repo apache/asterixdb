@@ -139,11 +139,10 @@ public class RTree extends AbstractTreeIndex {
         }
     }
 
-    private RTreeOpContext createOpContext(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback) {
+    private RTreeOpContext createOpContext(IModificationOperationCallback modificationCallback) {
         return new RTreeOpContext((IRTreeLeafFrame) leafFrameFactory.createFrame(),
                 (IRTreeInteriorFrame) interiorFrameFactory.createFrame(), freePageManager.getMetaDataFrameFactory()
-                        .createFrame(), cmpFactories, 8, modificationCallback, searchCallback);
+                        .createFrame(), cmpFactories, 8, modificationCallback);
     }
 
     private void insert(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
@@ -768,7 +767,6 @@ public class RTree extends AbstractTreeIndex {
             cursor.setFileId(fileId);
             cursor.setCurrentPageId(currentPageId);
             cursor.setMaxPageId(maxPageId);
-            ctx.cursorInitialState.setSearchOperationCallback(ctx.searchCallback);
             ctx.cursorInitialState.setOriginialKeyComparator(ctx.cmp);
             ctx.cursorInitialState.setPage(page);
             cursor.open(ctx.cursorInitialState, searchPred);
@@ -797,7 +795,7 @@ public class RTree extends AbstractTreeIndex {
         public RTreeAccessor(RTree rtree, IModificationOperationCallback modificationCallback,
                 ISearchOperationCallback searchCallback) {
             this.rtree = rtree;
-            this.ctx = rtree.createOpContext(modificationCallback, searchCallback);
+            this.ctx = rtree.createOpContext(modificationCallback);
         }
 
         @Override
@@ -852,11 +850,11 @@ public class RTree extends AbstractTreeIndex {
                     "The RTree does not support the notion of keys, therefore upsert does not make sense.");
         }
     }
-    
+
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws TreeIndexException {
         // TODO: verifyInput currently does nothing.
-    	try {
+        try {
             return new RTreeBulkLoader(fillFactor);
         } catch (HyracksDataException e) {
             throw new TreeIndexException(e);
