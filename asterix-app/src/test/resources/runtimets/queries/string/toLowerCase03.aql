@@ -1,0 +1,39 @@
+/*
+ * Test case Name : toLowerCas03.aql
+ * Description    : Test lowercase(string) function 
+ *                : This test case covers Positive tests
+ * Success        : Yes
+ * Date           : 19th April 2012
+ */
+
+
+// Create internal dataset, insert string data and pass the string attribute to lowercase function, and verify results.
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as {
+name:string
+}
+
+create dataset testds(TestType) partitioned by key name;
+
+insert into dataset testds({"name":"Maradona"});
+insert into dataset testds({"name":"Pele"});
+insert into dataset testds({"name":"Roberto Baggio"});
+insert into dataset testds({"name":"Beckham David"});
+insert into dataset testds({"name":"Rooney"});
+insert into dataset testds({"name":"Ronaldinho"});
+insert into dataset testds({"name":"Ronaldo"});
+insert into dataset testds({"name":"Zinadine Zidane"});
+insert into dataset testds({"name":"Cristiano Ronaldo"});
+insert into dataset testds({"name":"Messi"});
+insert into dataset testds({"name":"Tevez"});
+insert into dataset testds({"name":"Henry"});
+
+write output to nc1:"rttest/string_toLowerCase03.adm";
+
+for $l in dataset('testds')
+order by $l.name
+return lowercase($l.name)
