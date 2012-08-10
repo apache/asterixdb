@@ -907,6 +907,11 @@ public class BTree extends AbstractTreeIndex {
         public BTreeOpContext getOpContext() {
             return ctx;
         }
+        
+        public ITreeIndexCursor createCountingSearchCursor() {
+            IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
+            return new BTreeCountingSearchCursor(leafFrame, false);
+        }
     }
 
     @Override

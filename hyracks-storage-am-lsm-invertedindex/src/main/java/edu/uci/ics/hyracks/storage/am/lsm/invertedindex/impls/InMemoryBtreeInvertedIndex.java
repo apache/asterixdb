@@ -115,7 +115,7 @@ public class InMemoryBtreeInvertedIndex implements IInvertedIndex {
     public boolean insert(ITupleReference tuple, BTreeAccessor btreeAccessor, IIndexOpContext ictx)
             throws HyracksDataException, IndexException {
         InMemoryBtreeInvertedIndexOpContext ctx = (InMemoryBtreeInvertedIndexOpContext) ictx;
-        // TODO: We can probably avoid copying the data into a new tuple here.
+        // TODO: We can possibly avoid copying the data into a new tuple here.
         tokenizer.reset(tuple.getFieldData(0), tuple.getFieldStart(0), tuple.getFieldLength(0));
         while (tokenizer.hasNext()) {
             tokenizer.next();
@@ -155,13 +155,17 @@ public class InMemoryBtreeInvertedIndex implements IInvertedIndex {
 
     @Override
     public IInvertedListCursor createInvertedListCursor() {
-        return new InMemoryBtreeInvertedListCursor(btree, invListTypeTraits);
+        return new InMemoryBtreeInvertedListCursor(invListTypeTraits.length, tokenTypeTraits.length);
     }
 
     @Override
-    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference tupleReference)
+    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference tupleReference, IIndexOpContext ictx)
             throws HyracksDataException, IndexException {
+        InMemoryBtreeInvertedIndexOpContext ctx = (InMemoryBtreeInvertedIndexOpContext) ictx;
         InMemoryBtreeInvertedListCursor inMemListCursor = (InMemoryBtreeInvertedListCursor) listCursor;
+        inMemListCursor.prepare(ctx.btreeAccessor, ctx.btreePred, ctx.tokenFieldsCmp, ctx.btreeCmp);
+        
+        
         inMemListCursor.reset(tupleReference);
     }
 
@@ -169,7 +173,7 @@ public class InMemoryBtreeInvertedIndex implements IInvertedIndex {
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
         return new InMemoryBtreeInvertedIndexAccessor(this, new InMemoryBtreeInvertedIndexOpContext(
-                btreeTypeTraits.length), tokenizer);
+                btree, tokenCmpFactories), tokenizer);
     }
 
     @Override

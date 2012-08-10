@@ -41,13 +41,14 @@ public class InMemoryBtreeInvertedIndexAccessor implements IIndexAccessor {
     protected InMemoryBtreeInvertedIndex memoryBtreeInvertedIndex;
     protected BTreeAccessor btreeAccessor;
 
-    public InMemoryBtreeInvertedIndexAccessor(InMemoryBtreeInvertedIndex memoryBtreeInvertedIndex, IIndexOpContext opCtx,
-            IBinaryTokenizer tokenizer) {
+    public InMemoryBtreeInvertedIndexAccessor(InMemoryBtreeInvertedIndex memoryBtreeInvertedIndex,
+            IIndexOpContext opCtx, IBinaryTokenizer tokenizer) {
         this.opCtx = opCtx;
         this.memoryBtreeInvertedIndex = memoryBtreeInvertedIndex;
         this.searcher = new TOccurrenceSearcher(hyracksCtx, memoryBtreeInvertedIndex);
         // TODO: Ignore opcallbacks for now.
-        this.btreeAccessor = (BTreeAccessor) memoryBtreeInvertedIndex.getBTree().createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        this.btreeAccessor = (BTreeAccessor) memoryBtreeInvertedIndex.getBTree().createAccessor(
+                NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
     }
 
     public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
@@ -62,19 +63,19 @@ public class InMemoryBtreeInvertedIndexAccessor implements IIndexAccessor {
 
     @Override
     public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
-        searcher.search((InvertedIndexSearchCursor) cursor, (InvertedIndexSearchPredicate) searchPred);
+        searcher.search((InvertedIndexSearchCursor) cursor, (InvertedIndexSearchPredicate) searchPred, opCtx);
     }
 
     @Override
     public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
         throw new UnsupportedOperationException("Delete not supported by in-memory inverted index.");
     }
-    
+
     @Override
     public void update(ITupleReference tuple) throws HyracksDataException, IndexException {
         throw new UnsupportedOperationException("Update not supported by in-memory inverted index.");
     }
-    
+
     @Override
     public void upsert(ITupleReference tuple) throws HyracksDataException, IndexException {
         throw new UnsupportedOperationException("Upsert not supported by in-memory inverted index.");

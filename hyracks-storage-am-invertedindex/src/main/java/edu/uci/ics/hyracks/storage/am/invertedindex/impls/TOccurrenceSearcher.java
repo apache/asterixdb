@@ -35,6 +35,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndex;
@@ -59,7 +60,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
     protected List<ByteBuffer> prevResultBuffers = new ArrayList<ByteBuffer>();
     protected List<ByteBuffer> swap = null;
     protected int maxResultBufIdx = 0;
-    
+
     protected RecordDescriptor queryTokenRecDesc = new RecordDescriptor(
             new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
     protected ArrayTupleBuilder queryTokenBuilder = new ArrayTupleBuilder(queryTokenRecDesc.getFieldCount());
@@ -120,8 +121,8 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         currentNumResults = 0;
     }
 
-    public void search(InvertedIndexSearchCursor resultCursor, InvertedIndexSearchPredicate searchPred)
-            throws HyracksDataException, IndexException {
+    public void search(InvertedIndexSearchCursor resultCursor, InvertedIndexSearchPredicate searchPred,
+            IIndexOpContext ictx) throws HyracksDataException, IndexException {
         ITupleReference queryTuple = searchPred.getQueryTuple();
         int queryFieldIndex = searchPred.getQueryFieldIndex();
         IInvertedIndexSearchModifier searchModifier = searchPred.getSearchModifier();
@@ -161,7 +162,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         invListCursors.clear();
         for (int i = 0; i < numQueryTokens; i++) {
             searchKey.reset(queryTokenAccessor, i);
-            invIndex.openInvertedListCursor(invListCursorCache.get(i), searchKey);
+            invIndex.openInvertedListCursor(invListCursorCache.get(i), searchKey, ictx);
             invListCursors.add(invListCursorCache.get(i));
         }
 
@@ -217,7 +218,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
     }
 
     protected int mergeSuffixListProbe(IInvertedListCursor invListCursor, List<ByteBuffer> prevResultBuffers,
-            int maxPrevBufIdx, List<ByteBuffer> newResultBuffers, int invListIx, int numQueryTokens) {
+            int maxPrevBufIdx, List<ByteBuffer> newResultBuffers, int invListIx, int numQueryTokens) throws HyracksDataException {
 
         int newBufIdx = 0;
         ByteBuffer newCurrentBuffer = newResultBuffers.get(0);
@@ -262,7 +263,8 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
     }
 
     protected int mergeSuffixListScan(IInvertedListCursor invListCursor, List<ByteBuffer> prevResultBuffers,
-            int maxPrevBufIdx, List<ByteBuffer> newResultBuffers, int invListIx, int numQueryTokens) {
+            int maxPrevBufIdx, List<ByteBuffer> newResultBuffers, int invListIx, int numQueryTokens)
+            throws HyracksDataException {
         int newBufIdx = 0;
         ByteBuffer newCurrentBuffer = newResultBuffers.get(0);
 
@@ -356,7 +358,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
     }
 
     protected int mergePrefixList(IInvertedListCursor invListCursor, List<ByteBuffer> prevResultBuffers,
-            int maxPrevBufIdx, List<ByteBuffer> newResultBuffers) {
+            int maxPrevBufIdx, List<ByteBuffer> newResultBuffers) throws HyracksDataException {
         int newBufIdx = 0;
         ByteBuffer newCurrentBuffer = newResultBuffers.get(0);
 

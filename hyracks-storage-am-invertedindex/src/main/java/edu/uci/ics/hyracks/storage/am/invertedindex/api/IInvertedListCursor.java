@@ -29,9 +29,9 @@ public interface IInvertedListCursor extends Comparable<IInvertedListCursor> {
 
     void unpinPages() throws HyracksDataException;
 
-    boolean hasNext();
+    boolean hasNext() throws HyracksDataException;
 
-    void next();
+    void next() throws HyracksDataException;
 
     ITupleReference getTuple();
 
@@ -44,10 +44,7 @@ public interface IInvertedListCursor extends Comparable<IInvertedListCursor> {
 
     int getStartOff();
 
-    // jump to a specific element
-    void positionCursor(int elementIx);
-
-    boolean containsKey(ITupleReference searchTuple, MultiComparator invListCmp);
+    boolean containsKey(ITupleReference searchTuple, MultiComparator invListCmp) throws HyracksDataException;
 
     // for debugging
     String printInvList(ISerializerDeserializer[] serdes) throws HyracksDataException;

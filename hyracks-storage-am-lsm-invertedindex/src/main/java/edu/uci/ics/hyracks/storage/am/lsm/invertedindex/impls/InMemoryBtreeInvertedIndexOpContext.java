@@ -15,37 +15,54 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class InMemoryBtreeInvertedIndexOpContext implements IIndexOpContext {
     public IndexOp op;
-    public final int numBTreeFields;
-    
-    // To generate in-memory btree tuples for insertions.
+    public final BTree btree;
+
+    // Needed for search operations,    
+    public RangePredicate btreePred;
+    public BTreeAccessor btreeAccessor;
+    public MultiComparator btreeCmp;
+    public IBinaryComparatorFactory[] tokenCmpFactories;
+    public MultiComparator tokenFieldsCmp;
+
+    // To generate in-memory BTree tuples for insertions.
     public ArrayTupleBuilder btreeTupleBuilder;
     public ArrayTupleReference btreeTupleReference;
-    
-    public InMemoryBtreeInvertedIndexOpContext(int numBTreeFields) {
-        this.numBTreeFields = numBTreeFields;
-    }
-    
-    @Override
-    public void reset() {
-        op = null;
+
+    public InMemoryBtreeInvertedIndexOpContext(BTree btree, IBinaryComparatorFactory[] tokenCmpFactories) {
+        this.btree = btree;
+        this.tokenCmpFactories = tokenCmpFactories;
     }
 
     @Override
     public void reset(IndexOp newOp) {
         switch (newOp) {
             case INSERT: {
-                btreeTupleBuilder = new ArrayTupleBuilder(numBTreeFields);
-                btreeTupleReference = new ArrayTupleReference();                
+                btreeTupleBuilder = new ArrayTupleBuilder(btree.getFieldCount());
+                btreeTupleReference = new ArrayTupleReference();
                 break;
             }
             case SEARCH: {
+                if (btreePred == null) {
+                    btreePred = new RangePredicate(null, null, true, true, null, null);
+                    // TODO: Ignore opcallbacks for now.
+                    btreeAccessor = (BTreeAccessor) btree.createAccessor(NoOpOperationCallback.INSTANCE,
+                            NoOpOperationCallback.INSTANCE);
+                    btreeCmp = MultiComparator.create(btree.getComparatorFactories());
+                    tokenFieldsCmp = MultiComparator.create(tokenCmpFactories);
+                }
                 break;
             }
             default: {
@@ -53,5 +70,10 @@ public class InMemoryBtreeInvertedIndexOpContext implements IIndexOpContext {
             }
         }
         op = newOp;
+    }
+
+    @Override
+    public void reset() {
+        op = null;
     }
 }

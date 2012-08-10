@@ -21,12 +21,13 @@ import java.util.List;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndexSearchCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndexSearchPredicate;
 
 public interface IInvertedIndexSearcher {
-    public void search(InvertedIndexSearchCursor resultCursor, InvertedIndexSearchPredicate searchPred)
+    public void search(InvertedIndexSearchCursor resultCursor, InvertedIndexSearchPredicate searchPred, IIndexOpContext ictx)
             throws HyracksDataException, IndexException;
 
     public IFrameTupleAccessor createResultFrameTupleAccessor();

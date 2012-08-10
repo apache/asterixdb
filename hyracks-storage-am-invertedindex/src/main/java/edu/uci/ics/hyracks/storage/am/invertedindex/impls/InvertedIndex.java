@@ -28,26 +28,23 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearcher;
@@ -392,29 +389,10 @@ public class InvertedIndex implements IInvertedIndex {
 
     public class InvertedIndexAccessor implements IIndexAccessor {
         private final IInvertedIndexSearcher searcher;
+        private final IIndexOpContext opCtx = new InvertedIndexOpContext(btree);
 
         public InvertedIndexAccessor(InvertedIndex index) {
             this.searcher = new TOccurrenceSearcher(ctx, index);
-        }
-
-        @Override
-        public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
-            // TODO Auto-generated method stub
-        }
-
-        @Override
-        public void update(ITupleReference tuple) throws HyracksDataException, IndexException {
-            // TODO Auto-generated method stub
-        }
-
-        @Override
-        public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
-            // TODO Auto-generated method stub
-        }
-
-        @Override
-        public void upsert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
-            // TODO Auto-generated method stub
         }
 
         @Override
@@ -425,11 +403,31 @@ public class InvertedIndex implements IInvertedIndex {
         @Override
         public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
                 IndexException {
-            searcher.search((InvertedIndexSearchCursor) cursor, (InvertedIndexSearchPredicate) searchPred);
+            searcher.search((InvertedIndexSearchCursor) cursor, (InvertedIndexSearchPredicate) searchPred, opCtx);
         }
 
         public IInvertedIndexSearcher getSearcher() {
             return searcher;
+        }
+        
+        @Override
+        public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
+            throw new UnsupportedOperationException("Insert not supported by inverted index.");
+        }
+
+        @Override
+        public void update(ITupleReference tuple) throws HyracksDataException, IndexException {
+            throw new UnsupportedOperationException("Update not supported by inverted index.");
+        }
+
+        @Override
+        public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
+            throw new UnsupportedOperationException("Delete not supported by inverted index.");
+        }
+
+        @Override
+        public void upsert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+            throw new UnsupportedOperationException("Upsert not supported by inverted index.");
         }
     }
 
@@ -472,7 +470,7 @@ public class InvertedIndex implements IInvertedIndex {
         try {
             return new InvertedIndexBulkLoader(fillFactor, verifyInput, rootPageId, fileId);
         } catch (HyracksDataException e) {
-            throw new IndexException(e);
+            throw new InvertedIndexException(e);
         }
     }
 
@@ -492,27 +490,19 @@ public class InvertedIndex implements IInvertedIndex {
     }
 
     @Override
-    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference tupleReference)
+    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey, IIndexOpContext ictx)
             throws HyracksDataException, IndexException {
-        // TODO: Ideally, we should not create this objects over and over.
-        // Probably need a fancier list cursor for with.
-        RangePredicate btreePred = new RangePredicate(null, null, true, true, null, null);
-        ITreeIndexFrame leafFrame = btree.getLeafFrameFactory().createFrame();
-        ITreeIndexCursor btreeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) leafFrame, false);
-        MultiComparator searchCmp = MultiComparator.create(btree.getComparatorFactories());
-        btreePred.setLowKeyComparator(searchCmp);
-        btreePred.setHighKeyComparator(searchCmp);
-        btreePred.setLowKey(tupleReference, true);
-        btreePred.setHighKey(tupleReference, true);
-
-        // TODO: Worry about these callbacks later.
-        ITreeIndexAccessor btreeAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-        btreeAccessor.search(btreeCursor, btreePred);
+        InvertedIndexOpContext ctx = (InvertedIndexOpContext) ictx;
+        ctx.btreePred.setLowKeyComparator(ctx.searchCmp);
+        ctx.btreePred.setHighKeyComparator(ctx.searchCmp);
+        ctx.btreePred.setLowKey(searchKey, true);
+        ctx.btreePred.setHighKey(searchKey, true);
+        ctx.btreeAccessor.search(ctx.btreeCursor, ctx.btreePred);
         try {
-            if (btreeCursor.hasNext()) {
-                btreeCursor.next();
-                ITupleReference frameTuple = btreeCursor.getTuple();
-                // Hardcoded mapping of btree fields
+            if (ctx.btreeCursor.hasNext()) {
+                ctx.btreeCursor.next();
+                ITupleReference frameTuple = ctx.btreeCursor.getTuple();
+                // Hardcoded mapping of btree fields.
                 int startPageId = IntegerSerializerDeserializer.getInt(frameTuple.getFieldData(1),
                         frameTuple.getFieldStart(1));
                 int endPageId = IntegerSerializerDeserializer.getInt(frameTuple.getFieldData(2),
@@ -526,8 +516,8 @@ public class InvertedIndex implements IInvertedIndex {
                 listCursor.reset(0, 0, 0, 0);
             }
         } finally {
-            btreeCursor.close();
-            btreeCursor.reset();
+            ctx.btreeCursor.close();
+            ctx.btreeCursor.reset();
         }
     }
 }

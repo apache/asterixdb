@@ -14,67 +14,72 @@
  */
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeCountingSearchCursor;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.ConcatenatingTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
 
 public class InMemoryBtreeInvertedListCursor implements IInvertedListCursor {
-    private final BTree btree;
-    private final RangePredicate btreePred;
-    private final IBTreeLeafFrame leafFrame;
-    private final ITreeIndexAccessor btreeAccessor;
-    private BTreeRangeSearchCursor btreeCursor;
+    private RangePredicate btreePred;
+    private BTreeAccessor btreeAccessor;
+    private IIndexCursor btreeCursor;
+    private IIndexCursor countingCursor;
     private MultiComparator tokenFieldsCmp;
-
+    private MultiComparator btreeCmp;
+    private final PermutingTupleReference resultTuple;
+    private final ConcatenatingTupleReference btreeSearchTuple;
+    
+    private final ArrayTupleBuilder tokenTupleBuilder;
+    private final ArrayTupleReference tokenTuple = new ArrayTupleReference();
+    
     private int numElements = -1;
-    private ITupleReference tokenTuple;
-
-    public InMemoryBtreeInvertedListCursor(BTree btree, ITypeTraits[] invListFields) {
-        this.btree = btree;
-        this.btreeAccessor = btree.createAccessor();
-        this.btreePred = new RangePredicate(null, null, true, true, null, null);
-        this.leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
-        this.btreeCursor = new BTreeRangeSearchCursor(leafFrame, false);
-        setTokenFieldComparators(btree.getComparatorFactories(), btree.getComparatorFactories().length
-                - invListFields.length);
-        btreePred.setLowKeyComparator(tokenFieldsCmp);
-        btreePred.setHighKeyComparator(tokenFieldsCmp);
+    
+    public InMemoryBtreeInvertedListCursor(int invListFieldCount, int tokenFieldCount) {
+        int[] fieldPermutation = new int[invListFieldCount];
+        for (int i = 0; i < invListFieldCount; i++) {
+            fieldPermutation[i] = tokenFieldCount + i;
+        }
+        resultTuple = new PermutingTupleReference(fieldPermutation);
+        // Concatenating the tuple with tokens, and the tuple with inverted-list elements.
+        btreeSearchTuple = new ConcatenatingTupleReference(2);
+        tokenTupleBuilder = new ArrayTupleBuilder(tokenFieldCount);
     }
-
-    private void setTokenFieldComparators(IBinaryComparatorFactory[] cmpFactories, int numTokenFields) {
-        IBinaryComparatorFactory[] keyFieldCmpFactories = new IBinaryComparatorFactory[numTokenFields];
-        System.arraycopy(cmpFactories, 0, keyFieldCmpFactories, 0, numTokenFields);
-        tokenFieldsCmp = MultiComparator.create(keyFieldCmpFactories);
+    
+    public void prepare(BTreeAccessor btreeAccessor, RangePredicate btreePred, MultiComparator tokenFieldsCmp,
+            MultiComparator btreeCmp) {
+        this.btreeAccessor = btreeAccessor;
+        this.btreeCursor = btreeAccessor.createSearchCursor();
+        this.countingCursor = btreeAccessor.createCountingSearchCursor();
+        this.btreePred = btreePred;
+        this.btreePred.setLowKeyComparator(tokenFieldsCmp);
+        this.btreePred.setHighKeyComparator(tokenFieldsCmp);
+        this.tokenFieldsCmp = tokenFieldsCmp;
+        this.btreeCmp = btreeCmp;
     }
-
+    
     @Override
     public int compareTo(IInvertedListCursor cursor) {
         return getNumElements() - cursor.getNumElements();
     }
 
-    public void reset(ITupleReference tuple) throws HyracksDataException, IndexException {
+    public void reset(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
         numElements = -1;
-        tokenTuple = TupleUtils.copyTuple(tuple);
-        btreeCursor = (BTreeRangeSearchCursor) btreeAccessor.createSearchCursor();
+        // Copy the tokens tuple for later use in btree probes.
+        TupleUtils.copyTuple(tokenTupleBuilder, tuple, tuple.getFieldCount());
+        tokenTuple.reset(tokenTupleBuilder.getFieldEndOffsets(), tokenTupleBuilder.getByteArray());
+        btreeSearchTuple.addTuple(tokenTuple);
         btreePred.setLowKey(tuple, true);
         btreePred.setHighKey(tuple, true);
         btreeAccessor.search(btreeCursor, btreePred);
@@ -110,54 +115,40 @@ public class InMemoryBtreeInvertedListCursor implements IInvertedListCursor {
         btreeCursor.next();
     }
 
-    public ITupleReference getTuple() throws HyracksDataException {
-        PermutingTupleReference projectedTuple = new PermutingTupleReference();
-        ITupleReference tuple = btreeCursor.getTuple();
-        int tupleFieldCount = tuple.getFieldCount();
-        int tokensFieldCount = tokenFieldsCmp.getKeyFieldCount();
-
-        int[] fEndOffsets = new int[tupleFieldCount];
-        int[] fieldPermutation = new int[tupleFieldCount - tokensFieldCount];
-
-        for (int i = 0; i < tupleFieldCount; i++) {
-            fEndOffsets[i] = tuple.getFieldStart(i) + tuple.getFieldLength(i);
-        }
-
-        for (int i = 0; i < fieldPermutation.length; i++) {
-            fieldPermutation[i] = tokensFieldCount + i;
-        }
-
-        projectedTuple.reset(fEndOffsets, fieldPermutation, tuple.getFieldData(0));
-
-        return projectedTuple;
+    @Override
+    public ITupleReference getTuple() {
+        resultTuple.reset(btreeCursor.getTuple());
+        return resultTuple;
     }
 
     @Override
     public int getNumElements() {
         if (numElements < 0) {
-            // perform the count
-            IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
-            BTreeCountingSearchCursor countCursor = new BTreeCountingSearchCursor(leafFrame, false);
-            RangePredicate predicate = new RangePredicate(tokenTuple, tokenTuple, true, true, tokenFieldsCmp,
-                    tokenFieldsCmp);
+            btreePred.setLowKeyComparator(tokenFieldsCmp);
+            btreePred.setHighKeyComparator(tokenFieldsCmp);
+            btreePred.setLowKey(tokenTuple, true);
+            btreePred.setHighKey(tokenTuple, true);
+            
+            // Perform the count.
             try {
-                btreeAccessor.search(countCursor, predicate);
-                while (countCursor.hasNext()) {
-                    countCursor.next();
-                    ITupleReference countTuple = countCursor.getTuple();
-                    ByteArrayInputStream bais = new ByteArrayInputStream(countTuple.getFieldData(0));
-                    DataInputStream dis = new DataInputStream(bais);
-                    numElements = IntegerSerializerDeserializer.INSTANCE.deserialize(dis).intValue();
+                btreeAccessor.search(countingCursor, btreePred);
+                while (countingCursor.hasNext()) {
+                    countingCursor.next();
+                    ITupleReference countTuple = countingCursor.getTuple();
+                    numElements = IntegerSerializerDeserializer.getInt(countTuple.getFieldData(0), countTuple.getFieldStart(0));
                 }
-                countCursor.close();
             } catch (HyracksDataException e) {
                 e.printStackTrace();
             } catch (IndexException e) {
                 e.printStackTrace();
+            } finally {
+                try {
+                    countingCursor.close();
+                } catch (HyracksDataException e) {
+                    e.printStackTrace();
+                }
             }
-
         }
-
         return numElements;
     }
 
@@ -177,38 +168,38 @@ public class InMemoryBtreeInvertedListCursor implements IInvertedListCursor {
     }
 
     @Override
-    public boolean containsKey(ITupleReference searchTuple, MultiComparator invListCmp) throws HyracksDataException,
-            IndexException {
-        int numCompositeFields = tokenTuple.getFieldCount() + invListCmp.getKeyFieldCount();
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(numCompositeFields);
-        ArrayTupleReference compositeTuple = new ArrayTupleReference();
-        for (int i = 0; i < tokenTuple.getFieldCount(); i++) {
-            tb.addField(tokenTuple.getFieldData(i), tokenTuple.getFieldStart(i), tokenTuple.getFieldLength(i));
+    public boolean containsKey(ITupleReference searchTuple, MultiComparator invListCmp) throws HyracksDataException {
+        btreeSearchTuple.addTuple(searchTuple);
+        btreePred.setLowKeyComparator(btreeCmp);
+        btreePred.setHighKeyComparator(btreeCmp);
+        btreePred.setLowKey(btreeSearchTuple, true);
+        btreePred.setHighKey(btreeSearchTuple, true);
+        try {
+            btreeAccessor.search(btreeCursor, btreePred);
+        } catch (TreeIndexException e) {
+            btreeSearchTuple.removeLastTuple();
+            throw new HyracksDataException(e);
         }
-        for (int i = 0; i < invListCmp.getKeyFieldCount(); i++) {
-            tb.addField(searchTuple.getFieldData(i), searchTuple.getFieldStart(i), searchTuple.getFieldLength(i));
-        }
-        compositeTuple.reset(tb.getFieldEndOffsets(), tb.getByteArray());
-
-        MultiComparator cmp = MultiComparator.create(btree.getComparatorFactories());
-        RangePredicate predicate = new RangePredicate(compositeTuple, compositeTuple, true, true, cmp, cmp);
-        BTreeRangeSearchCursor cursor = (BTreeRangeSearchCursor) btreeAccessor.createSearchCursor();
-        btreeAccessor.search(cursor, predicate);
-
-        boolean containsKey = cursor.hasNext();
-        cursor.close();
-
+        boolean containsKey = false;
+        try {
+            containsKey = btreeCursor.hasNext();
+        } finally {
+            btreeCursor.close();
+            btreeCursor.reset();
+            btreeSearchTuple.removeLastTuple();
+        }        
         return containsKey;
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public String printInvList(ISerializerDeserializer[] serdes) throws HyracksDataException {
         return null;
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public String printCurrentElement(ISerializerDeserializer[] serdes) throws HyracksDataException {
         return null;
     }
-
 }
