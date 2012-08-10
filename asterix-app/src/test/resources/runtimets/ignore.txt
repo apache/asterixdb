@@ -32,3 +32,4 @@ quantifiers/somesat_05.aql
 quantifiers/everysat_02.aql
 quantifiers/everysat_03.aql
 flwor
+string/startwith03.aql
