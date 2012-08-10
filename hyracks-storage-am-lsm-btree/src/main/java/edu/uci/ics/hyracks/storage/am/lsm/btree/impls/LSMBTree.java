@@ -65,7 +65,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMFlushOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexComponentFinalizer;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -84,10 +84,10 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     // On-disk components.    
     private final ILSMFileManager fileManager;
     // For creating BTree's used in flush and merge.
-    private final TreeFactory<BTree> diskBTreeFactory;
+    private final TreeIndexFactory<BTree> diskBTreeFactory;
     // For creating BTree's used in bulk load. Different from diskBTreeFactory
     // because it should have a different tuple writer in it's leaf frames.
-    private final TreeFactory<BTree> bulkLoadBTreeFactory;
+    private final TreeIndexFactory<BTree> bulkLoadBTreeFactory;
     private final IBufferCache diskBufferCache;
     private final IFileMapProvider diskFileMapProvider;
     // List of BTree instances. Using Object for better sharing via ILSMTree + LSMHarness.
@@ -105,7 +105,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     public LSMBTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMFileManager fileNameManager,
-            TreeFactory<BTree> diskBTreeFactory, TreeFactory<BTree> bulkLoadBTreeFactory,
+            TreeIndexFactory<BTree> diskBTreeFactory, TreeIndexFactory<BTree> bulkLoadBTreeFactory,
             IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
             ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler) {
@@ -309,7 +309,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         return createDiskBTree(bulkLoadBTreeFactory, fileRef, true);
     }
 
-    private BTree createDiskBTree(TreeFactory<BTree> factory, FileReference fileRef, boolean createBTree)
+    private BTree createDiskBTree(TreeIndexFactory<BTree> factory, FileReference fileRef, boolean createBTree)
             throws HyracksDataException {
         // Create new BTree instance.
         BTree diskBTree = factory.createIndexInstance(fileRef);

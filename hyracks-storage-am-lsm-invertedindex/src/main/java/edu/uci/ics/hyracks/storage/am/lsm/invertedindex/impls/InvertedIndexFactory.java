@@ -16,24 +16,24 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
+import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.IndexFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class InvertedIndexFactory<T extends IInvertedIndex> {
+public class InvertedIndexFactory extends IndexFactory<IIndex> {
 
-    protected IBufferCache bufferCache;
     protected ITypeTraits[] invListTypeTraits;
     protected IBinaryComparatorFactory[] invListCmpFactories;
     protected IInvertedListBuilder invListBuilder;
@@ -48,10 +48,11 @@ public class InvertedIndexFactory<T extends IInvertedIndex> {
     
     protected ILSMFileManager fileManager;
     
-    public InvertedIndexFactory(IBufferCache bufferCache, ITypeTraits[] invListTypeTraits,
+    public InvertedIndexFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
+            IFreePageManagerFactory freePageManagerFactory, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, IInvertedListBuilder invListBuilder,
             IBinaryTokenizer tokenizer, ILSMFileManager fileManager) {
-        this.bufferCache = bufferCache;
+        super(bufferCache, fileMapProvider, freePageManagerFactory);
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
         this.invListBuilder = invListBuilder;
@@ -72,12 +73,9 @@ public class InvertedIndexFactory<T extends IInvertedIndex> {
         this.fileManager = fileManager;
     }
 
-    public T createIndexInstance(BTree btree) {
-        return (T) new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories, invListBuilder,
-                tokenizer);               
-    }
-    
-    public IBufferCache getBufferCache() {
-        return bufferCache;
+    @Override
+    public IIndex createIndexInstance(FileReference file) {
+        return new InvertedIndex(bufferCache, btree, invListTypeTraits, invListCmpFactories, invListBuilder,
+                tokenizer); ;
     }
 }

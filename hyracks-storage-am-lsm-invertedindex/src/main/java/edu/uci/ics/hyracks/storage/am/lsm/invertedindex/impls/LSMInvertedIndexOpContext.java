@@ -32,7 +32,7 @@ public class LSMInvertedIndexOpContext implements IIndexOpContext {
     	InMemoryBtreeInvertedIndex memoryBTreeInvertedIndex = (InMemoryBtreeInvertedIndex)memoryInvertedIndex;
     	BTree btree = memoryBTreeInvertedIndex.getBTree();
     	this.cmp = MultiComparator.create(btree.getComparatorFactories());
-    	this.invListFieldCount = memoryBTreeInvertedIndex.getInvListElementCmpFactories().length;
+    	this.invListFieldCount = memoryBTreeInvertedIndex.getInvListCmpFactories().length;
     	this.tokenFieldCount = cmp.getKeyFieldCount() - invListFieldCount;
     }
     

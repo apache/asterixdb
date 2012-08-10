@@ -23,28 +23,17 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public abstract class TreeFactory<T extends ITreeIndex> {
-
-    protected final IBufferCache bufferCache;
-
-    protected final IFileMapProvider fileMapProvider;
-
-    protected final IFreePageManagerFactory freePageManagerFactory;
+public abstract class TreeIndexFactory<T extends ITreeIndex> extends IndexFactory<T> {
 
     protected final ITreeIndexFrameFactory interiorFrameFactory;
-
     protected final ITreeIndexFrameFactory leafFrameFactory;
-
     protected final IBinaryComparatorFactory[] cmpFactories;
-
     protected final int fieldCount;
 
-    public TreeFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
+    public TreeIndexFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             IFreePageManagerFactory freePageManagerFactory, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory leafFrameFactory, IBinaryComparatorFactory[] cmpFactories, int fieldCount) {
-        this.bufferCache = bufferCache;
-        this.fileMapProvider = fileMapProvider;
-        this.freePageManagerFactory = freePageManagerFactory;
+        super(bufferCache, fileMapProvider, freePageManagerFactory);
         this.interiorFrameFactory = interiorFrameFactory;
         this.leafFrameFactory = leafFrameFactory;
         this.cmpFactories = cmpFactories;

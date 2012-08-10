@@ -18,74 +18,123 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.http.TokenIterator;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexFileManager.LSMInvertedFileNameComponent;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
+public class LSMInvertedIndex implements ILSMIndex, IIndex {
+	private final Logger LOGGER = Logger.getLogger(LSMInvertedIndex.class.getName());
+	
+	public class LSMInvertedIndexComponent {
+        private final IIndex invIndex;
+        private final BTree deleteKeysBTree;
 
-    private final LSMHarness lsmHarness;
-    private final IInvertedIndex memoryInvertedIndex;
-    private final BTreeFactory diskBTreeFactory;
-    private final InvertedIndexFactory diskInvertedIndexFactory;
-    private final ILSMFileManager fileManager;
-    private final IFileMapProvider diskFileMapProvider;
-    private final ILSMComponentFinalizer componentFinalizer;
-    private LinkedList<Object> diskInvertedIndexList = new LinkedList<Object>();
-    private final IBufferCache diskBufferCache;
+        LSMInvertedIndexComponent(IIndex invIndex, BTree deleteKeysBTree) {
+            this.invIndex = invIndex;
+            this.deleteKeysBTree = deleteKeysBTree;
+        }
 
-    private final IIndexAccessor memAccessor;
+        public IIndex getInvIndex() {
+            return invIndex;
+        }
 
-    private boolean isOpen;
+        public BTree getDeletedKeysBTree() {
+            return deleteKeysBTree;
+        }
+    }
+	
+    protected final LSMHarness lsmHarness;
+    
+    // In-memory components.
+    protected final LSMInvertedIndexComponent memComponent;
+    protected final IBufferCache memBufferCache;
+    protected final InMemoryFreePageManager memFreePageManager;
 
-    public LSMInvertedIndex(IInvertedIndex memoryInvertedIndex, BTreeFactory diskBTreeFactory,
-            InvertedIndexFactory diskInvertedIndexFactory, ILSMFileManager fileManager,
-            IFileMapProvider diskFileMapProvider) {
-        this.memoryInvertedIndex = memoryInvertedIndex;
-        this.diskBTreeFactory = diskBTreeFactory;
-        this.diskInvertedIndexFactory = diskInvertedIndexFactory;
+    // On-disk components.
+    protected final ILSMFileManager fileManager;
+    // For creating inverted indexes in flush and merge.
+    protected final InvertedIndexFactory diskInvIndexFactory;
+    protected final IBufferCache diskBufferCache;
+    protected final IFileMapProvider diskFileMapProvider;
+    // List of LSMInvertedIndexComponent instances. Using Object for better sharing via
+    // ILSMIndex + LSMHarness.
+    protected final LinkedList<Object> diskComponents = new LinkedList<Object>();
+    // Helps to guarantees physical consistency of LSM components.
+    protected final ILSMComponentFinalizer componentFinalizer;
+    
+    // Type traits and comparators for tokens and inverted-list elements.
+    protected final ITypeTraits[] invListTypeTraits;
+    protected final IBinaryComparatorFactory[] invListCmpFactories;
+    protected final ITypeTraits[] tokenTypeTraits;
+    protected final IBinaryComparatorFactory[] tokenCmpFactories;
+    
+    private boolean isActivated = false;
+
+    public LSMInvertedIndex(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager, InvertedIndexFactory diskInvIndexFactory,
+            ILSMFileManager fileManager, IFileMapProvider diskFileMapProvider, ITypeTraits[] invListTypeTraits,
+            IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
+            IBinaryComparatorFactory[] tokenCmpFactories, ILSMFlushController flushController,
+            ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler) {
+        // TODO: Finish this one properly.
+        InMemoryBtreeInvertedIndex memInvIndex = null;
+        BTree deleteKeysBTree = null;
+        memComponent = new LSMInvertedIndexComponent(memInvIndex, deleteKeysBTree);
+        this.memBufferCache = memBufferCache;
+        this.memFreePageManager = memFreePageManager;
         this.fileManager = fileManager;
+        this.diskInvIndexFactory = diskInvIndexFactory;        
+        this.diskBufferCache = diskInvIndexFactory.getBufferCache();
         this.diskFileMapProvider = diskFileMapProvider;
-        this.lsmHarness = new LSMHarness(this);
+        this.invListTypeTraits = invListTypeTraits;
+        this.invListCmpFactories = invListCmpFactories;
+        this.tokenTypeTraits = tokenTypeTraits;
+        this.tokenCmpFactories = tokenCmpFactories;
+        
+        this.lsmHarness = new LSMHarness(this, flushController, mergePolicy, opTracker, ioScheduler);
         this.componentFinalizer = new InvertedIndexComponentFinalizer(diskFileMapProvider);
-        this.diskBufferCache = diskBTreeFactory.getBufferCache();
-        this.memAccessor = memoryInvertedIndex.createAccessor();
     }
 
     @Override
-    public void create(int indexFileId) throws HyracksDataException {
+    public synchronized void create(int indexFileId) throws HyracksDataException {
+        if (isActivated) {
+            return;
+        }
+        
         // TODO: What else is needed here?
         memoryInvertedIndex.create(indexFileId);
         fileManager.createDirs();
@@ -429,12 +478,104 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
 
     @Override
     public IBinaryComparatorFactory[] getInvListElementCmpFactories() {
-        return memoryInvertedIndex.getInvListElementCmpFactories();
+        return memoryInvertedIndex.getInvListCmpFactories();
     }
 
     @Override
     public ITypeTraits[] getTypeTraits() {
-        return memoryInvertedIndex.getTypeTraits();
+        return memoryInvertedIndex.getInvListTypeTraits();
+    }
+
+    @Override
+    public void create() throws HyracksDataException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void activate() throws HyracksDataException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void clear() throws HyracksDataException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void deactivate() throws HyracksDataException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void destroy() throws HyracksDataException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void validate() throws HyracksDataException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public long getInMemorySize() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws IndexException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Object merge(List<Object> mergedComponents, ILSMIOOperation operation) throws HyracksDataException,
+            IndexException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Object flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ILSMFlushController getFlushController() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ILSMOperationTracker getOperationTracker() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ILSMIOOperationScheduler getIOScheduler() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

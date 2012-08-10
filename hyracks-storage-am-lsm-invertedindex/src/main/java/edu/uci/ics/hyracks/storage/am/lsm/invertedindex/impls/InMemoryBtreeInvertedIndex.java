@@ -14,198 +14,148 @@
  */
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
+import java.io.File;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
+import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IToken;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
-public class InMemoryBtreeInvertedIndex implements IIndex {
+public class InMemoryBtreeInvertedIndex implements IInvertedIndex {
 
     private final BTree btree;
-    private final IIndexAccessor btreeAccessor;
-//    private final ITypeTraits[] tokenTypeTraits;
-//    private final IBinaryComparatorFactory[] tokenCmpFactories;
-    private final ITypeTraits[] invertedListTypeTraits;
-    private final IBinaryComparatorFactory[] invertedListCmpFactories;
+    private final FileReference memBTreeFile = new FileReference(new File("memBTree"));
+    private final ITypeTraits[] tokenTypeTraits;
+    private final IBinaryComparatorFactory[] tokenCmpFactories;
+    private final ITypeTraits[] invListTypeTraits;
+    private final IBinaryComparatorFactory[] invListCmpFactories;
     private final IBinaryTokenizer tokenizer;
-    private final int numTokenFields;
 
-    private final ArrayTupleBuilder btreeTupleBuilder;
-    private final ArrayTupleReference btreeTupleReference;
+    private final ITypeTraits[] btreeTypeTraits;
+    private final IBinaryComparatorFactory[] btreeCmpFactories;
 
-//    public InMemoryBtreeInvertedIndex(IBufferCache inMemBufferCache, IFreePageManager inMemFreePageManager,
-//            ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories,
-//            ITypeTraits[] invertedListTypeTraits, IBinaryComparatorFactory[] invertedListCmpFactories,
-//            IBinaryTokenizer tokenizer) {
-//        this.tokenTypeTraits = tokenTypeTraits;
-//        this.tokenCmpFactories = tokenCmpFactories;
-//        this.invertedListTypeTraits = invertedListTypeTraits;
-//        this.invertedListCmpFactories = invertedListCmpFactories;
-//        this.tokenizer = tokenizer;
-//        
-//        this.btreeTupleBuilder = new ArrayTupleBuilder(btree.getFieldCount());
-//        this.btreeTupleReference = new ArrayTupleReference();
-//    }
-
-    public InMemoryBtreeInvertedIndex(BTree btree, ITypeTraits[] invListTypeTraits,
-            IBinaryComparatorFactory[] invListCmpFactories, IBinaryTokenizer tokenizer) {
-        // membufcache, tokenCmpFactories, memfpmgr, tokentypetraits
-        //
-        // IBufferCache bufferCache, int fieldCount, IBinaryComparatorFactory[] cmpFactories, IFreePageManager freePageManager,
-        // ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory
-        this.btree = btree;
-        this.btreeAccessor = btree.createAccessor();
-        this.invertedListTypeTraits = invListTypeTraits;
-        this.invertedListCmpFactories = invListCmpFactories;
+    public InMemoryBtreeInvertedIndex(IBufferCache memBufferCache, IFreePageManager memFreePageManager,
+            ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
+            ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizer tokenizer)
+            throws BTreeException {
+        this.tokenTypeTraits = tokenTypeTraits;
+        this.tokenCmpFactories = tokenCmpFactories;
+        this.invListTypeTraits = invListTypeTraits;
+        this.invListCmpFactories = invListCmpFactories;
         this.tokenizer = tokenizer;
-        this.numTokenFields = btree.getComparatorFactories().length - invListCmpFactories.length;
-
-        // To generate in-memory BTree tuples 
-        this.btreeTupleBuilder = new ArrayTupleBuilder(btree.getFieldCount());
-        this.btreeTupleReference = new ArrayTupleReference();
+        // BTree tuples: <tokens, inverted-list elements>.
+        int numBTreeFields = tokenTypeTraits.length + invListTypeTraits.length;
+        btreeTypeTraits = new ITypeTraits[numBTreeFields];
+        btreeCmpFactories = new IBinaryComparatorFactory[numBTreeFields];
+        for (int i = 0; i < tokenTypeTraits.length; i++) {
+            btreeTypeTraits[i] = tokenTypeTraits[i];
+            btreeCmpFactories[i] = tokenCmpFactories[i];
+        }
+        for (int i = 0; i < invListTypeTraits.length; i++) {
+            btreeTypeTraits[tokenTypeTraits.length + i] = invListTypeTraits[i];
+            btreeCmpFactories[tokenTypeTraits.length + i] = invListCmpFactories[i];
+        }
+        this.btree = BTreeUtils.createBTree(memBufferCache,
+                ((InMemoryBufferCache) memBufferCache).getFileMapProvider(), btreeTypeTraits, btreeCmpFactories,
+                BTreeLeafFrameType.REGULAR_NSM, memBTreeFile);
     }
 
     @Override
-	public void create() throws HyracksDataException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void activate() throws HyracksDataException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void clear() throws HyracksDataException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void deactivate() throws HyracksDataException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void destroy() throws HyracksDataException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public IIndexAccessor createAccessor(
-			IModificationOperationCallback modificationCallback,
-			ISearchOperationCallback searchCallback) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void validate() throws HyracksDataException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public long getInMemorySize() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public IIndexBulkLoader createBulkLoader(float fillFactor,
-			boolean verifyInput) throws IndexException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-    
-    @Override
-    public void open(int fileId) {
-        btree.open(fileId);
+    public void create() throws HyracksDataException {
+        btree.create();
     }
 
     @Override
-    public void create(int indexFileId) throws HyracksDataException {
-        btree.create(indexFileId);
+    public void activate() throws HyracksDataException {
+        btree.activate();
     }
 
     @Override
-    public void close() {
-        btree.close();
+    public void clear() throws HyracksDataException {
+        btree.clear();
     }
 
-    public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
-            IndexException {
-        LSMInvertedIndexOpContext ctx = (LSMInvertedIndexOpContext) ictx;
+    @Override
+    public void deactivate() throws HyracksDataException {
+        btree.deactivate();
+    }
 
-        //Tuple --> |Field1|Field2| ... |FieldN|doc-id|
-        //Each field represents a document and doc-id always comes at the last field.
-        //parse document
-        //create a list of (term,doc-id)
-        //sort the list in the order of term
-        //insert a pair of (term, doc-id) into in-memory BTree until to the end of the list.
+    @Override
+    public void destroy() throws HyracksDataException {
+        btree.destroy();
+    }
 
-        for (int i = 0; i < numTokenFields; i++) {
-            tokenizer.reset(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
-            while (tokenizer.hasNext()) {
-                tokenizer.next();
-                IToken token = tokenizer.getToken();
-                btreeTupleBuilder.reset();
+    @Override
+    public void validate() throws HyracksDataException {
+        btree.validate();
+    }
 
-                try {
-                    token.serializeToken(btreeTupleBuilder.getDataOutput());
-                } catch (IOException e) {
-                    throw new HyracksDataException(e);
-                }
-                btreeTupleBuilder.addFieldEndOffset();
-
-                // This doesn't work for some reason.
-                //  btreeTupleBuilder.addField(token.getData(), token.getStart(), token.getTokenLength());
-
-                btreeTupleBuilder.addField(tuple.getFieldData(0), tuple.getFieldStart(1), tuple.getFieldLength(1));
-                btreeTupleReference.reset(btreeTupleBuilder.getFieldEndOffsets(), btreeTupleBuilder.getByteArray());
-
-                try {
-                    btreeAccessor.insert(btreeTupleReference);
-                } catch (BTreeDuplicateKeyException e) {
-                    // Consciously ignoring... guarantees uniqueness!
-                    // When duplication occurs, the current insert can be simply ignored 
-                    // since the current inverted list stores doc-id only.
-                    // TODO 
-                    // We may work around this duplication issue by pre-processing the inserted document.
-                    // This pre-processing will generate only unique <term, doc-id> pair for each document.
-                    // Therefore there will be no duplication in in-memory BTree.    
-                }
+    public boolean insert(ITupleReference tuple, BTreeAccessor btreeAccessor, IIndexOpContext ictx)
+            throws HyracksDataException, IndexException {
+        InMemoryBtreeInvertedIndexOpContext ctx = (InMemoryBtreeInvertedIndexOpContext) ictx;
+        // TODO: We can probably avoid copying the data into a new tuple here.
+        tokenizer.reset(tuple.getFieldData(0), tuple.getFieldStart(0), tuple.getFieldLength(0));
+        while (tokenizer.hasNext()) {
+            tokenizer.next();
+            IToken token = tokenizer.getToken();
+            ctx.btreeTupleBuilder.reset();
+            // Add token field.
+            try {
+                token.serializeToken(ctx.btreeTupleBuilder.getDataOutput());
+            } catch (IOException e) {
+                throw new HyracksDataException(e);
+            }
+            ctx.btreeTupleBuilder.addFieldEndOffset();
+            // Add inverted-list element fields.
+            for (int i = 0; i < invListTypeTraits.length; i++) {
+                ctx.btreeTupleBuilder.addField(tuple.getFieldData(i + 1), tuple.getFieldStart(i + 1),
+                        tuple.getFieldLength(i + 1));
+            }
+            // Reset tuple reference for insert operation.
+            ctx.btreeTupleReference.reset(ctx.btreeTupleBuilder.getFieldEndOffsets(),
+                    ctx.btreeTupleBuilder.getByteArray());
+            try {
+                btreeAccessor.insert(ctx.btreeTupleReference);
+            } catch (BTreeDuplicateKeyException e) {
+                // This exception may be caused by duplicate tokens in the same insert "document".
+                // We ignore such duplicate tokens in all inverted-index implementations, hence
+                // we can safely ignore this exception.
             }
         }
         return true;
     }
 
     @Override
+    public long getInMemorySize() {
+        InMemoryBufferCache memBufferCache = (InMemoryBufferCache) btree.getBufferCache();
+        return memBufferCache.getNumPages() * memBufferCache.getPageSize();
+    }
+
+    @Override
     public IInvertedListCursor createInvertedListCursor() {
-        return new InMemoryBtreeInvertedListCursor(btree, invertedListTypeTraits);
+        return new InMemoryBtreeInvertedListCursor(btree, invListTypeTraits);
     }
 
     @Override
@@ -216,23 +166,10 @@ public class InMemoryBtreeInvertedIndex implements IIndex {
     }
 
     @Override
-    public IIndexAccessor createAccessor() {
-        return new InMemoryBtreeInvertedIndexAccessor(this, new LSMInvertedIndexOpContext(this), tokenizer);
-    }
-
-    @Override
-    public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws IndexException, HyracksDataException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void bulkLoadAddTuple(ITupleReference tuple, IIndexBulkLoadContext ictx) throws HyracksDataException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException {
-        throw new UnsupportedOperationException();
+    public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback) {
+        return new InMemoryBtreeInvertedIndexAccessor(this, new InMemoryBtreeInvertedIndexOpContext(
+                btreeTypeTraits.length), tokenizer);
     }
 
     @Override
@@ -245,17 +182,22 @@ public class InMemoryBtreeInvertedIndex implements IIndex {
         return IndexType.INVERTED;
     }
 
-    @Override
-    public IBinaryComparatorFactory[] getInvListElementCmpFactories() {
-        return invertedListCmpFactories;
-    }
-
-    @Override
-    public ITypeTraits[] getTypeTraits() {
-        return invertedListTypeTraits;
-    }
-
     public BTree getBTree() {
         return btree;
+    }
+
+    @Override
+    public IBinaryComparatorFactory[] getInvListCmpFactories() {
+        return invListCmpFactories;
+    }
+
+    @Override
+    public ITypeTraits[] getInvListTypeTraits() {
+        return invListTypeTraits;
+    }
+    
+    @Override
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws IndexException {
+        throw new UnsupportedOperationException("Bulk load not supported by in-memory inverted index.");
     }
 }

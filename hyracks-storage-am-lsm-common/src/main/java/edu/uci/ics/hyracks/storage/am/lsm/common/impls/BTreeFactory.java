@@ -23,7 +23,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class BTreeFactory extends TreeFactory<BTree> {
+public class BTreeFactory extends TreeIndexFactory<BTree> {
 
     public BTreeFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             IFreePageManagerFactory freePageManagerFactory, ITreeIndexFrameFactory interiorFrameFactory,

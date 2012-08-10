@@ -35,15 +35,9 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
-import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearcher;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
@@ -65,22 +59,16 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
     protected List<ByteBuffer> prevResultBuffers = new ArrayList<ByteBuffer>();
     protected List<ByteBuffer> swap = null;
     protected int maxResultBufIdx = 0;
-
-    protected final ITreeIndexFrame leafFrame;
-    protected final ITreeIndexFrame interiorFrame;
-    protected final ITreeIndexCursor btreeCursor;
-    protected final FrameTupleReference searchKey = new FrameTupleReference();
-    protected final RangePredicate btreePred = new RangePredicate(null, null, true, true, null, null);
-    protected final ITreeIndexAccessor btreeAccessor;
-
+    
     protected RecordDescriptor queryTokenRecDesc = new RecordDescriptor(
             new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
     protected ArrayTupleBuilder queryTokenBuilder = new ArrayTupleBuilder(queryTokenRecDesc.getFieldCount());
     protected DataOutput queryTokenDos = queryTokenBuilder.getDataOutput();
     protected FrameTupleAppender queryTokenAppender;
     protected ByteBuffer queryTokenFrame;
+    protected final FrameTupleReference searchKey = new FrameTupleReference();
 
-    protected final InvertedIndex invIndex;
+    protected final IInvertedIndex invIndex;
     protected final MultiComparator invListCmp;
     protected final ITypeTraits[] invListFieldsWithCount;
     protected int occurrenceThreshold;
@@ -89,16 +77,12 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
     protected List<IInvertedListCursor> invListCursorCache = new ArrayList<IInvertedListCursor>(cursorCacheSize);
     protected List<IInvertedListCursor> invListCursors = new ArrayList<IInvertedListCursor>(cursorCacheSize);
 
-    public TOccurrenceSearcher(IHyracksCommonContext ctx, InvertedIndex invIndex) {
+    public TOccurrenceSearcher(IHyracksCommonContext ctx, IInvertedIndex invIndex) {
         this.ctx = ctx;
         this.invIndex = invIndex;
-        this.invListCmp = MultiComparator.create(invIndex.getInvListElementCmpFactories());
+        this.invListCmp = MultiComparator.create(invIndex.getInvListCmpFactories());
 
-        leafFrame = invIndex.getBTree().getLeafFrameFactory().createFrame();
-        interiorFrame = invIndex.getBTree().getInteriorFrameFactory().createFrame();
-
-        btreeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) leafFrame, false);
-        ITypeTraits[] invListFields = invIndex.getTypeTraits();
+        ITypeTraits[] invListFields = invIndex.getInvListTypeTraits();
         invListFieldsWithCount = new ITypeTraits[invListFields.length + 1];
         int tmp = 0;
         for (int i = 0; i < invListFields.length; i++) {
@@ -115,23 +99,14 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         newResultBuffers.add(ctx.allocateFrame());
         prevResultBuffers.add(ctx.allocateFrame());
 
-        MultiComparator searchCmp = MultiComparator.create(invIndex.getBTree().getComparatorFactories());
-        btreePred.setLowKeyComparator(searchCmp);
-        btreePred.setHighKeyComparator(searchCmp);
-        btreePred.setLowKey(searchKey, true);
-        btreePred.setHighKey(searchKey, true);
-
-        // pre-create cursor objects
+        // Pre-create cursor objects.
         for (int i = 0; i < cursorCacheSize; i++) {
-            invListCursorCache.add(new FixedSizeElementInvertedListCursor(invIndex.getBufferCache(), invIndex
-                    .getInvListsFileId(), invIndex.getTypeTraits()));
+            invListCursorCache.add(invIndex.createInvertedListCursor());
         }
 
         queryTokenAppender = new FrameTupleAppender(ctx.getFrameSize());
         queryTokenFrame = ctx.allocateFrame();
 
-        btreeAccessor = invIndex.getBTree().createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
         currentNumResults = 0;
     }
 
@@ -175,19 +150,18 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         queryTokenAccessor.reset(queryTokenFrame);
         int numQueryTokens = queryTokenAccessor.getTupleCount();
 
-        // expand cursor cache if necessary
+        // Expand cursor cache if necessary.
         if (numQueryTokens > invListCursorCache.size()) {
             int diff = numQueryTokens - invListCursorCache.size();
             for (int i = 0; i < diff; i++) {
-                invListCursorCache.add(new FixedSizeElementInvertedListCursor(invIndex.getBufferCache(), invIndex
-                        .getInvListsFileId(), invIndex.getTypeTraits()));
+                invListCursorCache.add(invIndex.createInvertedListCursor());
             }
         }
 
         invListCursors.clear();
         for (int i = 0; i < numQueryTokens; i++) {
             searchKey.reset(queryTokenAccessor, i);
-            invIndex.openCursor(btreeCursor, btreePred, btreeAccessor, invListCursorCache.get(i));
+            invIndex.openInvertedListCursor(invListCursorCache.get(i), searchKey);
             invListCursors.add(invListCursorCache.get(i));
         }
 

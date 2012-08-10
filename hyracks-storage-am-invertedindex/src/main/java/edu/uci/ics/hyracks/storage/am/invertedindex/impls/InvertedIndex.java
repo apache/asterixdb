@@ -28,9 +28,11 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
@@ -41,11 +43,13 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearcher;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
@@ -62,7 +66,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
  * implemented features: updates (insert/update/delete) Limitations: a query
  * cannot exceed the size of a Hyracks frame.
  */
-public class InvertedIndex implements IIndex {
+public class InvertedIndex implements IInvertedIndex {
     private final IHyracksCommonContext ctx = new DefaultHyracksCommonContext();
 
     private BTree btree;
@@ -374,11 +378,11 @@ public class InvertedIndex implements IIndex {
         return fileId;
     }
 
-    public IBinaryComparatorFactory[] getInvListElementCmpFactories() {
+    public IBinaryComparatorFactory[] getInvListCmpFactories() {
         return invListCmpFactories;
     }
 
-    public ITypeTraits[] getTypeTraits() {
+    public ITypeTraits[] getInvListTypeTraits() {
         return invListTypeTraits;
     }
 
@@ -444,7 +448,7 @@ public class InvertedIndex implements IIndex {
     // results during inverted index searches.
     // TODO: In the future we should use the real HyracksTaskContext to track
     // frame usage.
-    private class DefaultHyracksCommonContext implements IHyracksCommonContext {
+    public static class DefaultHyracksCommonContext implements IHyracksCommonContext {
         private final int FRAME_SIZE = 32768;
 
         @Override
@@ -480,5 +484,50 @@ public class InvertedIndex implements IIndex {
     @Override
     public long getInMemorySize() {
         return 0;
+    }
+
+    @Override
+    public IInvertedListCursor createInvertedListCursor() {
+        return new FixedSizeElementInvertedListCursor(bufferCache, fileId, invListTypeTraits);
+    }
+
+    @Override
+    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference tupleReference)
+            throws HyracksDataException, IndexException {
+        // TODO: Ideally, we should not create this objects over and over.
+        // Probably need a fancier list cursor for with.
+        RangePredicate btreePred = new RangePredicate(null, null, true, true, null, null);
+        ITreeIndexFrame leafFrame = btree.getLeafFrameFactory().createFrame();
+        ITreeIndexCursor btreeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) leafFrame, false);
+        MultiComparator searchCmp = MultiComparator.create(btree.getComparatorFactories());
+        btreePred.setLowKeyComparator(searchCmp);
+        btreePred.setHighKeyComparator(searchCmp);
+        btreePred.setLowKey(tupleReference, true);
+        btreePred.setHighKey(tupleReference, true);
+
+        // TODO: Worry about these callbacks later.
+        ITreeIndexAccessor btreeAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        btreeAccessor.search(btreeCursor, btreePred);
+        try {
+            if (btreeCursor.hasNext()) {
+                btreeCursor.next();
+                ITupleReference frameTuple = btreeCursor.getTuple();
+                // Hardcoded mapping of btree fields
+                int startPageId = IntegerSerializerDeserializer.getInt(frameTuple.getFieldData(1),
+                        frameTuple.getFieldStart(1));
+                int endPageId = IntegerSerializerDeserializer.getInt(frameTuple.getFieldData(2),
+                        frameTuple.getFieldStart(2));
+                int startOff = IntegerSerializerDeserializer.getInt(frameTuple.getFieldData(3),
+                        frameTuple.getFieldStart(3));
+                int numElements = IntegerSerializerDeserializer.getInt(frameTuple.getFieldData(4),
+                        frameTuple.getFieldStart(4));
+                listCursor.reset(startPageId, endPageId, startOff, numElements);
+            } else {
+                listCursor.reset(0, 0, 0, 0);
+            }
+        } finally {
+            btreeCursor.close();
+            btreeCursor.reset();
+        }
     }
 }

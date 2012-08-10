@@ -31,7 +31,7 @@ public class TOccurrenceSearcherSuffixScanOnly extends TOccurrenceSearcher {
 	
     public TOccurrenceSearcherSuffixScanOnly(IHyracksTaskContext ctx, InvertedIndex invIndex) {
         super(ctx, invIndex);
-        this.invListCmp = MultiComparator.create(invIndex.getInvListElementCmpFactories());
+        this.invListCmp = MultiComparator.create(invIndex.getInvListCmpFactories());
     }
 
     protected int mergeSuffixLists(int numPrefixTokens, int numQueryTokens, int maxPrevBufIdx) throws HyracksDataException {

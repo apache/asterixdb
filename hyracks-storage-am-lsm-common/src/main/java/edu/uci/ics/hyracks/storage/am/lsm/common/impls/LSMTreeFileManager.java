@@ -42,7 +42,7 @@ public class LSMTreeFileManager implements ILSMFileManager {
     // where to flush and merge
     protected final IIOManager ioManager;
     protected final IFileMapProvider fileMapProvider;
-    protected final TreeFactory<? extends ITreeIndex> treeFactory;
+    protected final TreeIndexFactory<? extends ITreeIndex> treeFactory;
 
     // baseDir should reflect dataset name and partition name.
     protected FileReference file;
@@ -61,7 +61,7 @@ public class LSMTreeFileManager implements ILSMFileManager {
     };
 
     public LSMTreeFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
-            TreeFactory<? extends ITreeIndex> treeFactory) {
+            TreeIndexFactory<? extends ITreeIndex> treeFactory) {
         this.file = file;
         this.baseDir = file.getFile().getPath();
         if (!baseDir.endsWith(System.getProperty("file.separator"))) {
@@ -154,7 +154,7 @@ public class LSMTreeFileManager implements ILSMFileManager {
     }
 
     protected void cleanupAndGetValidFilesInternal(IODeviceHandle dev, FilenameFilter filter,
-            TreeFactory<? extends ITreeIndex> treeFactory, ILSMComponentFinalizer componentFinalizer,
+            TreeIndexFactory<? extends ITreeIndex> treeFactory, ILSMComponentFinalizer componentFinalizer,
             ArrayList<ComparableFileName> allFiles) throws HyracksDataException {
         File dir = new File(dev.getPath(), baseDir);
         String[] files = dir.list(filter);
