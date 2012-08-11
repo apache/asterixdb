@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -26,12 +26,12 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.ConcatenatingTupleReference;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.tuples.ConcatenatingTupleReference;
+import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
 
-public class InMemoryBtreeInvertedListCursor implements IInvertedListCursor {
+public class InMemoryInvertedListCursor implements IInvertedListCursor {
     private RangePredicate btreePred;
     private BTreeAccessor btreeAccessor;
     private IIndexCursor btreeCursor;
@@ -46,7 +46,7 @@ public class InMemoryBtreeInvertedListCursor implements IInvertedListCursor {
     
     private int numElements = -1;
     
-    public InMemoryBtreeInvertedListCursor(int invListFieldCount, int tokenFieldCount) {
+    public InMemoryInvertedListCursor(int invListFieldCount, int tokenFieldCount) {
         int[] fieldPermutation = new int[invListFieldCount];
         for (int i = 0; i < invListFieldCount; i++) {
             fieldPermutation[i] = tokenFieldCount + i;
@@ -91,12 +91,7 @@ public class InMemoryBtreeInvertedListCursor implements IInvertedListCursor {
     }
 
     @Override
-    public void pinPagesSync() throws HyracksDataException {
-        // Do nothing
-    }
-
-    @Override
-    public void pinPagesAsync() throws HyracksDataException {
+    public void pinPages() throws HyracksDataException {
         // Do nothing
     }
 

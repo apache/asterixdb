@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 
 import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -33,15 +33,15 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndexSearchPre
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.TOccurrenceSearcher;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
 
-public class InMemoryBtreeInvertedIndexAccessor implements IIndexAccessor {
+public class InMemoryInvertedIndexAccessor implements IIndexAccessor {
     // TODO: This ctx needs to go away.
     protected final IHyracksCommonContext hyracksCtx = new DefaultHyracksCommonContext();
     protected final IInvertedIndexSearcher searcher;
     protected IIndexOpContext opCtx;
-    protected InMemoryBtreeInvertedIndex memoryBtreeInvertedIndex;
+    protected InMemoryInvertedIndex memoryBtreeInvertedIndex;
     protected BTreeAccessor btreeAccessor;
 
-    public InMemoryBtreeInvertedIndexAccessor(InMemoryBtreeInvertedIndex memoryBtreeInvertedIndex,
+    public InMemoryInvertedIndexAccessor(InMemoryInvertedIndex memoryBtreeInvertedIndex,
             IIndexOpContext opCtx, IBinaryTokenizer tokenizer) {
         this.opCtx = opCtx;
         this.memoryBtreeInvertedIndex = memoryBtreeInvertedIndex;

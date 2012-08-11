@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -53,7 +53,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexFileManager.LSMInvertedFileNameComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.LSMInvertedIndexFileManager.LSMInvertedFileNameComponent;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
@@ -111,7 +111,7 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
             IBinaryComparatorFactory[] tokenCmpFactories, ILSMFlushController flushController,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler) {
         // TODO: Finish this one properly.
-        InMemoryBtreeInvertedIndex memInvIndex = null;
+        InMemoryInvertedIndex memInvIndex = null;
         BTree deleteKeysBTree = null;
         memComponent = new LSMInvertedIndexComponent(memInvIndex, deleteKeysBTree);
         this.memBufferCache = memBufferCache;
@@ -355,7 +355,7 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
         // ---------------------------------------------------
 
         // #. Create a scanCursor of memoryInvertedIndex to iterate all keys in it.
-        BTree inMemBtree = ((InMemoryBtreeInvertedIndex) memoryInvertedIndex).getBTree();
+        BTree inMemBtree = ((InMemoryInvertedIndex) memoryInvertedIndex).getBTree();
         IIndexAccessor btreeAccessor = inMemBtree.createAccessor();
         MultiComparator btreeMultiComparator = MultiComparator.create(inMemBtree.getComparatorFactories());
         RangePredicate scanPred = new RangePredicate(null, null, true, true, btreeMultiComparator, btreeMultiComparator);
@@ -438,7 +438,7 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
     public InMemoryFreePageManager getInMemoryFreePageManager() {
         // TODO This code should be changed more generally if IInMemoryInvertedIndex interface is defined and
         //      InMemoryBtreeInvertedIndex implements IInMemoryInvertedIndex
-        InMemoryBtreeInvertedIndex memoryBTreeInvertedIndex = (InMemoryBtreeInvertedIndex) memoryInvertedIndex;
+        InMemoryInvertedIndex memoryBTreeInvertedIndex = (InMemoryInvertedIndex) memoryInvertedIndex;
         return (InMemoryFreePageManager) memoryBTreeInvertedIndex.getBTree().getFreePageManager();
     }
 
@@ -446,7 +446,7 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
     public void resetInMemoryComponent() throws HyracksDataException {
         // TODO This code should be changed more generally if IInMemoryInvertedIndex interface is defined and
         //      InMemoryBtreeInvertedIndex implements IInMemoryInvertedIndex
-        InMemoryBtreeInvertedIndex memoryBTreeInvertedIndex = (InMemoryBtreeInvertedIndex) memoryInvertedIndex;
+        InMemoryInvertedIndex memoryBTreeInvertedIndex = (InMemoryInvertedIndex) memoryInvertedIndex;
         BTree memBTree = memoryBTreeInvertedIndex.getBTree();
         InMemoryFreePageManager memFreePageManager = (InMemoryFreePageManager) memBTree.getFreePageManager();
         memFreePageManager.reset();

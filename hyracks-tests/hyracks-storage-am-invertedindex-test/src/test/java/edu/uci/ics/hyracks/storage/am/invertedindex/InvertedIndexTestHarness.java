@@ -25,7 +25,8 @@ public class InvertedIndexTestHarness {
     private IHyracksTaskContext ctx;
     private IBufferCache bufferCache;
     private IFileMapProvider fileMapProvider;
-    private FileReference file;
+    private FileReference invListsFile;
+    private FileReference btreeFile;
 
     private final Random rnd = new Random();
     private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
@@ -51,13 +52,14 @@ public class InvertedIndexTestHarness {
         TestStorageManagerComponentHolder.init(pageSize, numPages, maxOpenFiles);
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        file = new FileReference(new File(fileName));
+        invListsFile = new FileReference(new File(fileName));
+        btreeFile = new FileReference(new File(fileName + "_btree"));
         rnd.setSeed(RANDOM_SEED);
     }
 
     public void tearDown() throws HyracksDataException {
         bufferCache.close();
-        file.delete();
+        invListsFile.delete();
     }
 
     public IHyracksTaskContext getHyracksTaskContext() {
@@ -72,8 +74,12 @@ public class InvertedIndexTestHarness {
         return fileMapProvider;
     }
 
-    public FileReference getFileReference() {
-        return file;
+    public FileReference getInvListsFile() {
+        return invListsFile;
+    }
+    
+    public FileReference getBTreeFile() {
+        return btreeFile;
     }
 
     public String getFileName() {

@@ -20,7 +20,9 @@ public class InMemoryBTreeInvertedIndexInsertTest extends AbstractInvertedIndexI
 
     @Override
     protected void setInvertedIndex() throws HyracksDataException {
-        invertedIndex = InvertedIndexTestUtils.createTestInMemoryBTreeInvertedIndex(harness, tokenizer);
+        invertedIndex = InvertedIndexTestUtils.createInMemoryInvertedIndex(harness, tokenizer);
+        invertedIndex.create();
+        invertedIndex.activate();
         invertedIndex.create(harness.getFileId());
         invertedIndex.open(harness.getFileId());
     }

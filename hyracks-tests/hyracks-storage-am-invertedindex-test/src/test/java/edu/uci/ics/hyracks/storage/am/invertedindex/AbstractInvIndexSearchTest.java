@@ -58,6 +58,7 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
     protected IFileMapProvider fmp;
 
     protected FileReference invListsFile = new FileReference(new File(invListsFileName));
+    protected FileReference btreeFile = new FileReference(new File(invListsFileName + "_btree"));
 
     protected ITypeTraits[] tokenTypeTraits = new ITypeTraits[] { UTF8StringPointable.TYPE_TRAITS };
     protected IBinaryComparatorFactory[] tokenCmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
@@ -109,7 +110,7 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
 
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
         invIndex = new InvertedIndex(bufferCache, fmp, invListBuilder, invListTypeTraits, invListCmpFactories,
-                tokenTypeTraits, tokenCmpFactories, invListsFile);
+                tokenTypeTraits, tokenCmpFactories, invListsFile, btreeFile);
         invIndex.create();
         invIndex.activate();
 

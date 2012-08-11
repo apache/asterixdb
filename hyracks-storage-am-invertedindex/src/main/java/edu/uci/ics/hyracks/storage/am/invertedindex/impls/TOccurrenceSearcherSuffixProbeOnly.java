@@ -40,7 +40,7 @@ public class TOccurrenceSearcherSuffixProbeOnly extends TOccurrenceSearcher {
             newResultBuffers = swap;
             currentNumResults = 0;
 
-            invListCursors.get(i).pinPagesSync();
+            invListCursors.get(i).pinPages();
             maxPrevBufIdx = mergeSuffixListProbe(invListCursors.get(i), prevResultBuffers, maxPrevBufIdx,
                     newResultBuffers, i, numQueryTokens);
             invListCursors.get(i).unpinPages();

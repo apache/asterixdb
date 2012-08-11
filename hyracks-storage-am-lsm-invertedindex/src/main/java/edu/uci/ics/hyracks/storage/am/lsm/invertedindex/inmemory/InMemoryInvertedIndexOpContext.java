@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -26,7 +26,7 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
-public class InMemoryBtreeInvertedIndexOpContext implements IIndexOpContext {
+public class InMemoryInvertedIndexOpContext implements IIndexOpContext {
     public IndexOp op;
     public final BTree btree;
 
@@ -41,7 +41,7 @@ public class InMemoryBtreeInvertedIndexOpContext implements IIndexOpContext {
     public ArrayTupleBuilder btreeTupleBuilder;
     public ArrayTupleReference btreeTupleReference;
 
-    public InMemoryBtreeInvertedIndexOpContext(BTree btree, IBinaryComparatorFactory[] tokenCmpFactories) {
+    public InMemoryInvertedIndexOpContext(BTree btree, IBinaryComparatorFactory[] tokenCmpFactories) {
         this.btree = btree;
         this.tokenCmpFactories = tokenCmpFactories;
     }

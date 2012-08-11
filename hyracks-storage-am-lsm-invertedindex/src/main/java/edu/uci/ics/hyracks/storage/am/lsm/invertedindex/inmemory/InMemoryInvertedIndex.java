@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +43,7 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IToken;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
-public class InMemoryBtreeInvertedIndex implements IInvertedIndex {
+public class InMemoryInvertedIndex implements IInvertedIndex {
 
     private final BTree btree;
     private final FileReference memBTreeFile = new FileReference(new File("memBTree"));
@@ -56,7 +56,7 @@ public class InMemoryBtreeInvertedIndex implements IInvertedIndex {
     private final ITypeTraits[] btreeTypeTraits;
     private final IBinaryComparatorFactory[] btreeCmpFactories;
 
-    public InMemoryBtreeInvertedIndex(IBufferCache memBufferCache, IFreePageManager memFreePageManager,
+    public InMemoryInvertedIndex(IBufferCache memBufferCache, IFreePageManager memFreePageManager,
             ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizer tokenizer)
             throws BTreeException {
@@ -114,7 +114,7 @@ public class InMemoryBtreeInvertedIndex implements IInvertedIndex {
 
     public boolean insert(ITupleReference tuple, BTreeAccessor btreeAccessor, IIndexOpContext ictx)
             throws HyracksDataException, IndexException {
-        InMemoryBtreeInvertedIndexOpContext ctx = (InMemoryBtreeInvertedIndexOpContext) ictx;
+        InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
         // TODO: We can possibly avoid copying the data into a new tuple here.
         tokenizer.reset(tuple.getFieldData(0), tuple.getFieldStart(0), tuple.getFieldLength(0));
         while (tokenizer.hasNext()) {
@@ -155,24 +155,22 @@ public class InMemoryBtreeInvertedIndex implements IInvertedIndex {
 
     @Override
     public IInvertedListCursor createInvertedListCursor() {
-        return new InMemoryBtreeInvertedListCursor(invListTypeTraits.length, tokenTypeTraits.length);
+        return new InMemoryInvertedListCursor(invListTypeTraits.length, tokenTypeTraits.length);
     }
 
     @Override
     public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference tupleReference, IIndexOpContext ictx)
             throws HyracksDataException, IndexException {
-        InMemoryBtreeInvertedIndexOpContext ctx = (InMemoryBtreeInvertedIndexOpContext) ictx;
-        InMemoryBtreeInvertedListCursor inMemListCursor = (InMemoryBtreeInvertedListCursor) listCursor;
+        InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
+        InMemoryInvertedListCursor inMemListCursor = (InMemoryInvertedListCursor) listCursor;
         inMemListCursor.prepare(ctx.btreeAccessor, ctx.btreePred, ctx.tokenFieldsCmp, ctx.btreeCmp);
-        
-        
         inMemListCursor.reset(tupleReference);
     }
 
     @Override
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
-        return new InMemoryBtreeInvertedIndexAccessor(this, new InMemoryBtreeInvertedIndexOpContext(
+        return new InMemoryInvertedIndexAccessor(this, new InMemoryInvertedIndexOpContext(
                 btree, tokenCmpFactories), tokenizer);
     }
 

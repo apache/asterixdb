@@ -69,12 +69,7 @@ public class FixedSizeElementInvertedListCursor implements IInvertedListCursor {
     }
 
     @Override
-    public void pinPagesAsync() {
-        // TODO: implement
-    }
-
-    @Override
-    public void pinPagesSync() throws HyracksDataException {
+    public void pinPages() throws HyracksDataException {
         int pix = 0;
         for (int i = startPageId; i <= endPageId; i++) {
             pages[pix] = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, i), false);
@@ -164,6 +159,7 @@ public class FixedSizeElementInvertedListCursor implements IInvertedListCursor {
         elementIndexes[numPages - 1] = numElements - 1;
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public String printInvList(ISerializerDeserializer[] serdes) throws HyracksDataException {
         int oldCurrentOff = currentOff;
@@ -176,10 +172,8 @@ public class FixedSizeElementInvertedListCursor implements IInvertedListCursor {
 
         StringBuilder strBuilder = new StringBuilder();
 
-        int count = 0;
         while (hasNext()) {
             next();
-            count++;
             for (int i = 0; i < tuple.getFieldCount(); i++) {
                 ByteArrayInputStream inStream = new ByteArrayInputStream(tuple.getFieldData(i), tuple.getFieldStart(i),
                         tuple.getFieldLength(i));
@@ -200,6 +194,7 @@ public class FixedSizeElementInvertedListCursor implements IInvertedListCursor {
         return strBuilder.toString();
     }
 
+    @SuppressWarnings("rawtypes")
     public String printCurrentElement(ISerializerDeserializer[] serdes) throws HyracksDataException {
         StringBuilder strBuilder = new StringBuilder();
         for (int i = 0; i < tuple.getFieldCount(); i++) {

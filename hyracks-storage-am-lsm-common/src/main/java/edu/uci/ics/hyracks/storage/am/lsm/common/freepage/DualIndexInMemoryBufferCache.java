@@ -13,19 +13,22 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.common.freepage;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
 
-public class LSMRTreeInMemoryBufferCache extends InMemoryBufferCache {
+/**
+ * In-memory buffer cache that supports two tree indexes.
+ * We assume that the tree indexes have 2 fixed pages, one at index 0 (metadata page), and one at index 1 (root page).
+ */
+public class DualIndexInMemoryBufferCache extends InMemoryBufferCache {
 
-    public LSMRTreeInMemoryBufferCache(ICacheMemoryAllocator allocator, int pageSize, int numPages) {
+    public DualIndexInMemoryBufferCache(ICacheMemoryAllocator allocator, int pageSize, int numPages) {
         super(allocator, pageSize, numPages, new TransientFileMapManager());
     }
 
@@ -33,10 +36,8 @@ public class LSMRTreeInMemoryBufferCache extends InMemoryBufferCache {
     public ICachedPage pin(long dpid, boolean newPage) {
         int pageId = BufferedFileHandle.getPageId(dpid);
         int fileId = BufferedFileHandle.getFileId(dpid);
-
         if (pageId < pages.length) {
             // Common case: Return regular page.
-
             if (pageId == 0 || pageId == 1) {
                 return pages[pageId + 2 * fileId];
             } else {

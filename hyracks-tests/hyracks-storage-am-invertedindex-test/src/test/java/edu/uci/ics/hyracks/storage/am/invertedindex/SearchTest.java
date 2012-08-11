@@ -135,7 +135,7 @@ public class SearchTest extends AbstractInvIndexSearchTest {
 
     public void loadData() throws IOException, IndexException {
         List<TokenIdPair> pairs = new ArrayList<TokenIdPair>();
-        // generate pairs for subsequent sorting and bulk-loading
+        // Generate pairs for subsequent sorting and bulk-loading.
         int id = 0;
         for (String s : dataStrings) {
             ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
@@ -151,7 +151,7 @@ public class SearchTest extends AbstractInvIndexSearchTest {
         }
         Collections.sort(pairs);
 
-        // bulk load index
+        // Bulk load index.
         IIndexBulkLoader bulkLoader = invIndex.createBulkLoader(BTree.DEFAULT_FILL_FACTOR, false);
 
         for (TokenIdPair t : pairs) {

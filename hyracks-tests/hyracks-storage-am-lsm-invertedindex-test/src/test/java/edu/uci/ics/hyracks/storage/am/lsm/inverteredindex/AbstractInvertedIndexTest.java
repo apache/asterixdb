@@ -25,9 +25,9 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
@@ -43,7 +43,6 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.impls.OccurrenceThresholdPan
 import edu.uci.ics.hyracks.storage.am.invertedindex.searchmodifiers.ConjunctiveSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IToken;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexAccessor;
 
 public abstract class AbstractInvertedIndexTest {
     protected Logger LOGGER;
@@ -78,6 +77,8 @@ public abstract class AbstractInvertedIndexTest {
         harness.setUp();
         setTokenizer();
         setInvertedIndex();
+        invertedIndex.create();
+        invertedIndex.activate();
         setLogger();
         setRandom();
         generateData();
@@ -261,7 +262,7 @@ public abstract class AbstractInvertedIndexTest {
         // Query all tokens in the baseline
 
         ConjunctiveSearchModifier searchModifier = new ConjunctiveSearchModifier();
-        InvertedIndexSearchPredicate searchPred = new InvertedIndexSearchPredicate(searchModifier);
+        InvertedIndexSearchPredicate searchPred = new InvertedIndexSearchPredicate(tokenizer, searchModifier);
         IIndexCursor resultCursor = invertedIndexAccessor.createSearchCursor();
         for (String tokenStr : baselineInvertedIndex.keySet()) {
             tuple = TupleUtils.createTuple(new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE },

@@ -50,12 +50,14 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.FixedSizeElementInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.FixedSizeElementInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
+import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndexOpContext;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
@@ -82,6 +84,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(stageletCtx);
 
         FileReference invListsFile = new FileReference(new File(invListsFileName));
+        FileReference btreeFile = new FileReference(new File(invListsFileName + "_btree"));
 
         ITypeTraits[] tokenTypeTraits = new ITypeTraits[] { UTF8StringPointable.TYPE_TRAITS };
 
@@ -98,7 +101,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
         InvertedIndex invIndex = new InvertedIndex(bufferCache, fmp, invListBuilder, invListTypeTraits,
-                invListCmpFactories, tokenTypeTraits, cmpFactories, invListsFile);
+                invListCmpFactories, tokenTypeTraits, cmpFactories, invListsFile, btreeFile);
         invIndex.create();
         invIndex.activate();
 
@@ -189,6 +192,8 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         tokenAccessor.reset(frame);
 
         // verify created inverted lists one-by-one
+        InvertedIndexOpContext opCtx = new InvertedIndexOpContext(invIndex.getBTree());
+        opCtx.reset(IndexOp.SEARCH);
         for (int i = 0; i < tokens.size(); i++) {
 
             tokenTupleBuilder.reset();
@@ -201,9 +206,9 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
             searchKey.reset(tokenAccessor, 0);
 
-            invIndex.openCursor(btreeCursor, btreePred, btreeAccessor, invListCursor);
+            invIndex.openInvertedListCursor(invListCursor, searchKey, opCtx);
 
-            invListCursor.pinPagesSync();
+            invListCursor.pinPages();
             int checkIndex = 0;
             while (invListCursor.hasNext()) {
                 invListCursor.next();
@@ -236,9 +241,9 @@ public class BulkLoadTest extends AbstractInvIndexTest {
 
             searchKey.reset(tokenAccessor, 0);
 
-            invIndex.openCursor(btreeCursor, btreePred, btreeAccessor, invListCursor);
-
-            invListCursor.pinPagesSync();
+            invIndex.openInvertedListCursor(invListCursor, searchKey, opCtx);
+            
+            invListCursor.pinPages();
             Assert.assertEquals(invListCursor.hasNext(), false);
             invListCursor.unpinPages();
         }

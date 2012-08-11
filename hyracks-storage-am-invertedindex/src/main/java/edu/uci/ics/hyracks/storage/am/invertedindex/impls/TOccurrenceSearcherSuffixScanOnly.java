@@ -41,7 +41,7 @@ public class TOccurrenceSearcherSuffixScanOnly extends TOccurrenceSearcher {
             newResultBuffers = swap;
             currentNumResults = 0;
 
-            invListCursors.get(i).pinPagesSync();
+            invListCursors.get(i).pinPages();
             maxPrevBufIdx = mergeSuffixListScan(invListCursors.get(i), prevResultBuffers, maxPrevBufIdx,
                     newResultBuffers, i, numQueryTokens);
             invListCursors.get(i).unpinPages();

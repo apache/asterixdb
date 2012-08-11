@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 
 import java.io.File;
 import java.io.FilenameFilter;

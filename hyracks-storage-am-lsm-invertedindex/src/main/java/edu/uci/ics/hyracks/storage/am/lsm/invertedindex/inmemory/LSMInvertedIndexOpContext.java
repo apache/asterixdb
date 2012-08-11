@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
@@ -29,7 +29,7 @@ public class LSMInvertedIndexOpContext implements IIndexOpContext {
     private final int tokenFieldCount;
     
     public LSMInvertedIndexOpContext(IInvertedIndex memoryInvertedIndex) {
-    	InMemoryBtreeInvertedIndex memoryBTreeInvertedIndex = (InMemoryBtreeInvertedIndex)memoryInvertedIndex;
+    	InMemoryInvertedIndex memoryBTreeInvertedIndex = (InMemoryInvertedIndex)memoryInvertedIndex;
     	BTree btree = memoryBTreeInvertedIndex.getBTree();
     	this.cmp = MultiComparator.create(btree.getComparatorFactories());
     	this.invListFieldCount = memoryBTreeInvertedIndex.getInvListCmpFactories().length;

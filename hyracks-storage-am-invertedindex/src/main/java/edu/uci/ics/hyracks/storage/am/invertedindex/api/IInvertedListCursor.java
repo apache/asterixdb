@@ -21,33 +21,33 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public interface IInvertedListCursor extends Comparable<IInvertedListCursor> {
-    void reset(int startPageId, int endPageId, int startOff, int numElements);
+    public void reset(int startPageId, int endPageId, int startOff, int numElements);
 
-    void pinPagesSync() throws HyracksDataException;
+    public void pinPages() throws HyracksDataException;
 
-    void pinPagesAsync() throws HyracksDataException;
+    public void unpinPages() throws HyracksDataException;
 
-    void unpinPages() throws HyracksDataException;
+    public boolean hasNext() throws HyracksDataException;
 
-    boolean hasNext() throws HyracksDataException;
+    public void next() throws HyracksDataException;
 
-    void next() throws HyracksDataException;
-
-    ITupleReference getTuple();
+    public ITupleReference getTuple();
 
     // getters
-    int getNumElements();
+    public int getNumElements();
 
-    int getStartPageId();
+    public int getStartPageId();
 
-    int getEndPageId();
+    public int getEndPageId();
 
-    int getStartOff();
+    public int getStartOff();
 
-    boolean containsKey(ITupleReference searchTuple, MultiComparator invListCmp) throws HyracksDataException;
+    public boolean containsKey(ITupleReference searchTuple, MultiComparator invListCmp) throws HyracksDataException;
 
     // for debugging
-    String printInvList(ISerializerDeserializer[] serdes) throws HyracksDataException;
+    @SuppressWarnings("rawtypes")
+    public String printInvList(ISerializerDeserializer[] serdes) throws HyracksDataException;
 
-    String printCurrentElement(ISerializerDeserializer[] serdes) throws HyracksDataException;
+    @SuppressWarnings("rawtypes")
+    public String printCurrentElement(ISerializerDeserializer[] serdes) throws HyracksDataException;
 }

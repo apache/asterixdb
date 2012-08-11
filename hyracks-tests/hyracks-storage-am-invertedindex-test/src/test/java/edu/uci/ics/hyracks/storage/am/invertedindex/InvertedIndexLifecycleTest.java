@@ -18,7 +18,7 @@ public class InvertedIndexLifecycleTest extends AbstractIndexLifecycleTest {
 
     @Override
     protected boolean persistentStateExists() throws Exception {
-        return harness.getFileReference().getFile().exists()
+        return harness.getInvListsFile().getFile().exists()
                 && ((InvertedIndex) index).getBTree().getFileReference().getFile().exists();
     }
 
@@ -41,7 +41,8 @@ public class InvertedIndexLifecycleTest extends AbstractIndexLifecycleTest {
                 .of(IntegerPointable.FACTORY) };
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
         index = new InvertedIndex(harness.getBufferCache(), harness.getFileMapProvider(), invListBuilder,
-                invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, harness.getFileReference());
+                invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, harness.getInvListsFile(),
+                harness.getBTreeFile());
 
     }
 

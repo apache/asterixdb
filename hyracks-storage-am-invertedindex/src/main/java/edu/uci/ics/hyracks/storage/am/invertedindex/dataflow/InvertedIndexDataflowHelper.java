@@ -14,8 +14,11 @@
  */
 package edu.uci.ics.hyracks.storage.am.invertedindex.dataflow;
 
+import java.io.File;
+
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
@@ -35,9 +38,10 @@ public final class InvertedIndexDataflowHelper extends IndexDataflowHelper {
         IInvertedIndexOperatorDescriptor invIndexOpDesc = (IInvertedIndexOperatorDescriptor) opDesc;
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(
                 invIndexOpDesc.getInvListsTypeTraits());
+        FileReference btreeFile = new FileReference(new File(file.getFile().getPath() + "_btree"));
         return new InvertedIndex(opDesc.getStorageManager().getBufferCache(ctx), opDesc.getStorageManager()
                 .getFileMapProvider(ctx), invListBuilder, invIndexOpDesc.getInvListsTypeTraits(),
                 invIndexOpDesc.getInvListsComparatorFactories(), invIndexOpDesc.getTreeIndexTypeTraits(),
-                invIndexOpDesc.getTreeIndexComparatorFactories(), file);
+                invIndexOpDesc.getTreeIndexComparatorFactories(), btreeFile, file);
     }
 }

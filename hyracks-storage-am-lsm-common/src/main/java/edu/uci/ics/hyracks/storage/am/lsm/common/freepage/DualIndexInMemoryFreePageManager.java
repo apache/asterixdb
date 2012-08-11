@@ -13,16 +13,19 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.common.freepage;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 
-public class LSMRTreeInMemoryFreePageManager extends InMemoryFreePageManager {
+/**
+ * In-memory free page manager that supports two tree indexes.
+ * We assume that the tree indexes have 2 fixed pages, one at index 0 (metadata page), and one at index 1 (root page).
+ */
+public class DualIndexInMemoryFreePageManager extends InMemoryFreePageManager {
 
-    public LSMRTreeInMemoryFreePageManager(int capacity, ITreeIndexMetaDataFrameFactory metaDataFrameFactory) {
+    public DualIndexInMemoryFreePageManager(int capacity, ITreeIndexMetaDataFrameFactory metaDataFrameFactory) {
         super(capacity, metaDataFrameFactory);
         // We start the currentPageId from 3, because the RTree uses
         // the first page as metadata page, and the second page as root page.
@@ -39,7 +42,7 @@ public class LSMRTreeInMemoryFreePageManager extends InMemoryFreePageManager {
     public int getCapacity() {
         return capacity - 4;
     }
-    
+
     public void reset() {
         currentPageId.set(3);
     }

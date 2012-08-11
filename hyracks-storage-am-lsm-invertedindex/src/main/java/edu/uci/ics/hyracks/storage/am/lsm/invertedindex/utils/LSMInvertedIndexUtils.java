@@ -4,7 +4,6 @@ import java.util.Arrays;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
@@ -20,37 +19,26 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.InMemoryBtreeInvertedIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.InvertedIndexFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.InvertedIndexFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.LSMInvertedIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.LSMInvertedIndexFileManager;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMInvertedIndexUtils {
-    public static InMemoryBtreeInvertedIndex createInMemoryBTreeInvertedindex(InMemoryBufferCache memBufferCache,
+    public static InMemoryInvertedIndex createInMemoryBTreeInvertedindex(InMemoryBufferCache memBufferCache,
             InMemoryFreePageManager memFreePageManager, ITypeTraits[] tokenTypeTraits, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryComparatorFactory[] invListCmpFactories,
             IBinaryTokenizer tokenizer) {
-
-        // Create the BTree
-        int fieldCount = tokenCmpFactories.length + invListCmpFactories.length;
-        IBinaryComparatorFactory[] combinedFactories = concatArrays(tokenCmpFactories, invListCmpFactories);
-        ITypeTraits[] combinedTraits = concatArrays(tokenTypeTraits, invListTypeTraits);
-        ITreeIndexTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(combinedTraits);
-        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
-        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
-        BTree btree = new BTree(memBufferCache, fieldCount, combinedFactories, memFreePageManager,
-                interiorFrameFactory, leafFrameFactory);
-
-        return new InMemoryBtreeInvertedIndex(btree, invListTypeTraits, invListCmpFactories, tokenizer);
+        return new InMemoryInvertedIndex(btree, invListTypeTraits, invListCmpFactories, tokenizer);
     }
 
-    public static InvertedIndex createInvertedIndex(IBufferCache bufferCache, BTree btree, ITypeTraits[] invListFields,
-            IBinaryComparatorFactory[] invListCmpFactories, IBinaryTokenizer tokenizer) {
-
-        IInvertedListBuilder builder = new FixedSizeElementInvertedListBuilder(invListFields);
-        return new InvertedIndex(bufferCache, btree, invListFields, invListCmpFactories, builder, tokenizer);
+    public static InvertedIndex createInvertedIndex(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
+            ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
+            ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizer tokenizer) {
+        IInvertedListBuilder builder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
+        return new InvertedIndex(bufferCache, fileMapProvider, invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, builder, tokenizer);
     }
 
     public static LSMInvertedIndex createLSMInvertedIndex(InMemoryBufferCache memBufferCache,
@@ -59,7 +47,7 @@ public class LSMInvertedIndexUtils {
             IBinaryTokenizer tokenizer, IBufferCache diskBufferCache,
             LinkedListFreePageManagerFactory diskFreePageManagerFactory, IOManager ioManager, String onDiskDir,
             IFileMapProvider diskFileMapProvider) {
-        InMemoryBtreeInvertedIndex memoryInvertedIndex = LSMInvertedIndexUtils.createInMemoryBTreeInvertedindex(
+        InMemoryInvertedIndex memoryInvertedIndex = LSMInvertedIndexUtils.createInMemoryBTreeInvertedindex(
                 memBufferCache, memFreePageManager, tokenTypeTraits, invListTypeTraits, tokenCmpFactories,
                 invListCmpFactories, tokenizer);
         ITypeTraits[] combinedTraits = concatArrays(tokenTypeTraits, new ITypeTraits[] { IntegerPointable.TYPE_TRAITS,

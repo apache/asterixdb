@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManagerFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -34,7 +35,7 @@ public abstract class IndexFactory<T extends IIndex> {
         this.freePageManagerFactory = freePageManagerFactory;
     }
 
-    public abstract T createIndexInstance(FileReference file);
+    public abstract T createIndexInstance(FileReference file) throws IndexException;
 
     public IBufferCache getBufferCache() {
         return bufferCache;

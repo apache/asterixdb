@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.utils;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -19,8 +34,8 @@ import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerF
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.InMemoryBtreeInvertedIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.LSMInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.inverteredindex.LSMInvertedIndexTestHarness;
 
 public class InvertedIndexTestUtils {
@@ -37,15 +52,11 @@ public class InvertedIndexTestUtils {
                 metaFrameFactory);
         IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
                 .of(UTF8StringPointable.FACTORY) };
-        BTree btree = new BTree(harness.getDiskBufferCache(), 5, btreeCmpFactories, freePageManager,
-                interiorFrameFactory, leafFrameFactory);
-        btree.create(harness.getDiskBtreeFileId());
-        btree.open(harness.getDiskBtreeFileId());
-        return LSMInvertedIndexUtils.createInvertedIndex(harness.getDiskBufferCache(), btree,
+        return LSMInvertedIndexUtils.createInvertedIndex(harness.getDiskBufferCache(), 
                 harness.getInvertedListTypeTraits(), harness.getInvertedListBinaryComparatorFactories(), tokenizer);
     }
 
-    public static InMemoryBtreeInvertedIndex createTestInMemoryBTreeInvertedIndex(LSMInvertedIndexTestHarness harness,
+    public static InMemoryInvertedIndex createInMemoryInvertedIndex(LSMInvertedIndexTestHarness harness,
             IBinaryTokenizer tokenizer) {
         return LSMInvertedIndexUtils.createInMemoryBTreeInvertedindex(harness.getMemBufferCache(),
                 harness.getMemFreePageManager(), harness.getTokenTypeTraits(), harness.getInvertedListTypeTraits(),

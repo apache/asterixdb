@@ -188,7 +188,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
             newResultBuffers = swap;
             currentNumResults = 0;
 
-            invListCursors.get(i).pinPagesSync();
+            invListCursors.get(i).pinPages();
             maxPrevBufIdx = mergePrefixList(invListCursors.get(i), prevResultBuffers, maxPrevBufIdx, newResultBuffers);
             invListCursors.get(i).unpinPages();
         }
@@ -202,7 +202,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
             prevResultBuffers = newResultBuffers;
             newResultBuffers = swap;
 
-            invListCursors.get(i).pinPagesSync();
+            invListCursors.get(i).pinPages();
             int numInvListElements = invListCursors.get(i).getNumElements();
             // should we binary search the next list or should we sort-merge it?
             if (currentNumResults * Math.log(numInvListElements) < currentNumResults + numInvListElements) {
