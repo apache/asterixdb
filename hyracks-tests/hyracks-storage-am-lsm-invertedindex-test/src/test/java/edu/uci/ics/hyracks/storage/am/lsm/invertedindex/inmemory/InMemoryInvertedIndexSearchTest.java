@@ -31,7 +31,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.NGramUTF8Stri
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8NGramTokenFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestUtils;
 
-public class InMemoryBTreeInvertedIndexSearchTest extends AbstractInvertedIndexTest {
+public class InMemoryInvertedIndexSearchTest extends AbstractInvertedIndexTest {
 
     /**
      * Runs 5 random conjunctive search queries to test the
@@ -115,7 +115,7 @@ public class InMemoryBTreeInvertedIndexSearchTest extends AbstractInvertedIndexT
 
     @Override
     protected void setLogger() {
-        LOGGER = Logger.getLogger(InMemoryBTreeInvertedIndexSearchTest.class.getName());
+        LOGGER = Logger.getLogger(InMemoryInvertedIndexSearchTest.class.getName());
     }
 
     @Override

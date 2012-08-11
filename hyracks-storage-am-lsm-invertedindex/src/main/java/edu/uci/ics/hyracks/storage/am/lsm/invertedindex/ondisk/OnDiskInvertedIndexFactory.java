@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
+package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk;
 
 import java.io.File;
 
@@ -23,11 +23,10 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.IndexFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class InvertedIndexFactory extends IndexFactory<IIndex> {
+public class OnDiskInvertedIndexFactory extends IndexFactory<IIndex> {
 
     protected final IInvertedListBuilder invListBuilder;
     protected final ITypeTraits[] invListTypeTraits;
@@ -35,7 +34,7 @@ public class InvertedIndexFactory extends IndexFactory<IIndex> {
     protected final ITypeTraits[] tokenTypeTraits;
     protected final IBinaryComparatorFactory[] tokenCmpFactories;
 
-    public InvertedIndexFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
+    public OnDiskInvertedIndexFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             IInvertedListBuilder invListBuilder, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories) {

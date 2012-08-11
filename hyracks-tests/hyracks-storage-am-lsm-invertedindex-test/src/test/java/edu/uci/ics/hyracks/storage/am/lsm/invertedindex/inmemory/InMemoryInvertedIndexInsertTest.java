@@ -24,7 +24,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.NGramUTF8Stri
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8NGramTokenFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestUtils;
 
-public class InMemoryBTreeInvertedIndexInsertTest extends AbstractInvertedIndexInsertTest {
+public class InMemoryInvertedIndexInsertTest extends AbstractInvertedIndexInsertTest {
 
     @Override
     protected void setTokenizer() {
@@ -45,7 +45,7 @@ public class InMemoryBTreeInvertedIndexInsertTest extends AbstractInvertedIndexI
 
     @Override
     protected void setLogger() {
-        LOGGER = Logger.getLogger(InMemoryBTreeInvertedIndexInsertTest.class.getName());
+        LOGGER = Logger.getLogger(InMemoryInvertedIndexInsertTest.class.getName());
     }
 
     @Override

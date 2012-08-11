@@ -33,8 +33,8 @@ import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.LSMInvertedIndexTestHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.LSMInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexUtils;
@@ -65,7 +65,7 @@ public class InvertedIndexTestUtils {
                 tokenizer);
     }
 
-    public static LSMInvertedIndex createTestLSMInvertedIndex(LSMInvertedIndexTestHarness harness,
+    public static LSMInvertedIndex createLSMInvertedIndex(LSMInvertedIndexTestHarness harness,
             IBinaryTokenizer tokenizer) {
         return LSMInvertedIndexUtils.createLSMInvertedIndex(harness.getMemBufferCache(),
                 harness.getMemFreePageManager(), harness.getTokenTypeTraits(), harness.getInvertedListTypeTraits(),

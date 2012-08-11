@@ -34,7 +34,7 @@ public class LSMInvertedIndexInsertTest extends AbstractInvertedIndexInsertTest 
 
     @Override
     protected void setInvertedIndex() throws HyracksDataException {
-        invertedIndex = InvertedIndexTestUtils.createTestLSMInvertedIndex(harness, tokenizer);
+        invertedIndex = InvertedIndexTestUtils.createLSMInvertedIndex(harness, tokenizer);
         invertedIndex.create(harness.getFileId());
         invertedIndex.open(harness.getFileId());
     }

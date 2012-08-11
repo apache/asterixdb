@@ -15,26 +15,16 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util;
 
-import java.util.Arrays;
+import java.io.File;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
-import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManagerFactory;
-import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
+import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
+import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.InvertedIndexFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.LSMInvertedIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.LSMInvertedIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeElementInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
@@ -42,20 +32,30 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMInvertedIndexUtils {
-    public static InMemoryInvertedIndex createInMemoryBTreeInvertedindex(InMemoryBufferCache memBufferCache,
-            InMemoryFreePageManager memFreePageManager, ITypeTraits[] tokenTypeTraits, ITypeTraits[] invListTypeTraits,
-            IBinaryComparatorFactory[] tokenCmpFactories, IBinaryComparatorFactory[] invListCmpFactories,
-            IBinaryTokenizer tokenizer) {
-        return new InMemoryInvertedIndex(btree, invListTypeTraits, invListCmpFactories, tokenizer);
+    
+    public static InMemoryInvertedIndex createInMemoryBTreeInvertedindex(IBufferCache memBufferCache,
+            IFreePageManager memFreePageManager, ITypeTraits[] invListTypeTraits,
+            IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
+            IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizer tokenizer) throws BTreeException {
+        return new InMemoryInvertedIndex(memBufferCache, memFreePageManager, invListTypeTraits, invListCmpFactories,
+                tokenTypeTraits, tokenCmpFactories, tokenizer);
     }
 
-    public static OnDiskInvertedIndex createInvertedIndex(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
-            ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
-            ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizer tokenizer) {
+    public static OnDiskInvertedIndex createOnDiskInvertedIndex(IBufferCache bufferCache,
+            IFileMapProvider fileMapProvider, ITypeTraits[] invListTypeTraits,
+            IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
+            IBinaryComparatorFactory[] tokenCmpFactories, FileReference invListsFile) throws IndexException {
         IInvertedListBuilder builder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
-        return new OnDiskInvertedIndex(bufferCache, fileMapProvider, invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, builder, tokenizer);
+        FileReference btreeFile = getBTreeFile(invListsFile);
+        return new OnDiskInvertedIndex(bufferCache, fileMapProvider, builder, invListTypeTraits, invListCmpFactories,
+                tokenTypeTraits, tokenCmpFactories, btreeFile, invListsFile);
     }
 
+    public static FileReference getBTreeFile(FileReference invListsFile) {
+        return new FileReference(new File(invListsFile.getFile().getPath() + "_btree"));
+    }
+    
+    /*
     public static LSMInvertedIndex createLSMInvertedIndex(InMemoryBufferCache memBufferCache,
             InMemoryFreePageManager memFreePageManager, ITypeTraits[] tokenTypeTraits, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryComparatorFactory[] invListCmpFactories,
@@ -75,7 +75,7 @@ public class LSMInvertedIndexUtils {
         LSMInvertedIndexFileManager fileManager = new LSMInvertedIndexFileManager(ioManager, diskFileMapProvider,
                 onDiskDir);
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
-        InvertedIndexFactory diskInvertedIndexFactory = new InvertedIndexFactory(diskBufferCache, invListTypeTraits,
+        OnDiskInvertedIndexFactory diskInvertedIndexFactory = new OnDiskInvertedIndexFactory(diskBufferCache, invListTypeTraits,
                 invListCmpFactories, invListBuilder, tokenizer, fileManager);
         return new LSMInvertedIndex(memoryInvertedIndex, diskBTreeFactory, diskInvertedIndexFactory, fileManager,
                 diskFileMapProvider);
@@ -86,4 +86,5 @@ public class LSMInvertedIndexUtils {
         System.arraycopy(last, 0, concatenated, first.length, last.length);
         return concatenated;
     }
+    */
 }

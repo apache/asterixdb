@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -48,7 +49,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.exceptions.InvertedIndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.TOccurrenceSearcher;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
@@ -70,7 +70,20 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     public final int INVLIST_END_PAGE_ID_FIELD = 2;
     public final int INVLIST_START_OFF_FIELD = 3;
     public final int INVLIST_NUM_ELEMENTS_FIELD = 4;
-    
+
+    // Type traits to be appended to the token type trait which finally form the BTree field type traits.
+    private static final ITypeTraits[] btreeValueTypeTraits = new ITypeTraits[4];
+    static {
+        // startPageId
+        btreeValueTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
+        // endPageId
+        btreeValueTypeTraits[1] = IntegerPointable.TYPE_TRAITS;
+        // startOff
+        btreeValueTypeTraits[2] = IntegerPointable.TYPE_TRAITS;
+        // numElements
+        btreeValueTypeTraits[3] = IntegerPointable.TYPE_TRAITS;
+    }
+
     private BTree btree;
     private int rootPageId = 0;
     private IBufferCache bufferCache;
@@ -82,7 +95,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     private final int numTokenFields;
     private final int numInvListKeys;
     private final FileReference invListsFile;
-    
+
     private boolean isOpen = false;
 
     public OnDiskInvertedIndex(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
@@ -95,9 +108,8 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         this.invListBuilder = invListBuilder;
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
-        this.btree = BTreeUtils.createBTree(bufferCache, fileMapProvider,
-                InvertedIndexUtils.getBTreeTypeTraits(tokenTypeTraits), tokenCmpFactories,
-                BTreeLeafFrameType.REGULAR_NSM, btreeFile);
+        this.btree = BTreeUtils.createBTree(bufferCache, fileMapProvider, getBTreeTypeTraits(tokenTypeTraits),
+                tokenCmpFactories, BTreeLeafFrameType.REGULAR_NSM, btreeFile);
         this.numTokenFields = btree.getComparatorFactories().length;
         this.numInvListKeys = invListCmpFactories.length;
         this.invListsFile = invListsFile;
@@ -231,13 +243,16 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
             if (ctx.btreeCursor.hasNext()) {
                 ctx.btreeCursor.next();
                 ITupleReference frameTuple = ctx.btreeCursor.getTuple();
-                int startPageId = IntegerSerializerDeserializer.getInt(frameTuple.getFieldData(INVLIST_START_PAGE_ID_FIELD),
+                int startPageId = IntegerSerializerDeserializer.getInt(
+                        frameTuple.getFieldData(INVLIST_START_PAGE_ID_FIELD),
                         frameTuple.getFieldStart(INVLIST_START_PAGE_ID_FIELD));
-                int endPageId = IntegerSerializerDeserializer.getInt(frameTuple.getFieldData(INVLIST_END_PAGE_ID_FIELD),
+                int endPageId = IntegerSerializerDeserializer.getInt(
+                        frameTuple.getFieldData(INVLIST_END_PAGE_ID_FIELD),
                         frameTuple.getFieldStart(INVLIST_END_PAGE_ID_FIELD));
                 int startOff = IntegerSerializerDeserializer.getInt(frameTuple.getFieldData(INVLIST_START_OFF_FIELD),
                         frameTuple.getFieldStart(INVLIST_START_OFF_FIELD));
-                int numElements = IntegerSerializerDeserializer.getInt(frameTuple.getFieldData(INVLIST_NUM_ELEMENTS_FIELD),
+                int numElements = IntegerSerializerDeserializer.getInt(
+                        frameTuple.getFieldData(INVLIST_NUM_ELEMENTS_FIELD),
                         frameTuple.getFieldStart(INVLIST_NUM_ELEMENTS_FIELD));
                 listCursor.reset(startPageId, endPageId, startOff, numElements);
             } else {
@@ -248,7 +263,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
             ctx.btreeCursor.reset();
         }
     }
-    
+
     public final class InvertedIndexBulkLoader implements IIndexBulkLoader {
         private final ArrayTupleBuilder btreeTupleBuilder;
         private final ArrayTupleReference btreeTupleReference;
@@ -413,7 +428,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         public IInvertedIndexSearcher getSearcher() {
             return searcher;
         }
-        
+
         @Override
         public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
             throw new UnsupportedOperationException("Insert not supported by inverted index.");
@@ -491,5 +506,18 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     @Override
     public IInvertedListCursor createInvertedListCursor() {
         return new FixedSizeElementInvertedListCursor(bufferCache, fileId, invListTypeTraits);
+    }
+
+    private static ITypeTraits[] getBTreeTypeTraits(ITypeTraits[] tokenTypeTraits) {
+        ITypeTraits[] btreeTypeTraits = new ITypeTraits[tokenTypeTraits.length + btreeValueTypeTraits.length];
+        // Set key type traits.
+        for (int i = 0; i < tokenTypeTraits.length; i++) {
+            btreeTypeTraits[i] = tokenTypeTraits[i];
+        }
+        // Set value type traits.
+        for (int i = 0; i < btreeValueTypeTraits.length; i++) {
+            btreeTypeTraits[i + tokenTypeTraits.length] = btreeValueTypeTraits[i];
+        }
+        return btreeTypeTraits;
     }
 }
