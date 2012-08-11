@@ -1,0 +1,50 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
+
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+
+public class InvertedIndexOpContext implements IIndexOpContext {
+
+    public final RangePredicate btreePred = new RangePredicate(null, null, true, true, null, null);
+    public IIndexAccessor btreeAccessor;
+    public IIndexCursor btreeCursor;
+    public MultiComparator searchCmp;
+
+    public InvertedIndexOpContext(BTree btree) {
+        // TODO: Ignore opcallbacks for now.
+        btreeAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        btreeCursor = btreeAccessor.createSearchCursor();
+        searchCmp = MultiComparator.create(btree.getComparatorFactories());
+    }
+
+    @Override
+    public void reset() {
+        // Nothing to be done here, only search operation supported.
+    }
+
+    @Override
+    public void reset(IndexOp newOp) {
+        // Nothing to be done here, only search operation supported.
+    }
+}

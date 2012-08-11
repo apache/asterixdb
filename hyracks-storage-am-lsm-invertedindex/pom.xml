@@ -37,13 +37,6 @@
 			<version>0.2.1-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>
-				<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-storage-am-invertedindex</artifactId>
-			<version>0.2.1-SNAPSHOT</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
+	    </dependency>
 	</dependencies>
 </project>
