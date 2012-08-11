@@ -45,7 +45,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.NGramUTF8StringBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8NGramTokenFactory;
 
-public class SearchTest extends AbstractInvIndexSearchTest {
+public class OnDiskInvertedIndexSearchTest extends AbstractInvIndexSearchTest {
 
     protected List<String> dataStrings = new ArrayList<String>();
     protected List<String> firstNames = new ArrayList<String>();

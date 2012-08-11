@@ -63,7 +63,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
 
-public class BulkLoadTest extends AbstractInvIndexTest {
+public class OnDiskInvertedIndexBulkLoadTest extends AbstractInvIndexTest {
 
     private static final int PAGE_SIZE = 32768;
     private static final int NUM_PAGES = 100;

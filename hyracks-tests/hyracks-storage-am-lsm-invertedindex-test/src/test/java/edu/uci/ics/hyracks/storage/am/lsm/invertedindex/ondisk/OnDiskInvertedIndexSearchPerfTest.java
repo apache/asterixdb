@@ -49,7 +49,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8WordToken
  * performance of executing them with different search modifiers. We test the
  * ConjunctiveSearchModifier and the JaccardSearchModifier.
  */
-public class SearchPerfTest extends AbstractInvIndexSearchTest {
+public class OnDiskInvertedIndexSearchPerfTest extends AbstractInvIndexSearchTest {
 
     protected List<String> tokens = new ArrayList<String>();
 
