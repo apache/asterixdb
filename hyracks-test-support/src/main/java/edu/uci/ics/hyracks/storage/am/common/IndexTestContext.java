@@ -21,20 +21,20 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 
 @SuppressWarnings("rawtypes")
-public abstract class TreeIndexTestContext<T extends CheckTuple> implements ITreeIndexTestContext<T> {
+public abstract class IndexTestContext<T extends CheckTuple> implements IIndexTestContext<T> {
     protected final ISerializerDeserializer[] fieldSerdes;
-    protected final ITreeIndex treeIndex;
+    protected final IIndex index;
     protected final ArrayTupleBuilder tupleBuilder;
     protected final ArrayTupleReference tuple = new ArrayTupleReference();
     protected final IIndexAccessor indexAccessor;
 
-    public TreeIndexTestContext(ISerializerDeserializer[] fieldSerdes, ITreeIndex treeIndex) {
+    public IndexTestContext(ISerializerDeserializer[] fieldSerdes, IIndex index) {
         this.fieldSerdes = fieldSerdes;
-        this.treeIndex = treeIndex;
-        this.indexAccessor = (IIndexAccessor) treeIndex.createAccessor(TestOperationCallback.INSTANCE,
+        this.index = index;
+        this.indexAccessor = (IIndexAccessor) index.createAccessor(TestOperationCallback.INSTANCE,
                 TestOperationCallback.INSTANCE);
         this.tupleBuilder = new ArrayTupleBuilder(fieldSerdes.length);
     }
@@ -65,8 +65,8 @@ public abstract class TreeIndexTestContext<T extends CheckTuple> implements ITre
     }
 
     @Override
-    public ITreeIndex getIndex() {
-        return treeIndex;
+    public IIndex getIndex() {
+        return index;
     }
 
     @Override

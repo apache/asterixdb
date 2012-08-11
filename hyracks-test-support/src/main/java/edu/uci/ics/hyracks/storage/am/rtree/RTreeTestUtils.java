@@ -15,7 +15,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
-import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestContext;
+import edu.uci.ics.hyracks.storage.am.common.IIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.TreeIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
@@ -46,7 +46,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
         return expectedResult;
     }
 
-    public void checkRangeSearch(ITreeIndexTestContext ictx, ITupleReference key) throws Exception {
+    public void checkRangeSearch(IIndexTestContext ictx, ITupleReference key) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Testing Range Search.");
         }
@@ -69,7 +69,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public void insertDoubleTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+    public void insertDoubleTuples(IIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
         int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         double[] fieldValues = new double[ctx.getFieldCount()];
@@ -129,7 +129,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public void bulkLoadDoubleTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+    public void bulkLoadDoubleTuples(IIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
         int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         double[] fieldValues = new double[ctx.getFieldCount()];
@@ -228,12 +228,12 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
     }
 
     @Override
-    protected ArrayTupleBuilder createDeleteTupleBuilder(ITreeIndexTestContext ctx) {
+    protected ArrayTupleBuilder createDeleteTupleBuilder(IIndexTestContext ctx) {
         return new ArrayTupleBuilder(ctx.getFieldCount());
     }
 
     @Override
-    protected boolean checkDiskOrderScanResult(ITupleReference tuple, CheckTuple checkTuple, ITreeIndexTestContext ctx)
+    protected boolean checkDiskOrderScanResult(ITupleReference tuple, CheckTuple checkTuple, IIndexTestContext ctx)
             throws HyracksDataException {
         return ctx.getCheckTuples().contains(checkTuple);
     }

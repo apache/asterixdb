@@ -91,6 +91,8 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     private int fileId = -1;
     private final ITypeTraits[] invListTypeTraits;
     private final IBinaryComparatorFactory[] invListCmpFactories;
+    private final ITypeTraits[] tokenTypeTraits;
+    private final IBinaryComparatorFactory[] tokenCmpFactories;
     private final IInvertedListBuilder invListBuilder;
     private final int numTokenFields;
     private final int numInvListKeys;
@@ -108,6 +110,8 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         this.invListBuilder = invListBuilder;
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
+        this.tokenTypeTraits = tokenTypeTraits;
+        this.tokenCmpFactories = tokenCmpFactories;
         this.btree = BTreeUtils.createBTree(bufferCache, fileMapProvider, getBTreeTypeTraits(tokenTypeTraits),
                 tokenCmpFactories, BTreeLeafFrameType.REGULAR_NSM, btreeFile);
         this.numTokenFields = btree.getComparatorFactories().length;
@@ -519,5 +523,15 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
             btreeTypeTraits[i + tokenTypeTraits.length] = btreeValueTypeTraits[i];
         }
         return btreeTypeTraits;
+    }
+
+    @Override
+    public ITypeTraits[] getTokenTypeTraits() {
+        return tokenTypeTraits;
+    }
+
+    @Override
+    public IBinaryComparatorFactory[] getTokenCmpFactories() {
+        return tokenCmpFactories;
     }
 }

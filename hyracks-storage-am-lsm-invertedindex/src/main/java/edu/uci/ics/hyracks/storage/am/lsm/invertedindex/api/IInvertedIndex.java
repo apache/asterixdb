@@ -29,7 +29,11 @@ public interface IInvertedIndex extends IIndex {
     public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey, IIndexOpContext ictx)
             throws HyracksDataException, IndexException;
 
-    public IBinaryComparatorFactory[] getInvListCmpFactories();
-
     public ITypeTraits[] getInvListTypeTraits();
+    
+    public IBinaryComparatorFactory[] getInvListCmpFactories();    
+    
+    public ITypeTraits[] getTokenTypeTraits();
+    
+    public IBinaryComparatorFactory[] getTokenCmpFactories();        
 }

@@ -32,7 +32,7 @@ public class DocumentStringFieldValueGenerator implements IFieldValueGenerator<S
     private final Random rnd;
     private int[] cumulIntRanges;
 
-    private List<String> TOKEN_DICT = new ArrayList<String>();
+    private List<String> tokenDict = new ArrayList<String>();
 
     public DocumentStringFieldValueGenerator(int docMinWords, int docMaxWords, int maxDictionarySize, Random rnd)
             throws IOException {
@@ -41,7 +41,7 @@ public class DocumentStringFieldValueGenerator implements IFieldValueGenerator<S
         this.maxDictionarySize = maxDictionarySize;
         this.rnd = rnd;
         initDictionary();
-        double[] zipfProbDist = ProbabilityHelper.getZipfProbDist(TOKEN_DICT.size(), 1);
+        double[] zipfProbDist = ProbabilityHelper.getZipfProbDist(tokenDict.size(), 1);
         cumulIntRanges = ProbabilityHelper.getCumulIntRanges(zipfProbDist);
     }
 
@@ -53,7 +53,7 @@ public class DocumentStringFieldValueGenerator implements IFieldValueGenerator<S
         BufferedReader firstNamesReader = new BufferedReader(new FileReader(FIRST_NAMES_FILE));
         try {
             while (count < maxDictionarySize && (line = firstNamesReader.readLine()) != null) {
-                TOKEN_DICT.add(line.trim());
+                tokenDict.add(line.trim());
                 count++;
             }
         } finally {
@@ -64,7 +64,7 @@ public class DocumentStringFieldValueGenerator implements IFieldValueGenerator<S
         BufferedReader lastNamesReader = new BufferedReader(new FileReader(LAST_NAMES_FILE));
         try {
             while (count < maxDictionarySize && (line = lastNamesReader.readLine()) != null) {
-                TOKEN_DICT.add(line.trim());
+                tokenDict.add(line.trim());
                 count++;
             }
         } finally {
@@ -78,11 +78,15 @@ public class DocumentStringFieldValueGenerator implements IFieldValueGenerator<S
         int numWords = Math.abs(rnd.nextInt()) % (docMaxWords - docMinWords + 1) + docMinWords;
         for (int i = 0; i < numWords; i++) {
             int ix = ProbabilityHelper.choose(cumulIntRanges, rnd.nextInt());
-            strBuilder.append(TOKEN_DICT.get(ix));
+            strBuilder.append(tokenDict.get(ix));
             if (i != numWords - 1) {
                 strBuilder.append(" ");
             }
         }
         return strBuilder.toString();
+    }
+
+    public List<String> getTokenDictionary() {
+        return tokenDict;
     }
 }

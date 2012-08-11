@@ -36,13 +36,13 @@ public class BTreeTestContext extends OrderedIndexTestContext {
 
     @Override
     public int getKeyFieldCount() {
-        BTree btree = (BTree) treeIndex;
+        BTree btree = (BTree) index;
         return btree.getComparatorFactories().length;
     }
 
     @Override
     public IBinaryComparatorFactory[] getComparatorFactories() {
-        BTree btree = (BTree) treeIndex;
+        BTree btree = (BTree) index;
         return btree.getComparatorFactories();
     }
 

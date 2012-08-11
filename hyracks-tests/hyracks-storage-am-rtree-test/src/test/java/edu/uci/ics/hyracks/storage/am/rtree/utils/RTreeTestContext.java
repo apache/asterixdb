@@ -38,13 +38,13 @@ public class RTreeTestContext extends AbstractRTreeTestContext {
 
     @Override
     public int getKeyFieldCount() {
-        RTree rtree = (RTree) treeIndex;
+        RTree rtree = (RTree) index;
         return rtree.getComparatorFactories().length;
     }
 
     @Override
     public IBinaryComparatorFactory[] getComparatorFactories() {
-        RTree rtree = (RTree) treeIndex;
+        RTree rtree = (RTree) index;
         return rtree.getComparatorFactories();
     }
 

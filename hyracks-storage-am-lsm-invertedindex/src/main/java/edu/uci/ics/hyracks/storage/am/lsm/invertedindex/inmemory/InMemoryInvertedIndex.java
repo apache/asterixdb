@@ -202,4 +202,14 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws IndexException {
         throw new UnsupportedOperationException("Bulk load not supported by in-memory inverted index.");
     }
+
+    @Override
+    public ITypeTraits[] getTokenTypeTraits() {
+        return tokenTypeTraits;
+    }
+
+    @Override
+    public IBinaryComparatorFactory[] getTokenCmpFactories() {
+        return tokenCmpFactories;
+    }
 }

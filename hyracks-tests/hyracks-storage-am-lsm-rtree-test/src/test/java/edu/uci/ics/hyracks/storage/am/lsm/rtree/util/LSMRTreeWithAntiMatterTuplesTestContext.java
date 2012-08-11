@@ -48,7 +48,7 @@ public final class LSMRTreeWithAntiMatterTuplesTestContext extends AbstractRTree
 
     @Override
     public int getKeyFieldCount() {
-        LSMRTreeWithAntiMatterTuples lsmTree = (LSMRTreeWithAntiMatterTuples) treeIndex;
+        LSMRTreeWithAntiMatterTuples lsmTree = (LSMRTreeWithAntiMatterTuples) index;
         return lsmTree.getComparatorFactories().length;
     }
 
@@ -63,7 +63,7 @@ public final class LSMRTreeWithAntiMatterTuplesTestContext extends AbstractRTree
 
     @Override
     public IBinaryComparatorFactory[] getComparatorFactories() {
-        LSMRTreeWithAntiMatterTuples lsmTree = (LSMRTreeWithAntiMatterTuples) treeIndex;
+        LSMRTreeWithAntiMatterTuples lsmTree = (LSMRTreeWithAntiMatterTuples) index;
         return lsmTree.getComparatorFactories();
     }
 

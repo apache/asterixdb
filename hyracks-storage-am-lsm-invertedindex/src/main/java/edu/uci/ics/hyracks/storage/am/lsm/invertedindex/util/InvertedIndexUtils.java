@@ -31,7 +31,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokeni
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class LSMInvertedIndexUtils {
+public class InvertedIndexUtils {
     
     public static InMemoryInvertedIndex createInMemoryBTreeInvertedindex(IBufferCache memBufferCache,
             IFreePageManager memFreePageManager, ITypeTraits[] invListTypeTraits,

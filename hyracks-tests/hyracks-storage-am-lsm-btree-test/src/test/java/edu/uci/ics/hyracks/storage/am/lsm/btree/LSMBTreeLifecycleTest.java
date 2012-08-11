@@ -7,7 +7,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.common.AbstractIndexLifecycleTest;
 import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
-import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestContext;
+import edu.uci.ics.hyracks.storage.am.common.IIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.TreeIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
@@ -21,7 +21,7 @@ public class LSMBTreeLifecycleTest extends AbstractIndexLifecycleTest {
     private final TreeIndexTestUtils titu = new OrderedIndexTestUtils();
 
     @SuppressWarnings("rawtypes")
-    private ITreeIndexTestContext<? extends CheckTuple> testCtx;
+    private IIndexTestContext<? extends CheckTuple> testCtx;
 
     @Override
     protected boolean persistentStateExists() throws Exception {

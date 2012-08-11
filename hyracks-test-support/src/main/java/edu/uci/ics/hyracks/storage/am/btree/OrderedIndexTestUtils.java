@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyExceptio
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
-import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestContext;
+import edu.uci.ics.hyracks.storage.am.common.IIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.TreeIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
@@ -83,7 +83,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public void checkRangeSearch(ITreeIndexTestContext ctx, ITupleReference lowKey, ITupleReference highKey,
+    public void checkRangeSearch(IIndexTestContext ctx, ITupleReference lowKey, ITupleReference highKey,
             boolean lowKeyInclusive, boolean highKeyInclusive) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Testing Range Search.");
@@ -132,7 +132,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
         }
     }
 
-    public void checkPointSearches(ITreeIndexTestContext ictx) throws Exception {
+    public void checkPointSearches(IIndexTestContext ictx) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Testing Point Searches On All Expected Keys.");
         }
@@ -177,7 +177,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public void insertStringTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+    public void insertStringTuples(IIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
         int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         String[] fieldValues = new String[fieldCount];
@@ -208,7 +208,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
         }
     }
     
-    public void upsertStringTuples(ITreeIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
+    public void upsertStringTuples(IIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
     	OrderedIndexTestContext ctx = (OrderedIndexTestContext) ictx;
     	int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
@@ -235,7 +235,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public void bulkLoadStringTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+    public void bulkLoadStringTuples(IIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
         int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         String[] fieldValues = new String[fieldCount];
@@ -262,7 +262,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
         }
     }
 
-    public void upsertIntTuples(ITreeIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
+    public void upsertIntTuples(IIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
         OrderedIndexTestContext ctx = (OrderedIndexTestContext) ictx;
     	int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
@@ -288,7 +288,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     }
     
     @SuppressWarnings("unchecked")
-    public void updateTuples(ITreeIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
+    public void updateTuples(IIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
         OrderedIndexTestContext ctx = (OrderedIndexTestContext) ictx;
         int fieldCount = ctx.getFieldCount();
         int keyFieldCount = ctx.getKeyFieldCount();
@@ -421,12 +421,12 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     }
 
     @Override
-    protected ArrayTupleBuilder createDeleteTupleBuilder(ITreeIndexTestContext ctx) {
+    protected ArrayTupleBuilder createDeleteTupleBuilder(IIndexTestContext ctx) {
         return new ArrayTupleBuilder(ctx.getKeyFieldCount());
     }
 
     @Override
-    protected boolean checkDiskOrderScanResult(ITupleReference tuple, CheckTuple checkTuple, ITreeIndexTestContext ctx)
+    protected boolean checkDiskOrderScanResult(ITupleReference tuple, CheckTuple checkTuple, IIndexTestContext ctx)
             throws HyracksDataException {
         @SuppressWarnings("unchecked")
         TreeSet<CheckTuple> checkTuples = (TreeSet<CheckTuple>) ctx.getCheckTuples();

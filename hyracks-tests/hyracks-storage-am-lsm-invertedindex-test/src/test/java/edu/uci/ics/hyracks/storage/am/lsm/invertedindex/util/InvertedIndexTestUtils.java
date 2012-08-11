@@ -37,7 +37,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexUtils;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexUtils;
 
 public class InvertedIndexTestUtils {
     public static OnDiskInvertedIndex createTestInvertedIndex(LSMInvertedIndexTestHarness harness, IBinaryTokenizer tokenizer)
@@ -53,13 +53,13 @@ public class InvertedIndexTestUtils {
                 metaFrameFactory);
         IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
                 .of(UTF8StringPointable.FACTORY) };
-        return LSMInvertedIndexUtils.createInvertedIndex(harness.getDiskBufferCache(), 
+        return InvertedIndexUtils.createInvertedIndex(harness.getDiskBufferCache(), 
                 harness.getInvertedListTypeTraits(), harness.getInvertedListBinaryComparatorFactories(), tokenizer);
     }
 
     public static InMemoryInvertedIndex createInMemoryInvertedIndex(LSMInvertedIndexTestHarness harness,
             IBinaryTokenizer tokenizer) {
-        return LSMInvertedIndexUtils.createInMemoryBTreeInvertedindex(harness.getMemBufferCache(),
+        return InvertedIndexUtils.createInMemoryBTreeInvertedindex(harness.getMemBufferCache(),
                 harness.getMemFreePageManager(), harness.getTokenTypeTraits(), harness.getInvertedListTypeTraits(),
                 harness.getTokenBinaryComparatorFactories(), harness.getInvertedListBinaryComparatorFactories(),
                 tokenizer);
@@ -67,7 +67,7 @@ public class InvertedIndexTestUtils {
 
     public static LSMInvertedIndex createLSMInvertedIndex(LSMInvertedIndexTestHarness harness,
             IBinaryTokenizer tokenizer) {
-        return LSMInvertedIndexUtils.createLSMInvertedIndex(harness.getMemBufferCache(),
+        return InvertedIndexUtils.createLSMInvertedIndex(harness.getMemBufferCache(),
                 harness.getMemFreePageManager(), harness.getTokenTypeTraits(), harness.getInvertedListTypeTraits(),
                 harness.getTokenBinaryComparatorFactories(), harness.getInvertedListBinaryComparatorFactories(),
                 tokenizer, harness.getDiskBufferCache(),

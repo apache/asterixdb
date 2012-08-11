@@ -72,8 +72,8 @@ public abstract class AbstractInvertedIndexTest {
     // This number will only be used in generating random documents.
     // If predefined data is generated, then the number of documents is fixed.
     protected int numDocuments = 1000;
-    protected int maxDocumentLength = 200;
-    protected List<String> documents = new ArrayList<String>();
+    protected int docMinWords = 2;
+    protected int docMaxWords = 10;
     protected Map<String, SortedSet<Integer>> baselineInvertedIndex = new HashMap<String, SortedSet<Integer>>();
 
     // Generate random data is false by default (generate predefined data is true!)
