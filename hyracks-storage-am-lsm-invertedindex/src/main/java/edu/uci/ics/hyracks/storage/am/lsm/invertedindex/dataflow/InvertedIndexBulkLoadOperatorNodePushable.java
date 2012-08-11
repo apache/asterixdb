@@ -27,14 +27,14 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.InvertedIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 
 public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
     private final AbstractInvertedIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
     private final IIndexLifecycleManager lcManager;
     private final InvertedIndexDataflowHelper invIndexDataflowHelper;
-    private InvertedIndex invIndex;
+    private OnDiskInvertedIndex invIndex;
     private IIndexBulkLoader bulkLoader;
 
     private FrameTupleAccessor accessor;
@@ -57,7 +57,7 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
         RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         accessor = new FrameTupleAccessor(ctx.getFrameSize(), recDesc);
 
-        invIndex = (InvertedIndex) lcManager.open(invIndexDataflowHelper);
+        invIndex = (OnDiskInvertedIndex) lcManager.open(invIndexDataflowHelper);
         try {
             bulkLoader = invIndex.createBulkLoader(BTree.DEFAULT_FILL_FACTOR, false);
         } catch (IndexException e) {

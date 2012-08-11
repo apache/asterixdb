@@ -27,10 +27,10 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.InvertedIndexSearchCursor;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.InvertedIndexSearchPredicate;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.TOccurrenceSearcher;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.InvertedIndex.DefaultHyracksCommonContext;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexSearchCursor;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex.DefaultHyracksCommonContext;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.TOccurrenceSearcher;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 
 public class InMemoryInvertedIndexAccessor implements IIndexAccessor {
@@ -58,12 +58,12 @@ public class InMemoryInvertedIndexAccessor implements IIndexAccessor {
 
     @Override
     public IIndexCursor createSearchCursor() {
-        return new InvertedIndexSearchCursor(searcher);
+        return new OnDiskInvertedIndexSearchCursor(searcher);
     }
 
     @Override
     public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
-        searcher.search((InvertedIndexSearchCursor) cursor, (InvertedIndexSearchPredicate) searchPred, opCtx);
+        searcher.search((OnDiskInvertedIndexSearchCursor) cursor, (InvertedIndexSearchPredicate) searchPred, opCtx);
     }
 
     @Override

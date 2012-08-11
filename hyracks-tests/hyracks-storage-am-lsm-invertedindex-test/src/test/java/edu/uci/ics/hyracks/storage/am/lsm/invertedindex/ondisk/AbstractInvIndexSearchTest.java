@@ -38,8 +38,8 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.FixedSizeElementInvertedListBuilder;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.InvertedIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeElementInvertedListBuilder;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.ITokenFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -67,7 +67,7 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
     protected IBinaryComparatorFactory[] invListCmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
             .of(IntegerPointable.FACTORY) };
 
-    protected InvertedIndex invIndex;
+    protected OnDiskInvertedIndex invIndex;
 
     protected Random rnd = new Random();
 
@@ -109,7 +109,7 @@ public abstract class AbstractInvIndexSearchTest extends AbstractInvIndexTest {
         setTokenizer();
 
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
-        invIndex = new InvertedIndex(bufferCache, fmp, invListBuilder, invListTypeTraits, invListCmpFactories,
+        invIndex = new OnDiskInvertedIndex(bufferCache, fmp, invListBuilder, invListTypeTraits, invListCmpFactories,
                 tokenTypeTraits, tokenCmpFactories, invListsFile, btreeFile);
         invIndex.create();
         invIndex.activate();

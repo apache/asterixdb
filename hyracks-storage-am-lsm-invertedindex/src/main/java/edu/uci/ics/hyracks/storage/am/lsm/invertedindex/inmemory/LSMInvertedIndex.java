@@ -52,8 +52,8 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManage
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.InvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.LSMInvertedIndexFileManager.LSMInvertedFileNameComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
@@ -282,7 +282,7 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
         LSMInvertedFileNameComponent fNameComponent = getMergeTargetFileName(mergedComponents);
         BTree diskBTree = createDiskBTree(fileManager.createMergeFile(fNameComponent.getBTreeFileName()), true);
         //    - Create an InvertedIndex instance
-        InvertedIndex mergedDiskInvertedIndex = createDiskInvertedIndex(
+        OnDiskInvertedIndex mergedDiskInvertedIndex = createDiskInvertedIndex(
                 fileManager.createMergeFile(fNameComponent.getInvertedFileName()), true, diskBTree);
 
         IIndexBulkLoadContext bulkLoadCtx = mergedDiskInvertedIndex.beginBulkLoad(1.0f);
@@ -302,8 +302,8 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
 
     private LSMInvertedFileNameComponent getMergeTargetFileName(List<Object> mergingDiskTrees)
             throws HyracksDataException {
-        BTree firstTree = ((InvertedIndex) mergingDiskTrees.get(0)).getBTree();
-        BTree lastTree = ((InvertedIndex) mergingDiskTrees.get(mergingDiskTrees.size() - 1)).getBTree();
+        BTree firstTree = ((OnDiskInvertedIndex) mergingDiskTrees.get(0)).getBTree();
+        BTree lastTree = ((OnDiskInvertedIndex) mergingDiskTrees.get(mergingDiskTrees.size() - 1)).getBTree();
         FileReference firstFile = diskFileMapProvider.lookupFileName(firstTree.getFileId());
         FileReference lastFile = diskFileMapProvider.lookupFileName(lastTree.getFileId());
         LSMInvertedFileNameComponent component = (LSMInvertedFileNameComponent) ((LSMInvertedIndexFileManager) fileManager)
@@ -320,7 +320,7 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
     @Override
     public void cleanUpAfterMerge(List<Object> mergedComponents) throws HyracksDataException {
         for (Object o : mergedComponents) {
-            InvertedIndex oldInvertedIndex = (InvertedIndex) o;
+            OnDiskInvertedIndex oldInvertedIndex = (OnDiskInvertedIndex) o;
             BTree oldBTree = oldInvertedIndex.getBTree();
 
             //delete a diskBTree file.
@@ -368,7 +368,7 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
         LSMInvertedFileNameComponent fNameComponent = (LSMInvertedFileNameComponent) fileManager.getRelFlushFileName();
         BTree diskBTree = createDiskBTree(fileManager.createFlushFile(fNameComponent.getBTreeFileName()), true);
         //    - Create an InvertedIndex instance
-        InvertedIndex diskInvertedIndex = createDiskInvertedIndex(
+        OnDiskInvertedIndex diskInvertedIndex = createDiskInvertedIndex(
                 fileManager.createFlushFile(fNameComponent.getInvertedFileName()), true, diskBTree);
 
         // #. Begin the bulkload of the diskInvertedIndex.
@@ -408,12 +408,12 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
         return diskBTree;
     }
 
-    private InvertedIndex createInvertedIndexFlushTarget(BTree diskBTree) throws HyracksDataException {
+    private OnDiskInvertedIndex createInvertedIndexFlushTarget(BTree diskBTree) throws HyracksDataException {
         FileReference fileRef = fileManager.createFlushFile((String) fileManager.getRelFlushFileName());
         return createDiskInvertedIndex(fileRef, true, diskBTree);
     }
 
-    private InvertedIndex createDiskInvertedIndex(FileReference fileRef, boolean createInvertedIndex, BTree diskBTree)
+    private OnDiskInvertedIndex createDiskInvertedIndex(FileReference fileRef, boolean createInvertedIndex, BTree diskBTree)
             throws HyracksDataException {
         // File will be deleted during cleanup of merge().
         diskBufferCache.createFile(fileRef);
@@ -421,7 +421,7 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
         // File will be closed during cleanup of merge().
         diskBufferCache.openFile(diskInvertedIndexFileId);
         // Create new InvertedIndex instance.
-        InvertedIndex diskInvertedIndex = (InvertedIndex) diskInvertedIndexFactory.createIndexInstance(diskBTree);
+        OnDiskInvertedIndex diskInvertedIndex = (OnDiskInvertedIndex) diskInvertedIndexFactory.createIndexInstance(diskBTree);
         if (createInvertedIndex) {
             diskInvertedIndex.create(diskInvertedIndexFileId);
         }

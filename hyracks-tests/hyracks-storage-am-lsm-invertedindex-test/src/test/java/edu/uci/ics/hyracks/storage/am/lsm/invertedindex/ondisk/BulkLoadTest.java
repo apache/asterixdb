@@ -54,10 +54,10 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.FixedSizeElementInvertedListBuilder;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.FixedSizeElementInvertedListCursor;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.InvertedIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.InvertedIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeElementInvertedListBuilder;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeElementInvertedListCursor;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexOpContext;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
@@ -100,7 +100,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         invListCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
-        InvertedIndex invIndex = new InvertedIndex(bufferCache, fmp, invListBuilder, invListTypeTraits,
+        OnDiskInvertedIndex invIndex = new OnDiskInvertedIndex(bufferCache, fmp, invListBuilder, invListTypeTraits,
                 invListCmpFactories, tokenTypeTraits, cmpFactories, invListsFile, btreeFile);
         invIndex.create();
         invIndex.activate();
@@ -192,7 +192,7 @@ public class BulkLoadTest extends AbstractInvIndexTest {
         tokenAccessor.reset(frame);
 
         // verify created inverted lists one-by-one
-        InvertedIndexOpContext opCtx = new InvertedIndexOpContext(invIndex.getBTree());
+        OnDiskInvertedIndexOpContext opCtx = new OnDiskInvertedIndexOpContext(invIndex.getBTree());
         opCtx.reset(IndexOp.SEARCH);
         for (int i = 0; i < tokens.size(); i++) {
 

@@ -20,7 +20,7 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.InvertedIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
@@ -36,7 +36,7 @@ public class InvertedIndexComponentFinalizer implements ILSMComponentFinalizer {
     
     @Override
     public boolean isValid(Object lsmComponent) throws HyracksDataException {
-        InvertedIndex index = (InvertedIndex) lsmComponent;
+        OnDiskInvertedIndex index = (OnDiskInvertedIndex) lsmComponent;
         ITreeIndex treeIndex = index.getBTree();
         IBufferCache bufferCache = treeIndex.getBufferCache();
         FileReference fileRef = new FileReference(file);
@@ -65,7 +65,7 @@ public class InvertedIndexComponentFinalizer implements ILSMComponentFinalizer {
 
     @Override
     public void finalize(Object lsmComponent) throws HyracksDataException {
-        InvertedIndex index = (InvertedIndex) lsmComponent;
+        OnDiskInvertedIndex index = (OnDiskInvertedIndex) lsmComponent;
         ITreeIndex treeIndex = index.getBTree();
         int fileId = treeIndex.getFileId();
         IBufferCache bufferCache = treeIndex.getBufferCache();

@@ -34,9 +34,9 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.InvertedIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.InvertedIndexSearchPredicate;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.OccurrenceThresholdPanicException;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.exceptions.OccurrenceThresholdPanicException;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
 
 public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
     private final AbstractInvertedIndexOperatorDescriptor opDesc;
@@ -47,7 +47,7 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
     private FrameTupleAccessor accessor;
     private FrameTupleReference tuple;
     private IRecordDescriptorProvider recordDescProvider;
-    private InvertedIndex invIndex;
+    private OnDiskInvertedIndex invIndex;
 
     private final InvertedIndexSearchPredicate searchPred;
     private IIndexAccessor indexAccessor;
@@ -80,7 +80,7 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
         accessor = new FrameTupleAccessor(ctx.getFrameSize(), inputRecDesc);
         tuple = new FrameTupleReference();
 
-        invIndex = (InvertedIndex) lcManager.open(invIndexDataflowHelper);
+        invIndex = (OnDiskInvertedIndex) lcManager.open(invIndexDataflowHelper);
         try {
             writeBuffer = ctx.allocateFrame();
             tb = new ArrayTupleBuilder(recordDesc.getFieldCount());

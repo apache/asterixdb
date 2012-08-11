@@ -25,8 +25,8 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.FixedSizeElementInvertedListBuilder;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.InvertedIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeElementInvertedListBuilder;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 
 public final class InvertedIndexDataflowHelper extends IndexDataflowHelper {
 
@@ -41,7 +41,7 @@ public final class InvertedIndexDataflowHelper extends IndexDataflowHelper {
                 invIndexOpDesc.getInvListsTypeTraits());
         FileReference btreeFile = new FileReference(new File(file.getFile().getPath() + "_btree"));
         try {
-            return new InvertedIndex(opDesc.getStorageManager().getBufferCache(ctx), opDesc.getStorageManager()
+            return new OnDiskInvertedIndex(opDesc.getStorageManager().getBufferCache(ctx), opDesc.getStorageManager()
                     .getFileMapProvider(ctx), invListBuilder, invIndexOpDesc.getInvListsTypeTraits(),
                     invIndexOpDesc.getInvListsComparatorFactories(), invIndexOpDesc.getTreeIndexTypeTraits(),
                     invIndexOpDesc.getTreeIndexComparatorFactories(), btreeFile, file);
