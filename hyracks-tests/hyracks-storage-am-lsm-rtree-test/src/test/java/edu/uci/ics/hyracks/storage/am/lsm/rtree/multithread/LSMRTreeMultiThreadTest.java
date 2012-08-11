@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.storage.am.common.TestWorkloadConf;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.datagen.ProbabilityHelper;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
 import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeMultiThreadTest;
@@ -35,14 +36,14 @@ import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 public class LSMRTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
 
-	private LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
+    private LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
 
     private LSMRTreeTestWorkerFactory workerFactory = new LSMRTreeTestWorkerFactory();
 
     public LSMRTreeMultiThreadTest() {
-		super(false);
-	}
-    
+        super(false);
+    }
+
     @Override
     protected void setUp() throws HyracksException {
         harness.setUp();
@@ -75,34 +76,40 @@ public class LSMRTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
 
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };
-        workloadConfs.add(new TestWorkloadConf(insertOnlyOps, getUniformOpProbs(insertOnlyOps)));
+        workloadConfs.add(new TestWorkloadConf(insertOnlyOps, ProbabilityHelper
+                .getUniformProbDist(insertOnlyOps.length)));
 
         // Insert and merge workload.
         TestOperation[] insertMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.MERGE };
-        workloadConfs.add(new TestWorkloadConf(insertMergeOps, getUniformOpProbs(insertMergeOps)));
+        workloadConfs.add(new TestWorkloadConf(insertMergeOps, ProbabilityHelper
+                .getUniformProbDist(insertMergeOps.length)));
 
         // Inserts mixed with scans.
         TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.SCAN };
-        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, getUniformOpProbs(insertSearchOnlyOps)));
+        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, ProbabilityHelper
+                .getUniformProbDist(insertSearchOnlyOps.length)));
 
         // Inserts and deletes.
         TestOperation[] insertDeleteOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE };
-        workloadConfs.add(new TestWorkloadConf(insertDeleteOps, getUniformOpProbs(insertDeleteOps)));
+        workloadConfs.add(new TestWorkloadConf(insertDeleteOps, ProbabilityHelper
+                .getUniformProbDist(insertDeleteOps.length)));
 
         // Inserts, deletes and merges.
         TestOperation[] insertDeleteMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
                 TestOperation.MERGE };
-        workloadConfs.add(new TestWorkloadConf(insertDeleteMergeOps, getUniformOpProbs(insertDeleteMergeOps)));
+        workloadConfs.add(new TestWorkloadConf(insertDeleteMergeOps, ProbabilityHelper
+                .getUniformProbDist(insertDeleteMergeOps.length)));
 
         // All operations except merge.
         TestOperation[] allNoMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
                 TestOperation.SCAN };
-        workloadConfs.add(new TestWorkloadConf(allNoMergeOps, getUniformOpProbs(allNoMergeOps)));
+        workloadConfs.add(new TestWorkloadConf(allNoMergeOps, ProbabilityHelper
+                .getUniformProbDist(allNoMergeOps.length)));
 
         // All operations.
         TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.SCAN,
                 TestOperation.MERGE };
-        workloadConfs.add(new TestWorkloadConf(allOps, getUniformOpProbs(allOps)));
+        workloadConfs.add(new TestWorkloadConf(allOps, ProbabilityHelper.getUniformProbDist(allOps.length)));
 
         return workloadConfs;
     }

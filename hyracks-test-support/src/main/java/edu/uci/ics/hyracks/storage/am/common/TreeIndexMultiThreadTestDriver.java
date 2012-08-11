@@ -34,7 +34,7 @@ public class TreeIndexMultiThreadTestDriver {
     private final ITreeIndexTestWorkerFactory workerFactory;
 
     public TreeIndexMultiThreadTestDriver(ITreeIndex index, ITreeIndexTestWorkerFactory workerFactory,
-            ISerializerDeserializer[] fieldSerdes, TestOperation[] ops, float[] opProbs) {
+            ISerializerDeserializer[] fieldSerdes, TestOperation[] ops, double[] opProbs) {
         this.index = index;
         this.workerFactory = workerFactory;
         this.fieldSerdes = fieldSerdes;

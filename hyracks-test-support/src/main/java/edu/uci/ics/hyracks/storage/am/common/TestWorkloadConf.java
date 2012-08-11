@@ -19,9 +19,9 @@ import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation
 
 public class TestWorkloadConf {
     public final TestOperation[] ops;
-    public final float[] opProbs;
+    public final double[] opProbs;
 
-    public TestWorkloadConf(TestOperation[] ops, float[] opProbs) {
+    public TestWorkloadConf(TestOperation[] ops, double[] opProbs) {
         this.ops = ops;
         this.opProbs = opProbs;
     }

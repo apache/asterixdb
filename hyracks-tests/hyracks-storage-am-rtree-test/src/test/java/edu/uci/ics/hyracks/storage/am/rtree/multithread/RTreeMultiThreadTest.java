@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.storage.am.common.TestWorkloadConf;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.datagen.ProbabilityHelper;
 import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeMultiThreadTest;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
@@ -35,10 +36,10 @@ import edu.uci.ics.hyracks.storage.am.rtree.utils.RTreeTestHarness;
 public class RTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
 
     public RTreeMultiThreadTest() {
-		super(true);
-	}
+        super(true);
+    }
 
-	private RTreeTestHarness harness = new RTreeTestHarness();
+    private RTreeTestHarness harness = new RTreeTestHarness();
 
     private RTreeTestWorkerFactory workerFactory = new RTreeTestWorkerFactory();
 
@@ -72,21 +73,24 @@ public class RTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
 
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };
-        workloadConfs.add(new TestWorkloadConf(insertOnlyOps, getUniformOpProbs(insertOnlyOps)));
+        workloadConfs.add(new TestWorkloadConf(insertOnlyOps, ProbabilityHelper
+                .getUniformProbDist(insertOnlyOps.length)));
 
         // Inserts mixed with scans.
         TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.SCAN,
                 TestOperation.DISKORDER_SCAN };
-        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, getUniformOpProbs(insertSearchOnlyOps)));
+        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, ProbabilityHelper
+                .getUniformProbDist(insertSearchOnlyOps.length)));
 
         // Inserts and deletes.
         TestOperation[] insertDeleteOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE };
-        workloadConfs.add(new TestWorkloadConf(insertDeleteOps, getUniformOpProbs(insertDeleteOps)));
+        workloadConfs.add(new TestWorkloadConf(insertDeleteOps, ProbabilityHelper
+                .getUniformProbDist(insertDeleteOps.length)));
 
         // All operations mixed.
         TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.SCAN,
                 TestOperation.DISKORDER_SCAN };
-        workloadConfs.add(new TestWorkloadConf(allOps, getUniformOpProbs(allOps)));
+        workloadConfs.add(new TestWorkloadConf(allOps, ProbabilityHelper.getUniformProbDist(allOps.length)));
 
         return workloadConfs;
     }
