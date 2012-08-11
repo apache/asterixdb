@@ -92,12 +92,11 @@
     <module>hyracks-storage-common</module>
     <module>hyracks-storage-am-common</module>
     <module>hyracks-storage-am-btree</module>
-    <module>hyracks-storage-am-invertedindex</module>
+    <module>hyracks-storage-am-rtree</module>
     <module>hyracks-storage-am-lsm-common</module>
     <module>hyracks-storage-am-lsm-btree</module>
     <module>hyracks-storage-am-lsm-rtree</module>
     <module>hyracks-storage-am-lsm-invertedindex</module>
-    <module>hyracks-storage-am-rtree</module>
     <module>hyracks-test-support</module>
     <module>hyracks-tests</module>
     <module>hyracks-server</module>
