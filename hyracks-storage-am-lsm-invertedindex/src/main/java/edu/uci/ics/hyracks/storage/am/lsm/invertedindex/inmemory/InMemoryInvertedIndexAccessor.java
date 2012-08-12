@@ -27,33 +27,31 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexSearchCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex.DefaultHyracksCommonContext;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexSearchCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.TOccurrenceSearcher;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 
 public class InMemoryInvertedIndexAccessor implements IIndexAccessor {
     // TODO: This ctx needs to go away.
     protected final IHyracksCommonContext hyracksCtx = new DefaultHyracksCommonContext();
     protected final IInvertedIndexSearcher searcher;
     protected IIndexOpContext opCtx;
-    protected InMemoryInvertedIndex memoryBtreeInvertedIndex;
+    protected InMemoryInvertedIndex inMemInvIx;
     protected BTreeAccessor btreeAccessor;
 
-    public InMemoryInvertedIndexAccessor(InMemoryInvertedIndex memoryBtreeInvertedIndex,
-            IIndexOpContext opCtx, IBinaryTokenizer tokenizer) {
+    public InMemoryInvertedIndexAccessor(InMemoryInvertedIndex inMemInvIx, IIndexOpContext opCtx) {
         this.opCtx = opCtx;
-        this.memoryBtreeInvertedIndex = memoryBtreeInvertedIndex;
-        this.searcher = new TOccurrenceSearcher(hyracksCtx, memoryBtreeInvertedIndex);
+        this.inMemInvIx = inMemInvIx;
+        this.searcher = new TOccurrenceSearcher(hyracksCtx, inMemInvIx);
         // TODO: Ignore opcallbacks for now.
-        this.btreeAccessor = (BTreeAccessor) memoryBtreeInvertedIndex.getBTree().createAccessor(
-                NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        this.btreeAccessor = (BTreeAccessor) inMemInvIx.getBTree().createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
     }
 
     public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
         opCtx.reset(IndexOp.INSERT);
-        memoryBtreeInvertedIndex.insert(tuple, btreeAccessor, opCtx);
+        inMemInvIx.insert(tuple, btreeAccessor, opCtx);
     }
 
     @Override

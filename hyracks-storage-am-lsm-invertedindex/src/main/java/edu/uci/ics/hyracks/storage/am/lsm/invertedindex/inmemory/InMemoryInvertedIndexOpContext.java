@@ -16,8 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
@@ -25,6 +23,9 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexInsertTupleIterator;
 
 public class InMemoryInvertedIndexOpContext implements IIndexOpContext {
     public IndexOp op;
@@ -38,20 +39,23 @@ public class InMemoryInvertedIndexOpContext implements IIndexOpContext {
     public MultiComparator tokenFieldsCmp;
 
     // To generate in-memory BTree tuples for insertions.
-    public ArrayTupleBuilder btreeTupleBuilder;
-    public ArrayTupleReference btreeTupleReference;
+    private final IBinaryTokenizerFactory tokenizerFactory;
+    public InvertedIndexInsertTupleIterator insertTupleIter;
 
-    public InMemoryInvertedIndexOpContext(BTree btree, IBinaryComparatorFactory[] tokenCmpFactories) {
+    public InMemoryInvertedIndexOpContext(BTree btree, IBinaryComparatorFactory[] tokenCmpFactories,
+            IBinaryTokenizerFactory tokenizerFactory) {
         this.btree = btree;
         this.tokenCmpFactories = tokenCmpFactories;
+        this.tokenizerFactory = tokenizerFactory;
     }
 
     @Override
     public void reset(IndexOp newOp) {
         switch (newOp) {
             case INSERT: {
-                btreeTupleBuilder = new ArrayTupleBuilder(btree.getFieldCount());
-                btreeTupleReference = new ArrayTupleReference();
+                IBinaryTokenizer tokenizer = tokenizerFactory.createTokenizer();
+                insertTupleIter = new InvertedIndexInsertTupleIterator(tokenCmpFactories.length, btree.getFieldCount()
+                        - tokenCmpFactories.length, tokenizer);
                 break;
             }
             case SEARCH: {

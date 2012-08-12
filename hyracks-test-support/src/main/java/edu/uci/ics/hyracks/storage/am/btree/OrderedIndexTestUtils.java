@@ -7,8 +7,8 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.NavigableSet;
 import java.util.Random;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,35 +51,27 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    // Create a new TreeSet containing the elements satisfying the prefix
-    // search.
+    // Create a new TreeSet containing the elements satisfying the prefix search.
     // Implementing prefix search by changing compareTo() in CheckTuple does not
     // work.
-    public static TreeSet<CheckTuple> getPrefixExpectedSubset(TreeSet<CheckTuple> checkTuples, CheckTuple lowKey,
+    public static SortedSet<CheckTuple> getPrefixExpectedSubset(TreeSet<CheckTuple> checkTuples, CheckTuple lowKey,
             CheckTuple highKey) {
-        TreeSet<CheckTuple> expectedSubset = new TreeSet<CheckTuple>();
-        Iterator<CheckTuple> iter = checkTuples.iterator();
-        while (iter.hasNext()) {
-            CheckTuple t = iter.next();
-            boolean geLowKey = true;
-            boolean leHighKey = true;
-            for (int i = 0; i < lowKey.getNumKeys(); i++) {
-                if (t.getField(i).compareTo(lowKey.getField(i)) < 0) {
-                    geLowKey = false;
-                    break;
-                }
-            }
-            for (int i = 0; i < highKey.getNumKeys(); i++) {
-                if (t.getField(i).compareTo(highKey.getField(i)) > 0) {
-                    leHighKey = false;
-                    break;
-                }
-            }
-            if (geLowKey && leHighKey) {
-                expectedSubset.add(t);
-            }
+        lowKey.setIsHighKey(false);
+        highKey.setIsHighKey(true);
+        CheckTuple low = checkTuples.ceiling(lowKey);
+        CheckTuple high = checkTuples.floor(highKey);
+        if (low == null) {
+            // Must be empty.
+            return new TreeSet<CheckTuple>();
         }
-        return expectedSubset;
+        if (high == null) {
+            throw new IllegalStateException("Upper bound is null.");
+        }
+        if (high.compareTo(low) < 0) {
+            // Must be empty.
+            return new TreeSet<CheckTuple>();
+        }
+        return checkTuples.subSet(low, true, high, true);
     }
 
     @SuppressWarnings("unchecked")
@@ -99,7 +91,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
         CheckTuple lowKeyCheck = createCheckTupleFromTuple(lowKey, ctx.getFieldSerdes(), lowKeyCmp.getKeyFieldCount());
         CheckTuple highKeyCheck = createCheckTupleFromTuple(highKey, ctx.getFieldSerdes(),
                 highKeyCmp.getKeyFieldCount());
-        NavigableSet<CheckTuple> expectedSubset = null;
+        SortedSet<CheckTuple> expectedSubset = null;
         if (lowKeyCmp.getKeyFieldCount() < ctx.getKeyFieldCount()
                 || highKeyCmp.getKeyFieldCount() < ctx.getKeyFieldCount()) {
             // Searching on a key prefix (low key or high key or both).
@@ -207,10 +199,10 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
             }
         }
     }
-    
+
     public void upsertStringTuples(IIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
-    	OrderedIndexTestContext ctx = (OrderedIndexTestContext) ictx;
-    	int fieldCount = ctx.getFieldCount();
+        OrderedIndexTestContext ctx = (OrderedIndexTestContext) ictx;
+        int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         String[] fieldValues = new String[fieldCount];
         for (int i = 0; i < numTuples; i++) {
@@ -264,7 +256,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
 
     public void upsertIntTuples(IIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
         OrderedIndexTestContext ctx = (OrderedIndexTestContext) ictx;
-    	int fieldCount = ctx.getFieldCount();
+        int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         int[] fieldValues = new int[ctx.getFieldCount()];
         // Scale range of values according to number of keys.
@@ -286,7 +278,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
             ctx.upsertCheckTuple(createIntCheckTuple(fieldValues, ctx.getKeyFieldCount()), ctx.getCheckTuples());
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     public void updateTuples(IIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
         OrderedIndexTestContext ctx = (OrderedIndexTestContext) ictx;

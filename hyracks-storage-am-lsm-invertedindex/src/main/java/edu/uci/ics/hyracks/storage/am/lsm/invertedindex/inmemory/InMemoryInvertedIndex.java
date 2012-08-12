@@ -15,7 +15,6 @@
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 
 import java.io.File;
-import java.io.IOException;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
@@ -39,8 +38,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public class InMemoryInvertedIndex implements IInvertedIndex {
@@ -51,20 +49,20 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     private final IBinaryComparatorFactory[] tokenCmpFactories;
     private final ITypeTraits[] invListTypeTraits;
     private final IBinaryComparatorFactory[] invListCmpFactories;
-    private final IBinaryTokenizer tokenizer;
+    private final IBinaryTokenizerFactory tokenizerFactory;
 
     private final ITypeTraits[] btreeTypeTraits;
     private final IBinaryComparatorFactory[] btreeCmpFactories;
 
     public InMemoryInvertedIndex(IBufferCache memBufferCache, IFreePageManager memFreePageManager,
             ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
-            ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizer tokenizer)
-            throws BTreeException {
+            ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories,
+            IBinaryTokenizerFactory tokenizerFactory) throws BTreeException {
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
-        this.tokenizer = tokenizer;
+        this.tokenizerFactory = tokenizerFactory;
         // BTree tuples: <tokens, inverted-list elements>.
         int numBTreeFields = tokenTypeTraits.length + invListTypeTraits.length;
         btreeTypeTraits = new ITypeTraits[numBTreeFields];
@@ -115,29 +113,12 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     public boolean insert(ITupleReference tuple, BTreeAccessor btreeAccessor, IIndexOpContext ictx)
             throws HyracksDataException, IndexException {
         InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
-        // TODO: We can possibly avoid copying the data into a new tuple here.
-        tokenizer.reset(tuple.getFieldData(0), tuple.getFieldStart(0), tuple.getFieldLength(0));
-        while (tokenizer.hasNext()) {
-            tokenizer.next();
-            IToken token = tokenizer.getToken();
-            ctx.btreeTupleBuilder.reset();
-            // Add token field.
+        ctx.insertTupleIter.reset(tuple);
+        while (ctx.insertTupleIter.hasNext()) {
+            ctx.insertTupleIter.next();
+            ITupleReference insertTuple = ctx.insertTupleIter.getTuple();
             try {
-                token.serializeToken(ctx.btreeTupleBuilder.getDataOutput());
-            } catch (IOException e) {
-                throw new HyracksDataException(e);
-            }
-            ctx.btreeTupleBuilder.addFieldEndOffset();
-            // Add inverted-list element fields.
-            for (int i = 0; i < invListTypeTraits.length; i++) {
-                ctx.btreeTupleBuilder.addField(tuple.getFieldData(i + 1), tuple.getFieldStart(i + 1),
-                        tuple.getFieldLength(i + 1));
-            }
-            // Reset tuple reference for insert operation.
-            ctx.btreeTupleReference.reset(ctx.btreeTupleBuilder.getFieldEndOffsets(),
-                    ctx.btreeTupleBuilder.getByteArray());
-            try {
-                btreeAccessor.insert(ctx.btreeTupleReference);
+                btreeAccessor.insert(insertTuple);
             } catch (BTreeDuplicateKeyException e) {
                 // This exception may be caused by duplicate tokens in the same insert "document".
                 // We ignore such duplicate tokens in all inverted-index implementations, hence
@@ -159,8 +140,8 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     }
 
     @Override
-    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference tupleReference, IIndexOpContext ictx)
-            throws HyracksDataException, IndexException {
+    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference tupleReference,
+            IIndexOpContext ictx) throws HyracksDataException, IndexException {
         InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
         InMemoryInvertedListCursor inMemListCursor = (InMemoryInvertedListCursor) listCursor;
         inMemListCursor.prepare(ctx.btreeAccessor, ctx.btreePred, ctx.tokenFieldsCmp, ctx.btreeCmp);
@@ -170,13 +151,13 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     @Override
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
-        return new InMemoryInvertedIndexAccessor(this, new InMemoryInvertedIndexOpContext(
-                btree, tokenCmpFactories), tokenizer);
+        return new InMemoryInvertedIndexAccessor(this, new InMemoryInvertedIndexOpContext(btree, tokenCmpFactories,
+                tokenizerFactory));
     }
 
     @Override
     public IBufferCache getBufferCache() {
-        return null;
+        return btree.getBufferCache();
     }
 
     @Override
@@ -197,7 +178,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     public ITypeTraits[] getInvListTypeTraits() {
         return invListTypeTraits;
     }
-    
+
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws IndexException {
         throw new UnsupportedOperationException("Bulk load not supported by in-memory inverted index.");

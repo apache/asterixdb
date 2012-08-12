@@ -28,7 +28,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.exceptions.InvertedIndexException;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
@@ -71,21 +71,10 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
         return allCmpFactories;
     }
 
-    @Override
-    public void insertCheckTuple(CheckTuple checkTuple, Collection<CheckTuple> checkTuples) {
-        // TODO: Tokenize and insert <token,key> pairs.
-        checkTuples.add(checkTuple);
-    }
-
-    @Override
-    public void deleteCheckTuple(CheckTuple checkTuple, Collection<CheckTuple> checkTuples) {
-        // TODO: Tokenize and insert <token,key> pairs.
-        checkTuples.remove(checkTuple);
-    }
-    
     public static InvertedIndexTestContext create(IBufferCache bufferCache, IFreePageManager freePageManager,
             IFileMapProvider fileMapProvider, FileReference invListsFile, ISerializerDeserializer[] fieldSerdes,
-            int tokenFieldCount, IBinaryTokenizer tokenizer, InvertedIndexType invIndexType) throws Exception {
+            int tokenFieldCount, IBinaryTokenizerFactory tokenizerFactory, InvertedIndexType invIndexType)
+            throws Exception {
         ITypeTraits[] allTypeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] allCmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes,
                 fieldSerdes.length);
@@ -109,7 +98,7 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
         switch (invIndexType) {
             case INMEMORY: {
                 invIndex = InvertedIndexUtils.createInMemoryBTreeInvertedindex(bufferCache, freePageManager,
-                        invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizer);
+                        invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory);
                 break;
             }
             case ONDISK: {
@@ -124,7 +113,7 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
         InvertedIndexTestContext testCtx = new InvertedIndexTestContext(fieldSerdes, invIndex);
         return testCtx;
     }
-    
+
     @Override
     public void upsertCheckTuple(CheckTuple checkTuple, Collection<CheckTuple> checkTuples) {
         throw new UnsupportedOperationException("Upsert not supported by inverted index.");

@@ -74,6 +74,7 @@ public abstract class AbstractInvertedIndexTest {
     protected int numDocuments = 1000;
     protected int docMinWords = 2;
     protected int docMaxWords = 10;
+    protected List<String> documents = new ArrayList<String>();
     protected Map<String, SortedSet<Integer>> baselineInvertedIndex = new HashMap<String, SortedSet<Integer>>();
 
     // Generate random data is false by default (generate predefined data is true!)
