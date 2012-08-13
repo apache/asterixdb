@@ -71,7 +71,7 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
     
     @Override
     public int compareTo(IInvertedListCursor cursor) {
-        return getNumElements() - cursor.getNumElements();
+        return size() - cursor.size();
     }
 
     public void reset(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
@@ -79,6 +79,7 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
         // Copy the tokens tuple for later use in btree probes.
         TupleUtils.copyTuple(tokenTupleBuilder, tuple, tuple.getFieldCount());
         tokenTuple.reset(tokenTupleBuilder.getFieldEndOffsets(), tokenTupleBuilder.getByteArray());
+        btreeSearchTuple.reset();
         btreeSearchTuple.addTuple(tokenTuple);
         btreePred.setLowKey(tuple, true);
         btreePred.setHighKey(tuple, true);
@@ -117,7 +118,7 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
     }
 
     @Override
-    public int getNumElements() {
+    public int size() {
         if (numElements < 0) {
             btreePred.setLowKeyComparator(tokenFieldsCmp);
             btreePred.setHighKeyComparator(tokenFieldsCmp);

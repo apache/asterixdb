@@ -72,7 +72,7 @@ public class LSMInvertedIndexRangeSearchCursor implements IIndexCursor {
         //create all cursors
         IIndexCursor cursor;
         for (IIndexAccessor accessor : indexAccessors) {
-            InvertedIndexAccessor invIndexAccessor = (InvertedIndexAccessor) accessor;
+            OnDiskInvertedIndexAccessor invIndexAccessor = (OnDiskInvertedIndexAccessor) accessor;
             cursor = invIndexAccessor.createRangeSearchCursor();
             try {
                 invIndexAccessor.rangeSearch(cursor, searchPred);

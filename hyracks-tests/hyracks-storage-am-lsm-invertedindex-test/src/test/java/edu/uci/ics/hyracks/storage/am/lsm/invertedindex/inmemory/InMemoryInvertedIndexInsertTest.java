@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -15,42 +15,33 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 
-import java.util.logging.Logger;
+import java.io.IOException;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.AbstractInvertedIndexInsertTest;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.ITokenFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.NGramUTF8StringBinaryTokenizer;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8NGramTokenFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestUtils;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.common.datagen.TupleGenerator;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext.InvertedIndexType;
+import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
-public class InMemoryInvertedIndexInsertTest extends AbstractInvertedIndexInsertTest {
-
-    @Override
-    protected void setTokenizer() {
-        ITokenFactory tokenFactory = new UTF8NGramTokenFactory();
-        tokenizer = new NGramUTF8StringBinaryTokenizer(3, false, true, false, tokenFactory);
-//        ITokenFactory tokenFactory = new UTF8WordTokenFactory();
-//        tokenizer = new DelimitedUTF8StringBinaryTokenizer(true, false, tokenFactory);
+public class InMemoryInvertedIndexInsertTest extends AbstractSingleComponentInvertedIndexTest {
+    
+    public InMemoryInvertedIndexInsertTest() {
+        super(InvertedIndexType.INMEMORY);
     }
 
     @Override
-    protected void setInvertedIndex() throws HyracksDataException {
-        invertedIndex = InvertedIndexTestUtils.createInMemoryInvertedIndex(harness, tokenizer);
-        invertedIndex.create();
-        invertedIndex.activate();
-        invertedIndex.create(harness.getFileId());
-        invertedIndex.open(harness.getFileId());
+    public void loadIndex(TupleGenerator tupleGen, InvertedIndexTestContext testCtx) throws IOException, IndexException {
+        // InMemoryInvertedIndex only supports insert.
+        for (int i = 0; i < NUM_DOCS_TO_INSERT; i++) {
+            ITupleReference tuple = tupleGen.next();
+            testCtx.getIndexAccessor().insert(tuple);
+            testCtx.insertCheckTuples(tuple);
+        }
     }
 
     @Override
-    protected void setLogger() {
-        LOGGER = Logger.getLogger(InMemoryInvertedIndexInsertTest.class.getName());
+    public IBufferCache getBufferCache() {
+        return harness.getMemBufferCache();
     }
-
-    @Override
-    protected void setRandom() {
-        random = true;
-    }
-
 }

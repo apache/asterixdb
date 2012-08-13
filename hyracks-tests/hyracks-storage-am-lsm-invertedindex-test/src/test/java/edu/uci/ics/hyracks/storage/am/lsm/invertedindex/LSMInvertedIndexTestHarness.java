@@ -22,17 +22,16 @@ import java.util.Date;
 import java.util.Random;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
-import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
-import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
-import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
+import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -62,6 +61,7 @@ public class LSMInvertedIndexTestHarness {
     protected IOManager ioManager;
     protected IBufferCache diskBufferCache;
     protected IFileMapProvider diskFileMapProvider;
+    protected IFreePageManager diskFreePageManager;
     protected InMemoryBufferCache memBufferCache;
     protected InMemoryFreePageManager memFreePageManager;
     protected IHyracksTaskContext ctx;
@@ -72,18 +72,7 @@ public class LSMInvertedIndexTestHarness {
     protected String onDiskDir;
     protected String btreeFileName = "btree_vocab";
     protected String invIndexFileName = "inv_index";
-    protected FileReference btreeFileRef;
     protected FileReference invIndexFileRef;
-
-    // Token information
-    protected ITypeTraits[] tokenTypeTraits = new ITypeTraits[] { UTF8StringPointable.TYPE_TRAITS };
-    protected IBinaryComparatorFactory[] tokenCmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
-            .of(UTF8StringPointable.FACTORY) };
-
-    // Inverted list information
-    protected ITypeTraits[] invListTypeTraits = new ITypeTraits[] { IntegerPointable.TYPE_TRAITS };
-    protected IBinaryComparatorFactory[] invListCmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
-            .of(IntegerPointable.FACTORY) };
 
     public LSMInvertedIndexTestHarness() {
         this.diskPageSize = DEFAULT_DISK_PAGE_SIZE;
@@ -110,8 +99,9 @@ public class LSMInvertedIndexTestHarness {
         TestStorageManagerComponentHolder.init(diskPageSize, diskNumPages, diskMaxOpenFiles);
         diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), memPageSize, memNumPages);
-        memFreePageManager = new InMemoryFreePageManager(memNumPages, new LIFOMetaDataFrameFactory());
+        memBufferCache = new DualIndexInMemoryBufferCache(new HeapBufferAllocator(), memPageSize, memNumPages);
+        memBufferCache.open();
+        memFreePageManager = new DualIndexInMemoryFreePageManager(memNumPages, new LIFOMetaDataFrameFactory());
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         rnd.setSeed(RANDOM_SEED);
         
@@ -119,20 +109,10 @@ public class LSMInvertedIndexTestHarness {
         btreeFile.deleteOnExit();
         File invIndexFile = new File(onDiskDir + invIndexFileName);
         invIndexFile.deleteOnExit();
-        btreeFileRef = new FileReference(btreeFile);
         invIndexFileRef = new FileReference(invIndexFile);
-        diskBufferCache.createFile(btreeFileRef);
-        diskBufferCache.openFile(diskFileMapProvider.lookupFileId(btreeFileRef));
-        diskBufferCache.createFile(invIndexFileRef);
-        diskBufferCache.openFile(diskFileMapProvider.lookupFileId(invIndexFileRef));
     }
 
     public void tearDown() throws HyracksDataException {
-        diskBufferCache.closeFile(diskFileMapProvider.lookupFileId(btreeFileRef));
-        diskBufferCache.deleteFile(diskFileMapProvider.lookupFileId(btreeFileRef), false);
-        diskBufferCache.closeFile(diskFileMapProvider.lookupFileId(invIndexFileRef));
-        diskBufferCache.deleteFile(diskFileMapProvider.lookupFileId(invIndexFileRef), false);
-        diskBufferCache.close();
         for (IODeviceHandle dev : ioManager.getIODevices()) {
             File dir = new File(dev.getPath(), onDiskDir);
             FilenameFilter filter = new FilenameFilter() {
@@ -149,16 +129,13 @@ public class LSMInvertedIndexTestHarness {
             }
             dir.delete();
         }
+        memBufferCache.close();
     }
     
-    public int getDiskInvertedIndexFileId() throws HyracksDataException {
-        return diskFileMapProvider.lookupFileId(invIndexFileRef);
+    public FileReference getInvListsFileRef() {
+        return invIndexFileRef;
     }
     
-    public int getDiskBtreeFileId() throws HyracksDataException {
-        return diskFileMapProvider.lookupFileId(btreeFileRef);
-    }
-
     public int getDiskPageSize() {
         return diskPageSize;
     }
@@ -217,21 +194,5 @@ public class LSMInvertedIndexTestHarness {
 
     public Random getRandom() {
         return rnd;
-    }
-    
-    public ITypeTraits[] getTokenTypeTraits() {
-        return tokenTypeTraits;
-    }
-    
-    public ITypeTraits[] getInvertedListTypeTraits() {
-        return invListTypeTraits;
-    }
-    
-    public IBinaryComparatorFactory[] getTokenBinaryComparatorFactories() {
-        return tokenCmpFactories;
-    }
-    
-    public IBinaryComparatorFactory[] getInvertedListBinaryComparatorFactories() {
-        return invListCmpFactories;
     }
 }

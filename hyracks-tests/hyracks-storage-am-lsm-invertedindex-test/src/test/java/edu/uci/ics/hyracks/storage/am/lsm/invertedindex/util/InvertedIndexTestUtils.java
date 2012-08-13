@@ -54,22 +54,22 @@ public class InvertedIndexTestUtils {
         IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
                 .of(UTF8StringPointable.FACTORY) };
         return InvertedIndexUtils.createInvertedIndex(harness.getDiskBufferCache(), 
-                harness.getInvertedListTypeTraits(), harness.getInvertedListBinaryComparatorFactories(), tokenizer);
+                harness.getInvListTypeTraits(), harness.getInvListCmpFactories(), tokenizer);
     }
 
     public static InMemoryInvertedIndex createInMemoryInvertedIndex(LSMInvertedIndexTestHarness harness,
             IBinaryTokenizer tokenizer) {
         return InvertedIndexUtils.createInMemoryBTreeInvertedindex(harness.getMemBufferCache(),
-                harness.getMemFreePageManager(), harness.getTokenTypeTraits(), harness.getInvertedListTypeTraits(),
-                harness.getTokenBinaryComparatorFactories(), harness.getInvertedListBinaryComparatorFactories(),
+                harness.getMemFreePageManager(), harness.getTokenTypeTraits(), harness.getInvListTypeTraits(),
+                harness.getTokenCmpFactories(), harness.getInvListCmpFactories(),
                 tokenizer);
     }
 
     public static LSMInvertedIndex createLSMInvertedIndex(LSMInvertedIndexTestHarness harness,
             IBinaryTokenizer tokenizer) {
         return InvertedIndexUtils.createLSMInvertedIndex(harness.getMemBufferCache(),
-                harness.getMemFreePageManager(), harness.getTokenTypeTraits(), harness.getInvertedListTypeTraits(),
-                harness.getTokenBinaryComparatorFactories(), harness.getInvertedListBinaryComparatorFactories(),
+                harness.getMemFreePageManager(), harness.getTokenTypeTraits(), harness.getInvListTypeTraits(),
+                harness.getTokenCmpFactories(), harness.getInvListCmpFactories(),
                 tokenizer, harness.getDiskBufferCache(),
                 new LinkedListFreePageManagerFactory(harness.getDiskBufferCache(), new LIFOMetaDataFrameFactory()),
                 harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskFileMapProvider());

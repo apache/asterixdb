@@ -36,7 +36,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.exceptions.OccurrenceThresholdPanicException;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex.InvertedIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex.OnDiskInvertedIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveSearchModifier;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.EditDistanceSearchModifier;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
@@ -176,7 +176,7 @@ public class OnDiskInvertedIndexSearchTest extends AbstractInvIndexSearchTest {
      */
     private void runQueries(IInvertedIndexSearchModifier searchModifier, int numQueries) throws Exception {
         rnd.setSeed(50);
-        InvertedIndexAccessor accessor = (InvertedIndexAccessor) invIndex.createAccessor(
+        OnDiskInvertedIndexAccessor accessor = (OnDiskInvertedIndexAccessor) invIndex.createAccessor(
                 NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         InvertedIndexSearchPredicate searchPred = new InvertedIndexSearchPredicate(tokenizer, searchModifier);
         for (int i = 0; i < numQueries; i++) {

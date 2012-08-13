@@ -208,7 +208,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
             newResultBuffers = swap;
 
             invListCursors.get(i).pinPages();
-            int numInvListElements = invListCursors.get(i).getNumElements();
+            int numInvListElements = invListCursors.get(i).size();
             // should we binary search the next list or should we sort-merge it?
             if (currentNumResults * Math.log(numInvListElements) < currentNumResults + numInvListElements) {
                 maxPrevBufIdx = mergeSuffixListProbe(invListCursors.get(i), prevResultBuffers, maxPrevBufIdx,
@@ -284,7 +284,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         resultFrameTupleApp.reset(newCurrentBuffer, true);
 
         int invListTidx = 0;
-        int invListNumTuples = invListCursor.getNumElements();
+        int invListNumTuples = invListCursor.size();
 
         if (invListCursor.hasNext())
             invListCursor.next();
@@ -378,7 +378,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         resultFrameTupleApp.reset(newCurrentBuffer, true);
 
         int invListTidx = 0;
-        int invListNumTuples = invListCursor.getNumElements();
+        int invListNumTuples = invListCursor.size();
 
         if (invListCursor.hasNext())
             invListCursor.next();

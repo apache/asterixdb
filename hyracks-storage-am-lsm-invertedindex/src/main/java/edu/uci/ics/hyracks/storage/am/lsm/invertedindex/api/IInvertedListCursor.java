@@ -34,7 +34,7 @@ public interface IInvertedListCursor extends Comparable<IInvertedListCursor> {
     public ITupleReference getTuple();
 
     // getters
-    public int getNumElements();
+    public int size();
 
     public int getStartPageId();
 

@@ -35,6 +35,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
@@ -143,6 +144,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference tupleReference,
             IIndexOpContext ictx) throws HyracksDataException, IndexException {
         InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
+        ctx.reset(IndexOp.SEARCH);
         InMemoryInvertedListCursor inMemListCursor = (InMemoryInvertedListCursor) listCursor;
         inMemListCursor.prepare(ctx.btreeAccessor, ctx.btreePred, ctx.tokenFieldsCmp, ctx.btreeCmp);
         inMemListCursor.reset(tupleReference);

@@ -251,7 +251,7 @@ public class FixedSizeElementInvertedListCursor implements IInvertedListCursor {
 
     @Override
     public int compareTo(IInvertedListCursor invListCursor) {
-        return numElements - invListCursor.getNumElements();
+        return numElements - invListCursor.size();
     }
 
     @Override
@@ -260,7 +260,7 @@ public class FixedSizeElementInvertedListCursor implements IInvertedListCursor {
     }
 
     @Override
-    public int getNumElements() {
+    public int size() {
         return numElements;
     }
 

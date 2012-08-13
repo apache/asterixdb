@@ -60,12 +60,9 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
         highKey.setIsHighKey(true);
         CheckTuple low = checkTuples.ceiling(lowKey);
         CheckTuple high = checkTuples.floor(highKey);
-        if (low == null) {
+        if (low == null || high == null) {
             // Must be empty.
             return new TreeSet<CheckTuple>();
-        }
-        if (high == null) {
-            throw new IllegalStateException("Upper bound is null.");
         }
         if (high.compareTo(low) < 0) {
             // Must be empty.

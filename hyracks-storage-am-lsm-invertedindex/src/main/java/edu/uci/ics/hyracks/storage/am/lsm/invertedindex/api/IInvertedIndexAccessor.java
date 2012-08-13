@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2010 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -15,25 +15,14 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 
-public interface IInvertedIndex extends IIndex {
+public interface IInvertedIndexAccessor extends IIndexAccessor {
     public IInvertedListCursor createInvertedListCursor();
-    
-    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey, IIndexOpContext ictx)
+
+    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey)
             throws HyracksDataException, IndexException;
-    
-    public ITypeTraits[] getInvListTypeTraits();
-    
-    public IBinaryComparatorFactory[] getInvListCmpFactories();    
-    
-    public ITypeTraits[] getTokenTypeTraits();
-    
-    public IBinaryComparatorFactory[] getTokenCmpFactories();
 }

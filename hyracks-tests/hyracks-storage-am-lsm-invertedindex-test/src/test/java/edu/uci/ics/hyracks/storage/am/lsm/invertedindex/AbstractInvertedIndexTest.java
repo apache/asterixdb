@@ -101,7 +101,7 @@ public abstract class AbstractInvertedIndexTest {
         generateData();
         invertedIndexAccessor = invertedIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
 
-        IBinaryComparatorFactory[] tokenCmpFactories = harness.getTokenBinaryComparatorFactories();
+        IBinaryComparatorFactory[] tokenCmpFactories = harness.getTokenCmpFactories();
         tokenComparators = new IBinaryComparator[tokenCmpFactories.length];
         for (int i = 0; i < tokenCmpFactories.length; i++) {
             tokenComparators[i] = tokenCmpFactories[i].createBinaryComparator();

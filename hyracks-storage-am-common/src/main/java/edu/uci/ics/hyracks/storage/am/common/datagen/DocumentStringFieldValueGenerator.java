@@ -16,15 +16,16 @@
 package edu.uci.ics.hyracks.storage.am.common.datagen;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class DocumentStringFieldValueGenerator implements IFieldValueGenerator<String> {
-    private final String FIRST_NAMES_FILE = "data/dist.all.first.cleaned";
-    private final String LAST_NAMES_FILE = "data/dist.all.last.cleaned";
+    private final String FIRST_NAMES_FILE = "dist.all.first.cleaned";
+    private final String LAST_NAMES_FILE = "dist.all.last.cleaned";
 
     private final int docMinWords;
     private final int docMaxWords;
@@ -50,7 +51,8 @@ public class DocumentStringFieldValueGenerator implements IFieldValueGenerator<S
         int count = 0;
 
         // Read first names from data file.
-        BufferedReader firstNamesReader = new BufferedReader(new FileReader(FIRST_NAMES_FILE));
+        InputStream firstNamesIn = this.getClass().getClassLoader().getResourceAsStream(FIRST_NAMES_FILE);
+        BufferedReader firstNamesReader = new BufferedReader(new InputStreamReader(firstNamesIn));
         try {
             while (count < maxDictionarySize && (line = firstNamesReader.readLine()) != null) {
                 tokenDict.add(line.trim());
@@ -61,7 +63,8 @@ public class DocumentStringFieldValueGenerator implements IFieldValueGenerator<S
         }
 
         // Read last names from data file.
-        BufferedReader lastNamesReader = new BufferedReader(new FileReader(LAST_NAMES_FILE));
+        InputStream lastNamesIn = this.getClass().getClassLoader().getResourceAsStream(LAST_NAMES_FILE);
+        BufferedReader lastNamesReader = new BufferedReader(new InputStreamReader(lastNamesIn));
         try {
             while (count < maxDictionarySize && (line = lastNamesReader.readLine()) != null) {
                 tokenDict.add(line.trim());

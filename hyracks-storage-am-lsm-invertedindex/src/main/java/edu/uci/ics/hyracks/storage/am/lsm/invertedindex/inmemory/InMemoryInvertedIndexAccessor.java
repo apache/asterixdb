@@ -19,39 +19,40 @@ import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex.DefaultHyracksCommonContext;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexSearchCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.TOccurrenceSearcher;
 
-public class InMemoryInvertedIndexAccessor implements IIndexAccessor {
+public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
     // TODO: This ctx needs to go away.
     protected final IHyracksCommonContext hyracksCtx = new DefaultHyracksCommonContext();
     protected final IInvertedIndexSearcher searcher;
     protected IIndexOpContext opCtx;
-    protected InMemoryInvertedIndex inMemInvIx;
+    protected InMemoryInvertedIndex index;
     protected BTreeAccessor btreeAccessor;
 
-    public InMemoryInvertedIndexAccessor(InMemoryInvertedIndex inMemInvIx, IIndexOpContext opCtx) {
+    public InMemoryInvertedIndexAccessor(InMemoryInvertedIndex index, IIndexOpContext opCtx) {
         this.opCtx = opCtx;
-        this.inMemInvIx = inMemInvIx;
-        this.searcher = new TOccurrenceSearcher(hyracksCtx, inMemInvIx);
+        this.index = index;
+        this.searcher = new TOccurrenceSearcher(hyracksCtx, index);
         // TODO: Ignore opcallbacks for now.
-        this.btreeAccessor = (BTreeAccessor) inMemInvIx.getBTree().createAccessor(NoOpOperationCallback.INSTANCE,
+        this.btreeAccessor = (BTreeAccessor) index.getBTree().createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
     }
 
     public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
         opCtx.reset(IndexOp.INSERT);
-        inMemInvIx.insert(tuple, btreeAccessor, opCtx);
+        index.insert(tuple, btreeAccessor, opCtx);
     }
 
     @Override
@@ -62,6 +63,17 @@ public class InMemoryInvertedIndexAccessor implements IIndexAccessor {
     @Override
     public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
         searcher.search((OnDiskInvertedIndexSearchCursor) cursor, (InvertedIndexSearchPredicate) searchPred, opCtx);
+    }
+
+    @Override
+    public IInvertedListCursor createInvertedListCursor() {
+        return index.createInvertedListCursor();
+    }
+
+    @Override
+    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey)
+            throws HyracksDataException, IndexException {
+        index.openInvertedListCursor(listCursor, searchKey, opCtx);
     }
 
     @Override
