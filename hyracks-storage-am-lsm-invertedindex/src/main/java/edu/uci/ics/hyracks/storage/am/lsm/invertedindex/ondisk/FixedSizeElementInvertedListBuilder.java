@@ -36,9 +36,9 @@ public class FixedSizeElementInvertedListBuilder implements IInvertedListBuilder
 
     @Override
     public boolean startNewList(ITupleReference tuple, int tokenField) {
-        if (pos + listElementSize >= targetBuf.length)
+        if (pos + listElementSize > targetBuf.length) {
             return false;
-        else {
+        } else {
             listSize = 0;
             return true;
         }
@@ -46,8 +46,9 @@ public class FixedSizeElementInvertedListBuilder implements IInvertedListBuilder
 
     @Override
     public boolean appendElement(ITupleReference tuple, int numTokenFields, int numElementFields) {
-        if (pos + listElementSize >= targetBuf.length)
+        if (pos + listElementSize > targetBuf.length) {
             return false;
+        }
 
         for (int i = 0; i < numElementFields; i++) {
             int field = numTokenFields + i;

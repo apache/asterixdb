@@ -15,29 +15,14 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 
-import java.io.IOException;
-
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.datagen.TupleGenerator;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common.AbstractInvertedIndexLoadTest;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext.InvertedIndexType;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
-public class InMemoryInvertedIndexInsertTest extends AbstractSingleComponentInvertedIndexTest {
+public class InMemoryInvertedIndexInsertTest extends AbstractInvertedIndexLoadTest {
     
     public InMemoryInvertedIndexInsertTest() {
-        super(InvertedIndexType.INMEMORY);
-    }
-
-    @Override
-    public void loadIndex(TupleGenerator tupleGen, InvertedIndexTestContext testCtx) throws IOException, IndexException {
-        // InMemoryInvertedIndex only supports insert.
-        for (int i = 0; i < NUM_DOCS_TO_INSERT; i++) {
-            ITupleReference tuple = tupleGen.next();
-            testCtx.getIndexAccessor().insert(tuple);
-            testCtx.insertCheckTuples(tuple);
-        }
+        super(InvertedIndexType.INMEMORY, false);
     }
 
     @Override

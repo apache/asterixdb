@@ -72,7 +72,7 @@ public class FixedSizeElementInvertedListCursor implements IInvertedListCursor {
 
     @Override
     public void next() {
-        if (currentOff + 2 * elementSize >= bufferCache.getPageSize()) {
+        if (currentOff + 2 * elementSize > bufferCache.getPageSize()) {
             currentPageIx++;
             currentOff = 0;
         } else {

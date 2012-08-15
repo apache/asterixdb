@@ -18,8 +18,10 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util;
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -28,6 +30,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
+import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
@@ -51,7 +54,8 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
     protected IBinaryComparatorFactory[] allCmpFactories;
     protected IBinaryTokenizerFactory tokenizerFactory;
     protected InvertedIndexInsertTupleIterator indexInsertIter;
-    protected HashSet<Comparable> allTokens = new HashSet<Comparable>();
+    protected HashSet<Comparable> allTokens = new HashSet<Comparable>();    
+    protected List<ITupleReference> documentCorpus = new ArrayList<ITupleReference>();
     
     public InvertedIndexTestContext(ISerializerDeserializer[] fieldSerdes, IIndex index,
             IBinaryTokenizerFactory tokenizerFactory) {
@@ -128,8 +132,9 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
         return testCtx;
     }
 
-    public void insertCheckTuples(ITupleReference tuple) throws HyracksDataException {
-        indexInsertIter.reset(tuple);
+    public void insertCheckTuples(ITupleReference tuple, Collection<CheckTuple> checkTuples) throws HyracksDataException {
+        documentCorpus.add(TupleUtils.copyTuple(tuple));
+        indexInsertIter.reset(tuple);        
         while (indexInsertIter.hasNext()) {
             indexInsertIter.next();
             ITupleReference insertTuple = indexInsertIter.getTuple();
@@ -139,7 +144,7 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
         }
     }
     
-    public void deleteCheckTuples(ITupleReference tuple) throws HyracksDataException {
+    public void deleteCheckTuples(ITupleReference tuple, Collection<CheckTuple> checkTuples) throws HyracksDataException {
         indexInsertIter.reset(tuple);
         while (indexInsertIter.hasNext()) {
             indexInsertIter.next();
@@ -168,5 +173,13 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
     @Override
     public void upsertCheckTuple(CheckTuple checkTuple, Collection<CheckTuple> checkTuples) {
         throw new UnsupportedOperationException("Upsert not supported by inverted index.");
+    }
+    
+    public IBinaryTokenizerFactory getTokenizerFactory() {
+        return tokenizerFactory;
+    }
+    
+    public List<ITupleReference> getDocumentCorpus() {
+        return documentCorpus;
     }
 }

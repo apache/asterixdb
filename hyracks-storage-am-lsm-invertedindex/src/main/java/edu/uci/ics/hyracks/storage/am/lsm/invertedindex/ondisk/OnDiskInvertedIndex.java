@@ -441,6 +441,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
             searcher.search((OnDiskInvertedIndexSearchCursor) cursor, (InvertedIndexSearchPredicate) searchPred, opCtx);
         }
 
+        @Override
         public IInvertedIndexSearcher getSearcher() {
             return searcher;
         }
@@ -539,6 +540,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
                 NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         IInvertedListCursor invListCursor = invIndexAccessor.createInvertedListCursor();
         MultiComparator invListCmp = MultiComparator.create(invListCmpFactories);
+        
         try {
             // Search key for finding an inverted-list in the actual index.
             ArrayTupleBuilder prevBuilder = new ArrayTupleBuilder(invListTypeTraits.length);

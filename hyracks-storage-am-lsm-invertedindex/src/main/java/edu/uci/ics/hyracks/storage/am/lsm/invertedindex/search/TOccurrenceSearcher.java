@@ -364,6 +364,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
 
     protected int mergePrefixList(IInvertedListCursor invListCursor, List<ByteBuffer> prevResultBuffers,
             int maxPrevBufIdx, List<ByteBuffer> newResultBuffers) throws HyracksDataException {
+        
         int newBufIdx = 0;
         ByteBuffer newCurrentBuffer = newResultBuffers.get(0);
 
@@ -514,10 +515,10 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         return occurrenceThreshold;
     }
 
-    public void printNewResults(int maxResultBufIdx) {
+    public void printNewResults(int maxResultBufIdx, List<ByteBuffer> buffer) {
         StringBuffer strBuffer = new StringBuffer();
         for (int i = 0; i <= maxResultBufIdx; i++) {
-            ByteBuffer testBuf = newResultBuffers.get(i);
+            ByteBuffer testBuf = buffer.get(i);
             resultFrameTupleAcc.reset(testBuf);
             for (int j = 0; j < resultFrameTupleAcc.getTupleCount(); j++) {
                 strBuffer.append(IntegerSerializerDeserializer.getInt(resultFrameTupleAcc.getBuffer().array(),
