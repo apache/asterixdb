@@ -1,0 +1,28 @@
+/*
+ * Test case Name : cpttostr01.aql
+ * Description    : Test codepoint-to-string(codepoint) function.
+ *                : Pass the codepoints which are in the internal dataset to the function. 
+ * Success        : Yes
+ * Date           : 16th April 2012
+ */
+
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as open{
+id:int32,
+cpt:[int32]
+}
+
+create dataset testds(TestType) partitioned by key id;
+
+// insert codepoint data into internal dataset testds here into the cpt attribute
+
+insert into dataset testds({"id":123,"cpt":[0048,0045,0057,0044,0065,0045,0090]});
+
+write output to nc1:"rttest/string_cpttostr01.adm";
+
+for $l in dataset('testds')
+return codepoint-to-string($l.cpt)

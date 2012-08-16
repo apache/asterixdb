@@ -1,0 +1,35 @@
+/*
+ * Description     : Test that BTree index is used in query plan
+ *                 : define the BTree index on a composite key (fname,lanme)
+ *                 : predicate => where $l.fname="Julio" and $l.lname="Isa"
+ * Expected Result : Success
+ * Issue           : Issue 162
+ * Date            : 7th August 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type Emp as closed {
+id:int32,
+fname:string,
+lname:string,
+age:int32,
+dept:string
+}
+
+create dataset employee(Emp) partitioned by key id;
+
+load dataset employee
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/names.adm"),("format"="delimited-text"),("delimiter"="|"));
+
+create index idx_employee_f_l_name on employee(fname,lname);
+
+write output to nc1:"rttest/index-selection_btree-index-composite-key.adm";
+
+for $l in dataset('employee')
+where $l.fname="Julio" and $l.lname="Isa"
+return $l
+

@@ -4,5 +4,9 @@
  * Date             :  7th July 2012
  */
 
+// return string length
+
+write output to nc1:"rttest/flwor_ret-01.adm";
+
 for $x in ["ten","twenty","thirty","forty","fifty","sixty","seventy","ninety"]
 return string-length($x)

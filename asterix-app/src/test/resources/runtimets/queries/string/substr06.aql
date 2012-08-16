@@ -1,0 +1,32 @@
+/*
+ * Description    : Test substring2(string,position) built in function.
+ * Success        : Yes
+ * Date           : 19th April 2012
+ */
+
+// To test substring function with string data stored in an internal dataset.
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as open {
+name : string
+}
+
+create dataset testdst(TestType) partitioned by key name;
+
+insert into dataset testdst({"name":"UC Berkeley"});
+insert into dataset testdst({"name":"UC Irvine"});
+insert into dataset testdst({"name":"UC LA"});
+insert into dataset testdst({"name":"UC Riverside"});
+insert into dataset testdst({"name":"UC San Diego"});
+insert into dataset testdst({"name":"UC Santa Barbara"});
+insert into dataset testdst({"name":"UT Austin "});
+insert into dataset testdst({"name":"UT Dallas"});
+
+write output to nc1:"rttest/string_substr06.adm";
+
+for $a in dataset('testdst')
+order by $a.name
+return substring2($a.name,4);

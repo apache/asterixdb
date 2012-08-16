@@ -1,0 +1,10 @@
+/*
+ * Description  : Test string to codepoint function with special characters 
+ * Expected Res : Success
+ * Date         : 7th Aug 2012
+ */
+
+write output to nc1:"rttest/string_strtocpt02.adm";
+
+let $x := "\"'-=_+|\,./<>?:;~`"
+return string-to-codepoint($x)
