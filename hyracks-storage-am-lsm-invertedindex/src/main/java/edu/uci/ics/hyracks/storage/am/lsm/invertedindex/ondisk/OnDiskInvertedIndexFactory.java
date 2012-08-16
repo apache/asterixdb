@@ -20,13 +20,13 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.IndexFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class OnDiskInvertedIndexFactory extends IndexFactory<IIndex> {
+public class OnDiskInvertedIndexFactory extends IndexFactory<IInvertedIndex> {
 
     protected final IInvertedListBuilder invListBuilder;
     protected final ITypeTraits[] invListTypeTraits;
@@ -47,7 +47,7 @@ public class OnDiskInvertedIndexFactory extends IndexFactory<IIndex> {
     }
 
     @Override
-    public IIndex createIndexInstance(FileReference file) throws IndexException {
+    public IInvertedIndex createIndexInstance(FileReference file) throws IndexException {
         FileReference btreeFile = new FileReference(new File(file.getFile().getPath() + "_btree"));
         return new OnDiskInvertedIndex(bufferCache, fileMapProvider, invListBuilder, invListTypeTraits, invListCmpFactories,
                 tokenTypeTraits, tokenCmpFactories, btreeFile, file);
