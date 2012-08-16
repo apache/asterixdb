@@ -77,6 +77,11 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
     }
 
     @Override
+    public IInvertedIndexSearcher getSearcher() {
+        return searcher;
+    }
+    
+    @Override
     public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
         throw new UnsupportedOperationException("Delete not supported by in-memory inverted index.");
     }

@@ -53,7 +53,7 @@ public class ConcatenatingTupleReference implements ITupleReference {
     
     public void removeLastTuple() {
         if (numTuples > 0) {
-            ITupleReference lastTuple = tuples[numTuples--];
+            ITupleReference lastTuple = tuples[--numTuples];
             totalFieldCount -= lastTuple.getFieldCount();
         }
     }

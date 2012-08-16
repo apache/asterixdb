@@ -14,6 +14,10 @@
  */
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -81,8 +85,8 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
         tokenTuple.reset(tokenTupleBuilder.getFieldEndOffsets(), tokenTupleBuilder.getByteArray());
         btreeSearchTuple.reset();
         btreeSearchTuple.addTuple(tokenTuple);
-        btreePred.setLowKey(tuple, true);
-        btreePred.setHighKey(tuple, true);
+        btreePred.setLowKey(tokenTuple, true);
+        btreePred.setHighKey(tokenTuple, true);
         btreeAccessor.search(btreeCursor, btreePred);
     }
 
@@ -140,6 +144,7 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
             } finally {
                 try {
                     countingCursor.close();
+                    countingCursor.reset();
                 } catch (HyracksDataException e) {
                     e.printStackTrace();
                 }
@@ -190,7 +195,27 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
     @SuppressWarnings("rawtypes")
     @Override
     public String printInvList(ISerializerDeserializer[] serdes) throws HyracksDataException {
-        return null;
+        StringBuilder strBuilder = new StringBuilder();
+        try {
+            while (btreeCursor.hasNext()) {
+                btreeCursor.next();
+                ITupleReference tuple = btreeCursor.getTuple();
+                ByteArrayInputStream inStream = new ByteArrayInputStream(tuple.getFieldData(1), tuple.getFieldStart(1),
+                        tuple.getFieldLength(1));
+                DataInput dataIn = new DataInputStream(inStream);
+                Object o = serdes[0].deserialize(dataIn);
+                strBuilder.append(o.toString() + " ");
+            }            
+        } finally {
+            btreeCursor.close();
+            btreeCursor.reset();            
+        }
+        try {
+            btreeAccessor.search(btreeCursor, btreePred);
+        } catch (TreeIndexException e) {
+            throw new HyracksDataException(e);
+        }
+        return strBuilder.toString();
     }
 
     @SuppressWarnings("rawtypes")

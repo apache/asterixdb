@@ -141,13 +141,13 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     }
 
     @Override
-    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference tupleReference,
+    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey,
             IIndexOpContext ictx) throws HyracksDataException, IndexException {
         InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
         ctx.reset(IndexOp.SEARCH);
         InMemoryInvertedListCursor inMemListCursor = (InMemoryInvertedListCursor) listCursor;
         inMemListCursor.prepare(ctx.btreeAccessor, ctx.btreePred, ctx.tokenFieldsCmp, ctx.btreeCmp);
-        inMemListCursor.reset(tupleReference);
+        inMemListCursor.reset(searchKey);
     }
 
     @Override

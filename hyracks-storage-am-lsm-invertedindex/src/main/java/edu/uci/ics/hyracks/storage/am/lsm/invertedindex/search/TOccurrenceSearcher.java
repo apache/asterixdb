@@ -270,6 +270,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
     protected int mergeSuffixListScan(IInvertedListCursor invListCursor, List<ByteBuffer> prevResultBuffers,
             int maxPrevBufIdx, List<ByteBuffer> newResultBuffers, int invListIx, int numQueryTokens)
             throws HyracksDataException {
+        
         int newBufIdx = 0;
         ByteBuffer newCurrentBuffer = newResultBuffers.get(0);
 

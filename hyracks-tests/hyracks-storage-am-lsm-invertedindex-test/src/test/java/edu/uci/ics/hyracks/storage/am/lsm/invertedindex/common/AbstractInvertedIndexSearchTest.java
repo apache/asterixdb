@@ -51,7 +51,7 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
     protected final boolean bulkLoad;
     
     // Probability that a randomly generated query is used, instead of a document from the corpus.
-    protected final float randomQueryProb = 0.2f;
+    protected final float randomQueryProb = 0.9f;
     
     public AbstractInvertedIndexSearchTest(InvertedIndexType invIndexType, boolean bulkLoad) {
         super(invIndexType);
@@ -93,6 +93,17 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
                 searchDocument.reset(documentCorpus.get(queryIndex));
             }
 
+            /*
+            StringBuilder builder = new StringBuilder();
+            UTF8StringPointable.toString(builder, searchDocument.getFieldData(0), searchDocument.getFieldStart(0));
+            String query = builder.toString();
+            
+            System.out.println("QUERY: " + i + " " + query + " " + isRandom);
+            if (query.equals("Patricia Mary")) {
+                System.out.println("HERE WE GO, DEBUG IT!");
+            }
+            */
+            
             // Set query tuple in search predicate.
             searchPred.setQueryTuple(searchDocument);
             searchPred.setQueryFieldIndex(0);
@@ -113,6 +124,7 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
                         tokenizer, testCtx.getFieldSerdes()[0], searcher.getOccurrenceThreshold(), expectedResults);
                 
                 Iterator<Integer> expectedIter = expectedResults.iterator();
+                int count = 0;
                 while (expectedIter.hasNext() && resultCursor.hasNext()) {
                     int expected = expectedIter.next();
                     resultCursor.next();
@@ -122,8 +134,10 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
                     if (actual != expected) {
                         fail("Query results do not match. Encountered: " + actual + ". Expected: " + expected + "");
                     }
+                    count++;
                 }
                 if (expectedIter.hasNext()) {
+                    System.out.println("COUNTS: " + expectedResults.size() + " " + count);
                     fail("Query results do not match. Actual results missing.");
                 }
                 if (resultCursor.hasNext()) {
