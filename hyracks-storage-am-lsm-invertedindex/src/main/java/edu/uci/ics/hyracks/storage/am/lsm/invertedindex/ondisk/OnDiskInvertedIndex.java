@@ -278,7 +278,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         }
     }
 
-    public final class InvertedIndexBulkLoader implements IIndexBulkLoader {
+    public final class OnDiskInvertedIndexBulkLoader implements IIndexBulkLoader {
         private final ArrayTupleBuilder btreeTupleBuilder;
         private final ArrayTupleReference btreeTupleReference;
         private final IIndexBulkLoader btreeBulkloader;
@@ -293,7 +293,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         private final MultiComparator tokenCmp;
         private final MultiComparator invListCmp;
 
-        public InvertedIndexBulkLoader(float btreeFillFactor, boolean verifyInput, int startPageId, int fileId)
+        public OnDiskInvertedIndexBulkLoader(float btreeFillFactor, boolean verifyInput, int startPageId, int fileId)
                 throws IndexException, HyracksDataException {
             this.tokenCmp = MultiComparator.create(btree.getComparatorFactories());
             this.invListCmp = MultiComparator.create(invListCmpFactories);
@@ -515,7 +515,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws IndexException {
         try {
-            return new InvertedIndexBulkLoader(fillFactor, verifyInput, rootPageId, fileId);
+            return new OnDiskInvertedIndexBulkLoader(fillFactor, verifyInput, rootPageId, fileId);
         } catch (HyracksDataException e) {
             throw new InvertedIndexException(e);
         }

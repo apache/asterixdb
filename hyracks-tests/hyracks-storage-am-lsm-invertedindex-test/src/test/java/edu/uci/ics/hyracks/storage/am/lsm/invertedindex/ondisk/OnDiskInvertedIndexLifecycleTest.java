@@ -15,25 +15,27 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk;
 
+import java.io.File;
+
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.storage.am.common.AbstractIndexLifecycleTest;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeElementInvertedListBuilder;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common.LSMInvertedIndexTestHarness;
 
 public class OnDiskInvertedIndexLifecycleTest extends AbstractIndexLifecycleTest {
 
-    private final OnDiskInvertedIndexTestHarness harness = new OnDiskInvertedIndexTestHarness();
+    private final LSMInvertedIndexTestHarness harness = new LSMInvertedIndexTestHarness();
     private ITreeIndexFrame frame = null;
 
     @Override
     protected boolean persistentStateExists() throws Exception {
-        return harness.getInvListsFile().getFile().exists()
+        return harness.getInvListsFileRef().getFile().exists()
                 && ((OnDiskInvertedIndex) index).getBTree().getFileReference().getFile().exists();
     }
 
@@ -55,9 +57,10 @@ public class OnDiskInvertedIndexLifecycleTest extends AbstractIndexLifecycleTest
         IBinaryComparatorFactory[] invListCmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
                 .of(IntegerPointable.FACTORY) };
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
-        index = new OnDiskInvertedIndex(harness.getBufferCache(), harness.getFileMapProvider(), invListBuilder,
-                invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, harness.getInvListsFile(),
-                harness.getBTreeFile());
+        FileReference btreeFile = new FileReference(new File(harness.getInvListsFileRef().getFile().getPath() + "_btree"));
+        index = new OnDiskInvertedIndex(harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), invListBuilder,
+                invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, harness.getInvListsFileRef(),
+                btreeFile);
 
     }
 
