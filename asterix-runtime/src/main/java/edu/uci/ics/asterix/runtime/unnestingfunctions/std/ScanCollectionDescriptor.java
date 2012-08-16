@@ -55,7 +55,7 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
         return new ScanCollectionUnnestingFunctionFactory(args[0]);
     }
 
-    private static class ScanCollectionUnnestingFunctionFactory implements ICopyUnnestingFunctionFactory {
+    public static class ScanCollectionUnnestingFunctionFactory implements ICopyUnnestingFunctionFactory {
 
         private static final long serialVersionUID = 1L;
         private ICopyEvaluatorFactory listEvalFactory;

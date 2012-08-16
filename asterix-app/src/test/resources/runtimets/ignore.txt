@@ -4,7 +4,6 @@ scan/temp_types_02.aql
 fuzzyjoin/dblp-splits-3_1.aql
 fuzzyjoin/events-users-aqlplus_1.aql
 subset-collection/04.aql
-quantifiers/everysat_01.aql
 custord/freq-clerk.aql
 custord/denorm-cust-order_01.aql
 custord/denorm-cust-order_03.aql

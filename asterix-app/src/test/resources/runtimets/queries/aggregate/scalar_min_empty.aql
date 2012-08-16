@@ -1,0 +1,12 @@
+/*
+ * Description    : Tests the scalar version of min with an empty list.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/aggregate_scalar_min_empty.adm";
+
+min([ ])

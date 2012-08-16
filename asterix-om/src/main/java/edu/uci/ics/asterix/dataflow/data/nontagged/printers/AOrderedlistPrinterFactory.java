@@ -34,10 +34,6 @@ public class AOrderedlistPrinterFactory implements IPrinterFactory {
             private ATypeTag itemTag;
             private boolean typedItemList = false;
 
-            // private int itemLength;
-            // private int numberOfitems;
-            // private int itemOffset;
-
             @Override
             public void init() throws AlgebricksException {
 

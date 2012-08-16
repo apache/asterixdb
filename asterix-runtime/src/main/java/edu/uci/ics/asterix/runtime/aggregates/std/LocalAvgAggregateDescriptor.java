@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
@@ -82,6 +81,7 @@ public class LocalAvgAggregateDescriptor extends AbstractAggregateFunctionDynami
                     private DataOutput out = provider.getDataOutput();
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(inputVal);
+                    private ATypeTag aggType;
                     private double sum;
                     private int count;
 
@@ -105,90 +105,95 @@ public class LocalAvgAggregateDescriptor extends AbstractAggregateFunctionDynami
                             .getSerializerDeserializer(BuiltinType.ANULL);
                     private AMutableDouble aDouble = new AMutableDouble(0);
                     private AMutableInt32 aInt32 = new AMutableInt32(0);
-                    private boolean metNull;
 
                     @Override
                     public void init() {
+                        aggType = ATypeTag.SYSTEM_NULL;
                         sum = 0.0;
                         count = 0;
-                        metNull = false;
                     }
 
                     @Override
                     public void step(IFrameTupleReference tuple) throws AlgebricksException {
                         inputVal.reset();
                         eval.evaluate(tuple);
-                        if (inputVal.getLength() > 0) {
-                            ++count;
-                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal
-                                    .getByteArray()[0]);
-                            switch (typeTag) {
-                                case INT8: {
-                                    byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);
-                                    sum += val;
-                                    break;
-                                }
-                                case INT16: {
-                                    short val = AInt16SerializerDeserializer.getShort(inputVal.getByteArray(), 1);
-                                    sum += val;
-                                    break;
-                                }
-                                case INT32: {
-                                    int val = AInt32SerializerDeserializer.getInt(inputVal.getByteArray(), 1);
-                                    sum += val;
-                                    break;
-                                }
-                                case INT64: {
-                                    long val = AInt64SerializerDeserializer.getLong(inputVal.getByteArray(), 1);
-                                    sum += val;
-                                    break;
-                                }
-                                case FLOAT: {
-                                    float val = AFloatSerializerDeserializer.getFloat(inputVal.getByteArray(), 1);
-                                    sum += val;
-                                    break;
-                                }
-                                case DOUBLE: {
-                                    double val = ADoubleSerializerDeserializer.getDouble(inputVal.getByteArray(), 1);
-                                    sum += val;
-                                    break;
-                                }
-                                case NULL: {
-                                    metNull = true;
-                                    break;
-                                }
-                                default: {
-                                    throw new NotImplementedException("Cannot compute LOCAL-AVG for values of type "
-                                            + typeTag);
-                                }
-                            }
-                            inputVal.reset();
+                        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                                .deserialize(inputVal.getByteArray()[0]);
+                        if (typeTag == ATypeTag.NULL || aggType == ATypeTag.NULL) {
+                            aggType = ATypeTag.NULL;
+                            return;
+                        } else if (aggType == ATypeTag.SYSTEM_NULL) {
+                            aggType = typeTag;
+                        } else if (typeTag != ATypeTag.SYSTEM_NULL && typeTag != aggType) {
+                            throw new AlgebricksException("Unexpected type " + typeTag
+                                    + " in aggregation input stream. Expected type " + aggType + ".");
                         }
+                        if (typeTag != ATypeTag.SYSTEM_NULL) {
+                            ++count;
+                        }
+                        switch (typeTag) {
+                            case INT8: {
+                                byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);
+                                sum += val;
+                                break;
+                            }
+                            case INT16: {
+                                short val = AInt16SerializerDeserializer.getShort(inputVal.getByteArray(), 1);
+                                sum += val;
+                                break;
+                            }
+                            case INT32: {
+                                int val = AInt32SerializerDeserializer.getInt(inputVal.getByteArray(), 1);
+                                sum += val;
+                                break;
+                            }
+                            case INT64: {
+                                long val = AInt64SerializerDeserializer.getLong(inputVal.getByteArray(), 1);
+                                sum += val;
+                                break;
+                            }
+                            case FLOAT: {
+                                float val = AFloatSerializerDeserializer.getFloat(inputVal.getByteArray(), 1);
+                                sum += val;
+                                break;
+                            }
+                            case DOUBLE: {
+                                double val = ADoubleSerializerDeserializer.getDouble(inputVal.getByteArray(), 1);
+                                sum += val;
+                                break;
+                            }
+                            case NULL: {
+                                break;
+                            }
+                            default: {
+                                throw new NotImplementedException("Cannot compute LOCAL-AVG for values of type "
+                                        + typeTag);
+                            }
+                        }
+                        inputVal.reset();
                     }
 
                     @Override
                     public void finish() throws AlgebricksException {
-                        if (count == 0) {
-                            if (GlobalConfig.DEBUG) {
-                                GlobalConfig.ASTERIX_LOGGER.finest("AVG aggregate ran over empty input.");
+                        try {
+                            if (count == 0) {
+                                out.writeByte(ATypeTag.SYSTEM_NULL.serialize());
+                                return;
                             }
-                        } else {
-                            try {
-                                if (metNull) {
-                                    sumBytes.reset();
-                                    nullSerde.serialize(ANull.NULL, sumBytesOutput);
-                                } else {
-                                    sumBytes.reset();
-                                    aDouble.setValue(sum);
-                                    doubleSerde.serialize(aDouble, sumBytesOutput);
-                                }
-                                countBytes.reset();
-                                aInt32.setValue(count);
-                                int32Serde.serialize(aInt32, countBytesOutput);
-                                recordEval.evaluate(null);
-                            } catch (IOException e) {
-                                throw new AlgebricksException(e);
+                            if (aggType == ATypeTag.NULL) {
+                                sumBytes.reset();
+                                nullSerde.serialize(ANull.NULL, sumBytesOutput);
+                            } else {
+                                sumBytes.reset();
+                                aDouble.setValue(sum);
+                                doubleSerde.serialize(aDouble, sumBytesOutput);
                             }
+                            countBytes.reset();
+                            aInt32.setValue(count);
+                            int32Serde.serialize(aInt32, countBytesOutput);
+                            recordEval.evaluate(null);
+                        } catch (IOException e) {
+                            throw new AlgebricksException(e);
                         }
                     }
 

@@ -41,18 +41,28 @@ import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.scalar.ScalarAvgAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.scalar.ScalarCountAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.scalar.ScalarMaxAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.scalar.ScalarMinAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.scalar.ScalarSumAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableCountAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableGlobalAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableLocalAvgAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableLocalSumAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableSumAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.AvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.CountAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.GlobalAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.LocalAvgAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.std.LocalMaxAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.std.LocalMinAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.std.LocalSumAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.MaxAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.MinAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.SumAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.stream.EmptyStreamAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.stream.NonEmptyStreamAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.common.CreateMBREvalFactory;
 import edu.uci.ics.asterix.runtime.evaluators.common.FieldAccessByIndexEvalFactory;
@@ -80,6 +90,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.AndDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.AnyCollectionMemberDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.CastRecordDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.ClosedRecordConstructorDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.CodePointToStringDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.ContainsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.CountHashedGramTokensDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.CountHashedWordTokensDescriptor;
@@ -107,10 +118,16 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.IsNullDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.LenDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.LikeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NotDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericAbsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericAddDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericCeilingDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericDivideDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericFloorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericModuloDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericMultiplyDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundHalfToEven2Descriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundHalfToEvenDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericSubtractDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericUnaryMinusDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.OpenRecordConstructorDescriptor;
@@ -129,33 +146,26 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.SpatialCellDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SpatialDistanceDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SpatialIntersectDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.StartsWithDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringConcatDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringEndWithDescrtiptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringEqualDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringJoinDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringLengthDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringLowerCaseDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringMatchesDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringMatchesWithFlagDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringReplaceDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringReplaceWithFlagsDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringStartWithDescrtiptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringToCodePointDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.Substring2Descriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.SubstringAfterDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.SubstringBeforeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SubstringDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SwitchCaseDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.UnorderedListConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.WordTokensDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.YearDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.NumericAbsDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.NumericCeilingDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.NumericFloorDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundHalfToEvenDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundHalfToEven2Descriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.StringEqualDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.StringStartWithDescrtiptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.StringEndWithDescrtiptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.StringMatchesDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.StringLowerCaseDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.StringMatchesWithFlagDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.StringReplaceDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.StringReplaceWithFlagsDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.StringLengthDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.Substring2Descriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.SubstringBeforeDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.SubstringAfterDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.StringToCodePointDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.CodePointToStringDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.StringConcatDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.StringJoinDescriptor;
 import edu.uci.ics.asterix.runtime.operators.file.AdmSchemafullRecordParserFactory;
 import edu.uci.ics.asterix.runtime.operators.file.NtDelimitedDataTupleParserFactory;
 import edu.uci.ics.asterix.runtime.runningaggregates.std.TidRunningAggregateDescriptor;
@@ -265,6 +275,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(IsNullDescriptor.FACTORY);
         temp.add(NotDescriptor.FACTORY);
         temp.add(LenDescriptor.FACTORY);
+        temp.add(EmptyStreamAggregateDescriptor.FACTORY);
         temp.add(NonEmptyStreamAggregateDescriptor.FACTORY);
         temp.add(RangeDescriptor.FACTORY);
 
@@ -300,8 +311,11 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(LocalAvgAggregateDescriptor.FACTORY);
         temp.add(GlobalAvgAggregateDescriptor.FACTORY);
         temp.add(SumAggregateDescriptor.FACTORY);
+        temp.add(LocalSumAggregateDescriptor.FACTORY);
         temp.add(MaxAggregateDescriptor.FACTORY);
+        temp.add(LocalMaxAggregateDescriptor.FACTORY);
         temp.add(MinAggregateDescriptor.FACTORY);
+        temp.add(LocalMinAggregateDescriptor.FACTORY);
 
         // serializable aggregates
         temp.add(SerializableCountAggregateDescriptor.FACTORY);
@@ -309,7 +323,15 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(SerializableLocalAvgAggregateDescriptor.FACTORY);
         temp.add(SerializableGlobalAvgAggregateDescriptor.FACTORY);
         temp.add(SerializableSumAggregateDescriptor.FACTORY);
+        temp.add(SerializableLocalSumAggregateDescriptor.FACTORY);
 
+        // scalar aggregates
+        temp.add(ScalarCountAggregateDescriptor.FACTORY);
+        temp.add(ScalarAvgAggregateDescriptor.FACTORY);
+        temp.add(ScalarSumAggregateDescriptor.FACTORY);
+        temp.add(ScalarMaxAggregateDescriptor.FACTORY);
+        temp.add(ScalarMinAggregateDescriptor.FACTORY);
+        
         // new functions - constructors
         temp.add(ABooleanConstructorDescriptor.FACTORY);
         temp.add(ANullConstructorDescriptor.FACTORY);
@@ -518,7 +540,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         typeInference(expr, fd, context);
         return fd;
     }
-
+    
     private void typeInference(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
             throws AlgebricksException {
         if (fd.getIdentifier().equals(AsterixBuiltinFunctions.LISTIFY)) {
