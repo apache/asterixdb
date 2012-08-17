@@ -29,7 +29,7 @@ import edu.uci.ics.hyracks.api.io.IIOManager;
  * components produced by flush are always newer than those produced by a
  * merge).
  */
-public interface ILSMFileManager {
+public interface ILSMIndexFileManager {
     public void createDirs();
 
     public void deleteDirs();

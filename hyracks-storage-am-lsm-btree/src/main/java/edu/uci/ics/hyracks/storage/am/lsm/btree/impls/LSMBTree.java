@@ -49,7 +49,7 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
@@ -82,7 +82,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     private final AntimatterAwareTupleAcceptor acceptor = new AntimatterAwareTupleAcceptor();
 
     // On-disk components.    
-    private final ILSMFileManager fileManager;
+    private final ILSMIndexFileManager fileManager;
     // For creating BTree's used in flush and merge.
     private final TreeIndexFactory<BTree> diskBTreeFactory;
     // For creating BTree's used in bulk load. Different from diskBTreeFactory
@@ -104,7 +104,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
 
     public LSMBTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
-            ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMFileManager fileNameManager,
+            ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMIndexFileManager fileNameManager,
             TreeIndexFactory<BTree> diskBTreeFactory, TreeIndexFactory<BTree> bulkLoadBTreeFactory,
             IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
             ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,

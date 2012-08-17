@@ -31,10 +31,10 @@ import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class LSMTreeFileManager implements ILSMFileManager {
+public class LSMIndexFileManager implements ILSMIndexFileManager {
 
     protected static final String SPLIT_STRING = "_";
 
@@ -60,7 +60,7 @@ public class LSMTreeFileManager implements ILSMFileManager {
         }
     };
 
-    public LSMTreeFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
+    public LSMIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
             TreeIndexFactory<? extends ITreeIndex> treeFactory) {
         this.file = file;
         this.baseDir = file.getFile().getPath();

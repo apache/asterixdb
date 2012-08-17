@@ -29,27 +29,28 @@ import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 // TODO: Implement this one properly!
-public class LSMInvertedIndexFileManager extends LSMTreeFileManager {
-    private static final String RTREE_STRING = "r";
-    private static final String BTREE_STRING = "b";
+public class LSMInvertedIndexFileManager extends LSMIndexFileManager {
+    private static final String BTREE_SUFFIX = "b";
+    private static final String INVLISTS_SUFFIX = "i";
+    private static final String DELETED_KEYS_BTREE_SUFFIX = "d";
 
     private final TreeIndexFactory<? extends ITreeIndex> rtreeFactory;
     private final TreeIndexFactory<? extends ITreeIndex> btreeFactory;
 
     private static FilenameFilter btreeFilter = new FilenameFilter() {
         public boolean accept(File dir, String name) {
-            return !name.startsWith(".") && name.endsWith(BTREE_STRING);
+            return !name.startsWith(".") && name.endsWith(BTREE_SUFFIX);
         }
     };
 
-    private static FilenameFilter rtreeFilter = new FilenameFilter() {
+    private static FilenameFilter deletedKeysBTreeFilter = new FilenameFilter() {
         public boolean accept(File dir, String name) {
-            return !name.startsWith(".") && name.endsWith(RTREE_STRING);
+            return !name.startsWith(".") && name.endsWith(DELETED_KEYS_BTREE_SUFFIX);
         }
     };
 
@@ -63,67 +64,76 @@ public class LSMInvertedIndexFileManager extends LSMTreeFileManager {
     @Override
     public Object getRelFlushFileName() {
         String baseName = (String) super.getRelFlushFileName();
-        return new LSMRInvertedIndexFileNameComponent(baseName + SPLIT_STRING + RTREE_STRING, baseName + SPLIT_STRING
-                + BTREE_STRING);
+        return new LSMInvertedIndexFileNameComponent(baseName + SPLIT_STRING + BTREE_SUFFIX, baseName + SPLIT_STRING
+                + INVLISTS_SUFFIX, baseName + DELETED_KEYS_BTREE_SUFFIX);
 
     }
 
     @Override
     public Object getRelMergeFileName(String firstFileName, String lastFileName) throws HyracksDataException {
         String baseName = (String) super.getRelMergeFileName(firstFileName, lastFileName);
-        return new LSMRInvertedIndexFileNameComponent(baseName + SPLIT_STRING + RTREE_STRING, baseName + SPLIT_STRING
-                + BTREE_STRING);
+        return new LSMInvertedIndexFileNameComponent(baseName + SPLIT_STRING + BTREE_SUFFIX, baseName + SPLIT_STRING
+                + INVLISTS_SUFFIX, baseName + DELETED_KEYS_BTREE_SUFFIX);
     }
 
     @Override
     public List<Object> cleanupAndGetValidFiles(ILSMComponentFinalizer componentFinalizer) throws HyracksDataException {
         List<Object> validFiles = new ArrayList<Object>();
-        ArrayList<ComparableFileName> allRTreeFiles = new ArrayList<ComparableFileName>();
         ArrayList<ComparableFileName> allBTreeFiles = new ArrayList<ComparableFileName>();
+        ArrayList<ComparableFileName> allInvListsFiles = new ArrayList<ComparableFileName>();
+        ArrayList<ComparableFileName> allDeletedKeysBTreeFiles = new ArrayList<ComparableFileName>();
 
         // Gather files from all IODeviceHandles.
         for (IODeviceHandle dev : ioManager.getIODevices()) {
-            cleanupAndGetValidFilesInternal(dev, btreeFilter, btreeFactory, componentFinalizer, allBTreeFiles);
-            HashSet<String> btreeFilesSet = new HashSet<String>();
+            cleanupAndGetValidFilesInternal(dev, deletedKeysBTreeFilter, btreeFactory, componentFinalizer,
+                    allDeletedKeysBTreeFiles);
+            HashSet<String> deletedKeysBTreeFilesSet = new HashSet<String>();
             for (ComparableFileName cmpFileName : allBTreeFiles) {
                 int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
-                btreeFilesSet.add(cmpFileName.fileName.substring(0, index));
+                deletedKeysBTreeFilesSet.add(cmpFileName.fileName.substring(0, index));
             }
-            // List of valid RTree files that may or may not have a BTree buddy. Will check for buddies below.
-            ArrayList<ComparableFileName> tmpAllRTreeFiles = new ArrayList<ComparableFileName>();
-            cleanupAndGetValidFilesInternal(dev, rtreeFilter, rtreeFactory, componentFinalizer, tmpAllRTreeFiles);
-            // Look for buddy BTrees for all valid RTrees. 
-            // If no buddy is found, delete the file, otherwise add the RTree to allRTreeFiles. 
-            for (ComparableFileName cmpFileName : tmpAllRTreeFiles) {
+            // We use the dictionary BTree of the inverted index for validation.
+            // List of valid dictionary BTree files that may or may not have a deleted-keys BTree buddy. Will check for buddies below.
+            ArrayList<ComparableFileName> tmpAllBTreeFiles = new ArrayList<ComparableFileName>();
+            // TODO: Fix factory.
+            cleanupAndGetValidFilesInternal(dev, btreeFilter, rtreeFactory, componentFinalizer, tmpAllBTreeFiles);
+            // Look for buddy deleted-keys BTrees for all valid dictionary BTrees. 
+            // If no buddy is found, delete the file, otherwise add the dictionary BTree to allBTreeFiles. 
+            for (ComparableFileName cmpFileName : tmpAllBTreeFiles) {
                 int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
                 String file = cmpFileName.fileName.substring(0, index);
-                if (btreeFilesSet.contains(file)) {
-                    allRTreeFiles.add(cmpFileName);
+                if (deletedKeysBTreeFilesSet.contains(file)) {
+                    allBTreeFiles.add(cmpFileName);
                 } else {
                     // Couldn't find the corresponding BTree file; thus, delete
-                    // the RTree file.
-                    File invalidRTreeFile = new File(cmpFileName.fullPath);
-                    invalidRTreeFile.delete();
+                    // the deleted-keys BTree file.
+                    // There is no need to delete the inverted-lists file corresponding to the non-existent
+                    // dictionary BTree, because we flush the dictionary BTree first. So if it a dictionary BTree 
+                    // file does not exists, then neither can its inverted-list file.
+                    File invalidDeletedKeysBTreeFile = new File(cmpFileName.fullPath);
+                    invalidDeletedKeysBTreeFile.delete();
                 }
             }
         }
         // Sanity check.
-        if (allRTreeFiles.size() != allBTreeFiles.size()) {
+        if (allBTreeFiles.size() != allDeletedKeysBTreeFiles.size()) {
             throw new HyracksDataException("Unequal number of valid RTree and BTree files found. Aborting cleanup.");
         }
 
         // Trivial cases.
-        if (allRTreeFiles.isEmpty() || allBTreeFiles.isEmpty()) {
+        if (allBTreeFiles.isEmpty() || allDeletedKeysBTreeFiles.isEmpty()) {
             return validFiles;
         }
 
-        if (allRTreeFiles.size() == 1 && allBTreeFiles.size() == 1) {
-            validFiles.add(new LSMRInvertedIndexFileNameComponent(allRTreeFiles.get(0).fullPath, allBTreeFiles.get(0).fullPath));
+        // TODO: Continue from here.
+        if (allBTreeFiles.size() == 1 && allDeletedKeysBTreeFiles.size() == 1) {
+            validFiles.add(new LSMInvertedIndexFileNameComponent(allRTreeFiles.get(0).fullPath,
+                    allBTreeFiles.get(0).fullPath));
             return validFiles;
         }
 
         // Sorts files names from earliest to latest timestamp.
-        Collections.sort(allRTreeFiles);
+        Collections.sort(allDeletedKeysBTreeFiles);
         Collections.sort(allBTreeFiles);
 
         List<ComparableFileName> validComparableRTreeFiles = new ArrayList<ComparableFileName>();
@@ -169,27 +179,33 @@ public class LSMInvertedIndexFileManager extends LSMTreeFileManager {
         while (rtreeFileIter.hasNext() && btreeFileIter.hasNext()) {
             ComparableFileName cmpRTreeFileName = rtreeFileIter.next();
             ComparableFileName cmpBTreeFileName = btreeFileIter.next();
-            validFiles.add(new LSMRInvertedIndexFileNameComponent(cmpRTreeFileName.fullPath, cmpBTreeFileName.fullPath));
+            validFiles.add(new LSMInvertedIndexFileNameComponent(cmpRTreeFileName.fullPath, cmpBTreeFileName.fullPath));
         }
 
         return validFiles;
     }
 
-    public class LSMRInvertedIndexFileNameComponent {
-        private final String rtreeFileName;
+    public class LSMInvertedIndexFileNameComponent {
         private final String btreeFileName;
+        private final String invListsFileName;
+        private final String deletedKeysBTreeFileName;
 
-        LSMRInvertedIndexFileNameComponent(String rtreeFileName, String btreeFileName) {
-            this.rtreeFileName = rtreeFileName;
+        LSMInvertedIndexFileNameComponent(String btreeFileName, String invListsFileName, String deletedKeysBTreeFileName) {
             this.btreeFileName = btreeFileName;
-        }
-
-        public String getRTreeFileName() {
-            return rtreeFileName;
+            this.invListsFileName = invListsFileName;
+            this.deletedKeysBTreeFileName = deletedKeysBTreeFileName;
         }
 
         public String getBTreeFileName() {
             return btreeFileName;
+        }
+
+        public String getInvListsFileName() {
+            return invListsFileName;
+        }
+
+        public String getDeletedKeysBTreeFileName() {
+            return deletedKeysBTreeFileName;
         }
     }
 }

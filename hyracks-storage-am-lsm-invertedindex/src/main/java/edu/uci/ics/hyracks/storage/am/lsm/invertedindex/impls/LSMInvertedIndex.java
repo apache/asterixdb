@@ -45,7 +45,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
@@ -60,7 +60,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexFileManager.LSMRInvertedIndexFileNameComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexFileManager.LSMInvertedIndexFileNameComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexFactory;
@@ -100,7 +100,7 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
     protected FileReference memDeleteKeysBTreeFile = new FileReference(new File("membtree"));
     
     // On-disk components.
-    protected final ILSMFileManager fileManager;
+    protected final ILSMIndexFileManager fileManager;
     // For creating inverted indexes in flush and merge.
     protected final OnDiskInvertedIndexFactory diskInvIndexFactory;
     // For creating deleted-keys BTrees in flush and merge.
@@ -122,7 +122,7 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
     private boolean isActivated = false;
 
     public LSMInvertedIndex(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
-            OnDiskInvertedIndexFactory diskInvIndexFactory, BTreeFactory diskBTreeFactory, ILSMFileManager fileManager,
+            OnDiskInvertedIndexFactory diskInvIndexFactory, BTreeFactory diskBTreeFactory, ILSMIndexFileManager fileManager,
             IFileMapProvider diskFileMapProvider, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizerFactory tokenizerFactory,
@@ -147,7 +147,7 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
         this.lsmHarness = new LSMHarness(this, flushController, mergePolicy, opTracker, ioScheduler);
-        this.componentFinalizer = new InvertedIndexComponentFinalizer(diskFileMapProvider);
+        this.componentFinalizer = new LSMInvertedIndexComponentFinalizer(diskFileMapProvider);
     }
 
     @Override
@@ -172,7 +172,7 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
         memComponent.getDeletedKeysBTree().create();
         List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(componentFinalizer);
         for (Object o : validFileNames) {
-            LSMRInvertedIndexFileNameComponent component = (LSMRInvertedIndexFileNameComponent) o;
+            LSMInvertedIndexFileNameComponent component = (LSMInvertedIndexFileNameComponent) o;
             FileReference rtreeFile = new FileReference(new File(component.getRTreeFileName()));
             FileReference btreeFile = new FileReference(new File(component.getBTreeFileName()));
             RTree rtree = (RTree) createDiskTree(diskRTreeFactory, rtreeFile, false);

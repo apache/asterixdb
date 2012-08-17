@@ -102,7 +102,9 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     private final int numTokenFields;
     private final int numInvListKeys;
     private final FileReference invListsFile;
-
+    // Last page id of inverted-lists file (inclusive). Set during bulk load.
+    private int invListsMaxPageId = -1;
+    
     private boolean isOpen = false;
 
     public OnDiskInvertedIndex(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
@@ -396,6 +398,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
                 currentPage.releaseWriteLatch();
                 bufferCache.unpin(currentPage);
             }
+            invListsMaxPageId = currentPageId;
         }
     }
 
@@ -408,6 +411,10 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         return fileId;
     }
 
+    public int getInvListsMaxPageId() {
+        return invListsMaxPageId;
+    }
+    
     public IBinaryComparatorFactory[] getInvListCmpFactories() {
         return invListCmpFactories;
     }
