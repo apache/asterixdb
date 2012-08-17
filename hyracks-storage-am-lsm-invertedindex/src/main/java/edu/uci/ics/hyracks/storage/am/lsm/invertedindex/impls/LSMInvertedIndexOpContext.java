@@ -15,12 +15,14 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 
 public class LSMInvertedIndexOpContext implements IIndexOpContext {
     
@@ -28,22 +30,45 @@ public class LSMInvertedIndexOpContext implements IIndexOpContext {
     private final MultiComparator cmp;
     private final int invListFieldCount;
     private final int tokenFieldCount;
+    private final IInvertedIndex memInvIndex;
+    private final IIndex memDeletedKeysBTree;
     
-    public LSMInvertedIndexOpContext(IInvertedIndex memoryInvertedIndex) {
-    	InMemoryInvertedIndex memoryBTreeInvertedIndex = (InMemoryInvertedIndex)memoryInvertedIndex;
-    	BTree btree = memoryBTreeInvertedIndex.getBTree();
+    // Accessor to the in-memory inverted index.
+    public IInvertedIndexAccessor insertAccessor;
+    // Accessor to the deleted-keys BTree.
+    public IIndexAccessor deleteAccessor;
+    
+    public LSMInvertedIndexOpContext(IInvertedIndex memInvIndex, IIndex memDeletedKeysBTree) {
+        this.memInvIndex = memInvIndex;
+        this.memDeletedKeysBTree = memDeletedKeysBTree;
+        /*
     	this.cmp = MultiComparator.create(btree.getComparatorFactories());
     	this.invListFieldCount = memoryBTreeInvertedIndex.getInvListCmpFactories().length;
     	this.tokenFieldCount = cmp.getKeyFieldCount() - invListFieldCount;
+    	*/
     }
     
     @Override
     public void reset() {
-        // TODO Auto-generated method stub
     }
 
     @Override
+    // TODO: Ignore opcallback for now.
     public void reset(IndexOp newOp) {
+        switch (newOp) {
+            case INSERT: {
+                if (insertAccessor == null) {
+                    insertAccessor = (IInvertedIndexAccessor) memInvIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                }
+                break;
+            }
+            case DELETE: {
+                if (deleteAccessor == null) {
+                    deleteAccessor = memDeletedKeysBTree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                }
+                break;
+            }
+        }
         op = newOp;
     }
     
