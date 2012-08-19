@@ -76,11 +76,6 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
         index.openInvertedListCursor(listCursor, searchKey, opCtx);
     }
 
-    @Override
-    public IInvertedIndexSearcher getSearcher() {
-        return searcher;
-    }
-    
     public BTreeAccessor getBTreeAccessor() {
         return btreeAccessor;
     }

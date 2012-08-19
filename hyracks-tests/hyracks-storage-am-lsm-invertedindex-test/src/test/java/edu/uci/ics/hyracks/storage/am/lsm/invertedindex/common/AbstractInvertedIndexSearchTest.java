@@ -19,6 +19,7 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -38,7 +39,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearch
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.exceptions.OccurrenceThresholdPanicException;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveSearchModifier;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.TOccurrenceSearcher;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext.InvertedIndexType;
@@ -49,17 +49,17 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
     protected int NUM_QUERIES = 10000;
     protected int[] scanCountArray = new int[NUM_DOCS_TO_INSERT];
     protected final boolean bulkLoad;
-    
+
     // Probability that a randomly generated query is used, instead of a document from the corpus.
     protected final float randomQueryProb = 0.9f;
-    
+
     public AbstractInvertedIndexSearchTest(InvertedIndexType invIndexType, boolean bulkLoad) {
         super(invIndexType);
         this.bulkLoad = bulkLoad;
     }
 
-    protected void runTest(InvertedIndexTestContext testCtx, TupleGenerator tupleGen, IInvertedIndexSearchModifier searchModifier) throws IOException,
-            IndexException {
+    protected void runTest(InvertedIndexTestContext testCtx, TupleGenerator tupleGen,
+            IInvertedIndexSearchModifier searchModifier) throws IOException, IndexException {
         IIndex invIndex = testCtx.getIndex();
         invIndex.create();
         invIndex.activate();
@@ -70,7 +70,7 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
             InvertedIndexTestUtils.insertIntoInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
         }
         invIndex.validate();
-        
+
         IInvertedIndexAccessor accessor = (IInvertedIndexAccessor) invIndex.createAccessor(
                 NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         IBinaryTokenizer tokenizer = testCtx.getTokenizerFactory().createTokenizer();
@@ -80,7 +80,7 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
         // Project away the primary-key field.
         int[] fieldPermutation = new int[] { 0 };
         PermutingTupleReference searchDocument = new PermutingTupleReference(fieldPermutation);
-        
+
         IIndexCursor resultCursor = accessor.createSearchCursor();
         for (int i = 0; i < NUM_QUERIES; i++) {
             if (rnd.nextFloat() <= randomQueryProb) {
@@ -104,7 +104,7 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
                 System.out.println("HERE WE GO, DEBUG IT!");
             }
             */
-            
+
             // Set query tuple in search predicate.
             searchPred.setQueryTuple(searchDocument);
             searchPred.setQueryFieldIndex(0);
@@ -117,31 +117,37 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
                 // ignore panic queries
                 panic = true;
             }
-            
+
             if (!panic) {
-                TOccurrenceSearcher searcher = (TOccurrenceSearcher) accessor.getSearcher();
-                List<Integer> expectedResults = new ArrayList<Integer>();
-                InvertedIndexTestUtils.getExpectedResults(scanCountArray, testCtx.getCheckTuples(), searchDocument,
-                        tokenizer, testCtx.getFieldSerdes()[0], searcher.getOccurrenceThreshold(), expectedResults);
-                
-                Iterator<Integer> expectedIter = expectedResults.iterator();
-                int count = 0;
-                while (expectedIter.hasNext() && resultCursor.hasNext()) {
-                    int expected = expectedIter.next();
+                // Consume cursor and deserialize results so we can sort them. Some search cursors may not deliver the result sorted (e.g., LSM search cursor).
+                ArrayList<Integer> actualResults = new ArrayList<Integer>();
+                while (resultCursor.hasNext()) {
                     resultCursor.next();
                     ITupleReference resultTuple = resultCursor.getTuple();
-                    int actual = IntegerSerializerDeserializer
-                            .getInt(resultTuple.getFieldData(0), resultTuple.getFieldStart(0));
+                    int actual = IntegerSerializerDeserializer.getInt(resultTuple.getFieldData(0),
+                            resultTuple.getFieldStart(0));
+                    actualResults.add(Integer.valueOf(actual));
+                }
+                Collections.sort(actualResults);
+
+                // Get expected results.
+                List<Integer> expectedResults = new ArrayList<Integer>();
+                InvertedIndexTestUtils.getExpectedResults(scanCountArray, testCtx.getCheckTuples(), searchDocument,
+                        tokenizer, testCtx.getFieldSerdes()[0], searchModifier, expectedResults);
+
+                Iterator<Integer> expectedIter = expectedResults.iterator();
+                Iterator<Integer> actualIter = actualResults.iterator();
+                while (expectedIter.hasNext() && actualIter.hasNext()) {
+                    int expected = expectedIter.next();
+                    int actual = actualIter.next();
                     if (actual != expected) {
                         fail("Query results do not match. Encountered: " + actual + ". Expected: " + expected + "");
                     }
-                    count++;
                 }
                 if (expectedIter.hasNext()) {
-                    System.out.println("COUNTS: " + expectedResults.size() + " " + count);
                     fail("Query results do not match. Actual results missing.");
                 }
-                if (resultCursor.hasNext()) {
+                if (actualIter.hasNext()) {
                     fail("Query results do not match. Actual contains too many results.");
                 }
             }

@@ -19,6 +19,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
@@ -170,15 +171,15 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
             invIndex.openInvertedListCursor(invListCursorCache.get(i), searchKey, ictx);
             invListCursors.add(invListCursorCache.get(i));
         }
-
-        occurrenceThreshold = searchModifier.getOccurrenceThreshold(invListCursors);
-
+        Collections.sort(invListCursors);
+        
+        occurrenceThreshold = searchModifier.getOccurrenceThreshold(invListCursors.size());
         // TODO: deal with panic cases properly
         if (occurrenceThreshold <= 0) {
             throw new OccurrenceThresholdPanicException("Merge Threshold is <= 0. Failing Search.");
         }
-
-        int numPrefixLists = searchModifier.getPrefixLists(invListCursors);
+        
+        int numPrefixLists = searchModifier.getNumPrefixLists(invListCursors.size());
         maxResultBufIdx = mergePrefixLists(numPrefixLists, numQueryTokens);
         maxResultBufIdx = mergeSuffixLists(numPrefixLists, numQueryTokens, maxResultBufIdx);
 

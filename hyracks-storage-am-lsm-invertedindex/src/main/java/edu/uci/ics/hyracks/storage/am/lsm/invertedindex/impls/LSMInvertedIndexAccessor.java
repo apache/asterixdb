@@ -29,9 +29,11 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeInProgressException;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexFileManager.LSMInvertedIndexFileNameComponent;
 
-public class LSMInvertedIndexAccessor implements ILSMIndexAccessor {
+public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedIndexAccessor {
 
     protected final LSMHarness lsmHarness;    
     protected final ILSMIndexFileManager fileManager;
@@ -48,15 +50,21 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor {
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
     }
 
-    public IIndexCursor createSearchCursor() {
-        return new LSMInvertedIndexSearchCursor(); 
-    }
-
     public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
         ctx.reset(IndexOp.SEARCH);
         lsmHarness.search(cursor, searchPred, ctx, true);
     }
 
+    @Override
+    public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
+        // TODO Auto-generated method stub
+        
+    }
+    
+    public IIndexCursor createSearchCursor() {
+        return new LSMInvertedIndexSearchCursor(); 
+    }
+    
     @Override
     public ILSMIOOperation createFlushOperation(ILSMIOOperationCallback callback) {
         LSMInvertedIndexFileNameComponent fileNameComponent = (LSMInvertedIndexFileNameComponent) fileManager
@@ -68,12 +76,6 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor {
                 callback);
     }
     
-    @Override
-    public void upsert(ITupleReference tuple) throws HyracksDataException, IndexException {
-        // TODO Auto-generated method stub
-        
-    }
-
     @Override
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
             LSMMergeInProgressException {
@@ -103,8 +105,18 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor {
     }
 
     @Override
-    public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
+    public void upsert(ITupleReference tuple) throws HyracksDataException, IndexException {
         // TODO Auto-generated method stub
         
     }
+    
+    @Override
+    public IInvertedListCursor createInvertedListCursor() {
+        throw new UnsupportedOperationException("Cannot create inverted list cursor on lsm inverted index.");
+    }
+
+    @Override
+    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey)
+            throws HyracksDataException, IndexException {
+        throw new UnsupportedOperationException("Cannot open inverted list cursor on lsm inverted index.");}
 }

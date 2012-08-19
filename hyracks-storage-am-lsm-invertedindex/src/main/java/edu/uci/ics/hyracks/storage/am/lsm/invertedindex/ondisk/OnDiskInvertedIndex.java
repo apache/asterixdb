@@ -452,11 +452,6 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         }
 
         @Override
-        public IInvertedIndexSearcher getSearcher() {
-            return searcher;
-        }
-
-        @Override
         public IInvertedListCursor createInvertedListCursor() {
             return index.createInvertedListCursor();
         }

@@ -15,11 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search;
 
-import java.util.Collections;
-import java.util.List;
-
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 
 public class JaccardSearchModifier implements IInvertedIndexSearchModifier {
 
@@ -30,17 +26,16 @@ public class JaccardSearchModifier implements IInvertedIndexSearchModifier {
     }
 
     @Override
-    public int getOccurrenceThreshold(List<IInvertedListCursor> invListCursors) {
-        return (int) Math.floor((float) invListCursors.size() * jaccThresh);
+    public int getOccurrenceThreshold(int numQueryTokens) {
+        return (int) Math.floor((float) numQueryTokens * jaccThresh);
     }
 
     @Override
-    public int getPrefixLists(List<IInvertedListCursor> invListCursors) {
-        Collections.sort(invListCursors);
-        if (invListCursors.size() == 0) {
+    public int getNumPrefixLists(int numQueryTokens) {
+        if (numQueryTokens == 0) {
             return 0;
         }
-        return invListCursors.size() - getOccurrenceThreshold(invListCursors) + 1;
+        return numQueryTokens - getOccurrenceThreshold(numQueryTokens) + 1;
     }
 
     public float getJaccThresh() {

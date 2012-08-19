@@ -37,7 +37,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedInd
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveSearchModifier;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.JaccardSearchModifier;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.TOccurrenceSearcher;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8WordTokenFactory;
 
@@ -202,8 +201,8 @@ public class OnDiskInvertedIndexSearchPerfTest extends AbstractInvIndexSearchTes
             }
 
             if (!panic) {
-                TOccurrenceSearcher searcher = (TOccurrenceSearcher) accessor.getSearcher();
-                fillExpectedResults(queryTokenIndexes, numQueryTokens, searcher.getOccurrenceThreshold());
+                int occurrenceThreshold = searchModifier.getOccurrenceThreshold(numQueryTokens);
+                fillExpectedResults(queryTokenIndexes, numQueryTokens, occurrenceThreshold);
                 // verify results
                 int checkIndex = 0;
                 while (resultCursor.hasNext()) {

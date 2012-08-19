@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -13,19 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search;
+package edu.uci.ics.hyracks.storage.am.lsm.invertedindex;
 
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common.AbstractInvertedIndexSearchTest;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext.InvertedIndexType;
 
-public class ConjunctiveSearchModifier implements IInvertedIndexSearchModifier {
+public class LSMInvertedIndexSearchTest extends AbstractInvertedIndexSearchTest {
 
-    @Override
-    public int getOccurrenceThreshold(int numQueryTokens) {
-        return numQueryTokens;
-    }
-
-    @Override
-    public int getNumPrefixLists(int numQueryTokens) {
-        return 1;
+    public LSMInvertedIndexSearchTest() {
+        super(InvertedIndexType.LSM, false);
     }
 }

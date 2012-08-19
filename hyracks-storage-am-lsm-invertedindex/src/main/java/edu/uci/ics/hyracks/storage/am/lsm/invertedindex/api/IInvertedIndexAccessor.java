@@ -25,6 +25,4 @@ public interface IInvertedIndexAccessor extends IIndexAccessor {
 
     public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey)
             throws HyracksDataException, IndexException;
-    
-    public IInvertedIndexSearcher getSearcher();
 }

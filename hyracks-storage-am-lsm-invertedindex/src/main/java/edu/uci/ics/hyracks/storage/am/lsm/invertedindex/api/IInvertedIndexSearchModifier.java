@@ -15,10 +15,9 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api;
 
-import java.util.List;
 
 public interface IInvertedIndexSearchModifier {
-    public int getOccurrenceThreshold(List<IInvertedListCursor> invListCursors);
+    public int getOccurrenceThreshold(int numQueryTokens);
 
-    public int getPrefixLists(List<IInvertedListCursor> invListCursors);
+    public int getNumPrefixLists(int numQueryTokens);
 }
