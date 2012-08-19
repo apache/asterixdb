@@ -176,7 +176,6 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         if (!isActivated) {
             throw new HyracksDataException("Failed to clear the index since it is not activated.");
         }
-
         initEmptyTree();
     }
 

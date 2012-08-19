@@ -35,6 +35,17 @@ public class BTreeUtils {
                 cmpFactories, typeTraits.length, file);
         return btree;
     }
+    
+    public static BTree createBTree(IBufferCache bufferCache, IFreePageManager freePageManager,
+            IFileMapProvider fileMapProvider, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
+            BTreeLeafFrameType leafType, FileReference file) throws BTreeException {
+        TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
+        ITreeIndexFrameFactory leafFrameFactory = getLeafFrameFactory(tupleWriterFactory, leafType);
+        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
+        BTree btree = new BTree(bufferCache, fileMapProvider, freePageManager, interiorFrameFactory, leafFrameFactory,
+                cmpFactories, typeTraits.length, file);
+        return btree;
+    }
 
     // Creates a new MultiComparator by constructing new IBinaryComparators.
     public static MultiComparator getSearchMultiComparator(IBinaryComparatorFactory[] cmpFactories,

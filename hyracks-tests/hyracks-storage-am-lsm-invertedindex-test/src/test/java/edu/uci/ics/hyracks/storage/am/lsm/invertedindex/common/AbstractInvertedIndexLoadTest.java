@@ -59,8 +59,7 @@ public abstract class AbstractInvertedIndexLoadTest extends AbstractInvertedInde
 
     @Test
     public void wordTokensInvIndexTest() throws IOException, IndexException {
-        InvertedIndexTestContext testCtx = InvertedIndexTestUtils.createWordInvIndexTestContext(harness,
-                getBufferCache(), invIndexType);
+        InvertedIndexTestContext testCtx = InvertedIndexTestUtils.createWordInvIndexTestContext(harness, invIndexType);
         TupleGenerator tupleGen = InvertedIndexTestUtils.createStringDocumentTupleGen(harness.getRandom());
         runTest(testCtx, tupleGen);
     }

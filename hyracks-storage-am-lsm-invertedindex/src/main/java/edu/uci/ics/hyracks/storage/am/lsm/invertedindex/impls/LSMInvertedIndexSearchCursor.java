@@ -36,11 +36,11 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     private List<IIndexAccessor> indexAccessors;
     private List<IIndexCursor> indexCursors;// = new ArrayList<IIndexCursor>();
     private ISearchPredicate searchPred;
-    
+
     public LSMInvertedIndexSearchCursor() {
         indexCursors = new ArrayList<IIndexCursor>();
     }
-    
+
     @Override
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         LSMInvertedIndexCursorInitialState lsmInitialState = (LSMInvertedIndexCursorInitialState) initialState;
@@ -49,7 +49,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
         searcherRefCount = lsmInitialState.getSearcherRefCount();
         indexAccessors = lsmInitialState.getIndexAccessors();
         indexCursors.clear();
-//        indexCursors = new ArrayList<IIndexCursor>(indexAccessors.size());
+        //        indexCursors = new ArrayList<IIndexCursor>(indexAccessors.size());
         cursorIndex = 0;
         this.searchPred = searchPred;
 
@@ -81,11 +81,11 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     public boolean hasNext() throws HyracksDataException {
         IIndexAccessor currentAccessor;
         IIndexCursor currentCursor;
-        
-        if(cursorIndex >= indexAccessors.size()) {
+
+        if (cursorIndex >= indexAccessors.size()) {
             return false;
         }
-        
+
         currentCursor = indexCursors.get(cursorIndex);
         if (currentCursor.hasNext()) {
             return true;
@@ -110,7 +110,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
                 }
             }
         }
-        
+
         return false;
     }
 
@@ -163,7 +163,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     }
 
     @Override
-    public ITupleReference getTuple() throws HyracksDataException {
+    public ITupleReference getTuple() {
         if (cursorIndex < indexCursors.size()) {
             return indexCursors.get(cursorIndex).getTuple();
         } else {

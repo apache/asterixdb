@@ -16,22 +16,30 @@
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeInProgressException;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexFileManager.LSMInvertedIndexFileNameComponent;
 
 public class LSMInvertedIndexAccessor implements ILSMIndexAccessor {
 
-    protected LSMHarness lsmHarness;
-    protected IIndexOpContext ctx;
-
-    public LSMInvertedIndexAccessor(LSMHarness lsmHarness, IIndexOpContext ctx) {
+    protected final LSMHarness lsmHarness;    
+    protected final ILSMIndexFileManager fileManager;
+    protected final IIndexOpContext ctx;
+    
+    public LSMInvertedIndexAccessor(LSMHarness lsmHarness, ILSMIndexFileManager fileManager, IIndexOpContext ctx) {
         this.lsmHarness = lsmHarness;
+        this.fileManager = fileManager;
         this.ctx = ctx;
     }
 
@@ -40,29 +48,63 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor {
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
     }
 
-    public void update(ITupleReference tuple) throws HyracksDataException, IndexException {
-        //not supported yet
-    }
-
-    public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
-        //not supported yet
-    }
-
     public IIndexCursor createSearchCursor() {
         return new LSMInvertedIndexSearchCursor(); 
     }
 
     public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
         ctx.reset(IndexOp.SEARCH);
-        //search include in-memory components
         lsmHarness.search(cursor, searchPred, ctx, true);
     }
 
-    public void flush() throws HyracksDataException, IndexException {
-        lsmHarness.flush();
+    @Override
+    public ILSMIOOperation createFlushOperation(ILSMIOOperationCallback callback) {
+        LSMInvertedIndexFileNameComponent fileNameComponent = (LSMInvertedIndexFileNameComponent) fileManager
+                .getRelFlushFileName();
+        FileReference dictBTreeFileRef = fileManager.createFlushFile(fileNameComponent.getDictBTreeFileName());
+        FileReference deletedKeysBTreeFileRef = fileManager.createFlushFile(fileNameComponent
+                .getDeletedKeysBTreeFileName());
+        return new LSMInvertedIndexFlushOperation(lsmHarness.getIndex(), dictBTreeFileRef, deletedKeysBTreeFileRef,
+                callback);
+    }
+    
+    @Override
+    public void upsert(ITupleReference tuple) throws HyracksDataException, IndexException {
+        // TODO Auto-generated method stub
+        
     }
 
-    public void merge() throws HyracksDataException, IndexException {
-        lsmHarness.merge();
+    @Override
+    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
+            LSMMergeInProgressException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
+        lsmHarness.flush(operation);
+    }
+
+    @Override
+    public void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException {
+        lsmHarness.merge(operation);
+    }
+
+    @Override
+    public void physicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
+        // TODO: Do we need this?
+    }
+
+    @Override
+    public void update(ITupleReference tuple) throws HyracksDataException, IndexException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
+        // TODO Auto-generated method stub
+        
     }
 }

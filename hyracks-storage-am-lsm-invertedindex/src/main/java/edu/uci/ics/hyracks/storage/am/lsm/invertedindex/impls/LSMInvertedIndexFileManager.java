@@ -27,10 +27,9 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMIndexFileManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexFileNameMapper;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
@@ -41,7 +40,7 @@ public class LSMInvertedIndexFileManager extends LSMIndexFileManager implements 
     private static final String DELETED_KEYS_BTREE_SUFFIX = "d";
 
     // We only need a BTree factory because the inverted indexes consistency is validated against its dictionary BTree.
-    private final TreeIndexFactory<? extends ITreeIndex> btreeFactory;
+    private final BTreeFactory btreeFactory;
 
     private static FilenameFilter dictBTreeFilter = new FilenameFilter() {
         public boolean accept(File dir, String name) {
@@ -56,7 +55,7 @@ public class LSMInvertedIndexFileManager extends LSMIndexFileManager implements 
     };
 
     public LSMInvertedIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
-            TreeIndexFactory<? extends ITreeIndex> btreeFactory) {
+            BTreeFactory btreeFactory) {
         super(ioManager, fileMapProvider, file, null);
         this.btreeFactory = btreeFactory;
     }
@@ -65,14 +64,15 @@ public class LSMInvertedIndexFileManager extends LSMIndexFileManager implements 
     public Object getRelFlushFileName() {
         String baseName = (String) super.getRelFlushFileName();
         return new LSMInvertedIndexFileNameComponent(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX, baseName
-                + DELETED_KEYS_BTREE_SUFFIX);
+                + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX);
 
     }
 
     @Override
     public Object getRelMergeFileName(String firstFileName, String lastFileName) throws HyracksDataException {
         String baseName = (String) super.getRelMergeFileName(firstFileName, lastFileName);
-        return new LSMInvertedIndexFileNameComponent(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX, baseName + DELETED_KEYS_BTREE_SUFFIX);
+        return new LSMInvertedIndexFileNameComponent(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX, baseName
+                + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX);
     }
 
     @Override

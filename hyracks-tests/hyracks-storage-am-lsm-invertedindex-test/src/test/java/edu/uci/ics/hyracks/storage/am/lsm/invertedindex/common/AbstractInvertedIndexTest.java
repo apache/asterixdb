@@ -21,12 +21,11 @@ import org.junit.Before;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext.InvertedIndexType;
-import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public abstract class AbstractInvertedIndexTest {
     protected final LSMInvertedIndexTestHarness harness = new LSMInvertedIndexTestHarness();
 
-    protected int NUM_DOCS_TO_INSERT = 10000;    
+    protected int NUM_DOCS_TO_INSERT = 10000;
 
     protected final InvertedIndexType invIndexType;
 
@@ -43,6 +42,4 @@ public abstract class AbstractInvertedIndexTest {
     public void tearDown() throws HyracksDataException {
         harness.tearDown();
     }
-    
-    public abstract IBufferCache getBufferCache();
 }

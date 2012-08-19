@@ -93,6 +93,7 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
                 searchDocument.reset(documentCorpus.get(queryIndex));
             }
 
+            // DEBUG
             /*
             StringBuilder builder = new StringBuilder();
             UTF8StringPointable.toString(builder, searchDocument.getFieldData(0), searchDocument.getFieldStart(0));
@@ -152,8 +153,7 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
 
     @Test
     public void wordTokensInvIndexTest() throws IOException, IndexException {
-        InvertedIndexTestContext testCtx = InvertedIndexTestUtils.createWordInvIndexTestContext(harness,
-                getBufferCache(), invIndexType);
+        InvertedIndexTestContext testCtx = InvertedIndexTestUtils.createWordInvIndexTestContext(harness, invIndexType);
         TupleGenerator tupleGen = InvertedIndexTestUtils.createStringDocumentTupleGen(harness.getRandom());
         IInvertedIndexSearchModifier searchModifier = new ConjunctiveSearchModifier();
         runTest(testCtx, tupleGen, searchModifier);

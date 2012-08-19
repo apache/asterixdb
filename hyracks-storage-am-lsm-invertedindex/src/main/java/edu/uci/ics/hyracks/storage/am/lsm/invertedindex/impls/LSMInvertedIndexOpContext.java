@@ -27,9 +27,9 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccess
 public class LSMInvertedIndexOpContext implements IIndexOpContext {
     
     private IndexOp op;
-    private final MultiComparator cmp;
-    private final int invListFieldCount;
-    private final int tokenFieldCount;
+    //private final MultiComparator cmp;
+    //private final int invListFieldCount;
+    //private final int tokenFieldCount;
     private final IInvertedIndex memInvIndex;
     private final IIndex memDeletedKeysBTree;
     
@@ -72,6 +72,7 @@ public class LSMInvertedIndexOpContext implements IIndexOpContext {
         op = newOp;
     }
     
+    /*
     public int getInvListFieldCount() {
     	return invListFieldCount;
     }
@@ -83,4 +84,5 @@ public class LSMInvertedIndexOpContext implements IIndexOpContext {
     public MultiComparator getComparator() {
     	return cmp;
     }
+    */
 }

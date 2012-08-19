@@ -76,7 +76,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
             btreeTypeTraits[tokenTypeTraits.length + i] = invListTypeTraits[i];
             btreeCmpFactories[tokenTypeTraits.length + i] = invListCmpFactories[i];
         }
-        this.btree = BTreeUtils.createBTree(memBufferCache,
+        this.btree = BTreeUtils.createBTree(memBufferCache, memFreePageManager,
                 ((InMemoryBufferCache) memBufferCache).getFileMapProvider(), btreeTypeTraits, btreeCmpFactories,
                 BTreeLeafFrameType.REGULAR_NSM, memBTreeFile);
     }

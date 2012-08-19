@@ -21,6 +21,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
@@ -31,6 +33,8 @@ public class LSMInvertedIndexCursorInitialState implements ICursorInitialState {
     private final LSMHarness lsmHarness;
     private final List<IIndexAccessor> indexAccessors;
     private final IIndexOpContext opContext;
+    private ISearchOperationCallback searchCallback;
+    private MultiComparator originalCmp;
 
     public LSMInvertedIndexCursorInitialState(List<IIndexAccessor> indexAccessors, IIndexOpContext ctx,
             boolean includeMemComponent, AtomicInteger searcherfRefCount, LSMHarness lsmHarness) {
@@ -68,5 +72,25 @@ public class LSMInvertedIndexCursorInitialState implements ICursorInitialState {
 
     public IIndexOpContext getOpContext() {
         return opContext;
+    }
+
+    @Override
+    public ISearchOperationCallback getSearchOperationCallback() {
+        return searchCallback;
+    }
+
+    @Override
+    public void setSearchOperationCallback(ISearchOperationCallback searchCallback) {
+        this.searchCallback = searchCallback;
+    }
+
+    @Override
+    public MultiComparator getOriginalKeyComparator() {
+        return originalCmp;
+    }
+
+    @Override
+    public void setOriginialKeyComparator(MultiComparator originalCmp) {
+        this.originalCmp = originalCmp;
     }
 }

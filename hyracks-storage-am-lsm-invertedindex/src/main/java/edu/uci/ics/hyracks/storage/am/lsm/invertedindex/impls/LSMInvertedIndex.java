@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
@@ -32,7 +31,6 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
@@ -42,8 +40,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -60,19 +58,17 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexFileManager.LSMInvertedIndexFileNameComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class LSMInvertedIndex implements ILSMIndex, IIndex {
-	private final Logger LOGGER = Logger.getLogger(LSMInvertedIndex.class.getName());
-	
+public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
 	public class LSMInvertedIndexComponent {
         private final IInvertedIndex invIndex;
         private final BTree deleteKeysBTree;
@@ -123,7 +119,7 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
     private boolean isActivated = false;
 
     public LSMInvertedIndex(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
-            OnDiskInvertedIndexFactory diskInvIndexFactory, BTreeFactory diskBTreeFactory, ILSMIndexFileManager fileManager,
+            OnDiskInvertedIndexFactory diskInvIndexFactory, BTreeFactory deletedKeysBTreeFactory, ILSMIndexFileManager fileManager,
             IFileMapProvider diskFileMapProvider, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizerFactory tokenizerFactory,
@@ -132,15 +128,16 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
         InMemoryInvertedIndex memInvIndex = InvertedIndexUtils.createInMemoryBTreeInvertedindex(memBufferCache,
                 memFreePageManager, invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
                 tokenizerFactory);
-        BTree deleteKeysBTree = BTreeUtils.createBTree(memBufferCache, diskFileMapProvider, invListTypeTraits,
-                invListCmpFactories, BTreeLeafFrameType.REGULAR_NSM, memDeleteKeysBTreeFile);
+        BTree deleteKeysBTree = BTreeUtils.createBTree(memBufferCache,
+                ((InMemoryBufferCache) memBufferCache).getFileMapProvider(), invListTypeTraits, invListCmpFactories,
+                BTreeLeafFrameType.REGULAR_NSM, memDeleteKeysBTreeFile);
         memComponent = new LSMInvertedIndexComponent(memInvIndex, deleteKeysBTree);
         this.memBufferCache = memBufferCache;
         this.memFreePageManager = memFreePageManager;
         this.tokenizerFactory = tokenizerFactory;
         this.fileManager = fileManager;
         this.diskInvIndexFactory = diskInvIndexFactory;
-        this.deletedKeysBTreeFactory = diskBTreeFactory;
+        this.deletedKeysBTreeFactory = deletedKeysBTreeFactory;
         this.diskBufferCache = diskInvIndexFactory.getBufferCache();
         this.diskFileMapProvider = diskFileMapProvider;
         this.invListTypeTraits = invListTypeTraits;
@@ -169,7 +166,9 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
         try {
             ((InMemoryBufferCache) memComponent.getInvIndex().getBufferCache()).open();
             memComponent.getInvIndex().create();
+            memComponent.getInvIndex().activate();
             memComponent.getDeletedKeysBTree().create();
+            memComponent.getDeletedKeysBTree().activate();
             List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(componentFinalizer);
             for (Object o : validFileNames) {
                 LSMInvertedIndexFileNameComponent component = (LSMInvertedIndexFileNameComponent) o;
@@ -242,6 +241,11 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
             throw new HyracksDataException(e);
         }
 
+        for (Object o : diskComponents) {
+            LSMInvertedIndexComponent component = (LSMInvertedIndexComponent) o;
+            component.getInvIndex().deactivate();
+            component.getDeletedKeysBTree().deactivate();
+        }
         memComponent.getInvIndex().deactivate();
         memComponent.getDeletedKeysBTree().deactivate();
         memComponent.getInvIndex().destroy();
@@ -280,7 +284,7 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
         // TODO: Ignore opcallbacks for now.
-        return new LSMInvertedIndexAccessor(lsmHarness, createOpContext());
+        return new LSMInvertedIndexAccessor(lsmHarness, fileManager, createOpContext());
     }
     
     private LSMInvertedIndexOpContext createOpContext() {
@@ -298,14 +302,7 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
         // TODO Auto-generated method stub
         return null;
     }
-
-    @Override
-    public Object merge(List<Object> mergedComponents, ILSMIOOperation operation) throws HyracksDataException,
-            IndexException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
+    
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws IndexException {
         // TODO Auto-generated method stub
@@ -320,62 +317,40 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
     }
 
     @Override
+    // TODO: Deal with deletions properly.
     public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOpContext ictx,
             boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, IndexException {
-        IIndexAccessor componentAccessor;
-
-        // Over-provision by 1 if includeMemComponent == false, but that's okay!
-        ArrayList<IIndexAccessor> indexAccessors = new ArrayList<IIndexAccessor>(diskComponents.size() + 1);
-
+        int numComponents = (includeMemComponent) ? diskComponents.size() : diskComponents.size() + 1;
+        ArrayList<IIndexAccessor> indexAccessors = new ArrayList<IIndexAccessor>(numComponents);
         if (includeMemComponent) {
-            componentAccessor = memoryInvertedIndex.createAccessor();
-            indexAccessors.add(componentAccessor);
+            IIndexAccessor accessor = memComponent.getInvIndex().createAccessor(NoOpOperationCallback.INSTANCE,
+                    NoOpOperationCallback.INSTANCE);
+            indexAccessors.add(accessor);
         }
-
         for (int i = 0; i < diskComponents.size(); i++) {
-            componentAccessor = ((IInvertedIndex) diskComponents.get(i)).createAccessor();
-            indexAccessors.add(componentAccessor);
+            LSMInvertedIndexComponent component = (LSMInvertedIndexComponent) diskComponents.get(i);
+            IIndexAccessor accessor = component.getInvIndex().createAccessor(NoOpOperationCallback.INSTANCE,
+                    NoOpOperationCallback.INSTANCE);
+            indexAccessors.add(accessor);
         }
-
         LSMInvertedIndexCursorInitialState initState = new LSMInvertedIndexCursorInitialState(indexAccessors, ictx,
                 includeMemComponent, searcherRefCount, lsmHarness);
-        LSMInvertedIndexSearchCursor lsmCursor = (LSMInvertedIndexSearchCursor) cursor;
-        lsmCursor.open(initState, pred);
-    }
-
-    public void mergeSearch(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred,
-            IIndexOpContext ictx, boolean includeMemComponent, AtomicInteger searcherRefCount)
-            throws HyracksDataException, IndexException {
-        IIndexAccessor componentAccessor;
-
-        // Over-provision by 1 if includeMemComponent == false, but that's okay!
-        ArrayList<IIndexAccessor> indexAccessors = new ArrayList<IIndexAccessor>(diskComponents.size() + 1);
-
-        if (includeMemComponent) {
-            componentAccessor = memoryInvertedIndex.createAccessor();
-            indexAccessors.add(componentAccessor);
-        }
-
-        for (int i = 0; i < diskComponents.size(); i++) {
-            componentAccessor = ((IInvertedIndex) diskComponents.get(i)).createAccessor();
-            indexAccessors.add(componentAccessor);
-        }
-
-        LSMInvertedIndexCursorInitialState initState = new LSMInvertedIndexCursorInitialState(indexAccessors, ictx,
-                includeMemComponent, searcherRefCount, lsmHarness);
-        LSMInvertedIndexRangeSearchCursor rangeSearchCursor = (LSMInvertedIndexRangeSearchCursor) cursor;
-        rangeSearchCursor.open(initState, pred);
+        cursor.open(initState, pred);
     }
 
     @Override
-    public Object merge(List<Object> mergedComponents) throws HyracksDataException, IndexException {
-        LSMInvertedIndexOpContext ctx = createOpContext();
+    // TODO: Deal with deletions properly.
+    public Object merge(List<Object> mergedComponents, ILSMIOOperation operation) throws HyracksDataException,
+            IndexException {
+        LSMInvertedIndexMergeOperation mergeOp = (LSMInvertedIndexMergeOperation) operation;
 
+        LSMInvertedIndexOpContext ctx = createOpContext();
+        ctx.reset(IndexOp.SEARCH);
         IIndexCursor cursor = new LSMInvertedIndexRangeSearchCursor();
         RangePredicate mergePred = new RangePredicate(null, null, true, true, null, null);
 
-        //Scan diskInvertedIndexes ignoring the memoryInvertedIndex.
-        List<Object> mergingComponents = lsmHarness.mergeSearch(cursor, mergePred, ctx, false);
+        // Scan diskInvertedIndexes ignoring the memoryInvertedIndex.
+        List<Object> mergingComponents = lsmHarness.search(cursor, mergePred, ctx, false);
         mergedComponents.addAll(mergingComponents);
 
         // Nothing to merge.
@@ -384,37 +359,28 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
             return null;
         }
 
-        // Bulk load the tuples from all diskInvertedIndexes into the new diskInvertedIndex.
-        LSMInvertedFileNameComponent fNameComponent = getMergeTargetFileName(mergedComponents);
-        BTree diskBTree = createDiskBTree(fileManager.createMergeFile(fNameComponent.getDictBTreeFileName()), true);
-        //    - Create an InvertedIndex instance
-        OnDiskInvertedIndex mergedDiskInvertedIndex = createDiskInvertedIndex(
-                fileManager.createMergeFile(fNameComponent.getInvertedFileName()), true, diskBTree);
-
-        IIndexBulkLoadContext bulkLoadCtx = mergedDiskInvertedIndex.beginBulkLoad(1.0f);
+        // Create an inverted index instance.
+        IInvertedIndex mergedDiskInvertedIndex = createDiskInvIndex(diskInvIndexFactory,
+                mergeOp.getDictBTreeMergeTarget(), true);
+        IIndexBulkLoader invIndexBulkLoader = mergedDiskInvertedIndex.createBulkLoader(1.0f, false);
         try {
             while (cursor.hasNext()) {
                 cursor.next();
                 ITupleReference tuple = cursor.getTuple();
-                mergedDiskInvertedIndex.bulkLoadAddTuple(tuple, bulkLoadCtx);
+                invIndexBulkLoader.add(tuple);
             }
         } finally {
             cursor.close();
         }
-        mergedDiskInvertedIndex.endBulkLoad(bulkLoadCtx);
+        invIndexBulkLoader.end();
+
+        // Create an empty deleted keys BTree.
+        ITreeIndex deletedKeysBTree = createDiskTree(deletedKeysBTreeFactory, mergeOp.getDeletedKeysBTreeMergeTarget(),
+                true);
+        IIndexBulkLoader deletedKeysBulkLoader = deletedKeysBTree.createBulkLoader(1.0f, false);
+        deletedKeysBulkLoader.end();
 
         return mergedDiskInvertedIndex;
-    }
-
-    private LSMInvertedFileNameComponent getMergeTargetFileName(List<Object> mergingDiskTrees)
-            throws HyracksDataException {
-        BTree firstTree = ((OnDiskInvertedIndex) mergingDiskTrees.get(0)).getBTree();
-        BTree lastTree = ((OnDiskInvertedIndex) mergingDiskTrees.get(mergingDiskTrees.size() - 1)).getBTree();
-        FileReference firstFile = diskFileMapProvider.lookupFileName(firstTree.getFileId());
-        FileReference lastFile = diskFileMapProvider.lookupFileName(lastTree.getFileId());
-        LSMInvertedFileNameComponent component = (LSMInvertedFileNameComponent) ((LSMInvertedIndexFileManager) fileManager)
-                .getRelMergeFileName(firstFile.getFile().getName(), lastFile.getFile().getName());
-        return component;
     }
 
     @Override
@@ -469,7 +435,7 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
                 flushOp.getDeletedKeysBTreeFlushTarget(), true);
 
         // Create a scan cursor on the deleted keys BTree underlying the in-memory inverted index.
-        IIndexAccessor deletedKeysBTreeAccessor = (InMemoryInvertedIndexAccessor) memComponent.getDeletedKeysBTree()
+        IIndexAccessor deletedKeysBTreeAccessor = memComponent.getDeletedKeysBTree()
                 .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         IIndexCursor deletedKeysScanCursor = deletedKeysBTreeAccessor.createSearchCursor();
         deletedKeysBTreeAccessor.search(deletedKeysScanCursor, nullPred);
@@ -538,5 +504,36 @@ public class LSMInvertedIndex implements ILSMIndex, IIndex {
     @Override
     public IndexType getIndexType() {
         return IndexType.INVERTED;
+    }
+
+    @Override
+    public IInvertedListCursor createInvertedListCursor() {
+        throw new UnsupportedOperationException("Cannot create inverted list cursor on lsm inverted index.");
+    }
+
+    @Override
+    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey, IIndexOpContext ictx)
+            throws HyracksDataException, IndexException {
+        throw new UnsupportedOperationException("Cannot open inverted list cursor on lsm inverted index.");
+    }
+
+    @Override
+    public ITypeTraits[] getInvListTypeTraits() {
+        return invListTypeTraits;
+    }
+
+    @Override
+    public IBinaryComparatorFactory[] getInvListCmpFactories() {
+        return invListCmpFactories;
+    }
+
+    @Override
+    public ITypeTraits[] getTokenTypeTraits() {
+        return tokenTypeTraits;
+    }
+
+    @Override
+    public IBinaryComparatorFactory[] getTokenCmpFactories() {
+        return tokenCmpFactories;
     }
 }

@@ -75,15 +75,14 @@ public class InvertedIndexTestUtils {
     }
 
     public static InvertedIndexTestContext createWordInvIndexTestContext(LSMInvertedIndexTestHarness harness,
-            IBufferCache bufferCache, InvertedIndexType invIndexType) throws IOException, IndexException {
+            InvertedIndexType invIndexType) throws IOException, IndexException {
         ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         ITokenFactory tokenFactory = new UTF8WordTokenFactory();
         IBinaryTokenizerFactory tokenizerFactory = new DelimitedUTF8StringBinaryTokenizerFactory(true, false,
                 tokenFactory);
-        InvertedIndexTestContext testCtx = InvertedIndexTestContext.create(bufferCache,
-                harness.getMemFreePageManager(), harness.getDiskFileMapProvider(), harness.getInvListsFileRef(),
-                fieldSerdes, 1, tokenizerFactory, invIndexType);
+        InvertedIndexTestContext testCtx = InvertedIndexTestContext.create(harness, fieldSerdes, 1, tokenizerFactory,
+                invIndexType);
         return testCtx;
     }
 

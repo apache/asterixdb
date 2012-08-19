@@ -106,7 +106,7 @@ public class LSMHarness implements ILSMHarness {
 
     public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Flushing LSM-Tree.");
+            LOGGER.info("Flushing LSM-Index: " + lsmIndex);
         }
         Object newComponent = lsmIndex.flush(operation);
 
@@ -169,7 +169,7 @@ public class LSMHarness implements ILSMHarness {
 
     public void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Merging LSM-Tree.");
+            LOGGER.info("Merging LSM-Index: " + lsmIndex);
         }
 
         // Point to the current searcher ref count, so we can wait for it later

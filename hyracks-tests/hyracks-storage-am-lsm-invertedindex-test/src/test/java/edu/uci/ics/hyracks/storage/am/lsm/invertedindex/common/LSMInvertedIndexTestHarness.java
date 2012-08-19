@@ -27,12 +27,19 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTracker;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -45,9 +52,9 @@ public class LSMInvertedIndexTestHarness {
     private static final int DEFAULT_DISK_PAGE_SIZE = 256;
     private static final int DEFAULT_DISK_NUM_PAGES = 1000;
     private static final int DEFAULT_DISK_MAX_OPEN_FILES = 200;
-    private static final int DEFAULT_MEM_PAGE_SIZE = 4096;
+    private static final int DEFAULT_MEM_PAGE_SIZE = 256;
     private static final int DEFAULT_MEM_NUM_PAGES = 200;
-    private static final int DEFAULT_HYRACKS_FRAME_SIZE = 128;
+    private static final int DEFAULT_HYRACKS_FRAME_SIZE = 512;
     private static final int DUMMY_FILE_ID = -1;
 
     protected final int diskPageSize;
@@ -60,11 +67,14 @@ public class LSMInvertedIndexTestHarness {
     protected IOManager ioManager;
     protected IBufferCache diskBufferCache;
     protected IFileMapProvider diskFileMapProvider;
-    protected IFreePageManager diskFreePageManager;
     protected InMemoryBufferCache memBufferCache;
     protected InMemoryFreePageManager memFreePageManager;
     protected IHyracksTaskContext ctx;
-
+    protected ILSMIOOperationScheduler ioScheduler;
+    protected ILSMFlushController flushController;
+    protected ILSMMergePolicy mergePolicy;
+    protected ILSMOperationTracker opTracker;
+    
     protected final Random rnd = new Random();
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final static String sep = System.getProperty("file.separator");
@@ -80,6 +90,10 @@ public class LSMInvertedIndexTestHarness {
         this.memPageSize = DEFAULT_MEM_PAGE_SIZE;
         this.memNumPages = DEFAULT_MEM_NUM_PAGES;
         this.hyracksFrameSize = DEFAULT_HYRACKS_FRAME_SIZE;
+        this.ioScheduler = ImmediateScheduler.INSTANCE;
+        this.mergePolicy = NoMergePolicy.INSTANCE;
+        this.flushController = new FlushController();
+        this.opTracker = new RefCountingOperationTracker();
     }
 
     public LSMInvertedIndexTestHarness(int diskPageSize, int diskNumPages, int diskMaxOpenFiles, int memPageSize,
@@ -90,6 +104,10 @@ public class LSMInvertedIndexTestHarness {
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
         this.hyracksFrameSize = hyracksFrameSize;
+        this.ioScheduler = ImmediateScheduler.INSTANCE;
+        this.mergePolicy = NoMergePolicy.INSTANCE;
+        this.flushController = new FlushController();
+        this.opTracker = new RefCountingOperationTracker();
     }
 
     public void setUp() throws HyracksException {
@@ -103,9 +121,7 @@ public class LSMInvertedIndexTestHarness {
         memFreePageManager = new DualIndexInMemoryFreePageManager(memNumPages, new LIFOMetaDataFrameFactory());
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         rnd.setSeed(RANDOM_SEED);
-        
-        File btreeFile = new File(onDiskDir + btreeFileName);
-        btreeFile.deleteOnExit();
+
         File invIndexFile = new File(onDiskDir + invIndexFileName);
         invIndexFile.deleteOnExit();
         invIndexFileRef = new FileReference(invIndexFile);
@@ -193,5 +209,21 @@ public class LSMInvertedIndexTestHarness {
 
     public Random getRandom() {
         return rnd;
+    }
+    
+    public ILSMIOOperationScheduler getIOScheduler() {
+        return ioScheduler;
+    }
+
+    public ILSMOperationTracker getOperationTracker() {
+        return opTracker;
+    }
+
+    public ILSMFlushController getFlushController() {
+        return flushController;
+    }
+
+    public ILSMMergePolicy getMergePolicy() {
+        return mergePolicy;
     }
 }
