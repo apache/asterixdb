@@ -81,6 +81,7 @@
         <configuration>
           <hyracksServerHome>${basedir}/../../../hyracks-server/target/hyracks-server-${project.version}-binary-assembly</hyracksServerHome>
           <hyracksCLIHome>${basedir}/../../../hyracks-cli/target/hyracks-cli-${project.version}-binary-assembly</hyracksCLIHome>
+          <jvmOptions>${jvm.extraargs}</jvmOptions>
         </configuration>
         <executions>
           <execution>

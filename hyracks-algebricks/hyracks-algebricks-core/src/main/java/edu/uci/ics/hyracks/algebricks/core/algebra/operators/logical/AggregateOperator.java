@@ -20,6 +20,7 @@ public class AggregateOperator extends AbstractAssignOperator {
     // private ArrayList<AggregateFunctionCallExpression> expressions;
     // TODO type safe list of expressions
     private List<Mutable<ILogicalExpression>> mergeExpressions;
+    private LogicalVariable partitioningVariable;
 
     public AggregateOperator(List<LogicalVariable> variables, List<Mutable<ILogicalExpression>> expressions) {
         super(variables, expressions);
@@ -66,6 +67,14 @@ public class AggregateOperator extends AbstractAssignOperator {
 
     public List<Mutable<ILogicalExpression>> getMergeExpressions() {
         return mergeExpressions;
+    }
+
+    public void setPartitioningVariable(LogicalVariable partitioningVariable) {
+        this.partitioningVariable = partitioningVariable;
+    }
+
+    public LogicalVariable getPartitioningVariable() {
+        return partitioningVariable;
     }
 
     @Override

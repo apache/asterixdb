@@ -71,6 +71,9 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
         for (Mutable<ILogicalExpression> exprRef : op.getExpressions()) {
             exprRef.getValue().getUsedVariables(usedVariables);
         }
+        if (op.getPartitioningVariable() != null) {
+            usedVariables.add(op.getPartitioningVariable());
+        }
         return null;
     }
 
