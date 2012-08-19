@@ -391,7 +391,10 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
 
         @Override
         public void end() throws IndexException, HyracksDataException {
-            createAndInsertBTreeTuple();
+            // The last tuple builder is empty if add() was never called.
+            if (lastTupleBuilder.getSize() != 0) {
+                createAndInsertBTreeTuple();
+            }
             btreeBulkloader.end();
 
             if (currentPage != null) {

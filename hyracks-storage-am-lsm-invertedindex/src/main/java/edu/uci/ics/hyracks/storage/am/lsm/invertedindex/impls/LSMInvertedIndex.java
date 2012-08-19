@@ -40,6 +40,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
@@ -292,12 +293,6 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     }
     
     @Override
-    public long getInMemorySize() {
-        InMemoryBufferCache memBufferCache = (InMemoryBufferCache) memComponent.getInvIndex().getBufferCache();
-        return memBufferCache.getNumPages() * memBufferCache.getPageSize();
-    }
-
-    @Override
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException {
         // TODO Auto-generated method stub
         return null;
@@ -305,8 +300,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws IndexException {
-        // TODO Auto-generated method stub
-        return null;
+        return new LSMInvertedIndexBulkLoader(fillFactor, verifyInput);
     }
     
     public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
@@ -374,11 +368,8 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         }
         invIndexBulkLoader.end();
 
-        // Create an empty deleted keys BTree.
-        ITreeIndex deletedKeysBTree = createDiskTree(deletedKeysBTreeFactory, mergeOp.getDeletedKeysBTreeMergeTarget(),
-                true);
-        IIndexBulkLoader deletedKeysBulkLoader = deletedKeysBTree.createBulkLoader(1.0f, false);
-        deletedKeysBulkLoader.end();
+        // Create an empty deleted keys BTree (do nothing with the returned index).
+        createDiskTree(deletedKeysBTreeFactory, mergeOp.getDeletedKeysBTreeMergeTarget(), true);
 
         return mergedDiskInvertedIndex;
     }
@@ -459,11 +450,60 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         diskComponents.addFirst(index);
     }
 
-    @Override
-    public InMemoryFreePageManager getInMemoryFreePageManager() {
-        return memFreePageManager;
-    }
+    public class LSMInvertedIndexBulkLoader implements IIndexBulkLoader {
+        private final IInvertedIndex invIndex;
+        private final BTree deletedKeysBTree;
+        private final IIndexBulkLoader invIndexBulkLoader;
 
+        public LSMInvertedIndexBulkLoader(float fillFactor, boolean verifyInput) throws IndexException {
+            // Note that by using a flush target file name, we state that the
+            // new bulk loaded tree is "newer" than any other merged tree.
+            try {
+                LSMInvertedIndexFileNameComponent fileNameComponent = (LSMInvertedIndexFileNameComponent) fileManager
+                        .getRelFlushFileName();
+                FileReference dictBTreeFileRef = fileManager.createFlushFile(fileNameComponent.getDictBTreeFileName());
+                invIndex = createDiskInvIndex(diskInvIndexFactory, dictBTreeFileRef, true);
+                // Create an empty deleted-keys BTree.
+                FileReference deletedKeysBTreeFile = fileManager.createFlushFile(fileNameComponent
+                        .getDeletedKeysBTreeFileName());
+                deletedKeysBTree = (BTree) createDiskTree(deletedKeysBTreeFactory, deletedKeysBTreeFile, true);
+            } catch (HyracksDataException e) {
+                throw new TreeIndexException(e);
+            }
+            invIndexBulkLoader = invIndex.createBulkLoader(fillFactor, verifyInput);
+        }
+
+        @Override
+        public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
+            try {
+                invIndexBulkLoader.add(tuple);
+            } catch (IndexException e) {
+                handleException();
+                throw e;
+            } catch (HyracksDataException e) {
+                handleException();
+                throw e;
+            } catch (RuntimeException e) {
+                handleException();
+                throw e;
+            }
+        }
+
+        protected void handleException() throws HyracksDataException {
+            invIndex.deactivate();
+            invIndex.destroy();
+            deletedKeysBTree.deactivate();
+            deletedKeysBTree.destroy();
+        }
+
+        @Override
+        public void end() throws IndexException, HyracksDataException {
+            invIndexBulkLoader.end();
+            LSMInvertedIndexComponent diskComponent = new LSMInvertedIndexComponent(invIndex, deletedKeysBTree);
+            lsmHarness.addBulkLoadedComponent(diskComponent);
+        }
+    }
+    
     @Override
     public void resetInMemoryComponent() throws HyracksDataException {
         memFreePageManager.reset();
@@ -471,6 +511,17 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         memComponent.getDeletedKeysBTree().clear();
     }
 
+    @Override
+    public long getInMemorySize() {
+        InMemoryBufferCache memBufferCache = (InMemoryBufferCache) memComponent.getInvIndex().getBufferCache();
+        return memBufferCache.getNumPages() * memBufferCache.getPageSize();
+    }
+    
+    @Override
+    public InMemoryFreePageManager getInMemoryFreePageManager() {
+        return memFreePageManager;
+    }
+    
     @Override
     public List<Object> getDiskComponents() {
         return diskComponents;
