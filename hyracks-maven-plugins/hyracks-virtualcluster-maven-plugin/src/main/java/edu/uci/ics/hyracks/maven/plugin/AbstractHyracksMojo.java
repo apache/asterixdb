@@ -24,6 +24,11 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
 public abstract class AbstractHyracksMojo extends AbstractMojo {
+    /**
+     * @parameter
+     */
+    protected String jvmOptions;
+
     protected Process launch(File command, String options, File workingDir) throws MojoExecutionException {
         if (!command.isFile()) {
             throw new MojoExecutionException(command.getAbsolutePath() + " is not an executable program");
@@ -61,8 +66,12 @@ public abstract class AbstractHyracksMojo extends AbstractMojo {
         for (int i = 0; i < optionsArray.length; ++i) {
             commandWithOptions[i + 1] = optionsArray[i];
         }
-        Process proc = Runtime.getRuntime().exec(commandWithOptions, null,
-                workingDir == null ? new File(".") : workingDir);
+        ProcessBuilder pb = new ProcessBuilder(commandWithOptions);
+        if (jvmOptions != null) {
+            pb.environment().put("JAVA_OPTS", jvmOptions);
+        }
+        pb.directory(workingDir == null ? new File(".") : workingDir);
+        Process proc = pb.start();
         dump(proc.getInputStream());
         dump(proc.getErrorStream());
         return proc;

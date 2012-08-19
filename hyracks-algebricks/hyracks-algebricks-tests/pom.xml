@@ -20,19 +20,6 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.7.2</version>
-        <configuration>
-          <forkMode>pertest</forkMode>
-          <argLine>-enableassertions -Djava.util.logging.config.file=src/test/resources/logging.properties</argLine>
-          <includes>
-            <include>**/*Test.java</include>
-            <include>**/*Suite.java</include>
-          </includes>
-        </configuration>
-      </plugin>
-      <plugin>
         <artifactId>maven-antrun-plugin</artifactId>
         <executions>
           <execution>
