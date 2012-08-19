@@ -29,10 +29,12 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestUt
 public abstract class AbstractInvertedIndexLoadTest extends AbstractInvertedIndexTest {
 
     protected final boolean bulkLoad;
+    protected final int numRounds;
     
-    public AbstractInvertedIndexLoadTest(InvertedIndexType invIndexType, boolean bulkLoad) {
+    public AbstractInvertedIndexLoadTest(InvertedIndexType invIndexType, boolean bulkLoad, int numRounds) {
         super(invIndexType);
         this.bulkLoad = bulkLoad;
+        this.numRounds = numRounds;
     }
 
     protected void runTest(InvertedIndexTestContext testCtx, TupleGenerator tupleGen) throws IOException,
@@ -41,16 +43,18 @@ public abstract class AbstractInvertedIndexLoadTest extends AbstractInvertedInde
         invIndex.create();
         invIndex.activate();
 
-        if (bulkLoad) {
-            InvertedIndexTestUtils.bulkLoadInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
-        } else {
-            InvertedIndexTestUtils.insertIntoInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
-        }
+        for (int i = 0; i < numRounds; i++) {
+            if (bulkLoad) {
+                InvertedIndexTestUtils.bulkLoadInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
+            } else {
+                InvertedIndexTestUtils.insertIntoInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
+            }
 
-        // Validate index and compare against expected index.
-        invIndex.validate();
-        if (invIndexType == InvertedIndexType.INMEMORY || invIndexType == InvertedIndexType.ONDISK) {
-            InvertedIndexTestUtils.compareActualAndExpectedIndexes(testCtx);
+            // Validate index and compare against expected index.
+            invIndex.validate();
+            if (invIndexType == InvertedIndexType.INMEMORY || invIndexType == InvertedIndexType.ONDISK) {
+                InvertedIndexTestUtils.compareActualAndExpectedIndexes(testCtx);
+            }
         }
 
         invIndex.deactivate();

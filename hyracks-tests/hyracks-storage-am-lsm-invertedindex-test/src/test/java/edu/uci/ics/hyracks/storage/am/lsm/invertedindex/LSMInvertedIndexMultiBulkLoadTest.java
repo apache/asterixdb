@@ -13,14 +13,15 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk;
+package edu.uci.ics.hyracks.storage.am.lsm.invertedindex;
 
+import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common.AbstractInvertedIndexLoadTest;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext.InvertedIndexType;
 
-public class OnDiskInvertedIndexBulkLoadTest extends AbstractInvertedIndexLoadTest {
+public class LSMInvertedIndexMultiBulkLoadTest extends AbstractInvertedIndexLoadTest {
 
-    public OnDiskInvertedIndexBulkLoadTest() {
-        super(InvertedIndexType.ONDISK, true, 1);
+    public LSMInvertedIndexMultiBulkLoadTest() {
+        super(InvertedIndexType.LSM, true, AccessMethodTestsConfig.INVINDEX_NUM_BULKLOAD_ROUNDS);
     }
 }

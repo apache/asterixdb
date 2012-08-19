@@ -21,6 +21,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestCo
 public class InMemoryInvertedIndexInsertTest extends AbstractInvertedIndexLoadTest {
     
     public InMemoryInvertedIndexInsertTest() {
-        super(InvertedIndexType.INMEMORY, false);
+        super(InvertedIndexType.INMEMORY, false, 1);
     }
 }
