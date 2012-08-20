@@ -51,9 +51,11 @@ import edu.uci.ics.hyracks.storage.am.common.datagen.SortedIntegerFieldValueGene
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleGenerator;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common.LSMInvertedIndexTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
@@ -124,8 +126,11 @@ public class InvertedIndexTestUtils {
         }
     }
 
-    public static void compareActualAndExpectedIndexes(InvertedIndexTestContext testCtx) throws HyracksDataException,
-            IndexException {
+    /**
+     * Compares actual and expected indexes using the rangeSearch() method of the inverted-index accessor.
+     */
+    public static void compareActualAndExpectedIndexesRangeSearch(InvertedIndexTestContext testCtx)
+            throws HyracksDataException, IndexException {
         IInvertedIndex invIndex = (IInvertedIndex) testCtx.getIndex();
         int tokenFieldCount = invIndex.getTokenTypeTraits().length;
         int invListFieldCount = invIndex.getInvListTypeTraits().length;
@@ -169,7 +174,9 @@ public class InvertedIndexTestUtils {
         }
     }
 
-    /*
+    /**
+     * Compares actual and expected indexes by comparing their inverted-lists one by one. Exercises the openInvertedListCursor() method of the inverted-index accessor.
+     */
     @SuppressWarnings("unchecked")
     public static void compareActualAndExpectedIndexes(InvertedIndexTestContext testCtx) throws HyracksDataException,
             IndexException {
@@ -242,7 +249,6 @@ public class InvertedIndexTestUtils {
             }
         }
     }
-    */
 
     /**
      * Determine the expected results with the simple ScanCount algorithm.
