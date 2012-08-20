@@ -24,6 +24,8 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
+import edu.uci.ics.hyracks.storage.am.common.api.ICloseableResource;
+import edu.uci.ics.hyracks.storage.am.common.api.ICloseableResourceManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -36,6 +38,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
     private final AbstractTreeIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
+    private final ICloseableResourceManager closeableResourceManager;
     private final IIndexLifecycleManager lcManager;
     private final TreeIndexDataflowHelper treeIndexHelper;
     private FrameTupleAccessor accessor;
@@ -54,6 +57,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.lcManager = opDesc.getLifecycleManagerProvider().getLifecycleManager(ctx);
+        this.closeableResourceManager = opDesc.getCloseableResourceManagerProvider().getCloseableResourceManager();
         this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
                 .createIndexDataflowHelper(opDesc, ctx, partition);
         this.recordDescProvider = recordDescProvider;
@@ -135,7 +139,13 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         try {
             writer.close();
         } finally {
-            lcManager.close(treeIndexHelper);
+            closeableResourceManager.addCloseableResource(ctx.getJobletContext().getJobId().getId(),
+                    new ICloseableResource() {
+                        @Override
+                        public void close() throws HyracksDataException {
+                            lcManager.close(treeIndexHelper);
+                        }
+                    });
         }
 
     }

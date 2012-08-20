@@ -81,8 +81,8 @@ public class RTreeSecondaryIndexScanOperatorTest extends AbstractRTreeOperatorTe
         int[] keyFields = null;
 
         RTreeSearchOperatorDescriptor secondarySearchOp = new RTreeSearchOperatorDescriptor(spec, secondaryRecDesc,
-                storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
-                secondaryComparatorFactories, keyFields, rtreeDataflowHelperFactory, false,
+                storageManager, lcManagerProvider, closeableResourceManagerProvider, secondarySplitProvider,
+                secondaryTypeTraits, secondaryComparatorFactories, keyFields, rtreeDataflowHelperFactory, false,
                 NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondarySearchOp, NC1_ID);
 
@@ -105,7 +105,7 @@ public class RTreeSecondaryIndexScanOperatorTest extends AbstractRTreeOperatorTe
         return ((RTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(secondaryValueProviderFactories,
                 rtreePolicyType, null);
     }
-    
+
     @Override
     public void cleanup() throws Exception {
         destroyPrimaryIndex();

@@ -44,8 +44,8 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractBTreeOperatorTes
         JobSpecification spec = new JobSpecification();
 
         TreeIndexStatsOperatorDescriptor primaryStatsOp = new TreeIndexStatsOperatorDescriptor(spec, storageManager,
-                lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
-                dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+                lcManagerProvider, closeableResourceManagerProvider, primarySplitProvider, primaryTypeTraits,
+                primaryComparatorFactories, dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryStatsOp, NC1_ID);
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
                 createTempFile().getAbsolutePath()) });
