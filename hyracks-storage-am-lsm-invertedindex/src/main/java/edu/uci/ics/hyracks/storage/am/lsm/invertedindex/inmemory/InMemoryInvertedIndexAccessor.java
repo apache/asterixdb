@@ -18,7 +18,9 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
@@ -76,6 +78,18 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
         index.openInvertedListCursor(listCursor, searchKey, opCtx);
     }
 
+    @Override
+    public IIndexCursor createRangeSearchCursor() {
+        IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) index.getBTree().getLeafFrameFactory().createFrame();
+        return new BTreeRangeSearchCursor(leafFrame, false);
+    }
+    
+    @Override
+    public void rangeSearch(IIndexCursor cursor, ISearchPredicate searchPred) throws IndexException,
+            HyracksDataException {
+        btreeAccessor.search(cursor, searchPred);
+    }
+    
     public BTreeAccessor getBTreeAccessor() {
         return btreeAccessor;
     }

@@ -94,6 +94,19 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     }
 
     @Override
+    public IIndexCursor createRangeSearchCursor() {
+        return new LSMInvertedIndexRangeSearchCursor();
+    }
+    
+    @Override
+    public void rangeSearch(IIndexCursor cursor, ISearchPredicate searchPred) throws IndexException,
+            HyracksDataException {
+        // TODO: Figure out what the initial state is here.
+        //LSMInvertedIndexRangeSearchCursor rangeSearchCursor = (LSMInvertedIndexRangeSearchCursor) cursor;
+        //rangeSearchCursor.open(initialState, searchPred);
+    }
+    
+    @Override
     public void physicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
         // TODO: Do we need this?
     }

@@ -463,6 +463,17 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         }
 
         @Override
+        public IIndexCursor createRangeSearchCursor() {
+            return new OnDiskInvertedIndexRangeSearchCursor(index, opCtx);
+        }
+        
+        @Override
+        public void rangeSearch(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException {
+            OnDiskInvertedIndexRangeSearchCursor rangeSearchCursor = (OnDiskInvertedIndexRangeSearchCursor) cursor;
+            rangeSearchCursor.open(null, searchPred);
+        }
+        
+        @Override
         public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
             throw new UnsupportedOperationException("Insert not supported by inverted index.");
         }

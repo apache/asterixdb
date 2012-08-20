@@ -18,6 +18,8 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 public interface IInvertedIndexAccessor extends IIndexAccessor {
@@ -25,4 +27,9 @@ public interface IInvertedIndexAccessor extends IIndexAccessor {
 
     public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey)
             throws HyracksDataException, IndexException;
+
+    public IIndexCursor createRangeSearchCursor();
+
+    public void rangeSearch(IIndexCursor cursor, ISearchPredicate searchPred) throws IndexException,
+            HyracksDataException;
 }

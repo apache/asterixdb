@@ -17,6 +17,8 @@ package edu.uci.ics.hyracks.storage.am.common.tuples;
 
 import java.util.Arrays;
 
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane.MaximizeAction;
+
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 /**
@@ -56,6 +58,14 @@ public class ConcatenatingTupleReference implements ITupleReference {
             ITupleReference lastTuple = tuples[--numTuples];
             totalFieldCount -= lastTuple.getFieldCount();
         }
+    }
+    
+    public int getNumTuples() {
+        return numTuples;
+    }
+    
+    public boolean hasMaxTuples() {
+        return numTuples == tuples.length;
     }
     
     @Override

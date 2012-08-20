@@ -30,6 +30,7 @@ import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
@@ -39,19 +40,20 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestUtils;
+import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DocumentStringFieldValueGenerator;
 import edu.uci.ics.hyracks.storage.am.common.datagen.IFieldValueGenerator;
 import edu.uci.ics.hyracks.storage.am.common.datagen.SortedIntegerFieldValueGenerator;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleGenerator;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common.LSMInvertedIndexTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
@@ -122,6 +124,52 @@ public class InvertedIndexTestUtils {
         }
     }
 
+    public static void compareActualAndExpectedIndexes(InvertedIndexTestContext testCtx) throws HyracksDataException,
+            IndexException {
+        IInvertedIndex invIndex = (IInvertedIndex) testCtx.getIndex();
+        int tokenFieldCount = invIndex.getTokenTypeTraits().length;
+        int invListFieldCount = invIndex.getInvListTypeTraits().length;
+        IInvertedIndexAccessor invIndexAccessor = (IInvertedIndexAccessor) invIndex.createAccessor(
+                NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        IIndexCursor invIndexCursor = invIndexAccessor.createRangeSearchCursor();
+        MultiComparator tokenCmp = MultiComparator.create(invIndex.getTokenCmpFactories());
+        IBinaryComparatorFactory[] tupleCmpFactories = new IBinaryComparatorFactory[tokenFieldCount + invListFieldCount];
+        for (int i = 0; i < tokenFieldCount; i++) {
+            tupleCmpFactories[i] = invIndex.getTokenCmpFactories()[i];
+        }
+        for (int i = 0; i < invListFieldCount; i++) {
+            tupleCmpFactories[tokenFieldCount + i] = invIndex.getInvListCmpFactories()[i];
+        }
+        MultiComparator tupleCmp = MultiComparator.create(tupleCmpFactories);
+        RangePredicate nullPred = new RangePredicate(null, null, true, true, tokenCmp, tokenCmp);
+        invIndexAccessor.rangeSearch(invIndexCursor, nullPred);
+
+        // Helpers for generating a serialized inverted-list element from a CheckTuple from the expected index.
+        ISerializerDeserializer[] fieldSerdes = testCtx.getFieldSerdes();
+        ArrayTupleBuilder expectedBuilder = new ArrayTupleBuilder(fieldSerdes.length);
+        ArrayTupleReference expectedTuple = new ArrayTupleReference();
+
+        Iterator<CheckTuple> expectedIter = testCtx.getCheckTuples().iterator();
+
+        // Compare index elements.
+        int count = 0;
+        try {
+            while (invIndexCursor.hasNext() && expectedIter.hasNext()) {
+                invIndexCursor.next();
+                ITupleReference actualTuple = invIndexCursor.getTuple();
+                CheckTuple expected = expectedIter.next();
+                OrderedIndexTestUtils.createTupleFromCheckTuple(expected, expectedBuilder, expectedTuple, fieldSerdes);
+                if (tupleCmp.compare(actualTuple, expectedTuple) != 0) {
+                    fail("Index elements differ for token '" + expected.getField(0) + "' at position " + count + ".");
+                }
+                count++;
+            }
+        } finally {
+            invIndexCursor.close();
+        }
+    }
+
+    /*
     @SuppressWarnings("unchecked")
     public static void compareActualAndExpectedIndexes(InvertedIndexTestContext testCtx) throws HyracksDataException,
             IndexException {
@@ -194,6 +242,7 @@ public class InvertedIndexTestUtils {
             }
         }
     }
+    */
 
     /**
      * Determine the expected results with the simple ScanCount algorithm.
@@ -245,7 +294,7 @@ public class InvertedIndexTestUtils {
             }
         }
     }
-    
+
     /*
     public static OnDiskInvertedIndex createTestInvertedIndex(LSMInvertedIndexTestHarness harness, IBinaryTokenizer tokenizer)
             throws HyracksDataException {
