@@ -27,19 +27,19 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 
+/**
+ * Searches the components one-by-one, completely consuming a cursor before moving on to the next one.
+ * Therefore, the are no guarantees about sort order of the results.
+ */
 public class LSMInvertedIndexSearchCursor implements IIndexCursor {
 
+    private final List<IIndexCursor> indexCursors = new ArrayList<IIndexCursor>();
     private int cursorIndex = -1;
     private LSMHarness harness;
     private boolean includeMemComponent;
     private AtomicInteger searcherRefCount;
     private List<IIndexAccessor> indexAccessors;
-    private List<IIndexCursor> indexCursors;// = new ArrayList<IIndexCursor>();
     private ISearchPredicate searchPred;
-
-    public LSMInvertedIndexSearchCursor() {
-        indexCursors = new ArrayList<IIndexCursor>();
-    }
 
     @Override
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
@@ -49,15 +49,40 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
         searcherRefCount = lsmInitialState.getSearcherRefCount();
         indexAccessors = lsmInitialState.getIndexAccessors();
         indexCursors.clear();
-        //        indexCursors = new ArrayList<IIndexCursor>(indexAccessors.size());
         cursorIndex = 0;
         this.searchPred = searchPred;
-
-        IIndexAccessor currentAccessor;
-        IIndexCursor currentCursor;
         while (cursorIndex < indexAccessors.size()) {
             // Open cursors and perform search lazily as each component is passed over
-            currentAccessor = indexAccessors.get(cursorIndex);
+            IIndexAccessor currentAccessor = indexAccessors.get(cursorIndex);
+            IIndexCursor currentCursor = currentAccessor.createSearchCursor();
+            try {
+                currentAccessor.search(currentCursor, searchPred);
+            } catch (IndexException e) {
+                throw new HyracksDataException(e);
+            }
+            indexCursors.add(currentCursor);
+            if (currentCursor.hasNext()) {
+                break;
+            }
+            // Close as we go to release any resources.
+            currentCursor.close();
+            cursorIndex++;
+        }
+    }
+
+    @Override
+    public boolean hasNext() throws HyracksDataException {
+        if (cursorIndex >= indexAccessors.size()) {
+            return false;
+        }
+        IIndexCursor currentCursor = indexCursors.get(cursorIndex);
+        if (currentCursor.hasNext()) {
+            return true;
+        }
+        currentCursor.close();
+        cursorIndex++;
+        while (cursorIndex < indexAccessors.size()) {
+            IIndexAccessor currentAccessor = indexAccessors.get(cursorIndex);
             currentCursor = currentAccessor.createSearchCursor();
             try {
                 currentAccessor.search(currentCursor, searchPred);
@@ -65,67 +90,25 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
                 throw new HyracksDataException(e);
             }
             indexCursors.add(currentCursor);
-
             if (currentCursor.hasNext()) {
-                break;
+                return true;
             }
-
-            // Close as we go to release any resources
             currentCursor.close();
             cursorIndex++;
         }
-
-    }
-
-    @Override
-    public boolean hasNext() throws HyracksDataException {
-        IIndexAccessor currentAccessor;
-        IIndexCursor currentCursor;
-
-        if (cursorIndex >= indexAccessors.size()) {
-            return false;
-        }
-
-        currentCursor = indexCursors.get(cursorIndex);
-        if (currentCursor.hasNext()) {
-            return true;
-        } else {
-            currentCursor.close();
-            cursorIndex++;
-            while (cursorIndex < indexAccessors.size()) {
-                currentAccessor = indexAccessors.get(cursorIndex);
-                currentCursor = currentAccessor.createSearchCursor();
-                try {
-                    currentAccessor.search(currentCursor, searchPred);
-                } catch (IndexException e) {
-                    throw new HyracksDataException(e);
-                }
-                indexCursors.add(currentCursor);
-
-                if (currentCursor.hasNext()) {
-                    return true;
-                } else {
-                    currentCursor.close();
-                    cursorIndex++;
-                }
-            }
-        }
-
         return false;
     }
 
     @Override
     public void next() throws HyracksDataException {
-        IIndexAccessor currentAccessor;
         IIndexCursor currentCursor = indexCursors.get(cursorIndex);
-
         if (currentCursor.hasNext()) {
             currentCursor.next();
         } else {
             currentCursor.close();
             cursorIndex++;
             while (cursorIndex < indexAccessors.size()) {
-                currentAccessor = indexAccessors.get(cursorIndex);
+                IIndexAccessor currentAccessor = indexAccessors.get(cursorIndex);
                 currentCursor = currentAccessor.createSearchCursor();
                 try {
                     currentAccessor.search(currentCursor, searchPred);
@@ -133,7 +116,6 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
                     throw new HyracksDataException(e);
                 }
                 indexCursors.add(currentCursor);
-
                 if (currentCursor.hasNext()) {
                     currentCursor.next();
                     break;
@@ -166,9 +148,8 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     public ITupleReference getTuple() {
         if (cursorIndex < indexCursors.size()) {
             return indexCursors.get(cursorIndex).getTuple();
-        } else {
-            return null;
         }
+        return null;
     }
 
 }
