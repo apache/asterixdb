@@ -25,6 +25,8 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import edu.uci.ics.hyracks.storage.am.common.api.ICloseableResource;
+import edu.uci.ics.hyracks.storage.am.common.api.ICloseableResourceManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStats;
@@ -37,12 +39,14 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
     private final IHyracksTaskContext ctx;
     private final IIndexLifecycleManager lcManager;
     private final TreeIndexDataflowHelper treeIndexHelper;
+    private final ICloseableResourceManager closeableResourceManager;
     private TreeIndexStatsGatherer statsGatherer;
 
     public TreeIndexStatsOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
         this.opDesc = opDesc;
         this.ctx = ctx;
+        this.closeableResourceManager = opDesc.getCloseableResourceManagerProvider().getCloseableResourceManager();
         this.lcManager = opDesc.getLifecycleManagerProvider().getLifecycleManager(ctx);
         this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
                 .createIndexDataflowHelper(opDesc, ctx, partition);
@@ -51,7 +55,13 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
 
     @Override
     public void deinitialize() throws HyracksDataException {
-        lcManager.close(treeIndexHelper);
+        closeableResourceManager.addCloseableResource(ctx.getJobletContext().getJobId().getId(),
+                new ICloseableResource() {
+                    @Override
+                    public void close() throws HyracksDataException {
+                        lcManager.close(treeIndexHelper);
+                    }
+                });
     }
 
     @Override

@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.common.dataflow;
 import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.ICloseableResourceManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
@@ -28,6 +29,8 @@ public interface IIndexOperatorDescriptor extends IActivity {
     public IStorageManagerInterface getStorageManager();
 
     public IIndexLifecycleManagerProvider getLifecycleManagerProvider();
+
+    public ICloseableResourceManagerProvider getCloseableResourceManagerProvider();
 
     public RecordDescriptor getRecordDescriptor();
 
