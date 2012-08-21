@@ -23,6 +23,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.common.api.ICloseableResource;
+import edu.uci.ics.hyracks.storage.am.common.api.ICloseableResourceManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
@@ -33,6 +35,7 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
     private final AbstractInvertedIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
     private final IIndexLifecycleManager lcManager;
+    private final ICloseableResourceManager closeableResourceManager;
     private final InvertedIndexDataflowHelper invIndexDataflowHelper;
     private OnDiskInvertedIndex invIndex;
     private IIndexBulkLoader bulkLoader;
@@ -47,6 +50,7 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.lcManager = opDesc.getLifecycleManagerProvider().getLifecycleManager(ctx);
+        this.closeableResourceManager = opDesc.getCloseableResourceManagerProvider().getCloseableResourceManager();
         this.invIndexDataflowHelper = new InvertedIndexDataflowHelper(opDesc, ctx, partition);
         this.recordDescProvider = recordDescProvider;
         tuple.setFieldPermutation(fieldPermutation);
@@ -85,9 +89,15 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
         try {
             bulkLoader.end();
         } catch (IndexException e) {
-        	throw new HyracksDataException(e);
+            throw new HyracksDataException(e);
         } finally {
-            lcManager.close(invIndexDataflowHelper);
+            closeableResourceManager.addCloseableResource(ctx.getJobletContext().getJobId().getId(),
+                    new ICloseableResource() {
+                        @Override
+                        public void close() throws HyracksDataException {
+                            lcManager.close(invIndexDataflowHelper);
+                        }
+                    });
         }
     }
 
