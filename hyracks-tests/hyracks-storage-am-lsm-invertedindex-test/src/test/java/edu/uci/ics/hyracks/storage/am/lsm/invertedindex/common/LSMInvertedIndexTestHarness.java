@@ -50,7 +50,7 @@ public class LSMInvertedIndexTestHarness {
 
     private static final long RANDOM_SEED = 50;
     private static final int DEFAULT_DISK_PAGE_SIZE = 256;
-    private static final int DEFAULT_DISK_NUM_PAGES = 1000;
+    private static final int DEFAULT_DISK_NUM_PAGES = 10000;
     private static final int DEFAULT_DISK_MAX_OPEN_FILES = 200;
     private static final int DEFAULT_MEM_PAGE_SIZE = 256;
     private static final int DEFAULT_MEM_NUM_PAGES = 200;
