@@ -30,6 +30,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
+import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
@@ -43,6 +44,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -64,6 +66,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexFi
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -327,11 +330,27 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
                     NoOpOperationCallback.INSTANCE);
             indexAccessors.add(accessor);
         }
-        LSMInvertedIndexCursorInitialState initState = new LSMInvertedIndexCursorInitialState(indexAccessors, ictx,
-                includeMemComponent, searcherRefCount, lsmHarness);
+        ICursorInitialState initState = createCursorInitialState(pred, ictx, includeMemComponent, searcherRefCount, indexAccessors);
         cursor.open(initState, pred);
     }
 
+    private ICursorInitialState createCursorInitialState(ISearchPredicate pred, IIndexOpContext ictx,
+            boolean includeMemComponent, AtomicInteger searcherRefCount, ArrayList<IIndexAccessor> indexAccessors) {
+        // TODO: This check is not pretty, but it does the job. Come up with something more OO in the future.
+        ICursorInitialState initState = null;
+        // Distinguish between regular searches and range searches (mostly used in merges).
+        if (pred instanceof InvertedIndexSearchPredicate) {
+            initState = new LSMInvertedIndexCursorInitialState(indexAccessors, ictx, includeMemComponent,
+                    searcherRefCount, lsmHarness);
+        } else {
+            InMemoryInvertedIndex memInvIndex = (InMemoryInvertedIndex) memComponent.getInvIndex();
+            MultiComparator cmp = MultiComparator.create(memInvIndex.getBTree().getComparatorFactories());
+            initState = new LSMInvertedIndexRangeSearchCursorInitialState(cmp, searcherRefCount, lsmHarness,
+                    indexAccessors, pred);
+        }
+        return initState;
+    }
+    
     @Override
     // TODO: Deal with deletions properly.
     public Object merge(List<Object> mergedComponents, ILSMIOOperation operation) throws HyracksDataException,
@@ -446,6 +465,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         return new LSMInvertedIndexComponent(diskInvertedIndex, diskDeletedKeysBTree);
     }
 
+    @Override
     public void addFlushedComponent(Object index) {
         diskComponents.addFirst(index);
     }

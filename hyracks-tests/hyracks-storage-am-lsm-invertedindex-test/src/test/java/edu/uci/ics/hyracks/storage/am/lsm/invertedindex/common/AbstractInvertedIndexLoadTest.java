@@ -53,10 +53,10 @@ public abstract class AbstractInvertedIndexLoadTest extends AbstractInvertedInde
             // Validate index and compare against expected index.
             invIndex.validate();
             if (invIndexType == InvertedIndexType.INMEMORY || invIndexType == InvertedIndexType.ONDISK) {
-                // These two different comparison methods exercise different features of the inverted-indexes.
-                InvertedIndexTestUtils.compareActualAndExpectedIndexes(testCtx);
-                InvertedIndexTestUtils.compareActualAndExpectedIndexesRangeSearch(testCtx);
+                // This comparison method exercises different features of these types of inverted-indexes.
+                InvertedIndexTestUtils.compareActualAndExpectedIndexes(testCtx);                
             }
+            InvertedIndexTestUtils.compareActualAndExpectedIndexesRangeSearch(testCtx);
         }
 
         invIndex.deactivate();

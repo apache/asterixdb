@@ -15,11 +15,13 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
+import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
@@ -28,8 +30,9 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
     protected PriorityQueueElement outputElement;
-    protected ITreeIndexCursor[] rangeCursors;
+    protected IIndexCursor[] rangeCursors;
     protected PriorityQueue<PriorityQueueElement> outputPriorityQueue;
+    protected PriorityQueueComparator pqCmp;
     protected MultiComparator cmp;
     protected boolean needPush;
     protected boolean includeMemComponent;
@@ -41,7 +44,16 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
         needPush = false;
     }
 
-    public ITreeIndexCursor getCursor(int cursorIndex) {
+    public void initPriorityQueue() throws HyracksDataException {
+        int pqInitSize = (rangeCursors.length > 0) ? rangeCursors.length : 1;
+        outputPriorityQueue = new PriorityQueue<PriorityQueueElement>(pqInitSize, pqCmp);
+        for (int i = 0; i < rangeCursors.length; i++) {
+            pushIntoPriorityQueue(new PriorityQueueElement(i));
+        }
+        checkPriorityQueue();
+    }
+
+    public IIndexCursor getCursor(int cursorIndex) {
         return rangeCursors[cursorIndex];
     }
 
@@ -80,8 +92,6 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
             throw new HyracksDataException("The outputPriorityQueue is empty");
         }
     }
-
-    protected abstract void setPriorityQueueComparator();
 
     @Override
     public ICachedPage getPage() {
@@ -128,8 +138,6 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
         rangeCursors[cursorIndex].close();
         return false;
     }
-
-    protected abstract int compare(MultiComparator cmp, ITupleReference tupleA, ITupleReference tupleB);
 
     protected void checkPriorityQueue() throws HyracksDataException {
         while (!outputPriorityQueue.isEmpty() || needPush == true) {
@@ -203,5 +211,41 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
         public void reset(ITupleReference tuple) {
             this.tuple = tuple;
         }
+    }
+
+    public class PriorityQueueComparator implements Comparator<PriorityQueueElement> {
+
+        protected final MultiComparator cmp;
+
+        public PriorityQueueComparator(MultiComparator cmp) {
+            this.cmp = cmp;
+        }
+
+        @Override
+        public int compare(PriorityQueueElement elementA, PriorityQueueElement elementB) {
+            int result = cmp.compare(elementA.getTuple(), elementB.getTuple());
+            if (result != 0) {
+                return result;
+            }
+            if (elementA.getCursorIndex() > elementB.getCursorIndex()) {
+                return 1;
+            } else {
+                return -1;
+            }
+        }
+
+        public MultiComparator getMultiComparator() {
+            return cmp;
+        }
+    }
+
+    protected void setPriorityQueueComparator() {
+        if (pqCmp == null || cmp != pqCmp.getMultiComparator()) {
+            pqCmp = new PriorityQueueComparator(cmp);
+        }
+    }
+
+    protected int compare(MultiComparator cmp, ITupleReference tupleA, ITupleReference tupleB) {
+        return cmp.compare(tupleA, tupleB);
     }
 }

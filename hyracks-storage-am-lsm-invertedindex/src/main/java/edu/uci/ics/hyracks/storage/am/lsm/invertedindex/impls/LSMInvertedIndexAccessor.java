@@ -101,9 +101,7 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     @Override
     public void rangeSearch(IIndexCursor cursor, ISearchPredicate searchPred) throws IndexException,
             HyracksDataException {
-        // TODO: Figure out what the initial state is here.
-        //LSMInvertedIndexRangeSearchCursor rangeSearchCursor = (LSMInvertedIndexRangeSearchCursor) cursor;
-        //rangeSearchCursor.open(initialState, searchPred);
+        search(cursor, searchPred);
     }
     
     @Override

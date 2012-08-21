@@ -15,7 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
-import java.util.Comparator;
 import java.util.PriorityQueue;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -39,7 +38,6 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMTreeSearchCurso
     private BTreeRangeSearchCursor memBTreeCursor;
     private RangePredicate btreeRangePredicate;
     private ITreeIndexAccessor memBTreeAccessor;
-    protected PriorityQueueHilbertComparator pqCmp;
     private boolean foundNext;
     private ITupleReference frameTuple;
     private int[] comparatorFields;
@@ -185,13 +183,12 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMTreeSearchCurso
         }
     }
 
-    public class PriorityQueueHilbertComparator implements Comparator<PriorityQueueElement> {
+    public class PriorityQueueHilbertComparator extends PriorityQueueComparator {
 
-        private final MultiComparator cmp;
         private final int[] comparatorFields;
 
         public PriorityQueueHilbertComparator(MultiComparator cmp, int[] comparatorFields) {
-            this.cmp = cmp;
+            super(cmp);
             this.comparatorFields = comparatorFields;
         }
 
@@ -206,10 +203,6 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMTreeSearchCurso
             } else {
                 return -1;
             }
-        }
-
-        public MultiComparator getMultiComparator() {
-            return cmp;
         }
     }
 

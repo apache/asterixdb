@@ -736,7 +736,7 @@ public class RTree extends AbstractTreeIndex {
     }
 
     private void search(ITreeIndexCursor cursor, ISearchPredicate searchPred, RTreeOpContext ctx)
-            throws HyracksDataException, TreeIndexException {
+            throws HyracksDataException, IndexException {
         ctx.reset();
         ctx.cursor = cursor;
 
