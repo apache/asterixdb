@@ -5,30 +5,26 @@
  *  Date            : 13th Aug 2012
  */
 
-// Negative test - prefix search, BTree index should NOT be used in the query plan.
-
 drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
 
-write output to nc1:"rttest/btree-index_btree-primary-06.adm";
+write output to nc1:"rttest/btree-index_btree-primary-56.adm";
 
 create type TestType as open {
+    id : int32,
     fname : string,
     lname : string
 }
 
-// create internal dataset with primary index defined on fname,lname fields
-create dataset testdst(TestType) partitioned by key fname,lname;
+create dataset testdst(TestType) partitioned by key id;
 
-// load valid data with fname and lname entries
+create index sec_Idx on testdst(fname);
 
 load dataset testdst
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/fn-ln.adm"),("format"="delimited-text"),("delimiter"="|"));
-
-// Query the data that was loaded above. 
+(("path"="nc1://data/id-fn-ln.adm"),("format"="delimited-text"),("delimiter"="|"));
 
 for $emp in dataset('testdst') 
-where $emp.fname = "Julio"
+where $emp.fname > "Neil" and $emp.fname < "Roger" 
 return $emp

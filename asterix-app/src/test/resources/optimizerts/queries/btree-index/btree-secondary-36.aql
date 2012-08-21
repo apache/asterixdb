@@ -1,7 +1,7 @@
 /*
- *  Description     : BTree Index verification (usage) test
+ *  Description     : BTree Index verification test
  *                  : This test is intended to verify that the secondary BTree index is used 
- *                  : in the optimized query plan for the predicates that satisfy BTree index look up rule.
+ *                  : in the optimized query plan.
  *  Expected Result : Success
  *  Date            : 13th Aug 2012
  */
@@ -20,19 +20,13 @@ create type TestType as open {
     lname : string
 }
 
-// create internal dataset
 create dataset testdst(TestType) partitioned by key id;
 
-// create secondary index
 create index sec_Idx on testdst(fname,lname);
-
-// load valid data with fname and lname entries
 
 load dataset testdst
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/id-fn-ln.adm"),("format"="delimited-text"),("delimiter"="|"));
-
-// Query the data that was loaded above. 
 
 for $emp in dataset('testdst') 
 where $emp.fname = "Julio"

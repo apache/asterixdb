@@ -1,7 +1,6 @@
 /*
- *  Description     : BTree Index verification (usage) test
- *                  : This test is intended to verify that the primary BTree index is used 
- *                  : in the optimized query plan for the predicates that satisfy BTree index look up rule.
+ *  Description     : This test is intended to verify that the primary BTree index is NOT used 
+ *                  : in the optimized query plan.
  *  Expected Result : Success
  *  Date            : 13th Aug 2012
  */

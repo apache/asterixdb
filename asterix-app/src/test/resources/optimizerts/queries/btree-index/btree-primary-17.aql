@@ -1,7 +1,7 @@
 /*
- *  Description     : BTree Index verification (usage) test
+ *  Description     : BTree Index verification test
  *                  : This test is intended to verify that the primary BTree index is NOT used 
- *                  : in the optimized query plan for predicates like ($v1 <= v2 and $v3 > v4).
+ *                  : in the optimized query plan.
  *  Expected Result : Success
  *  Date            : 13th Aug 2012
  */
@@ -17,16 +17,11 @@ create type TestType as open {
     lname : string
 }
 
-// create internal dataset with primary index defined on fname,lname fields
 create dataset testdst(TestType) partitioned by key fname,lname;
-
-// load valid data with fname and lname entries
 
 load dataset testdst
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/fn-ln.adm"),("format"="delimited-text"),("delimiter"="|"));
-
-// Query the data that was loaded above. 
 
 for $emp in dataset('testdst') 
 where $emp.fname <= "Craig" and $emp.lname > "Kevin"
