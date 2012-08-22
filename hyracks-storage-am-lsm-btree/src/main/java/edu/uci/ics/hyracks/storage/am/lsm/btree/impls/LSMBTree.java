@@ -451,7 +451,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         }
 
         @Override
-        public void end() throws HyracksDataException {
+        public void end() throws HyracksDataException, IndexException {
             bulkLoader.end();
             lsmHarness.addBulkLoadedComponent(diskBTree);
         }

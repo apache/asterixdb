@@ -69,12 +69,13 @@ public class AccessMethodTestsConfig {
     public static final int LSM_BTREE_HYRACKS_FRAME_SIZE = 128;
 
     // Mem configuration for Inverted Index.
-    public static final int INVINDEX_PAGE_SIZE = 32768;
-    public static final int INVINDEX_NUM_PAGES = 100;
-    public static final int INVINDEX_MAX_OPEN_FILES = 10;
-    public static final int INVINDEX_HYRACKS_FRAME_SIZE = 32768;
+    public static final int LSM_INVINDEX_PAGE_SIZE = 32768;
+    public static final int LSM_INVINDEX_NUM_PAGES = 100;
+    public static final int LSM_INVINDEX_MAX_OPEN_FILES = 10;
+    public static final int LSM_INVINDEX_HYRACKS_FRAME_SIZE = 32768;
     
-    public static final int INVINDEX_NUM_BULKLOAD_ROUNDS = 5;
+    public static final int LSM_INVINDEX_NUM_BULKLOAD_ROUNDS = 5;
+    public static final int LSM_INVINDEX_MAX_TREES_TO_MERGE = 5;
     
 }
 

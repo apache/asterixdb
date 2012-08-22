@@ -65,6 +65,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexFileManager.LSMInvertedIndexFileNameComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
@@ -75,11 +76,11 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
 	public class LSMInvertedIndexComponent {
         private final IInvertedIndex invIndex;
-        private final BTree deleteKeysBTree;
+        private final BTree deletedKeysBTree;
 
-        LSMInvertedIndexComponent(IInvertedIndex invIndex, BTree deleteKeysBTree) {
+        LSMInvertedIndexComponent(IInvertedIndex invIndex, BTree deletedKeysBTree) {
             this.invIndex = invIndex;
-            this.deleteKeysBTree = deleteKeysBTree;
+            this.deletedKeysBTree = deletedKeysBTree;
         }
 
         public IInvertedIndex getInvIndex() {
@@ -87,7 +88,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         }
 
         public BTree getDeletedKeysBTree() {
-            return deleteKeysBTree;
+            return deletedKeysBTree;
         }
     }
 	
@@ -288,7 +289,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
         // TODO: Ignore opcallbacks for now.
-        return new LSMInvertedIndexAccessor(lsmHarness, fileManager, createOpContext());
+        return new LSMInvertedIndexAccessor(this, lsmHarness, fileManager, createOpContext());
     }
     
     private LSMInvertedIndexOpContext createOpContext() {
@@ -296,9 +297,39 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     }
     
     @Override
-    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException {
-        // TODO Auto-generated method stub
-        return null;
+    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
+            IndexException {
+        LSMInvertedIndexOpContext ctx = createOpContext();
+        ctx.reset(IndexOp.SEARCH);
+        IIndexCursor cursor = new LSMInvertedIndexRangeSearchCursor();
+        RangePredicate mergePred = new RangePredicate(null, null, true, true, null, null);
+
+        // Scan diskInvertedIndexes ignoring the memoryInvertedIndex.
+        List<Object> mergingComponents = lsmHarness.search(cursor, mergePred, ctx, false);
+        if (mergingComponents.size() <= 1) {
+            cursor.close();
+            return null;
+        }
+
+        LSMInvertedIndexComponent firstComponent = (LSMInvertedIndexComponent) mergingComponents.get(0);
+        OnDiskInvertedIndex firstInvIndex = (OnDiskInvertedIndex) firstComponent.getInvIndex();
+        String firstFileName = firstInvIndex.getBTree().getFileReference().getFile().getName();
+
+        LSMInvertedIndexComponent lastComponent = (LSMInvertedIndexComponent) mergingComponents.get(mergingComponents
+                .size() - 1);
+        OnDiskInvertedIndex lastInvIndex = (OnDiskInvertedIndex) lastComponent.getInvIndex();
+        String lastFileName = lastInvIndex.getBTree().getFileReference().getFile().getName();
+
+        LSMInvertedIndexFileNameComponent fileNameComponent = (LSMInvertedIndexFileNameComponent) fileManager
+                .getRelMergeFileName(firstFileName, lastFileName);
+        FileReference dictBTreeFileRef = fileManager.createMergeFile(fileNameComponent.getDictBTreeFileName());
+        FileReference deletedKeysBTreeFileRef = fileManager.createMergeFile(fileNameComponent
+                .getDeletedKeysBTreeFileName());
+
+        LSMInvertedIndexMergeOperation mergeOp = new LSMInvertedIndexMergeOperation(this, mergingComponents, cursor,
+                dictBTreeFileRef, deletedKeysBTreeFileRef, callback);
+
+        return mergeOp;
     }
     
     @Override
@@ -357,24 +388,10 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
             IndexException {
         LSMInvertedIndexMergeOperation mergeOp = (LSMInvertedIndexMergeOperation) operation;
 
-        LSMInvertedIndexOpContext ctx = createOpContext();
-        ctx.reset(IndexOp.SEARCH);
-        IIndexCursor cursor = new LSMInvertedIndexRangeSearchCursor();
-        RangePredicate mergePred = new RangePredicate(null, null, true, true, null, null);
-
-        // Scan diskInvertedIndexes ignoring the memoryInvertedIndex.
-        List<Object> mergingComponents = lsmHarness.search(cursor, mergePred, ctx, false);
-        mergedComponents.addAll(mergingComponents);
-
-        // Nothing to merge.
-        if (mergedComponents.size() <= 1) {
-            cursor.close();
-            return null;
-        }
-
         // Create an inverted index instance.
         IInvertedIndex mergedDiskInvertedIndex = createDiskInvIndex(diskInvIndexFactory,
                 mergeOp.getDictBTreeMergeTarget(), true);
+        IIndexCursor cursor = mergeOp.getCursor();
         IIndexBulkLoader invIndexBulkLoader = mergedDiskInvertedIndex.createBulkLoader(1.0f, false);
         try {
             while (cursor.hasNext()) {
@@ -388,11 +405,15 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         invIndexBulkLoader.end();
 
         // Create an empty deleted keys BTree (do nothing with the returned index).
-        createDiskTree(deletedKeysBTreeFactory, mergeOp.getDeletedKeysBTreeMergeTarget(), true);
+        BTree deletedKeysBTree = (BTree) createDiskTree(deletedKeysBTreeFactory,
+                mergeOp.getDeletedKeysBTreeMergeTarget(), true);
 
-        return mergedDiskInvertedIndex;
+        // Add the merged components for cleanup.
+        mergedComponents.addAll(mergeOp.getMergingComponents());
+        
+        return new LSMInvertedIndexComponent(mergedDiskInvertedIndex, deletedKeysBTree);
     }
-
+    
     @Override
     public void addMergedComponent(Object newComponent, List<Object> mergedComponents) {
         diskComponents.removeAll(mergedComponents);

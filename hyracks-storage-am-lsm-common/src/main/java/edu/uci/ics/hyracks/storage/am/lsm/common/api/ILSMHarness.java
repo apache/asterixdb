@@ -39,7 +39,7 @@ public interface ILSMHarness {
 
     public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
 
-    public void addBulkLoadedComponent(Object index) throws HyracksDataException;
+    public void addBulkLoadedComponent(Object index) throws HyracksDataException, IndexException;
     
     public ILSMIndex getIndex();
 

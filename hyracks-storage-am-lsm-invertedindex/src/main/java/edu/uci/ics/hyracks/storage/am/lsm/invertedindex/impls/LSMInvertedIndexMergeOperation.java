@@ -21,7 +21,7 @@ import java.util.List;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -34,12 +34,12 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedInd
 public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
     private final ILSMIndex index;
     private final List<Object> mergingComponents;
-    private final ITreeIndexCursor cursor;
+    private final IIndexCursor cursor;
     private final FileReference dictBTreeMergeTarget;
     private final FileReference deletedKeysBTreeMergeTarget;
     private final ILSMIOOperationCallback callback;
 
-    public LSMInvertedIndexMergeOperation(ILSMIndex index, List<Object> mergingComponents, ITreeIndexCursor cursor,
+    public LSMInvertedIndexMergeOperation(ILSMIndex index, List<Object> mergingComponents, IIndexCursor cursor,
             FileReference dictBTreeMergeTarget, FileReference deletedKeysBTreeMergeTarget, ILSMIOOperationCallback callback) {
         this.index = index;
         this.mergingComponents = mergingComponents;
@@ -89,7 +89,7 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
         return deletedKeysBTreeMergeTarget;
     }
 
-    public ITreeIndexCursor getCursor() {
+    public IIndexCursor getCursor() {
         return cursor;
     }
 

@@ -28,7 +28,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeInProgressException;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexFileManager.LSMInvertedIndexFileNameComponent;
@@ -38,11 +37,13 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     protected final LSMHarness lsmHarness;    
     protected final ILSMIndexFileManager fileManager;
     protected final IIndexOpContext ctx;
+    protected final LSMInvertedIndex invIndex;
     
-    public LSMInvertedIndexAccessor(LSMHarness lsmHarness, ILSMIndexFileManager fileManager, IIndexOpContext ctx) {
+    public LSMInvertedIndexAccessor(LSMInvertedIndex invIndex, LSMHarness lsmHarness, ILSMIndexFileManager fileManager, IIndexOpContext ctx) {
         this.lsmHarness = lsmHarness;
         this.fileManager = fileManager;
         this.ctx = ctx;
+        this.invIndex = invIndex;
     }
 
     public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
@@ -78,9 +79,9 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     
     @Override
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
-            LSMMergeInProgressException {
-        // TODO Auto-generated method stub
-        return null;
+            IndexException {
+        ILSMIOOperation mergeOp = invIndex.createMergeOperation(callback);
+        return mergeOp;
     }
 
     @Override

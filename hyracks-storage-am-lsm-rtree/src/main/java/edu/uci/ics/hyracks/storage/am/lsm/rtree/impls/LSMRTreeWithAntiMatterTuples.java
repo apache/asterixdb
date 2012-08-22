@@ -361,7 +361,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         }
 
         @Override
-        public void end() throws HyracksDataException {
+        public void end() throws HyracksDataException, IndexException {
             bulkLoader.end();
             lsmHarness.addBulkLoadedComponent(diskRTree);
         }

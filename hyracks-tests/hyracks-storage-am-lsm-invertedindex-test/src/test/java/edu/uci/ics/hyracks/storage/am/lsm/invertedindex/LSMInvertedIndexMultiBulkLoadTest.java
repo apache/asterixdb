@@ -22,6 +22,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestCo
 public class LSMInvertedIndexMultiBulkLoadTest extends AbstractInvertedIndexLoadTest {
 
     public LSMInvertedIndexMultiBulkLoadTest() {
-        super(InvertedIndexType.LSM, true, AccessMethodTestsConfig.INVINDEX_NUM_BULKLOAD_ROUNDS);
+        super(InvertedIndexType.LSM, true, AccessMethodTestsConfig.LSM_INVINDEX_NUM_BULKLOAD_ROUNDS);
     }
 }
