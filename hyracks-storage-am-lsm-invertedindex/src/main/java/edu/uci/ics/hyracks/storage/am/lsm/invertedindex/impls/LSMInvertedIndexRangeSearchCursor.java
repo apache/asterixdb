@@ -15,16 +15,28 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
+import java.util.ArrayList;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 
 public class LSMInvertedIndexRangeSearchCursor extends LSMTreeSearchCursor {
 
+    // Assuming the cursor for all deleted-keys indexes are of the same type.
+    protected IIndexCursor deletedKeysBTreeCursor;
+    protected ArrayList<IIndexAccessor> deletedKeysBTreeAccessors;
+    protected PermutingTupleReference keysOnlyTuple;
+    protected RangePredicate keySearchPred;
+    
     @Override
     public void open(ICursorInitialState initState, ISearchPredicate searchPred) throws IndexException,
             HyracksDataException {
@@ -38,10 +50,45 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMTreeSearchCursor {
             invIndexAccessor.rangeSearch(rangeCursors[i], lsmInitState.getSearchPredicate());
 
         }
+        
+        // For searching the deleted-keys BTrees.
+        deletedKeysBTreeAccessors = lsmInitState.getDeletedKeysBTreeAccessors();
+        deletedKeysBTreeCursor = deletedKeysBTreeAccessors.get(0).createSearchCursor();        
+        MultiComparator keyCmp = lsmInitState.getKeyComparator();
+        // Project away token fields.
+        int[] keyFieldPermutation = new int[keyCmp.getKeyFieldCount()];
+        int numTokenFields = cmp.getKeyFieldCount() - keyCmp.getKeyFieldCount();
+        for (int i = 0; i < keyCmp.getKeyFieldCount(); i++) {
+            keyFieldPermutation[i] = numTokenFields + i;
+        }
+        keysOnlyTuple = new PermutingTupleReference(keyFieldPermutation);
+        keySearchPred = new RangePredicate(keysOnlyTuple, keysOnlyTuple, true, true, keyCmp, keyCmp);
+        
         searcherRefCount = lsmInitState.getSearcherRefCount();
         lsmHarness = lsmInitState.getLSMHarness();
+        includeMemComponent = lsmInitState.getIncludeMemComponent();
         setPriorityQueueComparator();
         initPriorityQueue();
+    }
+    
+    // Check deleted-keys BTrees whether they contain the key in the checkElement's tuple.
+    protected boolean isDeleted(PriorityQueueElement checkElement) throws HyracksDataException {
+        int end = checkElement.getCursorIndex();
+        for (int i = 0; i <= end; i++) {
+            deletedKeysBTreeCursor.reset();
+            keysOnlyTuple.reset(checkElement.getTuple());
+            try {
+                deletedKeysBTreeAccessors.get(i).search(deletedKeysBTreeCursor, keySearchPred);
+                if (deletedKeysBTreeCursor.hasNext()) {
+                    return true;
+                }
+            } catch (IndexException e) {
+                throw new HyracksDataException(e);
+            } finally {
+                deletedKeysBTreeCursor.close();
+            }
+        }
+        return false;
     }
     
     protected void checkPriorityQueue() throws HyracksDataException {
@@ -50,8 +97,16 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMTreeSearchCursor {
                 PriorityQueueElement checkElement = outputPriorityQueue.peek();
                 // If there is no previous tuple or the previous tuple can be ignored
                 if (outputElement == null) {
-                    // TODO: This is the place where we need to check for deleted keys. Have a look at the super class to find out more.
-                    break;
+                    // Test the tuple is a delete tuple or not
+                    if (isDeleted(checkElement)) {
+                        // If the key has been deleted then pop it and set needPush to true.
+                        // We cannot push immediately because the tuple may be
+                        // modified if hasNext() is called
+                        outputElement = outputPriorityQueue.poll();
+                        needPush = true;
+                    } else {
+                        break;
+                    }
                 } else {
                     // Compare the previous tuple and the head tuple in the PQ
                     if (compare(cmp, outputElement.getTuple(), checkElement.getTuple()) == 0) {

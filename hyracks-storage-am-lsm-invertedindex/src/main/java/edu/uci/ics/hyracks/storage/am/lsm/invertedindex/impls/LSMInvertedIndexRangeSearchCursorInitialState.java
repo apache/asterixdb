@@ -28,20 +28,29 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMInvertedIndexRangeSearchCursorInitialState implements ICursorInitialState {
 
-    private final MultiComparator cmp;
+    private final MultiComparator tokensAndKeyCmp;
+    private final MultiComparator keyCmp;
     private final AtomicInteger searcherRefCount;
     private final LSMHarness lsmHarness;
 
     private final ArrayList<IIndexAccessor> indexAccessors;
+    private final ArrayList<IIndexAccessor> deletedKeysBTreeAccessors;
     private final ISearchPredicate predicate;
+    
+    private final boolean includeMemComponent;
 
-    public LSMInvertedIndexRangeSearchCursorInitialState(MultiComparator cmp, AtomicInteger searcherRefCount,
-            LSMHarness lsmHarness, ArrayList<IIndexAccessor> indexAccessors, ISearchPredicate predicate) {
-        this.cmp = cmp;
+    public LSMInvertedIndexRangeSearchCursorInitialState(MultiComparator tokensAndKeyCmp, MultiComparator keyCmp,
+            boolean includeMemComponent, AtomicInteger searcherRefCount, LSMHarness lsmHarness,
+            ArrayList<IIndexAccessor> indexAccessors, ArrayList<IIndexAccessor> deletedKeysBTreeAccessors,
+            ISearchPredicate predicate) {
+        this.tokensAndKeyCmp = tokensAndKeyCmp;
+        this.keyCmp = keyCmp;
         this.searcherRefCount = searcherRefCount;
         this.lsmHarness = lsmHarness;
         this.indexAccessors = indexAccessors;
+        this.deletedKeysBTreeAccessors = deletedKeysBTreeAccessors;
         this.predicate = predicate;
+        this.includeMemComponent = includeMemComponent;
     }
 
     public int getNumComponents() {
@@ -79,17 +88,29 @@ public class LSMInvertedIndexRangeSearchCursorInitialState implements ICursorIni
         return indexAccessors;
     }
 
+    public ArrayList<IIndexAccessor> getDeletedKeysBTreeAccessors() {
+        return deletedKeysBTreeAccessors;
+    }
+    
     public ISearchPredicate getSearchPredicate() {
         return predicate;
     }
 
+    public MultiComparator getKeyComparator() {
+        return keyCmp;
+    }
+    
     @Override
     public MultiComparator getOriginalKeyComparator() {
-        return cmp;
+        return tokensAndKeyCmp;
     }
 
     @Override
     public void setOriginialKeyComparator(MultiComparator originalCmp) {
         // Do nothing.
+    }
+    
+    public boolean getIncludeMemComponent() {
+        return includeMemComponent;
     }
 }

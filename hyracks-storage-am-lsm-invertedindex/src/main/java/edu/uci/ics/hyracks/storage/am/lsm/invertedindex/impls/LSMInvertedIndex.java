@@ -135,7 +135,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         InMemoryInvertedIndex memInvIndex = InvertedIndexUtils.createInMemoryBTreeInvertedindex(memBufferCache,
                 memFreePageManager, invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
                 tokenizerFactory);
-        BTree deleteKeysBTree = BTreeUtils.createBTree(memBufferCache,
+        BTree deleteKeysBTree = BTreeUtils.createBTree(memBufferCache, memFreePageManager,
                 ((InMemoryBufferCache) memBufferCache).getFileMapProvider(), invListTypeTraits, invListCmpFactories,
                 BTreeLeafFrameType.REGULAR_NSM, memDeleteKeysBTreeFile);
         memComponent = new LSMInvertedIndexComponent(memInvIndex, deleteKeysBTree);
@@ -356,7 +356,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
                 // First remove the possibly deleted key from the deleted-keys BTree.
                 ctx.keysOnlyTuple.reset(tuple);
                 try {
-                    ctx.deletedKeysBTreeAccessor.delete(tuple);
+                    ctx.deletedKeysBTreeAccessor.delete(ctx.keysOnlyTuple);
                 } catch (BTreeNonExistentKeyException e) {
                     // The key did not exist in the deleted-keys BTree.
                 }
@@ -370,7 +370,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
                 // Insert key into the deleted-keys BTree.
                 ctx.keysOnlyTuple.reset(tuple);
                 try {
-                    ctx.deletedKeysBTreeAccessor.insert(tuple);
+                    ctx.deletedKeysBTreeAccessor.insert(ctx.keysOnlyTuple);
                 } catch (BTreeDuplicateKeyException e) {
                     // Key has already been deleted.
                 }
@@ -394,23 +394,32 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
             boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, IndexException {
         int numComponents = (includeMemComponent) ? diskComponents.size() : diskComponents.size() + 1;
         ArrayList<IIndexAccessor> indexAccessors = new ArrayList<IIndexAccessor>(numComponents);
+        ArrayList<IIndexAccessor> deletedKeysBTreeAccessors = new ArrayList<IIndexAccessor>(numComponents);
         if (includeMemComponent) {
-            IIndexAccessor accessor = memComponent.getInvIndex().createAccessor(NoOpOperationCallback.INSTANCE,
+            IIndexAccessor invIndexAccessor = memComponent.getInvIndex().createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
-            indexAccessors.add(accessor);
+            indexAccessors.add(invIndexAccessor);
+            IIndexAccessor deletedKeysAccessor = memComponent.getDeletedKeysBTree().createAccessor(
+                    NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            deletedKeysBTreeAccessors.add(deletedKeysAccessor);
         }
         for (int i = 0; i < diskComponents.size(); i++) {
             LSMInvertedIndexComponent component = (LSMInvertedIndexComponent) diskComponents.get(i);
-            IIndexAccessor accessor = component.getInvIndex().createAccessor(NoOpOperationCallback.INSTANCE,
+            IIndexAccessor invIndexAccessor = component.getInvIndex().createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
-            indexAccessors.add(accessor);
+            indexAccessors.add(invIndexAccessor);
+            IIndexAccessor deletedKeysAccessor = component.getDeletedKeysBTree().createAccessor(
+                    NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            deletedKeysBTreeAccessors.add(deletedKeysAccessor);
         }
-        ICursorInitialState initState = createCursorInitialState(pred, ictx, includeMemComponent, searcherRefCount, indexAccessors);
+        ICursorInitialState initState = createCursorInitialState(pred, ictx, includeMemComponent, searcherRefCount,
+                indexAccessors, deletedKeysBTreeAccessors);
         cursor.open(initState, pred);
     }
 
     private ICursorInitialState createCursorInitialState(ISearchPredicate pred, IIndexOpContext ictx,
-            boolean includeMemComponent, AtomicInteger searcherRefCount, ArrayList<IIndexAccessor> indexAccessors) {
+            boolean includeMemComponent, AtomicInteger searcherRefCount, ArrayList<IIndexAccessor> indexAccessors,
+            ArrayList<IIndexAccessor> deletedKeysBTreeAccessors) {
         // TODO: This check is not pretty, but it does the job. Come up with something more OO in the future.
         ICursorInitialState initState = null;
         // Distinguish between regular searches and range searches (mostly used in merges).
@@ -419,9 +428,10 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
                     searcherRefCount, lsmHarness);
         } else {
             InMemoryInvertedIndex memInvIndex = (InMemoryInvertedIndex) memComponent.getInvIndex();
-            MultiComparator cmp = MultiComparator.create(memInvIndex.getBTree().getComparatorFactories());
-            initState = new LSMInvertedIndexRangeSearchCursorInitialState(cmp, searcherRefCount, lsmHarness,
-                    indexAccessors, pred);
+            MultiComparator tokensAndKeyCmp = MultiComparator.create(memInvIndex.getBTree().getComparatorFactories());
+            MultiComparator keyCmp = MultiComparator.create(invListCmpFactories);
+            initState = new LSMInvertedIndexRangeSearchCursorInitialState(tokensAndKeyCmp, keyCmp, includeMemComponent, searcherRefCount,
+                    lsmHarness, indexAccessors, deletedKeysBTreeAccessors, pred);
         }
         return initState;
     }
