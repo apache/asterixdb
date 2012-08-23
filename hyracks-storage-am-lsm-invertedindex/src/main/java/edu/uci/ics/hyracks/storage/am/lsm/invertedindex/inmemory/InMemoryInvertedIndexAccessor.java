@@ -60,7 +60,7 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
 
     @Override
     public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
-        opCtx.reset(IndexOp.INSERT);
+        opCtx.reset(IndexOp.DELETE);
         index.delete(tuple, btreeAccessor, opCtx);
     }
     

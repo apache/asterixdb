@@ -87,6 +87,8 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
         btreeSearchTuple.addTuple(tokenTuple);
         btreePred.setLowKey(tokenTuple, true);
         btreePred.setHighKey(tokenTuple, true);
+        btreeCursor.reset();
+        countingCursor.reset();
         btreeAccessor.search(btreeCursor, btreePred);
     }
 
@@ -144,7 +146,6 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
             } finally {
                 try {
                     countingCursor.close();
-                    countingCursor.reset();
                 } catch (HyracksDataException e) {
                     e.printStackTrace();
                 }

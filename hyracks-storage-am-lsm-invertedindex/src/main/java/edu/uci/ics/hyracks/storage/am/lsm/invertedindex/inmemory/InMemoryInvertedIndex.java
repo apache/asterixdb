@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
@@ -135,7 +136,11 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
         while (ctx.tupleIter.hasNext()) {
             ctx.tupleIter.next();
             ITupleReference deleteTuple = ctx.tupleIter.getTuple();
-            btreeAccessor.delete(deleteTuple);
+            try {
+                btreeAccessor.delete(deleteTuple);
+            } catch (BTreeNonExistentKeyException e) {
+                // Ignore this exception, since a document may have duplicate tokens.
+            }
         }
     }
 

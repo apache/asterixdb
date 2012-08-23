@@ -106,7 +106,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
         }
 
         tupleIndex = getLowKeyIndex();
-        stopTupleIndex = getHighKeyIndex();
+        stopTupleIndex = getHighKeyIndex();        
     }
 
     private void fetchNextLeafPage(int nextLeafPage) throws HyracksDataException {
@@ -165,7 +165,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
         if (count < 0) {
             count = 0;
 
-            while (stopTupleIndex >= 0) {
+            while (stopTupleIndex >= 0 || frame.getTupleCount() == 0) {
                 count += (stopTupleIndex - tupleIndex + 1);
 
                 int nextLeafPage = frame.getNextLeaf();
@@ -207,6 +207,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
         tupleIndex = 0;
         page = null;
         pred = null;
+        count = -1;
     }
 
     @Override

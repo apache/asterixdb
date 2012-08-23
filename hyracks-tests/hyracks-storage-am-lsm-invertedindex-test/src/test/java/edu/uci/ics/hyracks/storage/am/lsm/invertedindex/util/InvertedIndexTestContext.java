@@ -28,7 +28,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestContext;
@@ -52,18 +51,16 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
     protected IInvertedIndex invIndex;
     protected IBinaryComparatorFactory[] allCmpFactories;
     protected IBinaryTokenizerFactory tokenizerFactory;
-    protected InvertedIndexTokenizingTupleIterator indexInsertIter;
+    protected InvertedIndexTokenizingTupleIterator indexTupleIter;
     protected HashSet<Comparable> allTokens = new HashSet<Comparable>();
     protected List<ITupleReference> documentCorpus = new ArrayList<ITupleReference>();
-    // Set containing the keys of deleted documents.
-    protected HashSet<Integer> deletedKeys = new HashSet<Integer>();
     
     public InvertedIndexTestContext(ISerializerDeserializer[] fieldSerdes, IIndex index,
             IBinaryTokenizerFactory tokenizerFactory) {
         super(fieldSerdes, index);
         this.tokenizerFactory = tokenizerFactory;
         invIndex = (IInvertedIndex) index;
-        indexInsertIter = new InvertedIndexTokenizingTupleIterator(invIndex.getTokenTypeTraits().length,
+        indexTupleIter = new InvertedIndexTokenizingTupleIterator(invIndex.getTokenTypeTraits().length,
                 invIndex.getInvListTypeTraits().length, tokenizerFactory.createTokenizer());
     }
 
@@ -146,27 +143,25 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
     public void insertCheckTuples(ITupleReference tuple, Collection<CheckTuple> checkTuples)
             throws HyracksDataException {
         documentCorpus.add(TupleUtils.copyTuple(tuple));
-        indexInsertIter.reset(tuple);
-        while (indexInsertIter.hasNext()) {
-            indexInsertIter.next();
-            ITupleReference insertTuple = indexInsertIter.getTuple();
+        indexTupleIter.reset(tuple);
+        while (indexTupleIter.hasNext()) {
+            indexTupleIter.next();
+            ITupleReference insertTuple = indexTupleIter.getTuple();
             CheckTuple checkTuple = createCheckTuple(insertTuple);
             insertCheckTuple(checkTuple, getCheckTuples());
             allTokens.add(checkTuple.getField(0));
         }
-        // Remove key from the deleted-keys set.
-        int numTokenFields = invIndex.getTokenTypeTraits().length;
-        int key = IntegerSerializerDeserializer.getInt(tuple.getFieldData(numTokenFields),
-                tuple.getFieldStart(numTokenFields));
-        deletedKeys.remove(Integer.valueOf(key));
     }
     
-    public void deleteTuple(ITupleReference tuple) throws HyracksDataException {
-        // Add key to the deleted-keys set.
-        int numTokenFields = invIndex.getTokenTypeTraits().length;
-        int key = IntegerSerializerDeserializer.getInt(tuple.getFieldData(numTokenFields),
-                tuple.getFieldStart(numTokenFields));
-        deletedKeys.add(Integer.valueOf(key));
+    public void deleteCheckTuples(ITupleReference tuple, Collection<CheckTuple> checkTuples)
+            throws HyracksDataException {
+        indexTupleIter.reset(tuple);
+        while (indexTupleIter.hasNext()) {
+            indexTupleIter.next();
+            ITupleReference insertTuple = indexTupleIter.getTuple();
+            CheckTuple checkTuple = createCheckTuple(insertTuple);
+            deleteCheckTuple(checkTuple, getCheckTuples());
+        }
     }
     
     public HashSet<Comparable> getAllTokens() {
@@ -196,9 +191,5 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
     
     public List<ITupleReference> getDocumentCorpus() {
         return documentCorpus;
-    }
-    
-    public HashSet<Integer> getDeletedKeys() {
-        return deletedKeys;
     }
 }

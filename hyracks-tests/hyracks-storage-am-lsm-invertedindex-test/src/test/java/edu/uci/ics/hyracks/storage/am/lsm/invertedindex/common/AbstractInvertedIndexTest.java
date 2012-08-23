@@ -20,7 +20,11 @@ import org.junit.Before;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext.InvertedIndexType;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestUtils;
 
 public abstract class AbstractInvertedIndexTest {
     protected final LSMInvertedIndexTestHarness harness = new LSMInvertedIndexTestHarness();
@@ -41,5 +45,16 @@ public abstract class AbstractInvertedIndexTest {
     @After
     public void tearDown() throws HyracksDataException {
         harness.tearDown();
+    }
+    
+    protected void validateAndCheckIndex(InvertedIndexTestContext testCtx) throws HyracksDataException, IndexException {
+        IIndex invIndex = testCtx.getIndex();
+        // Validate index and compare against expected index.
+        invIndex.validate();
+        if (invIndexType == InvertedIndexType.INMEMORY || invIndexType == InvertedIndexType.ONDISK) {
+            // This comparison method exercises different features of these types of inverted indexes.
+            InvertedIndexTestUtils.compareActualAndExpectedIndexes(testCtx);
+        }
+        InvertedIndexTestUtils.compareActualAndExpectedIndexesRangeSearch(testCtx);
     }
 }

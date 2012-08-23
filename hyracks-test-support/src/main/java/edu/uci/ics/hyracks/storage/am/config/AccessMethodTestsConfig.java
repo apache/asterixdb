@@ -76,6 +76,8 @@ public class AccessMethodTestsConfig {
     
     public static final int LSM_INVINDEX_NUM_BULKLOAD_ROUNDS = 5;
     public static final int LSM_INVINDEX_MAX_TREES_TO_MERGE = 5;
+    public static final int LSM_INVINDEX_NUM_INSERT_ROUNDS = 3;
+    public static final int LSM_INVINDEX_NUM_DELETE_ROUNDS = 3;
     
 }
 

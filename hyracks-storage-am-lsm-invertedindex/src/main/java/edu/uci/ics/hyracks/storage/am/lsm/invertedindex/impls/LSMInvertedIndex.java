@@ -340,17 +340,12 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     }
         
     /**
-     * The way we deal with inserts/deletes allows for the rare possibility of false-positive answers.
-     * We assume that the user of this index performs a post-processing step to removes such false positives
-     * (e.g., by not removing the original optimizable predicate).
-     * For example, consider inserting a document with key '1' and tokens 'A' and 'B', then deleting that document.
-     * The state of the index is that 'A,1' 'B,1' are in the in-memory inverted index, and '1' is in the deleted-keys BTree.
-     * Now if we insert a document with key '1' and tokens 'C' and 'D', then we have 'A,1', 'B,1', 'C,1' and 'D,1' in
-     * the in-memory inverted index with the key '1' not in the deleted-keys BTree.
-     * So, the index will incorrectly return document '1' for a query 'A and B'.
-     * The post-processing assumption allows for faster processing of deletes because only a single insert into a BTree
-     * is needed as opposed to physically deleting all token,key pairs from the in-memory inverted index.
-     * Further, the post-processing is often needed anyway, for example, to deal with collisions when using hashed tokens.
+     * Insert:
+     * - Delete key from deleted-keys BTree (ignore if key does not exist).
+     * - Insert document into in-memory inverted index.
+     * Delete:
+     * - Delete document from in-memory inverted index (ignore if it does not exist).
+     * - Insert key into deleted-keys BTree.
      */
     @Override
     public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
@@ -370,6 +365,8 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
                 break;
             }
             case DELETE: {
+                // First remove all entries in the in-memory inverted index (if any).
+                ctx.memInvIndexAccessor.delete(tuple);
                 // Insert key into the deleted-keys BTree.
                 ctx.keysOnlyTuple.reset(tuple);
                 try {

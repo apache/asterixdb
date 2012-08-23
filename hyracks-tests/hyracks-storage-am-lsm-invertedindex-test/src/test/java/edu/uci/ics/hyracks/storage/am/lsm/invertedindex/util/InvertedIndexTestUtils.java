@@ -24,7 +24,6 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -127,6 +126,21 @@ public class InvertedIndexTestUtils {
         }
     }
 
+    public static void deleteFromInvIndex(InvertedIndexTestContext testCtx, Random rnd, int numDocsToDelete)
+            throws HyracksDataException, IndexException {
+        List<ITupleReference> documentCorpus = testCtx.getDocumentCorpus();
+        for (int i = 0; i < numDocsToDelete && !documentCorpus.isEmpty(); i++) {
+            int size = documentCorpus.size();
+            int tupleIndex = Math.abs(rnd.nextInt()) % size;
+            ITupleReference deleteTuple = documentCorpus.get(tupleIndex);
+            testCtx.getIndexAccessor().delete(deleteTuple);
+            testCtx.deleteCheckTuples(deleteTuple, testCtx.getCheckTuples());
+            // Swap tupleIndex with last element.
+            documentCorpus.set(tupleIndex, documentCorpus.get(size - 1));
+            documentCorpus.remove(size - 1);
+        }
+    }
+    
     /**
      * Compares actual and expected indexes using the rangeSearch() method of the inverted-index accessor.
      */
@@ -216,6 +230,7 @@ public class InvertedIndexTestUtils {
             checkLowKey.appendField(token);
             CheckTuple checkHighKey = new CheckTuple(tokenFieldCount, tokenFieldCount);
             checkHighKey.appendField(token);
+            
             SortedSet<CheckTuple> expectedInvList = OrderedIndexTestUtils.getPrefixExpectedSubset(
                     testCtx.getCheckTuples(), checkLowKey, checkHighKey);
             Iterator<CheckTuple> expectedInvListIter = expectedInvList.iterator();
@@ -255,7 +270,7 @@ public class InvertedIndexTestUtils {
      * Determine the expected results with the simple ScanCount algorithm.
      */
     @SuppressWarnings("unchecked")
-    public static void getExpectedResults(int[] scanCountArray, TreeSet<CheckTuple> checkTuples, HashSet<Integer> deletedKeys,
+    public static void getExpectedResults(int[] scanCountArray, TreeSet<CheckTuple> checkTuples,
             ITupleReference searchDocument, IBinaryTokenizer tokenizer, ISerializerDeserializer tokenSerde,
             IInvertedIndexSearchModifier searchModifier, List<Integer> expectedResults) throws IOException {
         // Reset scan count array.
@@ -296,7 +311,7 @@ public class InvertedIndexTestUtils {
         // Run through scan count array, and see whether elements satisfy the given occurrence threshold.
         expectedResults.clear();
         for (int i = 0; i < scanCountArray.length; i++) {
-            if (scanCountArray[i] >= occurrenceThreshold && !deletedKeys.contains(Integer.valueOf(i))) {
+            if (scanCountArray[i] >= occurrenceThreshold) {
                 expectedResults.add(i);
             }
         }

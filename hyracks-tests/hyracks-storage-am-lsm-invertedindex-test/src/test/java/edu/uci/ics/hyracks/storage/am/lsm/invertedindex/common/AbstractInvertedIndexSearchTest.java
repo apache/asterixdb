@@ -133,7 +133,7 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
                 // Get expected results.
                 List<Integer> expectedResults = new ArrayList<Integer>();
                 InvertedIndexTestUtils.getExpectedResults(scanCountArray, testCtx.getCheckTuples(),
-                        testCtx.getDeletedKeys(), searchDocument, tokenizer, testCtx.getFieldSerdes()[0],
+                        searchDocument, tokenizer, testCtx.getFieldSerdes()[0],
                         searchModifier, expectedResults);
 
                 Iterator<Integer> expectedIter = expectedResults.iterator();
