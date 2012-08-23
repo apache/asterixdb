@@ -12,6 +12,8 @@
  * q - nested record
  */
 
+write output to nc1:"rttest/flwor_let24.adm";
+
 let $m := {"name":"Holmes S","age":25,"sex":"M"}
 let $n := {"name":"Bob","age":35,"sex":null}
 let $o := {{"John",45,"M"}}

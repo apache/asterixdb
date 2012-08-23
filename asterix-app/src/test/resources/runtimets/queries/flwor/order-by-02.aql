@@ -4,6 +4,8 @@
  * Date            : 24th July 2012
  */
 
+write output to nc1:"rttest/flwor_order-by-02.adm";
+
 for $a in ["two","four","six","eight","ten","twenty","undo"]
 order by $a asc
 return $a

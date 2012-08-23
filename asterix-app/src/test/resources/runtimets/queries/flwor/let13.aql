@@ -1,8 +1,10 @@
 /*
  * Description     :  Test let clause
- * Expected Result :  Success
+ * Expected Result :  Failure - Negative test
  * Date            :  6th July 2012 
  */
+
+write output to nc1:"rttest/flwor_let13.adm";
 
 // Bind an undefined variable.
 

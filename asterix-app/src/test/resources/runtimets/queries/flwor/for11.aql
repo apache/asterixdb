@@ -4,5 +4,8 @@
  * Date             :  7th July 2012
  */
 
+write output to nc1:"rttest/flwor_for11.adm";
+
 for $a in [true,true,false,true]
+where $a = true
 return {{"this is additional data","this is too","and this is additional too"}}

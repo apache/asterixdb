@@ -4,6 +4,8 @@
  * Date            :  6th July 2012 
  */
 
+write output to nc1:"rttest/flwor_let08.adm";
+
 let $x:=[1,2,3]
 for $b in $x
 let $y:=$b+1
