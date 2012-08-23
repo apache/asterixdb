@@ -71,7 +71,10 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMTreeSearchCursor {
         initPriorityQueue();
     }
     
-    // Check deleted-keys BTrees whether they contain the key in the checkElement's tuple.
+    /**
+     * Check deleted-keys BTrees whether they contain the key in the checkElement's tuple.
+     */
+    @Override
     protected boolean isDeleted(PriorityQueueElement checkElement) throws HyracksDataException {
         int end = checkElement.getCursorIndex();
         for (int i = 0; i <= end; i++) {
@@ -89,51 +92,5 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMTreeSearchCursor {
             }
         }
         return false;
-    }
-    
-    protected void checkPriorityQueue() throws HyracksDataException {
-        while (!outputPriorityQueue.isEmpty() || needPush == true) {
-            if (!outputPriorityQueue.isEmpty()) {
-                PriorityQueueElement checkElement = outputPriorityQueue.peek();
-                // If there is no previous tuple or the previous tuple can be ignored
-                if (outputElement == null) {
-                    // Test the tuple is a delete tuple or not
-                    if (isDeleted(checkElement)) {
-                        // If the key has been deleted then pop it and set needPush to true.
-                        // We cannot push immediately because the tuple may be
-                        // modified if hasNext() is called
-                        outputElement = outputPriorityQueue.poll();
-                        needPush = true;
-                    } else {
-                        break;
-                    }
-                } else {
-                    // Compare the previous tuple and the head tuple in the PQ
-                    if (compare(cmp, outputElement.getTuple(), checkElement.getTuple()) == 0) {
-                        // If the previous tuple and the head tuple are
-                        // identical
-                        // then pop the head tuple and push the next tuple from
-                        // the tree of head tuple
-
-                        // the head element of PQ is useless now
-                        PriorityQueueElement e = outputPriorityQueue.poll();
-                        pushIntoPriorityQueue(e);
-                    } else {
-                        // If the previous tuple and the head tuple are different
-                        // the info of previous tuple is useless
-                        if (needPush == true) {
-                            pushIntoPriorityQueue(outputElement);
-                            needPush = false;
-                        }
-                        outputElement = null;
-                    }
-                }
-            } else {
-                // the priority queue is empty and needPush
-                pushIntoPriorityQueue(outputElement);
-                needPush = false;
-                outputElement = null;
-            }
-        }
     }
 }

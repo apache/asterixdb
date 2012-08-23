@@ -139,18 +139,20 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
         return false;
     }
 
+    protected boolean isDeleted(PriorityQueueElement checkElement) throws HyracksDataException {
+        return ((ILSMTreeTupleReference) checkElement.getTuple()).isAntimatter();
+    }
+    
     protected void checkPriorityQueue() throws HyracksDataException {
         while (!outputPriorityQueue.isEmpty() || needPush == true) {
             if (!outputPriorityQueue.isEmpty()) {
                 PriorityQueueElement checkElement = outputPriorityQueue.peek();
                 // If there is no previous tuple or the previous tuple can be ignored
                 if (outputElement == null) {
-                    // Test the tuple is a delete tuple or not
-                    if (((ILSMTreeTupleReference) checkElement.getTuple()).isAntimatter() == true) {
-                        // If the tuple is a delete tuple then pop it and mark
-                        // it "needPush"
-                        // Cannot push at this time because the tuple may be
-                        // modified if "hasNext" is called
+                    if (isDeleted(checkElement)) {
+                        // If the key has been deleted then pop it and set needPush to true.
+                        // We cannot push immediately because the tuple may be
+                        // modified if hasNext() is called
                         outputElement = outputPriorityQueue.poll();
                         needPush = true;
                     } else {
