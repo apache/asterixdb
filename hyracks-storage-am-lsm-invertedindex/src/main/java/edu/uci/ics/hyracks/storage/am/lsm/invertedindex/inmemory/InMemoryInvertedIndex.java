@@ -111,13 +111,13 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
         btree.validate();
     }
 
-    public boolean insert(ITupleReference tuple, BTreeAccessor btreeAccessor, IIndexOpContext ictx)
+    public void insert(ITupleReference tuple, BTreeAccessor btreeAccessor, IIndexOpContext ictx)
             throws HyracksDataException, IndexException {
         InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
-        ctx.insertTupleIter.reset(tuple);
-        while (ctx.insertTupleIter.hasNext()) {
-            ctx.insertTupleIter.next();
-            ITupleReference insertTuple = ctx.insertTupleIter.getTuple();
+        ctx.tupleIter.reset(tuple);
+        while (ctx.tupleIter.hasNext()) {
+            ctx.tupleIter.next();
+            ITupleReference insertTuple = ctx.tupleIter.getTuple();
             try {
                 btreeAccessor.insert(insertTuple);
             } catch (BTreeDuplicateKeyException e) {
@@ -126,7 +126,17 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
                 // we can safely ignore this exception.
             }
         }
-        return true;
+    }
+    
+    public void delete(ITupleReference tuple, BTreeAccessor btreeAccessor, IIndexOpContext ictx)
+            throws HyracksDataException, IndexException {
+        InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
+        ctx.tupleIter.reset(tuple);
+        while (ctx.tupleIter.hasNext()) {
+            ctx.tupleIter.next();
+            ITupleReference deleteTuple = ctx.tupleIter.getTuple();
+            btreeAccessor.delete(deleteTuple);
+        }
     }
 
     @Override

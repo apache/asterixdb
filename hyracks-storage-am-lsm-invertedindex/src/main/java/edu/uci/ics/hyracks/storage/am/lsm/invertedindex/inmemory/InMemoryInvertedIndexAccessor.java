@@ -52,11 +52,18 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
                 NoOpOperationCallback.INSTANCE);
     }
 
+    @Override
     public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
         opCtx.reset(IndexOp.INSERT);
         index.insert(tuple, btreeAccessor, opCtx);
     }
 
+    @Override
+    public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
+        opCtx.reset(IndexOp.INSERT);
+        index.delete(tuple, btreeAccessor, opCtx);
+    }
+    
     @Override
     public IIndexCursor createSearchCursor() {
         return new OnDiskInvertedIndexSearchCursor(searcher);
@@ -92,11 +99,6 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
     
     public BTreeAccessor getBTreeAccessor() {
         return btreeAccessor;
-    }
-    
-    @Override
-    public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
-        throw new UnsupportedOperationException("Delete not supported by in-memory inverted index.");
     }
 
     @Override

@@ -20,6 +20,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 
@@ -29,10 +30,13 @@ public class LSMInvertedIndexOpContext implements IIndexOpContext {
     private final IInvertedIndex memInvIndex;
     private final IIndex memDeletedKeysBTree;
 
+    // Tuple that only has the inverted-index elements (aka keys), projecting away the document fields.
+    public PermutingTupleReference keysOnlyTuple;
+    
     // Accessor to the in-memory inverted index.
-    public IInvertedIndexAccessor insertAccessor;
+    public IInvertedIndexAccessor memInvIndexAccessor;
     // Accessor to the deleted-keys BTree.
-    public IIndexAccessor deleteAccessor;
+    public IIndexAccessor deletedKeysBTreeAccessor;
 
     public LSMInvertedIndexOpContext(IInvertedIndex memInvIndex, IIndex memDeletedKeysBTree) {
         this.memInvIndex = memInvIndex;
@@ -47,25 +51,30 @@ public class LSMInvertedIndexOpContext implements IIndexOpContext {
     // TODO: Ignore opcallback for now.
     public void reset(IndexOp newOp) {
         switch (newOp) {
-            case INSERT: {
-                if (insertAccessor == null) {
-                    insertAccessor = (IInvertedIndexAccessor) memInvIndex.createAccessor(
+            case INSERT:
+            case DELETE:
+            case PHYSICALDELETE: {
+                if (deletedKeysBTreeAccessor == null) {
+                    memInvIndexAccessor = (IInvertedIndexAccessor) memInvIndex.createAccessor(
                             NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-                }
-                break;
-            }
-            case DELETE: {
-                if (deleteAccessor == null) {
-                    deleteAccessor = memDeletedKeysBTree.createAccessor(NoOpOperationCallback.INSTANCE,
+                    deletedKeysBTreeAccessor = memDeletedKeysBTree.createAccessor(NoOpOperationCallback.INSTANCE,
                             NoOpOperationCallback.INSTANCE);
+                    // Project away the document fields, leaving only the key fields.
+                    int numTokenFields = memInvIndex.getTokenTypeTraits().length;
+                    int numKeyFields = memInvIndex.getInvListTypeTraits().length;
+                    int[] keyFieldPermutation = new int[memInvIndex.getInvListTypeTraits().length];
+                    for (int i = 0; i < numKeyFields; i++) {
+                        keyFieldPermutation[i] = numTokenFields + i;
+                    }
+                    keysOnlyTuple = new PermutingTupleReference(keyFieldPermutation);
                 }
                 break;
             }
         }
         op = newOp;
     }
-
-    public IndexOp getOp() {
+    
+    public IndexOp getIndexOp() {
         return op;
     }
 }

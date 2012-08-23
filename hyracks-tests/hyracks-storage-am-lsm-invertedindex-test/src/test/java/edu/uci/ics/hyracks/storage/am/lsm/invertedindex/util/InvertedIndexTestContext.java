@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestContext;
@@ -48,18 +49,21 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
         LSM
     };
 
+    protected IInvertedIndex invIndex;
     protected IBinaryComparatorFactory[] allCmpFactories;
     protected IBinaryTokenizerFactory tokenizerFactory;
-    protected InvertedIndexInsertTupleIterator indexInsertIter;
-    protected HashSet<Comparable> allTokens = new HashSet<Comparable>();    
+    protected InvertedIndexTokenizingTupleIterator indexInsertIter;
+    protected HashSet<Comparable> allTokens = new HashSet<Comparable>();
     protected List<ITupleReference> documentCorpus = new ArrayList<ITupleReference>();
+    // Set containing the keys of deleted documents.
+    protected HashSet<Integer> deletedKeys = new HashSet<Integer>();
     
     public InvertedIndexTestContext(ISerializerDeserializer[] fieldSerdes, IIndex index,
             IBinaryTokenizerFactory tokenizerFactory) {
         super(fieldSerdes, index);
         this.tokenizerFactory = tokenizerFactory;
-        IInvertedIndex invIndex = (IInvertedIndex) index;
-        indexInsertIter = new InvertedIndexInsertTupleIterator(invIndex.getTokenTypeTraits().length,
+        invIndex = (IInvertedIndex) index;
+        indexInsertIter = new InvertedIndexTokenizingTupleIterator(invIndex.getTokenTypeTraits().length,
                 invIndex.getInvListTypeTraits().length, tokenizerFactory.createTokenizer());
     }
 
@@ -139,9 +143,10 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
         return testCtx;
     }
 
-    public void insertCheckTuples(ITupleReference tuple, Collection<CheckTuple> checkTuples) throws HyracksDataException {
+    public void insertCheckTuples(ITupleReference tuple, Collection<CheckTuple> checkTuples)
+            throws HyracksDataException {
         documentCorpus.add(TupleUtils.copyTuple(tuple));
-        indexInsertIter.reset(tuple);        
+        indexInsertIter.reset(tuple);
         while (indexInsertIter.hasNext()) {
             indexInsertIter.next();
             ITupleReference insertTuple = indexInsertIter.getTuple();
@@ -149,16 +154,19 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
             insertCheckTuple(checkTuple, getCheckTuples());
             allTokens.add(checkTuple.getField(0));
         }
+        // Remove key from the deleted-keys set.
+        int numTokenFields = invIndex.getTokenTypeTraits().length;
+        int key = IntegerSerializerDeserializer.getInt(tuple.getFieldData(numTokenFields),
+                tuple.getFieldStart(numTokenFields));
+        deletedKeys.remove(Integer.valueOf(key));
     }
     
-    public void deleteCheckTuples(ITupleReference tuple, Collection<CheckTuple> checkTuples) throws HyracksDataException {
-        indexInsertIter.reset(tuple);
-        while (indexInsertIter.hasNext()) {
-            indexInsertIter.next();
-            ITupleReference deteleTuple = indexInsertIter.getTuple();
-            CheckTuple checkTuple = createCheckTuple(deteleTuple);
-            deleteCheckTuple(checkTuple, getCheckTuples());
-        }
+    public void deleteTuple(ITupleReference tuple) throws HyracksDataException {
+        // Add key to the deleted-keys set.
+        int numTokenFields = invIndex.getTokenTypeTraits().length;
+        int key = IntegerSerializerDeserializer.getInt(tuple.getFieldData(numTokenFields),
+                tuple.getFieldStart(numTokenFields));
+        deletedKeys.add(Integer.valueOf(key));
     }
     
     public HashSet<Comparable> getAllTokens() {
@@ -188,5 +196,9 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
     
     public List<ITupleReference> getDocumentCorpus() {
         return documentCorpus;
+    }
+    
+    public HashSet<Integer> getDeletedKeys() {
+        return deletedKeys;
     }
 }

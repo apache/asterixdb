@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokeni
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
 
 // TODO: We can possibly avoid copying the data into a new tuple here.
-public class InvertedIndexInsertTupleIterator {
+public class InvertedIndexTokenizingTupleIterator {
     // Field that is expected to be tokenized.
     private final int DOC_FIELD_INDEX = 0;
 
@@ -35,7 +35,7 @@ public class InvertedIndexInsertTupleIterator {
     private final IBinaryTokenizer tokenizer;
     private ITupleReference inputTuple;
 
-    public InvertedIndexInsertTupleIterator(int tokensFieldCount, int invListFieldCount, IBinaryTokenizer tokenizer) {
+    public InvertedIndexTokenizingTupleIterator(int tokensFieldCount, int invListFieldCount, IBinaryTokenizer tokenizer) {
         this.invListFieldCount = invListFieldCount;
         this.tupleBuilder = new ArrayTupleBuilder(tokensFieldCount + invListFieldCount);
         this.tupleReference = new ArrayTupleReference();

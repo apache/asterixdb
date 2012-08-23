@@ -24,6 +24,7 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -254,7 +255,7 @@ public class InvertedIndexTestUtils {
      * Determine the expected results with the simple ScanCount algorithm.
      */
     @SuppressWarnings("unchecked")
-    public static void getExpectedResults(int[] scanCountArray, TreeSet<CheckTuple> checkTuples,
+    public static void getExpectedResults(int[] scanCountArray, TreeSet<CheckTuple> checkTuples, HashSet<Integer> deletedKeys,
             ITupleReference searchDocument, IBinaryTokenizer tokenizer, ISerializerDeserializer tokenSerde,
             IInvertedIndexSearchModifier searchModifier, List<Integer> expectedResults) throws IOException {
         // Reset scan count array.
@@ -295,7 +296,7 @@ public class InvertedIndexTestUtils {
         // Run through scan count array, and see whether elements satisfy the given occurrence threshold.
         expectedResults.clear();
         for (int i = 0; i < scanCountArray.length; i++) {
-            if (scanCountArray[i] >= occurrenceThreshold) {
+            if (scanCountArray[i] >= occurrenceThreshold && !deletedKeys.contains(Integer.valueOf(i))) {
                 expectedResults.add(i);
             }
         }

@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexInsertTupleIterator;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTokenizingTupleIterator;
 
 public class InMemoryInvertedIndexOpContext implements IIndexOpContext {
     public IndexOp op;
@@ -40,7 +40,7 @@ public class InMemoryInvertedIndexOpContext implements IIndexOpContext {
 
     // To generate in-memory BTree tuples for insertions.
     private final IBinaryTokenizerFactory tokenizerFactory;
-    public InvertedIndexInsertTupleIterator insertTupleIter;
+    public InvertedIndexTokenizingTupleIterator tupleIter;
 
     public InMemoryInvertedIndexOpContext(BTree btree, IBinaryComparatorFactory[] tokenCmpFactories,
             IBinaryTokenizerFactory tokenizerFactory) {
@@ -52,10 +52,13 @@ public class InMemoryInvertedIndexOpContext implements IIndexOpContext {
     @Override
     public void reset(IndexOp newOp) {
         switch (newOp) {
-            case INSERT: {
-                IBinaryTokenizer tokenizer = tokenizerFactory.createTokenizer();
-                insertTupleIter = new InvertedIndexInsertTupleIterator(tokenCmpFactories.length, btree.getFieldCount()
-                        - tokenCmpFactories.length, tokenizer);
+            case INSERT: 
+            case DELETE: {
+                if (tupleIter == null) {
+                    IBinaryTokenizer tokenizer = tokenizerFactory.createTokenizer();
+                    tupleIter = new InvertedIndexTokenizingTupleIterator(tokenCmpFactories.length,
+                            btree.getFieldCount() - tokenCmpFactories.length, tokenizer);
+                }
                 break;
             }
             case SEARCH: {

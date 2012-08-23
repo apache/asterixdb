@@ -268,6 +268,7 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
         return memComponent.getRTree().getFileId();
     }
 
+    @Override
     public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
             TreeIndexException {
         LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;

@@ -25,6 +25,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
@@ -336,11 +338,56 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws IndexException {
         return new LSMInvertedIndexBulkLoader(fillFactor, verifyInput);
     }
-    
+        
+    /**
+     * The way we deal with inserts/deletes allows for the rare possibility of false-positive answers.
+     * We assume that the user of this index performs a post-processing step to removes such false positives
+     * (e.g., by not removing the original optimizable predicate).
+     * For example, consider inserting a document with key '1' and tokens 'A' and 'B', then deleting that document.
+     * The state of the index is that 'A,1' 'B,1' are in the in-memory inverted index, and '1' is in the deleted-keys BTree.
+     * Now if we insert a document with key '1' and tokens 'C' and 'D', then we have 'A,1', 'B,1', 'C,1' and 'D,1' in
+     * the in-memory inverted index with the key '1' not in the deleted-keys BTree.
+     * So, the index will incorrectly return document '1' for a query 'A and B'.
+     * The post-processing assumption allows for faster processing of deletes because only a single insert into a BTree
+     * is needed as opposed to physically deleting all token,key pairs from the in-memory inverted index.
+     * Further, the post-processing is often needed anyway, for example, to deal with collisions when using hashed tokens.
+     */
+    @Override
     public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
             IndexException {
         LSMInvertedIndexOpContext ctx = (LSMInvertedIndexOpContext) ictx;
-        ctx.insertAccessor.insert(tuple);
+        switch (ctx.getIndexOp()) {
+            case INSERT: {
+                // First remove the possibly deleted key from the deleted-keys BTree.
+                ctx.keysOnlyTuple.reset(tuple);
+                try {
+                    ctx.deletedKeysBTreeAccessor.delete(tuple);
+                } catch (BTreeNonExistentKeyException e) {
+                    // The key did not exist in the deleted-keys BTree.
+                }
+                // Insert into the in-memory inverted index.
+                ctx.memInvIndexAccessor.insert(tuple);
+                break;
+            }
+            case DELETE: {
+                // Insert key into the deleted-keys BTree.
+                ctx.keysOnlyTuple.reset(tuple);
+                try {
+                    ctx.deletedKeysBTreeAccessor.insert(tuple);
+                } catch (BTreeDuplicateKeyException e) {
+                    // Key has already been deleted.
+                }
+                break;
+            }
+            case PHYSICALDELETE: {
+                // TODO: Think about whether we actually need this, since this is a secondary index.
+                ctx.memInvIndexAccessor.delete(tuple);
+                break;
+            }
+            default: {
+                throw new UnsupportedOperationException("Operation " + ctx.getIndexOp() + " not supported.");
+            }
+        }
         return true;
     }
 

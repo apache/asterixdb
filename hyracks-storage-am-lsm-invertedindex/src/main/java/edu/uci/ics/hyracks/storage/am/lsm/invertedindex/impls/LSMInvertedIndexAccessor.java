@@ -46,20 +46,27 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
         this.invIndex = invIndex;
     }
 
+    @Override
     public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.reset(IndexOp.INSERT);
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
     }
 
+    @Override
+    public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
+        ctx.reset(IndexOp.DELETE);
+        lsmHarness.insertUpdateOrDelete(tuple, ctx);
+    }
+    
+    @Override
+    public void physicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
+        ctx.reset(IndexOp.PHYSICALDELETE);
+        lsmHarness.insertUpdateOrDelete(tuple, ctx);
+    }
+    
     public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
         ctx.reset(IndexOp.SEARCH);
         lsmHarness.search(cursor, searchPred, ctx, true);
-    }
-
-    @Override
-    public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
-        // TODO Auto-generated method stub
-        
     }
     
     public IIndexCursor createSearchCursor() {
@@ -105,11 +112,6 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
         search(cursor, searchPred);
     }
     
-    @Override
-    public void physicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
-        // TODO: Do we need this?
-    }
-
     @Override
     public void update(ITupleReference tuple) throws HyracksDataException, IndexException {
         // TODO Auto-generated method stub
