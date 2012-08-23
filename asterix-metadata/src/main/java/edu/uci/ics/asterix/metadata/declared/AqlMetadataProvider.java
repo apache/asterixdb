@@ -297,8 +297,15 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
         IBinaryComparatorFactory[] comparatorFactories = JobGenHelper.variablesToAscBinaryComparatorFactories(
                 outputVars, keysStartIndex, numKeys, typeEnv, context);
-        ITypeTraits[] typeTraits = JobGenHelper.variablesToTypeTraits(outputVars, keysStartIndex, numKeys, typeEnv,
-                context);
+        ITypeTraits[] typeTraits = null;
+
+	if (isSecondary) {
+        	typeTraits = JobGenHelper.variablesToTypeTraits(outputVars, keysStartIndex, numKeys, typeEnv,
+                    context);
+        } else {
+        	typeTraits = JobGenHelper.variablesToTypeTraits(outputVars, keysStartIndex, numKeys + 1, typeEnv,
+                    context);
+        }
 
         IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc;
