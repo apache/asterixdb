@@ -21,7 +21,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.ICloseableResourceManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
@@ -38,7 +37,6 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     // General.
     protected final IStorageManagerInterface storageManager;
     protected final IIndexLifecycleManagerProvider lifecycleManagerProvider;
-    protected final ICloseableResourceManagerProvider closeableResourceManagerProvider;
     protected final boolean retainInput;
     protected final IOperationCallbackProvider opCallbackProvider;
 
@@ -57,8 +55,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     public AbstractInvertedIndexOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
             IFileSplitProvider btreeFileSplitProvider, IFileSplitProvider invListsFileSplitProvider,
-            IIndexLifecycleManagerProvider lifecycleManagerProvider,
-            ICloseableResourceManagerProvider closeableResourceManagerProvider, ITypeTraits[] tokenTypeTraits,
+            IIndexLifecycleManagerProvider lifecycleManagerProvider, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTraits[] invListsTypeTraits,
             IBinaryComparatorFactory[] invListComparatorFactories, IBinaryTokenizerFactory tokenizerFactory,
             IIndexDataflowHelperFactory invertedIndexDataflowHelperFactory, boolean retainInput,
@@ -68,7 +65,6 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
         // General.
         this.storageManager = storageManager;
         this.lifecycleManagerProvider = lifecycleManagerProvider;
-        this.closeableResourceManagerProvider = closeableResourceManagerProvider;
         this.retainInput = retainInput;
         this.opCallbackProvider = opCallbackProvider;
 
@@ -157,10 +153,5 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     @Override
     public ITupleFilterFactory getTupleFilterFactory() {
         return null;
-    }
-    
-    @Override
-    public ICloseableResourceManagerProvider getCloseableResourceManagerProvider() {
-        return closeableResourceManagerProvider;
     }
 }
