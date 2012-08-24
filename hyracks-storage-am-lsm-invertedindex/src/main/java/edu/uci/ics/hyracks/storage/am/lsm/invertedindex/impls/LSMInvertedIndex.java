@@ -47,6 +47,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -420,20 +421,32 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     private ICursorInitialState createCursorInitialState(ISearchPredicate pred, IIndexOpContext ictx,
             boolean includeMemComponent, AtomicInteger searcherRefCount, ArrayList<IIndexAccessor> indexAccessors,
             ArrayList<IIndexAccessor> deletedKeysBTreeAccessors) {
-        // TODO: This check is not pretty, but it does the job. Come up with something more OO in the future.
         ICursorInitialState initState = null;
+        PermutingTupleReference keysOnlyTuple = createKeysOnlyTupleReference();
+        MultiComparator keyCmp = MultiComparator.create(invListCmpFactories);
+        // TODO: This check is not pretty, but it does the job. Come up with something more OO in the future.
         // Distinguish between regular searches and range searches (mostly used in merges).
         if (pred instanceof InvertedIndexSearchPredicate) {
-            initState = new LSMInvertedIndexCursorInitialState(indexAccessors, ictx, includeMemComponent,
-                    searcherRefCount, lsmHarness);
+            initState = new LSMInvertedIndexSearchCursorInitialState(keyCmp, keysOnlyTuple, indexAccessors,
+                    deletedKeysBTreeAccessors, ictx, includeMemComponent, searcherRefCount, lsmHarness);
         } else {
-            InMemoryInvertedIndex memInvIndex = (InMemoryInvertedIndex) memComponent.getInvIndex();
-            MultiComparator tokensAndKeyCmp = MultiComparator.create(memInvIndex.getBTree().getComparatorFactories());
-            MultiComparator keyCmp = MultiComparator.create(invListCmpFactories);
-            initState = new LSMInvertedIndexRangeSearchCursorInitialState(tokensAndKeyCmp, keyCmp, includeMemComponent, searcherRefCount,
-                    lsmHarness, indexAccessors, deletedKeysBTreeAccessors, pred);
+            initState = new LSMInvertedIndexRangeSearchCursorInitialState(keyCmp, keysOnlyTuple, includeMemComponent,
+                    searcherRefCount, lsmHarness, indexAccessors, deletedKeysBTreeAccessors, pred);
         }
         return initState;
+    }
+    
+    /**
+     * Returns a permuting tuple reference that projects away the document field(s) of a tuple, only leaving the key fields.
+     */
+    private PermutingTupleReference createKeysOnlyTupleReference() {
+        // Project away token fields.
+        int[] keyFieldPermutation = new int[invListTypeTraits.length];
+        int numTokenFields = tokenTypeTraits.length;
+        for (int i = 0; i < invListTypeTraits.length; i++) {
+            keyFieldPermutation[i] = numTokenFields + i;
+        }
+        return new PermutingTupleReference(keyFieldPermutation);
     }
     
     @Override

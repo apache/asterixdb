@@ -23,12 +23,12 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMInvertedIndexRangeSearchCursorInitialState implements ICursorInitialState {
 
-    private final MultiComparator tokensAndKeyCmp;
     private final MultiComparator keyCmp;
     private final AtomicInteger searcherRefCount;
     private final LSMHarness lsmHarness;
@@ -36,15 +36,16 @@ public class LSMInvertedIndexRangeSearchCursorInitialState implements ICursorIni
     private final ArrayList<IIndexAccessor> indexAccessors;
     private final ArrayList<IIndexAccessor> deletedKeysBTreeAccessors;
     private final ISearchPredicate predicate;
+    private final PermutingTupleReference keysOnlyTuple;
     
     private final boolean includeMemComponent;
 
-    public LSMInvertedIndexRangeSearchCursorInitialState(MultiComparator tokensAndKeyCmp, MultiComparator keyCmp,
-            boolean includeMemComponent, AtomicInteger searcherRefCount, LSMHarness lsmHarness,
+    public LSMInvertedIndexRangeSearchCursorInitialState(MultiComparator keyCmp,
+            PermutingTupleReference keysOnlyTuple, boolean includeMemComponent, AtomicInteger searcherRefCount, LSMHarness lsmHarness,
             ArrayList<IIndexAccessor> indexAccessors, ArrayList<IIndexAccessor> deletedKeysBTreeAccessors,
             ISearchPredicate predicate) {
-        this.tokensAndKeyCmp = tokensAndKeyCmp;
         this.keyCmp = keyCmp;
+        this.keysOnlyTuple = keysOnlyTuple;
         this.searcherRefCount = searcherRefCount;
         this.lsmHarness = lsmHarness;
         this.indexAccessors = indexAccessors;
@@ -96,21 +97,25 @@ public class LSMInvertedIndexRangeSearchCursorInitialState implements ICursorIni
         return predicate;
     }
 
-    public MultiComparator getKeyComparator() {
-        return keyCmp;
-    }
-    
-    @Override
-    public MultiComparator getOriginalKeyComparator() {
-        return tokensAndKeyCmp;
-    }
-
     @Override
     public void setOriginialKeyComparator(MultiComparator originalCmp) {
         // Do nothing.
     }
     
+    @Override
+    public MultiComparator getOriginalKeyComparator() {
+        return null;
+    }
+
+    public MultiComparator getKeyComparator() {
+        return keyCmp;
+    }
+    
     public boolean getIncludeMemComponent() {
         return includeMemComponent;
+    }
+    
+    public PermutingTupleReference getKeysOnlyTuple() {
+        return keysOnlyTuple;
     }
 }

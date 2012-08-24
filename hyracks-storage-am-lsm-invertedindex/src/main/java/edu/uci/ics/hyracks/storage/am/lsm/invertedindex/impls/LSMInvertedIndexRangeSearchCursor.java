@@ -52,16 +52,10 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMTreeSearchCursor {
         }
         
         // For searching the deleted-keys BTrees.
+        this.keysOnlyTuple = lsmInitState.getKeysOnlyTuple();
         deletedKeysBTreeAccessors = lsmInitState.getDeletedKeysBTreeAccessors();
         deletedKeysBTreeCursor = deletedKeysBTreeAccessors.get(0).createSearchCursor();        
         MultiComparator keyCmp = lsmInitState.getKeyComparator();
-        // Project away token fields.
-        int[] keyFieldPermutation = new int[keyCmp.getKeyFieldCount()];
-        int numTokenFields = cmp.getKeyFieldCount() - keyCmp.getKeyFieldCount();
-        for (int i = 0; i < keyCmp.getKeyFieldCount(); i++) {
-            keyFieldPermutation[i] = numTokenFields + i;
-        }
-        keysOnlyTuple = new PermutingTupleReference(keyFieldPermutation);
         keySearchPred = new RangePredicate(keysOnlyTuple, keysOnlyTuple, true, true, keyCmp, keyCmp);
         
         searcherRefCount = lsmInitState.getSearcherRefCount();

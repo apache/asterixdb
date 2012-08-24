@@ -23,22 +23,30 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
-public class LSMInvertedIndexCursorInitialState implements ICursorInitialState {
+public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialState {
 
     private final boolean includeMemComponent;
     private final AtomicInteger searcherfRefCount;
     private final LSMHarness lsmHarness;
     private final List<IIndexAccessor> indexAccessors;
+    private final List<IIndexAccessor> deletedKeysBTreeAccessors;
     private final IIndexOpContext opContext;
     private ISearchOperationCallback searchCallback;
     private MultiComparator originalCmp;
+    private final MultiComparator keyCmp;
+    private final PermutingTupleReference keysOnlyTuple;
 
-    public LSMInvertedIndexCursorInitialState(List<IIndexAccessor> indexAccessors, IIndexOpContext ctx,
-            boolean includeMemComponent, AtomicInteger searcherfRefCount, LSMHarness lsmHarness) {
+    public LSMInvertedIndexSearchCursorInitialState(final MultiComparator keyCmp, PermutingTupleReference keysOnlyTuple, List<IIndexAccessor> indexAccessors,
+            List<IIndexAccessor> deletedKeysBTreeAccessors, IIndexOpContext ctx, boolean includeMemComponent,
+            AtomicInteger searcherfRefCount, LSMHarness lsmHarness) {
+        this.keyCmp = keyCmp;
+        this.keysOnlyTuple = keysOnlyTuple;
         this.indexAccessors = indexAccessors;
+        this.deletedKeysBTreeAccessors = deletedKeysBTreeAccessors;
         this.includeMemComponent = includeMemComponent;
         this.searcherfRefCount = searcherfRefCount;
         this.lsmHarness = lsmHarness;
@@ -92,5 +100,17 @@ public class LSMInvertedIndexCursorInitialState implements ICursorInitialState {
     @Override
     public void setOriginialKeyComparator(MultiComparator originalCmp) {
         this.originalCmp = originalCmp;
+    }
+    
+    public MultiComparator getKeyComparator() {
+        return keyCmp;
+    }
+    
+    public List<IIndexAccessor> getDeletedKeysBTreeAccessors() {
+        return deletedKeysBTreeAccessors;
+    }
+    
+    public PermutingTupleReference getKeysOnlyTuple() {
+        return keysOnlyTuple;
     }
 }

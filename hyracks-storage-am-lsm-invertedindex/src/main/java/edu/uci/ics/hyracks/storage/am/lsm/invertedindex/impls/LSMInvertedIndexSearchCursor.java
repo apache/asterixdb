@@ -14,17 +14,19 @@
  */
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 
 /**
@@ -33,123 +35,90 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
  */
 public class LSMInvertedIndexSearchCursor implements IIndexCursor {
 
-    private final List<IIndexCursor> indexCursors = new ArrayList<IIndexCursor>();
-    private int cursorIndex = -1;
+    private IIndexAccessor currentAccessor;
+    private IIndexCursor currentCursor;
+    private int accessorIndex = -1;
     private LSMHarness harness;
     private boolean includeMemComponent;
     private AtomicInteger searcherRefCount;
     private List<IIndexAccessor> indexAccessors;
     private ISearchPredicate searchPred;
+    
+    // Assuming the cursor for all deleted-keys indexes are of the same type.
+    protected IIndexCursor deletedKeysBTreeCursor;
+    protected List<IIndexAccessor> deletedKeysBTreeAccessors;
+    protected PermutingTupleReference keysOnlyTuple;
+    protected RangePredicate keySearchPred;
 
     @Override
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
-        LSMInvertedIndexCursorInitialState lsmInitialState = (LSMInvertedIndexCursorInitialState) initialState;
-        harness = lsmInitialState.getLSMHarness();
-        includeMemComponent = lsmInitialState.getIncludeMemComponent();
-        searcherRefCount = lsmInitialState.getSearcherRefCount();
-        indexAccessors = lsmInitialState.getIndexAccessors();
-        indexCursors.clear();
-        cursorIndex = 0;
+        LSMInvertedIndexSearchCursorInitialState lsmInitState = (LSMInvertedIndexSearchCursorInitialState) initialState;
+        harness = lsmInitState.getLSMHarness();
+        includeMemComponent = lsmInitState.getIncludeMemComponent();
+        searcherRefCount = lsmInitState.getSearcherRefCount();
+        indexAccessors = lsmInitState.getIndexAccessors();
+        accessorIndex = 0;
         this.searchPred = searchPred;
-        while (cursorIndex < indexAccessors.size()) {
-            // Open cursors and perform search lazily as each component is passed over
-            IIndexAccessor currentAccessor = indexAccessors.get(cursorIndex);
-            IIndexCursor currentCursor = currentAccessor.createSearchCursor();
-            try {
-                currentAccessor.search(currentCursor, searchPred);
-            } catch (IndexException e) {
-                throw new HyracksDataException(e);
-            }
-            indexCursors.add(currentCursor);
-            if (currentCursor.hasNext()) {
-                break;
-            }
-            // Close as we go to release any resources.
-            currentCursor.close();
-            cursorIndex++;
-        }
+        
+        // For searching the deleted-keys BTrees.
+        this.keysOnlyTuple = lsmInitState.getKeysOnlyTuple();
+        deletedKeysBTreeAccessors = lsmInitState.getDeletedKeysBTreeAccessors();
+        deletedKeysBTreeCursor = deletedKeysBTreeAccessors.get(0).createSearchCursor();        
+        MultiComparator keyCmp = lsmInitState.getKeyComparator();
+        keySearchPred = new RangePredicate(keysOnlyTuple, keysOnlyTuple, true, true, keyCmp, keyCmp);        
     }
 
     @Override
     public boolean hasNext() throws HyracksDataException {
-        if (cursorIndex >= indexAccessors.size()) {
-            return false;
+        if (currentCursor != null) {
+            if (currentCursor.hasNext()) {
+                return true;
+            }
+            currentCursor.close();
+            accessorIndex++;
         }
-        IIndexCursor currentCursor = indexCursors.get(cursorIndex);
-        if (currentCursor.hasNext()) {
-            return true;
-        }
-        currentCursor.close();
-        cursorIndex++;
-        while (cursorIndex < indexAccessors.size()) {
-            IIndexAccessor currentAccessor = indexAccessors.get(cursorIndex);
+        while (accessorIndex < indexAccessors.size()) {
+            // Current cursor has been exhausted, switch to next accessor/cursor.
+            currentAccessor = indexAccessors.get(accessorIndex);
             currentCursor = currentAccessor.createSearchCursor();
             try {
                 currentAccessor.search(currentCursor, searchPred);
             } catch (IndexException e) {
                 throw new HyracksDataException(e);
             }
-            indexCursors.add(currentCursor);
             if (currentCursor.hasNext()) {
                 return true;
             }
+            // Close as we go to release resources.
             currentCursor.close();
-            cursorIndex++;
+            accessorIndex++;
         }
         return false;
     }
 
     @Override
     public void next() throws HyracksDataException {
-        IIndexCursor currentCursor = indexCursors.get(cursorIndex);
-        if (currentCursor.hasNext()) {
-            currentCursor.next();
-        } else {
-            currentCursor.close();
-            cursorIndex++;
-            while (cursorIndex < indexAccessors.size()) {
-                IIndexAccessor currentAccessor = indexAccessors.get(cursorIndex);
-                currentCursor = currentAccessor.createSearchCursor();
-                try {
-                    currentAccessor.search(currentCursor, searchPred);
-                } catch (IndexException e) {
-                    throw new HyracksDataException(e);
-                }
-                indexCursors.add(currentCursor);
-                if (currentCursor.hasNext()) {
-                    currentCursor.next();
-                    break;
-                } else {
-                    cursorIndex++;
-                }
-            }
-        }
+        currentCursor.next();
     }
 
     @Override
     public void close() throws HyracksDataException {
-        cursorIndex = -1;
-        for (int i = 0; i < indexCursors.size(); i++) {
-            indexCursors.get(i).close();
-        }
-        indexCursors.clear();
+        reset();
+        accessorIndex = -1;
         harness.closeSearchCursor(searcherRefCount, includeMemComponent);
     }
 
     @Override
     public void reset() throws HyracksDataException {
-        cursorIndex = 0;
-        for (int i = 0; i < indexCursors.size(); i++) {
-            indexCursors.get(i).reset();
+        if (currentCursor != null) {
+            currentCursor.close();
+            currentCursor = null;
         }
+        accessorIndex = 0;
     }
 
     @Override
     public ITupleReference getTuple() {
-        if (cursorIndex < indexCursors.size()) {
-            return indexCursors.get(cursorIndex).getTuple();
-        }
-        return null;
+        return currentCursor.getTuple();
     }
-
 }
