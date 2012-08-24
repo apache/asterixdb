@@ -5,10 +5,6 @@
  * Date             :  5th July 2012
  */
 
-drop dataverse test if exists;
-create dataverse test;
-use dataverse test;
-
 write output to nc1:"rttest/quantifiers_somesat_05.adm";
 
 let $a := [

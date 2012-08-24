@@ -1,12 +1,8 @@
 /*
- * Description     :  Test quantified expressions; some variable in [ordered list] satisfies expression.
+ * Description     : Test quantified expressions; some variable in [ordered list] satisfies expression.
  * Expected Result : Success
  * Date            : 6th July 2012
  */
-
-drop dataverse test if exists;
-create dataverse test;
-use dataverse test;
 
 write output to nc1:"rttest/quantifiers_somesat_03.adm";
 
@@ -20,7 +16,7 @@ some $x in [1, 2] satisfies $x / 2 = 1,
 some $x in [1, 2] satisfies avg([$x,1]) = 1,
 some $x in [1, 2] satisfies boolean("true"),
 some $x in [1, 2] satisfies boolean("false"),
-some $x in [1, 2] satisfies not($x),
+some $x in [true,false] satisfies not($x),
 some $x in [1, 2] satisfies $x = 1 or $x = 2,
 some $x in [1, 2] satisfies $x = 1 and ($x +1) = 2 
 ]

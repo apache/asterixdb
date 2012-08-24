@@ -3,10 +3,6 @@
  * Success        : Yes
  */
 
-drop dataverse test if exists;
-create dataverse test;
-use dataverse test;
-
 write output to nc1:"rttest/quantifiers_everysat_04.adm";
 
 let $x := [
