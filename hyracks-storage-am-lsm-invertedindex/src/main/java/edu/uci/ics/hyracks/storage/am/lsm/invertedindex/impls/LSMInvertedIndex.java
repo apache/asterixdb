@@ -430,8 +430,10 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
             initState = new LSMInvertedIndexSearchCursorInitialState(keyCmp, keysOnlyTuple, indexAccessors,
                     deletedKeysBTreeAccessors, ictx, includeMemComponent, searcherRefCount, lsmHarness);
         } else {
-            initState = new LSMInvertedIndexRangeSearchCursorInitialState(keyCmp, keysOnlyTuple, includeMemComponent,
-                    searcherRefCount, lsmHarness, indexAccessors, deletedKeysBTreeAccessors, pred);
+            InMemoryInvertedIndex memInvIndex = (InMemoryInvertedIndex) memComponent.getInvIndex();
+            MultiComparator tokensAndKeysCmp = MultiComparator.create(memInvIndex.getBTree().getComparatorFactories());
+            initState = new LSMInvertedIndexRangeSearchCursorInitialState(tokensAndKeysCmp, keyCmp, keysOnlyTuple,
+                    includeMemComponent, searcherRefCount, lsmHarness, indexAccessors, deletedKeysBTreeAccessors, pred);
         }
         return initState;
     }

@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMInvertedIndexRangeSearchCursorInitialState implements ICursorInitialState {
 
+    private final MultiComparator tokensAndKeysCmp;
     private final MultiComparator keyCmp;
     private final AtomicInteger searcherRefCount;
     private final LSMHarness lsmHarness;
@@ -40,10 +41,11 @@ public class LSMInvertedIndexRangeSearchCursorInitialState implements ICursorIni
     
     private final boolean includeMemComponent;
 
-    public LSMInvertedIndexRangeSearchCursorInitialState(MultiComparator keyCmp,
+    public LSMInvertedIndexRangeSearchCursorInitialState(MultiComparator tokensAndKeysCmp, MultiComparator keyCmp,
             PermutingTupleReference keysOnlyTuple, boolean includeMemComponent, AtomicInteger searcherRefCount, LSMHarness lsmHarness,
             ArrayList<IIndexAccessor> indexAccessors, ArrayList<IIndexAccessor> deletedKeysBTreeAccessors,
             ISearchPredicate predicate) {
+        this.tokensAndKeysCmp = tokensAndKeysCmp;
         this.keyCmp = keyCmp;
         this.keysOnlyTuple = keysOnlyTuple;
         this.searcherRefCount = searcherRefCount;
@@ -104,7 +106,7 @@ public class LSMInvertedIndexRangeSearchCursorInitialState implements ICursorIni
     
     @Override
     public MultiComparator getOriginalKeyComparator() {
-        return null;
+        return tokensAndKeysCmp;
     }
 
     public MultiComparator getKeyComparator() {
