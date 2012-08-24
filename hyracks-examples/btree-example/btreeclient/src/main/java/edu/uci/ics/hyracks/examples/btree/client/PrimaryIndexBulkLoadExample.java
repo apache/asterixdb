@@ -43,13 +43,11 @@ import edu.uci.ics.hyracks.examples.btree.helper.DataGenOperatorDescriptor;
 import edu.uci.ics.hyracks.examples.btree.helper.IndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.examples.btree.helper.StorageManagerInterface;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ICloseableResourceManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
-import edu.uci.ics.hyracks.test.support.TestCloseableResourceManagerProvider;
 
 // This example will load a primary index from randomly generated data
 
@@ -142,7 +140,6 @@ public class PrimaryIndexBulkLoadExample {
         typeTraits[3] = UTF8StringPointable.TYPE_TRAITS;
 
         // create providers for B-Tree
-        ICloseableResourceManagerProvider closeableResourceManagerProvider = TestCloseableResourceManagerProvider.INSTANCE;
         IIndexLifecycleManagerProvider lcManagerProvider = IndexLifecycleManagerProvider.INSTANCE;
         IStorageManagerInterface storageManager = StorageManagerInterface.INSTANCE;
 
@@ -154,9 +151,8 @@ public class PrimaryIndexBulkLoadExample {
         IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName);
         IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory();
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManager, lcManagerProvider, closeableResourceManagerProvider, btreeSplitProvider, typeTraits,
-                comparatorFactories, fieldPermutation, 0.7f, false, dataflowHelperFactory,
-                NoOpOperationCallbackProvider.INSTANCE);
+                storageManager, lcManagerProvider, btreeSplitProvider, typeTraits, comparatorFactories,
+                fieldPermutation, 0.7f, false, dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         JobHelper.createPartitionConstraint(spec, btreeBulkLoad, splitNCs);
 
         // distribute the records from the datagen via hashing to the bulk load

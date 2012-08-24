@@ -49,7 +49,6 @@ import edu.uci.ics.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.api.ICloseableResourceManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -63,7 +62,6 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
-import edu.uci.ics.hyracks.test.support.TestCloseableResourceManagerProvider;
 import edu.uci.ics.hyracks.test.support.TestIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerInterface;
@@ -77,7 +75,6 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
 
     protected final IStorageManagerInterface storageManager = new TestStorageManagerInterface();
     protected final IIndexLifecycleManagerProvider lcManagerProvider = new TestIndexLifecycleManagerProvider();
-    protected final ICloseableResourceManagerProvider closeableResourceManagerProvider = TestCloseableResourceManagerProvider.INSTANCE;
     protected IIndexDataflowHelperFactory rtreeDataflowHelperFactory;
     protected IIndexDataflowHelperFactory btreeDataflowHelperFactory = new BTreeDataflowHelperFactory();
 
@@ -180,8 +177,8 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected void createPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         TreeIndexCreateOperatorDescriptor primaryCreateOp = new TreeIndexCreateOperatorDescriptor(spec, storageManager,
-                lcManagerProvider, closeableResourceManagerProvider, primarySplitProvider, primaryTypeTraits,
-                primaryComparatorFactories, btreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+                lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
+                btreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryCreateOp, NC1_ID);
         spec.addRoot(primaryCreateOp);
         runTest(spec);
@@ -219,9 +216,8 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
 
         int[] fieldPermutation = { 0, 1, 2, 4, 5, 7, 9, 10, 11, 12 };
         TreeIndexBulkLoadOperatorDescriptor primaryBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManager, lcManagerProvider, closeableResourceManagerProvider, primarySplitProvider,
-                primaryTypeTraits, primaryComparatorFactories, fieldPermutation, 0.7f, false,
-                btreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+                storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
+                fieldPermutation, 0.7f, false, btreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBulkLoad, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), ordScanner, 0, sorter, 0);
@@ -235,9 +231,8 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected void createSecondaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         TreeIndexCreateOperatorDescriptor secondaryCreateOp = new TreeIndexCreateOperatorDescriptor(spec,
-                storageManager, lcManagerProvider, closeableResourceManagerProvider, secondarySplitProvider,
-                secondaryTypeTraits, secondaryComparatorFactories, rtreeDataflowHelperFactory,
-                NoOpOperationCallbackProvider.INSTANCE);
+                storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
+                secondaryComparatorFactories, rtreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryCreateOp, NC1_ID);
         spec.addRoot(secondaryCreateOp);
         runTest(spec);
@@ -267,17 +262,17 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
 
         // scan primary index
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, lcManagerProvider, closeableResourceManagerProvider, primarySplitProvider,
-                primaryTypeTraits, primaryComparatorFactories, lowKeyFields, highKeyFields, true, true,
-                btreeDataflowHelperFactory, false, NoOpOperationCallbackProvider.INSTANCE);
+                storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
+                lowKeyFields, highKeyFields, true, true, btreeDataflowHelperFactory, false,
+                NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primarySearchOp, NC1_ID);
 
         // load secondary index
         int[] fieldPermutation = { 6, 7, 8, 9, 0 };
         TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManager, lcManagerProvider, closeableResourceManagerProvider, secondarySplitProvider,
-                secondaryTypeTraits, secondaryComparatorFactories, fieldPermutation, 0.7f, false,
-                rtreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+                storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
+                secondaryComparatorFactories, fieldPermutation, 0.7f, false, rtreeDataflowHelperFactory,
+                NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryBulkLoad, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primarySearchOp, 0);
@@ -316,17 +311,17 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         // insert into primary index
         int[] primaryFieldPermutation = { 0, 1, 2, 4, 5, 7, 9, 10, 11, 12 };
         TreeIndexInsertUpdateDeleteOperatorDescriptor primaryInsertOp = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
-                spec, ordersDesc, storageManager, lcManagerProvider, closeableResourceManagerProvider,
-                primarySplitProvider, primaryTypeTraits, primaryComparatorFactories, primaryFieldPermutation,
-                IndexOp.INSERT, btreeDataflowHelperFactory, null, NoOpOperationCallbackProvider.INSTANCE);
+                spec, ordersDesc, storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits,
+                primaryComparatorFactories, primaryFieldPermutation, IndexOp.INSERT, btreeDataflowHelperFactory, null,
+                NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryInsertOp, NC1_ID);
 
         // secondary index
         int[] secondaryFieldPermutation = { 9, 10, 11, 12, 0 };
         TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsertOp = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
-                spec, ordersDesc, storageManager, lcManagerProvider, closeableResourceManagerProvider,
-                secondarySplitProvider, secondaryTypeTraits, secondaryComparatorFactories, secondaryFieldPermutation,
-                IndexOp.INSERT, rtreeDataflowHelperFactory, null, NoOpOperationCallbackProvider.INSTANCE);
+                spec, ordersDesc, storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
+                secondaryComparatorFactories, secondaryFieldPermutation, IndexOp.INSERT, rtreeDataflowHelperFactory,
+                null, NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryInsertOp, NC1_ID);
 
         NullSinkOperatorDescriptor nullSink = new NullSinkOperatorDescriptor(spec);
@@ -345,8 +340,8 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected void destroyPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         TreeIndexDropOperatorDescriptor primaryDropOp = new TreeIndexDropOperatorDescriptor(spec, storageManager,
-                lcManagerProvider, closeableResourceManagerProvider, primarySplitProvider, primaryTypeTraits,
-                primaryComparatorFactories, btreeDataflowHelperFactory);
+                lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
+                btreeDataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryDropOp, NC1_ID);
         spec.addRoot(primaryDropOp);
         runTest(spec);
@@ -355,8 +350,8 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected void destroySecondaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         TreeIndexDropOperatorDescriptor secondaryDropOp = new TreeIndexDropOperatorDescriptor(spec, storageManager,
-                lcManagerProvider, closeableResourceManagerProvider, secondarySplitProvider, secondaryTypeTraits,
-                secondaryComparatorFactories, rtreeDataflowHelperFactory);
+                lcManagerProvider, secondarySplitProvider, secondaryTypeTraits, secondaryComparatorFactories,
+                rtreeDataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryDropOp, NC1_ID);
         spec.addRoot(secondaryDropOp);
         runTest(spec);

@@ -21,7 +21,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.ICloseableResourceManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
@@ -38,7 +37,6 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractSingle
 
     protected final IStorageManagerInterface storageManager;
     protected final IIndexLifecycleManagerProvider lifecycleManagerProvider;
-    protected final ICloseableResourceManagerProvider closeableResourceManagerProvider;
 
     protected final ITypeTraits[] typeTraits;
     protected final IIndexDataflowHelperFactory dataflowHelperFactory;
@@ -49,8 +47,7 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractSingle
 
     public AbstractTreeIndexOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
-            IIndexLifecycleManagerProvider lifecycleManagerProvider,
-            ICloseableResourceManagerProvider closeableResourceManagerProvider, IFileSplitProvider fileSplitProvider,
+            IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories,
             IIndexDataflowHelperFactory dataflowHelperFactory, ITupleFilterFactory tupleFilterFactory,
             boolean retainInput, IOperationCallbackProvider opCallbackProvider) {
@@ -58,7 +55,6 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractSingle
         this.fileSplitProvider = fileSplitProvider;
         this.storageManager = storageManager;
         this.lifecycleManagerProvider = lifecycleManagerProvider;
-        this.closeableResourceManagerProvider = closeableResourceManagerProvider;
         this.typeTraits = typeTraits;
         this.comparatorFactories = comparatorFactories;
         this.dataflowHelperFactory = dataflowHelperFactory;
@@ -103,11 +99,6 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractSingle
     @Override
     public IIndexDataflowHelperFactory getIndexDataflowHelperFactory() {
         return dataflowHelperFactory;
-    }
-
-    @Override
-    public ICloseableResourceManagerProvider getCloseableResourceManagerProvider() {
-        return closeableResourceManagerProvider;
     }
 
     @Override

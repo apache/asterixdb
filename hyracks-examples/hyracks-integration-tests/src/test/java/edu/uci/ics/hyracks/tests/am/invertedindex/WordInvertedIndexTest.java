@@ -52,7 +52,6 @@ import edu.uci.ics.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescript
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.api.ICloseableResourceManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
@@ -70,7 +69,6 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizerF
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.ITokenFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.UTF8WordTokenFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
-import edu.uci.ics.hyracks.test.support.TestCloseableResourceManagerProvider;
 import edu.uci.ics.hyracks.test.support.TestIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerInterface;
@@ -83,7 +81,6 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
 
     private IStorageManagerInterface storageManager = new TestStorageManagerInterface();
     private IIndexLifecycleManagerProvider lcManagerProvider = new TestIndexLifecycleManagerProvider();
-    private ICloseableResourceManagerProvider closeableResourceManagerProvider = TestCloseableResourceManagerProvider.INSTANCE;
     private IIndexDataflowHelperFactory btreeDataflowHelperFactory = new BTreeDataflowHelperFactory();
     private IIndexDataflowHelperFactory invertedIndexDataflowHelperFactory = new InvertedIndexDataflowHelperFactory();
 
@@ -152,8 +149,8 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     public void createPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         TreeIndexCreateOperatorDescriptor primaryCreateOp = new TreeIndexCreateOperatorDescriptor(spec, storageManager,
-                lcManagerProvider, closeableResourceManagerProvider, primaryFileSplitProvider, primaryTypeTraits,
-                primaryComparatorFactories, btreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+                lcManagerProvider, primaryFileSplitProvider, primaryTypeTraits, primaryComparatorFactories,
+                btreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryCreateOp, NC1_ID);
         spec.addRoot(primaryCreateOp);
         runTest(spec);
@@ -162,10 +159,9 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     public void createInvertedIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         InvertedIndexCreateOperatorDescriptor invIndexCreateOp = new InvertedIndexCreateOperatorDescriptor(spec,
-                storageManager, btreeFileSplitProvider, invListsFileSplitProvider, lcManagerProvider,
-                closeableResourceManagerProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
-                invListsComparatorFactories, tokenizerFactory, invertedIndexDataflowHelperFactory,
-                NoOpOperationCallbackProvider.INSTANCE);
+                storageManager, btreeFileSplitProvider, invListsFileSplitProvider, lcManagerProvider, tokenTypeTraits,
+                tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories, tokenizerFactory,
+                invertedIndexDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, invIndexCreateOp, NC1_ID);
         spec.addRoot(invIndexCreateOp);
         runTest(spec);
@@ -195,9 +191,9 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     private IOperatorDescriptor createPrimaryBulkLoadOp(JobSpecification spec) {
         int[] fieldPermutation = { 0, 1 };
         TreeIndexBulkLoadOperatorDescriptor primaryBtreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManager, lcManagerProvider, closeableResourceManagerProvider, primaryFileSplitProvider,
-                primaryTypeTraits, primaryComparatorFactories, fieldPermutation, 0.7f, true,
-                btreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+                storageManager, lcManagerProvider, primaryFileSplitProvider, primaryTypeTraits,
+                primaryComparatorFactories, fieldPermutation, 0.7f, true, btreeDataflowHelperFactory,
+                NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeBulkLoad, NC1_ID);
         return primaryBtreeBulkLoad;
     }
@@ -222,9 +218,9 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
         int[] lowKeyFields = null; // - infinity
         int[] highKeyFields = null; // + infinity
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, lcManagerProvider, closeableResourceManagerProvider, primaryFileSplitProvider,
-                primaryTypeTraits, primaryComparatorFactories, lowKeyFields, highKeyFields, true, true,
-                btreeDataflowHelperFactory, false, NoOpOperationCallbackProvider.INSTANCE);
+                storageManager, lcManagerProvider, primaryFileSplitProvider, primaryTypeTraits,
+                primaryComparatorFactories, lowKeyFields, highKeyFields, true, true, btreeDataflowHelperFactory, false,
+                NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
         return primaryBtreeSearchOp;
     }
@@ -272,9 +268,8 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     private IOperatorDescriptor createInvertedIndexBulkLoadOp(JobSpecification spec, int[] fieldPermutation) {
         InvertedIndexBulkLoadOperatorDescriptor invIndexBulkLoadOp = new InvertedIndexBulkLoadOperatorDescriptor(spec,
                 fieldPermutation, storageManager, btreeFileSplitProvider, invListsFileSplitProvider, lcManagerProvider,
-                closeableResourceManagerProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
-                invListsComparatorFactories, tokenizerFactory, invertedIndexDataflowHelperFactory,
-                NoOpOperationCallbackProvider.INSTANCE);
+                tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories,
+                tokenizerFactory, invertedIndexDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, invIndexBulkLoadOp, NC1_ID);
         return invIndexBulkLoadOp;
     }
@@ -317,10 +312,10 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     private IOperatorDescriptor createInvertedIndexSearchOp(JobSpecification spec,
             IInvertedIndexSearchModifierFactory searchModifierFactory) {
         InvertedIndexSearchOperatorDescriptor invIndexSearchOp = new InvertedIndexSearchOperatorDescriptor(spec, 0,
-                storageManager, btreeFileSplitProvider, invListsFileSplitProvider, lcManagerProvider,
-                closeableResourceManagerProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
-                invListsComparatorFactories, invertedIndexDataflowHelperFactory, tokenizerFactory,
-                searchModifierFactory, invListsRecDesc, false, NoOpOperationCallbackProvider.INSTANCE);
+                storageManager, btreeFileSplitProvider, invListsFileSplitProvider, lcManagerProvider, tokenTypeTraits,
+                tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories,
+                invertedIndexDataflowHelperFactory, tokenizerFactory, searchModifierFactory, invListsRecDesc, false,
+                NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, invIndexSearchOp, NC1_ID);
         return invIndexSearchOp;
     }
