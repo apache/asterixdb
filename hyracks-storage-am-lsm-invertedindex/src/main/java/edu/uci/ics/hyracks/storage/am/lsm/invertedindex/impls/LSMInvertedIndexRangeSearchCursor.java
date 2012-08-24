@@ -70,10 +70,10 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMTreeSearchCursor {
      */
     @Override
     protected boolean isDeleted(PriorityQueueElement checkElement) throws HyracksDataException {
+        keysOnlyTuple.reset(checkElement.getTuple());
         int end = checkElement.getCursorIndex();
         for (int i = 0; i <= end; i++) {
-            deletedKeysBTreeCursor.reset();
-            keysOnlyTuple.reset(checkElement.getTuple());
+            deletedKeysBTreeCursor.reset();            
             try {
                 deletedKeysBTreeAccessors.get(i).search(deletedKeysBTreeCursor, keySearchPred);
                 if (deletedKeysBTreeCursor.hasNext()) {

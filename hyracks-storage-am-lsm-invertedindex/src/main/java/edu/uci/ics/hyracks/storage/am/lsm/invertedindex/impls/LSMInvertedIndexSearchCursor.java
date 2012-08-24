@@ -26,7 +26,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 
 /**
@@ -38,6 +37,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     private IIndexAccessor currentAccessor;
     private IIndexCursor currentCursor;
     private int accessorIndex = -1;
+    private boolean tupleConsumed = true;
     private LSMHarness harness;
     private boolean includeMemComponent;
     private AtomicInteger searcherRefCount;
@@ -47,7 +47,6 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     // Assuming the cursor for all deleted-keys indexes are of the same type.
     protected IIndexCursor deletedKeysBTreeCursor;
     protected List<IIndexAccessor> deletedKeysBTreeAccessors;
-    protected PermutingTupleReference keysOnlyTuple;
     protected RangePredicate keySearchPred;
 
     @Override
@@ -61,17 +60,50 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
         this.searchPred = searchPred;
         
         // For searching the deleted-keys BTrees.
-        this.keysOnlyTuple = lsmInitState.getKeysOnlyTuple();
         deletedKeysBTreeAccessors = lsmInitState.getDeletedKeysBTreeAccessors();
         deletedKeysBTreeCursor = deletedKeysBTreeAccessors.get(0).createSearchCursor();        
         MultiComparator keyCmp = lsmInitState.getKeyComparator();
-        keySearchPred = new RangePredicate(keysOnlyTuple, keysOnlyTuple, true, true, keyCmp, keyCmp);        
+        keySearchPred = new RangePredicate(null, null, true, true, keyCmp, keyCmp);
     }
 
+    protected boolean isDeleted(ITupleReference key) throws HyracksDataException {
+        keySearchPred.setLowKey(key, true);
+        keySearchPred.setHighKey(key, true);
+        for (int i = 0; i <= accessorIndex; i++) {
+            deletedKeysBTreeCursor.reset();
+            try {
+                deletedKeysBTreeAccessors.get(i).search(deletedKeysBTreeCursor, keySearchPred);
+                if (deletedKeysBTreeCursor.hasNext()) {
+                    return true;
+                }
+            } catch (IndexException e) {
+                throw new HyracksDataException(e);
+            } finally {
+                deletedKeysBTreeCursor.close();
+            }
+        }
+        return false;
+    }
+    
+    // Move to the next tuple that has not been deleted.
+    private boolean nextValidTuple() throws HyracksDataException {
+        while (currentCursor.hasNext()) {
+            currentCursor.next();
+            if (!isDeleted(currentCursor.getTuple())) { 
+                tupleConsumed = false;
+                return true;
+            }
+        }
+        return false;
+    }
+    
     @Override
     public boolean hasNext() throws HyracksDataException {
+        if (!tupleConsumed) {
+            return true;
+        }
         if (currentCursor != null) {
-            if (currentCursor.hasNext()) {
+            if (nextValidTuple()) {
                 return true;
             }
             currentCursor.close();
@@ -86,7 +118,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
             } catch (IndexException e) {
                 throw new HyracksDataException(e);
             }
-            if (currentCursor.hasNext()) {
+            if (nextValidTuple()) {
                 return true;
             }
             // Close as we go to release resources.
@@ -98,7 +130,8 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
 
     @Override
     public void next() throws HyracksDataException {
-        currentCursor.next();
+        // Mark the tuple as consumed, so hasNext() can move on.
+        tupleConsumed = true;                
     }
 
     @Override
