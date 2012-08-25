@@ -476,6 +476,7 @@ public class BTree extends AbstractTreeIndex {
                 restartOp = updateLeaf(tuple, targetTupleIndex, pageId, ctx);
             }
         } else {
+            targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple);
             restartOp = insertLeaf(tuple, targetTupleIndex, pageId, ctx);
         }
         return restartOp;
@@ -996,7 +997,7 @@ public class BTree extends AbstractTreeIndex {
                 throw new BTreeUnsortedInputException("Input stream given to BTree bulk load is not sorted.");
             }
         }
-        
+
         protected void handleException() throws HyracksDataException {
             // Unlatch and unpin pages.
             for (NodeFrontier nodeFrontier : nodeFrontiers) {
@@ -1004,7 +1005,7 @@ public class BTree extends AbstractTreeIndex {
                 bufferCache.unpin(nodeFrontier.page);
             }
         }
-        
+
         protected void propagateBulk(int level) throws HyracksDataException {
             if (splitKey.getBuffer() == null)
                 return;
