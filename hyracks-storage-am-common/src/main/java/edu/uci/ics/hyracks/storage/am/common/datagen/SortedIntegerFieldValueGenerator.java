@@ -17,16 +17,25 @@ package edu.uci.ics.hyracks.storage.am.common.datagen;
 
 public class SortedIntegerFieldValueGenerator implements IFieldValueGenerator<Integer> {
     private int val = 0;
+    private final int startVal;
 
     public SortedIntegerFieldValueGenerator() {
+        startVal = 0;
+        reset();
     }
     
     public SortedIntegerFieldValueGenerator(int startVal) {
-        val = startVal;
+        this.startVal = startVal;
+        reset();
     }
     
     @Override
     public Integer next() {
         return val++;
+    }
+
+    @Override
+    public void reset() {
+        val = startVal;
     }
 }

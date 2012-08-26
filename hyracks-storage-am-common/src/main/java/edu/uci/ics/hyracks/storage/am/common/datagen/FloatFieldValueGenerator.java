@@ -28,4 +28,8 @@ public class FloatFieldValueGenerator implements IFieldValueGenerator<Float> {
     public Float next() {
         return rnd.nextFloat();
     }
+
+    @Override
+    public void reset() {
+    }
 }

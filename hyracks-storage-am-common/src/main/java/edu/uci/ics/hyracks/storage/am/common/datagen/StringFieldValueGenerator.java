@@ -39,4 +39,8 @@ public class StringFieldValueGenerator implements IFieldValueGenerator<String> {
         }
         return strBuilder.toString();
     }
+
+    @Override
+    public void reset() {
+    }
 }

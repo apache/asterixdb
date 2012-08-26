@@ -63,4 +63,10 @@ public class TupleGenerator {
     public ITupleReference get() {
         return tuple;
     }
+    
+    public void reset() {
+        for (IFieldValueGenerator fieldGen : fieldGens) {
+            fieldGen.reset();
+        }
+    }
 }

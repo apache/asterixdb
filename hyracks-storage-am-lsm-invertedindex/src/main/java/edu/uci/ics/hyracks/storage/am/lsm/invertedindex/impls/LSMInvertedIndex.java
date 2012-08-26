@@ -26,7 +26,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
-import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
@@ -341,8 +340,14 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     }
         
     /**
+     * The keys in the in-memory deleted-keys BTree only refers to on-disk components.
+     * We delete documents from the in-memory inverted index by deleting its entries directly,
+     * and do NOT add the deleted key to the deleted-keys BTree.
+     * Otherwise, inserts would have to remove keys from the in-memory deleted-keys BTree which 
+     * may cause incorrect behavior in the following pathological case:
+     * Insert doc 1, flush, delete doc 1, insert doc 1
+     * After the sequence above doc 1 will now appear twice because the delete of the on-disk doc 1 has been lost.
      * Insert:
-     * - Delete key from deleted-keys BTree (ignore if key does not exist).
      * - Insert document into in-memory inverted index.
      * Delete:
      * - Delete document from in-memory inverted index (ignore if it does not exist).
@@ -354,13 +359,6 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         LSMInvertedIndexOpContext ctx = (LSMInvertedIndexOpContext) ictx;
         switch (ctx.getIndexOp()) {
             case INSERT: {
-                // First remove the possibly deleted key from the deleted-keys BTree.
-                ctx.keysOnlyTuple.reset(tuple);
-                try {
-                    ctx.deletedKeysBTreeAccessor.delete(ctx.keysOnlyTuple);
-                } catch (BTreeNonExistentKeyException e) {
-                    // The key did not exist in the deleted-keys BTree.
-                }
                 // Insert into the in-memory inverted index.
                 ctx.memInvIndexAccessor.insert(tuple);
                 break;
@@ -452,7 +450,6 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     }
     
     @Override
-    // TODO: Deal with deletions properly.
     public Object merge(List<Object> mergedComponents, ILSMIOOperation operation) throws HyracksDataException,
             IndexException {
         LSMInvertedIndexMergeOperation mergeOp = (LSMInvertedIndexMergeOperation) operation;

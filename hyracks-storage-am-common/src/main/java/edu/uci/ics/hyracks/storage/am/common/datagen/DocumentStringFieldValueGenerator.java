@@ -92,4 +92,8 @@ public class DocumentStringFieldValueGenerator implements IFieldValueGenerator<S
     public List<String> getTokenDictionary() {
         return tokenDict;
     }
+
+    @Override
+    public void reset() {
+    }
 }

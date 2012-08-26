@@ -16,17 +16,26 @@
 package edu.uci.ics.hyracks.storage.am.common.datagen;
 
 public class SortedDoubleFieldValueGenerator implements IFieldValueGenerator<Double> {
-    private double val = 0.0d;
-
+    private double val;
+    private final double startVal;
+    
     public SortedDoubleFieldValueGenerator() {
+        startVal = 0.0d;
+        reset();
     }
     
     public SortedDoubleFieldValueGenerator(double startVal) {
-        val = startVal;
+        this.startVal = startVal;
+        reset();
     }
     
     @Override
     public Double next() {
         return val++;
+    }
+
+    @Override
+    public void reset() {
+        val = startVal;        
     }
 }

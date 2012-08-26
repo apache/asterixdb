@@ -90,4 +90,8 @@ public class PersonNameFieldValueGenerator implements IFieldValueGenerator<Strin
         
         return strBuilder.toString();
     }
+
+    @Override
+    public void reset() {
+    }
 }

@@ -28,4 +28,8 @@ public class IntegerFieldValueGenerator implements IFieldValueGenerator<Integer>
     public Integer next() {
         return rnd.nextInt();
     }
+
+    @Override
+    public void reset() {
+    }
 }

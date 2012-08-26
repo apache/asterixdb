@@ -17,16 +17,25 @@ package edu.uci.ics.hyracks.storage.am.common.datagen;
 
 public class SortedFloatFieldValueGenerator implements IFieldValueGenerator<Float> {
     private float val = 0.0f;
-
+    private final float startVal;
+    
     public SortedFloatFieldValueGenerator() {
+        startVal = 0.0f;
+        reset();
     }
     
     public SortedFloatFieldValueGenerator(float startVal) {
-        val = startVal;
+        this.startVal = startVal;
+        reset();
     }
     
     @Override
     public Float next() {
         return val++;
+    }
+
+    @Override
+    public void reset() {
+        val = startVal;
     }
 }

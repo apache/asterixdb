@@ -23,7 +23,9 @@ import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -57,6 +59,8 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccess
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common.LSMInvertedIndexTestHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.exceptions.OccurrenceThresholdPanicException;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
@@ -68,6 +72,9 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestCo
 @SuppressWarnings("rawtypes")
 public class InvertedIndexTestUtils {
 
+    // Probability that a randomly generated query is used, instead of a document from the corpus.
+    protected static final float RQNDOM_QUERY_PROB = 0.9f;
+    
     public static TupleGenerator createStringDocumentTupleGen(Random rnd) throws IOException {
         IFieldValueGenerator[] fieldGens = new IFieldValueGenerator[2];
         fieldGens[0] = new DocumentStringFieldValueGenerator(2, 10, 10000, rnd);
@@ -172,7 +179,6 @@ public class InvertedIndexTestUtils {
         Iterator<CheckTuple> expectedIter = testCtx.getCheckTuples().iterator();
 
         // Compare index elements.
-        int count = 0;
         try {
             while (invIndexCursor.hasNext() && expectedIter.hasNext()) {
                 invIndexCursor.next();
@@ -180,9 +186,14 @@ public class InvertedIndexTestUtils {
                 CheckTuple expected = expectedIter.next();
                 OrderedIndexTestUtils.createTupleFromCheckTuple(expected, expectedBuilder, expectedTuple, fieldSerdes);
                 if (tupleCmp.compare(actualTuple, expectedTuple) != 0) {
-                    fail("Index elements differ for token '" + expected.getField(0) + "' at position " + count + ".");
+                    fail("Index entries differ for token '" + expected.getField(0) + "'.");
                 }
-                count++;
+            }
+            if (expectedIter.hasNext()) {
+                fail("Indexes do not match. Actual index is missing entries.");
+            }
+            if (invIndexCursor.hasNext()) {
+                fail("Indexes do not match. Actual index contains too many entries.");
             }
         } finally {
             invIndexCursor.close();
@@ -317,6 +328,86 @@ public class InvertedIndexTestUtils {
         }
     }
 
+    public static void testIndexSearch(InvertedIndexTestContext testCtx, TupleGenerator tupleGen, Random rnd,
+            int numQueries, IInvertedIndexSearchModifier searchModifier, int[] scanCountArray) throws IOException,
+            IndexException {
+        IInvertedIndex invIndex = testCtx.invIndex;
+        IInvertedIndexAccessor accessor = (IInvertedIndexAccessor) invIndex.createAccessor(
+                NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        IBinaryTokenizer tokenizer = testCtx.getTokenizerFactory().createTokenizer();
+        InvertedIndexSearchPredicate searchPred = new InvertedIndexSearchPredicate(tokenizer, searchModifier);
+        List<ITupleReference> documentCorpus = testCtx.getDocumentCorpus();
+        // Project away the primary-key field.
+        int[] fieldPermutation = new int[] { 0 };
+        PermutingTupleReference searchDocument = new PermutingTupleReference(fieldPermutation);
+
+        IIndexCursor resultCursor = accessor.createSearchCursor();
+        for (int i = 0; i < numQueries; i++) {
+            if (rnd.nextFloat() <= RQNDOM_QUERY_PROB || documentCorpus.isEmpty()) {
+                // Generate a random query.
+                ITupleReference randomQuery = tupleGen.next();
+                searchDocument.reset(randomQuery);
+            } else {
+                // Pick a random document from the corpus to use as the search query.
+                int queryIndex = Math.abs(rnd.nextInt() % documentCorpus.size());
+                searchDocument.reset(documentCorpus.get(queryIndex));
+            }
+
+            // Set query tuple in search predicate.
+            searchPred.setQueryTuple(searchDocument);
+            searchPred.setQueryFieldIndex(0);
+
+            resultCursor.reset();
+            boolean panic = false;
+            try {
+                accessor.search(resultCursor, searchPred);
+            } catch (OccurrenceThresholdPanicException e) {
+                // ignore panic queries
+                panic = true;
+            }
+
+            try {
+                if (!panic) {
+                    // Consume cursor and deserialize results so we can sort them. Some search cursors may not deliver the result sorted (e.g., LSM search cursor).
+                    ArrayList<Integer> actualResults = new ArrayList<Integer>();
+                    while (resultCursor.hasNext()) {
+                        resultCursor.next();
+                        ITupleReference resultTuple = resultCursor.getTuple();
+                        int actual = IntegerSerializerDeserializer.getInt(resultTuple.getFieldData(0),
+                                resultTuple.getFieldStart(0));
+                        actualResults.add(Integer.valueOf(actual));
+                    }
+                    Collections.sort(actualResults);
+
+                    // Get expected results.
+                    List<Integer> expectedResults = new ArrayList<Integer>();
+                    InvertedIndexTestUtils.getExpectedResults(scanCountArray, testCtx.getCheckTuples(), searchDocument,
+                            tokenizer, testCtx.getFieldSerdes()[0], searchModifier, expectedResults);
+
+                    Iterator<Integer> expectedIter = expectedResults.iterator();
+                    Iterator<Integer> actualIter = actualResults.iterator();
+                    while (expectedIter.hasNext() && actualIter.hasNext()) {
+                        int expected = expectedIter.next();
+                        int actual = actualIter.next();
+                        if (actual != expected) {
+                            fail("Query results do not match. Encountered: " + actual + ". Expected: " + expected + "");
+                        }
+                    }
+                    if (expectedIter.hasNext()) {
+                        fail("Query results do not match. Actual results missing.");
+                    }
+                    if (actualIter.hasNext()) {
+                        fail("Query results do not match. Actual contains too many results.");
+                    }
+                }
+            } finally {
+                resultCursor.close();
+            }
+        }
+    }
+    
+    
+    
     /*
     public static OnDiskInvertedIndex createTestInvertedIndex(LSMInvertedIndexTestHarness harness, IBinaryTokenizer tokenizer)
             throws HyracksDataException {

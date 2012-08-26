@@ -28,4 +28,8 @@ public class DoubleFieldValueGenerator implements IFieldValueGenerator<Double> {
     public Double next() {
         return rnd.nextDouble();
     }
+
+    @Override
+    public void reset() {
+    }
 }

@@ -26,6 +26,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleGenerator;
 import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveSearchModifier;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext.InvertedIndexType;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestUtils;
@@ -33,9 +35,12 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestUt
 public abstract class AbstractInvertedIndexDeleteTest extends AbstractInvertedIndexTest {
 
     protected final int numInsertRounds = AccessMethodTestsConfig.LSM_INVINDEX_NUM_INSERT_ROUNDS;
-    protected final int numDeleteRounds = AccessMethodTestsConfig.LSM_INVINDEX_NUM_INSERT_ROUNDS;
+    protected final int numDeleteRounds = AccessMethodTestsConfig.LSM_INVINDEX_NUM_DELETE_ROUNDS;
     protected final boolean bulkLoad;
 
+    protected int NUM_QUERIES = 10000;
+    protected int[] scanCountArray = new int[NUM_DOCS_TO_INSERT];
+    
     public AbstractInvertedIndexDeleteTest(InvertedIndexType invIndexType, boolean bulkLoad) {
         super(invIndexType);
         this.bulkLoad = bulkLoad;
@@ -48,6 +53,9 @@ public abstract class AbstractInvertedIndexDeleteTest extends AbstractInvertedIn
         invIndex.activate();
 
         for (int i = 0; i < numInsertRounds; i++) {
+            // Start generating documents ids from 0 again.
+            tupleGen.reset();
+            
             if (bulkLoad) {
                 InvertedIndexTestUtils.bulkLoadInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
             } else {
@@ -62,8 +70,18 @@ public abstract class AbstractInvertedIndexDeleteTest extends AbstractInvertedIn
             int numTuplesPerDeleteRound = (int) Math.ceil((float) testCtx.getDocumentCorpus().size()
                     / (float) numDeleteRounds);
             for (int j = 0; j < numDeleteRounds; j++) {
+                System.out.println("DELETE ROUND: " + i + " " + j);
+                
                 InvertedIndexTestUtils.deleteFromInvIndex(testCtx, harness.getRandom(), numTuplesPerDeleteRound);
                 validateAndCheckIndex(testCtx);
+                
+                System.out.println("TESTING SEARCHES");
+                
+                IInvertedIndexSearchModifier searchModifier = new ConjunctiveSearchModifier();
+                InvertedIndexTestUtils.testIndexSearch(testCtx, tupleGen, harness.getRandom(), NUM_QUERIES, searchModifier,
+                        scanCountArray);
+                
+                System.out.println("DONE WITH TESTING SEARCHES");
             }
         }
 
