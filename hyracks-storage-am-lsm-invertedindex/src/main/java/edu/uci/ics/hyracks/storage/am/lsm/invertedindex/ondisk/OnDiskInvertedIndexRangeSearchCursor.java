@@ -81,8 +81,10 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
         if (invListCursor.hasNext()) {
             return true;
         }
-        invListCursor.unpinPages();
-        unpinNeeded = false;
+        if (unpinNeeded) {
+            invListCursor.unpinPages();
+            unpinNeeded = false;
+        }
         if (!btreeCursor.hasNext()) {
             return false;
         }
