@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -44,7 +45,7 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
         needPush = false;
     }
 
-    public void initPriorityQueue() throws HyracksDataException {
+    public void initPriorityQueue() throws HyracksDataException, IndexException {
         int pqInitSize = (rangeCursors.length > 0) ? rangeCursors.length : 1;
         outputPriorityQueue = new PriorityQueue<PriorityQueueElement>(pqInitSize, pqCmp);
         for (int i = 0; i < rangeCursors.length; i++) {
@@ -79,7 +80,7 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException {
+    public boolean hasNext() throws HyracksDataException, IndexException {
         checkPriorityQueue();
         return !outputPriorityQueue.isEmpty();
     }
@@ -127,7 +128,7 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
         return (ITupleReference) outputElement.getTuple();
     }
 
-    protected boolean pushIntoPriorityQueue(PriorityQueueElement e) throws HyracksDataException {
+    protected boolean pushIntoPriorityQueue(PriorityQueueElement e) throws HyracksDataException, IndexException {
         int cursorIndex = e.getCursorIndex();
         if (rangeCursors[cursorIndex].hasNext()) {
             rangeCursors[cursorIndex].next();
@@ -143,7 +144,7 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
         return ((ILSMTreeTupleReference) checkElement.getTuple()).isAntimatter();
     }
     
-    protected void checkPriorityQueue() throws HyracksDataException {
+    protected void checkPriorityQueue() throws HyracksDataException, IndexException {
         while (!outputPriorityQueue.isEmpty() || needPush == true) {
             if (!outputPriorityQueue.isEmpty()) {
                 PriorityQueueElement checkElement = outputPriorityQueue.peek();

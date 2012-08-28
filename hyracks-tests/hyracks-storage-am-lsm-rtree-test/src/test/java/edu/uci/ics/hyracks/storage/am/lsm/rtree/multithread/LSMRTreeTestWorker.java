@@ -122,7 +122,7 @@ public class LSMRTreeTestWorker extends AbstractTreeIndexTestWorker {
         rearrangedTuple.reset(rearrangedTb.getFieldEndOffsets(), rearrangedTb.getByteArray());
     }
 
-    private void consumeCursorTuples(ITreeIndexCursor cursor) throws HyracksDataException {
+    private void consumeCursorTuples(ITreeIndexCursor cursor) throws HyracksDataException, IndexException {
         try {
             while (cursor.hasNext()) {
                 cursor.next();

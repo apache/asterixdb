@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.storage.am.common.AbstractTreeIndexTestWorker;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
@@ -72,7 +73,7 @@ public abstract class AbstractLSMRTreeTestWorker extends AbstractTreeIndexTestWo
         rearrangedTuple.reset(rearrangedTb.getFieldEndOffsets(), rearrangedTb.getByteArray());
     }
 
-    protected void consumeCursorTuples(ITreeIndexCursor cursor) throws HyracksDataException {
+    protected void consumeCursorTuples(ITreeIndexCursor cursor) throws HyracksDataException, IndexException {
         try {
             while (cursor.hasNext()) {
                 cursor.next();

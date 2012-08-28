@@ -22,7 +22,7 @@ public interface IIndexCursor {
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws IndexException,
             HyracksDataException;
 
-    public boolean hasNext() throws HyracksDataException;
+    public boolean hasNext() throws HyracksDataException, IndexException;
 
     public void next() throws HyracksDataException;
 

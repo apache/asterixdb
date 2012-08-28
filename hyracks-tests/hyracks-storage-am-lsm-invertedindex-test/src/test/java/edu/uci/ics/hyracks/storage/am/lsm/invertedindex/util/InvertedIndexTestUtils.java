@@ -49,6 +49,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DocumentStringFieldValueGenerator;
 import edu.uci.ics.hyracks.storage.am.common.datagen.IFieldValueGenerator;
+import edu.uci.ics.hyracks.storage.am.common.datagen.PersonNameFieldValueGenerator;
 import edu.uci.ics.hyracks.storage.am.common.datagen.SortedIntegerFieldValueGenerator;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleGenerator;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -62,22 +63,35 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common.LSMInvertedIndexT
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.exceptions.OccurrenceThresholdPanicException;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.HashedUTF8NGramTokenFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.HashedUTF8WordTokenFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.ITokenFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.NGramUTF8StringBinaryTokenizerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8NGramTokenFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8WordTokenFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext.InvertedIndexType;
 
 @SuppressWarnings("rawtypes")
 public class InvertedIndexTestUtils {
 
-    // Probability that a randomly generated query is used, instead of a document from the corpus.
-    protected static final float RQNDOM_QUERY_PROB = 0.9f;
-    
+    public static final int TEST_GRAM_LENGTH = 3;
+
     public static TupleGenerator createStringDocumentTupleGen(Random rnd) throws IOException {
         IFieldValueGenerator[] fieldGens = new IFieldValueGenerator[2];
         fieldGens[0] = new DocumentStringFieldValueGenerator(2, 10, 10000, rnd);
+        fieldGens[1] = new SortedIntegerFieldValueGenerator(0);
+        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] {
+                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+        TupleGenerator tupleGen = new TupleGenerator(fieldGens, fieldSerdes, 0);
+        return tupleGen;
+    }
+
+    public static TupleGenerator createPersonNamesTupleGen(Random rnd) throws IOException {
+        IFieldValueGenerator[] fieldGens = new IFieldValueGenerator[2];
+        fieldGens[0] = new PersonNameFieldValueGenerator(rnd, 0.5f);
         fieldGens[1] = new SortedIntegerFieldValueGenerator(0);
         ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
@@ -92,6 +106,42 @@ public class InvertedIndexTestUtils {
         ITokenFactory tokenFactory = new UTF8WordTokenFactory();
         IBinaryTokenizerFactory tokenizerFactory = new DelimitedUTF8StringBinaryTokenizerFactory(true, false,
                 tokenFactory);
+        InvertedIndexTestContext testCtx = InvertedIndexTestContext.create(harness, fieldSerdes, 1, tokenizerFactory,
+                invIndexType);
+        return testCtx;
+    }
+
+    public static InvertedIndexTestContext createHashedWordInvIndexTestContext(LSMInvertedIndexTestHarness harness,
+            InvertedIndexType invIndexType) throws IOException, IndexException {
+        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
+                IntegerSerializerDeserializer.INSTANCE };
+        ITokenFactory tokenFactory = new HashedUTF8WordTokenFactory();
+        IBinaryTokenizerFactory tokenizerFactory = new DelimitedUTF8StringBinaryTokenizerFactory(true, false,
+                tokenFactory);
+        InvertedIndexTestContext testCtx = InvertedIndexTestContext.create(harness, fieldSerdes, 1, tokenizerFactory,
+                invIndexType);
+        return testCtx;
+    }
+
+    public static InvertedIndexTestContext createNGramInvIndexTestContext(LSMInvertedIndexTestHarness harness,
+            InvertedIndexType invIndexType) throws IOException, IndexException {
+        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] {
+                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+        ITokenFactory tokenFactory = new UTF8NGramTokenFactory();
+        IBinaryTokenizerFactory tokenizerFactory = new NGramUTF8StringBinaryTokenizerFactory(TEST_GRAM_LENGTH, true,
+                true, false, tokenFactory);
+        InvertedIndexTestContext testCtx = InvertedIndexTestContext.create(harness, fieldSerdes, 1, tokenizerFactory,
+                invIndexType);
+        return testCtx;
+    }
+
+    public static InvertedIndexTestContext createHashedNGramInvIndexTestContext(LSMInvertedIndexTestHarness harness,
+            InvertedIndexType invIndexType) throws IOException, IndexException {
+        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
+                IntegerSerializerDeserializer.INSTANCE };
+        ITokenFactory tokenFactory = new HashedUTF8NGramTokenFactory();
+        IBinaryTokenizerFactory tokenizerFactory = new NGramUTF8StringBinaryTokenizerFactory(TEST_GRAM_LENGTH, true,
+                true, false, tokenFactory);
         InvertedIndexTestContext testCtx = InvertedIndexTestContext.create(harness, fieldSerdes, 1, tokenizerFactory,
                 invIndexType);
         return testCtx;
@@ -147,7 +197,7 @@ public class InvertedIndexTestUtils {
             documentCorpus.remove(size - 1);
         }
     }
-    
+
     /**
      * Compares actual and expected indexes using the rangeSearch() method of the inverted-index accessor.
      */
@@ -241,7 +291,7 @@ public class InvertedIndexTestUtils {
             checkLowKey.appendField(token);
             CheckTuple checkHighKey = new CheckTuple(tokenFieldCount, tokenFieldCount);
             checkHighKey.appendField(token);
-            
+
             SortedSet<CheckTuple> expectedInvList = OrderedIndexTestUtils.getPrefixExpectedSubset(
                     testCtx.getCheckTuples(), checkLowKey, checkHighKey);
             Iterator<CheckTuple> expectedInvListIter = expectedInvList.iterator();
@@ -329,8 +379,8 @@ public class InvertedIndexTestUtils {
     }
 
     public static void testIndexSearch(InvertedIndexTestContext testCtx, TupleGenerator tupleGen, Random rnd,
-            int numDocQueries, int numRandomQueries, IInvertedIndexSearchModifier searchModifier, int[] scanCountArray) throws IOException,
-            IndexException {
+            int numDocQueries, int numRandomQueries, IInvertedIndexSearchModifier searchModifier, int[] scanCountArray)
+            throws IOException, IndexException {
         IInvertedIndex invIndex = testCtx.invIndex;
         IInvertedIndexAccessor accessor = (IInvertedIndexAccessor) invIndex.createAccessor(
                 NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
@@ -364,7 +414,7 @@ public class InvertedIndexTestUtils {
             try {
                 accessor.search(resultCursor, searchPred);
             } catch (OccurrenceThresholdPanicException e) {
-                // ignore panic queries
+                // ignore panic queries.
                 panic = true;
             }
 
@@ -372,12 +422,17 @@ public class InvertedIndexTestUtils {
                 if (!panic) {
                     // Consume cursor and deserialize results so we can sort them. Some search cursors may not deliver the result sorted (e.g., LSM search cursor).
                     ArrayList<Integer> actualResults = new ArrayList<Integer>();
-                    while (resultCursor.hasNext()) {
-                        resultCursor.next();
-                        ITupleReference resultTuple = resultCursor.getTuple();
-                        int actual = IntegerSerializerDeserializer.getInt(resultTuple.getFieldData(0),
-                                resultTuple.getFieldStart(0));
-                        actualResults.add(Integer.valueOf(actual));
+                    try {
+                        while (resultCursor.hasNext()) {
+                            resultCursor.next();
+                            ITupleReference resultTuple = resultCursor.getTuple();
+                            int actual = IntegerSerializerDeserializer.getInt(resultTuple.getFieldData(0),
+                                    resultTuple.getFieldStart(0));
+                            actualResults.add(Integer.valueOf(actual));
+                        }
+                    } catch (OccurrenceThresholdPanicException e) {
+                        // Ignore panic queries.
+                        continue;
                     }
                     Collections.sort(actualResults);
 
@@ -407,43 +462,4 @@ public class InvertedIndexTestUtils {
             }
         }
     }
-    
-    
-    
-    /*
-    public static OnDiskInvertedIndex createTestInvertedIndex(LSMInvertedIndexTestHarness harness, IBinaryTokenizer tokenizer)
-            throws HyracksDataException {
-        ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-        ITypeTraits[] btreeTypeTraits = new ITypeTraits[] { UTF8StringPointable.TYPE_TRAITS,
-                IntegerPointable.TYPE_TRAITS, IntegerPointable.TYPE_TRAITS, IntegerPointable.TYPE_TRAITS,
-                IntegerPointable.TYPE_TRAITS };
-        ITreeIndexTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(btreeTypeTraits);
-        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
-        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
-        IFreePageManager freePageManager = new LinkedListFreePageManager(harness.getDiskBufferCache(), 0,
-                metaFrameFactory);
-        IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
-                .of(UTF8StringPointable.FACTORY) };
-        return InvertedIndexUtils.createInvertedIndex(harness.getDiskBufferCache(), 
-                harness.getInvListTypeTraits(), harness.getInvListCmpFactories(), tokenizer);
-    }
-
-    public static InMemoryInvertedIndex createInMemoryInvertedIndex(LSMInvertedIndexTestHarness harness,
-            IBinaryTokenizer tokenizer) {
-        return InvertedIndexUtils.createInMemoryBTreeInvertedindex(harness.getMemBufferCache(),
-                harness.getMemFreePageManager(), harness.getTokenTypeTraits(), harness.getInvListTypeTraits(),
-                harness.getTokenCmpFactories(), harness.getInvListCmpFactories(),
-                tokenizer);
-    }
-
-    public static LSMInvertedIndex createLSMInvertedIndex(LSMInvertedIndexTestHarness harness,
-            IBinaryTokenizer tokenizer) {
-        return InvertedIndexUtils.createLSMInvertedIndex(harness.getMemBufferCache(),
-                harness.getMemFreePageManager(), harness.getTokenTypeTraits(), harness.getInvListTypeTraits(),
-                harness.getTokenCmpFactories(), harness.getInvListCmpFactories(),
-                tokenizer, harness.getDiskBufferCache(),
-                new LinkedListFreePageManagerFactory(harness.getDiskBufferCache(), new LIFOMetaDataFrameFactory()),
-                harness.getIOManager(), harness.getOnDiskDir(), harness.getDiskFileMapProvider());
-    }
-    */
 }

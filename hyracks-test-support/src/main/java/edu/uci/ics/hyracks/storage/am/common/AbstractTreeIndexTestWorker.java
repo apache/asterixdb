@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleBatch;
 
@@ -60,7 +61,7 @@ public abstract class AbstractTreeIndexTestWorker extends Thread implements ITre
         }
     }
 
-    protected void consumeCursorTuples(IIndexCursor cursor) throws HyracksDataException {
+    protected void consumeCursorTuples(IIndexCursor cursor) throws HyracksDataException, IndexException {
         try {
             while (cursor.hasNext()) {
                 cursor.next();

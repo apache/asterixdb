@@ -74,4 +74,11 @@ public abstract class AbstractInvertedIndexDeleteTest extends AbstractInvertedIn
         TupleGenerator tupleGen = InvertedIndexTestUtils.createStringDocumentTupleGen(harness.getRandom());
         runTest(testCtx, tupleGen);
     }
+    
+    @Test
+    public void hashedWordTokensInvIndexTest() throws IOException, IndexException {
+        InvertedIndexTestContext testCtx = InvertedIndexTestUtils.createHashedWordInvIndexTestContext(harness, invIndexType);
+        TupleGenerator tupleGen = InvertedIndexTestUtils.createStringDocumentTupleGen(harness.getRandom());
+        runTest(testCtx, tupleGen);
+    }
 }

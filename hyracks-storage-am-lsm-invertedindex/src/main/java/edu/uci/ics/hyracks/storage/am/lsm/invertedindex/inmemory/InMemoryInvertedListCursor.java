@@ -108,7 +108,7 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException {
+    public boolean hasNext() throws HyracksDataException, IndexException {
         return btreeCursor.hasNext();
     }
 
@@ -170,7 +170,7 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
     }
 
     @Override
-    public boolean containsKey(ITupleReference searchTuple, MultiComparator invListCmp) throws HyracksDataException {
+    public boolean containsKey(ITupleReference searchTuple, MultiComparator invListCmp) throws HyracksDataException, IndexException {
         btreeSearchTuple.addTuple(searchTuple);
         btreePred.setLowKeyComparator(btreeCmp);
         btreePred.setHighKeyComparator(btreeCmp);
@@ -195,7 +195,7 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
 
     @SuppressWarnings("rawtypes")
     @Override
-    public String printInvList(ISerializerDeserializer[] serdes) throws HyracksDataException {
+    public String printInvList(ISerializerDeserializer[] serdes) throws HyracksDataException, IndexException {
         StringBuilder strBuilder = new StringBuilder();
         try {
             while (btreeCursor.hasNext()) {

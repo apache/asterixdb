@@ -15,7 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
-
 public class HashedUTF8NGramTokenFactory extends AbstractUTF8TokenFactory {
 
 	private static final long serialVersionUID = 1L;

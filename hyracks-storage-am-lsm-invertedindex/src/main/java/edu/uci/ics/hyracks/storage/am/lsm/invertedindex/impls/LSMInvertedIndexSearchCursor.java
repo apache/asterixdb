@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.exceptions.OccurrenceThresholdPanicException;
 
 /**
  * Searches the components one-by-one, completely consuming a cursor before moving on to the next one.
@@ -86,7 +87,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     }
     
     // Move to the next tuple that has not been deleted.
-    private boolean nextValidTuple() throws HyracksDataException {
+    private boolean nextValidTuple() throws HyracksDataException, IndexException {
         while (currentCursor.hasNext()) {
             currentCursor.next();
             if (!isDeleted(currentCursor.getTuple())) { 
@@ -98,7 +99,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     }
     
     @Override
-    public boolean hasNext() throws HyracksDataException {
+    public boolean hasNext() throws HyracksDataException, IndexException {
         if (!tupleConsumed) {
             return true;
         }
@@ -115,6 +116,8 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
             currentCursor = currentAccessor.createSearchCursor();
             try {
                 currentAccessor.search(currentCursor, searchPred);
+            } catch (OccurrenceThresholdPanicException e) {
+                throw e;
             } catch (IndexException e) {
                 throw new HyracksDataException(e);
             }

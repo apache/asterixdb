@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public interface IInvertedListCursor extends Comparable<IInvertedListCursor> {
@@ -27,7 +28,7 @@ public interface IInvertedListCursor extends Comparable<IInvertedListCursor> {
 
     public void unpinPages() throws HyracksDataException;
 
-    public boolean hasNext() throws HyracksDataException;
+    public boolean hasNext() throws HyracksDataException, IndexException;
 
     public void next() throws HyracksDataException;
 
@@ -42,11 +43,11 @@ public interface IInvertedListCursor extends Comparable<IInvertedListCursor> {
 
     public int getStartOff();
 
-    public boolean containsKey(ITupleReference searchTuple, MultiComparator invListCmp) throws HyracksDataException;
+    public boolean containsKey(ITupleReference searchTuple, MultiComparator invListCmp) throws HyracksDataException, IndexException;
 
     // for debugging
     @SuppressWarnings("rawtypes")
-    public String printInvList(ISerializerDeserializer[] serdes) throws HyracksDataException;
+    public String printInvList(ISerializerDeserializer[] serdes) throws HyracksDataException, IndexException;
 
     @SuppressWarnings("rawtypes")
     public String printCurrentElement(ISerializerDeserializer[] serdes) throws HyracksDataException;

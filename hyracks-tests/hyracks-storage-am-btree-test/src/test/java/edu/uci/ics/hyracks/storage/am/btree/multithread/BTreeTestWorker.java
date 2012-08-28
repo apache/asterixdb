@@ -29,7 +29,7 @@ import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
@@ -48,7 +48,7 @@ public class BTreeTestWorker extends AbstractTreeIndexTestWorker {
     }
 
     @Override
-    public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, TreeIndexException {
+    public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, IndexException {
         BTree.BTreeAccessor accessor = (BTree.BTreeAccessor) indexAccessor;
         ITreeIndexCursor searchCursor = accessor.createSearchCursor();
         ITreeIndexCursor diskOrderScanCursor = accessor.createDiskOrderScanCursor();
@@ -121,7 +121,7 @@ public class BTreeTestWorker extends AbstractTreeIndexTestWorker {
         }
     }
 
-    private void consumeCursorTuples(ITreeIndexCursor cursor) throws HyracksDataException {
+    private void consumeCursorTuples(ITreeIndexCursor cursor) throws HyracksDataException, IndexException {
         try {
             while (cursor.hasNext()) {
                 cursor.next();

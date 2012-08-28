@@ -78,7 +78,7 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException {
+    public boolean hasNext() throws HyracksDataException, IndexException {
         if (invListCursor.hasNext()) {
             return true;
         }

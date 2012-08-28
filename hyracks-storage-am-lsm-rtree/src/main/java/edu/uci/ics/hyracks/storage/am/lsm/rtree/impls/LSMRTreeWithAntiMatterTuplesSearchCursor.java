@@ -43,7 +43,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMTreeSearchCurso
     private int[] comparatorFields;
     private MultiComparator btreeCmp;
 
-    public void initPriorityQueue() throws HyracksDataException {
+    public void initPriorityQueue() throws HyracksDataException, IndexException {
         int pqInitSize = (rangeCursors.length > 0) ? rangeCursors.length : 1;
         outputPriorityQueue = new PriorityQueue<PriorityQueueElement>(pqInitSize, pqCmp);
         for (int i = 0; i < rangeCursors.length; i++) {
@@ -80,7 +80,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMTreeSearchCurso
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException {
+    public boolean hasNext() throws HyracksDataException, IndexException {
         if (includeMemComponent) {
             if (foundNext) {
                 return true;

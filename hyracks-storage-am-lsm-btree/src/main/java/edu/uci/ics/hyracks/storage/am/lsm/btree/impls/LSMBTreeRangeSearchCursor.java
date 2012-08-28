@@ -47,7 +47,7 @@ public class LSMBTreeRangeSearchCursor extends LSMTreeSearchCursor {
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException {
+    public boolean hasNext() throws HyracksDataException, IndexException {
         checkPriorityQueue();
         PriorityQueueElement pqHead = outputPriorityQueue.peek();
         if (pqHead == null) {

@@ -186,7 +186,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         resultCursor.open(null, searchPred);
     }
 
-    protected int mergePrefixLists(int numPrefixTokens, int numQueryTokens) throws HyracksDataException {
+    protected int mergePrefixLists(int numPrefixTokens, int numQueryTokens) throws HyracksDataException, IndexException {
         int maxPrevBufIdx = 0;
         for (int i = 0; i < numPrefixTokens; i++) {
             swap = prevResultBuffers;
@@ -202,7 +202,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
     }
 
     protected int mergeSuffixLists(int numPrefixTokens, int numQueryTokens, int maxPrevBufIdx)
-            throws HyracksDataException {
+            throws HyracksDataException, IndexException {
         for (int i = numPrefixTokens; i < numQueryTokens; i++) {
             swap = prevResultBuffers;
             prevResultBuffers = newResultBuffers;
@@ -224,7 +224,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
     }
 
     protected int mergeSuffixListProbe(IInvertedListCursor invListCursor, List<ByteBuffer> prevResultBuffers,
-            int maxPrevBufIdx, List<ByteBuffer> newResultBuffers, int invListIx, int numQueryTokens) throws HyracksDataException {
+            int maxPrevBufIdx, List<ByteBuffer> newResultBuffers, int invListIx, int numQueryTokens) throws HyracksDataException, IndexException {
 
         int newBufIdx = 0;
         ByteBuffer newCurrentBuffer = newResultBuffers.get(0);
@@ -270,7 +270,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
 
     protected int mergeSuffixListScan(IInvertedListCursor invListCursor, List<ByteBuffer> prevResultBuffers,
             int maxPrevBufIdx, List<ByteBuffer> newResultBuffers, int invListIx, int numQueryTokens)
-            throws HyracksDataException {
+            throws HyracksDataException, IndexException {
         
         int newBufIdx = 0;
         ByteBuffer newCurrentBuffer = newResultBuffers.get(0);
@@ -365,7 +365,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
     }
 
     protected int mergePrefixList(IInvertedListCursor invListCursor, List<ByteBuffer> prevResultBuffers,
-            int maxPrevBufIdx, List<ByteBuffer> newResultBuffers) throws HyracksDataException {
+            int maxPrevBufIdx, List<ByteBuffer> newResultBuffers) throws HyracksDataException, IndexException {
         
         int newBufIdx = 0;
         ByteBuffer newCurrentBuffer = newResultBuffers.get(0);

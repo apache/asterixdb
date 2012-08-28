@@ -15,15 +15,19 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
-public class DelimitedUTF8StringBinaryTokenizerFactory implements IBinaryTokenizerFactory {
+public class NGramUTF8StringBinaryTokenizerFactory implements IBinaryTokenizerFactory {
 
     private static final long serialVersionUID = 1L;
+    private final int gramLength;
+    private final boolean usePrePost;
     private final boolean ignoreTokenCount;
     private final boolean sourceHasTypeTag;
     private final ITokenFactory tokenFactory;
 
-    public DelimitedUTF8StringBinaryTokenizerFactory(boolean ignoreTokenCount, boolean sourceHasTypeTag,
-            ITokenFactory tokenFactory) {
+    public NGramUTF8StringBinaryTokenizerFactory(int gramLength, boolean usePrePost, boolean ignoreTokenCount,
+            boolean sourceHasTypeTag, ITokenFactory tokenFactory) {
+        this.gramLength = gramLength;
+        this.usePrePost = usePrePost;
         this.ignoreTokenCount = ignoreTokenCount;
         this.sourceHasTypeTag = sourceHasTypeTag;
         this.tokenFactory = tokenFactory;
@@ -31,6 +35,8 @@ public class DelimitedUTF8StringBinaryTokenizerFactory implements IBinaryTokeniz
 
     @Override
     public IBinaryTokenizer createTokenizer() {
-        return new DelimitedUTF8StringBinaryTokenizer(ignoreTokenCount, sourceHasTypeTag, tokenFactory);
+        return new NGramUTF8StringBinaryTokenizer(gramLength, usePrePost, ignoreTokenCount, sourceHasTypeTag,
+                tokenFactory);
     }
+
 }

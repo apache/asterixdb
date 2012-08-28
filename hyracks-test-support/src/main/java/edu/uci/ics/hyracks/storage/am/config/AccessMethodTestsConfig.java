@@ -74,7 +74,7 @@ public class AccessMethodTestsConfig {
     public static final int LSM_INVINDEX_MAX_OPEN_FILES = 10;
     public static final int LSM_INVINDEX_HYRACKS_FRAME_SIZE = 32768;
     
-    public static final int LSM_INVINDEX_NUM_DOCS_TO_INSERT = 10000;
+    public static final int LSM_INVINDEX_NUM_DOCS_TO_INSERT = 1000;
     public static final int LSM_INVINDEX_NUM_BULKLOAD_ROUNDS = 5;
     public static final int LSM_INVINDEX_MAX_TREES_TO_MERGE = 5;
     public static final int LSM_INVINDEX_NUM_INSERT_ROUNDS = 3;

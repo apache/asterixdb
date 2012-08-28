@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
@@ -35,7 +36,7 @@ public class TOccurrenceSearcherSuffixScanOnly extends TOccurrenceSearcher {
         this.invListCmp = MultiComparator.create(invIndex.getInvListCmpFactories());
     }
 
-    protected int mergeSuffixLists(int numPrefixTokens, int numQueryTokens, int maxPrevBufIdx) throws HyracksDataException {
+    protected int mergeSuffixLists(int numPrefixTokens, int numQueryTokens, int maxPrevBufIdx) throws HyracksDataException, IndexException {
         for (int i = numPrefixTokens; i < numQueryTokens; i++) {
             swap = prevResultBuffers;
             prevResultBuffers = newResultBuffers;
@@ -51,7 +52,7 @@ public class TOccurrenceSearcherSuffixScanOnly extends TOccurrenceSearcher {
     }
 
     protected int mergeSuffixListScan(IInvertedListCursor invListCursor, List<ByteBuffer> prevResultBuffers,
-            int maxPrevBufIdx, List<ByteBuffer> newResultBuffers, int invListIx, int numQueryTokens) throws HyracksDataException {
+            int maxPrevBufIdx, List<ByteBuffer> newResultBuffers, int invListIx, int numQueryTokens) throws HyracksDataException, IndexException {
 
         int newBufIdx = 0;
         ByteBuffer newCurrentBuffer = newResultBuffers.get(0);
