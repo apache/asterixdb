@@ -32,7 +32,7 @@ import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
-import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestWorkerFactory;
+import edu.uci.ics.hyracks.storage.am.common.IIndexTestWorkerFactory;
 import edu.uci.ics.hyracks.storage.am.common.TestWorkloadConf;
 import edu.uci.ics.hyracks.storage.am.common.TreeIndexMultiThreadTestDriver;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
@@ -70,7 +70,7 @@ public abstract class AbstractRTreeMultiThreadTest {
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType)
             throws TreeIndexException;
 
-    protected abstract ITreeIndexTestWorkerFactory getWorkerFactory();
+    protected abstract IIndexTestWorkerFactory getWorkerFactory();
 
     protected abstract ArrayList<TestWorkloadConf> getTestWorkloadConf();
 
@@ -97,7 +97,7 @@ public abstract class AbstractRTreeMultiThreadTest {
 
         ITreeIndex index = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
                 rtreePolicyType);
-        ITreeIndexTestWorkerFactory workerFactory = getWorkerFactory();
+        IIndexTestWorkerFactory workerFactory = getWorkerFactory();
 
         // 4 batches per thread.
         int batchSize = (NUM_OPERATIONS / numThreads) / 4;

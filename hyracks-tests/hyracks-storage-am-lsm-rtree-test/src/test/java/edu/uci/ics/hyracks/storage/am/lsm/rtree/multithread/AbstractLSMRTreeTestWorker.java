@@ -19,25 +19,26 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.AbstractTreeIndexTestWorker;
+import edu.uci.ics.hyracks.storage.am.common.AbstractIndexTestWorker;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
-public abstract class AbstractLSMRTreeTestWorker extends AbstractTreeIndexTestWorker {
+public abstract class AbstractLSMRTreeTestWorker extends AbstractIndexTestWorker {
 
     protected final ITreeIndex lsmRTree;
     protected final int numFields;
     protected final ArrayTupleBuilder rearrangedTb;
     protected final ArrayTupleReference rearrangedTuple = new ArrayTupleReference();
 
-    public AbstractLSMRTreeTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, ITreeIndex index,
+    public AbstractLSMRTreeTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index,
             int numBatches) {
         super(dataGen, opSelector, index, numBatches);
-        lsmRTree = index;
+        lsmRTree = (ITreeIndex) index;
         numFields = lsmRTree.getFieldCount();
         rearrangedTb = new ArrayTupleBuilder(numFields);
     }

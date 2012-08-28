@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -49,13 +50,6 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 public class LSMInvertedIndexTestHarness {
 
     private static final long RANDOM_SEED = 50;
-    private static final int DEFAULT_DISK_PAGE_SIZE = 256;
-    private static final int DEFAULT_DISK_NUM_PAGES = 10000;
-    private static final int DEFAULT_DISK_MAX_OPEN_FILES = 1000;
-    private static final int DEFAULT_MEM_PAGE_SIZE = 256;
-    private static final int DEFAULT_MEM_NUM_PAGES = 200;
-    private static final int DEFAULT_HYRACKS_FRAME_SIZE = 512;
-    private static final int DUMMY_FILE_ID = -1;
 
     protected final int diskPageSize;
     protected final int diskNumPages;
@@ -84,12 +78,12 @@ public class LSMInvertedIndexTestHarness {
     protected FileReference invIndexFileRef;
 
     public LSMInvertedIndexTestHarness() {
-        this.diskPageSize = DEFAULT_DISK_PAGE_SIZE;
-        this.diskNumPages = DEFAULT_DISK_NUM_PAGES;
-        this.diskMaxOpenFiles = DEFAULT_DISK_MAX_OPEN_FILES;
-        this.memPageSize = DEFAULT_MEM_PAGE_SIZE;
-        this.memNumPages = DEFAULT_MEM_NUM_PAGES;
-        this.hyracksFrameSize = DEFAULT_HYRACKS_FRAME_SIZE;
+        this.diskPageSize = AccessMethodTestsConfig.LSM_INVINDEX_DISK_PAGE_SIZE;
+        this.diskNumPages = AccessMethodTestsConfig.LSM_INVINDEX_DISK_NUM_PAGES;
+        this.diskMaxOpenFiles = AccessMethodTestsConfig.LSM_INVINDEX_DISK_MAX_OPEN_FILES;
+        this.memPageSize = AccessMethodTestsConfig.LSM_INVINDEX_MEM_PAGE_SIZE;
+        this.memNumPages = AccessMethodTestsConfig.LSM_INVINDEX_MEM_NUM_PAGES;
+        this.hyracksFrameSize = AccessMethodTestsConfig.LSM_INVINDEX_HYRACKS_FRAME_SIZE;
         this.ioScheduler = ImmediateScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
         this.flushController = new FlushController();
@@ -174,10 +168,6 @@ public class LSMInvertedIndexTestHarness {
 
     public int getHyracksFrameSize() {
         return hyracksFrameSize;
-    }
-
-    public int getFileId() {
-        return DUMMY_FILE_ID;
     }
 
     public IOManager getIOManager() {

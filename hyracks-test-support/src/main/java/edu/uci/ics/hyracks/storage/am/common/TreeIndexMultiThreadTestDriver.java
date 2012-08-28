@@ -19,8 +19,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 
 @SuppressWarnings("rawtypes")
@@ -30,10 +30,10 @@ public class TreeIndexMultiThreadTestDriver {
     private static final int PAYLOAD_SIZE = 0;
     private final TestOperationSelector opSelector;
     private final ISerializerDeserializer[] fieldSerdes;
-    private final ITreeIndex index;
-    private final ITreeIndexTestWorkerFactory workerFactory;
+    private final IIndex index;
+    private final IIndexTestWorkerFactory workerFactory;
 
-    public TreeIndexMultiThreadTestDriver(ITreeIndex index, ITreeIndexTestWorkerFactory workerFactory,
+    public TreeIndexMultiThreadTestDriver(IIndex index, IIndexTestWorkerFactory workerFactory,
             ISerializerDeserializer[] fieldSerdes, TestOperation[] ops, double[] opProbs) {
         this.index = index;
         this.workerFactory = workerFactory;
@@ -63,7 +63,7 @@ public class TreeIndexMultiThreadTestDriver {
             }
 
             // Start worker threads.
-            AbstractTreeIndexTestWorker[] workers = new AbstractTreeIndexTestWorker[numThreads];
+            AbstractIndexTestWorker[] workers = new AbstractIndexTestWorker[numThreads];
             long start = System.currentTimeMillis();
             for (int j = 0; j < numThreads; j++) {
                 workers[j] = workerFactory.create(dataGen, opSelector, index, threadNumBatches);

@@ -22,12 +22,12 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleBatch;
 
-public abstract class AbstractTreeIndexTestWorker extends Thread implements ITreeIndexTestWorker {
+public abstract class AbstractIndexTestWorker extends Thread implements ITreeIndexTestWorker {
     private final Random rnd;
     private final DataGenThread dataGen;
     private final TestOperationSelector opSelector;
@@ -35,7 +35,7 @@ public abstract class AbstractTreeIndexTestWorker extends Thread implements ITre
 
     protected final IIndexAccessor indexAccessor;
 
-    public AbstractTreeIndexTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, ITreeIndex index,
+    public AbstractIndexTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index,
             int numBatches) {
         this.dataGen = dataGen;
         this.opSelector = opSelector;

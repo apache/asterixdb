@@ -15,16 +15,16 @@
 
 package edu.uci.ics.hyracks.storage.am.rtree.multithread;
 
-import edu.uci.ics.hyracks.storage.am.common.AbstractTreeIndexTestWorker;
-import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestWorkerFactory;
+import edu.uci.ics.hyracks.storage.am.common.AbstractIndexTestWorker;
+import edu.uci.ics.hyracks.storage.am.common.IIndexTestWorkerFactory;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 
-public class RTreeTestWorkerFactory implements ITreeIndexTestWorkerFactory {
+public class RTreeTestWorkerFactory implements IIndexTestWorkerFactory {
     @Override
-    public AbstractTreeIndexTestWorker create(DataGenThread dataGen, TestOperationSelector opSelector,
-            ITreeIndex index, int numBatches) {
+    public AbstractIndexTestWorker create(DataGenThread dataGen, TestOperationSelector opSelector,
+            IIndex index, int numBatches) {
         return new RTreeTestWorker(dataGen, opSelector, index, numBatches);
     }
 }

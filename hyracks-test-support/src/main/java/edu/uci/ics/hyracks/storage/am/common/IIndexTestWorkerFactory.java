@@ -15,9 +15,10 @@
 
 package edu.uci.ics.hyracks.storage.am.common;
 
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 
-public interface ITreeIndexTestWorkerFactory {
-    public AbstractTreeIndexTestWorker create(DataGenThread dataGen, TestOperationSelector opSelector, ITreeIndex index, int numBatches);
+public interface IIndexTestWorkerFactory {
+    public AbstractIndexTestWorker create(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index,
+            int numBatches);
 }

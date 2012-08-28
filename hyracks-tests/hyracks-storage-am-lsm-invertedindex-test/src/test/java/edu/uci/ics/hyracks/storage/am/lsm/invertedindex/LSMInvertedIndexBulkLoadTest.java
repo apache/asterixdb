@@ -16,7 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex;
 
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common.AbstractInvertedIndexLoadTest;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext.InvertedIndexType;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
 
 public class LSMInvertedIndexBulkLoadTest extends AbstractInvertedIndexLoadTest {
 

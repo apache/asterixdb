@@ -31,9 +31,9 @@ import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveSearchModifier;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.JaccardSearchModifier;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext.InvertedIndexType;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestUtils;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestUtils;
 
 public abstract class AbstractInvertedIndexTest {
     protected final Logger LOGGER = Logger.getLogger(AbstractInvertedIndexTest.class.getName());
@@ -43,8 +43,8 @@ public abstract class AbstractInvertedIndexTest {
     protected final int NUM_DOCS_TO_INSERT = AccessMethodTestsConfig.LSM_INVINDEX_NUM_DOCS_TO_INSERT;
     protected final int[] SCAN_COUNT_ARRAY = new int[AccessMethodTestsConfig.LSM_INVINDEX_SCAN_COUNT_ARRAY_SIZE];
 
-    protected final int TINY_WORKLOAD_NUM_DOC_QUERIES = 800;
-    protected final int TINY_WORKLOAD_NUM_RANDOM_QUERIES = 200;
+    protected final int TINY_WORKLOAD_NUM_DOC_QUERIES = AccessMethodTestsConfig.LSM_INVINDEX_TINY_NUM_DOC_QUERIES;
+    protected final int TINY_WORKLOAD_NUM_RANDOM_QUERIES = AccessMethodTestsConfig.LSM_INVINDEX_TINY_NUM_RANDOM_QUERIES;
 
     // Note: The edit-distance search modifier is tested separately.
     protected final IInvertedIndexSearchModifier[] TEST_SEARCH_MODIFIERS = new IInvertedIndexSearchModifier[] {
@@ -71,7 +71,7 @@ public abstract class AbstractInvertedIndexTest {
      * This test is only for verifying the integrity and correctness of the index,
      * it does not ensure the correctness of index searches.
      */
-    protected void validateAndCheckIndex(InvertedIndexTestContext testCtx) throws HyracksDataException, IndexException {
+    protected void validateAndCheckIndex(LSMInvertedIndexTestContext testCtx) throws HyracksDataException, IndexException {
         IIndex invIndex = testCtx.getIndex();
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Validating index: " + invIndex);
@@ -80,21 +80,21 @@ public abstract class AbstractInvertedIndexTest {
         invIndex.validate();
         if (invIndexType == InvertedIndexType.INMEMORY || invIndexType == InvertedIndexType.ONDISK) {
             // This comparison method exercises different features of these types of inverted indexes.
-            InvertedIndexTestUtils.compareActualAndExpectedIndexes(testCtx);
+            LSMInvertedIndexTestUtils.compareActualAndExpectedIndexes(testCtx);
         }
-        InvertedIndexTestUtils.compareActualAndExpectedIndexesRangeSearch(testCtx);
+        LSMInvertedIndexTestUtils.compareActualAndExpectedIndexesRangeSearch(testCtx);
     }
 
     /**
      * Runs a workload of queries using different search modifiers, and verifies the correctness of the results.
      */
-    protected void runTinySearchWorkload(InvertedIndexTestContext testCtx, TupleGenerator tupleGen) throws IOException,
+    protected void runTinySearchWorkload(LSMInvertedIndexTestContext testCtx, TupleGenerator tupleGen) throws IOException,
             IndexException {
         for (IInvertedIndexSearchModifier searchModifier : TEST_SEARCH_MODIFIERS) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Running test workload with: " + searchModifier.toString());
             }
-            InvertedIndexTestUtils.testIndexSearch(testCtx, tupleGen, harness.getRandom(),
+            LSMInvertedIndexTestUtils.testIndexSearch(testCtx, tupleGen, harness.getRandom(),
                     TINY_WORKLOAD_NUM_DOC_QUERIES, TINY_WORKLOAD_NUM_RANDOM_QUERIES, searchModifier, SCAN_COUNT_ARRAY);
         }
     }

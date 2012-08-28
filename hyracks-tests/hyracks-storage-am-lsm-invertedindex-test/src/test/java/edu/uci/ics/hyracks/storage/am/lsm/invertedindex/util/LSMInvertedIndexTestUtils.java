@@ -72,10 +72,10 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.ITokenFactory
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.NGramUTF8StringBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8NGramTokenFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8WordTokenFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext.InvertedIndexType;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
 
 @SuppressWarnings("rawtypes")
-public class InvertedIndexTestUtils {
+public class LSMInvertedIndexTestUtils {
 
     public static final int TEST_GRAM_LENGTH = 3;
 
@@ -99,55 +99,55 @@ public class InvertedIndexTestUtils {
         return tupleGen;
     }
 
-    public static InvertedIndexTestContext createWordInvIndexTestContext(LSMInvertedIndexTestHarness harness,
+    public static LSMInvertedIndexTestContext createWordInvIndexTestContext(LSMInvertedIndexTestHarness harness,
             InvertedIndexType invIndexType) throws IOException, IndexException {
         ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         ITokenFactory tokenFactory = new UTF8WordTokenFactory();
         IBinaryTokenizerFactory tokenizerFactory = new DelimitedUTF8StringBinaryTokenizerFactory(true, false,
                 tokenFactory);
-        InvertedIndexTestContext testCtx = InvertedIndexTestContext.create(harness, fieldSerdes, 1, tokenizerFactory,
+        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes, 1, tokenizerFactory,
                 invIndexType);
         return testCtx;
     }
 
-    public static InvertedIndexTestContext createHashedWordInvIndexTestContext(LSMInvertedIndexTestHarness harness,
+    public static LSMInvertedIndexTestContext createHashedWordInvIndexTestContext(LSMInvertedIndexTestHarness harness,
             InvertedIndexType invIndexType) throws IOException, IndexException {
         ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE };
         ITokenFactory tokenFactory = new HashedUTF8WordTokenFactory();
         IBinaryTokenizerFactory tokenizerFactory = new DelimitedUTF8StringBinaryTokenizerFactory(true, false,
                 tokenFactory);
-        InvertedIndexTestContext testCtx = InvertedIndexTestContext.create(harness, fieldSerdes, 1, tokenizerFactory,
+        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes, 1, tokenizerFactory,
                 invIndexType);
         return testCtx;
     }
 
-    public static InvertedIndexTestContext createNGramInvIndexTestContext(LSMInvertedIndexTestHarness harness,
+    public static LSMInvertedIndexTestContext createNGramInvIndexTestContext(LSMInvertedIndexTestHarness harness,
             InvertedIndexType invIndexType) throws IOException, IndexException {
         ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         ITokenFactory tokenFactory = new UTF8NGramTokenFactory();
         IBinaryTokenizerFactory tokenizerFactory = new NGramUTF8StringBinaryTokenizerFactory(TEST_GRAM_LENGTH, true,
                 true, false, tokenFactory);
-        InvertedIndexTestContext testCtx = InvertedIndexTestContext.create(harness, fieldSerdes, 1, tokenizerFactory,
+        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes, 1, tokenizerFactory,
                 invIndexType);
         return testCtx;
     }
 
-    public static InvertedIndexTestContext createHashedNGramInvIndexTestContext(LSMInvertedIndexTestHarness harness,
+    public static LSMInvertedIndexTestContext createHashedNGramInvIndexTestContext(LSMInvertedIndexTestHarness harness,
             InvertedIndexType invIndexType) throws IOException, IndexException {
         ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE };
         ITokenFactory tokenFactory = new HashedUTF8NGramTokenFactory();
         IBinaryTokenizerFactory tokenizerFactory = new NGramUTF8StringBinaryTokenizerFactory(TEST_GRAM_LENGTH, true,
                 true, false, tokenFactory);
-        InvertedIndexTestContext testCtx = InvertedIndexTestContext.create(harness, fieldSerdes, 1, tokenizerFactory,
+        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes, 1, tokenizerFactory,
                 invIndexType);
         return testCtx;
     }
 
-    public static void bulkLoadInvIndex(InvertedIndexTestContext testCtx, TupleGenerator tupleGen, int numDocs)
+    public static void bulkLoadInvIndex(LSMInvertedIndexTestContext testCtx, TupleGenerator tupleGen, int numDocs)
             throws IndexException, IOException {
         SortedSet<CheckTuple> tmpMemIndex = new TreeSet<CheckTuple>();;
         // First generate the expected index by inserting the documents one-by-one.
@@ -173,7 +173,7 @@ public class InvertedIndexTestUtils {
         testCtx.getCheckTuples().addAll(tmpMemIndex);
     }
 
-    public static void insertIntoInvIndex(InvertedIndexTestContext testCtx, TupleGenerator tupleGen, int numDocs)
+    public static void insertIntoInvIndex(LSMInvertedIndexTestContext testCtx, TupleGenerator tupleGen, int numDocs)
             throws IOException, IndexException {
         // InMemoryInvertedIndex only supports insert.
         for (int i = 0; i < numDocs; i++) {
@@ -183,7 +183,7 @@ public class InvertedIndexTestUtils {
         }
     }
 
-    public static void deleteFromInvIndex(InvertedIndexTestContext testCtx, Random rnd, int numDocsToDelete)
+    public static void deleteFromInvIndex(LSMInvertedIndexTestContext testCtx, Random rnd, int numDocsToDelete)
             throws HyracksDataException, IndexException {
         List<ITupleReference> documentCorpus = testCtx.getDocumentCorpus();
         for (int i = 0; i < numDocsToDelete && !documentCorpus.isEmpty(); i++) {
@@ -201,7 +201,7 @@ public class InvertedIndexTestUtils {
     /**
      * Compares actual and expected indexes using the rangeSearch() method of the inverted-index accessor.
      */
-    public static void compareActualAndExpectedIndexesRangeSearch(InvertedIndexTestContext testCtx)
+    public static void compareActualAndExpectedIndexesRangeSearch(LSMInvertedIndexTestContext testCtx)
             throws HyracksDataException, IndexException {
         IInvertedIndex invIndex = (IInvertedIndex) testCtx.getIndex();
         int tokenFieldCount = invIndex.getTokenTypeTraits().length;
@@ -254,7 +254,7 @@ public class InvertedIndexTestUtils {
      * Compares actual and expected indexes by comparing their inverted-lists one by one. Exercises the openInvertedListCursor() method of the inverted-index accessor.
      */
     @SuppressWarnings("unchecked")
-    public static void compareActualAndExpectedIndexes(InvertedIndexTestContext testCtx) throws HyracksDataException,
+    public static void compareActualAndExpectedIndexes(LSMInvertedIndexTestContext testCtx) throws HyracksDataException,
             IndexException {
         IInvertedIndex invIndex = (IInvertedIndex) testCtx.getIndex();
         ISerializerDeserializer[] fieldSerdes = testCtx.getFieldSerdes();
@@ -378,7 +378,7 @@ public class InvertedIndexTestUtils {
         }
     }
 
-    public static void testIndexSearch(InvertedIndexTestContext testCtx, TupleGenerator tupleGen, Random rnd,
+    public static void testIndexSearch(LSMInvertedIndexTestContext testCtx, TupleGenerator tupleGen, Random rnd,
             int numDocQueries, int numRandomQueries, IInvertedIndexSearchModifier searchModifier, int[] scanCountArray)
             throws IOException, IndexException {
         IInvertedIndex invIndex = testCtx.invIndex;
@@ -438,7 +438,7 @@ public class InvertedIndexTestUtils {
 
                     // Get expected results.
                     List<Integer> expectedResults = new ArrayList<Integer>();
-                    InvertedIndexTestUtils.getExpectedResults(scanCountArray, testCtx.getCheckTuples(), searchDocument,
+                    LSMInvertedIndexTestUtils.getExpectedResults(scanCountArray, testCtx.getCheckTuples(), searchDocument,
                             tokenizer, testCtx.getFieldSerdes()[0], searchModifier, expectedResults);
 
                     Iterator<Integer> expectedIter = expectedResults.iterator();

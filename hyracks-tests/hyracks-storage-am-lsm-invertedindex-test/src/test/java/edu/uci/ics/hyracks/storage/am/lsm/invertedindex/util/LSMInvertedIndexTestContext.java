@@ -40,7 +40,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.exceptions.InvertedIndex
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 
 @SuppressWarnings("rawtypes")
-public class InvertedIndexTestContext extends OrderedIndexTestContext {
+public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
 
     public static enum InvertedIndexType {
         INMEMORY,
@@ -55,7 +55,7 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
     protected HashSet<Comparable> allTokens = new HashSet<Comparable>();
     protected List<ITupleReference> documentCorpus = new ArrayList<ITupleReference>();
     
-    public InvertedIndexTestContext(ISerializerDeserializer[] fieldSerdes, IIndex index,
+    public LSMInvertedIndexTestContext(ISerializerDeserializer[] fieldSerdes, IIndex index,
             IBinaryTokenizerFactory tokenizerFactory) {
         super(fieldSerdes, index);
         this.tokenizerFactory = tokenizerFactory;
@@ -88,7 +88,7 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
         return allCmpFactories;
     }
 
-    public static InvertedIndexTestContext create(LSMInvertedIndexTestHarness harness, ISerializerDeserializer[] fieldSerdes,
+    public static LSMInvertedIndexTestContext create(LSMInvertedIndexTestHarness harness, ISerializerDeserializer[] fieldSerdes,
             int tokenFieldCount, IBinaryTokenizerFactory tokenizerFactory, InvertedIndexType invIndexType) throws IndexException {
         ITypeTraits[] allTypeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] allCmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes,
@@ -136,7 +136,7 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
                 throw new InvertedIndexException("Unknow inverted-index type '" + invIndexType + "'.");
             }
         }
-        InvertedIndexTestContext testCtx = new InvertedIndexTestContext(fieldSerdes, invIndex, tokenizerFactory);
+        LSMInvertedIndexTestContext testCtx = new LSMInvertedIndexTestContext(fieldSerdes, invIndex, tokenizerFactory);
         return testCtx;
     }
 
