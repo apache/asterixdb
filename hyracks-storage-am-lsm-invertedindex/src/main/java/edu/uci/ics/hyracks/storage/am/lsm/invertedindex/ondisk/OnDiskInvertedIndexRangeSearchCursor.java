@@ -74,6 +74,7 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
             throw new HyracksDataException(e);
         }        
         invListCursor.pinPages();
+        unpinNeeded = true;
     }
 
     @Override
@@ -115,6 +116,7 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
     public void close() throws HyracksDataException {
         if (unpinNeeded) {
             invListCursor.unpinPages();
+            unpinNeeded = false;
         }
         btreeCursor.close();
     }
@@ -123,6 +125,7 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
     public void reset() throws HyracksDataException {
         if (unpinNeeded) {
             invListCursor.unpinPages();
+            unpinNeeded = false;
         }
         btreeCursor.close();
         open(null, btreePred);
