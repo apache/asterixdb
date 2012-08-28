@@ -30,7 +30,8 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestUt
 
 public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIndexTest {
 
-    protected int NUM_QUERIES = 10000;
+    protected int NUM_DOC_QUERIES = 8000;
+    protected int NUM_RANDOM_QUERIES = 2000;
     protected int[] scanCountArray = new int[NUM_DOCS_TO_INSERT];
     protected final boolean bulkLoad;
 
@@ -52,8 +53,8 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
         }
         invIndex.validate();
 
-        InvertedIndexTestUtils.testIndexSearch(testCtx, tupleGen, harness.getRandom(), NUM_QUERIES, searchModifier,
-                scanCountArray);
+        InvertedIndexTestUtils.testIndexSearch(testCtx, tupleGen, harness.getRandom(), NUM_DOC_QUERIES,
+                NUM_RANDOM_QUERIES, searchModifier, scanCountArray);
         
         invIndex.deactivate();
         invIndex.destroy();

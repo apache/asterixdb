@@ -15,6 +15,10 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common;
 
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.junit.After;
 import org.junit.Before;
 
@@ -22,14 +26,29 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.datagen.TupleGenerator;
+import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveSearchModifier;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.JaccardSearchModifier;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext.InvertedIndexType;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestUtils;
 
 public abstract class AbstractInvertedIndexTest {
+    protected final Logger LOGGER = Logger.getLogger(AbstractInvertedIndexTest.class.getName());
+
     protected final LSMInvertedIndexTestHarness harness = new LSMInvertedIndexTestHarness();
 
-    protected int NUM_DOCS_TO_INSERT = 10000;
+    protected final int NUM_DOCS_TO_INSERT = AccessMethodTestsConfig.LSM_INVINDEX_NUM_DOCS_TO_INSERT;
+    protected final int[] SCAN_COUNT_ARRAY = new int[AccessMethodTestsConfig.LSM_INVINDEX_SCAN_COUNT_ARRAY_SIZE];
+
+    protected final int TINY_WORKLOAD_NUM_DOC_QUERIES = 800;
+    protected final int TINY_WORKLOAD_NUM_RANDOM_QUERIES = 200;
+
+    // Note: The edit-distance search modifier is tested separately.
+    protected final IInvertedIndexSearchModifier[] TEST_SEARCH_MODIFIERS = new IInvertedIndexSearchModifier[] {
+            new ConjunctiveSearchModifier(), new JaccardSearchModifier(0.8f), new JaccardSearchModifier(0.5f) };
 
     protected final InvertedIndexType invIndexType;
 
@@ -46,9 +65,17 @@ public abstract class AbstractInvertedIndexTest {
     public void tearDown() throws HyracksDataException {
         harness.tearDown();
     }
-    
+
+    /**
+     * Validates the index, and compares it against the expected index.
+     * This test is only for verifying the integrity and correctness of the index,
+     * it does not ensure the correctness of index searches.
+     */
     protected void validateAndCheckIndex(InvertedIndexTestContext testCtx) throws HyracksDataException, IndexException {
         IIndex invIndex = testCtx.getIndex();
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Validating index: " + invIndex);
+        }
         // Validate index and compare against expected index.
         invIndex.validate();
         if (invIndexType == InvertedIndexType.INMEMORY || invIndexType == InvertedIndexType.ONDISK) {
@@ -56,5 +83,19 @@ public abstract class AbstractInvertedIndexTest {
             InvertedIndexTestUtils.compareActualAndExpectedIndexes(testCtx);
         }
         InvertedIndexTestUtils.compareActualAndExpectedIndexesRangeSearch(testCtx);
+    }
+
+    /**
+     * Runs a workload of queries using different search modifiers, and verifies the correctness of the results.
+     */
+    protected void runTinySearchWorkload(InvertedIndexTestContext testCtx, TupleGenerator tupleGen) throws IOException,
+            IndexException {
+        for (IInvertedIndexSearchModifier searchModifier : TEST_SEARCH_MODIFIERS) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Running test workload with: " + searchModifier.toString());
+            }
+            InvertedIndexTestUtils.testIndexSearch(testCtx, tupleGen, harness.getRandom(),
+                    TINY_WORKLOAD_NUM_DOC_QUERIES, TINY_WORKLOAD_NUM_RANDOM_QUERIES, searchModifier, SCAN_COUNT_ARRAY);
+        }
     }
 }

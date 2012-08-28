@@ -35,7 +35,7 @@ public class LSMInvertedIndexMergeTest extends AbstractInvertedIndexLoadTest {
     private final int maxTreesToMerge = AccessMethodTestsConfig.LSM_INVINDEX_MAX_TREES_TO_MERGE;
     
     public LSMInvertedIndexMergeTest() {
-        super(InvertedIndexType.LSM, true, 5);
+        super(InvertedIndexType.LSM, true, 1);
     }
 
     @Override
@@ -60,6 +60,7 @@ public class LSMInvertedIndexMergeTest extends AbstractInvertedIndexLoadTest {
                     invIndexAccessor.merge(ioop);
                 }
                 validateAndCheckIndex(testCtx);
+                runTinySearchWorkload(testCtx, tupleGen);
             }
         }
         

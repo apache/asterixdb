@@ -111,7 +111,7 @@ public class InvertedIndexTestUtils {
         IIndexBulkLoader bulkLoader = testCtx.getIndex().createBulkLoader(1.0f, false);
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(testCtx.getFieldSerdes().length);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        Iterator<CheckTuple> checkTupleIter = testCtx.getCheckTuples().iterator();
+        Iterator<CheckTuple> checkTupleIter = tmpMemIndex.iterator();
         while (checkTupleIter.hasNext()) {
             CheckTuple checkTuple = checkTupleIter.next();
             OrderedIndexTestUtils.createTupleFromCheckTuple(checkTuple, tupleBuilder, tuple, fieldSerdes);
@@ -329,7 +329,7 @@ public class InvertedIndexTestUtils {
     }
 
     public static void testIndexSearch(InvertedIndexTestContext testCtx, TupleGenerator tupleGen, Random rnd,
-            int numQueries, IInvertedIndexSearchModifier searchModifier, int[] scanCountArray) throws IOException,
+            int numDocQueries, int numRandomQueries, IInvertedIndexSearchModifier searchModifier, int[] scanCountArray) throws IOException,
             IndexException {
         IInvertedIndex invIndex = testCtx.invIndex;
         IInvertedIndexAccessor accessor = (IInvertedIndexAccessor) invIndex.createAccessor(
@@ -342,8 +342,10 @@ public class InvertedIndexTestUtils {
         PermutingTupleReference searchDocument = new PermutingTupleReference(fieldPermutation);
 
         IIndexCursor resultCursor = accessor.createSearchCursor();
+        int numQueries = numDocQueries + numRandomQueries;
         for (int i = 0; i < numQueries; i++) {
-            if (rnd.nextFloat() <= RQNDOM_QUERY_PROB || documentCorpus.isEmpty()) {
+            // If number of documents in the corpus io less than numDocQueries, then replace the remaining ones with random queries.
+            if (i >= numDocQueries || i >= documentCorpus.size()) {
                 // Generate a random query.
                 ITupleReference randomQuery = tupleGen.next();
                 searchDocument.reset(randomQuery);

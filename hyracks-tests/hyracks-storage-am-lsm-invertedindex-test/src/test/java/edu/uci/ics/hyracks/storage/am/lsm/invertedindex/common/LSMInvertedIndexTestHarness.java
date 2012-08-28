@@ -128,6 +128,7 @@ public class LSMInvertedIndexTestHarness {
     }
 
     public void tearDown() throws HyracksDataException {
+        diskBufferCache.close();
         for (IODeviceHandle dev : ioManager.getIODevices()) {
             File dir = new File(dev.getPath(), onDiskDir);
             FilenameFilter filter = new FilenameFilter() {

@@ -45,4 +45,9 @@ public class JaccardSearchModifier implements IInvertedIndexSearchModifier {
     public void setJaccThresh(float jaccThresh) {
         this.jaccThresh = jaccThresh;
     }
+    
+    @Override
+    public String toString() {
+        return "Jaccard Search Modifier, Threshold: " + jaccThresh;
+    }
 }

@@ -16,18 +16,13 @@
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleGenerator;
 import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveSearchModifier;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestContext.InvertedIndexType;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTestUtils;
@@ -38,9 +33,6 @@ public abstract class AbstractInvertedIndexDeleteTest extends AbstractInvertedIn
     protected final int numDeleteRounds = AccessMethodTestsConfig.LSM_INVINDEX_NUM_DELETE_ROUNDS;
     protected final boolean bulkLoad;
 
-    protected int NUM_QUERIES = 10000;
-    protected int[] scanCountArray = new int[NUM_DOCS_TO_INSERT];
-    
     public AbstractInvertedIndexDeleteTest(InvertedIndexType invIndexType, boolean bulkLoad) {
         super(invIndexType);
         this.bulkLoad = bulkLoad;
@@ -51,7 +43,7 @@ public abstract class AbstractInvertedIndexDeleteTest extends AbstractInvertedIn
         IIndex invIndex = testCtx.getIndex();
         invIndex.create();
         invIndex.activate();
-
+        
         for (int i = 0; i < numInsertRounds; i++) {
             // Start generating documents ids from 0 again.
             tupleGen.reset();
@@ -60,28 +52,15 @@ public abstract class AbstractInvertedIndexDeleteTest extends AbstractInvertedIn
                 InvertedIndexTestUtils.bulkLoadInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
             } else {
                 InvertedIndexTestUtils.insertIntoInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
-            }
-            validateAndCheckIndex(testCtx);
-
-            List<ITupleReference> documentCorpus = new ArrayList<ITupleReference>();
-            documentCorpus.addAll(testCtx.getDocumentCorpus());
+            }            
 
             // Delete all documents in a couple of rounds.
             int numTuplesPerDeleteRound = (int) Math.ceil((float) testCtx.getDocumentCorpus().size()
                     / (float) numDeleteRounds);
             for (int j = 0; j < numDeleteRounds; j++) {
-                System.out.println("DELETE ROUND: " + i + " " + j);
-                
                 InvertedIndexTestUtils.deleteFromInvIndex(testCtx, harness.getRandom(), numTuplesPerDeleteRound);
                 validateAndCheckIndex(testCtx);
-                
-                System.out.println("TESTING SEARCHES");
-                
-                IInvertedIndexSearchModifier searchModifier = new ConjunctiveSearchModifier();
-                InvertedIndexTestUtils.testIndexSearch(testCtx, tupleGen, harness.getRandom(), NUM_QUERIES, searchModifier,
-                        scanCountArray);
-                
-                System.out.println("DONE WITH TESTING SEARCHES");
+                runTinySearchWorkload(testCtx, tupleGen);
             }
         }
 

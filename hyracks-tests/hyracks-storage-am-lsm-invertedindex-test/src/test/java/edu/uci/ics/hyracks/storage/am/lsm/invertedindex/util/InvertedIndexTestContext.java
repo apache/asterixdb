@@ -148,7 +148,7 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
             indexTupleIter.next();
             ITupleReference insertTuple = indexTupleIter.getTuple();
             CheckTuple checkTuple = createCheckTuple(insertTuple);
-            insertCheckTuple(checkTuple, getCheckTuples());
+            insertCheckTuple(checkTuple, checkTuples);
             allTokens.add(checkTuple.getField(0));
         }
     }
@@ -160,7 +160,7 @@ public class InvertedIndexTestContext extends OrderedIndexTestContext {
             indexTupleIter.next();
             ITupleReference insertTuple = indexTupleIter.getTuple();
             CheckTuple checkTuple = createCheckTuple(insertTuple);
-            deleteCheckTuple(checkTuple, getCheckTuples());
+            deleteCheckTuple(checkTuple, checkTuples);
         }
     }
     

@@ -50,6 +50,7 @@ public abstract class AbstractInvertedIndexLoadTest extends AbstractInvertedInde
                 InvertedIndexTestUtils.insertIntoInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
             }
             validateAndCheckIndex(testCtx);
+            runTinySearchWorkload(testCtx, tupleGen);
         }
 
         invIndex.deactivate();
