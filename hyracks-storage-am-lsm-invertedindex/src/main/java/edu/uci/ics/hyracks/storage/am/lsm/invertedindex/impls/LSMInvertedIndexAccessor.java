@@ -85,17 +85,16 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     }
     
     @Override
-    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
-            IndexException {
-        ILSMIOOperation mergeOp = invIndex.createMergeOperation(callback);
-        return mergeOp;
-    }
-
-    @Override
     public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         lsmHarness.flush(operation);
     }
 
+    @Override
+    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
+            IndexException {
+        return lsmHarness.createMergeOperation(callback);
+    }
+    
     @Override
     public void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         lsmHarness.merge(operation);

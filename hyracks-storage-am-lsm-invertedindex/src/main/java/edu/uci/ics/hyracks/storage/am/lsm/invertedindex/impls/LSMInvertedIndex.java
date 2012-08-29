@@ -457,7 +457,8 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         IInvertedIndex mergedDiskInvertedIndex = createDiskInvIndex(diskInvIndexFactory,
                 mergeOp.getDictBTreeMergeTarget(), true);
         IIndexCursor cursor = mergeOp.getCursor();
-        IIndexBulkLoader invIndexBulkLoader = mergedDiskInvertedIndex.createBulkLoader(1.0f, false);
+        // TODO: Reset verifyInput to false.
+        IIndexBulkLoader invIndexBulkLoader = mergedDiskInvertedIndex.createBulkLoader(1.0f, true);
         try {
             while (cursor.hasNext()) {
                 cursor.next();

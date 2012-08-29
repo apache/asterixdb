@@ -13,19 +13,19 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.exceptions;
+package edu.uci.ics.hyracks.storage.am.common.api;
 
 /**
- * Thrown when trying to bulk load a tree with an unsorted input stream. 
+ * Thrown when trying to bulk load an index with an unsorted input stream. 
  */
-public class BTreeUnsortedInputException extends BTreeException {
+public class UnsortedInputException extends IndexException {
 	private static final long serialVersionUID = 1L;
 	
-	public BTreeUnsortedInputException(Exception e) {
+	public UnsortedInputException(Exception e) {
 		super(e);
 	}
 	
-	public BTreeUnsortedInputException(String message) {
+	public UnsortedInputException(String message) {
         super(message);
     }
 }

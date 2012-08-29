@@ -48,7 +48,6 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMTreeSearchCursor {
             IInvertedIndexAccessor invIndexAccessor = (IInvertedIndexAccessor) lsmInitState.getIndexAccessors().get(i);
             rangeCursors[i] = invIndexAccessor.createRangeSearchCursor();
             invIndexAccessor.rangeSearch(rangeCursors[i], lsmInitState.getSearchPredicate());
-
         }
         
         // For searching the deleted-keys BTrees.
@@ -71,7 +70,7 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMTreeSearchCursor {
      * Check deleted-keys BTrees whether they contain the key in the checkElement's tuple.
      */
     @Override
-    protected boolean isDeleted(PriorityQueueElement checkElement) throws HyracksDataException {
+    protected boolean isDeleted(PriorityQueueElement checkElement) throws HyracksDataException, IndexException {
         keysOnlyTuple.reset(checkElement.getTuple());
         int end = checkElement.getCursorIndex();
         for (int i = 0; i < end; i++) {

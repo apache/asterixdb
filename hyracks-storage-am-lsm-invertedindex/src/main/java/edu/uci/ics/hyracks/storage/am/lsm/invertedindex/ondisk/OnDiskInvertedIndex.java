@@ -43,6 +43,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.api.UnsortedInputException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
@@ -294,11 +295,20 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         private ICachedPage currentPage;
         private final MultiComparator tokenCmp;
         private final MultiComparator invListCmp;
-
+        
+        private final boolean verifyInput;
+        private final MultiComparator allCmp;
+        
         public OnDiskInvertedIndexBulkLoader(float btreeFillFactor, boolean verifyInput, int startPageId, int fileId)
                 throws IndexException, HyracksDataException {
+            this.verifyInput = verifyInput;
             this.tokenCmp = MultiComparator.create(btree.getComparatorFactories());
-            this.invListCmp = MultiComparator.create(invListCmpFactories);
+            this.invListCmp = MultiComparator.create(invListCmpFactories);            
+            if (verifyInput) {
+                allCmp = MultiComparator.create(btree.getComparatorFactories(), invListCmpFactories);
+            } else {
+                allCmp = null;
+            }
             this.btreeTupleBuilder = new ArrayTupleBuilder(btree.getFieldCount());
             this.btreeTupleReference = new ArrayTupleReference();
             this.lastTupleBuilder = new ArrayTupleBuilder(numTokenFields + numInvListKeys);
@@ -381,6 +391,14 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
                 }
             }
 
+            if (verifyInput && lastTupleBuilder.getSize() != 0) {
+                if (allCmp.compare(tuple, lastTuple) <= 0) {
+                    System.out.println("FOUND YOU!");
+                    throw new UnsortedInputException(
+                            "Input stream given to OnDiskInvertedIndex bulk load is not sorted.");
+                }
+            }
+            
             // Remember last tuple by creating a copy.
             // TODO: This portion can be optimized by only copying the token when it changes, and using the last appended inverted-list element as a reference.
             lastTupleBuilder.reset();
@@ -468,7 +486,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         }
         
         @Override
-        public void rangeSearch(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException {
+        public void rangeSearch(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
             OnDiskInvertedIndexRangeSearchCursor rangeSearchCursor = (OnDiskInvertedIndexRangeSearchCursor) cursor;
             rangeSearchCursor.open(null, searchPred);
         }

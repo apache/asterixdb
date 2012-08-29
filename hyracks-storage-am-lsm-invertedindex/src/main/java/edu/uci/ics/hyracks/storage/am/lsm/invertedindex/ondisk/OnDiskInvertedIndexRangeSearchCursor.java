@@ -66,7 +66,7 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
     }
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
+    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
         this.btreePred = (RangePredicate) searchPred;
         try {
             btreeAccessor.search(btreeCursor, btreePred);
@@ -122,13 +122,12 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
     }
 
     @Override
-    public void reset() throws HyracksDataException {
+    public void reset() throws HyracksDataException, IndexException {
         if (unpinNeeded) {
             invListCursor.unpinPages();
             unpinNeeded = false;
         }
         btreeCursor.close();
-        open(null, btreePred);
     }
 
     @Override

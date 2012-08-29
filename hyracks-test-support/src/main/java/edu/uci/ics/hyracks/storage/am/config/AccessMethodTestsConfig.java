@@ -69,10 +69,10 @@ public class AccessMethodTestsConfig {
     public static final int LSM_BTREE_HYRACKS_FRAME_SIZE = 128;
 
     // Mem configuration for Inverted Index.
-    public static final int LSM_INVINDEX_DISK_PAGE_SIZE = 1024;
+    public static final int LSM_INVINDEX_DISK_PAGE_SIZE = 256;
     public static final int LSM_INVINDEX_DISK_NUM_PAGES = 1000;
     public static final int LSM_INVINDEX_DISK_MAX_OPEN_FILES = 1000;
-    public static final int LSM_INVINDEX_MEM_PAGE_SIZE = 1024;
+    public static final int LSM_INVINDEX_MEM_PAGE_SIZE = 256;
     public static final int LSM_INVINDEX_MEM_NUM_PAGES = 100;
     public static final int LSM_INVINDEX_HYRACKS_FRAME_SIZE = 256;
     // Test parameters.
@@ -89,7 +89,7 @@ public class AccessMethodTestsConfig {
     public static final int LSM_INVINDEX_NUM_DELETE_ROUNDS = 3;
     // Allocate a generous size to make sure we have enough elements for all tests.
     public static final int LSM_INVINDEX_SCAN_COUNT_ARRAY_SIZE = 1000000;
-    public static final int LSM_INVINDEX_MULTITHREAD_NUM_OPERATIONS = 10000;
+    public static final int LSM_INVINDEX_MULTITHREAD_NUM_OPERATIONS = 1000;
     
 }
 

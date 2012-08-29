@@ -44,7 +44,7 @@ public class LSMInvertedIndexMultiThreadTest {
     protected final int REGULAR_NUM_THREADS = Runtime.getRuntime().availableProcessors();
     // Excessive number of threads for testing.
     protected final int EXCESSIVE_NUM_THREADS = Runtime.getRuntime().availableProcessors() * 4;
-    protected final int NUM_OPERATIONS = AccessMethodTestsConfig.BTREE_MULTITHREAD_NUM_OPERATIONS;
+    protected final int NUM_OPERATIONS = AccessMethodTestsConfig.LSM_INVINDEX_MULTITHREAD_NUM_OPERATIONS;
     
     private final LSMInvertedIndexTestHarness harness = new LSMInvertedIndexTestHarness();
     private final LSMInvertedIndexWorkerFactory workerFactory = new LSMInvertedIndexWorkerFactory();
@@ -83,16 +83,19 @@ public class LSMInvertedIndexMultiThreadTest {
     protected ArrayList<TestWorkloadConf> getTestWorkloadConf() {
         ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<TestWorkloadConf>();
 
+        /*
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };
         workloadConfs.add(new TestWorkloadConf(insertOnlyOps, ProbabilityHelper
                 .getUniformProbDist(insertOnlyOps.length)));
+        */
 
         // Insert and merge workload.
         TestOperation[] insertMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.MERGE };
         workloadConfs.add(new TestWorkloadConf(insertMergeOps, ProbabilityHelper
                 .getUniformProbDist(insertMergeOps.length)));
 
+        /*
         // Inserts mixed with point searches and scans.
         TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.POINT_SEARCH,
                 TestOperation.SCAN };
@@ -120,6 +123,7 @@ public class LSMInvertedIndexMultiThreadTest {
         TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
                 TestOperation.POINT_SEARCH, TestOperation.SCAN, TestOperation.MERGE };
         workloadConfs.add(new TestWorkloadConf(allOps, ProbabilityHelper.getUniformProbDist(allOps.length)));
+        */
 
         return workloadConfs;
     }
@@ -127,9 +131,9 @@ public class LSMInvertedIndexMultiThreadTest {
     @Test
     public void wordTokensInvIndexTest() throws IOException, IndexException, InterruptedException {
         String dataMsg = "Documents";
-        int[] numThreads = new int[] { EXCESSIVE_NUM_THREADS };
+        int[] numThreads = new int[] { REGULAR_NUM_THREADS };
         for (int i = 0; i < numThreads.length; i++) {
-            for (TestWorkloadConf conf : workloadConfs) {
+            for (TestWorkloadConf conf : workloadConfs) {                
                 setUp();
                 LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestUtils.createWordInvIndexTestContext(harness,
                         InvertedIndexType.LSM);

@@ -95,4 +95,19 @@ public class MultiComparator {
         }
         return new MultiComparator(cmps);
     }
+    
+    public static MultiComparator create(IBinaryComparatorFactory[]... cmpFactories) {
+        int size = 0;
+        for (int i = 0; i < cmpFactories.length; i++) {
+            size += cmpFactories[i].length;
+        }
+        IBinaryComparator[] cmps = new IBinaryComparator[size];
+        int x = 0;
+        for (int i = 0; i < cmpFactories.length; i++) {
+            for (int j = 0; j < cmpFactories[i].length; j++) {
+                cmps[x++] = cmpFactories[i][j].createBinaryComparator();
+            }
+        }
+        return new MultiComparator(cmps);
+    }
 }

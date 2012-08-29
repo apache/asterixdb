@@ -67,7 +67,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
         keySearchPred = new RangePredicate(null, null, true, true, keyCmp, keyCmp);
     }
 
-    protected boolean isDeleted(ITupleReference key) throws HyracksDataException {
+    protected boolean isDeleted(ITupleReference key) throws HyracksDataException, IndexException {
         keySearchPred.setLowKey(key, true);
         keySearchPred.setHighKey(key, true);
         for (int i = 0; i < accessorIndex; i++) {

@@ -24,7 +24,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 public interface IInvertedListCursor extends Comparable<IInvertedListCursor> {
     public void reset(int startPageId, int endPageId, int startOff, int numElements);
 
-    public void pinPages() throws HyracksDataException;
+    public void pinPages() throws HyracksDataException, IndexException;
 
     public void unpinPages() throws HyracksDataException;
 

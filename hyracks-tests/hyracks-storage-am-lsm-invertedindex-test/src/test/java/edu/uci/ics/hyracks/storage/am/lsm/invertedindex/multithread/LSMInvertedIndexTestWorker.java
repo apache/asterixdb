@@ -123,11 +123,12 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
                         accessor.merge(ioop);
                     }
                 } catch (LSMMergeInProgressException e) {
+                    e.printStackTrace();
                     // Ignore ongoing merges. Do an insert instead.
-                    accessor.insert(tuple);
+                    //accessor.insert(tuple);
                     // Add tuple to document corpus so we can delete it.
-                    ITupleReference copyTuple = TupleUtils.copyTuple(tuple);
-                    documentCorpus.add(copyTuple);
+                    //ITupleReference copyTuple = TupleUtils.copyTuple(tuple);
+                    //documentCorpus.add(copyTuple);
                 }
                 break;
             }

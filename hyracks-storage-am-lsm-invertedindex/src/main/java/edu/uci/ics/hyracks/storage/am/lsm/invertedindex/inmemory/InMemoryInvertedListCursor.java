@@ -39,11 +39,12 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
     private RangePredicate btreePred;
     private BTreeAccessor btreeAccessor;
     private IIndexCursor btreeCursor;
+    private boolean cursorNeedsClose = false;
     private IIndexCursor countingCursor;
     private MultiComparator tokenFieldsCmp;
     private MultiComparator btreeCmp;
     private final PermutingTupleReference resultTuple;
-    private final ConcatenatingTupleReference btreeSearchTuple;
+    private final ConcatenatingTupleReference btreeSearchTuple;    
     
     private final ArrayTupleBuilder tokenTupleBuilder;
     private final ArrayTupleReference tokenTuple = new ArrayTupleReference();
@@ -78,18 +79,15 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
         return size() - cursor.size();
     }
 
-    public void reset(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+    public void reset(ITupleReference tuple) throws HyracksDataException, IndexException {
         numElements = -1;
         // Copy the tokens tuple for later use in btree probes.
         TupleUtils.copyTuple(tokenTupleBuilder, tuple, tuple.getFieldCount());
         tokenTuple.reset(tokenTupleBuilder.getFieldEndOffsets(), tokenTupleBuilder.getByteArray());
         btreeSearchTuple.reset();
         btreeSearchTuple.addTuple(tokenTuple);
-        btreePred.setLowKey(tokenTuple, true);
-        btreePred.setHighKey(tokenTuple, true);
         btreeCursor.reset();
         countingCursor.reset();
-        btreeAccessor.search(btreeCursor, btreePred);
     }
 
     @Override
@@ -98,13 +96,21 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
     }
 
     @Override
-    public void pinPages() throws HyracksDataException {
-        // Do nothing
+    public void pinPages() throws HyracksDataException, IndexException {
+        btreePred.setLowKeyComparator(tokenFieldsCmp);
+        btreePred.setHighKeyComparator(tokenFieldsCmp);
+        btreePred.setLowKey(tokenTuple, true);
+        btreePred.setHighKey(tokenTuple, true);
+        btreeAccessor.search(btreeCursor, btreePred);
+        cursorNeedsClose = true;
     }
 
     @Override
     public void unpinPages() throws HyracksDataException {
-        btreeCursor.close();
+        if (cursorNeedsClose) {
+            btreeCursor.close();
+            cursorNeedsClose = false;
+        }
     }
 
     @Override
@@ -171,6 +177,8 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
 
     @Override
     public boolean containsKey(ITupleReference searchTuple, MultiComparator invListCmp) throws HyracksDataException, IndexException {
+        // Close cursor if necessary.
+        unpinPages();
         btreeSearchTuple.addTuple(searchTuple);
         btreePred.setLowKeyComparator(btreeCmp);
         btreePred.setHighKeyComparator(btreeCmp);

@@ -59,7 +59,7 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void reset() throws HyracksDataException {
+    public void reset() throws HyracksDataException, IndexException {
         outputElement = null;
         needPush = false;
 
@@ -140,7 +140,7 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
         return false;
     }
 
-    protected boolean isDeleted(PriorityQueueElement checkElement) throws HyracksDataException {
+    protected boolean isDeleted(PriorityQueueElement checkElement) throws HyracksDataException, IndexException {
         return ((ILSMTreeTupleReference) checkElement.getTuple()).isAntimatter();
     }
     
