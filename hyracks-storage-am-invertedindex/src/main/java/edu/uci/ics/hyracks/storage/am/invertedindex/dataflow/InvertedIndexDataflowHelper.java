@@ -31,7 +31,7 @@ public final class InvertedIndexDataflowHelper extends IndexDataflowHelper {
     }
 
     @Override
-    public IIndex getIndexInstance() throws HyracksDataException {
+    public IIndex createIndexInstance() throws HyracksDataException {
         IInvertedIndexOperatorDescriptor invIndexOpDesc = (IInvertedIndexOperatorDescriptor) opDesc;
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(
                 invIndexOpDesc.getInvListsTypeTraits());

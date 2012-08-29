@@ -31,7 +31,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
@@ -41,7 +40,6 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.impls.OccurrenceThresholdPan
 public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
     private final AbstractInvertedIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
-    private final IIndexLifecycleManager lcManager;
     private final InvertedIndexDataflowHelper invIndexDataflowHelper;
     private final int queryField;
     private FrameTupleAccessor accessor;
@@ -65,7 +63,6 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
             IRecordDescriptorProvider recordDescProvider) {
         this.opDesc = opDesc;
         this.ctx = ctx;
-        this.lcManager = opDesc.getLifecycleManagerProvider().getLifecycleManager(ctx);
         this.invIndexDataflowHelper = new InvertedIndexDataflowHelper(opDesc, ctx, partition);
         this.queryField = queryField;
         this.searchPred = new InvertedIndexSearchPredicate(opDesc.getTokenizerFactory().createTokenizer(),
@@ -80,7 +77,8 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
         accessor = new FrameTupleAccessor(ctx.getFrameSize(), inputRecDesc);
         tuple = new FrameTupleReference();
 
-        invIndex = (InvertedIndex) lcManager.open(invIndexDataflowHelper);
+        invIndexDataflowHelper.open();
+        invIndex = (InvertedIndex) invIndexDataflowHelper.getIndexInstance();
         try {
             writeBuffer = ctx.allocateFrame();
             tb = new ArrayTupleBuilder(recordDesc.getFieldCount());
@@ -92,7 +90,7 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
             resultCursor = indexAccessor.createSearchCursor();
             writer.open();
         } catch (HyracksDataException e) {
-            lcManager.close(invIndexDataflowHelper);
+            invIndexDataflowHelper.close();
             throw e;
         }
     }
@@ -159,7 +157,7 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
             }
             writer.close();
         } finally {
-            lcManager.close(invIndexDataflowHelper);
+            invIndexDataflowHelper.close();
         }
     }
 }

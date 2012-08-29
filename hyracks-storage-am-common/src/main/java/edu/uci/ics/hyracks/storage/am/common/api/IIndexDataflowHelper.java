@@ -1,19 +1,21 @@
 package edu.uci.ics.hyracks.storage.am.common.api;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 
 public interface IIndexDataflowHelper {
-    public IIndex getIndexInstance() throws HyracksDataException;
+    public void create() throws HyracksDataException;
+
+    public void close() throws HyracksDataException;
+
+    public void open() throws HyracksDataException;
+
+    public void destroy() throws HyracksDataException;
+
+    public IIndex getIndexInstance();
 
     public FileReference getFileReference();
 
     public long getResourceID();
-
-    public IIndexOperatorDescriptor getOperatorDescriptor();
-
-    public IHyracksTaskContext getHyracksTaskContext();
 }

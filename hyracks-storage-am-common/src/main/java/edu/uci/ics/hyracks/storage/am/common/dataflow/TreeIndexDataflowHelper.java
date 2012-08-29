@@ -29,8 +29,6 @@ public abstract class TreeIndexDataflowHelper extends IndexDataflowHelper {
         this.treeOpDesc = (ITreeIndexOperatorDescriptor) opDesc;
     }
 
-    public abstract IIndex getIndexInstance() throws HyracksDataException;
-
     public ITreeIndexCursor createDiskOrderScanCursor(ITreeIndexFrame leafFrame) throws HyracksDataException {
         return new TreeDiskOrderScanCursor(leafFrame);
     }

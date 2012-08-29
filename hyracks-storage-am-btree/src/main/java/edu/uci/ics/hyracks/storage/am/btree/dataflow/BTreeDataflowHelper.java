@@ -30,7 +30,7 @@ public class BTreeDataflowHelper extends TreeIndexDataflowHelper {
     }
 
     @Override
-    public ITreeIndex getIndexInstance() throws HyracksDataException {
+    public ITreeIndex createIndexInstance() throws HyracksDataException {
         try {
             return BTreeUtils.createBTree(opDesc.getStorageManager().getBufferCache(ctx), opDesc.getStorageManager()
                     .getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc

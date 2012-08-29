@@ -82,7 +82,7 @@ public abstract class AbstractLSMRTreeDataflowHelper extends TreeIndexDataflowHe
     }
 
     @Override
-    public ITreeIndex getIndexInstance() throws HyracksDataException {
+    public ITreeIndex createIndexInstance() throws HyracksDataException {
         ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
         InMemoryBufferCache memBufferCache = new LSMRTreeInMemoryBufferCache(new HeapBufferAllocator(), memPageSize,
                 memNumPages);
