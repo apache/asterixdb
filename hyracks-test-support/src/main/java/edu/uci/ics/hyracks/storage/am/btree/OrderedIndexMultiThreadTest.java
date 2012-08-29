@@ -26,13 +26,12 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
 import edu.uci.ics.hyracks.storage.am.common.IIndexTestWorkerFactory;
+import edu.uci.ics.hyracks.storage.am.common.IndexMultiThreadTestDriver;
 import edu.uci.ics.hyracks.storage.am.common.TestWorkloadConf;
-import edu.uci.ics.hyracks.storage.am.common.TreeIndexMultiThreadTestDriver;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
@@ -63,8 +62,6 @@ public abstract class OrderedIndexMultiThreadTest {
 
     protected abstract String getIndexTypeName();
 
-    protected abstract FileReference getFileReference();
-
     protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, int numThreads, TestWorkloadConf conf,
             String dataMsg) throws InterruptedException, TreeIndexException, HyracksException {
         setUp();
@@ -84,9 +81,9 @@ public abstract class OrderedIndexMultiThreadTest {
         // 4 batches per thread.
         int batchSize = (NUM_OPERATIONS / numThreads) / 4;
 
-        TreeIndexMultiThreadTestDriver driver = new TreeIndexMultiThreadTestDriver(index, workerFactory, fieldSerdes,
+        IndexMultiThreadTestDriver driver = new IndexMultiThreadTestDriver(index, workerFactory, fieldSerdes,
                 conf.ops, conf.opProbs);
-        driver.init(getFileReference());
+        driver.init();
         long[] times = driver.run(numThreads, 1, NUM_OPERATIONS, batchSize);
         index.validate();
         driver.deinit();

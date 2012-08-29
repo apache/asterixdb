@@ -21,7 +21,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexMultiThreadTest;
 import edu.uci.ics.hyracks.storage.am.common.IIndexTestWorkerFactory;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
@@ -111,10 +110,5 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
     @Override
     protected String getIndexTypeName() {
         return "LSMBTree";
-    }
-
-    @Override
-    protected FileReference getFileReference() {
-        return harness.getFileReference();
     }
 }

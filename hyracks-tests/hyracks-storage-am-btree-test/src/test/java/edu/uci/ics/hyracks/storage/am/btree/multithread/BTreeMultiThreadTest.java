@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexMultiThreadTest;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
@@ -87,11 +86,6 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
         workloadConfs.add(new TestWorkloadConf(allOps, ProbabilityHelper.getUniformProbDist(allOps.length)));
 
         return workloadConfs;
-    }
-
-    @Override
-    protected FileReference getFileReference() {
-        return harness.getFileReference();
     }
 
     @Override

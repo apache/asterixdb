@@ -51,6 +51,19 @@ public class DataGenThread extends Thread {
         ringPos = 0;
     }
     
+    public DataGenThread(int numConsumers, int maxNumBatches, int batchSize, ISerializerDeserializer[] fieldSerdes,
+            IFieldValueGenerator[] fieldGens, int rndSeed, int maxOutstandingBatches) {
+        this.maxNumBatches = maxNumBatches;
+        this.maxOutstandingBatches = maxOutstandingBatches;
+        rnd = new Random(rndSeed);
+        tupleBatches = new TupleBatch[maxOutstandingBatches];
+        for (int i = 0; i < maxOutstandingBatches; i++) {
+            tupleBatches[i] = new TupleBatch(batchSize, fieldGens, fieldSerdes, 0);
+        }
+        tupleBatchQueue = new LinkedBlockingQueue<TupleBatch>(maxOutstandingBatches);
+        ringPos = 0;
+    }
+    
     @Override
     public void run() {
         while(numBatches < maxNumBatches) {

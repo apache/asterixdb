@@ -17,23 +17,22 @@ package edu.uci.ics.hyracks.storage.am.common;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 
 @SuppressWarnings("rawtypes")
-public class TreeIndexMultiThreadTestDriver {
-    private static final int RANDOM_SEED = 50;
+public class IndexMultiThreadTestDriver {
+    protected static final int RANDOM_SEED = 50;
     // Means no additional payload. Only the specified fields.
-    private static final int PAYLOAD_SIZE = 0;
-    private final TestOperationSelector opSelector;
-    private final ISerializerDeserializer[] fieldSerdes;
-    private final IIndex index;
-    private final IIndexTestWorkerFactory workerFactory;
+    protected static final int PAYLOAD_SIZE = 0;
+    protected final TestOperationSelector opSelector;
+    protected final ISerializerDeserializer[] fieldSerdes;
+    protected final IIndex index;
+    protected final IIndexTestWorkerFactory workerFactory;
 
-    public TreeIndexMultiThreadTestDriver(IIndex index, IIndexTestWorkerFactory workerFactory,
+    public IndexMultiThreadTestDriver(IIndex index, IIndexTestWorkerFactory workerFactory,
             ISerializerDeserializer[] fieldSerdes, TestOperation[] ops, double[] opProbs) {
         this.index = index;
         this.workerFactory = workerFactory;
@@ -41,7 +40,7 @@ public class TreeIndexMultiThreadTestDriver {
         this.opSelector = new TestOperationSelector(ops, opProbs);
     }
 
-    public void init(FileReference file) throws HyracksDataException {
+    public void init() throws HyracksDataException {
         index.create();
         index.activate();
     }
@@ -81,6 +80,7 @@ public class TreeIndexMultiThreadTestDriver {
 
     public void deinit() throws HyracksDataException {
         index.deactivate();
+        index.destroy();
     }
 
     // To allow subclasses to override the data gen params.

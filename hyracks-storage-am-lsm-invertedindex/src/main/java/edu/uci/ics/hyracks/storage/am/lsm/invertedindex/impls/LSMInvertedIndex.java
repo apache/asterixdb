@@ -388,7 +388,6 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     }
 
     @Override
-    // TODO: Deal with deletions properly.
     public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOpContext ictx,
             boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, IndexException {
         int numComponents = (includeMemComponent) ? diskComponents.size() : diskComponents.size() + 1;
@@ -693,5 +692,9 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     @Override
     public IBinaryComparatorFactory[] getTokenCmpFactories() {
         return tokenCmpFactories;
+    }
+    
+    public IBinaryTokenizerFactory getTokenizerFactory() {
+        return tokenizerFactory;
     }
 }

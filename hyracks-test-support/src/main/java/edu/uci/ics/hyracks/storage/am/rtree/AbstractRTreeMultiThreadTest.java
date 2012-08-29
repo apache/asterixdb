@@ -26,15 +26,14 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
 import edu.uci.ics.hyracks.storage.am.common.IIndexTestWorkerFactory;
+import edu.uci.ics.hyracks.storage.am.common.IndexMultiThreadTestDriver;
 import edu.uci.ics.hyracks.storage.am.common.TestWorkloadConf;
-import edu.uci.ics.hyracks.storage.am.common.TreeIndexMultiThreadTestDriver;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -76,8 +75,6 @@ public abstract class AbstractRTreeMultiThreadTest {
 
     protected abstract String getIndexTypeName();
 
-    protected abstract FileReference getFileReference();
-
     protected void runTest(ISerializerDeserializer[] fieldSerdes,
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, RTreePolicyType rtreePolicyType,
             int numThreads, TestWorkloadConf conf, String dataMsg) throws HyracksException, InterruptedException,
@@ -102,9 +99,9 @@ public abstract class AbstractRTreeMultiThreadTest {
         // 4 batches per thread.
         int batchSize = (NUM_OPERATIONS / numThreads) / 4;
 
-        TreeIndexMultiThreadTestDriver driver = new TreeIndexMultiThreadTestDriver(index, workerFactory, fieldSerdes,
+        IndexMultiThreadTestDriver driver = new IndexMultiThreadTestDriver(index, workerFactory, fieldSerdes,
                 conf.ops, conf.opProbs);
-        driver.init(getFileReference());
+        driver.init();
         long[] times = driver.run(numThreads, 1, NUM_OPERATIONS, batchSize);
         driver.deinit();
 

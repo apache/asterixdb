@@ -69,4 +69,12 @@ public class TupleGenerator {
             fieldGen.reset();
         }
     }
+    
+    public ISerializerDeserializer[] getFieldSerdes() {
+        return fieldSerdes;
+    }
+    
+    public IFieldValueGenerator[] getFieldGens() {
+        return fieldGens;
+    }
 }

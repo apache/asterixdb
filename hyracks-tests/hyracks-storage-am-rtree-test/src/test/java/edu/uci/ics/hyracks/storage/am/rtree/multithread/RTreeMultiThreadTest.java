@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.IIndexTestWorkerFactory;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import edu.uci.ics.hyracks.storage.am.common.TestWorkloadConf;
@@ -98,10 +97,5 @@ public class RTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
     @Override
     protected String getIndexTypeName() {
         return "RTree";
-    }
-
-    @Override
-    protected FileReference getFileReference() {
-        return harness.getFileReference();
     }
 }
