@@ -61,7 +61,7 @@ public class UnorderedListBuilder implements IAUnorderedListBuilder {
     public void addItem(IValueReference item) throws HyracksDataException {
         if (!fixedSize)
             this.offsets.add((short) outputStream.size());
-        if (itemTypeTag == ATypeTag.ANY) {
+        if (itemTypeTag == ATypeTag.ANY || (itemTypeTag == ATypeTag.NULL && item.getByteArray()[0] == serNullTypeTag)) {
             this.numberOfItems++;
             this.outputStream.write(item.getByteArray(), item.getStartOffset(), item.getLength());
         } else if (item.getByteArray()[0] != serNullTypeTag) {

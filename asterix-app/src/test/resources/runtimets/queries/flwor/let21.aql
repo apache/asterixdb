@@ -4,6 +4,7 @@
  * Date             :  23rd July 2012
  */
 
+write output to nc1:"rttest/flwor_let21.adm";
 
 // Ordered list of boolean values.
 

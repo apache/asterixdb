@@ -96,7 +96,7 @@ public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDyna
                     try {
                         for (int i = 0; i < argEvals.length; i++) {
                             inputVal.reset();
-                            argEvals[i].evaluate(tuple);
+                            argEvals[i].evaluate(tuple);                            
                             builder.addItem(inputVal);
                         }
 

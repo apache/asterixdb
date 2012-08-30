@@ -4,5 +4,7 @@
  * Date             :  7th July 2012
  */
 
+write output to nc1:"rttest/flwor_for14.adm";
+
 for $a in [{"name":"Rocky","age":59,"sex":"M"},["job","ink","king","ontario","lavelle"],[1,4,5,6,7,8,9,2,3,4,5,6,7],{{"extra data","extra data","extra data"}}]
 return $a

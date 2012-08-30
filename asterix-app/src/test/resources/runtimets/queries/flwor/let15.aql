@@ -4,6 +4,8 @@
  * Date            :  6th July 2012 
  */
 
+write output to nc1:"rttest/flwor_let15.adm";
+
 // nested ordered list comprising of only one integer value.
 
 let $a := [[[[[[[[[[[int64("9222872036854775809")]]]]]]]]]]]

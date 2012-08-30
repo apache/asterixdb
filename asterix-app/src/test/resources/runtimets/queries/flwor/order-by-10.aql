@@ -4,6 +4,8 @@
  * Date            : 24th July 2012
  */
 
+write output to nc1:"rttest/flwor_order-by-10.adm";
+
 for $x in ["ten","twenty","thirty","forty","fifty","sixty","seventy","ninety"]
 order by string-concat([$x,$x]) desc 
 return string-concat([$x,$x])

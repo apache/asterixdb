@@ -4,6 +4,8 @@
  * Date             :  7th July 2012
  */
 
+write output to nc1:"rttest/flwor_for08.adm";
+
 for $a in [{"name":"Bob","age":10,"sex":"Male"},{"name":"John","age":45,"sex":"Female"},{"name":"Raj","age":35,"sex":"Male"}]
 where $a.name="John"
 return $a

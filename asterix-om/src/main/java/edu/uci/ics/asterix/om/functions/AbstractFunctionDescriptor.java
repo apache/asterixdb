@@ -26,6 +26,8 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory
 
 public abstract class AbstractFunctionDescriptor implements IFunctionDescriptor {
 
+    private static final long serialVersionUID = 1L;
+
     @Override
     public abstract FunctionIdentifier getIdentifier();
 
@@ -59,7 +61,6 @@ public abstract class AbstractFunctionDescriptor implements IFunctionDescriptor 
     public ICopyAggregateFunctionFactory createAggregateFunctionFactory(ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
         throw new NotImplementedException("Not Implemented");
-
     }
 
 }

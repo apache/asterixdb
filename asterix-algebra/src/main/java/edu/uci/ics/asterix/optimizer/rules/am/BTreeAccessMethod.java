@@ -58,7 +58,6 @@ public class BTreeAccessMethod implements IAccessMethod {
         funcIdents.add(AlgebricksBuiltinFunctions.GE);
         funcIdents.add(AlgebricksBuiltinFunctions.LT);
         funcIdents.add(AlgebricksBuiltinFunctions.GT);
-        funcIdents.add(AlgebricksBuiltinFunctions.NEQ);
     }
 
     public static BTreeAccessMethod INSTANCE = new BTreeAccessMethod();

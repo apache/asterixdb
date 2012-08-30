@@ -4,5 +4,7 @@
  * Date            : 23rd July 2012
  */
 
+write output to nc1:"rttest/flwor_let23.adm";
+
 let $a := [1,2,3,4,5,6,7,8,9,null]
 return len($a)
