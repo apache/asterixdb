@@ -163,51 +163,51 @@ public class AsterixBuiltinFunctions {
             "numeric-idiv", 2);
     public final static FunctionIdentifier CARET = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "caret", 2);
 
-	public final static FunctionIdentifier NUMERIC_ABS = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "numeric-abs", 1);
-	public final static FunctionIdentifier NUMERIC_CEILING = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "numeric-ceiling", 1);
-	public final static FunctionIdentifier NUMERIC_FLOOR = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "numeric-floor", 1);
-	public final static FunctionIdentifier NUMERIC_ROUND = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "numeric-round", 1);
-	public final static FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "numeric-round-half-to-even", 1);
-	public final static FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN2 = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "numeric-round-half-to-even2", 2);
-	// String funcitons
-	public final static FunctionIdentifier STRING_EQUAL = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "string-equal", 2);
-	public final static FunctionIdentifier STRING_START_WITH = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "start-with", 2);
-	public final static FunctionIdentifier STRING_END_WITH = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "end-with", 2);
-	public final static FunctionIdentifier STRING_MATCHES = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "matches", 2);
-	public final static FunctionIdentifier STRING_MATCHES_WITH_FLAG = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "matches2", 3);
-	public final static FunctionIdentifier STRING_LOWERCASE = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "lowercase", 1);
-	public final static FunctionIdentifier STRING_REPLACE = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "replace", 3);
-	public final static FunctionIdentifier STRING_REPLACE_WITH_FLAG = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "replace2", 4);
-	public final static FunctionIdentifier STRING_LENGTH = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "string-length", 1);
-	public final static FunctionIdentifier SUBSTRING2 = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "substring2", 2);
-	public final static FunctionIdentifier SUBSTRING_BEFORE = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "substring-before", 2);
-	public final static FunctionIdentifier SUBSTRING_AFTER = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "substring-after", 2);
-	public final static FunctionIdentifier STRING_TO_CODEPOINT = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "string-to-codepoint", 1);
-	public final static FunctionIdentifier CODEPOINT_TO_STRING = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "codepoint-to-string", 1);
-	public final static FunctionIdentifier STRING_CONCAT = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "string-concat", 1);
-	public final static FunctionIdentifier STRING_JOIN = new FunctionIdentifier(
-			FunctionConstants.ASTERIX_NS, "string-join", 2);
+    public final static FunctionIdentifier NUMERIC_ABS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "numeric-abs", 1);
+    public final static FunctionIdentifier NUMERIC_CEILING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "numeric-ceiling", 1);
+    public final static FunctionIdentifier NUMERIC_FLOOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "numeric-floor", 1);
+    public final static FunctionIdentifier NUMERIC_ROUND = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "numeric-round", 1);
+    public final static FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "numeric-round-half-to-even", 1);
+    public final static FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN2 = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "numeric-round-half-to-even2", 2);
+    // String funcitons
+    public final static FunctionIdentifier STRING_EQUAL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "string-equal", 2);
+    public final static FunctionIdentifier STRING_START_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "start-with", 2);
+    public final static FunctionIdentifier STRING_END_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "end-with", 2);
+    public final static FunctionIdentifier STRING_MATCHES = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "matches", 2);
+    public final static FunctionIdentifier STRING_MATCHES_WITH_FLAG = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "matches2", 3);
+    public final static FunctionIdentifier STRING_LOWERCASE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "lowercase", 1);
+    public final static FunctionIdentifier STRING_REPLACE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "replace", 3);
+    public final static FunctionIdentifier STRING_REPLACE_WITH_FLAG = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "replace2", 4);
+    public final static FunctionIdentifier STRING_LENGTH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "string-length", 1);
+    public final static FunctionIdentifier SUBSTRING2 = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "substring2", 2);
+    public final static FunctionIdentifier SUBSTRING_BEFORE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "substring-before", 2);
+    public final static FunctionIdentifier SUBSTRING_AFTER = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "substring-after", 2);
+    public final static FunctionIdentifier STRING_TO_CODEPOINT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "string-to-codepoint", 1);
+    public final static FunctionIdentifier CODEPOINT_TO_STRING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "codepoint-to-string", 1);
+    public final static FunctionIdentifier STRING_CONCAT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "string-concat", 1);
+    public final static FunctionIdentifier STRING_JOIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "string-join", 2);
 
     public final static FunctionIdentifier DATASET = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "dataset", 1);
     public final static FunctionIdentifier FEED_INGEST = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -263,8 +263,6 @@ public class AsterixBuiltinFunctions {
             "global-avg-serial", 1);
     public final static FunctionIdentifier SERIAL_LOCAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "local-avg-serial", 1);
-
-    public final static FunctionIdentifier YEAR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "year", 1);
 
     public final static FunctionIdentifier SCAN_COLLECTION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "scan-collection", 1);
@@ -387,6 +385,22 @@ public class AsterixBuiltinFunctions {
             "inject-failure", 2);
     public final static FunctionIdentifier CAST_RECORD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "cast-record", 1);
+
+    // Spatial and temporal type accessors
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "year", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_MONTH = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "month", 2);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_DAY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "day", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_HOUR = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "hour", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "minute", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_SEC = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "second", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_MILLISEC = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "millisecond", 1);
 
     public static final FunctionIdentifier EQ = AlgebricksBuiltinFunctions.EQ;
     public static final FunctionIdentifier LE = AlgebricksBuiltinFunctions.LE;
@@ -523,7 +537,7 @@ public class AsterixBuiltinFunctions {
         add(NUMERIC_DIVIDE, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
         add(NUMERIC_MOD, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
         add(NUMERIC_IDIV, AInt32TypeComputer.INSTANCE);
-        
+
         // Xiaoyu Ma Add for new functions
         add(NUMERIC_ABS, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
         add(NUMERIC_CEILING, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
@@ -531,7 +545,7 @@ public class AsterixBuiltinFunctions {
         add(NUMERIC_ROUND, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
         add(NUMERIC_ROUND_HALF_TO_EVEN, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
         add(NUMERIC_ROUND_HALF_TO_EVEN2, NonTaggedNumericRoundHalfToEven2TypeComputer.INSTANCE);
-        
+
         add(STRING_TO_CODEPOINT, OrderedListOfAInt32TypeComputer.INSTANCE);
         add(CODEPOINT_TO_STRING, AStringTypeComputer.INSTANCE);
         add(STRING_CONCAT, AStringTypeComputer.INSTANCE);
@@ -548,7 +562,7 @@ public class AsterixBuiltinFunctions {
         add(SUBSTRING_AFTER, BinaryStringStringOrNullTypeComputer.INSTANCE);
         add(STRING_EQUAL, BinaryStringBoolOrNullTypeComputer.INSTANCE);
         add(STRING_JOIN, AStringTypeComputer.INSTANCE);
-        
+
         add(OPEN_RECORD_CONSTRUCTOR, OpenRecordConstructorResultType.INSTANCE);
         add(ORDERED_LIST_CONSTRUCTOR, OrderedListConstructorResultType.INSTANCE);
         add(POINT_CONSTRUCTOR, OptionalAPointTypeComputer.INSTANCE);
@@ -631,7 +645,6 @@ public class AsterixBuiltinFunctions {
         add(TIME_CONSTRUCTOR, OptionalATimeTypeComputer.INSTANCE);
         add(TYPE_OF, null); // TODO
         add(UNORDERED_LIST_CONSTRUCTOR, UnorderedListConstructorResultType.INSTANCE);
-        add(YEAR, OptionalAInt32TypeComputer.INSTANCE);
         add(WORD_TOKENS, new IResultTypeComputer() {
 
             @Override
@@ -640,6 +653,15 @@ public class AsterixBuiltinFunctions {
                 return new AOrderedListType(BuiltinType.ASTRING, "string");
             }
         });
+
+        // spatial and temporal type accessors
+        add(ACCESSOR_TEMPORAL_YEAR, OptionalAInt32TypeComputer.INSTANCE);
+        add(ACCESSOR_TEMPORAL_MONTH, OptionalAInt32TypeComputer.INSTANCE);
+        add(ACCESSOR_TEMPORAL_DAY, OptionalAInt32TypeComputer.INSTANCE);
+        add(ACCESSOR_TEMPORAL_HOUR, OptionalAInt32TypeComputer.INSTANCE);
+        add(ACCESSOR_TEMPORAL_MIN, OptionalAInt32TypeComputer.INSTANCE);
+        add(ACCESSOR_TEMPORAL_SEC, OptionalAInt32TypeComputer.INSTANCE);
+        add(ACCESSOR_TEMPORAL_MILLISEC, OptionalAInt32TypeComputer.INSTANCE);
 
         String metadataFunctionLoaderClassName = "edu.uci.ics.asterix.metadata.functions.MetadataBuiltinFunctions";
         try {

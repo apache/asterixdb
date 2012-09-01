@@ -12,18 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.runtime.evaluators.constructors;
+package edu.uci.ics.asterix.runtime.evaluators.accessors;
 
 import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import edu.uci.ics.asterix.om.base.ADate;
-import edu.uci.ics.asterix.om.base.AMutableDate;
+import edu.uci.ics.asterix.om.base.AInt32;
+import edu.uci.ics.asterix.om.base.AMutableInt32;
 import edu.uci.ics.asterix.om.base.ANull;
-import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
-import edu.uci.ics.asterix.om.base.temporal.ADateAndTimeParser;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -39,22 +39,33 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class TemporalMinuteAccessor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "date", 1);
-    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+
+    private static final FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "minute", 1);
+
+    // allowed input types
+    private static final byte SER_TIME_TYPE_TAG = ATypeTag.TIME.serialize();
+    private static final byte SER_DATETIME_TYPE_TAG = ATypeTag.DATETIME.serialize();
+    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new ADateConstructorDescriptor();
+            return new TemporalMinuteAccessor();
         }
+
     };
 
+    /* (non-Javadoc)
+     * @see edu.uci.ics.asterix.runtime.base.IScalarFunctionDynamicDescriptor#createEvaluatorFactory(edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory[])
+     */
     @Override
-    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
+
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -63,49 +74,47 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
 
                     private DataOutput out = output.getDataOutput();
 
-                    private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(outInput);
-                    private String errorMessage = "This can not be an instance of date";
-                    private AMutableDate aDate = new AMutableDate(0);
+                    private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
+
+                    private ICopyEvaluator eval = args[0].createEvaluator(argOut);
+
+                    private GregorianCalendarSystem calSystem = GregorianCalendarSystem.getInstance();
+
+                    // for output: type integer
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADate> dateSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADATE);
+                    private ISerializerDeserializer<AInt32> intSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.AINT32);
+                    private AMutableInt32 aMutableInt32 = new AMutableInt32(0);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
-                    private ByteArrayCharSequenceAccessor charAccessor = new ByteArrayCharSequenceAccessor();
-
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                        argOut.reset();
+                        eval.evaluate(tuple);
+                        byte[] bytes = argOut.getByteArray();
 
                         try {
-                            outInput.reset();
-                            eval.evaluate(tuple);
-                            byte[] serString = outInput.getByteArray();
-                            if (serString[0] == SER_STRING_TYPE_TAG) {
-
-                                charAccessor.reset(serString, 3, 0);
-                                long chrononTimeInMs = ADateAndTimeParser.parseDatePart(charAccessor, true);
-
-                                short temp = 0;
-                                if (chrononTimeInMs < 0
-                                        && chrononTimeInMs % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
-                                    temp = 1;
-                                }
-
-                                aDate.setValue((int) (chrononTimeInMs / GregorianCalendarSystem.CHRONON_OF_DAY) - temp);
-
-                                dateSerde.serialize(aDate, out);
-                            } else if (serString[0] == SER_NULL_TYPE_TAG) {
+                            long chrononTimeInMs = 0;
+                            if (bytes[0] == SER_TIME_TYPE_TAG) {
+                                chrononTimeInMs = AInt32SerializerDeserializer.getInt(bytes, 1);
+                            } else if (bytes[0] == SER_DATETIME_TYPE_TAG) {
+                                chrononTimeInMs = AInt64SerializerDeserializer.getLong(bytes, 1);
+                            } else if (bytes[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
+                                return;
                             } else {
-                                throw new AlgebricksException(errorMessage);
+                                throw new AlgebricksException("Inapplicable input type: " + bytes[0]);
                             }
-                        } catch (IOException e1) {
-                            throw new AlgebricksException(errorMessage);
-                        } catch (Exception e2) {
-                            throw new AlgebricksException(e2);
+
+                            int min = calSystem.getMinOfHour(chrononTimeInMs);
+
+                            aMutableInt32.setValue(min);
+                            intSerde.serialize(aMutableInt32, out);
+
+                        } catch (IOException e) {
+                            throw new AlgebricksException(e);
                         }
                     }
                 };
@@ -113,6 +122,9 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
         };
     }
 
+    /* (non-Javadoc)
+     * @see edu.uci.ics.asterix.om.functions.IFunctionDescriptor#getIdentifier()
+     */
     @Override
     public FunctionIdentifier getIdentifier() {
         return FID;

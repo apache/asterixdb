@@ -54,6 +54,13 @@ import edu.uci.ics.asterix.runtime.aggregates.std.MaxAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.MinAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.SumAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.stream.NonEmptyStreamAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalDayAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalHourAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalMillisecondAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalMinuteAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalMonthAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalSecondAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalYearAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.common.CreateMBREvalFactory;
 import edu.uci.ics.asterix.runtime.evaluators.common.FieldAccessByIndexEvalFactory;
 import edu.uci.ics.asterix.runtime.evaluators.common.FunctionManagerImpl;
@@ -133,7 +140,6 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.SubstringDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SwitchCaseDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.UnorderedListConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.WordTokensDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.YearDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericAbsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericCeilingDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericFloorDescriptor;
@@ -244,7 +250,6 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(AndDescriptor.FACTORY);
         temp.add(OrDescriptor.FACTORY);
         temp.add(LikeDescriptor.FACTORY);
-        temp.add(YearDescriptor.FACTORY);
         temp.add(ScanCollectionDescriptor.FACTORY);
         temp.add(AnyCollectionMemberDescriptor.FACTORY);
         temp.add(ClosedRecordConstructorDescriptor.FACTORY);
@@ -268,7 +273,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(NonEmptyStreamAggregateDescriptor.FACTORY);
         temp.add(RangeDescriptor.FACTORY);
 
-// Xiaoyu Ma add for numeric unary functions
+        // Xiaoyu Ma add for numeric unary functions
         temp.add(NumericAbsDescriptor.FACTORY);
         temp.add(NumericCeilingDescriptor.FACTORY);
         temp.add(NumericFloorDescriptor.FACTORY);
@@ -277,21 +282,21 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(NumericRoundHalfToEven2Descriptor.FACTORY);
         // String functions
         temp.add(StringEqualDescriptor.FACTORY);
-        temp.add(StringStartWithDescrtiptor.FACTORY);    
-        temp.add(StringEndWithDescrtiptor.FACTORY);       
-        temp.add(StringMatchesDescriptor.FACTORY);    
-        temp.add(StringLowerCaseDescriptor.FACTORY);   
+        temp.add(StringStartWithDescrtiptor.FACTORY);
+        temp.add(StringEndWithDescrtiptor.FACTORY);
+        temp.add(StringMatchesDescriptor.FACTORY);
+        temp.add(StringLowerCaseDescriptor.FACTORY);
         temp.add(StringMatchesWithFlagDescriptor.FACTORY);
-        temp.add(StringReplaceDescriptor.FACTORY);      
-        temp.add(StringReplaceWithFlagsDescriptor.FACTORY);    
-        temp.add(StringLengthDescriptor.FACTORY);        
-        temp.add(Substring2Descriptor.FACTORY);    
-        temp.add(SubstringBeforeDescriptor.FACTORY); 
-        temp.add(SubstringAfterDescriptor.FACTORY); 
-        temp.add(StringToCodePointDescriptor.FACTORY);         
-        temp.add(CodePointToStringDescriptor.FACTORY); 
-        temp.add(StringConcatDescriptor.FACTORY);         
-        temp.add(StringJoinDescriptor.FACTORY);      
+        temp.add(StringReplaceDescriptor.FACTORY);
+        temp.add(StringReplaceWithFlagsDescriptor.FACTORY);
+        temp.add(StringLengthDescriptor.FACTORY);
+        temp.add(Substring2Descriptor.FACTORY);
+        temp.add(SubstringBeforeDescriptor.FACTORY);
+        temp.add(SubstringAfterDescriptor.FACTORY);
+        temp.add(StringToCodePointDescriptor.FACTORY);
+        temp.add(CodePointToStringDescriptor.FACTORY);
+        temp.add(StringConcatDescriptor.FACTORY);
+        temp.add(StringJoinDescriptor.FACTORY);
 
         // aggregates
         temp.add(ListifyAggregateDescriptor.FACTORY);
@@ -372,6 +377,15 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(RegExpDescriptor.FACTORY);
         temp.add(InjectFailureDescriptor.FACTORY);
         temp.add(CastRecordDescriptor.FACTORY);
+
+        // Spatial and temporal type accessors
+        temp.add(TemporalYearAccessor.FACTORY);
+        temp.add(TemporalMonthAccessor.FACTORY);
+        temp.add(TemporalDayAccessor.FACTORY);
+        temp.add(TemporalHourAccessor.FACTORY);
+        temp.add(TemporalMinuteAccessor.FACTORY);
+        temp.add(TemporalSecondAccessor.FACTORY);
+        temp.add(TemporalMillisecondAccessor.FACTORY);
 
         IFunctionManager mgr = new FunctionManagerImpl();
         for (IFunctionDescriptorFactory fdFactory : temp) {

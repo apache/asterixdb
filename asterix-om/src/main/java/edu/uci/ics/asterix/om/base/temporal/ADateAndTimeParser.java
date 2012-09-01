@@ -54,7 +54,7 @@ public class ADateAndTimeParser {
 
         if (isExtendedForm) {
             if (charAccessor.getCharAt(offset + 4) != '-' || charAccessor.getCharAt(offset + 7) != '-') {
-                throw new Exception(dateErrorMessage);
+                throw new Exception("Missing dash in the date string as an extended form");
             }
         }
 
@@ -63,7 +63,7 @@ public class ADateAndTimeParser {
             if (charAccessor.getCharAt(offset + i) >= '0' && charAccessor.getCharAt(offset + i) <= '9') {
                 year = year * 10 + charAccessor.getCharAt(offset + i) - '0';
             } else {
-                throw new Exception(dateErrorMessage);
+                throw new Exception("Non-numeric value in year field");
             }
         }
 
@@ -79,7 +79,7 @@ public class ADateAndTimeParser {
             if ((charAccessor.getCharAt(offset + i) >= '0' && charAccessor.getCharAt(offset + i) <= '9')) {
                 month = month * 10 + charAccessor.getCharAt(offset + i) - '0';
             } else {
-                throw new Exception(dateErrorMessage);
+                throw new Exception("Non-numeric value in month field");
             }
         }
 
@@ -94,7 +94,7 @@ public class ADateAndTimeParser {
             if ((charAccessor.getCharAt(offset + i) >= '0' && charAccessor.getCharAt(offset + i) <= '9')) {
                 day = day * 10 + charAccessor.getCharAt(offset + i) - '0';
             } else {
-                throw new Exception(dateErrorMessage);
+                throw new Exception("Non-numeric value in day field");
             }
         }
 
@@ -110,7 +110,7 @@ public class ADateAndTimeParser {
         }
 
         if (isDateOnly && length > offset) {
-            throw new Exception(dateErrorMessage);
+            throw new Exception("Too many chars for a date only value");
         }
         return gCalInstance.getChronon(year, month, day, 0, 0, 0, 0, 0);
     }
@@ -136,14 +136,14 @@ public class ADateAndTimeParser {
         }
 
         if (isExtendedForm && (charAccessor.getCharAt(offset + 2) != ':' || charAccessor.getCharAt(offset + 5) != ':')) {
-            throw new Exception(timeErrorMessage);
+            throw new Exception("Missing colon in an extended time format.");
         }
         // hour
         for (int i = 0; i < 2; i++) {
             if ((charAccessor.getCharAt(offset + i) >= '0' && charAccessor.getCharAt(offset + i) <= '9')) {
                 hour = hour * 10 + charAccessor.getCharAt(offset + i) - '0';
             } else {
-                throw new Exception(timeErrorMessage);
+                throw new Exception("Non-numeric value in hour field");
             }
         }
 
@@ -159,7 +159,7 @@ public class ADateAndTimeParser {
             if ((charAccessor.getCharAt(offset + i) >= '0' && charAccessor.getCharAt(offset + i) <= '9')) {
                 min = min * 10 + charAccessor.getCharAt(offset + i) - '0';
             } else {
-                throw new Exception(timeErrorMessage);
+                throw new Exception("Non-numeric value in minute field");
             }
         }
 
@@ -175,7 +175,7 @@ public class ADateAndTimeParser {
             if ((charAccessor.getCharAt(offset + i) >= '0' && charAccessor.getCharAt(offset + i) <= '9')) {
                 sec = sec * 10 + charAccessor.getCharAt(offset + i) - '0';
             } else {
-                throw new Exception(timeErrorMessage);
+                throw new Exception("Non-numeric value in second field");
             }
         }
 
@@ -215,7 +215,7 @@ public class ADateAndTimeParser {
             if (charAccessor.getCharAt(offset) != 'Z') {
                 if ((charAccessor.getCharAt(offset) != '+' && charAccessor.getCharAt(offset) != '-')
                         || (isExtendedForm && charAccessor.getCharAt(offset + 3) != ':')) {
-                    throw new Exception(timeErrorMessage);
+                    throw new Exception("Wrong timezone format: missing sign or missing colon in an extended form");
                 }
 
                 short timezoneHour = 0;
@@ -225,7 +225,7 @@ public class ADateAndTimeParser {
                     if ((charAccessor.getCharAt(offset + 1 + i) >= '0' && charAccessor.getCharAt(offset + 1 + i) <= '9')) {
                         timezoneHour = (short) (timezoneHour * 10 + charAccessor.getCharAt(offset + 1 + i) - '0');
                     } else {
-                        throw new Exception(timeErrorMessage);
+                        throw new Exception("Non-numeric value in timezone hour field");
                     }
                 }
 
@@ -242,7 +242,7 @@ public class ADateAndTimeParser {
                         timezoneMinute = (short) (timezoneMinute * 10
                                 + charAccessor.getCharAt(offset + temp_offset + 3 + i) - '0');
                     } else {
-                        throw new Exception(timeErrorMessage);
+                        throw new Exception("Non-numeric value in timezone minute field");
                     }
                 }
 
