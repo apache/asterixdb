@@ -299,42 +299,6 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     }
     
     @Override
-    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
-            IndexException {
-        LSMInvertedIndexOpContext ctx = createOpContext();
-        ctx.reset(IndexOp.SEARCH);
-        IIndexCursor cursor = new LSMInvertedIndexRangeSearchCursor();
-        RangePredicate mergePred = new RangePredicate(null, null, true, true, null, null);
-
-        // Scan diskInvertedIndexes ignoring the memoryInvertedIndex.
-        List<Object> mergingComponents = lsmHarness.search(cursor, mergePred, ctx, false);
-        if (mergingComponents.size() <= 1) {
-            cursor.close();
-            return null;
-        }
-
-        LSMInvertedIndexComponent firstComponent = (LSMInvertedIndexComponent) mergingComponents.get(0);
-        OnDiskInvertedIndex firstInvIndex = (OnDiskInvertedIndex) firstComponent.getInvIndex();
-        String firstFileName = firstInvIndex.getBTree().getFileReference().getFile().getName();
-
-        LSMInvertedIndexComponent lastComponent = (LSMInvertedIndexComponent) mergingComponents.get(mergingComponents
-                .size() - 1);
-        OnDiskInvertedIndex lastInvIndex = (OnDiskInvertedIndex) lastComponent.getInvIndex();
-        String lastFileName = lastInvIndex.getBTree().getFileReference().getFile().getName();
-
-        LSMInvertedIndexFileNameComponent fileNameComponent = (LSMInvertedIndexFileNameComponent) fileManager
-                .getRelMergeFileName(firstFileName, lastFileName);
-        FileReference dictBTreeFileRef = fileManager.createMergeFile(fileNameComponent.getDictBTreeFileName());
-        FileReference deletedKeysBTreeFileRef = fileManager.createMergeFile(fileNameComponent
-                .getDeletedKeysBTreeFileName());
-
-        LSMInvertedIndexMergeOperation mergeOp = new LSMInvertedIndexMergeOperation(this, mergingComponents, cursor,
-                dictBTreeFileRef, deletedKeysBTreeFileRef, callback);
-
-        return mergeOp;
-    }
-    
-    @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws IndexException {
         return new LSMInvertedIndexBulkLoader(fillFactor, verifyInput);
     }
@@ -457,7 +421,6 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         IInvertedIndex mergedDiskInvertedIndex = createDiskInvIndex(diskInvIndexFactory,
                 mergeOp.getDictBTreeMergeTarget(), true);
         IIndexCursor cursor = mergeOp.getCursor();
-        // TODO: Reset verifyInput to false.
         IIndexBulkLoader invIndexBulkLoader = mergedDiskInvertedIndex.createBulkLoader(1.0f, true);
         try {
             while (cursor.hasNext()) {
@@ -478,6 +441,42 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         mergedComponents.addAll(mergeOp.getMergingComponents());
         
         return new LSMInvertedIndexComponent(mergedDiskInvertedIndex, deletedKeysBTree);
+    }
+    
+    @Override
+    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
+            IndexException {
+        LSMInvertedIndexOpContext ctx = createOpContext();
+        ctx.reset(IndexOp.SEARCH);
+        IIndexCursor cursor = new LSMInvertedIndexRangeSearchCursor();
+        RangePredicate mergePred = new RangePredicate(null, null, true, true, null, null);
+
+        // Scan diskInvertedIndexes ignoring the memoryInvertedIndex.
+        List<Object> mergingComponents = lsmHarness.search(cursor, mergePred, ctx, false);
+        if (mergingComponents.size() <= 1) {
+            cursor.close();
+            return null;
+        }
+
+        LSMInvertedIndexComponent firstComponent = (LSMInvertedIndexComponent) mergingComponents.get(0);
+        OnDiskInvertedIndex firstInvIndex = (OnDiskInvertedIndex) firstComponent.getInvIndex();
+        String firstFileName = firstInvIndex.getBTree().getFileReference().getFile().getName();
+
+        LSMInvertedIndexComponent lastComponent = (LSMInvertedIndexComponent) mergingComponents.get(mergingComponents
+                .size() - 1);
+        OnDiskInvertedIndex lastInvIndex = (OnDiskInvertedIndex) lastComponent.getInvIndex();
+        String lastFileName = lastInvIndex.getBTree().getFileReference().getFile().getName();
+
+        LSMInvertedIndexFileNameComponent fileNameComponent = (LSMInvertedIndexFileNameComponent) fileManager
+                .getRelMergeFileName(firstFileName, lastFileName);
+        FileReference dictBTreeFileRef = fileManager.createMergeFile(fileNameComponent.getDictBTreeFileName());
+        FileReference deletedKeysBTreeFileRef = fileManager.createMergeFile(fileNameComponent
+                .getDeletedKeysBTreeFileName());
+
+        LSMInvertedIndexMergeOperation mergeOp = new LSMInvertedIndexMergeOperation(this, mergingComponents, cursor,
+                dictBTreeFileRef, deletedKeysBTreeFileRef, callback);
+
+        return mergeOp;
     }
     
     @Override

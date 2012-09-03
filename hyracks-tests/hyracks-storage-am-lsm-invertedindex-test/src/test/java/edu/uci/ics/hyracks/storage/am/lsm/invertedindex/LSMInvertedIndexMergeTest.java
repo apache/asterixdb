@@ -53,15 +53,14 @@ public class LSMInvertedIndexMergeTest extends AbstractInvertedIndexLoadTest {
                 } else {
                     LSMInvertedIndexTestUtils.insertIntoInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
                 }
-
-                // Perform merge.
-                ILSMIOOperation ioop = invIndexAccessor.createMergeOperation(NoOpIOOperationCallback.INSTANCE);
-                if (ioop != null) {
-                    invIndexAccessor.merge(ioop);
-                }
-                validateAndCheckIndex(testCtx);
-                runTinySearchWorkload(testCtx, tupleGen);
             }
+            // Perform merge.
+            ILSMIOOperation ioop = invIndexAccessor.createMergeOperation(NoOpIOOperationCallback.INSTANCE);
+            if (ioop != null) {
+                invIndexAccessor.merge(ioop);
+            }
+            validateAndCheckIndex(testCtx);
+            runTinySearchWorkload(testCtx, tupleGen);
         }
         
         invIndex.deactivate();

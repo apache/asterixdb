@@ -70,10 +70,7 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
         
         switch (op) {
             case INSERT: {
-                accessor.insert(tuple);
-                // Add tuple to document corpus so we can delete it.
-                ITupleReference copyTuple = TupleUtils.copyTuple(tuple);
-                documentCorpus.add(copyTuple);
+                insert(accessor, tuple);
                 break;
             }
 
@@ -87,11 +84,8 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
                     documentCorpus.set(docIndex, documentCorpus.get(documentCorpus.size() - 1));
                     documentCorpus.remove(documentCorpus.size() - 1);
                 } else {
-                    // Treat this case as an insert.
-                    accessor.insert(tuple);
-                    // Add tuple to document corpus so we can delete it.
-                    ITupleReference copyTuple = TupleUtils.copyTuple(tuple);
-                    documentCorpus.add(copyTuple);
+                    // No existing documents to delete, treat this case as an insert.
+                    insert(accessor, tuple);
                 }
                 break;
             }
@@ -123,12 +117,7 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
                         accessor.merge(ioop);
                     }
                 } catch (LSMMergeInProgressException e) {
-                    e.printStackTrace();
-                    // Ignore ongoing merges. Do an insert instead.
-                    //accessor.insert(tuple);
-                    // Add tuple to document corpus so we can delete it.
-                    //ITupleReference copyTuple = TupleUtils.copyTuple(tuple);
-                    //documentCorpus.add(copyTuple);
+                    insert(accessor, tuple);
                 }
                 break;
             }
@@ -136,5 +125,13 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
             default:
                 throw new HyracksDataException("Op " + op.toString() + " not supported.");
         }
+    }
+    
+    private void insert(LSMInvertedIndexAccessor accessor, ITupleReference tuple) throws HyracksDataException, IndexException {
+        // Ignore ongoing merges. Do an insert instead.
+        accessor.insert(tuple);
+        // Add tuple to document corpus so we can delete it.
+        ITupleReference copyTuple = TupleUtils.copyTuple(tuple);
+        documentCorpus.add(copyTuple);
     }
 }

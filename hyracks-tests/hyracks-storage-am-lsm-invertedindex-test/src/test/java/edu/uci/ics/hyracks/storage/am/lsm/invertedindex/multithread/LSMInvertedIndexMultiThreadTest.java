@@ -83,19 +83,16 @@ public class LSMInvertedIndexMultiThreadTest {
     protected ArrayList<TestWorkloadConf> getTestWorkloadConf() {
         ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<TestWorkloadConf>();
 
-        /*
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };
         workloadConfs.add(new TestWorkloadConf(insertOnlyOps, ProbabilityHelper
                 .getUniformProbDist(insertOnlyOps.length)));
-        */
 
         // Insert and merge workload.
         TestOperation[] insertMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.MERGE };
         workloadConfs.add(new TestWorkloadConf(insertMergeOps, ProbabilityHelper
                 .getUniformProbDist(insertMergeOps.length)));
 
-        /*
         // Inserts mixed with point searches and scans.
         TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.POINT_SEARCH,
                 TestOperation.SCAN };
@@ -123,7 +120,6 @@ public class LSMInvertedIndexMultiThreadTest {
         TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
                 TestOperation.POINT_SEARCH, TestOperation.SCAN, TestOperation.MERGE };
         workloadConfs.add(new TestWorkloadConf(allOps, ProbabilityHelper.getUniformProbDist(allOps.length)));
-        */
 
         return workloadConfs;
     }
@@ -131,13 +127,29 @@ public class LSMInvertedIndexMultiThreadTest {
     @Test
     public void wordTokensInvIndexTest() throws IOException, IndexException, InterruptedException {
         String dataMsg = "Documents";
-        int[] numThreads = new int[] { REGULAR_NUM_THREADS };
+        int[] numThreads = new int[] { REGULAR_NUM_THREADS, EXCESSIVE_NUM_THREADS };
         for (int i = 0; i < numThreads.length; i++) {
             for (TestWorkloadConf conf : workloadConfs) {                
                 setUp();
                 LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestUtils.createWordInvIndexTestContext(harness,
                         InvertedIndexType.LSM);
                 TupleGenerator tupleGen = LSMInvertedIndexTestUtils.createStringDocumentTupleGen(harness.getRandom());
+                runTest(testCtx, tupleGen, numThreads[i], conf, dataMsg);
+                tearDown();
+            }
+        }
+    }
+    
+    @Test
+    public void hashedNGramTokensInvIndexTest() throws IOException, IndexException, InterruptedException {
+        String dataMsg = "Person Names";
+        int[] numThreads = new int[] { REGULAR_NUM_THREADS, EXCESSIVE_NUM_THREADS };
+        for (int i = 0; i < numThreads.length; i++) {
+            for (TestWorkloadConf conf : workloadConfs) {
+                setUp();
+                LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestUtils.createHashedNGramInvIndexTestContext(
+                        harness, InvertedIndexType.LSM);
+                TupleGenerator tupleGen = LSMInvertedIndexTestUtils.createPersonNamesTupleGen(harness.getRandom());
                 runTest(testCtx, tupleGen, numThreads[i], conf, dataMsg);
                 tearDown();
             }

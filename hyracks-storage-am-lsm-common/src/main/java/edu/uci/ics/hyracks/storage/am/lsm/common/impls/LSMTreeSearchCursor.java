@@ -89,9 +89,6 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
     public void next() throws HyracksDataException {
         outputElement = outputPriorityQueue.poll();
         needPush = true;
-        if (outputElement == null) {
-            throw new HyracksDataException("The outputPriorityQueue is empty");
-        }
     }
 
     @Override

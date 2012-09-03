@@ -393,7 +393,6 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
 
             if (verifyInput && lastTupleBuilder.getSize() != 0) {
                 if (allCmp.compare(tuple, lastTuple) <= 0) {
-                    System.out.println("FOUND YOU!");
                     throw new UnsortedInputException(
                             "Input stream given to OnDiskInvertedIndex bulk load is not sorted.");
                 }

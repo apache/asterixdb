@@ -78,7 +78,6 @@ public class FixedSizeElementInvertedListCursor implements IInvertedListCursor {
         } else {
             currentOff += elementSize;
         }
-
         currentElementIx++;
         tuple.reset(pages[currentPageIx].getBuffer().array(), currentOff);
     }

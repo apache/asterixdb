@@ -97,6 +97,7 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
             throw new HyracksDataException(e);
         }
         invListCursor.pinPages();
+        invListCursor.hasNext();
         unpinNeeded = true;
         concatTuple.reset();
         concatTuple.addTuple(tokenTuple);
