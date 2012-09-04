@@ -66,8 +66,8 @@ public class IndexLifecycleManager implements IIndexLifecycleManager {
         }
 
         if (info.isOpen) {
-            memoryUsed -= info.index.getInMemorySize();
             info.index.deactivate();
+            memoryUsed -= info.index.getInMemorySize();
         }
     }
 
