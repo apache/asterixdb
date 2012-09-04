@@ -89,6 +89,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, String> {
     private final long txnId;
@@ -315,8 +316,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             throw new AlgebricksException(e);
         }
         BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(jobSpec, outputRecDesc,
-                appContext.getStorageManagerInterface(), appContext.getIndexRegistryProvider(), spPc.first, typeTraits,
-                comparatorFactories, lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive,
+                appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(), spPc.first,
+                typeTraits, comparatorFactories, lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive,
                 new BTreeDataflowHelperFactory(), retainInput, NoOpOperationCallbackProvider.INSTANCE);
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeSearchOp, spPc.second);
     }
@@ -395,9 +396,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc = metadata
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, indexName);
         RTreeSearchOperatorDescriptor rtreeSearchOp = new RTreeSearchOperatorDescriptor(jobSpec, recDesc,
-                appContext.getStorageManagerInterface(), appContext.getIndexRegistryProvider(), spPc.first, typeTraits,
-                comparatorFactories, keyFields, new RTreeDataflowHelperFactory(valueProviderFactories), false,
-                NoOpOperationCallbackProvider.INSTANCE);
+                appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(), spPc.first,
+                typeTraits, comparatorFactories, keyFields, new RTreeDataflowHelperFactory(valueProviderFactories,
+                        RTreePolicyType.RTREE), false, NoOpOperationCallbackProvider.INSTANCE);
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(rtreeSearchOp, spPc.second);
     }
 
@@ -504,9 +505,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, indexName);
         IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                appContext.getStorageManagerInterface(), appContext.getIndexRegistryProvider(),
+                appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
                 splitsAndConstraint.first, typeTraits, comparatorFactories, fieldPermutation,
-                GlobalConfig.DEFAULT_BTREE_FILL_FACTOR, new BTreeDataflowHelperFactory(),
+                GlobalConfig.DEFAULT_BTREE_FILL_FACTOR, false, new BTreeDataflowHelperFactory(),
                 NoOpOperationCallbackProvider.INSTANCE);
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad, splitsAndConstraint.second);
     }
@@ -545,9 +546,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, indexName);
         TreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
-                spec, recordDesc, appContext.getStorageManagerInterface(), appContext.getIndexRegistryProvider(),
-                splitsAndConstraint.first, typeTraits, comparatorFactories, fieldPermutation, indexOp,
-                new BTreeDataflowHelperFactory(), null, NoOpOperationCallbackProvider.INSTANCE, txnId);
+                spec, recordDesc, appContext.getStorageManagerInterface(),
+                appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
+                comparatorFactories, fieldPermutation, indexOp, new BTreeDataflowHelperFactory(), null,
+                NoOpOperationCallbackProvider.INSTANCE, txnId);
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad, splitsAndConstraint.second);
     }
 
@@ -687,9 +689,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, indexName);
         TreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
-                spec, recordDesc, appContext.getStorageManagerInterface(), appContext.getIndexRegistryProvider(),
-                splitsAndConstraint.first, typeTraits, comparatorFactories, fieldPermutation, indexOp,
-                new BTreeDataflowHelperFactory(), filterFactory, NoOpOperationCallbackProvider.INSTANCE, txnId);
+                spec, recordDesc, appContext.getStorageManagerInterface(),
+                appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
+                comparatorFactories, fieldPermutation, indexOp, new BTreeDataflowHelperFactory(), filterFactory,
+                NoOpOperationCallbackProvider.INSTANCE, txnId);
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad, splitsAndConstraint.second);
     }
 
@@ -748,10 +751,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, indexName);
         TreeIndexInsertUpdateDeleteOperatorDescriptor rtreeUpdate = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
-                spec, recordDesc, appContext.getStorageManagerInterface(), appContext.getIndexRegistryProvider(),
-                splitsAndConstraint.first, typeTraits, comparatorFactories, fieldPermutation, indexOp,
-                new RTreeDataflowHelperFactory(valueProviderFactories), filterFactory,
-                NoOpOperationCallbackProvider.INSTANCE, txnId);
+                spec, recordDesc, appContext.getStorageManagerInterface(),
+                appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
+                comparatorFactories, fieldPermutation, indexOp, new RTreeDataflowHelperFactory(valueProviderFactories,
+                        RTreePolicyType.RTREE), filterFactory, NoOpOperationCallbackProvider.INSTANCE, txnId);
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(rtreeUpdate, splitsAndConstraint.second);
     }
 

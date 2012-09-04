@@ -166,7 +166,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                 searchModifierType, searchKeyType, secondaryIndex);
         InvertedIndexSearchOperatorDescriptor invIndexSearchOp = new InvertedIndexSearchOperatorDescriptor(jobSpec,
                 queryField, appContext.getStorageManagerInterface(), fileSplitProviders.first,
-                fileSplitProviders.second, appContext.getIndexRegistryProvider(), tokenTypeTraits,
+                fileSplitProviders.second, appContext.getIndexLifecycleManagerProvider(), tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories,
                 new BTreeDataflowHelperFactory(), queryTokenizerFactory, searchModifierFactory, outputRecDesc,
                 retainInput, NoOpOperationCallbackProvider.INSTANCE);

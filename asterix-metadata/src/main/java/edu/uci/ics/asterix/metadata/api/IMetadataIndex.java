@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 
 /**
@@ -58,11 +59,19 @@ public interface IMetadataIndex {
 
     public ARecordType getPayloadRecordType();
 
+    public void setFile(FileReference file);
+
+    public FileReference getFile();
+
     public void setFileId(int fileId);
 
     public void initTreeLogger(ITreeIndex treeIndex) throws ACIDException;
 
     public int getFileId();
+
+    public void setResourceID(long resourceID);
+
+    public long getResourceID();
 
     public byte[] getResourceId();
 

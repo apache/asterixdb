@@ -4,6 +4,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
+import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
 
 public class AsterixStorageManagerInterface implements IStorageManagerInterface {
     private static final long serialVersionUID = 1L;
@@ -20,5 +21,11 @@ public class AsterixStorageManagerInterface implements IStorageManagerInterface 
     public IFileMapProvider getFileMapProvider(IHyracksTaskContext ctx) {
         return ((AsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
                 .getFileMapManager();
+    }
+
+    @Override
+    public IIndexArtifactMap getIndexArtifactMap(IHyracksTaskContext ctx) {
+        return ((AsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
+                .getIndexArtifactMap();
     }
 }

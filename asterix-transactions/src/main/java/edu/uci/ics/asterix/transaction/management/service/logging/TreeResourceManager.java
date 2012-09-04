@@ -20,6 +20,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 
 public class TreeResourceManager implements IResourceManager {
 
@@ -36,7 +37,6 @@ public class TreeResourceManager implements IResourceManager {
     }
 
     public void undo(ILogRecordHelper logRecordHelper, LogicalLogLocator logLocator) throws ACIDException {
-
         int logContentBeginPos = logRecordHelper.getLogContentBeginPos(logLocator);
         byte[] logBufferContent = logLocator.getBuffer().getArray();
         // read the length of resource id byte array
@@ -58,7 +58,8 @@ public class TreeResourceManager implements IResourceManager {
         tupleReference.setFieldCount(tupleReference.getFieldCount());
         tupleReference.resetByTupleOffset(logLocator.getBuffer().getByteBuffer(), tupleBeginPos);
         byte operation = logBufferContent[operationOffset];
-        IIndexAccessor treeIndexAccessor = treeIndex.createAccessor();
+        IIndexAccessor treeIndexAccessor = treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         try {
             switch (operation) {
                 case TreeLogger.BTreeOperationCodes.INSERT:

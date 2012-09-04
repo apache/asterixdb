@@ -68,12 +68,12 @@ import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyExceptio
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
@@ -83,7 +83,7 @@ public class MetadataNode implements IMetadataNode {
     // TODO: Temporary transactional resource id for metadata.
     private static final byte[] metadataResourceId = MetadataNode.class.toString().getBytes();
 
-    private IndexRegistry<IIndex> indexRegistry;
+    private IIndexLifecycleManager indexLifecycleManager;
     private TransactionProvider transactionProvider;
 
     public static final MetadataNode INSTANCE = new MetadataNode();
@@ -94,7 +94,7 @@ public class MetadataNode implements IMetadataNode {
 
     public void initialize(AsterixAppRuntimeContext runtimeContext) {
         this.transactionProvider = runtimeContext.getTransactionProvider();
-        this.indexRegistry = runtimeContext.getIndexRegistry();
+        this.indexLifecycleManager = runtimeContext.getIndexLifecycleManager();
     }
 
     @Override
@@ -251,15 +251,17 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private void insertTupleIntoIndex(long txnId, IMetadataIndex index, ITupleReference tuple) throws Exception {
-        int fileId = index.getFileId();
-        BTree btree = (BTree) indexRegistry.get(fileId);
-        btree.open(fileId);
-        ITreeIndexAccessor indexAccessor = btree.createAccessor();
+        long resourceID = index.getResourceID();
+        BTree btree = (BTree) indexLifecycleManager.getIndex(resourceID);
+        indexLifecycleManager.open(resourceID);
+        ITreeIndexAccessor indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         TransactionContext txnCtx = transactionProvider.getTransactionManager().getTransactionContext(txnId);
         transactionProvider.getLockManager().lock(txnCtx, index.getResourceId(), LockMode.EXCLUSIVE);
         // TODO: fix exceptions once new BTree exception model is in hyracks.
         indexAccessor.insert(tuple);
         index.getTreeLogger().generateLogRecord(transactionProvider, txnCtx, IndexOp.INSERT, tuple);
+        indexLifecycleManager.close(resourceID);
     }
 
     @Override
@@ -496,11 +498,11 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private void deleteTupleFromIndex(long txnId, IMetadataIndex index, ITupleReference tuple) throws Exception {
-        int fileId = index.getFileId();
-        BTree btree = (BTree) indexRegistry.get(fileId);
-        btree.open(fileId);
-
-        ITreeIndexAccessor indexAccessor = btree.createAccessor();
+        long resourceID = index.getResourceID();
+        BTree btree = (BTree) indexLifecycleManager.getIndex(resourceID);
+        indexLifecycleManager.open(resourceID);
+        ITreeIndexAccessor indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         TransactionContext txnCtx = transactionProvider.getTransactionManager().getTransactionContext(txnId);
         // This lock is actually an upgrade, because a deletion must be preceded
         // by a search, in order to be able to undo an aborted deletion.
@@ -510,6 +512,7 @@ public class MetadataNode implements IMetadataNode {
         transactionProvider.getLockManager().lock(txnCtx, index.getResourceId(), LockMode.EXCLUSIVE);
         indexAccessor.delete(tuple);
         index.getTreeLogger().generateLogRecord(transactionProvider, txnCtx, IndexOp.DELETE, tuple);
+        indexLifecycleManager.close(resourceID);
     }
 
     @Override
@@ -769,11 +772,12 @@ public class MetadataNode implements IMetadataNode {
         TransactionContext txnCtx = transactionProvider.getTransactionManager().getTransactionContext(txnId);
         transactionProvider.getLockManager().lock(txnCtx, index.getResourceId(), LockMode.SHARED);
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
-        int fileId = index.getFileId();
-        BTree btree = (BTree) indexRegistry.get(fileId);
-        btree.open(fileId);
+        long resourceID = index.getResourceID();
+        BTree btree = (BTree) indexLifecycleManager.getIndex(resourceID);
+        indexLifecycleManager.open(resourceID);
         ITreeIndexFrame leafFrame = btree.getLeafFrameFactory().createFrame();
-        ITreeIndexAccessor indexAccessor = btree.createAccessor();
+        ITreeIndexAccessor indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) leafFrame, false);
         IBinaryComparator[] searchCmps = new IBinaryComparator[searchKey.getFieldCount()];
         for (int i = 0; i < searchKey.getFieldCount(); i++) {
@@ -794,6 +798,7 @@ public class MetadataNode implements IMetadataNode {
         } finally {
             rangeCursor.close();
         }
+        indexLifecycleManager.close(resourceID);
     }
 
     // TODO: Can use Hyrack's TupleUtils for this, once we switch to a newer

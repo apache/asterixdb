@@ -2,7 +2,7 @@ package edu.uci.ics.asterix.file;
 
 import java.util.List;
 
-import edu.uci.ics.asterix.common.context.AsterixIndexRegistryProvider;
+import edu.uci.ics.asterix.common.context.AsterixIndexLifecycleManagerProvider;
 import edu.uci.ics.asterix.common.context.AsterixStorageManagerInterface;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.entities.Index;
@@ -121,8 +121,8 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         JobSpecification spec = new JobSpecification();
         InvertedIndexCreateOperatorDescriptor invIndexCreateOp = new InvertedIndexCreateOperatorDescriptor(spec,
                 AsterixStorageManagerInterface.INSTANCE, fileSplitProviders.first, fileSplitProviders.second,
-                AsterixIndexRegistryProvider.INSTANCE, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
-                primaryComparatorFactories, tokenizerFactory, new BTreeDataflowHelperFactory(),
+                AsterixIndexLifecycleManagerProvider.INSTANCE, tokenTypeTraits, tokenComparatorFactories,
+                invListsTypeTraits, primaryComparatorFactories, tokenizerFactory, new BTreeDataflowHelperFactory(),
                 NoOpOperationCallbackProvider.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexCreateOp,
                 secondaryPartitionConstraint);
@@ -212,7 +212,7 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         }
         InvertedIndexBulkLoadOperatorDescriptor invIndexBulkLoadOp = new InvertedIndexBulkLoadOperatorDescriptor(spec,
                 fieldPermutation, AsterixStorageManagerInterface.INSTANCE, fileSplitProviders.first,
-                fileSplitProviders.second, AsterixIndexRegistryProvider.INSTANCE, tokenTypeTraits,
+                fileSplitProviders.second, AsterixIndexLifecycleManagerProvider.INSTANCE, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, primaryComparatorFactories, tokenizerFactory,
                 new BTreeDataflowHelperFactory(), NoOpOperationCallbackProvider.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexBulkLoadOp,

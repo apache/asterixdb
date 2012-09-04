@@ -18,7 +18,6 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.resource.ICloseable;
 import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceRepository;
 import edu.uci.ics.asterix.transaction.management.service.locking.ILockManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.DataUtil;
@@ -37,30 +36,35 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilter;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.PermutingFrameTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
 
 public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
+    private final AbstractTreeIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
+    private final TreeIndexDataflowHelper treeIndexHelper;
     private FrameTupleAccessor accessor;
-    private TreeIndexDataflowHelper treeIndexHelper;
     private final IRecordDescriptorProvider recordDescProvider;
     private final IndexOp op;
     private final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
     private FrameTupleReference frameTuple;
     private ByteBuffer writeBuffer;
     private IIndexAccessor indexAccessor;
+    private ITupleFilter tupleFilter;
+    private IModificationOperationCallback modCallback;
     private ILockManager lockManager;
     private final TransactionContext txnContext;
     private TreeLogger treeLogger;
-    private ITupleFilter tupleFilter;
     private final TransactionProvider transactionProvider;
+    private byte[] resourceIDBytes;
 
     /* TODO: Index operators should live in Hyracks. Right now, they are needed here in Asterix
      * as a hack to provide transactionIDs. The Asterix verions of this operator will disappear 
@@ -70,9 +74,10 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
     public TreeIndexInsertUpdateDeleteOperatorNodePushable(TransactionContext txnContext,
             AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition, int[] fieldPermutation,
             IRecordDescriptorProvider recordDescProvider, IndexOp op) {
+        this.opDesc = opDesc;
         this.ctx = ctx;
-        treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
-                opDesc, ctx, partition);
+        this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
+                .createIndexDataflowHelper(opDesc, ctx, partition);
         this.recordDescProvider = recordDescProvider;
         this.op = op;
         tuple.setFieldPermutation(fieldPermutation);
@@ -82,52 +87,49 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         transactionProvider = runtimeContext.getTransactionProvider();
     }
 
-    public void initializeTransactionSupport() {
+    public void initializeTransactionSupport(long resourceID) {
         TransactionalResourceRepository resourceRepository = transactionProvider.getTransactionalResourceRepository();
         IResourceManager resourceMgr = resourceRepository.getTransactionalResourceMgr(TreeResourceManager.ID);
         if (resourceMgr == null) {
             resourceRepository.registerTransactionalResourceManager(TreeResourceManager.ID, new TreeResourceManager(
                     transactionProvider));
         }
-        int fileId = treeIndexHelper.getIndexFileId();
-        byte[] resourceId = DataUtil.intToByteArray(fileId);
-        transactionProvider.getTransactionalResourceRepository().registerTransactionalResource(resourceId,
-                treeIndexHelper.getIndex());
+        resourceIDBytes = DataUtil.longToByteArray(resourceID);
+        transactionProvider.getTransactionalResourceRepository().registerTransactionalResource(resourceIDBytes,
+                treeIndexHelper.getIndexInstance());
         lockManager = transactionProvider.getLockManager();
-        treeLogger = transactionProvider.getTreeLoggerRepository().getTreeLogger(resourceId);
+        treeLogger = transactionProvider.getTreeLoggerRepository().getTreeLogger(resourceIDBytes);
     }
 
     @Override
     public void open() throws HyracksDataException {
-        AbstractTreeIndexOperatorDescriptor opDesc = (AbstractTreeIndexOperatorDescriptor) treeIndexHelper
-                .getOperatorDescriptor();
         RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
-        accessor = new FrameTupleAccessor(treeIndexHelper.getHyracksTaskContext().getFrameSize(), inputRecDesc);
-        writeBuffer = treeIndexHelper.getHyracksTaskContext().allocateFrame();
+        accessor = new FrameTupleAccessor(ctx.getFrameSize(), inputRecDesc);
+        writeBuffer = ctx.allocateFrame();
         writer.open();
+        treeIndexHelper.open();
+        ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndexInstance();
         try {
-            treeIndexHelper.init(false);
-            ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
-            indexAccessor = treeIndex.createAccessor();
+            modCallback = opDesc.getOpCallbackProvider().getModificationOperationCallback(
+                    treeIndexHelper.getResourceID());
+            indexAccessor = treeIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
             ITupleFilterFactory tupleFilterFactory = opDesc.getTupleFilterFactory();
             if (tupleFilterFactory != null) {
                 tupleFilter = tupleFilterFactory.createTupleFilter(ctx);
                 frameTuple = new FrameTupleReference();
             }
-            initializeTransactionSupport();
+            IIndexArtifactMap iam = opDesc.getStorageManager().getIndexArtifactMap(ctx);
+            long resourceID = iam.get(treeIndexHelper.getFileReference().getFile().getPath());
+            initializeTransactionSupport(resourceID);
         } catch (Exception e) {
-            // cleanup in case of failure
-            treeIndexHelper.deinit();
+            treeIndexHelper.close();
             throw new HyracksDataException(e);
         }
     }
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        final IIndex treeIndex = treeIndexHelper.getIndex();
         accessor.reset(buffer);
-        int fileId = treeIndexHelper.getIndexFileId();
-        byte[] resourceId = DataUtil.intToByteArray(fileId);
         int tupleCount = accessor.getTupleCount();
         try {
             for (int i = 0; i < tupleCount; i++) {
@@ -138,32 +140,34 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
                     }
                 }
                 tuple.reset(accessor, i);
+                lockManager.lock(txnContext, resourceIDBytes,
+                        TransactionManagementConstants.LockManagerConstants.LockMode.EXCLUSIVE);
                 switch (op) {
                     case INSERT: {
-                        lockManager.lock(txnContext, resourceId,
-                                TransactionManagementConstants.LockManagerConstants.LockMode.EXCLUSIVE);
                         indexAccessor.insert(tuple);
-                        treeLogger.generateLogRecord(transactionProvider, txnContext, op, tuple);
                         break;
                     }
-
+                    case UPDATE: {
+                        indexAccessor.update(tuple);
+                        break;
+                    }
+                    case UPSERT: {
+                        indexAccessor.upsert(tuple);
+                        break;
+                    }
                     case DELETE: {
-                        lockManager.lock(txnContext, resourceId,
-                                TransactionManagementConstants.LockManagerConstants.LockMode.EXCLUSIVE);
                         indexAccessor.delete(tuple);
-                        treeLogger.generateLogRecord(transactionProvider, txnContext, op, tuple);
                         break;
                     }
-
                     default: {
                         throw new HyracksDataException("Unsupported operation " + op
                                 + " in tree index InsertUpdateDelete operator");
                     }
                 }
+                treeLogger.generateLogRecord(transactionProvider, txnContext, op, tuple);
             }
         } catch (ACIDException ae) {
-            throw new HyracksDataException("exception in locking/logging during operation " + op + " on tree "
-                    + treeIndex, ae);
+            throw new HyracksDataException("exception in locking/logging during operation " + op, ae);
         } catch (Exception e) {
             e.printStackTrace();
             throw new HyracksDataException(e);
@@ -180,35 +184,23 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         try {
             writer.close();
         } finally {
-            txnContext.addCloseableResource(new ICloseable() {
-                @Override
-                public void close(TransactionContext txnContext) throws ACIDException {
-                    try {
-                        treeIndexHelper.deinit();
-                    } catch (Exception e) {
-                        throw new ACIDException(txnContext, "could not de-initialize " + treeIndexHelper, e);
-                    }
-                }
-            });
+            treeIndexHelper.close();
+            //            txnContext.addCloseableResource(new ICloseable() {
+            //                @Override
+            //                public void close(TransactionContext txnContext) throws ACIDException {
+            //                    try {
+            //                        treeIndexHelper.close();
+            //                    } catch (Exception e) {
+            //                        throw new ACIDException(txnContext, "could not de-initialize " + treeIndexHelper, e);
+            //                    }
+            //                }
+            //            });
         }
     }
 
     @Override
     public void fail() throws HyracksDataException {
-        try {
-            writer.fail();
-        } finally {
-            txnContext.addCloseableResource(new ICloseable() {
-                @Override
-                public void close(TransactionContext txnContext) throws ACIDException {
-                    try {
-                        treeIndexHelper.deinit();
-                    } catch (Exception e) {
-                        throw new ACIDException(txnContext, "could not de-initialize " + treeIndexHelper, e);
-                    }
-                }
-            });
-        }
+        writer.fail();
     }
 
 }
