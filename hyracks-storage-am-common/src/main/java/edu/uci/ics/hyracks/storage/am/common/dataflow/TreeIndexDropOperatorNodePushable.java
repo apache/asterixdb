@@ -15,24 +15,17 @@
 
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
-import java.util.logging.Logger;
-
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 
 public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePushable {
-    private static final Logger LOGGER = Logger.getLogger(TreeIndexDropOperatorNodePushable.class.getName());
-
     private final TreeIndexDataflowHelper treeIndexHelper;
-    private final IIndexLifecycleManager lcManager;
 
     public TreeIndexDropOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
-        this.lcManager = opDesc.getLifecycleManagerProvider().getLifecycleManager(ctx);
         this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
                 .createIndexDataflowHelper(opDesc, ctx, partition);
     }
@@ -53,7 +46,7 @@ public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePusha
 
     @Override
     public void initialize() throws HyracksDataException {
-        lcManager.destroy(treeIndexHelper);
+        treeIndexHelper.destroy();
     }
 
     @Override

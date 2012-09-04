@@ -37,7 +37,7 @@ public class RTreeDataflowHelper extends TreeIndexDataflowHelper {
     }
 
     @Override
-    public ITreeIndex getIndexInstance() throws HyracksDataException {
+    public ITreeIndex createIndexInstance() throws HyracksDataException {
         return RTreeUtils.createRTree(treeOpDesc.getStorageManager().getBufferCache(ctx), treeOpDesc
                 .getStorageManager().getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(),
                 valueProviderFactories, treeOpDesc.getTreeIndexComparatorFactories(), rtreePolicyType, file);

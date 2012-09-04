@@ -25,7 +25,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStats;
 import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStatsGatherer;
@@ -35,7 +34,6 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
     private final AbstractTreeIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
-    private final IIndexLifecycleManager lcManager;
     private final TreeIndexDataflowHelper treeIndexHelper;
     private TreeIndexStatsGatherer statsGatherer;
 
@@ -43,7 +41,6 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
             int partition) {
         this.opDesc = opDesc;
         this.ctx = ctx;
-        this.lcManager = opDesc.getLifecycleManagerProvider().getLifecycleManager(ctx);
         this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
                 .createIndexDataflowHelper(opDesc, ctx, partition);
 
@@ -51,7 +48,6 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
 
     @Override
     public void deinitialize() throws HyracksDataException {
-        lcManager.close(treeIndexHelper);
     }
 
     @Override
@@ -61,7 +57,8 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
 
     @Override
     public void initialize() throws HyracksDataException {
-        ITreeIndex treeIndex = (ITreeIndex) lcManager.open(treeIndexHelper);
+        treeIndexHelper.open();
+        ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndexInstance();
         try {
             writer.open();
             IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
@@ -89,6 +86,7 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
             writer.fail();
         } finally {
             writer.close();
+            treeIndexHelper.close();
         }
     }
 }

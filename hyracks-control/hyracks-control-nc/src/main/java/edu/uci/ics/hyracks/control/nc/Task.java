@@ -308,19 +308,22 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                 reader.open();
                 try {
                     writer.open();
-                    ByteBuffer buffer = allocateFrame();
-                    while (reader.nextFrame(buffer)) {
-                        if (aborted) {
-                            return;
+                    try {
+                        ByteBuffer buffer = allocateFrame();
+                        while (reader.nextFrame(buffer)) {
+                            if (aborted) {
+                                return;
+                            }
+                            buffer.flip();
+                            writer.nextFrame(buffer);
+                            buffer.compact();
                         }
-                        buffer.flip();
-                        writer.nextFrame(buffer);
-                        buffer.compact();
+                    } catch (Exception e) {
+                        writer.fail();
+                        throw e;
+                    } finally {
+                        writer.close();
                     }
-                    writer.close();
-                } catch (Exception e) {
-                    writer.fail();
-                    throw e;
                 } finally {
                     reader.close();
                 }
@@ -346,6 +349,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     @Override
     public void sendApplicationMessageToCC(byte[] message, String nodeId) throws Exception {
-        this.ncs.sendApplicationMessageToCC(message, this.getJobletContext().getApplicationContext().getApplicationName(), nodeId);
+        this.ncs.sendApplicationMessageToCC(message, this.getJobletContext().getApplicationContext()
+                .getApplicationName(), nodeId);
     }
 }
