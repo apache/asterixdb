@@ -95,5 +95,6 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
 
     @Override
     public void fail() throws HyracksDataException {
+        writer.fail();
     }
 }
