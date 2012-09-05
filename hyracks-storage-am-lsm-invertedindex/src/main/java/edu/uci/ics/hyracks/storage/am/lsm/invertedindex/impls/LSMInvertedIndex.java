@@ -290,25 +290,27 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     @Override
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
-        // TODO: Ignore opcallbacks for now.
-        return new LSMInvertedIndexAccessor(this, lsmHarness, fileManager, createOpContext());
+        return new LSMInvertedIndexAccessor(this, lsmHarness, fileManager, createOpContext(modificationCallback,
+                searchCallback));
     }
-    
-    private LSMInvertedIndexOpContext createOpContext() {
-        return new LSMInvertedIndexOpContext(memComponent.getInvIndex(), memComponent.getDeletedKeysBTree());
+
+    private LSMInvertedIndexOpContext createOpContext(IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback) {
+        return new LSMInvertedIndexOpContext(memComponent.getInvIndex(), memComponent.getDeletedKeysBTree(),
+                modificationCallback, searchCallback);
     }
-    
+
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws IndexException {
         return new LSMInvertedIndexBulkLoader(fillFactor, verifyInput);
     }
         
     /**
-     * The keys in the in-memory deleted-keys BTree only refers to on-disk components.
+     * The keys in the in-memory deleted-keys BTree only refer to on-disk components.
      * We delete documents from the in-memory inverted index by deleting its entries directly,
      * and do NOT add the deleted key to the deleted-keys BTree.
      * Otherwise, inserts would have to remove keys from the in-memory deleted-keys BTree which 
-     * may cause incorrect behavior in the following pathological case:
+     * may cause incorrect behavior (lost deletes) in the following pathological case:
      * Insert doc 1, flush, delete doc 1, insert doc 1
      * After the sequence above doc 1 will now appear twice because the delete of the on-disk doc 1 has been lost.
      * Insert:
@@ -321,13 +323,15 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
             IndexException {
         LSMInvertedIndexOpContext ctx = (LSMInvertedIndexOpContext) ictx;
+        ctx.modificationCallback.before(tuple);
         switch (ctx.getIndexOp()) {
-            case INSERT: {
-                // Insert into the in-memory inverted index.
+            case INSERT: {                
+                // Insert into the in-memory inverted index.                
                 ctx.memInvIndexAccessor.insert(tuple);
                 break;
             }
             case DELETE: {
+                ctx.modificationCallback.before(tuple);
                 // First remove all entries in the in-memory inverted index (if any).
                 ctx.memInvIndexAccessor.delete(tuple);
                 // Insert key into the deleted-keys BTree.
@@ -337,11 +341,6 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
                 } catch (BTreeDuplicateKeyException e) {
                     // Key has already been deleted.
                 }
-                break;
-            }
-            case PHYSICALDELETE: {
-                // TODO: Think about whether we actually need this, since this is a secondary index.
-                ctx.memInvIndexAccessor.delete(tuple);
                 break;
             }
             default: {
@@ -446,7 +445,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     @Override
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
             IndexException {
-        LSMInvertedIndexOpContext ctx = createOpContext();
+        LSMInvertedIndexOpContext ctx = createOpContext(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         ctx.reset(IndexOp.SEARCH);
         IIndexCursor cursor = new LSMInvertedIndexRangeSearchCursor();
         RangePredicate mergePred = new RangePredicate(null, null, true, true, null, null);

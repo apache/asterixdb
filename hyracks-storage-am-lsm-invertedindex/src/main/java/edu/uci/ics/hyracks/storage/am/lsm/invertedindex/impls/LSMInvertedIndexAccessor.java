@@ -34,12 +34,13 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexFi
 
 public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedIndexAccessor {
 
-    protected final LSMHarness lsmHarness;    
+    protected final LSMHarness lsmHarness;
     protected final ILSMIndexFileManager fileManager;
     protected final IIndexOpContext ctx;
     protected final LSMInvertedIndex invIndex;
-    
-    public LSMInvertedIndexAccessor(LSMInvertedIndex invIndex, LSMHarness lsmHarness, ILSMIndexFileManager fileManager, IIndexOpContext ctx) {
+
+    public LSMInvertedIndexAccessor(LSMInvertedIndex invIndex, LSMHarness lsmHarness, ILSMIndexFileManager fileManager,
+            IIndexOpContext ctx) {
         this.lsmHarness = lsmHarness;
         this.fileManager = fileManager;
         this.ctx = ctx;
@@ -54,13 +55,7 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
 
     @Override
     public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
-        ctx.reset(IndexOp.DELETE);
-        lsmHarness.insertUpdateOrDelete(tuple, ctx);
-    }
-    
-    @Override
-    public void physicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
-        ctx.reset(IndexOp.PHYSICALDELETE);
+        ctx.reset(IndexOp.DELETE);        
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
     }
     
@@ -110,19 +105,22 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
             HyracksDataException {
         search(cursor, searchPred);
     }
-    
+
+    @Override
+    public void physicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
+        throw new UnsupportedOperationException("Physical delete not supported by lsm inverted index.");
+    }
+
     @Override
     public void update(ITupleReference tuple) throws HyracksDataException, IndexException {
-        // TODO Auto-generated method stub
-        
+        throw new UnsupportedOperationException("Update not supported by lsm inverted index.");
     }
 
     @Override
     public void upsert(ITupleReference tuple) throws HyracksDataException, IndexException {
-        // TODO Auto-generated method stub
-        
+        throw new UnsupportedOperationException("Upsert not supported by lsm inverted index.");
     }
-    
+
     @Override
     public IInvertedListCursor createInvertedListCursor() {
         throw new UnsupportedOperationException("Cannot create inverted list cursor on lsm inverted index.");
@@ -131,5 +129,6 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     @Override
     public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey)
             throws HyracksDataException, IndexException {
-        throw new UnsupportedOperationException("Cannot open inverted list cursor on lsm inverted index.");}
+        throw new UnsupportedOperationException("Cannot open inverted list cursor on lsm inverted index.");
+    }
 }

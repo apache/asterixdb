@@ -34,13 +34,14 @@ public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialS
     private final LSMHarness lsmHarness;
     private final List<IIndexAccessor> indexAccessors;
     private final List<IIndexAccessor> deletedKeysBTreeAccessors;
-    private final IIndexOpContext opContext;
+    private final LSMInvertedIndexOpContext ctx;
     private ISearchOperationCallback searchCallback;
     private MultiComparator originalCmp;
     private final MultiComparator keyCmp;
     private final PermutingTupleReference keysOnlyTuple;
 
-    public LSMInvertedIndexSearchCursorInitialState(final MultiComparator keyCmp, PermutingTupleReference keysOnlyTuple, List<IIndexAccessor> indexAccessors,
+    public LSMInvertedIndexSearchCursorInitialState(final MultiComparator keyCmp,
+            PermutingTupleReference keysOnlyTuple, List<IIndexAccessor> indexAccessors,
             List<IIndexAccessor> deletedKeysBTreeAccessors, IIndexOpContext ctx, boolean includeMemComponent,
             AtomicInteger searcherfRefCount, LSMHarness lsmHarness) {
         this.keyCmp = keyCmp;
@@ -50,7 +51,8 @@ public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialS
         this.includeMemComponent = includeMemComponent;
         this.searcherfRefCount = searcherfRefCount;
         this.lsmHarness = lsmHarness;
-        this.opContext = ctx;
+        this.ctx = (LSMInvertedIndexOpContext) ctx;
+        this.searchCallback = this.ctx.searchCallback;
     }
 
     @Override
@@ -79,7 +81,7 @@ public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialS
     }
 
     public IIndexOpContext getOpContext() {
-        return opContext;
+        return ctx;
     }
 
     @Override

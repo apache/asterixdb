@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -44,11 +45,12 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     private AtomicInteger searcherRefCount;
     private List<IIndexAccessor> indexAccessors;
     private ISearchPredicate searchPred;
+    private ISearchOperationCallback searchCallback;
     
     // Assuming the cursor for all deleted-keys indexes are of the same type.
-    protected IIndexCursor deletedKeysBTreeCursor;
-    protected List<IIndexAccessor> deletedKeysBTreeAccessors;
-    protected RangePredicate keySearchPred;
+    private IIndexCursor deletedKeysBTreeCursor;
+    private List<IIndexAccessor> deletedKeysBTreeAccessors;
+    private RangePredicate keySearchPred;    
 
     @Override
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
@@ -59,6 +61,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
         indexAccessors = lsmInitState.getIndexAccessors();
         accessorIndex = 0;
         this.searchPred = searchPred;
+        this.searchCallback = lsmInitState.getSearchOperationCallback();
         
         // For searching the deleted-keys BTrees.
         deletedKeysBTreeAccessors = lsmInitState.getDeletedKeysBTreeAccessors();
@@ -134,7 +137,12 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     @Override
     public void next() throws HyracksDataException {
         // Mark the tuple as consumed, so hasNext() can move on.
-        tupleConsumed = true;                
+        tupleConsumed = true;
+        // We assume that the underlying cursors materialize their results such that
+        // there is no need to reposition the result cursor after reconciliation.
+        if (!searchCallback.proceed(currentCursor.getTuple())) {
+            searchCallback.reconcile(currentCursor.getTuple());
+        }
     }
 
     @Override

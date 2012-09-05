@@ -122,7 +122,7 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
 
     @Override
     public ITupleReference getTuple() {
-        return (ITupleReference) outputElement.getTuple();
+        return outputElement.getTuple();
     }
 
     protected boolean pushIntoPriorityQueue(PriorityQueueElement e) throws HyracksDataException, IndexException {

@@ -38,6 +38,11 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMTreeSearchCursor {
     protected RangePredicate keySearchPred;
     
     @Override
+    public void next() throws HyracksDataException {
+        super.next();
+    }
+    
+    @Override
     public void open(ICursorInitialState initState, ISearchPredicate searchPred) throws IndexException,
             HyracksDataException {
         LSMInvertedIndexRangeSearchCursorInitialState lsmInitState = (LSMInvertedIndexRangeSearchCursorInitialState) initState;

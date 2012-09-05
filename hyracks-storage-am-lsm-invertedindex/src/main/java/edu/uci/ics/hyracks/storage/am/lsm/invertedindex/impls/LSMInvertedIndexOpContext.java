@@ -17,6 +17,8 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
@@ -30,6 +32,9 @@ public class LSMInvertedIndexOpContext implements IIndexOpContext {
     private final IInvertedIndex memInvIndex;
     private final IIndex memDeletedKeysBTree;
 
+    public final IModificationOperationCallback modificationCallback;
+    public final ISearchOperationCallback searchCallback;
+    
     // Tuple that only has the inverted-index elements (aka keys), projecting away the document fields.
     public PermutingTupleReference keysOnlyTuple;
     
@@ -38,9 +43,12 @@ public class LSMInvertedIndexOpContext implements IIndexOpContext {
     // Accessor to the deleted-keys BTree.
     public IIndexAccessor deletedKeysBTreeAccessor;
 
-    public LSMInvertedIndexOpContext(IInvertedIndex memInvIndex, IIndex memDeletedKeysBTree) {
+    public LSMInvertedIndexOpContext(IInvertedIndex memInvIndex, IIndex memDeletedKeysBTree,
+            IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback) {
         this.memInvIndex = memInvIndex;
         this.memDeletedKeysBTree = memDeletedKeysBTree;
+        this.modificationCallback = modificationCallback;
+        this.searchCallback = searchCallback;
     }
 
     @Override
