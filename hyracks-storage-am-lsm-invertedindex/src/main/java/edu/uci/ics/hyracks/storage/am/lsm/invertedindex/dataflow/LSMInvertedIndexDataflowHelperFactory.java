@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow;
+package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
@@ -24,11 +24,11 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.dataflow.AbstractLSMIndexDataflowHelperFactory;
 
-public class LSMBTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelperFactory {
+public class LSMInvertedIndexDataflowHelperFactory extends AbstractLSMIndexDataflowHelperFactory {
 
     private static final long serialVersionUID = 1L;
 
-    public LSMBTreeDataflowHelperFactory(ILSMFlushControllerProvider flushControllerProvider,
+    public LSMInvertedIndexDataflowHelperFactory(ILSMFlushControllerProvider flushControllerProvider,
             ILSMMergePolicyProvider mergePolicyProvider, ILSMOperationTrackerProvider opTrackerProvider,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider) {
         super(flushControllerProvider, mergePolicyProvider, opTrackerProvider, ioSchedulerProvider);
@@ -37,8 +37,9 @@ public class LSMBTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
-        return new LSMBTreeDataflowHelper(opDesc, ctx, partition, flushControllerProvider.getFlushController(),
+        return new LSMInvertedIndexDataflowHelper(opDesc, ctx, partition, flushControllerProvider.getFlushController(),
                 mergePolicyProvider.getMergePolicy(), opTrackerProvider.getOperationTracker(),
                 ioSchedulerProvider.getIOScheduler());
     }
+
 }

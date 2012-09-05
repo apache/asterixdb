@@ -25,35 +25,27 @@ import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.dataflow.AbstractLSMIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public abstract class AbstractLSMRTreeDataflowHelper extends TreeIndexDataflowHelper {
-    private static int DEFAULT_MEM_PAGE_SIZE = 32768;
-    private static int DEFAULT_MEM_NUM_PAGES = 1000;
-
-    private final int memPageSize;
-    private final int memNumPages;
+public abstract class AbstractLSMRTreeDataflowHelper extends AbstractLSMIndexDataflowHelper {
 
     protected final IBinaryComparatorFactory[] btreeComparatorFactories;
     protected final IPrimitiveValueProviderFactory[] valueProviderFactories;
     protected final RTreePolicyType rtreePolicyType;
-    protected final ILSMFlushController flushController;
-    protected final ILSMMergePolicy mergePolicy;
-    protected final ILSMOperationTracker opTracker;
-    protected final ILSMIOOperationScheduler ioScheduler;
 
     public AbstractLSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             IBinaryComparatorFactory[] btreeComparatorFactories,
@@ -69,26 +61,20 @@ public abstract class AbstractLSMRTreeDataflowHelper extends TreeIndexDataflowHe
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler) {
-        super(opDesc, ctx, partition);
-        this.memPageSize = memPageSize;
-        this.memNumPages = memNumPages;
+        super(opDesc, ctx, partition, memPageSize, memNumPages, flushController, mergePolicy, opTracker, ioScheduler);
         this.btreeComparatorFactories = btreeComparatorFactories;
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
-        this.flushController = flushController;
-        this.mergePolicy = mergePolicy;
-        this.opTracker = opTracker;
-        this.ioScheduler = ioScheduler;
     }
-
+    
     @Override
     public ITreeIndex createIndexInstance() throws HyracksDataException {
+        ITreeIndexOperatorDescriptor treeOpDesc = (ITreeIndexOperatorDescriptor) opDesc;
         ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
         InMemoryBufferCache memBufferCache = new DualIndexInMemoryBufferCache(new HeapBufferAllocator(), memPageSize,
                 memNumPages);
         InMemoryFreePageManager memFreePageManager = new DualIndexInMemoryFreePageManager(memNumPages,
                 metaDataFrameFactory);
-
         return createLSMTree(memBufferCache, memFreePageManager, ctx.getIOManager(), file, opDesc.getStorageManager()
                 .getBufferCache(ctx), opDesc.getStorageManager().getFileMapProvider(ctx),
                 treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories(),

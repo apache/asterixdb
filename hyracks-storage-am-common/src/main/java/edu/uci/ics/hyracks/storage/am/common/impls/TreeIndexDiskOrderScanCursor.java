@@ -26,7 +26,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
-public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
+public class TreeIndexDiskOrderScanCursor implements ITreeIndexCursor {
 
     private int tupleIndex = 0;
     private int fileId = -1;
@@ -39,7 +39,7 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
     private final ITreeIndexFrame frame;
     private final ITreeIndexTupleReference frameTuple;
 
-    public TreeDiskOrderScanCursor(ITreeIndexFrame frame) {
+    public TreeIndexDiskOrderScanCursor(ITreeIndexFrame frame) {
         this.frame = frame;
         this.frameTuple = frame.createTupleReference();
     }

@@ -32,13 +32,13 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearch
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
-public class InvertedIndexSearchOperatorDescriptor extends AbstractInvertedIndexOperatorDescriptor {
+public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInvertedIndexOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 
     private final int queryField;
     private final IInvertedIndexSearchModifierFactory searchModifierFactory;
 
-    public InvertedIndexSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, int queryField,
+    public LSMInvertedIndexSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, int queryField,
             IStorageManagerInterface storageManager, IFileSplitProvider btreeFileSplitProvider,
             IFileSplitProvider invListsFileSplitProvider, IIndexLifecycleManagerProvider lifecycleManagerProvider,
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenComparatorFactories,
@@ -58,7 +58,7 @@ public class InvertedIndexSearchOperatorDescriptor extends AbstractInvertedIndex
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         IInvertedIndexSearchModifier searchModifier = searchModifierFactory.createSearchModifier();
-        return new InvertedIndexSearchOperatorNodePushable(this, ctx, partition, queryField, searchModifier,
+        return new LSMInvertedIndexSearchOperatorNodePushable(this, ctx, partition, queryField, searchModifier,
                 recordDescProvider);
     }
 }

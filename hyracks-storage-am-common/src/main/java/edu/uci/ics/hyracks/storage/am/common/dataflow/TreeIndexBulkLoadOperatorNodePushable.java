@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
@@ -32,7 +33,7 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
     private final IHyracksTaskContext ctx;
     private final float fillFactor;
     private final boolean verifyInput;
-    private final TreeIndexDataflowHelper treeIndexHelper;
+    private final IIndexDataflowHelper indexHelper;
     private FrameTupleAccessor accessor;
     private IIndexBulkLoader bulkLoader;
     private ITreeIndex treeIndex;
@@ -46,8 +47,7 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
             IRecordDescriptorProvider recordDescProvider) {
         this.opDesc = opDesc;
         this.ctx = ctx;
-        this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
-                .createIndexDataflowHelper(opDesc, ctx, partition);
+        this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
         this.fillFactor = fillFactor;
         this.verifyInput = verifyInput;
         this.recordDescProvider = recordDescProvider;
@@ -59,12 +59,12 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
         RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         accessor = new FrameTupleAccessor(ctx.getFrameSize(), recDesc);
 
-        treeIndexHelper.open();
-        treeIndex = (ITreeIndex) treeIndexHelper.getIndexInstance();
+        indexHelper.open();
+        treeIndex = (ITreeIndex) indexHelper.getIndexInstance();
         try {
             bulkLoader = treeIndex.createBulkLoader(fillFactor, verifyInput);
         } catch (Exception e) {
-            treeIndexHelper.close();
+            indexHelper.close();
             throw new HyracksDataException(e);
         }
     }
@@ -90,7 +90,7 @@ public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSin
         } catch (Exception e) {
             throw new HyracksDataException(e);
         } finally {
-            treeIndexHelper.close();
+            indexHelper.close();
         }
     }
 

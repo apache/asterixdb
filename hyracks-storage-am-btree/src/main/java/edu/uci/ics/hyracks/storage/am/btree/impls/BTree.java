@@ -57,7 +57,7 @@ import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.impls.AbstractTreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.impls.NodeFrontier;
-import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
+import edu.uci.ics.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -86,7 +86,7 @@ public class BTree extends AbstractTreeIndex {
     }
 
     private void diskOrderScan(ITreeIndexCursor icursor, BTreeOpContext ctx) throws HyracksDataException {
-        TreeDiskOrderScanCursor cursor = (TreeDiskOrderScanCursor) icursor;
+        TreeIndexDiskOrderScanCursor cursor = (TreeIndexDiskOrderScanCursor) icursor;
         ctx.reset();
         RangePredicate diskOrderScanPred = new RangePredicate(null, null, true, true, ctx.cmp, ctx.cmp);
         int currentPageId = rootPage;
@@ -893,7 +893,7 @@ public class BTree extends AbstractTreeIndex {
         @Override
         public ITreeIndexCursor createDiskOrderScanCursor() {
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
-            return new TreeDiskOrderScanCursor(leafFrame);
+            return new TreeIndexDiskOrderScanCursor(leafFrame);
         }
 
         @Override

@@ -24,15 +24,16 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 
-public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
-    private final AbstractInvertedIndexOperatorDescriptor opDesc;
+public class LSMInvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
+    private final AbstractLSMInvertedIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
-    private final InvertedIndexDataflowHelper invIndexDataflowHelper;
-    private OnDiskInvertedIndex invIndex;
+    private final IIndexDataflowHelper invIndexDataflowHelper;
+    private IIndex invIndex;
     private IIndexBulkLoader bulkLoader;
 
     private FrameTupleAccessor accessor;
@@ -40,11 +41,12 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
 
     private IRecordDescriptorProvider recordDescProvider;
 
-    public InvertedIndexBulkLoadOperatorNodePushable(AbstractInvertedIndexOperatorDescriptor opDesc,
+    public LSMInvertedIndexBulkLoadOperatorNodePushable(AbstractLSMInvertedIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider) {
         this.opDesc = opDesc;
         this.ctx = ctx;
-        this.invIndexDataflowHelper = new InvertedIndexDataflowHelper(opDesc, ctx, partition);
+        this.invIndexDataflowHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx,
+                partition);
         this.recordDescProvider = recordDescProvider;
         tuple.setFieldPermutation(fieldPermutation);
     }
@@ -53,9 +55,9 @@ public class InvertedIndexBulkLoadOperatorNodePushable extends AbstractUnaryInpu
     public void open() throws HyracksDataException {
         RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         accessor = new FrameTupleAccessor(ctx.getFrameSize(), recDesc);
-        
+
         invIndexDataflowHelper.open();
-        invIndex = (OnDiskInvertedIndex) invIndexDataflowHelper.getIndexInstance();
+        invIndex = invIndexDataflowHelper.getIndexInstance();
         try {
             bulkLoader = invIndex.createBulkLoader(BTree.DEFAULT_FILL_FACTOR, false);
         } catch (Exception e) {

@@ -46,7 +46,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
-import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
+import edu.uci.ics.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 @SuppressWarnings("rawtypes")
@@ -646,7 +646,7 @@ public abstract class OrderedIndexExamplesTest {
                 LOGGER.info("Disk-Order Scan:");
             }
             ITreeIndexAccessor treeIndexAccessor = (ITreeIndexAccessor) indexAccessor;
-            TreeDiskOrderScanCursor diskOrderCursor = (TreeDiskOrderScanCursor) treeIndexAccessor
+            TreeIndexDiskOrderScanCursor diskOrderCursor = (TreeIndexDiskOrderScanCursor) treeIndexAccessor
                     .createDiskOrderScanCursor();
             treeIndexAccessor.diskOrderScan(diskOrderCursor);
             try {

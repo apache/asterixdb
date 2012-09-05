@@ -28,25 +28,29 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactor
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
-public class InvertedIndexCreateOperatorDescriptor extends AbstractInvertedIndexOperatorDescriptor {
+public class LSMInvertedIndexBulkLoadOperatorDescriptor extends AbstractLSMInvertedIndexOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
 
-    public InvertedIndexCreateOperatorDescriptor(IOperatorDescriptorRegistry spec,
+    private final int[] fieldPermutation;
+
+    public LSMInvertedIndexBulkLoadOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] fieldPermutation,
             IStorageManagerInterface storageManager, IFileSplitProvider btreeFileSplitProvider,
             IFileSplitProvider invListsFileSplitProvider, IIndexLifecycleManagerProvider lifecycleManagerProvider,
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenComparatorFactories,
             ITypeTraits[] invListsTypeTraits, IBinaryComparatorFactory[] invListComparatorFactories,
-            IBinaryTokenizerFactory tokenizerFactory, IIndexDataflowHelperFactory btreeDataflowHelperFactory,
+            IBinaryTokenizerFactory tokenizerFactory, IIndexDataflowHelperFactory invertedIndexDataflowHelperFactory,
             IOperationCallbackProvider opCallbackProvider) {
-        super(spec, 0, 0, null, storageManager, btreeFileSplitProvider, invListsFileSplitProvider,
+        super(spec, 1, 0, null, storageManager, btreeFileSplitProvider, invListsFileSplitProvider,
                 lifecycleManagerProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
-                invListComparatorFactories, tokenizerFactory, btreeDataflowHelperFactory, false, opCallbackProvider);
+                invListComparatorFactories, tokenizerFactory, invertedIndexDataflowHelperFactory, false,
+                opCallbackProvider);
+        this.fieldPermutation = fieldPermutation;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new InvertedIndexCreateOperatorNodePushable(this, ctx, partition);
+        return new LSMInvertedIndexBulkLoadOperatorNodePushable(this, ctx, partition, fieldPermutation, recordDescProvider);
     }
 }

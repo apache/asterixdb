@@ -19,7 +19,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
+import edu.uci.ics.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 
 public abstract class TreeIndexDataflowHelper extends IndexDataflowHelper {
     protected ITreeIndexOperatorDescriptor treeOpDesc;
@@ -30,6 +30,6 @@ public abstract class TreeIndexDataflowHelper extends IndexDataflowHelper {
     }
 
     public ITreeIndexCursor createDiskOrderScanCursor(ITreeIndexFrame leafFrame) throws HyracksDataException {
-        return new TreeDiskOrderScanCursor(leafFrame);
+        return new TreeIndexDiskOrderScanCursor(leafFrame);
     }
 }

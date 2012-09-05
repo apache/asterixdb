@@ -22,11 +22,11 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOperatorDescript
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 
 public interface IInvertedIndexOperatorDescriptor extends ITreeIndexOperatorDescriptor {
+    public ITypeTraits[] getInvListsTypeTraits();
+    
     public IBinaryComparatorFactory[] getInvListsComparatorFactories();
 
-    public IBinaryTokenizerFactory getTokenizerFactory();
-    
-    public ITypeTraits[] getInvListsTypeTraits();
+    public IBinaryTokenizerFactory getTokenizerFactory();        
     
     public IFileSplitProvider getInvListsFileSplitProvider();
 }

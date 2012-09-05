@@ -18,38 +18,31 @@ package edu.uci.ics.hyracks.storage.am.lsm.rtree.dataflow;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushControllerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.dataflow.AbstractLSMIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
-public class LSMRTreeDataflowHelperFactory implements IIndexDataflowHelperFactory {
+public class LSMRTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelperFactory {
 
     private static final long serialVersionUID = 1L;
 
     private final IBinaryComparatorFactory[] btreeComparatorFactories;
     private final IPrimitiveValueProviderFactory[] valueProviderFactories;
     private final RTreePolicyType rtreePolicyType;
-    private final ILSMFlushControllerProvider flushControllerProvider;
-    private final ILSMMergePolicyProvider mergePolicyProvider;
-    private final ILSMOperationTrackerProvider opTrackerProvider;
-    private final ILSMIOOperationSchedulerProvider ioSchedulerProvider;
 
     public LSMRTreeDataflowHelperFactory(IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, IBinaryComparatorFactory[] btreeComparatorFactories,
             ILSMFlushControllerProvider flushControllerProvider, ILSMMergePolicyProvider mergePolicyProvider,
             ILSMOperationTrackerProvider opTrackerProvider, ILSMIOOperationSchedulerProvider ioSchedulerProvider) {
+        super(flushControllerProvider, mergePolicyProvider, opTrackerProvider, ioSchedulerProvider);
         this.btreeComparatorFactories = btreeComparatorFactories;
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
-        this.flushControllerProvider = flushControllerProvider;
-        this.mergePolicyProvider = mergePolicyProvider;
-        this.opTrackerProvider = opTrackerProvider;
-        this.ioSchedulerProvider = ioSchedulerProvider;
     }
 
     @Override

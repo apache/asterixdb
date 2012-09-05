@@ -121,4 +121,8 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
     public long getResourceID() {
         return indexArtifactMap.get(file.getFile().getPath());
     }
+    
+    public IHyracksTaskContext getTaskContext() {
+        return ctx;
+    }
 }

@@ -29,7 +29,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexOperat
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
-public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor
+public abstract class AbstractLSMInvertedIndexOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor
         implements IInvertedIndexOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
@@ -42,7 +42,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
 
     // Btree.
     protected final ITypeTraits[] tokenTypeTraits;
-    protected final IBinaryComparatorFactory[] btreeComparatorFactories;
+    protected final IBinaryComparatorFactory[] tokenComparatorFactories;
     protected final IFileSplitProvider btreeFileSplitProvider;
 
     // Inverted index.
@@ -52,7 +52,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
     protected final IFileSplitProvider invListsFileSplitProvider;
     protected final IIndexDataflowHelperFactory invertedIndexDataflowHelperFactory;
 
-    public AbstractInvertedIndexOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity,
+    public AbstractLSMInvertedIndexOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
             IFileSplitProvider btreeFileSplitProvider, IFileSplitProvider invListsFileSplitProvider,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, ITypeTraits[] tokenTypeTraits,
@@ -70,7 +70,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
 
         // Btree.
         this.tokenTypeTraits = tokenTypeTraits;
-        this.btreeComparatorFactories = tokenComparatorFactories;
+        this.tokenComparatorFactories = tokenComparatorFactories;
         this.btreeFileSplitProvider = btreeFileSplitProvider;
 
         // Inverted index.
@@ -102,7 +102,7 @@ public abstract class AbstractInvertedIndexOperatorDescriptor extends AbstractSi
 
     @Override
     public IBinaryComparatorFactory[] getTreeIndexComparatorFactories() {
-        return btreeComparatorFactories;
+        return tokenComparatorFactories;
     }
 
     @Override

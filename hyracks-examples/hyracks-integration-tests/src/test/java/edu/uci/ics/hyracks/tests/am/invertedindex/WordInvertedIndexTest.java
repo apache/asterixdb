@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -57,12 +57,16 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactor
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushControllerProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateSchedulerProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrackerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifierFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.BinaryTokenizerOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.InvertedIndexBulkLoadOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.InvertedIndexCreateOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.InvertedIndexDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.InvertedIndexSearchOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexBulkLoadOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexCreateOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveSearchModifierFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
@@ -74,15 +78,20 @@ import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerInterface;
 import edu.uci.ics.hyracks.tests.integration.AbstractIntegrationTest;
 
+@SuppressWarnings("rawtypes")
 public class WordInvertedIndexTest extends AbstractIntegrationTest {
     static {
         TestStorageManagerComponentHolder.init(8192, 20, 20);
     }
 
+    private static final int MERGE_THRESHOLD = 3;
+    
     private IStorageManagerInterface storageManager = new TestStorageManagerInterface();
     private IIndexLifecycleManagerProvider lcManagerProvider = new TestIndexLifecycleManagerProvider();
     private IIndexDataflowHelperFactory btreeDataflowHelperFactory = new BTreeDataflowHelperFactory();
-    private IIndexDataflowHelperFactory invertedIndexDataflowHelperFactory = new InvertedIndexDataflowHelperFactory();
+    private IIndexDataflowHelperFactory invertedIndexDataflowHelperFactory = new LSMInvertedIndexDataflowHelperFactory(new FlushControllerProvider(), new ConstantMergePolicyProvider(
+            ImmediateSchedulerProvider.INSTANCE, MERGE_THRESHOLD), new RefCountingOperationTrackerProvider(),
+            ImmediateSchedulerProvider.INSTANCE);
 
     private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     private final static String sep = System.getProperty("file.separator");
@@ -158,7 +167,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
 
     public void createInvertedIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
-        InvertedIndexCreateOperatorDescriptor invIndexCreateOp = new InvertedIndexCreateOperatorDescriptor(spec,
+        LSMInvertedIndexCreateOperatorDescriptor invIndexCreateOp = new LSMInvertedIndexCreateOperatorDescriptor(spec,
                 storageManager, btreeFileSplitProvider, invListsFileSplitProvider, lcManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories, tokenizerFactory,
                 invertedIndexDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
@@ -197,7 +206,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeBulkLoad, NC1_ID);
         return primaryBtreeBulkLoad;
     }
-
+    
     private IOperatorDescriptor createScanKeyProviderOp(JobSpecification spec) throws HyracksDataException {
         // build dummy tuple containing nothing
         ArrayTupleBuilder tb = new ArrayTupleBuilder(primaryKeyFieldCount * 2);
@@ -266,7 +275,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     }
 
     private IOperatorDescriptor createInvertedIndexBulkLoadOp(JobSpecification spec, int[] fieldPermutation) {
-        InvertedIndexBulkLoadOperatorDescriptor invIndexBulkLoadOp = new InvertedIndexBulkLoadOperatorDescriptor(spec,
+        LSMInvertedIndexBulkLoadOperatorDescriptor invIndexBulkLoadOp = new LSMInvertedIndexBulkLoadOperatorDescriptor(spec,
                 fieldPermutation, storageManager, btreeFileSplitProvider, invListsFileSplitProvider, lcManagerProvider,
                 tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories,
                 tokenizerFactory, invertedIndexDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
@@ -311,7 +320,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
 
     private IOperatorDescriptor createInvertedIndexSearchOp(JobSpecification spec,
             IInvertedIndexSearchModifierFactory searchModifierFactory) {
-        InvertedIndexSearchOperatorDescriptor invIndexSearchOp = new InvertedIndexSearchOperatorDescriptor(spec, 0,
+        LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp = new LSMInvertedIndexSearchOperatorDescriptor(spec, 0,
                 storageManager, btreeFileSplitProvider, invListsFileSplitProvider, lcManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories,
                 invertedIndexDataflowHelperFactory, tokenizerFactory, searchModifierFactory, invListsRecDesc, false,

@@ -31,21 +31,22 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.exceptions.OccurrenceThresholdPanicException;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
 
-public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
-    private final AbstractInvertedIndexOperatorDescriptor opDesc;
+public class LSMInvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
+    private final AbstractLSMInvertedIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
-    private final InvertedIndexDataflowHelper invIndexDataflowHelper;
+    private final IIndexDataflowHelper invIndexDataflowHelper;
     private final int queryField;
     private FrameTupleAccessor accessor;
     private FrameTupleReference tuple;
     private IRecordDescriptorProvider recordDescProvider;
-    private OnDiskInvertedIndex invIndex;
+    private IIndex invIndex;
 
     private final InvertedIndexSearchPredicate searchPred;
     private IIndexAccessor indexAccessor;
@@ -58,12 +59,13 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
 
     private final boolean retainInput;
 
-    public InvertedIndexSearchOperatorNodePushable(AbstractInvertedIndexOperatorDescriptor opDesc,
+    public LSMInvertedIndexSearchOperatorNodePushable(AbstractLSMInvertedIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition, int queryField, IInvertedIndexSearchModifier searchModifier,
             IRecordDescriptorProvider recordDescProvider) {
         this.opDesc = opDesc;
         this.ctx = ctx;
-        this.invIndexDataflowHelper = new InvertedIndexDataflowHelper(opDesc, ctx, partition);
+        this.invIndexDataflowHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx,
+                partition);
         this.queryField = queryField;
         this.searchPred = new InvertedIndexSearchPredicate(opDesc.getTokenizerFactory().createTokenizer(),
                 searchModifier);
@@ -78,7 +80,7 @@ public class InvertedIndexSearchOperatorNodePushable extends AbstractUnaryInputU
         tuple = new FrameTupleReference();
 
         invIndexDataflowHelper.open();
-        invIndex = (OnDiskInvertedIndex) invIndexDataflowHelper.getIndexInstance();
+        invIndex = invIndexDataflowHelper.getIndexInstance();
         try {
             writeBuffer = ctx.allocateFrame();
             tb = new ArrayTupleBuilder(recordDesc.getFieldCount());
