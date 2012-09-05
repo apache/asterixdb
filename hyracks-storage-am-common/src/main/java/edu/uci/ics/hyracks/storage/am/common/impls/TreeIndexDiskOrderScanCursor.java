@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.storage.am.common.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
-import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
@@ -34,7 +33,6 @@ public class TreeIndexDiskOrderScanCursor implements ITreeIndexCursor {
     private int maxPageId = -1;
     private ICachedPage page = null;
     private IBufferCache bufferCache = null;
-    private ISearchOperationCallback searchCallback;
 
     private final ITreeIndexFrame frame;
     private final ITreeIndexTupleReference frameTuple;
@@ -113,7 +111,6 @@ public class TreeIndexDiskOrderScanCursor implements ITreeIndexCursor {
             page.releaseReadLatch();
             bufferCache.unpin(page);
         }
-        searchCallback = initialState.getSearchOperationCallback();
         page = initialState.getPage();
         tupleIndex = 0;
         frame.setPage(page);

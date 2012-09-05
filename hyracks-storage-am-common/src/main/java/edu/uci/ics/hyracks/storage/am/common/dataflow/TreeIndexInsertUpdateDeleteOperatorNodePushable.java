@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -37,12 +37,12 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference
 public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
     private final AbstractTreeIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
-    private final IIndexDataflowHelper indexHelper;
-    private FrameTupleAccessor accessor;
+    private final IIndexDataflowHelper indexHelper;    
     private final IRecordDescriptorProvider recordDescProvider;
     private final IndexOp op;
     private final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
-    private FrameTupleReference frameTuple;
+    private FrameTupleAccessor accessor;
+    private FrameTupleReference frameTuple;    
     private ByteBuffer writeBuffer;
     private IIndexAccessor indexAccessor;
     private ITupleFilter tupleFilter;

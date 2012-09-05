@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexBulkLoadOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
@@ -33,9 +34,10 @@ public class LSMInvertedIndexBulkLoadOperatorDescriptor extends AbstractLSMInver
     private static final long serialVersionUID = 1L;
 
     private final int[] fieldPermutation;
+    private final boolean verifyInput;
 
     public LSMInvertedIndexBulkLoadOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] fieldPermutation,
-            IStorageManagerInterface storageManager, IFileSplitProvider fileSplitProvider,
+            boolean verifyInput, IStorageManagerInterface storageManager, IFileSplitProvider fileSplitProvider,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTraits[] invListsTypeTraits,
             IBinaryComparatorFactory[] invListComparatorFactories, IBinaryTokenizerFactory tokenizerFactory,
@@ -45,12 +47,13 @@ public class LSMInvertedIndexBulkLoadOperatorDescriptor extends AbstractLSMInver
                 tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, tokenizerFactory,
                 invertedIndexDataflowHelperFactory, null, false, opCallbackProvider);
         this.fieldPermutation = fieldPermutation;
+        this.verifyInput = verifyInput;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new LSMInvertedIndexBulkLoadOperatorNodePushable(this, ctx, partition, fieldPermutation,
+        return new IndexBulkLoadOperatorNodePushable(this, ctx, partition, fieldPermutation, 1.0f, verifyInput,
                 recordDescProvider);
     }
 }

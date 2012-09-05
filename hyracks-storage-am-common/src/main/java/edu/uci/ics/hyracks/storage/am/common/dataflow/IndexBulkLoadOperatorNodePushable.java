@@ -22,47 +22,43 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexDataflowHelper;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 
-public class TreeIndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
-    private final AbstractTreeIndexOperatorDescriptor opDesc;
+public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
+    private final IIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
     private final float fillFactor;
     private final boolean verifyInput;
     private final IIndexDataflowHelper indexHelper;
     private FrameTupleAccessor accessor;
+    private IIndex index;
     private IIndexBulkLoader bulkLoader;
-    private ITreeIndex treeIndex;
-
-    private IRecordDescriptorProvider recordDescProvider;
-
+    private IRecordDescriptorProvider recDescProvider;
     private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 
-    public TreeIndexBulkLoadOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, int[] fieldPermutation, float fillFactor, boolean verifyInput,
-            IRecordDescriptorProvider recordDescProvider) {
+    public IndexBulkLoadOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
+            int[] fieldPermutation, float fillFactor, boolean verifyInput, IRecordDescriptorProvider recordDescProvider) {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
         this.fillFactor = fillFactor;
         this.verifyInput = verifyInput;
-        this.recordDescProvider = recordDescProvider;
+        this.recDescProvider = recordDescProvider;
         tuple.setFieldPermutation(fieldPermutation);
     }
 
     @Override
     public void open() throws HyracksDataException {
-        RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
+        RecordDescriptor recDesc = recDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         accessor = new FrameTupleAccessor(ctx.getFrameSize(), recDesc);
-
         indexHelper.open();
-        treeIndex = (ITreeIndex) indexHelper.getIndexInstance();
+        index = indexHelper.getIndexInstance();
         try {
-            bulkLoader = treeIndex.createBulkLoader(fillFactor, verifyInput);
+            bulkLoader = index.createBulkLoader(fillFactor, verifyInput);
         } catch (Exception e) {
             indexHelper.close();
             throw new HyracksDataException(e);

@@ -17,8 +17,8 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex;
 
 import java.io.IOException;
 
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleGenerator;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;

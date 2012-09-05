@@ -15,7 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.common;
 
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 
 public interface IIndexTestWorkerFactory {

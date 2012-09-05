@@ -21,7 +21,7 @@ import java.util.TreeSet;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
 import edu.uci.ics.hyracks.storage.am.common.IndexTestContext;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 
 @SuppressWarnings("rawtypes")
 public abstract class OrderedIndexTestContext extends IndexTestContext<CheckTuple> {

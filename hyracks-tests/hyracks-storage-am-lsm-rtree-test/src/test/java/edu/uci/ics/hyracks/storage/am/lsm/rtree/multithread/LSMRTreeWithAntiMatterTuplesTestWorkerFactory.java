@@ -18,7 +18,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.rtree.multithread;
 import edu.uci.ics.hyracks.storage.am.common.AbstractIndexTestWorker;
 import edu.uci.ics.hyracks.storage.am.common.IIndexTestWorkerFactory;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 
 public class LSMRTreeWithAntiMatterTuplesTestWorkerFactory implements IIndexTestWorkerFactory {

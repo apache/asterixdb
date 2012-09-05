@@ -23,20 +23,20 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
-public class TreeIndexDropOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
+public class IndexDropOperatorDescriptor extends AbstractIndexOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
 
-    public TreeIndexDropOperatorDescriptor(IOperatorDescriptorRegistry spec, IStorageManagerInterface storageManager,
+    public IndexDropOperatorDescriptor(IOperatorDescriptorRegistry spec, IStorageManagerInterface storageManager,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
             IIndexDataflowHelperFactory dataflowHelperFactory) {
-        super(spec, 0, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider, null,
-                null, dataflowHelperFactory, null, false, null);
+        super(spec, 0, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider, dataflowHelperFactory,
+                null, false, null);
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new TreeIndexDropOperatorNodePushable(this, ctx, partition);
+        return new IndexDropOperatorNodePushable(this, ctx, partition);
     }
 }

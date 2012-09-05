@@ -6,7 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 
 public abstract class AbstractIndexLifecycleTest {
 
