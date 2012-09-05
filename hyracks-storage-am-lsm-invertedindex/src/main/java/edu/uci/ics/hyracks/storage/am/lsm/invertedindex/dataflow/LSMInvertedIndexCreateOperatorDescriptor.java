@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexCreateOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
@@ -33,20 +34,19 @@ public class LSMInvertedIndexCreateOperatorDescriptor extends AbstractLSMInverte
     private static final long serialVersionUID = 1L;
 
     public LSMInvertedIndexCreateOperatorDescriptor(IOperatorDescriptorRegistry spec,
-            IStorageManagerInterface storageManager, IFileSplitProvider btreeFileSplitProvider,
-            IFileSplitProvider invListsFileSplitProvider, IIndexLifecycleManagerProvider lifecycleManagerProvider,
-            ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenComparatorFactories,
-            ITypeTraits[] invListsTypeTraits, IBinaryComparatorFactory[] invListComparatorFactories,
-            IBinaryTokenizerFactory tokenizerFactory, IIndexDataflowHelperFactory btreeDataflowHelperFactory,
-            IOperationCallbackProvider opCallbackProvider) {
-        super(spec, 0, 0, null, storageManager, btreeFileSplitProvider, invListsFileSplitProvider,
-                lifecycleManagerProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
-                invListComparatorFactories, tokenizerFactory, btreeDataflowHelperFactory, false, opCallbackProvider);
+            IStorageManagerInterface storageManager, IFileSplitProvider fileSplitProvider,
+            IIndexLifecycleManagerProvider lifecycleManagerProvider, ITypeTraits[] tokenTypeTraits,
+            IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTraits[] invListsTypeTraits,
+            IBinaryComparatorFactory[] invListComparatorFactories, IBinaryTokenizerFactory tokenizerFactory,
+            IIndexDataflowHelperFactory btreeDataflowHelperFactory, IOperationCallbackProvider opCallbackProvider) {
+        super(spec, 0, 0, null, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
+                tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, tokenizerFactory,
+                btreeDataflowHelperFactory, null, false, opCallbackProvider);
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new LSMInvertedIndexCreateOperatorNodePushable(this, ctx, partition);
+        return new IndexCreateOperatorNodePushable(this, ctx, partition);
     }
 }

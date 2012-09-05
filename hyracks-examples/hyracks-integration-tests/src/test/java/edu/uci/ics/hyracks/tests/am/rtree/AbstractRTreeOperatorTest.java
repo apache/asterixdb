@@ -340,8 +340,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected void destroyPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         TreeIndexDropOperatorDescriptor primaryDropOp = new TreeIndexDropOperatorDescriptor(spec, storageManager,
-                lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
-                btreeDataflowHelperFactory);
+                lcManagerProvider, primarySplitProvider, btreeDataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryDropOp, NC1_ID);
         spec.addRoot(primaryDropOp);
         runTest(spec);
@@ -350,8 +349,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected void destroySecondaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         TreeIndexDropOperatorDescriptor secondaryDropOp = new TreeIndexDropOperatorDescriptor(spec, storageManager,
-                lcManagerProvider, secondarySplitProvider, secondaryTypeTraits, secondaryComparatorFactories,
-                rtreeDataflowHelperFactory);
+                lcManagerProvider, secondarySplitProvider, rtreeDataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryDropOp, NC1_ID);
         spec.addRoot(secondaryDropOp);
         runTest(spec);

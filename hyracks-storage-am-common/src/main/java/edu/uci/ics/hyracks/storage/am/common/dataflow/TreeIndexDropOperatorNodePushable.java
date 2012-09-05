@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexDataflowHelper;
 public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePushable {
     private final IIndexDataflowHelper indexHelper;
 
-    public TreeIndexDropOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
+    public TreeIndexDropOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
         this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
     }

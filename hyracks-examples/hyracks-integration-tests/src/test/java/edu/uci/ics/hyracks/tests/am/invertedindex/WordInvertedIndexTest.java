@@ -98,14 +98,11 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     private final String dateString = simpleDateFormat.format(new Date());
     private final String primaryFileName = System.getProperty("java.io.tmpdir") + sep + "primaryBtree" + dateString;
     private final String btreeFileName = System.getProperty("java.io.tmpdir") + sep + "invIndexBtree" + dateString;
-    private final String invListsFileName = System.getProperty("java.io.tmpdir") + sep + "invIndexLists" + dateString;
 
     private IFileSplitProvider primaryFileSplitProvider = new ConstantFileSplitProvider(
             new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(primaryFileName))) });
     private IFileSplitProvider btreeFileSplitProvider = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(
             NC1_ID, new FileReference(new File(btreeFileName))) });
-    private IFileSplitProvider invListsFileSplitProvider = new ConstantFileSplitProvider(
-            new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(invListsFileName))) });
 
     // Primary BTree index.
     private int primaryFieldCount = 2;
@@ -168,7 +165,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     public void createInvertedIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         LSMInvertedIndexCreateOperatorDescriptor invIndexCreateOp = new LSMInvertedIndexCreateOperatorDescriptor(spec,
-                storageManager, btreeFileSplitProvider, invListsFileSplitProvider, lcManagerProvider, tokenTypeTraits,
+                storageManager, btreeFileSplitProvider, lcManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories, tokenizerFactory,
                 invertedIndexDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, invIndexCreateOp, NC1_ID);
@@ -276,7 +273,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
 
     private IOperatorDescriptor createInvertedIndexBulkLoadOp(JobSpecification spec, int[] fieldPermutation) {
         LSMInvertedIndexBulkLoadOperatorDescriptor invIndexBulkLoadOp = new LSMInvertedIndexBulkLoadOperatorDescriptor(spec,
-                fieldPermutation, storageManager, btreeFileSplitProvider, invListsFileSplitProvider, lcManagerProvider,
+                fieldPermutation, storageManager, btreeFileSplitProvider, lcManagerProvider,
                 tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories,
                 tokenizerFactory, invertedIndexDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, invIndexBulkLoadOp, NC1_ID);
@@ -321,7 +318,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     private IOperatorDescriptor createInvertedIndexSearchOp(JobSpecification spec,
             IInvertedIndexSearchModifierFactory searchModifierFactory) {
         LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp = new LSMInvertedIndexSearchOperatorDescriptor(spec, 0,
-                storageManager, btreeFileSplitProvider, invListsFileSplitProvider, lcManagerProvider, tokenTypeTraits,
+                storageManager, btreeFileSplitProvider, lcManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories,
                 invertedIndexDataflowHelperFactory, tokenizerFactory, searchModifierFactory, invListsRecDesc, false,
                 NoOpOperationCallbackProvider.INSTANCE);

@@ -17,9 +17,7 @@ package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
@@ -31,10 +29,9 @@ public class TreeIndexDropOperatorDescriptor extends AbstractTreeIndexOperatorDe
 
     public TreeIndexDropOperatorDescriptor(IOperatorDescriptorRegistry spec, IStorageManagerInterface storageManager,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
-            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories,
             IIndexDataflowHelperFactory dataflowHelperFactory) {
-        super(spec, 0, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, dataflowHelperFactory, null, false, null);
+        super(spec, 0, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider, null,
+                null, dataflowHelperFactory, null, false, null);
     }
 
     @Override

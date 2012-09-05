@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -39,17 +39,16 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInverte
     private final IInvertedIndexSearchModifierFactory searchModifierFactory;
 
     public LSMInvertedIndexSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, int queryField,
-            IStorageManagerInterface storageManager, IFileSplitProvider btreeFileSplitProvider,
-            IFileSplitProvider invListsFileSplitProvider, IIndexLifecycleManagerProvider lifecycleManagerProvider,
-            ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenComparatorFactories,
-            ITypeTraits[] invListsTypeTraits, IBinaryComparatorFactory[] invListComparatorFactories,
+            IStorageManagerInterface storageManager, IFileSplitProvider fileSplitProvider,
+            IIndexLifecycleManagerProvider lifecycleManagerProvider, ITypeTraits[] tokenTypeTraits,
+            IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTraits[] invListsTypeTraits,
+            IBinaryComparatorFactory[] invListComparatorFactories,
             IIndexDataflowHelperFactory btreeDataflowHelperFactory, IBinaryTokenizerFactory queryTokenizerFactory,
             IInvertedIndexSearchModifierFactory searchModifierFactory, RecordDescriptor recDesc, boolean retainInput,
             IOperationCallbackProvider opCallbackProvider) {
-        super(spec, 1, 1, recDesc, storageManager, btreeFileSplitProvider, invListsFileSplitProvider,
-                lifecycleManagerProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
-                invListComparatorFactories, queryTokenizerFactory, btreeDataflowHelperFactory, retainInput,
-                opCallbackProvider);
+        super(spec, 1, 1, recDesc, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
+                tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, queryTokenizerFactory,
+                btreeDataflowHelperFactory, null, retainInput, opCallbackProvider);
         this.queryField = queryField;
         this.searchModifierFactory = searchModifierFactory;
     }

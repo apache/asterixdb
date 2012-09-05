@@ -22,11 +22,10 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexDataflowHelper;
 
-public class TreeIndexCreateOperatorNodePushable extends AbstractOperatorNodePushable {
+public class IndexCreateOperatorNodePushable extends AbstractOperatorNodePushable {
     private final IIndexDataflowHelper indexHelper;
 
-    public TreeIndexCreateOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition) {
+    public IndexCreateOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition) {
         this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
     }
 

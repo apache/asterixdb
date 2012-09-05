@@ -17,16 +17,18 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 
-public interface IInvertedIndexOperatorDescriptor extends ITreeIndexOperatorDescriptor {
+public interface IInvertedIndexOperatorDescriptor extends IIndexOperatorDescriptor {
+    
     public ITypeTraits[] getInvListsTypeTraits();
     
     public IBinaryComparatorFactory[] getInvListsComparatorFactories();
+    
+    public ITypeTraits[] getTokenTypeTraits();
+    
+    public IBinaryComparatorFactory[] getTokenComparatorFactories();
 
     public IBinaryTokenizerFactory getTokenizerFactory();        
-    
-    public IFileSplitProvider getInvListsFileSplitProvider();
 }
