@@ -115,11 +115,7 @@ public class LSMInvertedIndexTestHarness {
         memFreePageManager = new DualIndexInMemoryFreePageManager(memNumPages, new LIFOMetaDataFrameFactory());
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         rnd.setSeed(RANDOM_SEED);
-
         invIndexFileRef = ioManager.getIODevices().get(0).createFileReference(onDiskDir + invIndexFileName);
-        //File invIndexFile = new File(onDiskDir + invIndexFileName);
-        //invIndexFile.deleteOnExit();
-        //invIndexFileRef = new FileReference(invIndexFile);
     }
 
     public void tearDown() throws HyracksDataException {
