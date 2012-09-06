@@ -37,9 +37,9 @@ public class LSMInvertedIndexDataflowHelperFactory extends AbstractLSMIndexDataf
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
-        return new LSMInvertedIndexDataflowHelper(opDesc, ctx, partition, flushControllerProvider.getFlushController(),
-                mergePolicyProvider.getMergePolicy(), opTrackerProvider.getOperationTracker(),
-                ioSchedulerProvider.getIOScheduler());
+        return new LSMInvertedIndexDataflowHelper(opDesc, ctx, partition, flushControllerProvider.getFlushController(ctx),
+                mergePolicyProvider.getMergePolicy(ctx), opTrackerProvider.getOperationTracker(ctx),
+                ioSchedulerProvider.getIOScheduler(ctx));
     }
 
 }
