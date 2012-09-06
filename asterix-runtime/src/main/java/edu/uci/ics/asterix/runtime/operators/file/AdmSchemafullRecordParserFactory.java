@@ -294,16 +294,32 @@ public class AdmSchemafullRecordParserFactory implements ITupleParserFactory {
                         parseConstructor(ATypeTag.DATE, objectType, out);
                         break;
                     }
+                    case AdmLexerConstants.DATE_LITERAL: {
+                        parseDate(token.image, out);
+                        break;
+                    }
                     case AdmLexerConstants.TIME_CONS: {
                         parseConstructor(ATypeTag.TIME, objectType, out);
+                        break;
+                    }
+                    case AdmLexerConstants.TIME_LITERAL: {
+                        parseTime(token.image, out);
                         break;
                     }
                     case AdmLexerConstants.DATETIME_CONS: {
                         parseConstructor(ATypeTag.DATETIME, objectType, out);
                         break;
                     }
+                    case AdmLexerConstants.DATETIME_LITERAL: {
+                        parseDatetime(token.image, out);
+                        break;
+                    }
                     case AdmLexerConstants.DURATION_CONS: {
                         parseConstructor(ATypeTag.DURATION, objectType, out);
+                        break;
+                    }
+                    case AdmLexerConstants.DURATION_LITERAL: {
+                        parseDuration(token.image, out);
                         break;
                     }
                     case AdmLexerConstants.POINT_CONS: {

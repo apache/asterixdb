@@ -206,7 +206,8 @@ public class ADateAndTimeParser {
             }
 
             // error is thrown if more than three digits are seen for the millisecond part
-            if (charAccessor.getCharAt(offset) >= '0' && charAccessor.getCharAt(offset) <= '9') {
+            if (charAccessor.getLength() > offset && charAccessor.getCharAt(offset) >= '0'
+                    && charAccessor.getCharAt(offset) <= '9') {
                 throw new Exception("Wrong format of time instance: too many fields for millisecond.");
             }
         }

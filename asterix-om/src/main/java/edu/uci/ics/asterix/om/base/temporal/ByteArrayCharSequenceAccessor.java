@@ -25,7 +25,16 @@ public class ByteArrayCharSequenceAccessor implements ICharSequenceAccessor<Byte
         return (char) (string[index + offset + beginOffset]);
     }
 
-    /* The offset is the position of the first letter in the byte array */
+    /**
+     * Reset the wrapped byte array.
+     * 
+     * @param obj
+     *            The byte array to be wrapped
+     * @param beginOffset
+     *            The offset of the string stored in the byte array.
+     * @param offset
+     *            The offset of the substring of the string stored (offset from the beginOffset).
+     */
     public void reset(byte[] obj, int beginOffset, int offset) {
         string = obj;
         this.offset = offset;

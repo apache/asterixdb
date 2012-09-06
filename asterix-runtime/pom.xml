@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>asterix</artifactId>
@@ -55,26 +56,26 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
-		        <artifactId>hyracks-storage-am-btree</artifactId>
+			<artifactId>hyracks-storage-am-btree</artifactId>
 			<version>0.2.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-		        <groupId>edu.uci.ics.asterix</groupId>
-		        <artifactId>asterix-transactions</artifactId>
+			<groupId>edu.uci.ics.asterix</groupId>
+			<artifactId>asterix-transactions</artifactId>
 			<version>0.0.4-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-		        <groupId>org.twitter4j</groupId>
-		        <artifactId>twitter4j-core</artifactId>
-		        <version>2.2.3</version>
+			<groupId>org.twitter4j</groupId>
+			<artifactId>twitter4j-core</artifactId>
+			<version>2.2.3</version>
 		</dependency>
 		<dependency>
-		        <groupId>org.apache.hadoop</groupId>
-		        <artifactId>hadoop-core</artifactId>
-		        <version>0.20.2</version>
-		        <type>jar</type>
-		        <scope>compile</scope>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-core</artifactId>
+			<version>0.20.2</version>
+			<type>jar</type>
+			<scope>compile</scope>
 		</dependency>
 	</dependencies>
 

@@ -144,13 +144,13 @@ TOKEN :
 <DEFAULT>
 TOKEN :
 {
-	<TIMEZONE_LITERAL : (("+"|"-")<INTEGER>(":")<INTEGER>) | ("Z") >
+	<TIMEZONE_LITERAL : (("+"|"-")<DIGIT><DIGIT>(":")<DIGIT><DIGIT>) | (("+"|"-")<DIGIT><DIGIT><DIGIT><DIGIT>) | ("Z") >
 }
 
 <DEFAULT>
 TOKEN :
 {
-	<DATE_LITERAL : ("-")?<INTEGER>("-")<INTEGER>("-")<INTEGER> (<TIMEZONE_LITERAL>)? >
+	<DATE_LITERAL : (("-")?<DIGIT><DIGIT><DIGIT><DIGIT>("-")<DIGIT><DIGIT>("-")<DIGIT><DIGIT>) | (("-")?<DIGIT><DIGIT><DIGIT><DIGIT><DIGIT><DIGIT><DIGIT><DIGIT>) >
 }
 
 <DEFAULT>
@@ -162,7 +162,7 @@ TOKEN :
 <DEFAULT>
 TOKEN :
 {
-	<TIME_LITERAL : <INTEGER>(":")<INTEGER>(":")<INTEGER> ( (":")<INTEGER>)? (<TIMEZONE_LITERAL>)? >
+	<TIME_LITERAL : (<DIGIT><DIGIT>(":")<DIGIT><DIGIT>(":")<DIGIT><DIGIT> ( (".")<DIGIT>(<DIGIT>((<DIGIT>)?))?)? ((("+"|"-")<DIGIT><DIGIT>(":")<DIGIT><DIGIT>) | ("Z"))?) | (<DIGIT><DIGIT><DIGIT><DIGIT><DIGIT><DIGIT> (<DIGIT>(<DIGIT>((<DIGIT>)?))?)? ((("+"|"-")<DIGIT><DIGIT><DIGIT><DIGIT>) | ("Z"))?) >
 }
 
 <DEFAULT>
@@ -174,7 +174,7 @@ TOKEN :
 <DEFAULT>
 TOKEN :
 {
-	<DATETIME_LITERAL : ("-")? <INTEGER>("-")<INTEGER>("-")<INTEGER>("T")<INTEGER>(":")<INTEGER>(":")<INTEGER> ( (":")<INTEGER>)? (<TIMEZONE_LITERAL>)?>
+	<DATETIME_LITERAL : (("-")?<DIGIT><DIGIT><DIGIT><DIGIT>("-")<DIGIT><DIGIT>("-")<DIGIT><DIGIT>("T")<DIGIT><DIGIT>(":")<DIGIT><DIGIT>(":")<DIGIT><DIGIT> ( (".")<DIGIT>(<DIGIT>((<DIGIT>)?))?)? ((("+"|"-")<DIGIT><DIGIT>(":")<DIGIT><DIGIT>) | ("Z"))?) | (("-")?<DIGIT><DIGIT><DIGIT><DIGIT><DIGIT><DIGIT><DIGIT><DIGIT>("T")<DIGIT><DIGIT><DIGIT><DIGIT><DIGIT><DIGIT> (<DIGIT>(<DIGIT>((<DIGIT>)?))?)? ((("+"|"-")<DIGIT><DIGIT><DIGIT><DIGIT>) | ("Z"))?)>
 }
 
 <DEFAULT>
@@ -186,7 +186,7 @@ TOKEN :
 <DEFAULT>
 TOKEN :
 {
-	<DURATION_LITERAL : ("-")? ("D")(<INTEGER>("Y"))?(<INTEGER>("M"))?(<INTEGER>("D"))?(("T")(<INTEGER>("H"))?(<INTEGER>("M"))?(<INTEGER>("S"))?)?>
+	<DURATION_LITERAL : ("-")? ("P")(<INTEGER>("Y"))?(<INTEGER>("M"))?(<INTEGER>("D"))?(("T")(((<INTEGER>("H"))(<INTEGER>("M"))?(<INTEGER>((".")<DIGIT>(<DIGIT>(<DIGIT>)?)?)?("S"))?) | ((<INTEGER>("M"))(<INTEGER>((".")<DIGIT>(<DIGIT>(<DIGIT>)?)?)?("S"))?) | ((<INTEGER>((".")<DIGIT>(<DIGIT>(<DIGIT>)?)?)?("S")))))?>
 }
 
 <DEFAULT>

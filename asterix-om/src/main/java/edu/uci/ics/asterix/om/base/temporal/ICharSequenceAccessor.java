@@ -16,8 +16,19 @@ package edu.uci.ics.asterix.om.base.temporal;
 
 public interface ICharSequenceAccessor<T> {
 
+    /**
+     * Return the character in the wrapped char sequence at the given index.
+     * 
+     * @param index
+     * @return
+     */
     public char getCharAt(int index);
 
+    /**
+     * Get the length of the wrapped char sequence.
+     * 
+     * @return
+     */
     public int getLength();
 
 }
