@@ -22,11 +22,9 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 
 public abstract class TreeIndexDataflowHelper extends IndexDataflowHelper {
-    protected ITreeIndexOperatorDescriptor treeOpDesc;
 
     public TreeIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition) {
         super(opDesc, ctx, partition);
-        this.treeOpDesc = (ITreeIndexOperatorDescriptor) opDesc;
     }
 
     public ITreeIndexCursor createDiskOrderScanCursor(ITreeIndexFrame leafFrame) throws HyracksDataException {
