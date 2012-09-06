@@ -116,9 +116,10 @@ public class LSMInvertedIndexTestHarness {
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         rnd.setSeed(RANDOM_SEED);
 
-        File invIndexFile = new File(onDiskDir + invIndexFileName);
-        invIndexFile.deleteOnExit();
-        invIndexFileRef = new FileReference(invIndexFile);
+        invIndexFileRef = ioManager.getIODevices().get(0).createFileReference(onDiskDir + invIndexFileName);
+        //File invIndexFile = new File(onDiskDir + invIndexFileName);
+        //invIndexFile.deleteOnExit();
+        //invIndexFileRef = new FileReference(invIndexFile);
     }
 
     public void tearDown() throws HyracksDataException {
