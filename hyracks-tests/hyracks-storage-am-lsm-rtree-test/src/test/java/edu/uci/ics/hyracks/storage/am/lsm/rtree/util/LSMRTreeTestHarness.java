@@ -36,12 +36,12 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTracker;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeInMemoryBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -64,8 +64,8 @@ public class LSMRTreeTestHarness {
     protected IOManager ioManager;
     protected IBufferCache diskBufferCache;
     protected IFileMapProvider diskFileMapProvider;
-    protected LSMRTreeInMemoryBufferCache memBufferCache;
-    protected LSMRTreeInMemoryFreePageManager memFreePageManager;
+    protected DualIndexInMemoryBufferCache memBufferCache;
+    protected DualIndexInMemoryFreePageManager memFreePageManager;
     protected IHyracksTaskContext ctx;
     protected ILSMIOOperationScheduler ioScheduler;
     protected ILSMFlushController flushController;
@@ -112,8 +112,8 @@ public class LSMRTreeTestHarness {
         TestStorageManagerComponentHolder.init(diskPageSize, diskNumPages, diskMaxOpenFiles);
         diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        memBufferCache = new LSMRTreeInMemoryBufferCache(new HeapBufferAllocator(), memPageSize, memNumPages);
-        memFreePageManager = new LSMRTreeInMemoryFreePageManager(memNumPages, new LIFOMetaDataFrameFactory());
+        memBufferCache = new DualIndexInMemoryBufferCache(new HeapBufferAllocator(), memPageSize, memNumPages);
+        memFreePageManager = new DualIndexInMemoryFreePageManager(memNumPages, new LIFOMetaDataFrameFactory());
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         rnd.setSeed(RANDOM_SEED);
     }

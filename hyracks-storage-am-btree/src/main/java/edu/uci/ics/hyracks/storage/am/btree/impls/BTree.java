@@ -35,7 +35,6 @@ import edu.uci.ics.hyracks.storage.am.btree.api.ITupleAcceptor;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNotUpdateableException;
-import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeUnsortedInputException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext.PageValidationInfo;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
@@ -53,11 +52,12 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.api.UnsortedInputException;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.impls.AbstractTreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.impls.NodeFrontier;
-import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
+import edu.uci.ics.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -86,7 +86,7 @@ public class BTree extends AbstractTreeIndex {
     }
 
     private void diskOrderScan(ITreeIndexCursor icursor, BTreeOpContext ctx) throws HyracksDataException {
-        TreeDiskOrderScanCursor cursor = (TreeDiskOrderScanCursor) icursor;
+        TreeIndexDiskOrderScanCursor cursor = (TreeIndexDiskOrderScanCursor) icursor;
         ctx.reset();
         RangePredicate diskOrderScanPred = new RangePredicate(null, null, true, true, ctx.cmp, ctx.cmp);
         int currentPageId = rootPage;
@@ -893,7 +893,7 @@ public class BTree extends AbstractTreeIndex {
         @Override
         public ITreeIndexCursor createDiskOrderScanCursor() {
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
-            return new TreeDiskOrderScanCursor(leafFrame);
+            return new TreeIndexDiskOrderScanCursor(leafFrame);
         }
 
         @Override
@@ -908,12 +908,17 @@ public class BTree extends AbstractTreeIndex {
         public BTreeOpContext getOpContext() {
             return ctx;
         }
+        
+        public ITreeIndexCursor createCountingSearchCursor() {
+            IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
+            return new BTreeCountingSearchCursor(leafFrame, false);
+        }
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyinput) throws TreeIndexException {
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws TreeIndexException {
         try {
-            return new BTreeBulkLoader(fillFactor, verifyinput);
+            return new BTreeBulkLoader(fillFactor, verifyInput);
         } catch (HyracksDataException e) {
             throw new TreeIndexException(e);
         }
@@ -994,7 +999,7 @@ public class BTree extends AbstractTreeIndex {
                 HyracksDataException {
             // New tuple should be strictly greater than last tuple.
             if (cmp.compare(tuple, prevTuple) != 1) {
-                throw new BTreeUnsortedInputException("Input stream given to BTree bulk load is not sorted.");
+                throw new UnsortedInputException("Input stream given to BTree bulk load is not sorted.");
             }
         }
 

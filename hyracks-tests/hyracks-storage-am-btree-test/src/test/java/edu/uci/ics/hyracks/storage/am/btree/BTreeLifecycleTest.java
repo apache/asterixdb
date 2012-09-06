@@ -9,7 +9,7 @@ import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.common.AbstractIndexLifecycleTest;
 import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
-import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestContext;
+import edu.uci.ics.hyracks.storage.am.common.IIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.TreeIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 
@@ -23,7 +23,7 @@ public class BTreeLifecycleTest extends AbstractIndexLifecycleTest {
     private ITreeIndexFrame frame = null;
 
     @SuppressWarnings("rawtypes")
-    private ITreeIndexTestContext<? extends CheckTuple> testCtx;
+    private IIndexTestContext<? extends CheckTuple> testCtx;
 
     @Override
     public void setup() throws Exception {

@@ -50,7 +50,7 @@ public class TreeIndexBulkLoadOperatorDescriptor extends AbstractTreeIndexOperat
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new TreeIndexBulkLoadOperatorNodePushable(this, ctx, partition, fieldPermutation, fillFactor,
+        return new IndexBulkLoadOperatorNodePushable(this, ctx, partition, fieldPermutation, fillFactor,
         		verifyInput, recordDescProvider);
     }
 }

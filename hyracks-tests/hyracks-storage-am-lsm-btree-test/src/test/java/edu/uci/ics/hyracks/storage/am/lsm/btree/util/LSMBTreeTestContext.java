@@ -45,13 +45,13 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
 
     @Override
     public int getKeyFieldCount() {
-        LSMBTree lsmTree = (LSMBTree) treeIndex;
+        LSMBTree lsmTree = (LSMBTree) index;
         return lsmTree.getComparatorFactories().length;
     }
 
     @Override
     public IBinaryComparatorFactory[] getComparatorFactories() {
-        LSMBTree lsmTree = (LSMBTree) treeIndex;
+        LSMBTree lsmTree = (LSMBTree) index;
         return lsmTree.getComparatorFactories();
     }
 

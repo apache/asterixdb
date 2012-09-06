@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -176,7 +176,6 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         if (!isActivated) {
             throw new HyracksDataException("Failed to clear the index since it is not activated.");
         }
-
         initEmptyTree();
     }
 
@@ -349,5 +348,4 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     public long getInMemorySize() {
         return 0;
     }
-
 }

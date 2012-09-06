@@ -20,11 +20,13 @@ public class CheckTuple<T extends Comparable<T>> implements Comparable<T> {
     protected final int numKeys;
     protected final Comparable[] fields;
     protected int pos;
+    protected boolean isHighKey;
 
     public CheckTuple(int numFields, int numKeys) {
         this.numKeys = numKeys;
         this.fields = new Comparable[numFields];
         pos = 0;
+        isHighKey = false;
     }
 
     public void appendField(T e) {
@@ -34,12 +36,22 @@ public class CheckTuple<T extends Comparable<T>> implements Comparable<T> {
 	@Override
 	public int compareTo(T o) {
 		CheckTuple<T> other = (CheckTuple<T>) o;
-		for (int i = 0; i < numKeys; i++) {
+		int cmpFieldCount = Math.min(other.getNumKeys(), numKeys);
+		for (int i = 0; i < cmpFieldCount; i++) {
 			int cmp = fields[i].compareTo(other.getField(i));
 			if (cmp != 0) {
 				return cmp;
 			}
 		}
+		if (other.getNumKeys() == numKeys) {
+		    return 0;
+		}
+		if (other.getNumKeys() < numKeys) {
+		    return (other.isHighKey) ? -1 : 1;
+		}
+		if (other.getNumKeys() > numKeys) {
+            return (isHighKey) ? 1 : -1;
+        }
 		return 0;
 	}
 
@@ -53,12 +65,15 @@ public class CheckTuple<T extends Comparable<T>> implements Comparable<T> {
     
 	@Override
 	public int hashCode() {
-		//int hash = 37 * numKeys + fields.length;
 		int hash = 0;
 		for (int i = 0; i < numKeys; i++) {
 			hash = 37 * hash + fields[i].hashCode();
 		}
 		return hash;
+	}
+	
+	public void setIsHighKey(boolean isHighKey) {
+	    this.isHighKey = isHighKey;
 	}
 	
 	public T getField(int idx) {

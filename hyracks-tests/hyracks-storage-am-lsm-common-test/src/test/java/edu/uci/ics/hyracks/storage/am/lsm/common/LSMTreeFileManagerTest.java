@@ -39,8 +39,8 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 
@@ -75,7 +75,7 @@ public class LSMTreeFileManagerTest {
     }
 
     public void sortOrderTest(boolean testFlushFileName) throws InterruptedException, HyracksDataException {
-        ILSMFileManager fileManager = new LSMTreeFileManager(ioManager, fileMapProvider, file, new DummyTreeFactory());
+        ILSMIndexFileManager fileManager = new LSMIndexFileManager(ioManager, fileMapProvider, file, new DummyTreeFactory());
         LinkedList<String> fileNames = new LinkedList<String>();
 
         int numFileNames = 100;
@@ -113,7 +113,7 @@ public class LSMTreeFileManagerTest {
     }
 
     public void cleanInvalidFilesTest(IOManager ioManager) throws InterruptedException, IOException {
-        ILSMFileManager fileManager = new LSMTreeFileManager(ioManager, fileMapProvider, file, new DummyTreeFactory());
+        ILSMIndexFileManager fileManager = new LSMIndexFileManager(ioManager, fileMapProvider, file, new DummyTreeFactory());
         fileManager.createDirs();
 
         List<FileReference> flushFiles = new ArrayList<FileReference>();
@@ -257,7 +257,7 @@ public class LSMTreeFileManagerTest {
         return new IOManager(devices, Executors.newCachedThreadPool());
     }
 
-    private FileReference simulateMerge(ILSMFileManager fileManager, FileReference a, FileReference b)
+    private FileReference simulateMerge(ILSMIndexFileManager fileManager, FileReference a, FileReference b)
             throws HyracksDataException {
         String relMergeFileName = (String) fileManager
                 .getRelMergeFileName(a.getFile().getName(), b.getFile().getName());
@@ -265,7 +265,7 @@ public class LSMTreeFileManagerTest {
         return mergeFile;
     }
 
-    private String getMergeFileName(ILSMFileManager fileNameManager, String firstFile, String lastFile)
+    private String getMergeFileName(ILSMIndexFileManager fileNameManager, String firstFile, String lastFile)
             throws HyracksDataException {
         File f1 = new File(firstFile);
         File f2 = new File(lastFile);

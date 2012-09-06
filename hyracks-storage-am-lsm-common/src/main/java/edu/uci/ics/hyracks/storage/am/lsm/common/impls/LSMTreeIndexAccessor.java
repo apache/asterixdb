@@ -84,7 +84,7 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
 
     @Override
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
-            LSMMergeInProgressException {
+            IndexException {
         return lsmHarness.createMergeOperation(callback);
     }
 }

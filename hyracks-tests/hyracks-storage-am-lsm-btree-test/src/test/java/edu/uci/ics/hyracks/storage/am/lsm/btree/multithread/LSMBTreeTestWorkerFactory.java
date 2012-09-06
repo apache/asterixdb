@@ -15,16 +15,16 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.btree.multithread;
 
-import edu.uci.ics.hyracks.storage.am.common.AbstractTreeIndexTestWorker;
-import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestWorkerFactory;
+import edu.uci.ics.hyracks.storage.am.common.AbstractIndexTestWorker;
+import edu.uci.ics.hyracks.storage.am.common.IIndexTestWorkerFactory;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 
-public class LSMBTreeTestWorkerFactory implements ITreeIndexTestWorkerFactory {
+public class LSMBTreeTestWorkerFactory implements IIndexTestWorkerFactory {
     @Override
-    public AbstractTreeIndexTestWorker create(DataGenThread dataGen, TestOperationSelector opSelector,
-            ITreeIndex index, int numBatches) {
+    public AbstractIndexTestWorker create(DataGenThread dataGen, TestOperationSelector opSelector,
+            IIndex index, int numBatches) {
         return new LSMBTreeTestWorker(dataGen, opSelector, index, numBatches);
     }
 }

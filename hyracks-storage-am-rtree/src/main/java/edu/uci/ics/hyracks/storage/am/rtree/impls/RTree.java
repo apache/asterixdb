@@ -42,7 +42,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.impls.AbstractTreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.impls.NodeFrontier;
-import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
+import edu.uci.ics.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexUtils;
@@ -736,7 +736,7 @@ public class RTree extends AbstractTreeIndex {
     }
 
     private void search(ITreeIndexCursor cursor, ISearchPredicate searchPred, RTreeOpContext ctx)
-            throws HyracksDataException, TreeIndexException {
+            throws HyracksDataException, IndexException {
         ctx.reset();
         ctx.cursor = cursor;
 
@@ -751,7 +751,7 @@ public class RTree extends AbstractTreeIndex {
     }
 
     private void diskOrderScan(ITreeIndexCursor icursor, RTreeOpContext ctx) throws HyracksDataException {
-        TreeDiskOrderScanCursor cursor = (TreeDiskOrderScanCursor) icursor;
+        TreeIndexDiskOrderScanCursor cursor = (TreeIndexDiskOrderScanCursor) icursor;
         ctx.reset();
 
         MultiComparator cmp = MultiComparator.create(cmpFactories);
@@ -831,7 +831,7 @@ public class RTree extends AbstractTreeIndex {
 
         @Override
         public ITreeIndexCursor createDiskOrderScanCursor() {
-            return new TreeDiskOrderScanCursor(leafFrameFactory.createFrame());
+            return new TreeIndexDiskOrderScanCursor(leafFrameFactory.createFrame());
         }
 
         @Override

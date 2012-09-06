@@ -7,7 +7,7 @@ import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.AbstractIndexLifecycleTest;
 import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
-import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestContext;
+import edu.uci.ics.hyracks.storage.am.common.IIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.TreeIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTree;
@@ -31,7 +31,7 @@ public class LSMRTreeLifecycleTest extends AbstractIndexLifecycleTest {
     private final TreeIndexTestUtils titu = new RTreeTestUtils();
 
     @SuppressWarnings("rawtypes")
-    private ITreeIndexTestContext<? extends CheckTuple> testCtx;
+    private IIndexTestContext<? extends CheckTuple> testCtx;
 
     @Override
     protected boolean persistentStateExists() throws Exception {

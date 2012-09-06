@@ -34,7 +34,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 public class LSMBTreeMultiBulkLoadTest extends OrderedIndexBulkLoadTest {
     public LSMBTreeMultiBulkLoadTest() {
         // Using 5 bulk load rounds.
-        super(LSMBTreeTestHarness.LEAF_FRAMES_TO_TEST, AccessMethodTestsConfig.LSM_RTREE_BULKLOAD_ROUNDS);
+        super(LSMBTreeTestHarness.LEAF_FRAMES_TO_TEST, AccessMethodTestsConfig.LSM_BTREE_BULKLOAD_ROUNDS);
     }
 
     private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();

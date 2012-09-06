@@ -59,11 +59,11 @@ public abstract class TreeIndexTestUtils {
 
     protected abstract Collection createCheckTuplesCollection();
 
-    protected abstract ArrayTupleBuilder createDeleteTupleBuilder(ITreeIndexTestContext ctx);
+    protected abstract ArrayTupleBuilder createDeleteTupleBuilder(IIndexTestContext ctx);
 
     // See if tuple with corresponding checkTuple exists in ctx.checkTuples.
     protected abstract boolean checkDiskOrderScanResult(ITupleReference tuple, CheckTuple checkTuple,
-            ITreeIndexTestContext ctx) throws HyracksDataException;
+            IIndexTestContext ctx) throws HyracksDataException;
 
     @SuppressWarnings("unchecked")
     public static void createTupleFromCheckTuple(CheckTuple checkTuple, ArrayTupleBuilder tupleBuilder,
@@ -94,7 +94,7 @@ public abstract class TreeIndexTestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public void checkScan(ITreeIndexTestContext ctx) throws Exception {
+    public void checkScan(IIndexTestContext ctx) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Testing Scan.");
         }
@@ -105,7 +105,7 @@ public abstract class TreeIndexTestUtils {
         checkExpectedResults(scanCursor, ctx.getCheckTuples(), ctx.getFieldSerdes(), ctx.getKeyFieldCount(), checkIter);
     }
 
-    public void checkDiskOrderScan(ITreeIndexTestContext ctx) throws Exception {
+    public void checkDiskOrderScan(IIndexTestContext ctx) throws Exception {
     	try {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Testing Disk-Order Scan.");
@@ -152,7 +152,7 @@ public abstract class TreeIndexTestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public void insertIntTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+    public void insertIntTuples(IIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
         int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         int[] fieldValues = new int[ctx.getFieldCount()];
@@ -182,7 +182,7 @@ public abstract class TreeIndexTestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public void upsertIntTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+    public void upsertIntTuples(IIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
         int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         int[] fieldValues = new int[ctx.getFieldCount()];
@@ -212,7 +212,7 @@ public abstract class TreeIndexTestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public void bulkLoadIntTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+    public void bulkLoadIntTuples(IIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
         int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         int[] fieldValues = new int[ctx.getFieldCount()];
@@ -236,7 +236,7 @@ public abstract class TreeIndexTestUtils {
         }
     }
 
-    public static void bulkLoadCheckTuples(ITreeIndexTestContext ctx, Collection<CheckTuple> checkTuples)
+    public static void bulkLoadCheckTuples(IIndexTestContext ctx, Collection<CheckTuple> checkTuples)
             throws HyracksDataException, IndexException {
         int fieldCount = ctx.getFieldCount();
         int numTuples = checkTuples.size();
@@ -259,7 +259,7 @@ public abstract class TreeIndexTestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public void deleteTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+    public void deleteTuples(IIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
         ArrayTupleBuilder deleteTupleBuilder = createDeleteTupleBuilder(ctx);
         ArrayTupleReference deleteTuple = new ArrayTupleReference();
         int numCheckTuples = ctx.getCheckTuples().size();

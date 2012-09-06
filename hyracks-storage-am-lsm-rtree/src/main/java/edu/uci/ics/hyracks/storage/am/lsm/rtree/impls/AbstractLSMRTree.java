@@ -33,23 +33,23 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
@@ -95,13 +95,13 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
     protected TreeTupleSorter rTreeTupleSorter = null;
 
     // On-disk components.
-    protected final ILSMFileManager fileManager;
+    protected final ILSMIndexFileManager fileManager;
     protected final IBufferCache diskBufferCache;
     protected final IFileMapProvider diskFileMapProvider;
     // For creating RTree's used in flush and merge.
-    protected final TreeFactory<RTree> diskRTreeFactory;
+    protected final TreeIndexFactory<RTree> diskRTreeFactory;
     // List of LSMRTreeComponent instances. Using Object for better sharing via
-    // ILSMTree + LSMHarness.
+    // ILSMIndex + LSMHarness.
     protected final LinkedList<Object> diskComponents = new LinkedList<Object>();
     // Helps to guarantees physical consistency of LSM components.
     protected final ILSMComponentFinalizer componentFinalizer;
@@ -120,7 +120,7 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
     public AbstractLSMRTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
-            ILSMFileManager fileManager, TreeFactory<RTree> diskRTreeFactory, IFileMapProvider diskFileMapProvider,
+            ILSMIndexFileManager fileManager, TreeIndexFactory<RTree> diskRTreeFactory, IFileMapProvider diskFileMapProvider,
             ILSMComponentFinalizer componentFinalizer, int fieldCount, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
             int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, ILSMFlushController flushController,
@@ -221,7 +221,7 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
     }
 
     @SuppressWarnings("rawtypes")
-    protected ITreeIndex createDiskTree(TreeFactory diskTreeFactory, FileReference fileRef, boolean createTree)
+    protected ITreeIndex createDiskTree(TreeIndexFactory diskTreeFactory, FileReference fileRef, boolean createTree)
             throws HyracksDataException {
         // Create new tree instance.
         ITreeIndex diskTree = diskTreeFactory.createIndexInstance(fileRef);
@@ -268,8 +268,9 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
         return memComponent.getRTree().getFileId();
     }
 
+    @Override
     public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
-            TreeIndexException {
+            IndexException {
         LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;
         if (ctx.getIndexOp() == IndexOp.PHYSICALDELETE) {
             throw new UnsupportedOperationException("Physical delete not yet supported in LSM R-tree");

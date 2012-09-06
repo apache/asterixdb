@@ -20,16 +20,16 @@ import java.util.ArrayList;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexMultiThreadTest;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
-import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestWorkerFactory;
+import edu.uci.ics.hyracks.storage.am.common.IIndexTestWorkerFactory;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import edu.uci.ics.hyracks.storage.am.common.TestWorkloadConf;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.datagen.ProbabilityHelper;
 
 public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
@@ -47,14 +47,14 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
     }
 
     @Override
-    protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
+    protected ITreeIndex createIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
             throws TreeIndexException {
         return BTreeUtils.createBTree(harness.getBufferCache(), harness.getFileMapProvider(), typeTraits, cmpFactories,
                 BTreeLeafFrameType.REGULAR_NSM, harness.getFileReference());
     }
 
     @Override
-    protected ITreeIndexTestWorkerFactory getWorkerFactory() {
+    protected IIndexTestWorkerFactory getWorkerFactory() {
         return workerFactory;
     }
 
@@ -64,31 +64,28 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };
-        workloadConfs.add(new TestWorkloadConf(insertOnlyOps, getUniformOpProbs(insertOnlyOps)));
+        workloadConfs.add(new TestWorkloadConf(insertOnlyOps, ProbabilityHelper
+                .getUniformProbDist(insertOnlyOps.length)));
 
         // Inserts mixed with point searches and scans.
         TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.POINT_SEARCH,
                 TestOperation.SCAN, TestOperation.DISKORDER_SCAN };
-        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, getUniformOpProbs(insertSearchOnlyOps)));
+        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, ProbabilityHelper
+                .getUniformProbDist(insertSearchOnlyOps.length)));
 
         // Inserts, updates, deletes, and upserts.        
         TestOperation[] insertDeleteUpdateUpsertOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
                 TestOperation.UPDATE, TestOperation.UPSERT };
-        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateUpsertOps,
-                getUniformOpProbs(insertDeleteUpdateUpsertOps)));
+        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateUpsertOps, ProbabilityHelper
+                .getUniformProbDist(insertDeleteUpdateUpsertOps.length)));
 
         // All operations mixed.
         TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
                 TestOperation.UPDATE, TestOperation.UPSERT, TestOperation.POINT_SEARCH, TestOperation.SCAN,
                 TestOperation.DISKORDER_SCAN };
-        workloadConfs.add(new TestWorkloadConf(allOps, getUniformOpProbs(allOps)));
+        workloadConfs.add(new TestWorkloadConf(allOps, ProbabilityHelper.getUniformProbDist(allOps.length)));
 
         return workloadConfs;
-    }
-
-    @Override
-    protected FileReference getFileReference() {
-        return harness.getFileReference();
     }
 
     @Override

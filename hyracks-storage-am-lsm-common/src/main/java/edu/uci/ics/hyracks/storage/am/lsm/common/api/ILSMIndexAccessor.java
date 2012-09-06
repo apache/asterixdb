@@ -20,7 +20,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeInProgressException;
 
 /**
  * Client handle for performing operations
@@ -33,7 +32,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
     public ILSMIOOperation createFlushOperation(ILSMIOOperationCallback callback);
 
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
-            LSMMergeInProgressException;
+           IndexException;
 
     /**
      * Force a flush of the in-memory component.

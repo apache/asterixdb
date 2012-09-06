@@ -55,7 +55,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDropOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexInsertUpdateDeleteOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
@@ -339,9 +339,8 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
 
     protected void destroyPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
-        TreeIndexDropOperatorDescriptor primaryDropOp = new TreeIndexDropOperatorDescriptor(spec, storageManager,
-                lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
-                btreeDataflowHelperFactory);
+        IndexDropOperatorDescriptor primaryDropOp = new IndexDropOperatorDescriptor(spec, storageManager,
+                lcManagerProvider, primarySplitProvider, btreeDataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryDropOp, NC1_ID);
         spec.addRoot(primaryDropOp);
         runTest(spec);
@@ -349,9 +348,8 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
 
     protected void destroySecondaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
-        TreeIndexDropOperatorDescriptor secondaryDropOp = new TreeIndexDropOperatorDescriptor(spec, storageManager,
-                lcManagerProvider, secondarySplitProvider, secondaryTypeTraits, secondaryComparatorFactories,
-                rtreeDataflowHelperFactory);
+        IndexDropOperatorDescriptor secondaryDropOp = new IndexDropOperatorDescriptor(spec, storageManager,
+                lcManagerProvider, secondarySplitProvider, rtreeDataflowHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryDropOp, NC1_ID);
         spec.addRoot(secondaryDropOp);
         runTest(spec);

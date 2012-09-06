@@ -106,7 +106,7 @@ public class LSMHarness implements ILSMHarness {
 
     public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Flushing LSM-Tree.");
+            LOGGER.info("Flushing LSM-Index: " + lsmIndex);
         }
         Object newComponent = lsmIndex.flush(operation);
 
@@ -153,8 +153,7 @@ public class LSMHarness implements ILSMHarness {
         return diskComponentSnapshot;
     }
 
-    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws LSMMergeInProgressException,
-            HyracksDataException {
+    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException {
         if (!isMerging.compareAndSet(false, true)) {
             throw new LSMMergeInProgressException(
                     "Merge already in progress. Only one merge process allowed at a time.");
@@ -169,7 +168,7 @@ public class LSMHarness implements ILSMHarness {
 
     public void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Merging LSM-Tree.");
+            LOGGER.info("Merging LSM-Index: " + lsmIndex);
         }
 
         // Point to the current searcher ref count, so we can wait for it later
@@ -237,7 +236,8 @@ public class LSMHarness implements ILSMHarness {
         searcherRefCount.decrementAndGet();
     }
 
-    public void addBulkLoadedComponent(Object index) throws HyracksDataException {
+    @Override
+    public void addBulkLoadedComponent(Object index) throws HyracksDataException, IndexException {
         // The implementation of this call must take any necessary steps to make
         // the new component permanent, and mark it as valid (usually this means
         // forcing all pages of the tree to disk, possibly with some extra

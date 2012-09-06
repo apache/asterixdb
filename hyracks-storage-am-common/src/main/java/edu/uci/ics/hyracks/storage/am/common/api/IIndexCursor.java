@@ -19,16 +19,16 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public interface IIndexCursor {
-    public void open(ICursorInitialState initialState,
-            ISearchPredicate searchPred) throws HyracksDataException;      
+    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws IndexException,
+            HyracksDataException;
 
-    public boolean hasNext() throws HyracksDataException;
+    public boolean hasNext() throws HyracksDataException, IndexException;
 
     public void next() throws HyracksDataException;
 
     public void close() throws HyracksDataException;
 
-    public void reset() throws HyracksDataException;
+    public void reset() throws HyracksDataException, IndexException;
 
     public ITupleReference getTuple();
 }

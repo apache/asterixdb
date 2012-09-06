@@ -19,10 +19,10 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.AbstractTreeIndexTestWorker;
+import edu.uci.ics.hyracks.storage.am.common.AbstractIndexTestWorker;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
@@ -34,14 +34,14 @@ import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTree;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTree.LSMRTreeAccessor;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
 
-public class LSMRTreeTestWorker extends AbstractTreeIndexTestWorker {
+public class LSMRTreeTestWorker extends AbstractIndexTestWorker {
 
     private final LSMRTree lsmRTree;
     private final int numFields;
     private final ArrayTupleBuilder rearrangedTb;
     private final ArrayTupleReference rearrangedTuple = new ArrayTupleReference();
 
-    public LSMRTreeTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, ITreeIndex index, int numBatches) {
+    public LSMRTreeTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index, int numBatches) {
         super(dataGen, opSelector, index, numBatches);
         lsmRTree = (LSMRTree) index;
         numFields = lsmRTree.getFieldCount();
@@ -122,7 +122,7 @@ public class LSMRTreeTestWorker extends AbstractTreeIndexTestWorker {
         rearrangedTuple.reset(rearrangedTb.getFieldEndOffsets(), rearrangedTb.getByteArray());
     }
 
-    private void consumeCursorTuples(ITreeIndexCursor cursor) throws HyracksDataException {
+    private void consumeCursorTuples(ITreeIndexCursor cursor) throws HyracksDataException, IndexException {
         try {
             while (cursor.hasNext()) {
                 cursor.next();

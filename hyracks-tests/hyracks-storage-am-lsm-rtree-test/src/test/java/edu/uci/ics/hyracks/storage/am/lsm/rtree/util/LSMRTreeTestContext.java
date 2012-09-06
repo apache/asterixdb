@@ -48,7 +48,7 @@ public final class LSMRTreeTestContext extends AbstractRTreeTestContext {
 
     @Override
     public int getKeyFieldCount() {
-        LSMRTree lsmTree = (LSMRTree) treeIndex;
+        LSMRTree lsmTree = (LSMRTree) index;
         return lsmTree.getComparatorFactories().length;
     }
 
@@ -63,7 +63,7 @@ public final class LSMRTreeTestContext extends AbstractRTreeTestContext {
 
     @Override
     public IBinaryComparatorFactory[] getComparatorFactories() {
-        LSMRTree lsmTree = (LSMRTree) treeIndex;
+        LSMRTree lsmTree = (LSMRTree) index;
         return lsmTree.getComparatorFactories();
     }
 

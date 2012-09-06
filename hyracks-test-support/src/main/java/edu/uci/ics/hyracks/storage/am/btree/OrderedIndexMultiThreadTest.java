@@ -26,15 +26,13 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
-import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestWorkerFactory;
-import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
+import edu.uci.ics.hyracks.storage.am.common.IIndexTestWorkerFactory;
+import edu.uci.ics.hyracks.storage.am.common.IndexMultiThreadTestDriver;
 import edu.uci.ics.hyracks.storage.am.common.TestWorkloadConf;
-import edu.uci.ics.hyracks.storage.am.common.TreeIndexMultiThreadTestDriver;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
 
@@ -55,24 +53,14 @@ public abstract class OrderedIndexMultiThreadTest {
 
     protected abstract void tearDown() throws HyracksDataException;
 
-    protected abstract ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
+    protected abstract IIndex createIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
             throws TreeIndexException;
 
-    protected abstract ITreeIndexTestWorkerFactory getWorkerFactory();
+    protected abstract IIndexTestWorkerFactory getWorkerFactory();
 
     protected abstract ArrayList<TestWorkloadConf> getTestWorkloadConf();
 
     protected abstract String getIndexTypeName();
-
-    protected abstract FileReference getFileReference();
-
-    protected static float[] getUniformOpProbs(TestOperation[] ops) {
-        float[] opProbs = new float[ops.length];
-        for (int i = 0; i < ops.length; i++) {
-            opProbs[i] = 1.0f / (float) ops.length;
-        }
-        return opProbs;
-    }
 
     protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, int numThreads, TestWorkloadConf conf,
             String dataMsg) throws InterruptedException, TreeIndexException, HyracksException {
@@ -87,15 +75,15 @@ public abstract class OrderedIndexMultiThreadTest {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeys);
 
-        ITreeIndex index = createTreeIndex(typeTraits, cmpFactories);
-        ITreeIndexTestWorkerFactory workerFactory = getWorkerFactory();
+        IIndex index = createIndex(typeTraits, cmpFactories);
+        IIndexTestWorkerFactory workerFactory = getWorkerFactory();
 
         // 4 batches per thread.
         int batchSize = (NUM_OPERATIONS / numThreads) / 4;
 
-        TreeIndexMultiThreadTestDriver driver = new TreeIndexMultiThreadTestDriver(index, workerFactory, fieldSerdes,
+        IndexMultiThreadTestDriver driver = new IndexMultiThreadTestDriver(index, workerFactory, fieldSerdes,
                 conf.ops, conf.opProbs);
-        driver.init(getFileReference());
+        driver.init();
         long[] times = driver.run(numThreads, 1, NUM_OPERATIONS, batchSize);
         index.validate();
         driver.deinit();

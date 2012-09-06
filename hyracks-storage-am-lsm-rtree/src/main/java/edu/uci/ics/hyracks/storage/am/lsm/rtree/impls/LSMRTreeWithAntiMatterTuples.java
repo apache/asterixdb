@@ -42,7 +42,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
@@ -54,7 +54,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMFlushOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree.RTreeBulkLoader;
@@ -70,12 +70,12 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     // On-disk components.
     // For creating RTree's used in bulk load. Different from diskRTreeFactory
     // because it should have a different tuple writer in it's leaf frames.
-    private final TreeFactory<RTree> bulkLoadRTreeFactory;
+    private final TreeIndexFactory<RTree> bulkLoadRTreeFactory;
 
     public LSMRTreeWithAntiMatterTuples(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
-            ILSMFileManager fileManager, TreeFactory<RTree> diskRTreeFactory, TreeFactory<RTree> bulkLoadRTreeFactory,
+            ILSMIndexFileManager fileManager, TreeIndexFactory<RTree> diskRTreeFactory, TreeIndexFactory<RTree> bulkLoadRTreeFactory,
             IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
             int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, ILSMFlushController flushController,
@@ -361,7 +361,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         }
 
         @Override
-        public void end() throws HyracksDataException {
+        public void end() throws HyracksDataException, IndexException {
             bulkLoader.end();
             lsmHarness.addBulkLoadedComponent(diskRTree);
         }

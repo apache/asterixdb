@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 
 public class IndexLifecycleManager implements IIndexLifecycleManager {

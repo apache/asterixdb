@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -25,22 +25,24 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilter;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 
 public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
     private final AbstractTreeIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
-    private final TreeIndexDataflowHelper treeIndexHelper;
-    private FrameTupleAccessor accessor;
+    private final IIndexDataflowHelper indexHelper;    
     private final IRecordDescriptorProvider recordDescProvider;
     private final IndexOp op;
     private final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
-    private FrameTupleReference frameTuple;
+    private FrameTupleAccessor accessor;
+    private FrameTupleReference frameTuple;    
     private ByteBuffer writeBuffer;
     private IIndexAccessor indexAccessor;
     private ITupleFilter tupleFilter;
@@ -51,8 +53,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
             IRecordDescriptorProvider recordDescProvider, IndexOp op) {
         this.opDesc = opDesc;
         this.ctx = ctx;
-        this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
-                .createIndexDataflowHelper(opDesc, ctx, partition);
+        this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
         this.recordDescProvider = recordDescProvider;
         this.op = op;
         tuple.setFieldPermutation(fieldPermutation);
@@ -64,19 +65,18 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         accessor = new FrameTupleAccessor(ctx.getFrameSize(), inputRecDesc);
         writeBuffer = ctx.allocateFrame();
         writer.open();
-        treeIndexHelper.open();
-        ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndexInstance();
+        indexHelper.open();
+        ITreeIndex treeIndex = (ITreeIndex) indexHelper.getIndexInstance();
         try {
-            modCallback = opDesc.getOpCallbackProvider().getModificationOperationCallback(
-                    treeIndexHelper.getResourceID());
+            modCallback = opDesc.getOpCallbackProvider().getModificationOperationCallback(indexHelper.getResourceID());
             indexAccessor = treeIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
             ITupleFilterFactory tupleFilterFactory = opDesc.getTupleFilterFactory();
             if (tupleFilterFactory != null) {
-                tupleFilter = tupleFilterFactory.createTupleFilter(treeIndexHelper.ctx);
+                tupleFilter = tupleFilterFactory.createTupleFilter(indexHelper.getTaskContext());
                 frameTuple = new FrameTupleReference();
             }
         } catch (Exception e) {
-            treeIndexHelper.close();
+            indexHelper.close();
             throw new HyracksDataException(e);
         }
     }
@@ -133,7 +133,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         try {
             writer.close();
         } finally {
-            treeIndexHelper.close();
+            indexHelper.close();
         }
 
     }

@@ -15,14 +15,11 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.PriorityQueue;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
@@ -32,7 +29,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeSearchCursor;
 
 public class LSMBTreeRangeSearchCursor extends LSMTreeSearchCursor {
@@ -40,7 +36,6 @@ public class LSMBTreeRangeSearchCursor extends LSMTreeSearchCursor {
     private final RangePredicate reusablePred;
 
     private ISearchOperationCallback searchCallback;
-    private PriorityQueueComparator pqCmp;
     private RangePredicate predicate;
     private IIndexAccessor memBTreeAccessor;
     private ArrayTupleBuilder tupleBuilder;
@@ -51,17 +46,8 @@ public class LSMBTreeRangeSearchCursor extends LSMTreeSearchCursor {
         this.reusablePred = new RangePredicate(null, null, true, true, null, null);
     }
 
-    public void initPriorityQueue() throws HyracksDataException {
-        int pqInitSize = (rangeCursors.length > 0) ? rangeCursors.length : 1;
-        outputPriorityQueue = new PriorityQueue<PriorityQueueElement>(pqInitSize, pqCmp);
-        for (int i = 0; i < rangeCursors.length; i++) {
-            pushIntoPriorityQueue(new PriorityQueueElement(i));
-        }
-        checkPriorityQueue();
-    }
-
     @Override
-    public boolean hasNext() throws HyracksDataException {
+    public boolean hasNext() throws HyracksDataException, IndexException {
         checkPriorityQueue();
         PriorityQueueElement pqHead = outputPriorityQueue.peek();
         if (pqHead == null) {
@@ -153,43 +139,5 @@ public class LSMBTreeRangeSearchCursor extends LSMTreeSearchCursor {
         reusablePred.setHighKey(predicate.getHighKey(), predicate.isHighKeyInclusive());
         reusablePred.setHighKeyComparator(predicate.getHighKeyComparator());
         setPriorityQueueComparator();
-    }
-
-    @Override
-    protected void setPriorityQueueComparator() {
-        if (pqCmp == null || cmp != pqCmp.getMultiComparator()) {
-            pqCmp = new PriorityQueueComparator(cmp);
-        }
-    }
-
-    public class PriorityQueueComparator implements Comparator<PriorityQueueElement> {
-
-        private final MultiComparator cmp;
-
-        public PriorityQueueComparator(MultiComparator cmp) {
-            this.cmp = cmp;
-        }
-
-        @Override
-        public int compare(PriorityQueueElement elementA, PriorityQueueElement elementB) {
-            int result = cmp.compare(elementA.getTuple(), elementB.getTuple());
-            if (result != 0) {
-                return result;
-            }
-            if (elementA.getCursorIndex() > elementB.getCursorIndex()) {
-                return 1;
-            } else {
-                return -1;
-            }
-        }
-
-        public MultiComparator getMultiComparator() {
-            return cmp;
-        }
-    }
-
-    @Override
-    protected int compare(MultiComparator cmp, ITupleReference tupleA, ITupleReference tupleB) {
-        return cmp.compare(tupleA, tupleB);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -20,29 +20,20 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.ITreeIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.dataflow.AbstractLSMIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
 
-public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
-    private static int DEFAULT_MEM_PAGE_SIZE = 32768;
-    private static int DEFAULT_MEM_NUM_PAGES = 1000;
-
-    private final int memPageSize;
-    private final int memNumPages;
-
-    private final ILSMFlushController flushController;
-    private final ILSMMergePolicy mergePolicy;
-    private final ILSMOperationTracker opTracker;
-    private final ILSMIOOperationScheduler ioScheduler;
+public class LSMBTreeDataflowHelper extends AbstractLSMIndexDataflowHelper {
 
     public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
@@ -54,17 +45,12 @@ public class LSMBTreeDataflowHelper extends TreeIndexDataflowHelper {
     public LSMBTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             int memPageSize, int memNumPages, ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler) {
-        super(opDesc, ctx, partition);
-        this.memPageSize = memPageSize;
-        this.memNumPages = memNumPages;
-        this.flushController = flushController;
-        this.mergePolicy = mergePolicy;
-        this.opTracker = opTracker;
-        this.ioScheduler = ioScheduler;
+        super(opDesc, ctx, partition, memPageSize, memNumPages, flushController, mergePolicy, opTracker, ioScheduler);
     }
 
     @Override
     public ITreeIndex createIndexInstance() throws HyracksDataException {
+        ITreeIndexOperatorDescriptor treeOpDesc = (ITreeIndexOperatorDescriptor) opDesc;
         ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
         InMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), memPageSize,
                 memNumPages, new TransientFileMapManager());
