@@ -37,8 +37,8 @@ public class LSMBTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
-        return new LSMBTreeDataflowHelper(opDesc, ctx, partition, flushControllerProvider.getFlushController(),
-                mergePolicyProvider.getMergePolicy(), opTrackerProvider.getOperationTracker(),
-                ioSchedulerProvider.getIOScheduler());
+        return new LSMBTreeDataflowHelper(opDesc, ctx, partition, flushControllerProvider.getFlushController(ctx),
+                mergePolicyProvider.getMergePolicy(ctx), opTrackerProvider.getOperationTracker(ctx),
+                ioSchedulerProvider.getIOScheduler(ctx));
     }
 }

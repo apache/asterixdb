@@ -1,5 +1,6 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyProvider;
@@ -18,8 +19,8 @@ public class ConstantMergePolicyProvider implements ILSMMergePolicyProvider {
     }
 
     @Override
-    public ILSMMergePolicy getMergePolicy() {
-        return new ConstantMergePolicy(schedulerProvider.getIOScheduler(), threshold);
+    public ILSMMergePolicy getMergePolicy(IHyracksTaskContext ctx) {
+        return new ConstantMergePolicy(schedulerProvider.getIOScheduler(ctx), threshold);
     }
 
 }

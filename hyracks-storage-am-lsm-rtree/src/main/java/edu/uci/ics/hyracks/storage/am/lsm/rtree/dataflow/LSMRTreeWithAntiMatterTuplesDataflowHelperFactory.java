@@ -56,8 +56,8 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelperFactory implements IIndex
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
         return new LSMRTreeWithAntiMatterTuplesDataflowHelper(opDesc, ctx, partition, btreeComparatorFactories,
-                valueProviderFactories, rtreePolicyType, flushControllerProvider.getFlushController(),
-                mergePolicyProvider.getMergePolicy(), opTrackerProvider.getOperationTracker(),
-                ioSchedulerProvider.getIOScheduler());
+                valueProviderFactories, rtreePolicyType, flushControllerProvider.getFlushController(ctx),
+                mergePolicyProvider.getMergePolicy(ctx), opTrackerProvider.getOperationTracker(ctx),
+                ioSchedulerProvider.getIOScheduler(ctx));
     }
 }

@@ -49,7 +49,7 @@ public class LSMRTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
         return new LSMRTreeDataflowHelper(opDesc, ctx, partition, btreeComparatorFactories, valueProviderFactories,
-                rtreePolicyType, flushControllerProvider.getFlushController(), mergePolicyProvider.getMergePolicy(),
-                opTrackerProvider.getOperationTracker(), ioSchedulerProvider.getIOScheduler());
+                rtreePolicyType, flushControllerProvider.getFlushController(ctx), mergePolicyProvider.getMergePolicy(ctx),
+                opTrackerProvider.getOperationTracker(ctx), ioSchedulerProvider.getIOScheduler(ctx));
     }
 }
