@@ -25,8 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
-public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractIndexOperatorDescriptor implements
-        ITreeIndexOperatorDescriptor {
+public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractIndexOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
 
@@ -45,12 +44,10 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractIndexO
         this.comparatorFactories = comparatorFactories;
     }
 
-    @Override
     public IBinaryComparatorFactory[] getTreeIndexComparatorFactories() {
         return comparatorFactories;
     }
 
-    @Override
     public ITypeTraits[] getTreeIndexTypeTraits() {
         return typeTraits;
     }
