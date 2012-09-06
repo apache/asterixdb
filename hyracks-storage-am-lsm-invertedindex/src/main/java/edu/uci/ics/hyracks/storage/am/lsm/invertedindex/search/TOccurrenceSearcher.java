@@ -499,7 +499,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         return new FixedSizeFrameTupleAccessor(ctx.getFrameSize(), invListFieldsWithCount);
     }
 
-    public ITupleReference createResultTupleReference() {
+    public ITupleReference createResultFrameTupleReference() {
         return new FixedSizeTupleReference(invListFieldsWithCount);
     }
 

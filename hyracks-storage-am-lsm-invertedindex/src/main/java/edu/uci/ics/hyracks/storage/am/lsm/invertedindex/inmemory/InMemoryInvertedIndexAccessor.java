@@ -47,7 +47,6 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
         this.opCtx = opCtx;
         this.index = index;
         this.searcher = new TOccurrenceSearcher(hyracksCtx, index);
-        // TODO: Ignore opcallbacks for now.
         this.btreeAccessor = (BTreeAccessor) index.getBTree().createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
     }
@@ -66,7 +65,7 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
     
     @Override
     public IIndexCursor createSearchCursor() {
-        return new OnDiskInvertedIndexSearchCursor(searcher);
+        return new OnDiskInvertedIndexSearchCursor(searcher, index.getInvListTypeTraits().length);
     }
 
     @Override

@@ -24,33 +24,32 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilter;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 
-public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
-    private final AbstractTreeIndexOperatorDescriptor opDesc;
+public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
+    private final IIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
-    private final IIndexDataflowHelper indexHelper;    
+    private final IIndexDataflowHelper indexHelper;
     private final IRecordDescriptorProvider recordDescProvider;
     private final IndexOp op;
     private final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
     private FrameTupleAccessor accessor;
-    private FrameTupleReference frameTuple;    
+    private FrameTupleReference frameTuple;
     private ByteBuffer writeBuffer;
     private IIndexAccessor indexAccessor;
     private ITupleFilter tupleFilter;
     private IModificationOperationCallback modCallback;
 
-    public TreeIndexInsertUpdateDeleteOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
-            IHyracksTaskContext ctx, int partition, int[] fieldPermutation,
-            IRecordDescriptorProvider recordDescProvider, IndexOp op) {
+    public IndexInsertUpdateDeleteOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
+            int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, IndexOp op) {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
@@ -66,10 +65,10 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         writeBuffer = ctx.allocateFrame();
         writer.open();
         indexHelper.open();
-        ITreeIndex treeIndex = (ITreeIndex) indexHelper.getIndexInstance();
+        IIndex index = indexHelper.getIndexInstance();
         try {
             modCallback = opDesc.getOpCallbackProvider().getModificationOperationCallback(indexHelper.getResourceID());
-            indexAccessor = treeIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
+            indexAccessor = index.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
             ITupleFilterFactory tupleFilterFactory = opDesc.getTupleFilterFactory();
             if (tupleFilterFactory != null) {
                 tupleFilter = tupleFilterFactory.createTupleFilter(indexHelper.getTaskContext());
@@ -135,7 +134,6 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         } finally {
             indexHelper.close();
         }
-
     }
 
     @Override

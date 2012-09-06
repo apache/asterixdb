@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
+import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
 
 public class OnDiskInvertedIndexSearchCursor implements IIndexCursor {
@@ -34,12 +35,19 @@ public class OnDiskInvertedIndexSearchCursor implements IIndexCursor {
     private int tupleIndex = 0;
     private final IInvertedIndexSearcher invIndexSearcher;
     private final IFrameTupleAccessor fta;
-    private final FixedSizeTupleReference resultTuple;
+    private final FixedSizeTupleReference frameTuple;
+    private final PermutingTupleReference resultTuple;
     
-    public OnDiskInvertedIndexSearchCursor(IInvertedIndexSearcher invIndexSearcher) {
+    public OnDiskInvertedIndexSearchCursor(IInvertedIndexSearcher invIndexSearcher, int numInvListFields) {
         this.invIndexSearcher = invIndexSearcher;
         this.fta = invIndexSearcher.createResultFrameTupleAccessor();
-        this.resultTuple = (FixedSizeTupleReference) invIndexSearcher.createResultTupleReference();
+        this.frameTuple = (FixedSizeTupleReference) invIndexSearcher.createResultFrameTupleReference();
+        // Project away the occurrence count from the result tuples.
+        int[] fieldPermutation = new int[numInvListFields];
+        for (int i = 0; i < numInvListFields; i++) {
+            fieldPermutation[i] = i;
+        }
+        resultTuple = new PermutingTupleReference(fieldPermutation);
     }
 
     @Override
@@ -64,7 +72,8 @@ public class OnDiskInvertedIndexSearchCursor implements IIndexCursor {
 
     @Override
     public void next() {
-        resultTuple.reset(fta.getBuffer().array(), fta.getTupleStartOffset(tupleIndex));
+        frameTuple.reset(fta.getBuffer().array(), fta.getTupleStartOffset(tupleIndex));
+        resultTuple.reset(frameTuple);
         tupleIndex++;
         if (tupleIndex >= fta.getTupleCount()) {
             if (currentBufferIndex + 1 < numResultBuffers) {
@@ -72,7 +81,7 @@ public class OnDiskInvertedIndexSearchCursor implements IIndexCursor {
                 fta.reset(resultBuffers.get(currentBufferIndex));
                 tupleIndex = 0;
             }
-        }
+        }        
     }
 
     @Override

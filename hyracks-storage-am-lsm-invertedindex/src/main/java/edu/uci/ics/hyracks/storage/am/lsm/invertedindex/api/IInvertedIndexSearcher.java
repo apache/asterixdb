@@ -32,7 +32,7 @@ public interface IInvertedIndexSearcher {
 
     public IFrameTupleAccessor createResultFrameTupleAccessor();
 
-    public ITupleReference createResultTupleReference();
+    public ITupleReference createResultFrameTupleReference();
 
     public List<ByteBuffer> getResultBuffers();
 

@@ -28,17 +28,16 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 
-public abstract class TreeIndexSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
-    protected final AbstractTreeIndexOperatorDescriptor opDesc;
+public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
+    protected final IIndexOperatorDescriptor opDesc;
     protected final IHyracksTaskContext ctx;
     protected final IIndexDataflowHelper indexHelper;
     protected FrameTupleAccessor accessor;
@@ -48,18 +47,17 @@ public abstract class TreeIndexSearchOperatorNodePushable extends AbstractUnaryI
     protected ArrayTupleBuilder tb;
     protected DataOutput dos;
 
-    protected ITreeIndex treeIndex;
+    protected IIndex index;
     protected ISearchPredicate searchPred;
     protected IIndexCursor cursor;
-    protected ITreeIndexFrame cursorFrame;
     protected IIndexAccessor indexAccessor;
 
     protected final RecordDescriptor inputRecDesc;
     protected final boolean retainInput;
     protected FrameTupleReference frameTuple;
 
-    public TreeIndexSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, IRecordDescriptorProvider recordDescProvider) {
+    public IndexSearchOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
+            IRecordDescriptorProvider recordDescProvider) {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
@@ -80,9 +78,8 @@ public abstract class TreeIndexSearchOperatorNodePushable extends AbstractUnaryI
         accessor = new FrameTupleAccessor(ctx.getFrameSize(), inputRecDesc);
         writer.open();
         indexHelper.open();
-        treeIndex = (ITreeIndex) indexHelper.getIndexInstance();
+        index = indexHelper.getIndexInstance();
         try {
-            cursorFrame = treeIndex.getLeafFrameFactory().createFrame();
             searchPred = createSearchPredicate();
             writeBuffer = ctx.allocateFrame();
             tb = new ArrayTupleBuilder(recordDesc.getFieldCount());
@@ -91,7 +88,7 @@ public abstract class TreeIndexSearchOperatorNodePushable extends AbstractUnaryI
             appender.reset(writeBuffer, true);
             ISearchOperationCallback searchCallback = opDesc.getOpCallbackProvider().getSearchOperationCallback(
                     indexHelper.getResourceID());
-            indexAccessor = treeIndex.createAccessor(NoOpOperationCallback.INSTANCE, searchCallback);
+            indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE, searchCallback);
             cursor = createCursor();
             if (retainInput) {
                 frameTuple = new FrameTupleReference();

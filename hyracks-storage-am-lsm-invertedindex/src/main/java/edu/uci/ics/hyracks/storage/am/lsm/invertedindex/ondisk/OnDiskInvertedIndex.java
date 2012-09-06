@@ -459,7 +459,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
 
         @Override
         public IIndexCursor createSearchCursor() {
-            return new OnDiskInvertedIndexSearchCursor(searcher);
+            return new OnDiskInvertedIndexSearchCursor(searcher, index.getInvListTypeTraits().length);
         }
 
         @Override

@@ -19,14 +19,15 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexSearchOperatorNodePushable;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexSearchOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 
-public class RTreeSearchOperatorNodePushable extends TreeIndexSearchOperatorNodePushable {
+public class RTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePushable {
     protected PermutingFrameTupleReference searchKey;
     protected MultiComparator cmp;
 
@@ -42,6 +43,7 @@ public class RTreeSearchOperatorNodePushable extends TreeIndexSearchOperatorNode
 
     @Override
     protected ISearchPredicate createSearchPredicate() {
+        ITreeIndex treeIndex = (ITreeIndex) index;
         cmp = RTreeUtils.getSearchMultiComparator(treeIndex.getComparatorFactories(), searchKey);
         return new SearchPredicate(searchKey, cmp);
     }
