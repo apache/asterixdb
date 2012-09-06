@@ -79,9 +79,7 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
         searchModifiers.add(new ConjunctiveSearchModifier());
         searchModifiers.add(new JaccardSearchModifier(1.0f));
         searchModifiers.add(new JaccardSearchModifier(0.9f));
-        searchModifiers.add(new JaccardSearchModifier(0.8f));
         searchModifiers.add(new JaccardSearchModifier(0.7f));
-        searchModifiers.add(new JaccardSearchModifier(0.6f));
         searchModifiers.add(new JaccardSearchModifier(0.5f));
         runTest(testCtx, tupleGen, searchModifiers);
     }
@@ -92,9 +90,7 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
         searchModifiers.add(new ConjunctiveSearchModifier());
         searchModifiers.add(new JaccardSearchModifier(1.0f));
         searchModifiers.add(new JaccardSearchModifier(0.9f));
-        searchModifiers.add(new JaccardSearchModifier(0.8f));
         searchModifiers.add(new JaccardSearchModifier(0.7f));
-        searchModifiers.add(new JaccardSearchModifier(0.6f));
         searchModifiers.add(new JaccardSearchModifier(0.5f));
         searchModifiers.add(new EditDistanceSearchModifier(LSMInvertedIndexTestUtils.TEST_GRAM_LENGTH, 0));
         searchModifiers.add(new EditDistanceSearchModifier(LSMInvertedIndexTestUtils.TEST_GRAM_LENGTH, 1));
