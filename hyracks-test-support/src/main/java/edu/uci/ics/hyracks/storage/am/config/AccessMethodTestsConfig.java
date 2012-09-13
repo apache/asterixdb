@@ -23,7 +23,7 @@ public class AccessMethodTestsConfig {
     public static final int RTREE_NUM_TUPLES_TO_INSERT = 100;
     public static final int RTREE_NUM_INSERT_ROUNDS = 2;
     public static final int RTREE_NUM_DELETE_ROUNDS = 2;
-    public static final int RTREE_MULTITHREAD_NUM_OPERATIONS = 100;
+    public static final int RTREE_MULTITHREAD_NUM_OPERATIONS = 200;
     public static final boolean RTREE_TEST_RSTAR_POLICY = true;
     // Test params for LSMRTree and LSMRTreeWithAntiMatterTuples.
     public static final int LSM_RTREE_BULKLOAD_ROUNDS = 5;
@@ -35,7 +35,7 @@ public class AccessMethodTestsConfig {
     public static final int BTREE_NUM_INSERT_ROUNDS = 3;
     public static final int BTREE_NUM_DELETE_ROUNDS = 3;
     public static final int BTREE_NUM_UPDATE_ROUNDS = 3;
-    public static final int BTREE_MULTITHREAD_NUM_OPERATIONS = 100;
+    public static final int BTREE_MULTITHREAD_NUM_OPERATIONS = 200;
     // Test params for LSMBTree only.
     public static final int LSM_BTREE_BULKLOAD_ROUNDS = 5;
     public static final int LSM_BTREE_MAX_TREES_TO_MERGE = 10;
@@ -89,7 +89,7 @@ public class AccessMethodTestsConfig {
     public static final int LSM_INVINDEX_NUM_DELETE_ROUNDS = 3;
     // Allocate a generous size to make sure we have enough elements for all tests.
     public static final int LSM_INVINDEX_SCAN_COUNT_ARRAY_SIZE = 1000000;
-    public static final int LSM_INVINDEX_MULTITHREAD_NUM_OPERATIONS = 100;
+    public static final int LSM_INVINDEX_MULTITHREAD_NUM_OPERATIONS = 200;
     
 }
 
