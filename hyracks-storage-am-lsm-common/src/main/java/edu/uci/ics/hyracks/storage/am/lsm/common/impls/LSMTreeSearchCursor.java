@@ -99,14 +99,16 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
 
     @Override
     public void close() throws HyracksDataException {
-        try {
-            outputPriorityQueue.clear();
-            for (int i = 0; i < rangeCursors.length; i++) {
-                rangeCursors[i].close();
+        if (lsmHarness != null) {
+            try {
+                outputPriorityQueue.clear();
+                for (int i = 0; i < rangeCursors.length; i++) {
+                    rangeCursors[i].close();
+                }
+                rangeCursors = null;
+            } finally {
+                lsmHarness.closeSearchCursor(searcherRefCount, includeMemComponent);
             }
-            rangeCursors = null;
-        } finally {
-            lsmHarness.closeSearchCursor(searcherRefCount, includeMemComponent);
         }
     }
 
@@ -140,7 +142,7 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
     protected boolean isDeleted(PriorityQueueElement checkElement) throws HyracksDataException, IndexException {
         return ((ILSMTreeTupleReference) checkElement.getTuple()).isAntimatter();
     }
-    
+
     protected void checkPriorityQueue() throws HyracksDataException, IndexException {
         while (!outputPriorityQueue.isEmpty() || needPush == true) {
             if (!outputPriorityQueue.isEmpty()) {
