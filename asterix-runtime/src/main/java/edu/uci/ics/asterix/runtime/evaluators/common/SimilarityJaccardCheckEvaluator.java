@@ -68,18 +68,18 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
             BinaryEntry entry = hashMap.get(keyEntry);
             if (entry != null) {
                 // Increment second value.
-                int firstValInt = IntegerPointable.getInteger(buf, 0);
+                int firstValInt = IntegerPointable.getInteger(entry.buf, entry.off);
                 // Irrelevant for the intersection size.
                 if (firstValInt == 0) {
                     continue;
                 }
-                int secondValInt = IntegerPointable.getInteger(buf, 4);
+                int secondValInt = IntegerPointable.getInteger(entry.buf, entry.off + 4);
                 // Subtract old min value.
                 intersectionSize -= (firstValInt < secondValInt) ? firstValInt : secondValInt;
                 secondValInt++;
                 // Add new min value.
                 intersectionSize += (firstValInt < secondValInt) ? firstValInt : secondValInt;
-                IntegerPointable.setInteger(entry.buf, 0, secondValInt);            
+                IntegerPointable.setInteger(entry.buf, entry.off + 4, secondValInt);
             } else {
                 // Could not find element in other set. Increase min union size by 1.
                 minUnionSize++;
