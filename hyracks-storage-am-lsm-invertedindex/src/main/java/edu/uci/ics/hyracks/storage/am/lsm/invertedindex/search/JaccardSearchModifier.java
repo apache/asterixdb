@@ -27,7 +27,7 @@ public class JaccardSearchModifier implements IInvertedIndexSearchModifier {
 
     @Override
     public int getOccurrenceThreshold(int numQueryTokens) {
-        return (int) Math.floor((float) numQueryTokens * jaccThresh);
+        return Math.max((int) Math.floor((float) numQueryTokens * jaccThresh), 1);
     }
 
     @Override
@@ -45,7 +45,7 @@ public class JaccardSearchModifier implements IInvertedIndexSearchModifier {
     public void setJaccThresh(float jaccThresh) {
         this.jaccThresh = jaccThresh;
     }
-    
+
     @Override
     public String toString() {
         return "Jaccard Search Modifier, Threshold: " + jaccThresh;
