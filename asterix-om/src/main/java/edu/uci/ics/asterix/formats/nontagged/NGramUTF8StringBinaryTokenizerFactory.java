@@ -19,30 +19,29 @@
 
 package edu.uci.ics.asterix.formats.nontagged;
 
-import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
-import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizerFactory;
-import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.ITokenFactory;
-import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.NGramUTF8StringBinaryTokenizer;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.ITokenFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.NGramUTF8StringBinaryTokenizer;
 
 // TODO: Should be moved into Hyracks with the rest of the tokenizer code.
-public class NGramUTF8StringBinaryTokenizerFactory implements
-		IBinaryTokenizerFactory {
+public class NGramUTF8StringBinaryTokenizerFactory implements IBinaryTokenizerFactory {
 
-	private static final long serialVersionUID = 1L;
-	private final int gramLength;
-	private final boolean usePrePost;
-	private final boolean ignoreTokenCount;
-	private final boolean sourceHasTypeTag;
-	private final ITokenFactory tokenFactory;
+    private static final long serialVersionUID = 1L;
+    private final int gramLength;
+    private final boolean usePrePost;
+    private final boolean ignoreTokenCount;
+    private final boolean sourceHasTypeTag;
+    private final ITokenFactory tokenFactory;
 
-	public NGramUTF8StringBinaryTokenizerFactory(int gramLength, boolean usePrePost, boolean ignoreTokenCount,
-			boolean sourceHasTypeTag, ITokenFactory tokenFactory) {
-		this.gramLength = gramLength;
-		this.usePrePost = usePrePost;
-	    this.ignoreTokenCount = ignoreTokenCount;
-		this.sourceHasTypeTag = sourceHasTypeTag;
-		this.tokenFactory = tokenFactory;
-	}
+    public NGramUTF8StringBinaryTokenizerFactory(int gramLength, boolean usePrePost, boolean ignoreTokenCount,
+            boolean sourceHasTypeTag, ITokenFactory tokenFactory) {
+        this.gramLength = gramLength;
+        this.usePrePost = usePrePost;
+        this.ignoreTokenCount = ignoreTokenCount;
+        this.sourceHasTypeTag = sourceHasTypeTag;
+        this.tokenFactory = tokenFactory;
+    }
 
     @Override
     public IBinaryTokenizer createTokenizer() {

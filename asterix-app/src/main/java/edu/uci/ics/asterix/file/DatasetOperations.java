@@ -23,8 +23,7 @@ import edu.uci.ics.asterix.aql.translator.DdlTranslator.CompiledDatasetDropState
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.config.OptimizationConfUtil;
-import edu.uci.ics.asterix.common.context.AsterixIndexLifecycleManagerProvider;
-import edu.uci.ics.asterix.common.context.AsterixStorageManagerInterface;
+import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
@@ -67,18 +66,16 @@ import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDropOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
-import edu.uci.ics.hyracks.storage.am.invertedindex.dataflow.InvertedIndexDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.dataflow.LSMRTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
-import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public class DatasetOperations {
 
@@ -95,9 +92,6 @@ public class DatasetOperations {
         String datasetPath = metadata.getRelativePath(datasetName);
 
         LOGGER.info("DROP DATASETPATH: " + datasetPath);
-
-        IIndexLifecycleManagerProvider indexLifecycleManagerProvider = AsterixIndexLifecycleManagerProvider.INSTANCE;
-        IStorageManagerInterface storageManager = AsterixStorageManagerInterface.INSTANCE;
 
         Dataset dataset = metadata.findDataset(datasetName);
         if (dataset == null) {
@@ -128,22 +122,33 @@ public class DatasetOperations {
                     IIndexDataflowHelperFactory dfhFactory;
                     switch (index.getIndexType()) {
                         case BTREE:
-                            dfhFactory = new BTreeDataflowHelperFactory();
+                            dfhFactory = new LSMBTreeDataflowHelperFactory(AsterixRuntimeComponentsProvider.INSTANCE,
+                                    AsterixRuntimeComponentsProvider.INSTANCE,
+                                    AsterixRuntimeComponentsProvider.INSTANCE,
+                                    AsterixRuntimeComponentsProvider.INSTANCE);
                             break;
                         case RTREE:
-                            dfhFactory = new RTreeDataflowHelperFactory(new IPrimitiveValueProviderFactory[] { null },
-                                    RTreePolicyType.RTREE);
+                            dfhFactory = new LSMRTreeDataflowHelperFactory(
+                                    new IPrimitiveValueProviderFactory[] { null }, RTreePolicyType.RTREE,
+                                    new IBinaryComparatorFactory[] { null }, AsterixRuntimeComponentsProvider.INSTANCE,
+                                    AsterixRuntimeComponentsProvider.INSTANCE,
+                                    AsterixRuntimeComponentsProvider.INSTANCE,
+                                    AsterixRuntimeComponentsProvider.INSTANCE);
                             break;
                         case NGRAM_INVIX:
                         case WORD_INVIX:
-                            dfhFactory = new InvertedIndexDataflowHelperFactory();
+                            dfhFactory = new LSMInvertedIndexDataflowHelperFactory(
+                                    AsterixRuntimeComponentsProvider.INSTANCE,
+                                    AsterixRuntimeComponentsProvider.INSTANCE,
+                                    AsterixRuntimeComponentsProvider.INSTANCE,
+                                    AsterixRuntimeComponentsProvider.INSTANCE);
                             break;
                         default:
                             throw new AsterixException("Unknown index type provided.");
                     }
-                    TreeIndexDropOperatorDescriptor secondaryBtreeDrop = new TreeIndexDropOperatorDescriptor(specs[i],
-                            storageManager, indexLifecycleManagerProvider, idxSplitsAndConstraint.first,
-                            new ITypeTraits[] { null }, new IBinaryComparatorFactory[] { null }, dfhFactory);
+                    IndexDropOperatorDescriptor secondaryBtreeDrop = new IndexDropOperatorDescriptor(specs[i],
+                            AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
+                            idxSplitsAndConstraint.first, dfhFactory);
                     AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specs[i], secondaryBtreeDrop,
                             idxSplitsAndConstraint.second);
                     i++;
@@ -157,9 +162,11 @@ public class DatasetOperations {
 
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, datasetName);
-        TreeIndexDropOperatorDescriptor primaryBtreeDrop = new TreeIndexDropOperatorDescriptor(specPrimary,
-                storageManager, indexLifecycleManagerProvider, splitsAndConstraint.first, new ITypeTraits[] { null },
-                new IBinaryComparatorFactory[] { null }, new BTreeDataflowHelperFactory());
+        IndexDropOperatorDescriptor primaryBtreeDrop = new IndexDropOperatorDescriptor(specPrimary,
+                AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
+                splitsAndConstraint.first, new LSMBTreeDataflowHelperFactory(AsterixRuntimeComponentsProvider.INSTANCE,
+                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
+                        AsterixRuntimeComponentsProvider.INSTANCE));
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specPrimary, primaryBtreeDrop,
                 splitsAndConstraint.second);
 
@@ -187,11 +194,11 @@ public class DatasetOperations {
             sb.append(stringOf(fs[i]) + " ");
         }
         LOGGER.info("CREATING File Splits: " + sb.toString());
-        IIndexLifecycleManagerProvider indexLifecycleManagerProvider = AsterixIndexLifecycleManagerProvider.INSTANCE;
-        IStorageManagerInterface storageManager = AsterixStorageManagerInterface.INSTANCE;
-        TreeIndexCreateOperatorDescriptor indexCreateOp = new TreeIndexCreateOperatorDescriptor(spec, storageManager,
-                indexLifecycleManagerProvider, splitsAndConstraint.first, typeTraits, comparatorFactories,
-                new BTreeDataflowHelperFactory(), NoOpOperationCallbackProvider.INSTANCE);
+        TreeIndexCreateOperatorDescriptor indexCreateOp = new TreeIndexCreateOperatorDescriptor(spec,
+                AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
+                splitsAndConstraint.first, typeTraits, comparatorFactories, new LSMBTreeDataflowHelperFactory(
+                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
+                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE));
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp,
                 splitsAndConstraint.second);
         spec.addRoot(indexCreateOp);
@@ -260,12 +267,13 @@ public class DatasetOperations {
         }
         LOGGER.info("LOAD into File Splits: " + sb.toString());
 
-        IIndexLifecycleManagerProvider indexLifecycleManagerProvider = AsterixIndexLifecycleManagerProvider.INSTANCE;
-        IStorageManagerInterface storageManager = AsterixStorageManagerInterface.INSTANCE;
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManager, indexLifecycleManagerProvider, splitsAndConstraint.first, typeTraits,
-                comparatorFactories, fieldPermutation, GlobalConfig.DEFAULT_BTREE_FILL_FACTOR, false,
-                new BTreeDataflowHelperFactory(), NoOpOperationCallbackProvider.INSTANCE);
+                AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
+                splitsAndConstraint.first, typeTraits, comparatorFactories, fieldPermutation,
+                GlobalConfig.DEFAULT_BTREE_FILL_FACTOR, false, new LSMBTreeDataflowHelperFactory(
+                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
+                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE),
+                NoOpOperationCallbackProvider.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeBulkLoad,
                 splitsAndConstraint.second);
 

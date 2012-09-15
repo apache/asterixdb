@@ -63,19 +63,17 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTreeRangeSearchCursor;
 
 public class MetadataNode implements IMetadataNode {
     private static final long serialVersionUID = 1L;
@@ -252,9 +250,9 @@ public class MetadataNode implements IMetadataNode {
 
     private void insertTupleIntoIndex(long txnId, IMetadataIndex index, ITupleReference tuple) throws Exception {
         long resourceID = index.getResourceID();
-        BTree btree = (BTree) indexLifecycleManager.getIndex(resourceID);
+        IIndex indexInstance = indexLifecycleManager.getIndex(resourceID);
         indexLifecycleManager.open(resourceID);
-        ITreeIndexAccessor indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE,
+        IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
         TransactionContext txnCtx = transactionProvider.getTransactionManager().getTransactionContext(txnId);
         transactionProvider.getLockManager().lock(txnCtx, index.getResourceId(), LockMode.EXCLUSIVE);
@@ -499,9 +497,9 @@ public class MetadataNode implements IMetadataNode {
 
     private void deleteTupleFromIndex(long txnId, IMetadataIndex index, ITupleReference tuple) throws Exception {
         long resourceID = index.getResourceID();
-        BTree btree = (BTree) indexLifecycleManager.getIndex(resourceID);
+        IIndex indexInstance = indexLifecycleManager.getIndex(resourceID);
         indexLifecycleManager.open(resourceID);
-        ITreeIndexAccessor indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE,
+        IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
         TransactionContext txnCtx = transactionProvider.getTransactionManager().getTransactionContext(txnId);
         // This lock is actually an upgrade, because a deletion must be preceded
@@ -773,12 +771,11 @@ public class MetadataNode implements IMetadataNode {
         transactionProvider.getLockManager().lock(txnCtx, index.getResourceId(), LockMode.SHARED);
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
         long resourceID = index.getResourceID();
-        BTree btree = (BTree) indexLifecycleManager.getIndex(resourceID);
+        IIndex indexInstance = indexLifecycleManager.getIndex(resourceID);
         indexLifecycleManager.open(resourceID);
-        ITreeIndexFrame leafFrame = btree.getLeafFrameFactory().createFrame();
-        ITreeIndexAccessor indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE,
+        IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
-        ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) leafFrame, false);
+        ITreeIndexCursor rangeCursor = new LSMBTreeRangeSearchCursor();
         IBinaryComparator[] searchCmps = new IBinaryComparator[searchKey.getFieldCount()];
         for (int i = 0; i < searchKey.getFieldCount(); i++) {
             searchCmps[i] = comparatorFactories[i].createBinaryComparator();

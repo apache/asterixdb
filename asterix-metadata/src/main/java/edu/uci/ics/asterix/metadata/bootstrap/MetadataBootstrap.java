@@ -53,20 +53,19 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
+import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
 
 /**
  * Initializes the remote metadata storage facilities ("universe") using a
@@ -78,6 +77,12 @@ import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
  * stopUniverse() should be called upon application undeployment.
  */
 public class MetadataBootstrap {
+    private static final Logger LOGGER = Logger.getLogger(MetadataBootstrap.class.getName());
+    private static final int DEFAULT_MEM_PAGE_SIZE = 32768;
+    private static final int DEFAULT_MEM_NUM_PAGES = 100;
+
+    private static AsterixAppRuntimeContext runtimeContext;
+
     private static IBufferCache bufferCache;
     private static IFileMapProvider fileMapProvider;
     private static IIndexLifecycleManager indexLifecycleManager;
@@ -88,8 +93,6 @@ public class MetadataBootstrap {
     private static String metadataStore;
     private static HashSet<String> nodeNames;
     private static String outputDir;
-
-    private static final Logger LOGGER = Logger.getLogger(MetadataBootstrap.class.getName());
 
     private static IMetadataIndex[] primaryIndexes;
     private static IMetadataIndex[] secondaryIndexes;
@@ -106,8 +109,7 @@ public class MetadataBootstrap {
 
     public static void startUniverse(AsterixProperties asterixProperties, INCApplicationContext ncApplicationContext)
             throws Exception {
-        AsterixAppRuntimeContext runtimeContext = (AsterixAppRuntimeContext) ncApplicationContext
-                .getApplicationObject();
+        runtimeContext = (AsterixAppRuntimeContext) ncApplicationContext.getApplicationObject();
 
         // Initialize static metadata objects, such as record types and metadata
         // index descriptors.
@@ -140,14 +142,6 @@ public class MetadataBootstrap {
         bufferCache = runtimeContext.getBufferCache();
         fileMapProvider = runtimeContext.getFileMapManager();
         ioManager = ncApplicationContext.getRootContext().getIOManager();
-
-        //        // Create fileRefs to all BTree files and open them in BufferCache.
-        //        for (int i = 0; i < primaryIndexes.length; i++) {
-        //            openIndexFile(primaryIndexes[i]);
-        //        }
-        //        for (int i = 0; i < secondaryIndexes.length; i++) {
-        //            openIndexFile(secondaryIndexes[i]);
-        //        }
 
         // Begin a transaction against the metadata.
         // Lock the metadata in X mode.
@@ -291,25 +285,27 @@ public class MetadataBootstrap {
     public static void enlistMetadataDataset(IMetadataIndex index, boolean create) throws Exception {
         String filePath = metadataStore + index.getFileNameRelativePath();
         FileReference file = new FileReference(new File(filePath));
+        InMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), DEFAULT_MEM_PAGE_SIZE,
+                DEFAULT_MEM_NUM_PAGES, new TransientFileMapManager());
         ITypeTraits[] typeTraits = index.getTypeTraits();
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
-        TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
-        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
-        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
-        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaDataFrameFactory);
-        BTree btree = new BTree(bufferCache, fileMapProvider, freePageManager, interiorFrameFactory, leafFrameFactory,
-                comparatorFactories, typeTraits.length, file);
+        InMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(DEFAULT_MEM_NUM_PAGES,
+                metaDataFrameFactory);
+        LSMBTree lsmBtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file,
+                bufferCache, fileMapProvider, typeTraits, comparatorFactories, runtimeContext.getFlushController(),
+                runtimeContext.getLSMMergePolicy(), runtimeContext.getLSMOperationTracker(),
+                runtimeContext.getLSMIOScheduler());
         long resourceID = -1;
         if (create) {
-            btree.create();
+            lsmBtree.create();
             resourceID = indexArtifactMap.create(file.getFile().getPath(), ioManager.getIODevices());
         } else {
             resourceID = indexArtifactMap.get(file.getFile().getPath());
         }
         index.setResourceID(resourceID);
         index.setFile(file);
-        indexLifecycleManager.register(resourceID, btree);
+        indexLifecycleManager.register(resourceID, lsmBtree);
         indexLifecycleManager.open(resourceID);
     }
 

@@ -3,8 +3,7 @@ package edu.uci.ics.asterix.common.api;
 import java.util.Map;
 import java.util.Set;
 
-import edu.uci.ics.asterix.common.context.AsterixIndexLifecycleManagerProvider;
-import edu.uci.ics.asterix.common.context.AsterixStorageManagerInterface;
+import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
@@ -20,7 +19,7 @@ public class AsterixAppContextInfoImpl implements IAsterixApplicationContextInfo
 
     @Override
     public IStorageManagerInterface getStorageManagerInterface() {
-        return AsterixStorageManagerInterface.INSTANCE;
+        return AsterixRuntimeComponentsProvider.INSTANCE;
     }
 
     public static void setNodeControllerInfo(Map<String, Set<String>> nodeControllerInfo) {
@@ -33,7 +32,7 @@ public class AsterixAppContextInfoImpl implements IAsterixApplicationContextInfo
 
     @Override
     public IIndexLifecycleManagerProvider getIndexLifecycleManagerProvider() {
-        return AsterixIndexLifecycleManagerProvider.INSTANCE;
+        return AsterixRuntimeComponentsProvider.INSTANCE;
     }
 
 }
