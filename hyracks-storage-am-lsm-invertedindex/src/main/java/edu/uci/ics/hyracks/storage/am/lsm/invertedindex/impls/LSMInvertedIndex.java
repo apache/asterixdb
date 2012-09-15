@@ -163,6 +163,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
 
         fileManager.deleteDirs();
         fileManager.createDirs();
+        diskComponents.clear();
     }
 
     @Override

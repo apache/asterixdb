@@ -120,11 +120,12 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
     public AbstractLSMRTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
-            ILSMIndexFileManager fileManager, TreeIndexFactory<RTree> diskRTreeFactory, IFileMapProvider diskFileMapProvider,
-            ILSMComponentFinalizer componentFinalizer, int fieldCount, IBinaryComparatorFactory[] rtreeCmpFactories,
-            IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
-            int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, ILSMFlushController flushController,
-            ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler) {
+            ILSMIndexFileManager fileManager, TreeIndexFactory<RTree> diskRTreeFactory,
+            IFileMapProvider diskFileMapProvider, ILSMComponentFinalizer componentFinalizer, int fieldCount,
+            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
+            ILinearizeComparatorFactory linearizer, int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
+            ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMIOOperationScheduler ioScheduler) {
         RTree memRTree = new RTree(memBufferCache, ((InMemoryBufferCache) memBufferCache).getFileMapProvider(),
                 memFreePageManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories, fieldCount,
                 memBtreeFile);
@@ -158,6 +159,7 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
 
         fileManager.deleteDirs();
         fileManager.createDirs();
+        diskComponents.clear();
     }
 
     @Override
