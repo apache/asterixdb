@@ -42,6 +42,6 @@ write output to nc1:"rttest/index-join_inverted-index-olist-jaccard.adm";
 for $a in dataset('Customers')
 for $b in dataset('Customers2')
 where /*+ indexnl */ similarity-jaccard($a.interests, $b.interests) >= 0.9f 
-      and $a.cid < $b.cid
+      and $a.cid < $b.cid and len($a.interests) > 1 and len($b.interests) > 1
 order by $a.cid, $b.cid
 return { "a": $a.interests, "b": $b.interests }

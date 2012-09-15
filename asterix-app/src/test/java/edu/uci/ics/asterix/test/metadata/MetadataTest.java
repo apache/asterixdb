@@ -130,7 +130,6 @@ public class MetadataTest {
         try {
             LOGGER.info("Query is: " + queryFile);
             asterix.compile(true, false, false, false, false, true, false);
-            asterix.compile();
         } catch (AsterixException e) {
             throw new Exception("Compile ERROR for " + queryFile + ": " + e.getMessage(), e);
         } finally {

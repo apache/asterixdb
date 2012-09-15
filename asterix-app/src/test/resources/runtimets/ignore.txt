@@ -32,3 +32,4 @@ quantifiers/everysat_02.aql
 quantifiers/everysat_03.aql
 flwor
 string/startwith03.aql
+aggregate/droptype.aql
