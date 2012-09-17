@@ -133,7 +133,7 @@ public class DatasetOperations {
                                     new IBinaryComparatorFactory[] { null }, AsterixRuntimeComponentsProvider.INSTANCE,
                                     AsterixRuntimeComponentsProvider.INSTANCE,
                                     AsterixRuntimeComponentsProvider.INSTANCE,
-                                    AsterixRuntimeComponentsProvider.INSTANCE);
+                                    AsterixRuntimeComponentsProvider.INSTANCE, null);
                             break;
                         case NGRAM_INVIX:
                         case WORD_INVIX:

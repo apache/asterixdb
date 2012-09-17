@@ -8,7 +8,9 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveVa
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
+import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Index;
+import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.translator.DmlTranslator.CompiledCreateIndexStatement;
@@ -38,6 +40,7 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
 
     protected IPrimitiveValueProviderFactory[] valueProviderFactories;
     protected int numNestedSecondaryKeyFields;
+    protected ATypeTag keyType;
 
     protected SecondaryRTreeCreator(PhysicalOptimizationConfig physOptConf) {
         super(physOptConf);
@@ -52,7 +55,8 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
                 new LSMRTreeDataflowHelperFactory(valueProviderFactories, RTreePolicyType.RTREE,
                         primaryComparatorFactories, AsterixRuntimeComponentsProvider.INSTANCE,
                         AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
-                        AsterixRuntimeComponentsProvider.INSTANCE));
+                        AsterixRuntimeComponentsProvider.INSTANCE, AqlMetadataProvider.proposeLinearizer(keyType,
+                                secondaryComparatorFactories.length)));
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
                 secondaryPartitionConstraint);
         spec.addRoot(secondaryIndexCreateOp);
@@ -87,6 +91,7 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
                 + numNestedSecondaryKeyFields];
         ITypeTraits[] secondaryTypeTraits = new ITypeTraits[numNestedSecondaryKeyFields + numPrimaryKeys];
         IAType nestedKeyType = NonTaggedFormatUtil.getNestedSpatialType(spatialType.getTypeTag());
+        keyType = nestedKeyType.getTypeTag();
         for (int i = 0; i < numNestedSecondaryKeyFields; i++) {
             ISerializerDeserializer keySerde = AqlSerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(nestedKeyType);
@@ -125,11 +130,14 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
         }
 
         // Create secondary RTree bulk load op.
-        TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(spec,
-                numNestedSecondaryKeyFields, new LSMRTreeDataflowHelperFactory(valueProviderFactories,
-                        RTreePolicyType.RTREE, primaryComparatorFactories, AsterixRuntimeComponentsProvider.INSTANCE,
+        TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(
+                spec,
+                numNestedSecondaryKeyFields,
+                new LSMRTreeDataflowHelperFactory(valueProviderFactories, RTreePolicyType.RTREE,
+                        primaryComparatorFactories, AsterixRuntimeComponentsProvider.INSTANCE,
                         AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
-                        AsterixRuntimeComponentsProvider.INSTANCE), BTree.DEFAULT_FILL_FACTOR);
+                        AsterixRuntimeComponentsProvider.INSTANCE, AqlMetadataProvider.proposeLinearizer(keyType,
+                                secondaryComparatorFactories.length)), BTree.DEFAULT_FILL_FACTOR);
 
         // Connect the operators.
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);

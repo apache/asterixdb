@@ -70,6 +70,7 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.SinkWriterRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -91,6 +92,9 @@ import edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeDataflowHelperF
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.dataflow.LSMRTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import edu.uci.ics.hyracks.storage.am.rtree.linearize.HilbertDoubleComparatorFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.linearize.ZCurveDoubleComparatorFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.linearize.ZCurveIntComparatorFactory;
 
 public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, String> {
     private final long txnId;
@@ -403,7 +407,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 typeTraits, comparatorFactories, keyFields, new LSMRTreeDataflowHelperFactory(valueProviderFactories,
                         RTreePolicyType.RTREE, primaryComparatorFactories, AsterixRuntimeComponentsProvider.INSTANCE,
                         AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
-                        AsterixRuntimeComponentsProvider.INSTANCE), false, NoOpOperationCallbackProvider.INSTANCE);
+                        AsterixRuntimeComponentsProvider.INSTANCE, proposeLinearizer(nestedKeyType.getTypeTag(),
+                                comparatorFactories.length)), false, NoOpOperationCallbackProvider.INSTANCE);
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(rtreeSearchOp, spPc.second);
     }
 
@@ -768,8 +773,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 comparatorFactories, fieldPermutation, indexOp, new LSMRTreeDataflowHelperFactory(
                         valueProviderFactories, RTreePolicyType.RTREE, primaryComparatorFactories,
                         AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
-                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE),
-                filterFactory, NoOpOperationCallbackProvider.INSTANCE, txnId);
+                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
+                        proposeLinearizer(nestedKeyType.getTypeTag(), comparatorFactories.length)), filterFactory,
+                NoOpOperationCallbackProvider.INSTANCE, txnId);
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(rtreeUpdate, splitsAndConstraint.second);
     }
 
@@ -779,6 +785,20 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     public static ITreeIndexFrameFactory createBTreeNSMInteriorFrameFactory(ITypeTraits[] typeTraits) {
         return new BTreeNSMInteriorFrameFactory(new TypeAwareTupleWriterFactory(typeTraits));
+    }
+
+    public static ILinearizeComparatorFactory proposeLinearizer(ATypeTag keyType, int numKeyFields)
+            throws AlgebricksException {
+        if (numKeyFields / 2 == 2 && (keyType == ATypeTag.DOUBLE)) {
+            return new HilbertDoubleComparatorFactory(2);
+        } else if (keyType == ATypeTag.DOUBLE) {
+            return new ZCurveDoubleComparatorFactory(numKeyFields / 2);
+        } else if (keyType == ATypeTag.INT8 || keyType == ATypeTag.INT16 || keyType == ATypeTag.INT32
+                || keyType == ATypeTag.INT64) {
+            return new ZCurveIntComparatorFactory(numKeyFields / 2);
+        } else {
+            throw new AlgebricksException("Cannot propose linearizer for key with type " + keyType + ".");
+        }
     }
 
     @Override
