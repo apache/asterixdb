@@ -49,6 +49,7 @@ import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -81,11 +82,11 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
     private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.DATATYPE_RECORDTYPE);
     private final MetadataNode metadataNode;
-    private final long txnId;
+    private final JobId jobId;
 
-    public DatatypeTupleTranslator(long txnId, MetadataNode metadataNode, boolean getTuple) {
+    public DatatypeTupleTranslator(JobId jobId, MetadataNode metadataNode, boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.DATATYPE_DATASET.getFieldCount());
-        this.txnId = txnId;
+        this.jobId = jobId;
         this.metadataNode = metadataNode;
     }
 
@@ -182,7 +183,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         IAType type = AsterixBuiltinTypeMap.getBuiltinTypes().get(typeName);
         if (type == null) {
             try {
-                return metadataNode.getDatatype(txnId, dataverseName, typeName).getDatatype();
+                return metadataNode.getDatatype(jobId, dataverseName, typeName).getDatatype();
             } catch (RemoteException e) {
                 throw new MetadataException(e);
             }
@@ -417,9 +418,9 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         MetadataNode mn = MetadataNode.INSTANCE;
         if (typeName == null) {
             typeName = suggestedTypeName;
-            metadataNode.addDatatype(txnId, new Datatype(topLevelType.getDataverseName(), typeName, nestedType, true));
+            metadataNode.addDatatype(jobId, new Datatype(topLevelType.getDataverseName(), typeName, nestedType, true));
             try {
-                mn.insertIntoDatatypeSecondaryIndex(txnId, topLevelType.getDataverseName(), typeName,
+                mn.insertIntoDatatypeSecondaryIndex(jobId, topLevelType.getDataverseName(), typeName,
                         topLevelType.getDatatypeName());
             } catch (BTreeDuplicateKeyException e) {
                 // The key may have been inserted by a previous DDL statement or
@@ -427,12 +428,12 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
             }
             return typeName;
         }
-        Datatype dt = mn.getDatatype(txnId, topLevelType.getDataverseName(), typeName);
+        Datatype dt = mn.getDatatype(jobId, topLevelType.getDataverseName(), typeName);
         if (dt == null) {
             throw new AlgebricksException("There is no datatype with this name " + typeName + ".");
         }
         try {
-            mn.insertIntoDatatypeSecondaryIndex(txnId, topLevelType.getDataverseName(), typeName,
+            mn.insertIntoDatatypeSecondaryIndex(jobId, topLevelType.getDataverseName(), typeName,
                     topLevelType.getDatatypeName());
         } catch (BTreeDuplicateKeyException e) {
             // The key may have been inserted by a previous DDL statement or by

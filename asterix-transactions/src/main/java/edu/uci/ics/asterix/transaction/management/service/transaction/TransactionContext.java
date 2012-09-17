@@ -36,7 +36,7 @@ public class TransactionContext implements Serializable {
     public static final long INVALID_TIME = -1l; // used for showing a
     // transaction is not waiting.
     public static final int ACTIVE_STATUS = 0;
-    public static final int TIMED_OUT_SATUS = 1;
+    public static final int TIMED_OUT_STATUS = 1;
 
     public enum TransactionType {
         READ,
@@ -45,13 +45,13 @@ public class TransactionContext implements Serializable {
 
     private static final long serialVersionUID = -6105616785783310111L;
     private TransactionProvider transactionProvider;
-    private long transactionID;
     private LogicalLogLocator lastLogLocator;
     private TransactionState txnState;
     private long startWaitTime;
     private int status;
     private Set<ICloseable> resources = new HashSet<ICloseable>();
     private TransactionType transactionType = TransactionType.READ;
+    private JobId jobId;
 
     public void setTransactionType(TransactionType transactionType) {
         this.transactionType = transactionType;
@@ -65,8 +65,8 @@ public class TransactionContext implements Serializable {
         resources.add(resource);
     }
 
-    public TransactionContext(long transactionId, TransactionProvider transactionProvider) throws ACIDException {
-        this.transactionID = transactionId;
+    public TransactionContext(JobId jobId, TransactionProvider transactionProvider) throws ACIDException {
+        this.jobId = jobId;
         this.transactionProvider = transactionProvider;
         init();
     }
@@ -86,8 +86,8 @@ public class TransactionContext implements Serializable {
         this.lastLogLocator = lastLogLocator;
     }
 
-    public long getTransactionID() {
-        return transactionID;
+    public JobId getJobId() {
+        return jobId;
     }
 
     public void setStartWaitTime(long time) {

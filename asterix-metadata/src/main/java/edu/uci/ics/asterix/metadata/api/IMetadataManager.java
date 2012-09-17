@@ -28,6 +28,7 @@ import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.Node;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 
 /**
  * A metadata manager provides user access to Asterix metadata (e.g., types,
@@ -92,7 +93,7 @@ public interface IMetadataManager {
      * @throws ACIDException
      * @throws RemoteException
      */
-    public void lock(MetadataTransactionContext ctx, int lockMode) throws ACIDException, RemoteException;
+    public void lock(MetadataTransactionContext ctx, byte lockMode) throws ACIDException, RemoteException;
 
     /**
      * Releases all locks on the metadata held by the given transaction id.
@@ -397,4 +398,6 @@ public interface IMetadataManager {
 	public void dropFunction(MetadataTransactionContext ctx,
 			String dataverseName, String functionName, int arity)
 			throws MetadataException;
+	
+    public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws MetadataException;
 }

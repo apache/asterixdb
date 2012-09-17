@@ -41,8 +41,10 @@ public class TransactionManagementConstants {
         public static final int[] LOCK_CONVERT_MATRIX = new int[] { 2, 0 };
 
         public static class LockMode {
-            public static final int SHARED = 0;
-            public static final int EXCLUSIVE = 1;
+            public static final byte S = 0;
+            public static final byte X = 1;
+            public static final byte IS = 2;
+            public static final byte IX = 3;
         }
     }
 

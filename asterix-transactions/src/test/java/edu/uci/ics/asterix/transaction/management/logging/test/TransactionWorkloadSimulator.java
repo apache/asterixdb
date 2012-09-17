@@ -20,7 +20,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.logging.BasicLogger;
-import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceRepository;
 import edu.uci.ics.asterix.transaction.management.service.locking.ILockManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.ILogManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.ILogRecordHelper;
@@ -28,9 +27,10 @@ import edu.uci.ics.asterix.transaction.management.service.logging.LogActionType;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
+import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionIDFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
 
 public class TransactionWorkloadSimulator {
@@ -99,7 +99,7 @@ class SingleTransactionContextFactory {
 
     public static TransactionContext getContext(TransactionProvider provider) throws ACIDException {
         if (context == null) {
-            context = new TransactionContext(TransactionIDFactory.generateTransactionId(), provider);
+            context = new TransactionContext(JobIdFactory.generateJobId(), provider);
         }
         return context;
     }
@@ -108,7 +108,7 @@ class SingleTransactionContextFactory {
 class MultipleTransactionContextFactory {
 
     public static TransactionContext getContext(TransactionProvider provider) throws ACIDException {
-        return new TransactionContext(TransactionIDFactory.generateTransactionId(), provider);
+        return new TransactionContext(JobIdFactory.generateJobId(), provider);
     }
 }
 
@@ -121,10 +121,12 @@ class Transaction extends Thread {
     LogicalLogLocator memLSN;
     String name;
     TransactionContext context;
-    private byte[] resourceID = new byte[1];
+    //private byte[] resourceID = new byte[1];
+    private int resourceID;
     private int myLogCount = 0;
     private TransactionProvider transactionProvider;
     private ILogManager logManager;
+    private DatasetId tempDatasetId = new DatasetId(-1);
 
     public Transaction(TransactionProvider provider, String name, boolean singleTransaction) throws ACIDException {
         this.name = name;
@@ -157,12 +159,12 @@ class Transaction extends Thread {
         }
         if (TransactionWorkloadSimulator.workload.singleResource) {
             int choice = random.nextInt(2);
-            resourceID[0] = (byte) (choice % 2);
+            resourceID = (byte) (choice % 2);
         } else {
-            random.nextBytes(resourceID);
+            random.nextInt(resourceID);
         }
         boolean retry = false;
-        int lockMode = -1;
+        byte lockMode = -1;
         try {
             for (int i = 0; i < numLogs - 1; i++) {
                 int logSize = TransactionWorkloadSimulator.workload.minLogSize
@@ -174,13 +176,10 @@ class Transaction extends Thread {
                 byte logActionType = LogActionType.REDO_UNDO;
                 long pageId = 0;
                 if (!retry) {
-                    lockMode = random.nextInt(2);
+                    lockMode = (byte)(random.nextInt(2));
                 }
-                boolean lockGranted = TransactionWorkloadSimulator.lockManager.lock(context, resourceID, lockMode);
-                if (!lockGranted) {
-                    retry = true;
-                    continue;
-                }
+                tempDatasetId.setId(resourceID);
+                TransactionWorkloadSimulator.lockManager.lock(tempDatasetId, -1, lockMode, context);
                 TransactionWorkloadSimulator.logManager.log(memLSN, context, ResourceMgrInfo.BTreeResourceMgrId,
                         pageId, logType, logActionType, logSize, logger, null);
                 retry = false;

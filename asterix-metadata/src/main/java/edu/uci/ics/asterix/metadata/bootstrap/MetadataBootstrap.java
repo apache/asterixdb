@@ -146,7 +146,7 @@ public class MetadataBootstrap {
         // Begin a transaction against the metadata.
         // Lock the metadata in X mode.
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        MetadataManager.INSTANCE.lock(mdTxnCtx, LockMode.EXCLUSIVE);
+        MetadataManager.INSTANCE.lock(mdTxnCtx, LockMode.X);
 
         try {
             if (isNewUniverse) {
@@ -176,6 +176,7 @@ public class MetadataBootstrap {
                 }
                 LOGGER.info("FINISHED ENLISTMENT OF METADATA B-TREES.");
             }
+            MetadataManager.INSTANCE.initializeDatasetIdFactory(mdTxnCtx);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
@@ -219,7 +220,7 @@ public class MetadataBootstrap {
                     primaryIndexes[i].getNodeGroupName());
             MetadataManager.INSTANCE.addDataset(mdTxnCtx, new Dataset(primaryIndexes[i].getDataverseName(),
                     primaryIndexes[i].getIndexedDatasetName(), primaryIndexes[i].getPayloadRecordType().getTypeName(),
-                    id, DatasetType.INTERNAL));
+                    id, DatasetType.INTERNAL, primaryIndexes[i].getDatasetId().getId()));
         }
     }
 

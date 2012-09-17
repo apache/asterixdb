@@ -158,6 +158,7 @@ public final class MetadataRecordTypes {
 
 	// Helper constants for accessing fields in an ARecord of type
 	// DatasetRecordType.
+	
 	public static final int DATASET_ARECORD_DATAVERSENAME_FIELD_INDEX = 0;
 	public static final int DATASET_ARECORD_DATASETNAME_FIELD_INDEX = 1;
 	public static final int DATASET_ARECORD_DATATYPENAME_FIELD_INDEX = 2;
@@ -166,11 +167,12 @@ public final class MetadataRecordTypes {
 	public static final int DATASET_ARECORD_EXTERNALDETAILS_FIELD_INDEX = 5;
 	public static final int DATASET_ARECORD_FEEDDETAILS_FIELD_INDEX = 6;
 	public static final int DATASET_ARECORD_TIMESTAMP_FIELD_INDEX = 7;
+	public static final int DATASET_ARECORD_DATASETID_FIELD_INDEX = 8;
 
 	private static final ARecordType createDatasetRecordType() {
 		String[] fieldNames = { "DataverseName", "DatasetName", "DataTypeName",
 				"DatasetType", "InternalDetails", "ExternalDetails",
-				"FeedDetails", "Timestamp" };
+				"FeedDetails", "Timestamp", "DatasetId" };
 
 		List<IAType> internalRecordUnionList = new ArrayList<IAType>();
 		internalRecordUnionList.add(BuiltinType.ANULL);
@@ -191,7 +193,7 @@ public final class MetadataRecordTypes {
 
 		IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING,
 				BuiltinType.ASTRING, BuiltinType.ASTRING, internalRecordUnion,
-				externalRecordUnion, feedRecordUnion, BuiltinType.ASTRING };
+				externalRecordUnion, feedRecordUnion, BuiltinType.ASTRING, BuiltinType.AINT32 };
 		return new ARecordType("DatasetRecordType", fieldNames, fieldTypes,
 				true);
 	}

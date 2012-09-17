@@ -122,9 +122,9 @@ public class TreeLogger implements ILogger, ICloseable {
     }
 
     public synchronized void close(TransactionContext context) {
-        TransactionState txnState = (TransactionState) arguments.get(context.getTransactionID());
+        TransactionState txnState = (TransactionState) arguments.get(context.getJobId());
         txnState.remove(Thread.currentThread().getId());
-        arguments.remove(context.getTransactionID());
+        arguments.remove(context.getJobId());
     }
 
     public void generateLogRecord(TransactionProvider provider, TransactionContext context, IndexOp operation,
@@ -140,14 +140,14 @@ public class TreeLogger implements ILogger, ICloseable {
 
         TxnThreadState txnThreadState = null;
         TransactionState txnState;
-        txnState = (TransactionState) arguments.get(context.getTransactionID());
+        txnState = (TransactionState) arguments.get(context.getJobId());
         if (txnState == null) {
             synchronized (context) { // threads belonging to different
                 // transaction do not need to
                 // synchronize amongst them.
                 if (txnState == null) {
                     txnState = new TransactionState();
-                    arguments.put(context.getTransactionID(), txnState);
+                    arguments.put(context.getJobId(), txnState);
                 }
             }
         }
@@ -172,7 +172,7 @@ public class TreeLogger implements ILogger, ICloseable {
     @Override
     public void log(TransactionContext context, LogicalLogLocator logicalLogLocator, int logRecordSize,
             Map<Object, Object> loggerArguments) throws ACIDException {
-        TransactionState txnState = (TransactionState) loggerArguments.get(context.getTransactionID());
+        TransactionState txnState = (TransactionState) loggerArguments.get(context.getJobId());
         TxnThreadState state = (TxnThreadState) txnState.getTransactionThreadState(Thread.currentThread().getId());
         int count = 0;
         byte[] logBuffer = logicalLogLocator.getBuffer().getArray();

@@ -34,14 +34,16 @@ public class Dataset implements IMetadataEntity {
     private final String itemTypeName;
     private final DatasetType datasetType;
     private IDatasetDetails datasetDetails;
+    private final int datasetId;
 
     public Dataset(String dataverseName, String datasetName, String itemTypeName, IDatasetDetails datasetDetails,
-            DatasetType datasetType) {
+            DatasetType datasetType, int datasetId) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.itemTypeName = itemTypeName;
         this.datasetType = datasetType;
         this.datasetDetails = datasetDetails;
+        this.datasetId = datasetId;
     }
 
     public String getDataverseName() {
@@ -66,6 +68,10 @@ public class Dataset implements IMetadataEntity {
 
     public void setDatasetDetails(IDatasetDetails datasetDetails) {
         this.datasetDetails = datasetDetails;
+    }
+
+    public int getDatasetId() {
+        return datasetId;
     }
 
     @Override

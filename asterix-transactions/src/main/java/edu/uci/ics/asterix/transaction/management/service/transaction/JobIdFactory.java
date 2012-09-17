@@ -14,15 +14,15 @@
  */
 package edu.uci.ics.asterix.transaction.management.service.transaction;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Represents a factory to generate unique transaction IDs.
  */
-public class TransactionIDFactory {
-    private static final AtomicLong ID = new AtomicLong();
+public class JobIdFactory {
+    private static final AtomicInteger Id = new AtomicInteger();
 
-    public static long generateTransactionId() {
-        return ID.incrementAndGet();
+    public static JobId generateJobId() {
+        return new JobId(Id.incrementAndGet());
     }
 }

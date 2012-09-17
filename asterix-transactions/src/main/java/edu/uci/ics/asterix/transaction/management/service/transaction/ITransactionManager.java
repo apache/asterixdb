@@ -40,24 +40,24 @@ public interface ITransactionManager {
      * Begins a transaction identified by a transaction id and returns the
      * associated transaction context.
      * 
-     * @param transactionId
+     * @param jobId
      *            a unique value for the transaction id.
      * @return the transaction context associated with the initiated transaction
      * @see TransactionContext
      * @throws ACIDException
      */
-    public TransactionContext beginTransaction(long transactionId) throws ACIDException;
+    public TransactionContext beginTransaction(JobId jobId) throws ACIDException;
 
     /**
      * Returns the transaction context of an active transaction given the
      * transaction id.
      * 
-     * @param transactionId
+     * @param jobId
      *            a unique value for the transaction id.
      * @return
      * @throws ACIDException
      */
-    public TransactionContext getTransactionContext(long transactionId) throws ACIDException;
+    public TransactionContext getTransactionContext(JobId jobId) throws ACIDException;
 
     /**
      * Commits a transaction.
@@ -65,7 +65,7 @@ public interface ITransactionManager {
      * @param txnContext
      *            the transaction context associated with the transaction
      * @throws ACIDException
-     * @see transactionContext
+     * @see transactionContextimport edu.uci.ics.hyracks.api.job.JobId;
      * @see ACIDException
      */
     public void commitTransaction(TransactionContext txnContext) throws ACIDException;
@@ -94,21 +94,6 @@ public interface ITransactionManager {
      * @throws ACIDException
      */
     public void completedTransaction(TransactionContext txnContext, boolean success) throws ACIDException;
-
-    /**
-     * Associates a resource manager with a transaction. In a distributed
-     * transaction multiple resource managers can join a transaction and
-     * participate in a two phase commit protocol. This method is not used
-     * currently as we do not support distributed transactions.
-     * 
-     * @param txnContext
-     *            the transaction context associated with the transaction
-     * @param resourceMgrID
-     *            a unique identifier for the resource manager.
-     * @see IResourceManager
-     * @throws ACIDException
-     */
-    public void joinTransaction(TransactionContext txnContext, byte[] resourceMgrID) throws ACIDException;
 
     /**
      * Returns the Transaction Provider for the transaction eco-system. A

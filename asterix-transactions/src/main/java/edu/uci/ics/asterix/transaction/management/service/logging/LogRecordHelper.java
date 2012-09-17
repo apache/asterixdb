@@ -30,10 +30,16 @@ public class LogRecordHelper implements ILogRecordHelper {
     private final int BEGIN_ACTION_TYPE_POS = 9;
     private final int BEGIN_TIMESTAMP_POS = 10;
     private final int BEGIN_TRANSACTION_ID_POS = 18;
+    /*
     private final int BEGIN_RESOURCE_MGR_ID_POS = 26;
     private final int BEGIN_PAGE_ID_POS = 27;
     private final int BEGIN_PREV_LSN_POS = 35;
+    */
+    private final int BEGIN_RESOURCE_MGR_ID_POS = 22;
+    private final int BEGIN_PAGE_ID_POS = 23;
+    private final int BEGIN_PREV_LSN_POS = 31;
 
+    
     private ILogManager logManager;
 
     public LogRecordHelper(ILogManager logManager) {
@@ -62,7 +68,7 @@ public class LogRecordHelper implements ILogRecordHelper {
     }
 
     public long getLogTransactionId(LogicalLogLocator logicalLogLocator) {
-        return (logicalLogLocator.getBuffer()).readLong(logicalLogLocator.getMemoryOffset() + BEGIN_TRANSACTION_ID_POS);
+        return (logicalLogLocator.getBuffer()).readInt(logicalLogLocator.getMemoryOffset() + BEGIN_TRANSACTION_ID_POS);
     }
 
     public byte getResourceMgrId(LogicalLogLocator logicalLogLocator) {
@@ -144,8 +150,8 @@ public class LogRecordHelper implements ILogRecordHelper {
         (logicalLogLocator.getBuffer()).writeLong(logicalLogLocator.getMemoryOffset() + BEGIN_TIMESTAMP_POS, timestamp);
 
         /* transaction id */
-        (logicalLogLocator.getBuffer()).writeLong(logicalLogLocator.getMemoryOffset() + BEGIN_TRANSACTION_ID_POS,
-                context.getTransactionID());
+        (logicalLogLocator.getBuffer()).writeInt(logicalLogLocator.getMemoryOffset() + BEGIN_TRANSACTION_ID_POS,
+                context.getJobId().getId());
 
         /* resource Mgr id */
         (logicalLogLocator.getBuffer()).put(logicalLogLocator.getMemoryOffset() + BEGIN_RESOURCE_MGR_ID_POS,

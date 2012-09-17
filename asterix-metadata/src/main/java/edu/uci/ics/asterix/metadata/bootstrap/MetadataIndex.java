@@ -30,6 +30,7 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.logging.DataUtil;
 import edu.uci.ics.asterix.transaction.management.service.logging.TreeLogger;
+import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -71,9 +72,11 @@ public final class MetadataIndex implements IMetadataIndex {
     protected byte[] indexResourceId;
     // Logger for tree indexes.
     private TreeLogger treeLogger;
+    // datasetId
+    private final DatasetId datasetId;
 
     public MetadataIndex(String datasetName, String indexName, int numFields, IAType[] keyTypes, String[] keyNames,
-            ARecordType payloadType) throws AsterixRuntimeException {
+            ARecordType payloadType, int datasetId) throws AsterixRuntimeException {
         // Sanity checks.
         if (keyTypes.length != keyNames.length) {
             throw new AsterixRuntimeException("Unequal number of key types and names given.");
@@ -126,6 +129,8 @@ public final class MetadataIndex implements IMetadataIndex {
         for (int i = 0; i < keyTypes.length; i++) {
             bhffs[i] = AqlBinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(keyTypes[i]);
         }
+
+        this.datasetId = new DatasetId(datasetId);
     }
 
     @Override
@@ -246,5 +251,10 @@ public final class MetadataIndex implements IMetadataIndex {
     @Override
     public long getResourceID() {
         return resourceID;
+    }
+
+    @Override
+    public DatasetId getDatasetId() {
+        return datasetId;
     }
 }

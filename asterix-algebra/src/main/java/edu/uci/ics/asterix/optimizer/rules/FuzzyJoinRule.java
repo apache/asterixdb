@@ -264,7 +264,7 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         // The translator will compile metadata internally. Run this compilation
         // under the same transaction id as the "outer" compilation.
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-        AqlPlusExpressionToPlanTranslator translator = new AqlPlusExpressionToPlanTranslator(mp.getTxnId(),
+        AqlPlusExpressionToPlanTranslator translator = new AqlPlusExpressionToPlanTranslator(mp.getJobId(),
                 metadata.getMetadataTransactionContext(), counter, null);
 
         LogicalOperatorDeepCopyVisitor deepCopyVisitor = new LogicalOperatorDeepCopyVisitor(counter);

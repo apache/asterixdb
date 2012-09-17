@@ -166,7 +166,7 @@ public class RecoveryManager implements IRecoveryManager {
     /**
      * Rollback a transaction (non-Javadoc)
      * 
-     * @see edu.uci.ics.transaction.management.service.recovery.IRecoveryManager# rollbackTransaction (edu.uci.ics.transaction.management.service.transaction .TransactionContext)
+     * @see edu.uci.ics.transaction.management.service.recovery.IRecoveryManager# rollbackTransaction (edu.uci.ics.TransactionContext.management.service.transaction .TransactionContext)
      */
     @Override
     public void rollbackTransaction(TransactionContext txnContext) throws ACIDException {
@@ -183,7 +183,7 @@ public class RecoveryManager implements IRecoveryManager {
         if (lsn.getLsn() == TransactionManagementConstants.LogManagerConstants.TERMINAL_LSN) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info(" no need to roll back as there were no operations by the transaction "
-                        + txnContext.getTransactionID());
+                        + txnContext.getJobId());
             }
             return;
         }

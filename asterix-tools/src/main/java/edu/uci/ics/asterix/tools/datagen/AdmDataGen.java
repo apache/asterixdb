@@ -46,6 +46,7 @@ import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.tools.translator.ADGenDmlTranslator;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.data.utils.WriteValueTools;
@@ -928,7 +929,7 @@ public class AdmDataGen {
         Query q = (Query) parser.Statement();
         aql.close();
         // TODO: Need to fix how to use transactions here.
-        MetadataTransactionContext mdTxnCtx = new MetadataTransactionContext(-1);
+        MetadataTransactionContext mdTxnCtx = new MetadataTransactionContext(new JobId(-1));
         ADGenDmlTranslator dmlt = new ADGenDmlTranslator(mdTxnCtx, q.getPrologDeclList());
         dmlt.translate();
         AqlCompiledMetadataDeclarations acmd = dmlt.getCompiledDeclarations();

@@ -31,8 +31,9 @@ import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryMana
 import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager.SystemState;
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionIDFactory;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
 
 public class TransactionSimulator {
@@ -63,8 +64,8 @@ public class TransactionSimulator {
     }
 
     public TransactionContext beginTransaction() throws ACIDException {
-        long transactionId = TransactionIDFactory.generateTransactionId();
-        return transactionManager.beginTransaction(transactionId);
+        JobId jobId = JobIdFactory.generateJobId();
+        return transactionManager.beginTransaction(jobId);
     }
 
     public void executeTransactionOperation(TransactionContext txnContext, FileResource.CounterOperation operation)

@@ -23,6 +23,7 @@ import edu.uci.ics.asterix.transaction.management.service.locking.ILockManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.DataUtil;
 import edu.uci.ics.asterix.transaction.management.service.logging.TreeLogger;
 import edu.uci.ics.asterix.transaction.management.service.logging.TreeResourceManager;
+import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
@@ -65,6 +66,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
     private TreeLogger treeLogger;
     private final TransactionProvider transactionProvider;
     private byte[] resourceIDBytes;
+    private final DatasetId datasetId;
 
     /* TODO: Index operators should live in Hyracks. Right now, they are needed here in Asterix
      * as a hack to provide transactionIDs. The Asterix verions of this operator will disappear 
@@ -73,9 +75,9 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
      */
     public TreeIndexInsertUpdateDeleteOperatorNodePushable(TransactionContext txnContext,
             AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition, int[] fieldPermutation,
-            IRecordDescriptorProvider recordDescProvider, IndexOp op) {
-        this.opDesc = opDesc;
+            IRecordDescriptorProvider recordDescProvider, IndexOp op, int datasetId) {
         this.ctx = ctx;
+        this.opDesc = opDesc;
         this.treeIndexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
         this.recordDescProvider = recordDescProvider;
         this.op = op;
@@ -84,6 +86,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         AsterixAppRuntimeContext runtimeContext = (AsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
         transactionProvider = runtimeContext.getTransactionProvider();
+        this.datasetId = new DatasetId(datasetId);
     }
 
     public void initializeTransactionSupport(long resourceID) {
@@ -139,8 +142,8 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
                     }
                 }
                 tuple.reset(accessor, i);
-                lockManager.lock(txnContext, resourceIDBytes,
-                        TransactionManagementConstants.LockManagerConstants.LockMode.EXCLUSIVE);
+                lockManager.lock(datasetId, -1, TransactionManagementConstants.LockManagerConstants.LockMode.X,
+                        txnContext);
                 switch (op) {
                     case INSERT: {
                         indexAccessor.insert(tuple);
@@ -201,5 +204,4 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
     public void fail() throws HyracksDataException {
         writer.fail();
     }
-
 }

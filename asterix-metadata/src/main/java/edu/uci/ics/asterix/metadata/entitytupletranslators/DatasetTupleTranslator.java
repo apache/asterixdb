@@ -40,10 +40,14 @@ import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
+import edu.uci.ics.asterix.om.base.AInt32;
+import edu.uci.ics.asterix.om.base.AMutableInt32;
+import edu.uci.ics.asterix.om.base.AMutableString;
 import edu.uci.ics.asterix.om.base.AOrderedList;
 import edu.uci.ics.asterix.om.base.ARecord;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.base.IACursor;
+import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -68,9 +72,14 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.DATASET_RECORDTYPE);
+    private AMutableInt32 aInt32;
+    protected ISerializerDeserializer<AInt32> aInt32Serde;
 
-    public DatasetTupleTranslator(boolean getTuple) {
+    @SuppressWarnings("unchecked")
+	public DatasetTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.DATASET_DATASET.getFieldCount());
+        aInt32 = new AMutableInt32(-1); 
+        aInt32Serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
     }
 
     @Override
@@ -85,6 +94,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
     }
 
     private Dataset createDatasetFromARecord(ARecord datasetRecord) {
+
         String dataverseName = ((AString) datasetRecord
                 .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_DATAVERSENAME_FIELD_INDEX)).getStringValue();
         String datasetName = ((AString) datasetRecord
@@ -93,6 +103,8 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_DATATYPENAME_FIELD_INDEX)).getStringValue();
         DatasetType datasetType = DatasetType.valueOf(((AString) datasetRecord.getValueByPos(3)).getStringValue());
         IDatasetDetails datasetDetails = null;
+    	int datasetId = ((AInt32) datasetRecord
+                .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_DATASETID_FIELD_INDEX)).getIntegerValue();
         switch (datasetType) {
             case FEED:
             case INTERNAL: {
@@ -177,7 +189,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 }
                 datasetDetails = new ExternalDatasetDetails(adapter, properties);
         }
-        return new Dataset(dataverseName, datasetName, typeName, datasetDetails, datasetType);
+        return new Dataset(dataverseName, datasetName, typeName, datasetDetails, datasetType, datasetId);
     }
 
     @Override
@@ -228,7 +240,13 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         aString.setValue(Calendar.getInstance().getTime().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
-
+        
+        // write field 8
+        fieldValue.reset();
+        aInt32.setValue(dataset.getDatasetId());
+        aInt32Serde.serialize(aInt32, fieldValue.getDataOutput());
+        recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_DATASETID_FIELD_INDEX, fieldValue);
+        
         // write record
         recordBuilder.write(tupleBuilder.getDataOutput(), true);
         tupleBuilder.addFieldEndOffset();

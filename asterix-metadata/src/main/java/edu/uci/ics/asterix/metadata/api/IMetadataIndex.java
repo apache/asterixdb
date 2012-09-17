@@ -20,6 +20,7 @@ import java.util.List;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.logging.TreeLogger;
+import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
@@ -76,4 +77,6 @@ public interface IMetadataIndex {
     public byte[] getResourceId();
 
     public TreeLogger getTreeLogger();
+    
+    public DatasetId getDatasetId();
 }

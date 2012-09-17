@@ -20,6 +20,7 @@ import java.io.IOException;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntityTupleTranslator;
 import edu.uci.ics.asterix.metadata.api.IValueExtractor;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -34,7 +35,7 @@ public class MetadataEntityValueExtractor<T> implements IValueExtractor<T> {
     }
 
     @Override
-    public T getValue(long txnId, ITupleReference tuple) throws MetadataException, HyracksDataException, IOException {
+    public T getValue(JobId jobId, ITupleReference tuple) throws MetadataException, HyracksDataException, IOException {
         return tupleReaderWriter.getMetadataEntytiFromTuple(tuple);
     }
 }

@@ -22,6 +22,7 @@ import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 
 /**
  * Used to implement serializable transactions against the MetadataCache.
@@ -53,14 +54,14 @@ public class MetadataTransactionContext extends MetadataCache {
 	protected MetadataCache droppedCache = new MetadataCache();
 
 	protected ArrayList<MetadataLogicalOperation> opLog = new ArrayList<MetadataLogicalOperation>();
-	private final long txnId;
+	private final JobId jobId;
 
-	public MetadataTransactionContext(long txnId) {
-		this.txnId = txnId;
+	public MetadataTransactionContext(JobId jobId) {
+		this.jobId = jobId;
 	}
 
-	public long getTxnId() {
-		return txnId;
+	public JobId getJobId() {
+		return jobId;
 	}
 
 	public void addDataverse(Dataverse dataverse) {
@@ -96,7 +97,7 @@ public class MetadataTransactionContext extends MetadataCache {
 
 	public void dropDataset(String dataverseName, String datasetName) {
 		Dataset dataset = new Dataset(dataverseName, datasetName, null, null,
-				null);
+				null, -1);
 		droppedCache.addDatasetIfNotExists(dataset);
 		logAndApply(new MetadataLogicalOperation(dataset, false));
 	}

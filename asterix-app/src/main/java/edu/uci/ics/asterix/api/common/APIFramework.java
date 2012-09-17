@@ -33,7 +33,7 @@ import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.optimizer.base.RuleCollections;
 import edu.uci.ics.asterix.runtime.job.listener.JobEventListenerFactory;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionIDFactory;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.asterix.translator.AqlExpressionToPlanTranslator;
 import edu.uci.ics.asterix.translator.DmlTranslator;
@@ -102,6 +102,8 @@ public class APIFramework {
                 RuleCollections.buildConsolidationRuleCollection()));
         defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlNoDfs,
                 RuleCollections.buildOpPushDownRuleCollection()));
+        
+        //put TXnRuleCollection!
         return defaultLogicalRewrites;
     }
 
@@ -149,7 +151,7 @@ public class APIFramework {
         // Begin a transaction against the metadata.
         // Lock the metadata in X mode to protect against other DDL and DML.
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        MetadataManager.INSTANCE.lock(mdTxnCtx, LockMode.EXCLUSIVE);
+        MetadataManager.INSTANCE.lock(mdTxnCtx, LockMode.X);
         try {
             DdlTranslator ddlt = new DdlTranslator(mdTxnCtx, query.getPrologDeclList(), out, pc, pdf);
             ddlt.translate(hcc, false);
@@ -170,7 +172,7 @@ public class APIFramework {
         // Lock the metadata in S mode to protect against other DDL
         // modifications.
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        MetadataManager.INSTANCE.lock(mdTxnCtx, LockMode.SHARED);
+        MetadataManager.INSTANCE.lock(mdTxnCtx, LockMode.S);
         try {
             DmlTranslator dmlt = new DmlTranslator(mdTxnCtx, query.getPrologDeclList());
             dmlt.translate();
@@ -305,7 +307,7 @@ public class APIFramework {
             JSONException, RemoteException, ACIDException {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         try {
-            MetadataManager.INSTANCE.lock(mdTxnCtx, LockMode.SHARED);
+            MetadataManager.INSTANCE.lock(mdTxnCtx, LockMode.S);
             Pair<AqlCompiledMetadataDeclarations, JobSpecification> result = compileQueryInternal(mdTxnCtx,
                     dataverseName, q, varCounter, outputDatasetName, metadataDecls, pc, out, pdf, dmlKind);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -390,8 +392,8 @@ public class APIFramework {
             }
 
         }
-        long txnId = TransactionIDFactory.generateTransactionId();
-        AqlExpressionToPlanTranslator t = new AqlExpressionToPlanTranslator(txnId, mdTxnCtx, rw.getVarCounter(),
+        edu.uci.ics.asterix.transaction.management.service.transaction.JobId asterixJobId = JobIdFactory.generateJobId();
+        AqlExpressionToPlanTranslator t = new AqlExpressionToPlanTranslator(asterixJobId, mdTxnCtx, rw.getVarCounter(),
                 outputDatasetName, dmlKind);
 
         ILogicalPlanAndMetadata planAndMetadata = t.translate(rwQ, metadataDecls);
@@ -526,7 +528,7 @@ public class APIFramework {
 
         JobSpecification spec = compiler.createJob(AsterixAppContextInfoImpl.INSTANCE);
         // set the job event listener
-        spec.setJobletEventListenerFactory(new JobEventListenerFactory(txnId, isWriteTransaction));
+        spec.setJobletEventListenerFactory(new JobEventListenerFactory(asterixJobId, isWriteTransaction));
         if (pc.isPrintJob()) {
             switch (pdf) {
                 case HTML: {

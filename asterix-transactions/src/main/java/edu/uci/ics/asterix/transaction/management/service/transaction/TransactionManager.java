@@ -30,7 +30,7 @@ import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 public class TransactionManager implements ITransactionManager {
     private static final Logger LOGGER = Logger.getLogger(TransactionManager.class.getName());
     private final TransactionProvider transactionProvider;
-    private Map<Long, TransactionContext> transactionContextRepository = new HashMap<Long, TransactionContext>();
+    private Map<JobId, TransactionContext> transactionContextRepository = new HashMap<JobId, TransactionContext>();
 
     public TransactionManager(TransactionProvider provider) {
         this.transactionProvider = provider;
@@ -54,29 +54,29 @@ public class TransactionManager implements ITransactionManager {
             } finally {
                 txnContext.releaseResources();
                 transactionProvider.getLockManager().releaseLocks(txnContext);
-                transactionContextRepository.remove(txnContext.getTransactionID());
+                transactionContextRepository.remove(txnContext.getJobId());
                 txnContext.setTxnState(TransactionState.ABORTED);
             }
         }
     }
 
     @Override
-    public TransactionContext beginTransaction(long transactionId) throws ACIDException {
-        TransactionContext txnContext = new TransactionContext(transactionId, transactionProvider);
+    public TransactionContext beginTransaction(JobId jobId) throws ACIDException {
+        TransactionContext txnContext = new TransactionContext(jobId, transactionProvider);
         synchronized (this) {
-            transactionContextRepository.put(transactionId, txnContext);
+            transactionContextRepository.put(jobId, txnContext);
         }
         return txnContext;
     }
 
     @Override
-    public TransactionContext getTransactionContext(long transactionId) throws ACIDException {
+    public TransactionContext getTransactionContext(JobId jobId) throws ACIDException {
         synchronized (transactionContextRepository) {
-            TransactionContext context = transactionContextRepository.get(transactionId);
+            TransactionContext context = transactionContextRepository.get(jobId);
             if (context == null) {
-                context = transactionContextRepository.get(transactionId);
-                context = new TransactionContext(transactionId, transactionProvider);
-                transactionContextRepository.put(transactionId, context);
+                context = transactionContextRepository.get(jobId);
+                context = new TransactionContext(jobId, transactionProvider);
+                transactionContextRepository.put(jobId, context);
             }
             return context;
         }
@@ -100,24 +100,16 @@ public class TransactionManager implements ITransactionManager {
                 }
             } catch (ACIDException ae) {
                 if (LOGGER.isLoggable(Level.SEVERE)) {
-                    LOGGER.severe(" caused exception in commit !" + txnContext.getTransactionID());
+                    LOGGER.severe(" caused exception in commit !" + txnContext.getJobId());
                 }
                 throw ae;
             } finally {
                 txnContext.releaseResources();
                 transactionProvider.getLockManager().releaseLocks(txnContext); // release
-                transactionContextRepository.remove(txnContext.getTransactionID());
+                transactionContextRepository.remove(txnContext.getJobId());
                 txnContext.setTxnState(TransactionState.COMMITTED);
             }
         }
-    }
-
-    @Override
-    public void joinTransaction(TransactionContext txnContext, byte[] resourceMgrID) throws ACIDException {
-        throw new UnsupportedOperationException();
-        // TODO this method will be implemented as part of support for
-        // distributed transactions
-
     }
 
     @Override

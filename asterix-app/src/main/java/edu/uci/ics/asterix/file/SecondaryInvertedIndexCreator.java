@@ -62,7 +62,8 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         if (numSecondaryKeys > 1) {
             throw new AsterixException("Cannot create composite inverted index on multiple fields.");
         }
-        // Prepare record descriptor used in the assign op, and the optional select op.
+        // Prepare record descriptor used in the assign op, and the optional
+        // select op.
         List<String> secondaryKeyFields = createIndexStmt.getKeyFields();
         secondaryFieldAccessEvalFactories = new ICopyEvaluatorFactory[numSecondaryKeys];
         ISerializerDeserializer[] secondaryRecFields = new ISerializerDeserializer[numPrimaryKeys + numSecondaryKeys];
@@ -86,11 +87,12 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         tokenComparatorFactories[0] = InvertedIndexAccessMethod.getTokenBinaryComparatorFactory(secondaryKeyType);
         tokenTypeTraits[0] = InvertedIndexAccessMethod.getTokenTypeTrait(secondaryKeyType);
         // Set tokenizer factory.
-        // TODO: We might want to expose the hashing option at the AQL level, 
+        // TODO: We might want to expose the hashing option at the AQL level,
         // and add the choice to the index metadata.
         tokenizerFactory = InvertedIndexAccessMethod.getBinaryTokenizerFactory(secondaryKeyType.getTypeTag(),
                 createIndexStmt.getIndexType(), createIndexStmt.getGramLength());
-        // Type traits for inverted-list elements. Inverted lists contain primary keys.
+        // Type traits for inverted-list elements. Inverted lists contain
+        // primary keys.
         invListsTypeTraits = new ITypeTraits[numPrimaryKeys];
         for (int i = 0; i < numPrimaryKeys; i++) {
             invListsTypeTraits[i] = primaryRecDesc.getTypeTraits()[i];
@@ -136,7 +138,7 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
     public JobSpecification buildLoadingJobSpec() throws AsterixException, AlgebricksException {
         JobSpecification spec = new JobSpecification();
 
-        // Create dummy key provider for feeding the primary index scan. 
+        // Create dummy key provider for feeding the primary index scan.
         AbstractOperatorDescriptor keyProviderOp = createDummyKeyProviderOp(spec);
 
         // Create primary index scan op.
@@ -145,7 +147,8 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         // Assign op.
         AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, primaryScanOp, numSecondaryKeys);
 
-        // If any of the secondary fields are nullable, then add a select op that filters nulls.
+        // If any of the secondary fields are nullable, then add a select op
+        // that filters nulls.
         AlgebricksMetaOperatorDescriptor selectOp = null;
         if (anySecondaryKeyIsNullable) {
             selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys);

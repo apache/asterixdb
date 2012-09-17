@@ -47,6 +47,7 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.base.AsterixTupleFilterFactory;
 import edu.uci.ics.asterix.runtime.transaction.TreeIndexInsertUpdateDeleteOperatorDescriptor;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -97,12 +98,12 @@ import edu.uci.ics.hyracks.storage.am.rtree.linearize.ZCurveDoubleComparatorFact
 import edu.uci.ics.hyracks.storage.am.rtree.linearize.ZCurveIntComparatorFactory;
 
 public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, String> {
-    private final long txnId;
+    private final JobId jobId;
     private boolean isWriteTransaction;
     private final AqlCompiledMetadataDeclarations metadata;
 
-    public AqlMetadataProvider(long txnId, boolean isWriteTransaction, AqlCompiledMetadataDeclarations metadata) {
-        this.txnId = txnId;
+    public AqlMetadataProvider(JobId jobId, boolean isWriteTransaction, AqlCompiledMetadataDeclarations metadata) {
+        this.jobId = jobId;
         this.isWriteTransaction = isWriteTransaction;
         this.metadata = metadata;
     }
@@ -563,7 +564,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 comparatorFactories, fieldPermutation, indexOp, new LSMBTreeDataflowHelperFactory(
                         AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
                         AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE), null,
-                NoOpOperationCallbackProvider.INSTANCE, txnId);
+                NoOpOperationCallbackProvider.INSTANCE, jobId, dataset.getDatasetId());
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad, splitsAndConstraint.second);
     }
 
@@ -708,7 +709,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 comparatorFactories, fieldPermutation, indexOp, new LSMBTreeDataflowHelperFactory(
                         AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
                         AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE),
-                filterFactory, NoOpOperationCallbackProvider.INSTANCE, txnId);
+                filterFactory, NoOpOperationCallbackProvider.INSTANCE, jobId, dataset.getDatasetId());
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad, splitsAndConstraint.second);
     }
 
@@ -775,12 +776,12 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                         AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
                         AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
                         proposeLinearizer(nestedKeyType.getTypeTag(), comparatorFactories.length)), filterFactory,
-                NoOpOperationCallbackProvider.INSTANCE, txnId);
+                NoOpOperationCallbackProvider.INSTANCE, jobId, dataset.getDatasetId());
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(rtreeUpdate, splitsAndConstraint.second);
     }
 
-    public long getTxnId() {
-        return txnId;
+    public JobId getJobId() {
+        return jobId;
     }
 
     public static ITreeIndexFrameFactory createBTreeNSMInteriorFrameFactory(ITypeTraits[] typeTraits) {
