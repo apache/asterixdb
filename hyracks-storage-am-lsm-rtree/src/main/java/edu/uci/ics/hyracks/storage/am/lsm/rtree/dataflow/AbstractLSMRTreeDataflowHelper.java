@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.rtree.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -46,27 +47,30 @@ public abstract class AbstractLSMRTreeDataflowHelper extends AbstractLSMIndexDat
     protected final IBinaryComparatorFactory[] btreeComparatorFactories;
     protected final IPrimitiveValueProviderFactory[] valueProviderFactories;
     protected final RTreePolicyType rtreePolicyType;
+    protected final ILinearizeComparatorFactory linearizeCmpFactory;
 
     public AbstractLSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            ILSMIOOperationScheduler ioScheduler) {
+            ILSMIOOperationScheduler ioScheduler, ILinearizeComparatorFactory linearizeCmpFactory) {
         this(opDesc, ctx, partition, DEFAULT_MEM_PAGE_SIZE, DEFAULT_MEM_NUM_PAGES, btreeComparatorFactories,
-                valueProviderFactories, rtreePolicyType, flushController, mergePolicy, opTracker, ioScheduler);
+                valueProviderFactories, rtreePolicyType, flushController, mergePolicy, opTracker, ioScheduler,
+                linearizeCmpFactory);
     }
 
     public AbstractLSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             int memPageSize, int memNumPages, IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            ILSMIOOperationScheduler ioScheduler) {
+            ILSMIOOperationScheduler ioScheduler, ILinearizeComparatorFactory linearizeCmpFactory) {
         super(opDesc, ctx, partition, memPageSize, memNumPages, flushController, mergePolicy, opTracker, ioScheduler);
         this.btreeComparatorFactories = btreeComparatorFactories;
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
+        this.linearizeCmpFactory = linearizeCmpFactory;
     }
-    
+
     @Override
     public ITreeIndex createIndexInstance() throws HyracksDataException {
         AbstractTreeIndexOperatorDescriptor treeOpDesc = (AbstractTreeIndexOperatorDescriptor) opDesc;
@@ -78,7 +82,7 @@ public abstract class AbstractLSMRTreeDataflowHelper extends AbstractLSMIndexDat
         return createLSMTree(memBufferCache, memFreePageManager, ctx.getIOManager(), file, opDesc.getStorageManager()
                 .getBufferCache(ctx), opDesc.getStorageManager().getFileMapProvider(ctx),
                 treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories(),
-                btreeComparatorFactories, valueProviderFactories, rtreePolicyType);
+                btreeComparatorFactories, valueProviderFactories, rtreePolicyType, linearizeCmpFactory);
 
     }
 
@@ -86,6 +90,6 @@ public abstract class AbstractLSMRTreeDataflowHelper extends AbstractLSMIndexDat
             InMemoryFreePageManager memFreePageManager, IIOManager ioManager, FileReference file,
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType)
-            throws HyracksDataException;
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
+            ILinearizeComparatorFactory linearizeCmpFactory) throws HyracksDataException;
 }

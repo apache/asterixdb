@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.rtree.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
@@ -34,22 +35,26 @@ public class LSMRTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
     private final IBinaryComparatorFactory[] btreeComparatorFactories;
     private final IPrimitiveValueProviderFactory[] valueProviderFactories;
     private final RTreePolicyType rtreePolicyType;
+    private final ILinearizeComparatorFactory linearizeCmpFactory;
 
     public LSMRTreeDataflowHelperFactory(IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, IBinaryComparatorFactory[] btreeComparatorFactories,
             ILSMFlushControllerProvider flushControllerProvider, ILSMMergePolicyProvider mergePolicyProvider,
-            ILSMOperationTrackerProvider opTrackerProvider, ILSMIOOperationSchedulerProvider ioSchedulerProvider) {
+            ILSMOperationTrackerProvider opTrackerProvider, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
+            ILinearizeComparatorFactory linearizeCmpFactory) {
         super(flushControllerProvider, mergePolicyProvider, opTrackerProvider, ioSchedulerProvider);
         this.btreeComparatorFactories = btreeComparatorFactories;
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
+        this.linearizeCmpFactory = linearizeCmpFactory;
     }
 
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
         return new LSMRTreeDataflowHelper(opDesc, ctx, partition, btreeComparatorFactories, valueProviderFactories,
-                rtreePolicyType, flushControllerProvider.getFlushController(ctx), mergePolicyProvider.getMergePolicy(ctx),
-                opTrackerProvider.getOperationTracker(ctx), ioSchedulerProvider.getIOScheduler(ctx));
+                rtreePolicyType, flushControllerProvider.getFlushController(ctx),
+                mergePolicyProvider.getMergePolicy(ctx), opTrackerProvider.getOperationTracker(ctx),
+                ioSchedulerProvider.getIOScheduler(ctx), linearizeCmpFactory);
     }
 }

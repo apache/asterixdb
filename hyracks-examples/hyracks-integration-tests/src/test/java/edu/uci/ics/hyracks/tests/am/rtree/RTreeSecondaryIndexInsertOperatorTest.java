@@ -23,6 +23,7 @@ import org.junit.Test;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -117,7 +118,7 @@ public class RTreeSecondaryIndexInsertOperatorTest extends AbstractRTreeOperator
     @Override
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory(
             IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
-            IBinaryComparatorFactory[] btreeComparatorFactories) throws TreeIndexException {
+            IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory) throws TreeIndexException {
         return ((RTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(secondaryValueProviderFactories,
                 rtreePolicyType, null);
     }

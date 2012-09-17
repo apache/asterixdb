@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.api.dataflow.value;
 
-import java.io.Serializable;
 
 public interface ILinearizeComparatorFactory extends IBinaryComparatorFactory {
     public ILinearizeComparator createBinaryComparator();

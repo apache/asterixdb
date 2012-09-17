@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.tests.am.lsm.rtree;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
@@ -32,8 +33,8 @@ public class LSMRTreeSecondaryIndexSearchOperatorTest extends RTreeSecondaryInde
     @Override
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory(
             IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
-            IBinaryComparatorFactory[] btreeComparatorFactories) {
+            IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory) {
         return ((LSMRTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(secondaryValueProviderFactories,
-                rtreePolicyType, btreeComparatorFactories);
+                rtreePolicyType, btreeComparatorFactories, linearizerCmpFactory);
     }
 }

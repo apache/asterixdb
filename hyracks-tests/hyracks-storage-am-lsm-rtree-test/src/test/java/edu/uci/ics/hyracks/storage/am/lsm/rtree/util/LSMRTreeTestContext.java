@@ -80,7 +80,8 @@ public final class LSMRTreeTestContext extends AbstractRTreeTestContext {
                 fieldSerdes.length);
         LSMRTree lsmTree = LSMRTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file,
                 diskBufferCache, diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, rtreePolicyType, flushController, mergePolicy, opTracker, ioScheduler);
+                valueProviderFactories, rtreePolicyType, flushController, mergePolicy, opTracker, ioScheduler,
+                LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length));
         LSMRTreeTestContext testCtx = new LSMRTreeTestContext(fieldSerdes, lsmTree);
         return testCtx;
     }
