@@ -53,7 +53,7 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
             ITreeIndexFrame cursorFrame = treeIndex.getLeafFrameFactory().createFrame();
             ITreeIndexCursor cursor = treeIndexHelper.createDiskOrderScanCursor(cursorFrame);
             ISearchOperationCallback searchCallback = opDesc.getOpCallbackProvider().getSearchOperationCallback(
-                    treeIndexHelper.getResourceID());
+                    treeIndexHelper.getResourceID(), ctx);
             ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor(
                     NoOpOperationCallback.INSTANCE, searchCallback);
             writer.open();

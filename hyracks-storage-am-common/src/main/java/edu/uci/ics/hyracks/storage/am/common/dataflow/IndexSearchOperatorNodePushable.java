@@ -87,7 +87,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             appender = new FrameTupleAppender(ctx.getFrameSize());
             appender.reset(writeBuffer, true);
             ISearchOperationCallback searchCallback = opDesc.getOpCallbackProvider().getSearchOperationCallback(
-                    indexHelper.getResourceID());
+                    indexHelper.getResourceID(), ctx);
             indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE, searchCallback);
             cursor = createCursor();
             if (retainInput) {

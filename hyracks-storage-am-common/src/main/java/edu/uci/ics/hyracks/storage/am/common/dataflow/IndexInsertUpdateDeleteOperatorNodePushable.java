@@ -67,7 +67,8 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
         indexHelper.open();
         IIndex index = indexHelper.getIndexInstance();
         try {
-            modCallback = opDesc.getOpCallbackProvider().getModificationOperationCallback(indexHelper.getResourceID());
+            modCallback = opDesc.getOpCallbackProvider().getModificationOperationCallback(indexHelper.getResourceID(),
+                    ctx);
             indexAccessor = index.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
             ITupleFilterFactory tupleFilterFactory = opDesc.getTupleFilterFactory();
             if (tupleFilterFactory != null) {

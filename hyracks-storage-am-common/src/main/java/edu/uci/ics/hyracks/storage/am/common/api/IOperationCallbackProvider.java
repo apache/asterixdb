@@ -2,8 +2,10 @@ package edu.uci.ics.hyracks.storage.am.common.api;
 
 import java.io.Serializable;
 
-public interface IOperationCallbackProvider extends Serializable {
-    public IModificationOperationCallback getModificationOperationCallback(long resourceId);
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
-    public ISearchOperationCallback getSearchOperationCallback(long resourceId);
+public interface IOperationCallbackProvider extends Serializable {
+    public IModificationOperationCallback getModificationOperationCallback(long resourceId, IHyracksTaskContext ctx);
+
+    public ISearchOperationCallback getSearchOperationCallback(long resourceId, IHyracksTaskContext ctx);
 }

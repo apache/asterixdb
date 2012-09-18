@@ -1,5 +1,6 @@
 package edu.uci.ics.hyracks.storage.am.common.impls;
 
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
@@ -14,12 +15,12 @@ public enum NoOpOperationCallbackProvider implements IOperationCallbackProvider 
     INSTANCE;
 
     @Override
-    public IModificationOperationCallback getModificationOperationCallback(long resourceId) {
+    public IModificationOperationCallback getModificationOperationCallback(long resourceId, IHyracksTaskContext ctx) {
         return NoOpOperationCallback.INSTANCE;
     }
 
     @Override
-    public ISearchOperationCallback getSearchOperationCallback(long resourceId) {
+    public ISearchOperationCallback getSearchOperationCallback(long resourceId, IHyracksTaskContext ctx) {
         return NoOpOperationCallback.INSTANCE;
     }
 }
