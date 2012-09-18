@@ -113,7 +113,7 @@ public class TreeIndexInsertUpdateDeleteOperatorNodePushable extends AbstractUna
         ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndexInstance();
         try {
             modCallback = opDesc.getOpCallbackProvider().getModificationOperationCallback(
-                    treeIndexHelper.getResourceID());
+                    treeIndexHelper.getResourceID(), ctx);
             indexAccessor = treeIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
             ITupleFilterFactory tupleFilterFactory = opDesc.getTupleFilterFactory();
             if (tupleFilterFactory != null) {
