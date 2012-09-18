@@ -143,6 +143,7 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
 
             @Override
             public void fail() throws HyracksDataException {
+                startOfPipeline.fail();
             }
         };
     }
