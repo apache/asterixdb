@@ -68,6 +68,7 @@ public abstract class AbstractSearchOperationCallbackTest extends AbstractOperat
         private final ArrayTupleReference tuple;
 
         private boolean blockOnHigh;
+        private int blockingValue;
         private int expectedAfterBlock;
 
         public SearchTask() {
@@ -79,6 +80,7 @@ public abstract class AbstractSearchOperationCallbackTest extends AbstractOperat
             this.tuple = new ArrayTupleReference();
 
             this.blockOnHigh = false;
+            this.blockingValue = -1;
             this.expectedAfterBlock = -1;
         }
 
@@ -107,7 +109,7 @@ public abstract class AbstractSearchOperationCallbackTest extends AbstractOperat
             } finally {
                 lock.unlock();
             }
-            
+
             return true;
         }
 
@@ -120,6 +122,7 @@ public abstract class AbstractSearchOperationCallbackTest extends AbstractOperat
             for (int i = begin; i <= end; i++) {
                 if (blockOnHigh == true && i == end) {
                     this.blockOnHigh = true;
+                    this.blockingValue = end;
                     this.expectedAfterBlock = expectedAfterBlock;
                 }
                 TupleUtils.createIntegerTuple(builder, tuple, i);
@@ -155,6 +158,17 @@ public abstract class AbstractSearchOperationCallbackTest extends AbstractOperat
                     condition.signal();
                     condition.awaitUninterruptibly();
                     blockOnHigh = false;
+                }
+            }
+
+            @Override
+            public void cancel(ITupleReference tuple) {
+                try {
+                    TupleUtils.createIntegerTuple(builder, SearchTask.this.tuple, blockingValue);
+                    Assert.assertEquals(0, cmp.compare(tuple, SearchTask.this.tuple));
+                    TupleUtils.createIntegerTuple(builder, SearchTask.this.tuple, expectedAfterBlock);
+                } catch (HyracksDataException e) {
+                    e.printStackTrace();
                 }
             }
 

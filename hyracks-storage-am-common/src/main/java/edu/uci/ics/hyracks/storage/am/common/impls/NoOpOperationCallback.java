@@ -44,4 +44,9 @@ public enum NoOpOperationCallback implements IModificationOperationCallback, ISe
     public void found(ITupleReference tuple) {
         // Do nothing.        
     }
+
+    @Override
+    public void cancel(ITupleReference tuple) {
+        // Do nothing.
+    }
 }

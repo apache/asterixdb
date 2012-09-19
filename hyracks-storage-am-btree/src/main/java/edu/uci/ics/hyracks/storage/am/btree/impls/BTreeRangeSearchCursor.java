@@ -189,6 +189,8 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
                 frameTuple.resetByTupleIndex(frame, tupleIndex);
                 if (originalKeyCmp.compare(reconciliationTuple, frameTuple) == 0) {
                     return true;
+                } else {
+                    searchCb.cancel(reconciliationTuple);
                 }
             }
         }

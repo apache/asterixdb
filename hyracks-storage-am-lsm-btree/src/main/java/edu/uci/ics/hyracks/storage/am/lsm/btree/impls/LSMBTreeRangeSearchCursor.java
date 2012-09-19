@@ -111,6 +111,12 @@ public class LSMBTreeRangeSearchCursor extends LSMTreeSearchCursor {
             if (!pushIntoPriorityQueue(inMemElement)) {
                 return !outputPriorityQueue.isEmpty();
             }
+
+            if (pqHead.getCursorIndex() == 0) {
+                if (cmp.compare(copyTuple, inMemElement.getTuple()) != 0) {
+                    searchCallback.cancel(copyTuple);
+                }
+            }
             checkPriorityQueue();
         } else {
             searchCallback.reconcile(pqHead.getTuple());

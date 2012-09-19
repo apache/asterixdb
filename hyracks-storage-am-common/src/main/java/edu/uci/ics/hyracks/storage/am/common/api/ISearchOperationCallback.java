@@ -32,4 +32,13 @@ public interface ISearchOperationCallback {
      * @param tuple the tuple that failed to proceed
      */
     public void reconcile(ITupleReference tuple);
+
+    /**
+     * This method is only called on a tuple that was reconciled on, but not found after 
+     * retraversing. This method allows an opportunity to cancel some action that was taken in 
+     * {@link #reconcile(ITupleReference))}.
+     * 
+     * @param tuple the tuple that was previously reconciled
+     */
+    public void cancel(ITupleReference tuple);
 }

@@ -170,6 +170,11 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 }
             }
 
+            @Override
+            public void cancel(ITupleReference tuple) {
+                // Do nothing.
+            }
+
         }
     }
 

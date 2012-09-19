@@ -37,4 +37,9 @@ public enum TestOperationCallback implements ISearchOperationCallback, IModifica
         // Do nothing.        
     }
 
+    @Override
+    public void cancel(ITupleReference tuple) {
+        // Do nothing.
+    }
+
 }
