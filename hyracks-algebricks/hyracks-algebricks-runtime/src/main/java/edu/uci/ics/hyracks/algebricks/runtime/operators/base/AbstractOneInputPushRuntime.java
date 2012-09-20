@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 public abstract class AbstractOneInputPushRuntime implements IPushRuntime {
     protected IFrameWriter writer;
     protected RecordDescriptor outputRecordDesc;
+    protected boolean failed;
 
     @Override
     public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
@@ -31,6 +32,7 @@ public abstract class AbstractOneInputPushRuntime implements IPushRuntime {
 
     @Override
     public void fail() throws HyracksDataException {
+        failed = true;
         writer.fail();
     }
 }

@@ -33,8 +33,10 @@ public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends Abstr
 
     @Override
     public void close() throws HyracksDataException {
-        if (appender.getTupleCount() > 0) {
-            FrameUtils.flushFrame(frame, writer);
+        if (!failed) {
+            if (appender.getTupleCount() > 0) {
+                FrameUtils.flushFrame(frame, writer);
+            }
         }
         writer.close();
         appender.reset(frame, true);
