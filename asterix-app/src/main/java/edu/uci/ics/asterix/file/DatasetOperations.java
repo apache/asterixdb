@@ -34,7 +34,9 @@ import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.runtime.job.listener.JobEventListenerFactory;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
 import edu.uci.ics.asterix.translator.DmlTranslator.CompiledLoadFromFileStatement;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
@@ -218,6 +220,8 @@ public class DatasetOperations {
                     + dataset.getDatasetType());
         }
         JobSpecification spec = new JobSpecification();
+        
+        edu.uci.ics.asterix.transaction.management.service.transaction.JobId asterixJobId = JobIdFactory.generateJobId();
 
         ARecordType itemType = (ARecordType) metadata.findType(dataset.getItemTypeName());
         IDataFormat format = metadata.getFormat();
@@ -296,6 +300,7 @@ public class DatasetOperations {
         }
         spec.addRoot(btreeBulkLoad);
         spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+        spec.setJobletEventListenerFactory(new JobEventListenerFactory(asterixJobId, false));
 
         return new Job(spec);
     }

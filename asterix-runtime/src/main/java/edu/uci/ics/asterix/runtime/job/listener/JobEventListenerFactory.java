@@ -42,7 +42,12 @@ public class JobEventListenerFactory implements IJobletEventListenerFactory {
 
             @Override
             public void jobletStart() {
-
+                try {
+                    ((AsterixAppRuntimeContext) jobletContext.getApplicationContext().getApplicationObject())
+                            .getTransactionProvider().getTransactionManager().getTransactionContext(jobId);
+                } catch (ACIDException e) {
+                    throw new Error(e);
+                }
             }
 
         };
