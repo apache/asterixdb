@@ -33,3 +33,7 @@ quantifiers/everysat_03.aql
 flwor
 string/startwith03.aql
 aggregate/droptype.aql
+failure/insert-rtree.aql
+failure/insert.aql
+failure/delete-rtree.aql
+failure/delete.aql

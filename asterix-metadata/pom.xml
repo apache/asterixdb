@@ -42,12 +42,6 @@
 			<version>0.0.4-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
-			<artifactId>asterix-hyracks-glue</artifactId>
-			<version>0.0.4-SNAPSHOT</version>
-			<scope>compile</scope>
-		</dependency>
                 <dependency>
                         <groupId>org.apache.hadoop</groupId>
                         <artifactId>hadoop-core</artifactId>

@@ -32,12 +32,6 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
-			<artifactId>asterix-hyracks-glue</artifactId>
-			<version>0.0.4-SNAPSHOT</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-algebricks-compiler</artifactId>
 			<version>0.2.1-SNAPSHOT</version>
