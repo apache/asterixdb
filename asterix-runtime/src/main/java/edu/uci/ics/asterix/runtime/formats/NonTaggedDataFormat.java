@@ -162,6 +162,18 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.StringToCodePointDescrip
 import edu.uci.ics.asterix.runtime.evaluators.functions.CodePointToStringDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.StringConcatDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.StringJoinDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AddDateDurationDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AddDatetimeDurationDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AddTimeDurationDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DateFromDatetimeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DateFromUnixTimeInDaysDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DatetimeFromDateAndTimeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DatetimeFromUnixTimeInMsDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.SubtractDateDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.SubtractDatetimeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.SubtractTimeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.TimeFromDatetimeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.TimeFromUnixTimeInMsDescriptor;
 import edu.uci.ics.asterix.runtime.operators.file.AdmSchemafullRecordParserFactory;
 import edu.uci.ics.asterix.runtime.operators.file.NtDelimitedDataTupleParserFactory;
 import edu.uci.ics.asterix.runtime.runningaggregates.std.TidRunningAggregateDescriptor;
@@ -386,6 +398,20 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(TemporalMinuteAccessor.FACTORY);
         temp.add(TemporalSecondAccessor.FACTORY);
         temp.add(TemporalMillisecondAccessor.FACTORY);
+
+        // Temporal functions
+        temp.add(DateFromUnixTimeInDaysDescriptor.FACTORY);
+        temp.add(DateFromDatetimeDescriptor.FACTORY);
+        temp.add(AddDateDurationDescriptor.FACTORY);
+        temp.add(SubtractDateDescriptor.FACTORY);
+        temp.add(TimeFromUnixTimeInMsDescriptor.FACTORY);
+        temp.add(TimeFromDatetimeDescriptor.FACTORY);
+        temp.add(SubtractTimeDescriptor.FACTORY);
+        temp.add(AddTimeDurationDescriptor.FACTORY);
+        temp.add(DatetimeFromUnixTimeInMsDescriptor.FACTORY);
+        temp.add(DatetimeFromDateAndTimeDescriptor.FACTORY);
+        temp.add(SubtractDatetimeDescriptor.FACTORY);
+        temp.add(AddDatetimeDurationDescriptor.FACTORY);
 
         IFunctionManager mgr = new FunctionManagerImpl();
         for (IFunctionDescriptorFactory fdFactory : temp) {

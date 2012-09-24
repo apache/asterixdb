@@ -1,0 +1,25 @@
+/*
+ * Description      :   Check temporal functions for time
+ * Expected Result  :   Success
+ * Date             :   24th Sep, 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/temp_time_functions.adm";
+
+let $t1 := time_from_unix_time_in_ms(1560074)
+let $dt1 := datetime("1327-12-02T23:35:49.938Z")
+let $t2 := time_from_datetime($dt1)
+let $dt2 := datetime("2012-10-11T02:30:23+03:00")
+let $t3 := time_from_datetime($dt2)
+let $dr1 := duration("-PT30H")
+let $t4 := add_time_duration($t1, $dr1)
+let $dr2 := duration("PT36M")
+let $t5 := add_time_duration($t2, $dr2)
+let $dr3 := subtract_time($t5, $t2)
+let $dr4 := subtract_time($t4, $t1)
+
+return { "time1" : $t1, "time2" : $t2, "time3" : $t3, "time4" : $t4, "time5" : $t5, "duration1" : $dr3, "duration2" : $dr4  }

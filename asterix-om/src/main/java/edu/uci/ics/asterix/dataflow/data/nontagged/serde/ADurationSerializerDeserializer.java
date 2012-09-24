@@ -56,4 +56,26 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
             throw new HyracksDataException(e);
         }
     }
+
+    /**
+     * Get the year-month field of the duration as an integer number of days.
+     * 
+     * @param data
+     * @param offset
+     * @return
+     */
+    public static int getYearMonth(byte[] data, int offset) {
+        return AInt32SerializerDeserializer.getInt(data, offset);
+    }
+
+    /**
+     * Get the day-time field of the duration as an long integer number of milliseconds.
+     * 
+     * @param data
+     * @param offset
+     * @return
+     */
+    public static long getDayTime(byte[] data, int offset) {
+        return AInt64SerializerDeserializer.getLong(data, offset + 4);
+    }
 }

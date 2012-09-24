@@ -63,4 +63,8 @@ public class ATimeSerializerDeserializer implements ISerializerDeserializer<ATim
         timeSerde.serialize(aTime, out);
     }
 
+    public static int getChronon(byte[] byteArray, int offset) {
+        return AInt32SerializerDeserializer.getInt(byteArray, offset);
+    }
+
 }

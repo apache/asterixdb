@@ -78,4 +78,8 @@ public class ADateSerializerDeserializer implements ISerializerDeserializer<ADat
 
         dateSerde.serialize(aDate, out);
     }
+
+    public static int getChronon(byte[] byteArray, int offset) {
+        return AInt32SerializerDeserializer.getInt(byteArray, offset);
+    }
 }

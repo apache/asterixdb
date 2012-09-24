@@ -402,6 +402,32 @@ public class AsterixBuiltinFunctions {
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_MILLISEC = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "millisecond", 1);
 
+    // Temporal functions
+    public static final FunctionIdentifier DATE_FROM_UNIX_TIME_IN_DAYS = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "date_from_unix_time_in_days", 1);
+    public static final FunctionIdentifier DATE_FROM_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "date_from_datetime", 1);
+    public final static FunctionIdentifier ADD_DATE_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "add_date_duration", 2);
+    public final static FunctionIdentifier SUBTRACT_DATE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "subtract_date", 2);
+    public final static FunctionIdentifier TIME_FROM_UNIX_TIME_IN_MS = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "time_from_unix_time_in_ms", 1);
+    public final static FunctionIdentifier TIME_FROM_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "time_from_datetime", 1);
+    public final static FunctionIdentifier SUBTRACT_TIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "subtract_time", 2);
+    public final static FunctionIdentifier ADD_TIME_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "add_time_duration", 2);
+    public final static FunctionIdentifier DATETIME_FROM_UNIX_TIME_IN_MS = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "datetime_from_unix_time_in_ms", 1);
+    public final static FunctionIdentifier DATETIME_FROM_DATE_TIME = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "datetime_from_date_time", 2);
+    public final static FunctionIdentifier SUBTRACT_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "subtract_datetime", 2);
+    public final static FunctionIdentifier ADD_DATETIME_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "add_datetime_duration", 2);
+
     public static final FunctionIdentifier EQ = AlgebricksBuiltinFunctions.EQ;
     public static final FunctionIdentifier LE = AlgebricksBuiltinFunctions.LE;
     public static final FunctionIdentifier GE = AlgebricksBuiltinFunctions.GE;
@@ -663,12 +689,27 @@ public class AsterixBuiltinFunctions {
         add(ACCESSOR_TEMPORAL_SEC, OptionalAInt32TypeComputer.INSTANCE);
         add(ACCESSOR_TEMPORAL_MILLISEC, OptionalAInt32TypeComputer.INSTANCE);
 
+        // temporal functions
+        add(DATE_FROM_UNIX_TIME_IN_DAYS, OptionalADateTypeComputer.INSTANCE);
+        add(DATE_FROM_DATETIME, OptionalADateTypeComputer.INSTANCE);
+        add(ADD_DATE_DURATION, OptionalADateTypeComputer.INSTANCE);
+        add(SUBTRACT_DATE, OptionalADurationTypeComputer.INSTANCE);
+        add(TIME_FROM_UNIX_TIME_IN_MS, OptionalATimeTypeComputer.INSTANCE);
+        add(TIME_FROM_DATETIME, OptionalATimeTypeComputer.INSTANCE);
+        add(SUBTRACT_TIME, OptionalADurationTypeComputer.INSTANCE);
+        add(ADD_TIME_DURATION, OptionalATimeTypeComputer.INSTANCE);
+        add(DATETIME_FROM_DATE_TIME, OptionalADateTimeTypeComputer.INSTANCE);
+        add(DATETIME_FROM_UNIX_TIME_IN_MS, OptionalADateTimeTypeComputer.INSTANCE);
+        add(SUBTRACT_DATETIME, OptionalADurationTypeComputer.INSTANCE);
+        add(ADD_DATETIME_DURATION, OptionalADateTimeTypeComputer.INSTANCE);
+
         String metadataFunctionLoaderClassName = "edu.uci.ics.asterix.metadata.functions.MetadataBuiltinFunctions";
         try {
             Class.forName(metadataFunctionLoaderClassName);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
+
     }
 
     static {

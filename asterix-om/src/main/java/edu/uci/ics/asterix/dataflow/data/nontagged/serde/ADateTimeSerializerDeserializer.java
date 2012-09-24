@@ -90,4 +90,8 @@ public class ADateTimeSerializerDeserializer implements ISerializerDeserializer<
 
         datetimeSerde.serialize(aDateTime, out);
     }
+
+    public static long getChronon(byte[] data, int offset) {
+        return AInt64SerializerDeserializer.getLong(data, offset);
+    }
 }
