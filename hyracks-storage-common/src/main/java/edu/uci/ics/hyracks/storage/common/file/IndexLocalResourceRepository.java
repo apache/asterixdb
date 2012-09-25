@@ -1,32 +1,62 @@
 package edu.uci.ics.hyracks.storage.common.file;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.IIOManager;
 
 public class IndexLocalResourceRepository implements ILocalResourceRepository {
 
-    private final IIOManager ioManager;
+    private final List<ILocalResourceClass> resourceClasses;
     private final List<String> mountPoints;
     private final String rootDir;
     private static final String METADATA_FILE_NAME = ".metadata";
     private Map<String, ILocalResource> name2ResourceMap = new HashMap<String, ILocalResource>();
     private Map<Long, ILocalResource> id2ResourceMap = new HashMap<Long, ILocalResource>();
 
-    public IndexLocalResourceRepository(IIOManager ioManager, List<String> mountPoints, String rootDir)
-            throws HyracksDataException {
-        this.ioManager = ioManager;
+    public IndexLocalResourceRepository(List<ILocalResourceClass> resourceClasses, List<String> mountPoints,
+            String rootDir) throws HyracksDataException {
+        this.resourceClasses = resourceClasses;
         this.mountPoints = mountPoints;
         this.rootDir = rootDir;
 
-        //TODO initialize the Maps
+        File rootFile = new File(this.mountPoints.get(0), rootDir);
+        if (!rootFile.exists()) {
+            throw new HyracksDataException(rootFile.getAbsolutePath() + "doesn't exist.");
+        }
+
+        FilenameFilter filter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                if (name.equalsIgnoreCase(METADATA_FILE_NAME)) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        };
+
+        String[] fileNameList = rootFile.list();
+        for (String fileName : fileNameList) {
+            File childFile = new File(rootFile, fileName);
+            if (childFile.isDirectory()) {
+                File[] targetFileList = childFile.listFiles(filter);
+                for (File targetFile : targetFileList) {
+                    ILocalResource localResource = readLocalResource(targetFile);
+                    id2ResourceMap.put(localResource.getResourceId(), localResource);
+                    name2ResourceMap.put(localResource.getResourceName(), localResource);
+                }
+            }
+        }
     }
 
     @Override
@@ -46,9 +76,8 @@ public class IndexLocalResourceRepository implements ILocalResourceRepository {
         if (id2ResourceMap.containsKey(id)) {
             throw new HyracksDataException("Duplicate resource");
         }
-        ILocalResource resourceClone = cloneResource(resource);
-        id2ResourceMap.put(id, resourceClone);
-        name2ResourceMap.put(resource.getResourceName(), resourceClone);
+        id2ResourceMap.put(id, resource);
+        name2ResourceMap.put(resource.getResourceName(), resource);
 
         FileOutputStream fos = null;
         ObjectOutputStream oosToFos = null;
@@ -56,6 +85,7 @@ public class IndexLocalResourceRepository implements ILocalResourceRepository {
             fos = new FileOutputStream(getFileName(mountPoints.get(0), resource.getResourceName()));
             oosToFos = new ObjectOutputStream(fos);
             byte[] outputBytes = resource.getResourceClass().serialize(resource);
+            oosToFos.writeInt(resource.getResourceClass().getResourceClassId());
             oosToFos.writeInt(outputBytes.length);
             oosToFos.write(outputBytes);
             oosToFos.flush();
@@ -105,18 +135,18 @@ public class IndexLocalResourceRepository implements ILocalResourceRepository {
 
     @Override
     public List<ILocalResource> getAllResources() throws HyracksDataException {
-        // TODO Auto-generated method stub
-        return null;
+        List<ILocalResource> resources = new ArrayList<ILocalResource>();
+        for (ILocalResource resource : id2ResourceMap.values()) {
+            resources.add(resource);
+        }
+        return resources;
     }
 
     private String getFileName(String mountPoint, String baseDir) {
 
         String fileName = new String(mountPoint);
 
-        if (!fileName.endsWith(System.getProperty("file.separator"))) {
-            fileName += System.getProperty("file.separator");
-        }
-        if (!baseDir.endsWith(System.getProperty("file.separate"))) {
+        if (!baseDir.endsWith(System.getProperty("file.separator"))) {
             baseDir += System.getProperty("file.separator");
         }
         fileName += baseDir + METADATA_FILE_NAME;
@@ -124,12 +154,71 @@ public class IndexLocalResourceRepository implements ILocalResourceRepository {
         return fileName;
     }
 
-    private ILocalResource cloneResource(ILocalResource resource) {
-        switch (resource.getResourceClass().getResourceClassId()) {
-            case ILocalResourceClass.LSMBTree:
-                return new LSMBTreeLocalResource();//TODO change the constructor appropriately
-            default:
-                throw new IllegalArgumentException();
+    private ILocalResource readLocalResource(File file) throws HyracksDataException {
+        FileInputStream fis = null;
+        ObjectInputStream oisFromFis = null;
+        ByteArrayInputStream bais = null;
+        ObjectInputStream oisFromBais = null;
+        ILocalResource resource = null;
+
+        try {
+            fis = new FileInputStream(file);
+            oisFromFis = new ObjectInputStream(fis);
+
+            int resourceClassId = oisFromFis.readInt();
+            int inputLength = oisFromFis.readInt();
+            byte[] inputBytes = new byte[inputLength];
+            if (inputLength != oisFromFis.read(inputBytes)) {
+                throw new HyracksDataException("Corrupted file");
+            }
+
+            bais = new ByteArrayInputStream(inputBytes);
+            oisFromBais = new ObjectInputStream(bais);
+            for (ILocalResourceClass resourceClass : resourceClasses) {
+                if (resourceClass.getResourceClassId() == resourceClassId) {
+                    resource = resourceClass.deserialize(inputBytes);
+                    break;
+                }
+            }
+            return resource;
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        } finally {
+            if (oisFromFis != null) {
+                try {
+                    oisFromFis.close();
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                } finally {
+                    closeInputStream(oisFromBais, bais);
+                }
+            }
+            if (oisFromFis == null && fis != null) {
+                try {
+                    fis.close();
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                } finally {
+                    closeInputStream(oisFromBais, bais);
+                }
+            }
+        }
+    }
+
+    private void closeInputStream(ObjectInputStream oisFromBais, ByteArrayInputStream bais) throws HyracksDataException {
+        if (oisFromBais != null) {
+            try {
+                oisFromBais.close();
+            } catch (IOException e) {
+                throw new HyracksDataException(e);
+            }
+        }
+        if (oisFromBais == null && bais != null) {
+            try {
+                bais.close();
+            } catch (IOException e) {
+                throw new HyracksDataException(e);
+            }
         }
     }
 }
