@@ -20,7 +20,7 @@ public interface ILocalResource extends Serializable {
     public long getResourceId();
 
     public String getResourceName();
-    
+
     public Object getResourceObject();
 
     public ILocalResourceClass getResourceClass();

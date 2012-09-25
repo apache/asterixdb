@@ -19,7 +19,7 @@ import java.util.List;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public interface ILocalResourceRepository {
-    
+
     public ILocalResource getResourceById(long id) throws HyracksDataException;
 
     public ILocalResource getResourceByName(String name) throws HyracksDataException;
@@ -29,7 +29,7 @@ public interface ILocalResourceRepository {
     public void deleteResourceById(long id) throws HyracksDataException;
 
     public void deleteResourceByName(String name) throws HyracksDataException;
-    
+
     public List<ILocalResource> getAllResources() throws HyracksDataException;
 
 }
