@@ -3,13 +3,13 @@ package edu.uci.ics.hyracks.storage.common.file;
 public class LSMBTreeLocalResourceClass implements ILocalResourceClass {
 
     @Override
-    public ILocalResource deserialize(byte[] bytes) {
+    public byte[] serialize(ILocalResource resource) {
         // TODO Auto-generated method stub
         return null;
     }
-
+    
     @Override
-    public byte[] serialize(ILocalResource localResource) {
+    public ILocalResource deserialize(byte[] bytes) {
         // TODO Auto-generated method stub
         return null;
     }

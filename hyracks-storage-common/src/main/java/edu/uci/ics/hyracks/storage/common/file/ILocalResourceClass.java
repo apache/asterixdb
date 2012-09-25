@@ -20,9 +20,9 @@ public interface ILocalResourceClass {
     public static final int LSMRTree = 1;
     public static final int LSMInvertedIndex = 2;
 
-    public ILocalResource deserialize(byte[] bytes);
+    public byte[] serialize(ILocalResource resource);
     
-    public byte[] serialize(ILocalResource localResource);
+    public ILocalResource deserialize(byte[] bytes);
     
     public int getResourceClassId();
     

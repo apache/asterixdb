@@ -17,8 +17,6 @@ package edu.uci.ics.hyracks.storage.common.file;
 import java.io.Serializable;
 
 public interface ILocalResource extends Serializable {
-    public byte[] toBytes();
-
     public long getResourceId();
 
     public String getResourceName();
