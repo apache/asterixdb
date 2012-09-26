@@ -64,7 +64,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManage
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
-import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
 
 /**
@@ -86,7 +86,7 @@ public class MetadataBootstrap {
     private static IBufferCache bufferCache;
     private static IFileMapProvider fileMapProvider;
     private static IIndexLifecycleManager indexLifecycleManager;
-    private static IIndexArtifactMap indexArtifactMap;
+    private static ILocalResourceRepository localResourceRepository;
     private static IIOManager ioManager;
 
     private static String metadataNodeName;
@@ -138,7 +138,7 @@ public class MetadataBootstrap {
         }
 
         indexLifecycleManager = runtimeContext.getIndexLifecycleManager();
-        indexArtifactMap = runtimeContext.getIndexArtifactMap();
+        localResourceRepository = runtimeContext.getLocalResourceRepository();
         bufferCache = runtimeContext.getBufferCache();
         fileMapProvider = runtimeContext.getFileMapManager();
         ioManager = ncApplicationContext.getRootContext().getIOManager();
@@ -187,12 +187,14 @@ public class MetadataBootstrap {
     public static void stopUniverse() throws HyracksDataException {
         // Close all BTree files in BufferCache.
         for (int i = 0; i < primaryIndexes.length; i++) {
-            long resourceID = indexArtifactMap.get(primaryIndexes[i].getFile().getFile().getPath());
+            long resourceID = localResourceRepository
+                    .getResourceByName(primaryIndexes[i].getFile().getFile().getPath()).getResourceId();
             indexLifecycleManager.close(resourceID);
             indexLifecycleManager.unregister(resourceID);
         }
         for (int i = 0; i < secondaryIndexes.length; i++) {
-            long resourceID = indexArtifactMap.get(secondaryIndexes[i].getFile().getFile().getPath());
+            long resourceID = localResourceRepository.getResourceByName(
+                    secondaryIndexes[i].getFile().getFile().getPath()).getResourceId();
             indexLifecycleManager.close(resourceID);
             indexLifecycleManager.unregister(resourceID);
         }
@@ -302,7 +304,7 @@ public class MetadataBootstrap {
             lsmBtree.create();
             resourceID = indexArtifactMap.create(file.getFile().getPath(), ioManager.getIODevices());
         } else {
-            resourceID = indexArtifactMap.get(file.getFile().getPath());
+            resourceID = localResourceRepository.getResourceByName(file.getFile().getPath()).getResourceId();
         }
         index.setResourceID(resourceID);
         index.setFile(file);

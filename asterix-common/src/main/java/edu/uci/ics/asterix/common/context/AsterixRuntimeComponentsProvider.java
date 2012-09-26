@@ -14,7 +14,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvide
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
-import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 
 public enum AsterixRuntimeComponentsProvider implements IIndexLifecycleManagerProvider, IStorageManagerInterface,
         ILSMIOOperationSchedulerProvider, ILSMFlushControllerProvider, ILSMOperationTrackerProvider,
@@ -58,9 +58,9 @@ public enum AsterixRuntimeComponentsProvider implements IIndexLifecycleManagerPr
     }
 
     @Override
-    public IIndexArtifactMap getIndexArtifactMap(IHyracksTaskContext ctx) {
+    public ILocalResourceRepository getLocalResourceRepository(IHyracksTaskContext ctx) {
         return ((AsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
-                .getIndexArtifactMap();
+                .getLocalResourceRepository();
     }
 
     @Override

@@ -17,7 +17,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateScheduler;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTracker;
 import edu.uci.ics.hyracks.storage.common.TransientIndexArtifactMap;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
@@ -27,14 +26,16 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
-import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
+import edu.uci.ics.hyracks.storage.common.file.IndexLocalResourceRepositoryFactory;
 
 public class AsterixAppRuntimeContext {
     private static final int DEFAULT_BUFFER_CACHE_PAGE_SIZE = 32768;
     private static final int DEFAULT_LIFECYCLEMANAGER_MEMORY_BUDGET = 1024 * 1024 * 1024; // 1GB
     private final INCApplicationContext ncApplicationContext;
 
-    private IIndexArtifactMap indexArtifactMap;
+    private ILocalResourceRepository localResourceRepository;
     private IIndexLifecycleManager indexLifecycleManager;
     private IFileMapManager fileMapManager;
     private IBufferCache bufferCache;
@@ -52,8 +53,7 @@ public class AsterixAppRuntimeContext {
     public void initialize() throws IOException, ACIDException {
         int pageSize = getBufferCachePageSize();
         int numPages = getBufferCacheNumPages();
-
-        indexArtifactMap = new TransientIndexArtifactMap();
+        
         fileMapManager = new AsterixFileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
@@ -66,7 +66,8 @@ public class AsterixAppRuntimeContext {
         lsmIOScheduler = ImmediateScheduler.INSTANCE;
         mergePolicy = new ConstantMergePolicy(lsmIOScheduler, 3);
         opTracker = new RefCountingOperationTracker();
-
+        ILocalResourceRepositoryFactory indexLocalResourceRepositoryFactory = new IndexLocalResourceRepositoryFactory(ioMgr);
+        localResourceRepository = indexLocalResourceRepositoryFactory.createRepository(); 
     }
 
     private int getBufferCachePageSize() {
@@ -132,8 +133,8 @@ public class AsterixAppRuntimeContext {
         return indexLifecycleManager;
     }
 
-    public IIndexArtifactMap getIndexArtifactMap() {
-        return indexArtifactMap;
+    public ILocalResourceRepository getLocalResourceRepository() {
+        return localResourceRepository;
     }
 
     public ILSMFlushController getFlushController() {
