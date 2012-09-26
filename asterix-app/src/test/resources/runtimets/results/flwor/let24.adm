@@ -1,0 +1,1 @@
+{ "m": { "name": "Holmes S", "age": 25, "sex": "M" }, "n": { "name": "Bob", "age": 35, "sex": null }, "o": {{ "John", 45, "M" }}, "p": {{ "Optional data goes here", null }}, "q": { "id": 1345, "test": { "name": "Federer", "age": 35 }, "foo": "foo" } }
