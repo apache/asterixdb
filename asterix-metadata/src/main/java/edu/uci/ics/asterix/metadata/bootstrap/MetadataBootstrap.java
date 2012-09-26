@@ -65,6 +65,8 @@ import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
+import edu.uci.ics.hyracks.storage.common.file.IndexLocalResource;
+import edu.uci.ics.hyracks.storage.common.file.LSMBTreeLocalResourceClass;
 import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
 
 /**
@@ -302,7 +304,9 @@ public class MetadataBootstrap {
         long resourceID = -1;
         if (create) {
             lsmBtree.create();
-            resourceID = indexArtifactMap.create(file.getFile().getPath(), ioManager.getIODevices());
+            resourceID = runtimeContext.getResourceIdFactory().createId();
+            //resourceID = indexArtifactMap.create(file.getFile().getPath(), ioManager.getIODevices());
+            localResourceRepository.insert(new IndexLocalResource(resourceID, file.getFile().getPath(), null, LSMBTreeLocalResourceClass.getInstance()));
         } else {
             resourceID = localResourceRepository.getResourceByName(file.getFile().getPath()).getResourceId();
         }
