@@ -25,7 +25,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 
 /**
  * Represents a utility class for generating log records corresponding to
@@ -58,10 +58,10 @@ class TransactionState {
 class TxnThreadState {
 
     private ITupleReference tuple;
-    private IndexOp indexOperation;
+    private IndexOperation indexOperation;
     private LogicalLogLocator logicalLogLocator;
 
-    public TxnThreadState(LogicalLogLocator logicalLogLocator, IndexOp indexOperation, ITupleReference tupleReference) {
+    public TxnThreadState(LogicalLogLocator logicalLogLocator, IndexOperation indexOperation, ITupleReference tupleReference) {
         this.tuple = tupleReference;
         this.indexOperation = indexOperation;
         this.logicalLogLocator = logicalLogLocator;
@@ -75,11 +75,11 @@ class TxnThreadState {
         this.tuple = tuple;
     }
 
-    public synchronized IndexOp getIndexOperation() {
+    public synchronized IndexOperation getIndexOperation() {
         return indexOperation;
     }
 
-    public synchronized void setIndexOperation(IndexOp indexOperation) {
+    public synchronized void setIndexOperation(IndexOperation indexOperation) {
         this.indexOperation = indexOperation;
     }
 
@@ -127,13 +127,13 @@ public class TreeLogger implements ILogger, ICloseable {
         arguments.remove(context.getJobId());
     }
 
-    public void generateLogRecord(TransactionProvider provider, TransactionContext context, IndexOp operation,
+    public void generateLogRecord(TransactionProvider provider, TransactionContext context, IndexOperation operation,
             ITupleReference tuple) throws ACIDException {
         context.addCloseableResource(this); // the close method would be called
         // on this TreeLogger instance at
         // the time of transaction
         // commit/abort.
-        if (operation != IndexOp.INSERT && operation != IndexOp.DELETE) {
+        if (operation != IndexOperation.INSERT && operation != IndexOperation.DELETE) {
             throw new ACIDException("Loging for Operation " + operation + " not supported");
 
         }

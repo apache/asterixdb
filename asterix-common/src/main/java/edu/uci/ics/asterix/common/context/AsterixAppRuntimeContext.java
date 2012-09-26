@@ -17,6 +17,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ReferenceCountingOperationTracker;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -55,7 +56,7 @@ public class AsterixAppRuntimeContext {
     public void initialize() throws IOException, ACIDException {
         int pageSize = getBufferCachePageSize();
         int numPages = getBufferCacheNumPages();
-        
+
         fileMapManager = new AsterixFileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
@@ -67,8 +68,9 @@ public class AsterixAppRuntimeContext {
         flushController = new FlushController();
         lsmIOScheduler = ImmediateScheduler.INSTANCE;
         mergePolicy = new ConstantMergePolicy(lsmIOScheduler, 3);
-        opTracker = new RefCountingOperationTracker();
-        ILocalResourceRepositoryFactory indexLocalResourceRepositoryFactory = new IndexLocalResourceRepositoryFactory(ioMgr);
+        opTracker = new ReferenceCountingOperationTracker();
+        ILocalResourceRepositoryFactory indexLocalResourceRepositoryFactory = new IndexLocalResourceRepositoryFactory(
+                ioMgr);
         localResourceRepository = indexLocalResourceRepositoryFactory.createRepository();
         resourceIdFactory = (new ResourceIdFactoryFactory(localResourceRepository)).createResourceIdFactory();
     }
@@ -155,7 +157,7 @@ public class AsterixAppRuntimeContext {
     public ILocalResourceRepository getLocalResourceRepository() {
         return localResourceRepository;
     }
-    
+
     public ResourceIdFactory getResourceIdFactory() {
         return resourceIdFactory;
     }

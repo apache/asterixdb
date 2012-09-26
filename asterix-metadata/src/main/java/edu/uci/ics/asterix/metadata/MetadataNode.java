@@ -75,7 +75,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTreeRangeSearchCursor;
 
@@ -263,7 +263,7 @@ public class MetadataNode implements IMetadataNode {
         transactionProvider.getLockManager().lock(index.getDatasetId(), -1, LockMode.X, txnCtx);
         // TODO: fix exceptions once new BTree exception model is in hyracks.
         indexAccessor.insert(tuple);
-        index.getTreeLogger().generateLogRecord(transactionProvider, txnCtx, IndexOp.INSERT, tuple);
+        index.getTreeLogger().generateLogRecord(transactionProvider, txnCtx, IndexOperation.INSERT, tuple);
         indexLifecycleManager.close(resourceID);
     }
 
@@ -514,7 +514,7 @@ public class MetadataNode implements IMetadataNode {
         // regular waiters in the LockManager.
         transactionProvider.getLockManager().lock(index.getDatasetId(), -1, LockMode.X, txnCtx);
         indexAccessor.delete(tuple);
-        index.getTreeLogger().generateLogRecord(transactionProvider, txnCtx, IndexOp.DELETE, tuple);
+        index.getTreeLogger().generateLogRecord(transactionProvider, txnCtx, IndexOperation.DELETE, tuple);
         indexLifecycleManager.close(resourceID);
     }
 
