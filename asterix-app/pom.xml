@@ -209,6 +209,11 @@
 			<type>jar</type>
 			<scope>test</scope>
 		</dependency>
+                <dependency>
+                    <groupId>net.sourceforge.cobertura</groupId>
+                    <artifactId>cobertura</artifactId>
+                    <version>1.9.4</version>
+                </dependency>
 	</dependencies>
 
 </project>
