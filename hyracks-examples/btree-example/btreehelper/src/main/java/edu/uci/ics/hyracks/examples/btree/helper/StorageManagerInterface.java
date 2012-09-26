@@ -20,6 +20,7 @@ import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
+import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 
 public class StorageManagerInterface implements IStorageManagerInterface {
     private static final long serialVersionUID = 1L;
@@ -38,9 +39,14 @@ public class StorageManagerInterface implements IStorageManagerInterface {
     public IFileMapProvider getFileMapProvider(IHyracksTaskContext ctx) {
         return RuntimeContext.get(ctx).getFileMapManager();
     }
-    
+
     @Override
     public ILocalResourceRepository getLocalResourceRepository(IHyracksTaskContext ctx) {
         return RuntimeContext.get(ctx).getLocalResourceRepository();
+    }
+
+    @Override
+    public ResourceIdFactory getResourceIdFactory(IHyracksTaskContext ctx) {
+        return RuntimeContext.get(ctx).getResourceIdFactory();
     }
 }

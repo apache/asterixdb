@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.IndexLocalResource;
-import edu.uci.ics.hyracks.storage.common.file.LSMBTreeLocalResourceClass;
+import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 
 public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
 
@@ -33,6 +33,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
     protected final IHyracksTaskContext ctx;
     protected final IIndexLifecycleManager lcManager;
     protected final ILocalResourceRepository localResourceRepository;
+    protected final ResourceIdFactory resourceIdFactory;
     protected final FileReference file;
 
     protected IIndex index;
@@ -42,6 +43,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         this.ctx = ctx;
         this.lcManager = opDesc.getLifecycleManagerProvider().getLifecycleManager(ctx);
         this.localResourceRepository = opDesc.getStorageManager().getLocalResourceRepository(ctx);
+        this.resourceIdFactory = opDesc.getStorageManager().getResourceIdFactory(ctx);
         this.file = opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile();
     }
 
@@ -69,8 +71,9 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
             }
             index.create();
             try {
-                //TODO Create ResourceIdFactory and LocalResourceFactory
-                localResourceRepository.insert(new IndexLocalResource(resourceID, file.getFile().getPath(), object, resourceClass));
+                //TODO Create LocalResource through LocalResourceFactory interface
+                resourceID = resourceIdFactory.createId();
+                localResourceRepository.insert(new IndexLocalResource(resourceID, file.getFile().getPath(), null, null));
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }

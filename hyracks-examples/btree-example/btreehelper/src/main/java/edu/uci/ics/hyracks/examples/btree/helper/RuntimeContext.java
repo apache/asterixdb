@@ -33,6 +33,8 @@ import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 import edu.uci.ics.hyracks.storage.common.file.IndexLocalResourceRepositoryFactory;
+import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
+import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactoryFactory;
 import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
 
 public class RuntimeContext {
@@ -40,6 +42,7 @@ public class RuntimeContext {
     private IFileMapManager fileMapManager;
     private ILocalResourceRepository localResourceRepository;
     private IIndexLifecycleManager lcManager;
+    private ResourceIdFactory resourceIdFactory;
 
     public RuntimeContext(INCApplicationContext appCtx) throws HyracksDataException {
         fileMapManager = new TransientFileMapManager();
@@ -49,6 +52,7 @@ public class RuntimeContext {
                 50, 100);
         ILocalResourceRepositoryFactory indexLocalResourceRepositoryFactory = new IndexLocalResourceRepositoryFactory(appCtx.getRootContext().getIOManager());
         localResourceRepository = indexLocalResourceRepositoryFactory.createRepository();  
+        resourceIdFactory = (new ResourceIdFactoryFactory(localResourceRepository)).createResourceIdFactory();
         lcManager = new IndexLifecycleManager();
     }
 
@@ -72,6 +76,10 @@ public class RuntimeContext {
         return localResourceRepository;
     }
 
+    public ResourceIdFactory getResourceIdFactory() {
+        return resourceIdFactory;
+    }
+    
     public IIndexLifecycleManager getIndexLifecycleManager() {
         return lcManager;
     }
