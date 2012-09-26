@@ -81,7 +81,7 @@ public class LSMHarness implements ILSMHarness {
         this.ioScheduler = ioScheduler;
     }
 
-    private void threadExit() {
+    private void threadExit() throws HyracksDataException {
         if (!lsmIndex.getFlushController().getFlushStatus(lsmIndex) && lsmIndex.getInMemoryFreePageManager().isFull()) {
             lsmIndex.getFlushController().setFlushStatus(lsmIndex, true);
         }
@@ -153,7 +153,8 @@ public class LSMHarness implements ILSMHarness {
         return diskComponentSnapshot;
     }
 
-    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException {
+    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
+            IndexException {
         if (!isMerging.compareAndSet(false, true)) {
             throw new LSMMergeInProgressException(
                     "Merge already in progress. Only one merge process allowed at a time.");

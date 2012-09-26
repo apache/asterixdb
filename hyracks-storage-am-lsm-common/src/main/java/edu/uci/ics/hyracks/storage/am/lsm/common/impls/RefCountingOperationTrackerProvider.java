@@ -10,7 +10,7 @@ public class RefCountingOperationTrackerProvider implements ILSMOperationTracker
 
     @Override
     public ILSMOperationTracker getOperationTracker(IHyracksTaskContext ctx) {
-        return new RefCountingOperationTracker();
+        return new ReferenceCountingOperationTracker();
     }
 
 }

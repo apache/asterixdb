@@ -1,5 +1,6 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 
 /**
@@ -19,12 +20,12 @@ public interface ILSMOperationTracker {
      * 
      * @param index the index for which the operation entered
      */
-    public void threadEnter(ILSMIndex index);
+    public void threadEnter(ILSMIndex index) throws HyracksDataException;
 
     /**
      * This method is guaranteed to be called just before an operation is finished on the index.
      * 
      * @param index the index for which the operation exited
      */
-    public void threadExit(ILSMIndex index);
+    public void threadExit(ILSMIndex index) throws HyracksDataException;
 }
