@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.examples.btree.helper;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.common.TransientIndexArtifactMap;
@@ -29,21 +30,25 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
+import edu.uci.ics.hyracks.storage.common.file.IndexLocalResourceRepositoryFactory;
 import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
 
 public class RuntimeContext {
     private IBufferCache bufferCache;
     private IFileMapManager fileMapManager;
-    private IIndexArtifactMap indexArtifactMap;
+    private ILocalResourceRepository localResourceRepository;
     private IIndexLifecycleManager lcManager;
 
-    public RuntimeContext(INCApplicationContext appCtx) {
+    public RuntimeContext(INCApplicationContext appCtx) throws HyracksDataException {
         fileMapManager = new TransientFileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
         bufferCache = new BufferCache(appCtx.getRootContext().getIOManager(), allocator, prs, fileMapManager, 32768,
                 50, 100);
-        indexArtifactMap = new TransientIndexArtifactMap();
+        ILocalResourceRepositoryFactory indexLocalResourceRepositoryFactory = new IndexLocalResourceRepositoryFactory(appCtx.getRootContext().getIOManager());
+        localResourceRepository = indexLocalResourceRepositoryFactory.createRepository();  
         lcManager = new IndexLifecycleManager();
     }
 
@@ -63,8 +68,8 @@ public class RuntimeContext {
         return (RuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
     }
 
-    public IIndexArtifactMap getIndexArtifactMap() {
-        return indexArtifactMap;
+    public ILocalResourceRepository getLocalResourceRepository() {
+        return localResourceRepository;
     }
 
     public IIndexLifecycleManager getIndexLifecycleManager() {

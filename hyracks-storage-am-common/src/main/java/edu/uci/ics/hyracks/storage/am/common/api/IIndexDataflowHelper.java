@@ -17,7 +17,7 @@ public interface IIndexDataflowHelper {
 
     public FileReference getFileReference();
 
-    public long getResourceID();
+    public long getResourceID() throws HyracksDataException;
     
     public IHyracksTaskContext getTaskContext();
 }

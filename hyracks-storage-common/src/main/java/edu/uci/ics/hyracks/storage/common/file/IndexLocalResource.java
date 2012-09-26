@@ -47,5 +47,4 @@ public class IndexLocalResource implements ILocalResource {
     public ILocalResourceClass getResourceClass() {
         return resourceClass;
     }
-
 }

@@ -14,8 +14,8 @@
  */
 package edu.uci.ics.hyracks.storage.common.file;
 
-import java.util.List;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public interface ILocalResourceRepositoryFactory {
-    public ILocalResourceRepository createRepository();
+    public ILocalResourceRepository createRepository() throws HyracksDataException;
 }

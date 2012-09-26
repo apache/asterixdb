@@ -14,12 +14,33 @@
  */
 package edu.uci.ics.hyracks.storage.common.file;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.IIOManager;
+import edu.uci.ics.hyracks.api.io.IODeviceHandle;
+
 public class IndexLocalResourceRepositoryFactory implements ILocalResourceRepositoryFactory {
-
-    @Override
-    public ILocalResourceRepository createRepository() {
-        // TODO Auto-generated method stub
-        return null;
+    private static final String rootDir = "";
+    private IIOManager ioManager;
+    
+    public IndexLocalResourceRepositoryFactory(IIOManager ioManager) {
+        this.ioManager = ioManager;
     }
-
+    
+    @Override
+    public ILocalResourceRepository createRepository() throws HyracksDataException {
+        List<ILocalResourceClass> resourceClasses = new ArrayList<ILocalResourceClass>();
+        resourceClasses.add(LSMBTreeLocalResourceClass.getInstance());
+        resourceClasses.add(LSMRTreeLocalResourceClass.getInstance());
+        resourceClasses.add(LSMInvertedIndexLocalResourceClass.getInstance());
+        
+        List<String> mountPoints = new ArrayList<String>();
+        List<IODeviceHandle> devices = ioManager.getIODevices();
+        for (IODeviceHandle dev : devices) {
+            mountPoints.add(dev.getPath().getPath());
+        }
+        return new IndexLocalResourceRepository(resourceClasses, mountPoints, rootDir);
+    }
 }

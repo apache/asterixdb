@@ -23,14 +23,16 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
+import edu.uci.ics.hyracks.storage.common.file.IndexLocalResource;
+import edu.uci.ics.hyracks.storage.common.file.LSMBTreeLocalResourceClass;
 
 public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
 
     protected final IIndexOperatorDescriptor opDesc;
     protected final IHyracksTaskContext ctx;
     protected final IIndexLifecycleManager lcManager;
-    protected final IIndexArtifactMap indexArtifactMap;
+    protected final ILocalResourceRepository localResourceRepository;
     protected final FileReference file;
 
     protected IIndex index;
@@ -39,7 +41,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.lcManager = opDesc.getLifecycleManagerProvider().getLifecycleManager(ctx);
-        this.indexArtifactMap = opDesc.getStorageManager().getIndexArtifactMap(ctx);
+        this.localResourceRepository = opDesc.getStorageManager().getLocalResourceRepository(ctx);
         this.file = opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile();
     }
 
@@ -63,11 +65,12 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
             // any physical artifact that the IIndexArtifactMap is managing (e.g. a file containing the resource ID). 
             // Once the index has been created, a new resource ID can be generated.
             if (resourceID != -1) {
-                indexArtifactMap.delete(file.getFile().getPath(), ctx.getIOManager().getIODevices());
+                localResourceRepository.deleteResourceByName(file.getFile().getPath());
             }
             index.create();
             try {
-                resourceID = indexArtifactMap.create(file.getFile().getPath(), ctx.getIOManager().getIODevices());
+                //TODO Create ResourceIdFactory and LocalResourceFactory
+                localResourceRepository.insert(new IndexLocalResource(resourceID, file.getFile().getPath(), object, resourceClass));
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
@@ -92,7 +95,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         }
     }
 
-    public void close() {
+    public void close() throws HyracksDataException {
         synchronized (lcManager) {
             lcManager.close(getResourceID());
         }
@@ -109,7 +112,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
             }
 
             if (resourceID != -1) {
-                indexArtifactMap.delete(file.getFile().getPath(), ctx.getIOManager().getIODevices());
+                localResourceRepository.deleteResourceByName(file.getFile().getPath());
             }
             index.destroy();
         }
@@ -119,8 +122,8 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         return file;
     }
 
-    public long getResourceID() {
-        return indexArtifactMap.get(file.getFile().getPath());
+    public long getResourceID() throws HyracksDataException {
+        return localResourceRepository.getResourceByName(file.getFile().getPath()).getResourceId();
     }
     
     public IHyracksTaskContext getTaskContext() {

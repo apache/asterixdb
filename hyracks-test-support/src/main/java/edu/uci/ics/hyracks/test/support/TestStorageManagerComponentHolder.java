@@ -25,7 +25,6 @@ import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.common.TransientIndexArtifactMap;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -34,14 +33,16 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
-import edu.uci.ics.hyracks.storage.common.file.IIndexArtifactMap;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
+import edu.uci.ics.hyracks.storage.common.file.IndexLocalResourceRepositoryFactory;
 import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
 
 public class TestStorageManagerComponentHolder {
     private static IBufferCache bufferCache;
     private static IFileMapProvider fileMapProvider;
     private static IOManager ioManager;
-    private static IIndexArtifactMap indexArtifactMap;
+    private static ILocalResourceRepository localResourceRepository;
     private static IIndexLifecycleManager lcManager;
 
     private static int pageSize;
@@ -54,7 +55,7 @@ public class TestStorageManagerComponentHolder {
         TestStorageManagerComponentHolder.maxOpenFiles = maxOpenFiles;
         bufferCache = null;
         fileMapProvider = null;
-        indexArtifactMap = null;
+        localResourceRepository = null;
         lcManager = null;
     }
 
@@ -92,10 +93,17 @@ public class TestStorageManagerComponentHolder {
         return ioManager;
     }
 
-    public synchronized static IIndexArtifactMap getIndexArtifactMap(IHyracksTaskContext ctx) {
-        if (indexArtifactMap == null) {
-            indexArtifactMap = new TransientIndexArtifactMap();
+    public synchronized static ILocalResourceRepository getLocalResourceRepository(IHyracksTaskContext ctx) {
+        if (localResourceRepository == null) {
+            try {
+                ILocalResourceRepositoryFactory indexLocalResourceRepositoryFactory = new IndexLocalResourceRepositoryFactory(
+                        getIOManager());
+                localResourceRepository = indexLocalResourceRepositoryFactory.createRepository();
+            } catch (HyracksException e) {
+                //In order not to change the IStorageManagerInterface due to the test code, throw runtime exception.
+                throw new IllegalArgumentException();
+            }
         }
-        return indexArtifactMap;
+        return localResourceRepository;
     }
 }

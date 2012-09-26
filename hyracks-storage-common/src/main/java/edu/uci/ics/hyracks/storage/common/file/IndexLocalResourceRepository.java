@@ -33,7 +33,6 @@ public class IndexLocalResourceRepository implements ILocalResourceRepository {
 
     private final List<ILocalResourceClass> resourceClasses;
     private final List<String> mountPoints;
-    private final String rootDir;
     private static final String METADATA_FILE_NAME = ".metadata";
     private Map<String, ILocalResource> name2ResourceMap = new HashMap<String, ILocalResource>();
     private Map<Long, ILocalResource> id2ResourceMap = new HashMap<Long, ILocalResource>();
@@ -42,7 +41,6 @@ public class IndexLocalResourceRepository implements ILocalResourceRepository {
             String rootDir) throws HyracksDataException {
         this.resourceClasses = resourceClasses;
         this.mountPoints = mountPoints;
-        this.rootDir = rootDir;
 
         File rootFile = new File(this.mountPoints.get(0), rootDir);
         if (!rootFile.exists()) {
@@ -59,9 +57,8 @@ public class IndexLocalResourceRepository implements ILocalResourceRepository {
             }
         };
 
-        String[] fileNameList = rootFile.list();
-        for (String fileName : fileNameList) {
-            File childFile = new File(rootFile, fileName);
+        File[] childFileList = rootFile.listFiles();
+        for (File childFile : childFileList) {
             if (childFile.isDirectory()) {
                 File[] targetFileList = childFile.listFiles(filter);
                 for (File targetFile : targetFileList) {
