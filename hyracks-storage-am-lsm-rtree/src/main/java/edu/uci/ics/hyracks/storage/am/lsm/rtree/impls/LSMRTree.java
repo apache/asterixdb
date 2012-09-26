@@ -30,7 +30,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
@@ -150,7 +150,7 @@ public class LSMRTree extends AbstractLSMRTree {
         return component;
     }
 
-    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOpContext ictx,
+    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOperationContext ictx,
             boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, IndexException {
         LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;
         int numDiskTrees = diskComponents.size();
@@ -320,7 +320,7 @@ public class LSMRTree extends AbstractLSMRTree {
         // Renaming order is critical because we use assume ordering when we
         // read the file names when we open the tree.
         // The RTree should be renamed before the BTree.
-        IIndexOpContext ctx = createOpContext();
+        IIndexOperationContext ctx = createOpContext();
         ITreeIndexCursor cursor;
         cursor = new LSMRTreeSortedCursor(linearizer);
         ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
@@ -351,7 +351,7 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     public class LSMRTreeAccessor extends LSMTreeIndexAccessor {
-        public LSMRTreeAccessor(LSMHarness lsmHarness, IIndexOpContext ctx) {
+        public LSMRTreeAccessor(LSMHarness lsmHarness, IIndexOperationContext ctx) {
             super(lsmHarness, ctx);
         }
 

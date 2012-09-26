@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
@@ -88,7 +88,7 @@ public class LSMHarness implements ILSMHarness {
         opTracker.threadExit(lsmIndex);
     }
 
-    public void insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ctx) throws HyracksDataException,
+    public void insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ctx) throws HyracksDataException,
             IndexException {
         opTracker.threadEnter(lsmIndex);
         // It is possible, due to concurrent execution of operations, that an operation will 
@@ -126,7 +126,7 @@ public class LSMHarness implements ILSMHarness {
         flushController.setFlushStatus(lsmIndex, false);
     }
 
-    public List<Object> search(IIndexCursor cursor, ISearchPredicate pred, IIndexOpContext ctx,
+    public List<Object> search(IIndexCursor cursor, ISearchPredicate pred, IIndexOperationContext ctx,
             boolean includeMemComponent) throws HyracksDataException, IndexException {
         // If the search doesn't include the in-memory component, then we don't have
         // to synchronize with a flush.

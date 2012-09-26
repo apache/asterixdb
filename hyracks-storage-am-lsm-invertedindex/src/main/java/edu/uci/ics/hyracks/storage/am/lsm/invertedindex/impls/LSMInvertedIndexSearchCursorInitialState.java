@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
@@ -42,7 +42,7 @@ public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialS
 
     public LSMInvertedIndexSearchCursorInitialState(final MultiComparator keyCmp,
             PermutingTupleReference keysOnlyTuple, List<IIndexAccessor> indexAccessors,
-            List<IIndexAccessor> deletedKeysBTreeAccessors, IIndexOpContext ctx, boolean includeMemComponent,
+            List<IIndexAccessor> deletedKeysBTreeAccessors, IIndexOperationContext ctx, boolean includeMemComponent,
             AtomicInteger searcherfRefCount, LSMHarness lsmHarness) {
         this.keyCmp = keyCmp;
         this.keysOnlyTuple = keysOnlyTuple;
@@ -80,7 +80,7 @@ public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialS
         return lsmHarness;
     }
 
-    public IIndexOpContext getOpContext() {
+    public IIndexOperationContext getOpContext() {
         return ctx;
     }
 

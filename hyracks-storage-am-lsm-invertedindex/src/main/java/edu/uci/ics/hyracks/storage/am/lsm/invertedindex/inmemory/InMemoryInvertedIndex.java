@@ -31,12 +31,12 @@ import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
@@ -112,7 +112,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
         btree.validate();
     }
 
-    public void insert(ITupleReference tuple, BTreeAccessor btreeAccessor, IIndexOpContext ictx)
+    public void insert(ITupleReference tuple, BTreeAccessor btreeAccessor, IIndexOperationContext ictx)
             throws HyracksDataException, IndexException {
         InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
         ctx.tupleIter.reset(tuple);
@@ -129,7 +129,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
         }
     }
     
-    public void delete(ITupleReference tuple, BTreeAccessor btreeAccessor, IIndexOpContext ictx)
+    public void delete(ITupleReference tuple, BTreeAccessor btreeAccessor, IIndexOperationContext ictx)
             throws HyracksDataException, IndexException {
         InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
         ctx.tupleIter.reset(tuple);
@@ -157,9 +157,9 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
 
     @Override
     public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey,
-            IIndexOpContext ictx) throws HyracksDataException, IndexException {
+            IIndexOperationContext ictx) throws HyracksDataException, IndexException {
         InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
-        ctx.reset(IndexOp.SEARCH);
+        ctx.startOperation(IndexOperation.SEARCH);
         InMemoryInvertedListCursor inMemListCursor = (InMemoryInvertedListCursor) listCursor;
         inMemListCursor.prepare(ctx.btreeAccessor, ctx.btreePred, ctx.tokenFieldsCmp, ctx.btreeCmp);
         inMemListCursor.reset(searchKey);

@@ -19,12 +19,12 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
-public class OnDiskInvertedIndexOpContext implements IIndexOpContext {
+public class OnDiskInvertedIndexOpContext implements IIndexOperationContext {
 
     public final RangePredicate btreePred = new RangePredicate(null, null, true, true, null, null);
     public IIndexAccessor btreeAccessor;
@@ -44,7 +44,7 @@ public class OnDiskInvertedIndexOpContext implements IIndexOpContext {
     }
 
     @Override
-    public void reset(IndexOp newOp) {
+    public void startOperation(IndexOperation newOp) {
         // Nothing to be done here, only search operation supported.
     }
 }

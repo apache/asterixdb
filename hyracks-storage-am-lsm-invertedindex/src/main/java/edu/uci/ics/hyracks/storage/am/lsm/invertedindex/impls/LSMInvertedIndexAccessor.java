@@ -19,10 +19,10 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
@@ -36,11 +36,11 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
 
     protected final LSMHarness lsmHarness;
     protected final ILSMIndexFileManager fileManager;
-    protected final IIndexOpContext ctx;
+    protected final IIndexOperationContext ctx;
     protected final LSMInvertedIndex invIndex;
 
     public LSMInvertedIndexAccessor(LSMInvertedIndex invIndex, LSMHarness lsmHarness, ILSMIndexFileManager fileManager,
-            IIndexOpContext ctx) {
+            IIndexOperationContext ctx) {
         this.lsmHarness = lsmHarness;
         this.fileManager = fileManager;
         this.ctx = ctx;
@@ -49,18 +49,18 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
 
     @Override
     public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
-        ctx.reset(IndexOp.INSERT);
+        ctx.startOperation(IndexOperation.INSERT);
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
     }
 
     @Override
     public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
-        ctx.reset(IndexOp.DELETE);        
+        ctx.startOperation(IndexOperation.DELETE);        
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
     }
     
     public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
-        ctx.reset(IndexOp.SEARCH);
+        ctx.startOperation(IndexOperation.SEARCH);
         lsmHarness.search(cursor, searchPred, ctx, true);
     }
     

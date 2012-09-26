@@ -22,11 +22,11 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
@@ -39,11 +39,11 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
     // TODO: This ctx needs to go away.
     protected final IHyracksCommonContext hyracksCtx = new DefaultHyracksCommonContext();
     protected final IInvertedIndexSearcher searcher;
-    protected IIndexOpContext opCtx;
+    protected IIndexOperationContext opCtx;
     protected InMemoryInvertedIndex index;
     protected BTreeAccessor btreeAccessor;
 
-    public InMemoryInvertedIndexAccessor(InMemoryInvertedIndex index, IIndexOpContext opCtx) {
+    public InMemoryInvertedIndexAccessor(InMemoryInvertedIndex index, IIndexOperationContext opCtx) {
         this.opCtx = opCtx;
         this.index = index;
         this.searcher = new TOccurrenceSearcher(hyracksCtx, index);
@@ -53,13 +53,13 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
 
     @Override
     public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
-        opCtx.reset(IndexOp.INSERT);
+        opCtx.startOperation(IndexOperation.INSERT);
         index.insert(tuple, btreeAccessor, opCtx);
     }
 
     @Override
     public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
-        opCtx.reset(IndexOp.DELETE);
+        opCtx.startOperation(IndexOperation.DELETE);
         index.delete(tuple, btreeAccessor, opCtx);
     }
     

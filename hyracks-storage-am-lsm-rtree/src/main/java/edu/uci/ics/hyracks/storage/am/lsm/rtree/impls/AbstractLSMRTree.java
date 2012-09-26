@@ -29,14 +29,14 @@ import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyExcept
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -271,14 +271,14 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
     }
 
     @Override
-    public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
+    public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ictx) throws HyracksDataException,
             IndexException {
         LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;
-        if (ctx.getIndexOp() == IndexOp.PHYSICALDELETE) {
+        if (ctx.getIndexOp() == IndexOperation.PHYSICALDELETE) {
             throw new UnsupportedOperationException("Physical delete not yet supported in LSM R-tree");
         }
 
-        if (ctx.getIndexOp() == IndexOp.INSERT) {
+        if (ctx.getIndexOp() == IndexOperation.INSERT) {
             // Before each insert, we must check whether there exist a killer
             // tuple in the memBTree. If we find a killer tuple, we must truly
             // delete the existing tuple from the BTree, and then insert it to

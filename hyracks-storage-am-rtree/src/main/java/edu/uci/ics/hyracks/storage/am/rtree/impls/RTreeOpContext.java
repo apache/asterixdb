@@ -19,22 +19,22 @@ import java.util.ArrayList;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
-public class RTreeOpContext implements IIndexOpContext {
+public class RTreeOpContext implements IIndexOperationContext {
     private static final int INITIAL_TRAVERSE_LIST_SIZE = 100;
     public final MultiComparator cmp;
     public final IRTreeInteriorFrame interiorFrame;
     public final IRTreeLeafFrame leafFrame;
-    public IndexOp op;
+    public IndexOperation op;
     public ITreeIndexCursor cursor;
     public RTreeCursorInitialState cursorInitialState;
     public ITreeIndexMetaDataFrame metaFrame;
@@ -83,11 +83,11 @@ public class RTreeOpContext implements IIndexOpContext {
     }
 
     @Override
-    public void reset(IndexOp newOp) {
+    public void startOperation(IndexOperation newOp) {
         if (op != null && newOp == op) {
             return;
         }
-        if (op != IndexOp.SEARCH && op != IndexOp.DISKORDERSCAN) {
+        if (op != IndexOperation.SEARCH && op != IndexOperation.DISKORDERSCAN) {
             if (splitKey == null) {
                 splitKey = new RTreeSplitKey(interiorFrame.getTupleWriter().createTupleReference(), interiorFrame
                         .getTupleWriter().createTupleReference());

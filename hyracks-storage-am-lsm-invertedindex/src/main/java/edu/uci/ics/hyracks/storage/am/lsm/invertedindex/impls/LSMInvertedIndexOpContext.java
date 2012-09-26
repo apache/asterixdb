@@ -17,18 +17,18 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 
-public class LSMInvertedIndexOpContext implements IIndexOpContext {
+public class LSMInvertedIndexOpContext implements IIndexOperationContext {
 
-    private IndexOp op;
+    private IndexOperation op;
     private final IInvertedIndex memInvIndex;
     private final IIndex memDeletedKeysBTree;
 
@@ -57,7 +57,7 @@ public class LSMInvertedIndexOpContext implements IIndexOpContext {
 
     @Override
     // TODO: Ignore opcallback for now.
-    public void reset(IndexOp newOp) {
+    public void startOperation(IndexOperation newOp) {
         switch (newOp) {
             case INSERT:
             case DELETE:
@@ -82,7 +82,7 @@ public class LSMInvertedIndexOpContext implements IIndexOpContext {
         op = newOp;
     }
     
-    public IndexOp getIndexOp() {
+    public IndexOperation getIndexOp() {
         return op;
     }
 }

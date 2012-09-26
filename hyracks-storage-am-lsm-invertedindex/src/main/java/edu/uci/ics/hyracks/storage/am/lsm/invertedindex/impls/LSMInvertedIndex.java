@@ -35,7 +35,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
@@ -44,7 +44,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
@@ -321,7 +321,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
      * - Insert key into deleted-keys BTree.
      */
     @Override
-    public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
+    public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ictx) throws HyracksDataException,
             IndexException {
         LSMInvertedIndexOpContext ctx = (LSMInvertedIndexOpContext) ictx;
         ctx.modificationCallback.before(tuple);
@@ -352,7 +352,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     }
 
     @Override
-    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOpContext ictx,
+    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOperationContext ictx,
             boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, IndexException {
         int numComponents = (includeMemComponent) ? diskComponents.size() : diskComponents.size() + 1;
         ArrayList<IIndexAccessor> indexAccessors = new ArrayList<IIndexAccessor>(numComponents);
@@ -379,7 +379,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         cursor.open(initState, pred);
     }
 
-    private ICursorInitialState createCursorInitialState(ISearchPredicate pred, IIndexOpContext ictx,
+    private ICursorInitialState createCursorInitialState(ISearchPredicate pred, IIndexOperationContext ictx,
             boolean includeMemComponent, AtomicInteger searcherRefCount, ArrayList<IIndexAccessor> indexAccessors,
             ArrayList<IIndexAccessor> deletedKeysBTreeAccessors) {
         ICursorInitialState initState = null;
@@ -447,7 +447,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
             IndexException {
         LSMInvertedIndexOpContext ctx = createOpContext(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-        ctx.reset(IndexOp.SEARCH);
+        ctx.startOperation(IndexOperation.SEARCH);
         IIndexCursor cursor = new LSMInvertedIndexRangeSearchCursor();
         RangePredicate mergePred = new RangePredicate(null, null, true, true, null, null);
 
@@ -669,7 +669,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     }
 
     @Override
-    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey, IIndexOpContext ictx)
+    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey, IIndexOperationContext ictx)
             throws HyracksDataException, IndexException {
         throw new UnsupportedOperationException("Cannot open inverted list cursor on lsm inverted index.");
     }

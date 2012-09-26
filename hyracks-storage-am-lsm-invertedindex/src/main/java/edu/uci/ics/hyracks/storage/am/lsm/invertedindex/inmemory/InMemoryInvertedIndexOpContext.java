@@ -19,16 +19,16 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTokenizingTupleIterator;
 
-public class InMemoryInvertedIndexOpContext implements IIndexOpContext {
-    public IndexOp op;
+public class InMemoryInvertedIndexOpContext implements IIndexOperationContext {
+    public IndexOperation op;
     public final BTree btree;
 
     // Needed for search operations,    
@@ -50,7 +50,7 @@ public class InMemoryInvertedIndexOpContext implements IIndexOpContext {
     }
 
     @Override
-    public void reset(IndexOp newOp) {
+    public void startOperation(IndexOperation newOp) {
         switch (newOp) {
             case INSERT: 
             case DELETE: {

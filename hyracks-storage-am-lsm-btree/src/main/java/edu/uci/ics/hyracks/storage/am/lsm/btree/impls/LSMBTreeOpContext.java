@@ -18,15 +18,15 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
-public final class LSMBTreeOpContext implements IIndexOpContext {
+public final class LSMBTreeOpContext implements IIndexOperationContext {
 
     public ITreeIndexFrameFactory insertLeafFrameFactory;
     public ITreeIndexFrameFactory deleteLeafFrameFactory;
@@ -35,7 +35,7 @@ public final class LSMBTreeOpContext implements IIndexOpContext {
     public final BTree memBTree;
     public BTree.BTreeAccessor memBTreeAccessor;
     public BTreeOpContext memBTreeOpCtx;
-    public IndexOp op;
+    public IndexOperation op;
     public final MultiComparator cmp;
     public final IModificationOperationCallback modificationCallback;
     public final ISearchOperationCallback searchCallback;
@@ -60,7 +60,7 @@ public final class LSMBTreeOpContext implements IIndexOpContext {
     }
 
     @Override
-    public void reset(IndexOp newOp) {
+    public void startOperation(IndexOperation newOp) {
         this.op = newOp;
         switch (newOp) {
             case SEARCH:
@@ -112,7 +112,7 @@ public final class LSMBTreeOpContext implements IIndexOpContext {
     public void reset() {
     }
 
-    public IndexOp getIndexOp() {
+    public IndexOperation getIndexOp() {
         return op;
     }
 }

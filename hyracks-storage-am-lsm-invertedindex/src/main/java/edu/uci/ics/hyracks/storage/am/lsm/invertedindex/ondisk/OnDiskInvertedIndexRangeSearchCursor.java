@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -38,7 +38,7 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
     private final BTree btree;
     private final IIndexAccessor btreeAccessor;
     private final IInvertedIndex invIndex;
-    private final IIndexOpContext opCtx;
+    private final IIndexOperationContext opCtx;
     private final IInvertedListCursor invListCursor;
     private boolean unpinNeeded;
     
@@ -48,7 +48,7 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
     private final PermutingTupleReference tokenTuple;
     private ConcatenatingTupleReference concatTuple;
 
-    public OnDiskInvertedIndexRangeSearchCursor(IInvertedIndex invIndex, IIndexOpContext opCtx) {
+    public OnDiskInvertedIndexRangeSearchCursor(IInvertedIndex invIndex, IIndexOperationContext opCtx) {
         this.btree = ((OnDiskInvertedIndex) invIndex).getBTree();
         this.btreeAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         this.invIndex = invIndex;

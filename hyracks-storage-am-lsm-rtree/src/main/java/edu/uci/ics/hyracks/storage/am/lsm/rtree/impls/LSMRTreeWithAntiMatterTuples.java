@@ -30,7 +30,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
@@ -130,7 +130,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         super.clear();
     }
 
-    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOpContext ictx,
+    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOperationContext ictx,
             boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, IndexException {
         LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;
         LSMRTreeWithAntiMatterTuplesSearchCursor lsmTreeCursor = (LSMRTreeWithAntiMatterTuplesSearchCursor) cursor;
@@ -307,7 +307,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     }
 
     public class LSMRTreeWithAntiMatterTuplesAccessor extends LSMTreeIndexAccessor {
-        public LSMRTreeWithAntiMatterTuplesAccessor(LSMHarness lsmHarness, IIndexOpContext ctx) {
+        public LSMRTreeWithAntiMatterTuplesAccessor(LSMHarness lsmHarness, IIndexOperationContext ctx) {
             super(lsmHarness, ctx);
         }
 

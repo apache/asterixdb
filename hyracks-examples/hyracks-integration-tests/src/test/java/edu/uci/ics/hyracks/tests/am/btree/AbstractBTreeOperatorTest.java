@@ -52,7 +52,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDes
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexInsertUpdateDeleteOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.test.support.TestIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
@@ -244,7 +244,7 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
     }
 
     protected void insertPipeline(boolean useUpsert) throws Exception {
-        IndexOp pipelineOperation = useUpsert ? IndexOp.UPSERT : IndexOp.INSERT;
+        IndexOperation pipelineOperation = useUpsert ? IndexOperation.UPSERT : IndexOperation.INSERT;
         JobSpecification spec = new JobSpecification();
 
         FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(

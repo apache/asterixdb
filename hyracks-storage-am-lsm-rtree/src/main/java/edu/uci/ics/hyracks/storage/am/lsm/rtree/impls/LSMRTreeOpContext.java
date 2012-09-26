@@ -18,26 +18,26 @@ package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
 
-public final class LSMRTreeOpContext implements IIndexOpContext {
+public final class LSMRTreeOpContext implements IIndexOperationContext {
 
     public RTreeOpContext rtreeOpContext;
     public BTreeOpContext btreeOpContext;
     public final RTree.RTreeAccessor memRTreeAccessor;
     public final BTree.BTreeAccessor memBTreeAccessor;
-    private IndexOp op;
+    private IndexOperation op;
     public final IModificationOperationCallback modificationCallback;
     public final ISearchOperationCallback searchCallback;
 
@@ -57,11 +57,11 @@ public final class LSMRTreeOpContext implements IIndexOpContext {
                 btreeMetaFrame, btreeCmpFactories, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
     }
 
-    public void reset(IndexOp newOp) {
-        if (newOp == IndexOp.INSERT) {
-            rtreeOpContext.reset(newOp);
-        } else if (newOp == IndexOp.DELETE) {
-            btreeOpContext.reset(IndexOp.INSERT);
+    public void startOperation(IndexOperation newOp) {
+        if (newOp == IndexOperation.INSERT) {
+            rtreeOpContext.startOperation(newOp);
+        } else if (newOp == IndexOperation.DELETE) {
+            btreeOpContext.startOperation(IndexOperation.INSERT);
         }
         this.op = newOp;
     }
@@ -71,7 +71,7 @@ public final class LSMRTreeOpContext implements IIndexOpContext {
 
     }
 
-    public IndexOp getIndexOp() {
+    public IndexOperation getIndexOp() {
         return op;
     }
 

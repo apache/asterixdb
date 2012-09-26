@@ -34,7 +34,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
@@ -212,7 +212,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     }
 
     @Override
-    public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException,
+    public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ictx) throws HyracksDataException,
             IndexException {
         LSMBTreeOpContext ctx = (LSMBTreeOpContext) ictx;
 
@@ -322,7 +322,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         return diskBTree;
     }
 
-    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOpContext ictx,
+    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOperationContext ictx,
             boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, IndexException {
         LSMBTreeOpContext ctx = (LSMBTreeOpContext) ictx;
         LSMBTreeRangeSearchCursor lsmTreeCursor = (LSMBTreeRangeSearchCursor) cursor;
@@ -511,7 +511,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     }
 
     public class LSMBTreeIndexAccessor extends LSMTreeIndexAccessor {
-        public LSMBTreeIndexAccessor(LSMHarness lsmHarness, IIndexOpContext ctx) {
+        public LSMBTreeIndexAccessor(LSMHarness lsmHarness, IIndexOperationContext ctx) {
             super(lsmHarness, ctx);
         }
 

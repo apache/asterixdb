@@ -36,7 +36,7 @@ import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
@@ -248,7 +248,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     }
     
     @Override
-    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey, IIndexOpContext ictx)
+    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey, IIndexOperationContext ictx)
             throws HyracksDataException, IndexException {
         OnDiskInvertedIndexOpContext ctx = (OnDiskInvertedIndexOpContext) ictx;
         ctx.btreePred.setLowKeyComparator(ctx.searchCmp);
@@ -450,7 +450,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     public class OnDiskInvertedIndexAccessor implements IInvertedIndexAccessor {
         private final OnDiskInvertedIndex index;
         private final IInvertedIndexSearcher searcher;
-        private final IIndexOpContext opCtx = new OnDiskInvertedIndexOpContext(btree);
+        private final IIndexOperationContext opCtx = new OnDiskInvertedIndexOpContext(btree);
 
         public OnDiskInvertedIndexAccessor(OnDiskInvertedIndex index) {
             this.index = index;

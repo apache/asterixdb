@@ -28,19 +28,19 @@ import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.ITupleAcceptor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IntArrayList;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.LongArrayList;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
-public class BTreeOpContext implements IIndexOpContext {
+public class BTreeOpContext implements IIndexOperationContext {
     private final int INIT_ARRAYLIST_SIZE = 6;
 
     public IIndexAccessor accessor;
@@ -50,7 +50,7 @@ public class BTreeOpContext implements IIndexOpContext {
     public IBTreeLeafFrame leafFrame;
     public IBTreeInteriorFrame interiorFrame;
     public ITreeIndexMetaDataFrame metaFrame;
-    public IndexOp op;
+    public IndexOperation op;
     public ITreeIndexCursor cursor;
     public BTreeCursorInitialState cursorInitialState;
     public RangePredicate pred;
@@ -111,8 +111,8 @@ public class BTreeOpContext implements IIndexOpContext {
     }
 
     @Override
-    public void reset(IndexOp newOp) {
-        if (newOp == IndexOp.SEARCH || newOp == IndexOp.DISKORDERSCAN) {
+    public void startOperation(IndexOperation newOp) {
+        if (newOp == IndexOperation.SEARCH || newOp == IndexOperation.DISKORDERSCAN) {
             if (cursorInitialState == null) {
                 cursorInitialState = new BTreeCursorInitialState(null, searchCallback, accessor);
             }

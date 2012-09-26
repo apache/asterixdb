@@ -59,7 +59,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorD
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexInsertUpdateDeleteOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
@@ -316,7 +316,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         int[] primaryFieldPermutation = { 0, 1, 2, 4, 5, 7, 9, 10, 11, 12 };
         TreeIndexInsertUpdateDeleteOperatorDescriptor primaryInsertOp = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, ordersDesc, storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits,
-                primaryComparatorFactories, primaryFieldPermutation, IndexOp.INSERT, btreeDataflowHelperFactory, null,
+                primaryComparatorFactories, primaryFieldPermutation, IndexOperation.INSERT, btreeDataflowHelperFactory, null,
                 NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryInsertOp, NC1_ID);
 
@@ -324,7 +324,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         int[] secondaryFieldPermutation = { 9, 10, 11, 12, 0 };
         TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsertOp = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, ordersDesc, storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
-                secondaryComparatorFactories, secondaryFieldPermutation, IndexOp.INSERT, rtreeDataflowHelperFactory,
+                secondaryComparatorFactories, secondaryFieldPermutation, IndexOperation.INSERT, rtreeDataflowHelperFactory,
                 null, NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryInsertOp, NC1_ID);
 

@@ -48,7 +48,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexInsertUpdateDeleteOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 // This example will insert tuples into the primary and secondary index using an insert pipeline
@@ -151,7 +151,7 @@ public class InsertPipelineExample {
         // create operator descriptor
         TreeIndexInsertUpdateDeleteOperatorDescriptor primaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, recDesc, storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits,
-                primaryComparatorFactories, primaryFieldPermutation, IndexOp.INSERT, dataflowHelperFactory, null,
+                primaryComparatorFactories, primaryFieldPermutation, IndexOperation.INSERT, dataflowHelperFactory, null,
                 NoOpOperationCallbackProvider.INSTANCE);
         JobHelper.createPartitionConstraint(spec, primaryInsert, splitNCs);
 
@@ -175,7 +175,7 @@ public class InsertPipelineExample {
         // create operator descriptor
         TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, recDesc, storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
-                secondaryComparatorFactories, secondaryFieldPermutation, IndexOp.INSERT, dataflowHelperFactory, null,
+                secondaryComparatorFactories, secondaryFieldPermutation, IndexOperation.INSERT, dataflowHelperFactory, null,
                 NoOpOperationCallbackProvider.INSTANCE);
         JobHelper.createPartitionConstraint(spec, secondaryInsert, splitNCs);
 
