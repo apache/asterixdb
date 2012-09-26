@@ -1,5 +1,6 @@
 package edu.uci.ics.hyracks.storage.am.common.api;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 /**
@@ -19,7 +20,7 @@ public interface IModificationOperationCallback {
      * 
      * @param tuple the tuple that is about to be operated on
      */
-    public void before(ITupleReference tuple);
+    public void before(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * This method is called on a tuple when a tuple with a matching key is found for the 
@@ -31,5 +32,5 @@ public interface IModificationOperationCallback {
      * 
      * @param tuple a tuple with a matching key, otherwise null if none exists
      */
-    public void found(ITupleReference tuple);
+    public void found(ITupleReference tuple) throws HyracksDataException;
 }

@@ -1,5 +1,6 @@
 package edu.uci.ics.hyracks.storage.am.common.api;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 /**
@@ -21,7 +22,7 @@ public interface ISearchOperationCallback {
      * @param tuple the tuple that is being passed over by the search cursor
      * @return true to proceed otherwise false to unlatch and unpin, leading to reconciliation
      */
-    public boolean proceed(ITupleReference tuple);
+    public boolean proceed(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * This method is only called on a tuple that was not 'proceeded' on 
@@ -31,7 +32,7 @@ public interface ISearchOperationCallback {
      * 
      * @param tuple the tuple that failed to proceed
      */
-    public void reconcile(ITupleReference tuple);
+    public void reconcile(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * This method is only called on a tuple that was reconciled on, but not found after 
@@ -40,5 +41,5 @@ public interface ISearchOperationCallback {
      * 
      * @param tuple the tuple that was previously reconciled
      */
-    public void cancel(ITupleReference tuple);
+    public void cancel(ITupleReference tuple) throws HyracksDataException;
 }
