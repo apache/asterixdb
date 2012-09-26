@@ -18,13 +18,15 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.channels.IInputChannel;
 import edu.uci.ics.hyracks.api.channels.IInputChannelMonitor;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
 import edu.uci.ics.hyracks.api.comm.PartitionChannel;
-import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -33,7 +35,7 @@ import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 
 public class ReceiveSideMaterializingCollector implements IPartitionCollector {
-    private final IHyracksRootContext ctx;
+    private final IHyracksTaskContext ctx;
 
     private PartitionManager manager;
 
@@ -43,7 +45,7 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
 
     private final Executor executor;
 
-    public ReceiveSideMaterializingCollector(IHyracksRootContext ctx, PartitionManager manager,
+    public ReceiveSideMaterializingCollector(IHyracksTaskContext ctx, PartitionManager manager,
             IPartitionCollector collector, TaskAttemptId taId, Executor executor) {
         this.ctx = ctx;
         this.manager = manager;
@@ -83,58 +85,63 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
     private class PartitionWriter implements Runnable, IInputChannelMonitor {
         private PartitionChannel pc;
 
-        private int nAvailableFrames;
+        private final AtomicInteger nAvailableFrames;
 
-        private boolean eos;
+        private final AtomicBoolean eos;
 
-        private boolean failed;
+        private final AtomicBoolean failed;
 
         public PartitionWriter(PartitionChannel pc) {
             this.pc = pc;
-            nAvailableFrames = 0;
-            eos = false;
+            nAvailableFrames = new AtomicInteger(0);
+            eos = new AtomicBoolean(false);
+            failed = new AtomicBoolean(false);
         }
 
         @Override
         public synchronized void notifyFailure(IInputChannel channel) {
-            failed = true;
+            failed.set(true);
             notifyAll();
         }
 
         @Override
         public synchronized void notifyDataAvailability(IInputChannel channel, int nFrames) {
-            nAvailableFrames += nFrames;
+            nAvailableFrames.addAndGet(nFrames);
             notifyAll();
         }
 
         @Override
         public synchronized void notifyEndOfStream(IInputChannel channel) {
-            eos = true;
+            eos.set(true);
             notifyAll();
         }
 
         @Override
-        public synchronized void run() {
+        public void run() {
             PartitionId pid = pc.getPartitionId();
             MaterializedPartitionWriter mpw = new MaterializedPartitionWriter(ctx, manager, pid, taId, executor);
             IInputChannel channel = pc.getInputChannel();
             try {
                 channel.registerMonitor(this);
-                channel.open();
+                channel.open(ctx);
                 mpw.open();
                 while (true) {
-                    if (nAvailableFrames > 0) {
+                    if (nAvailableFrames.get() > 0) {
                         ByteBuffer buffer = channel.getNextBuffer();
-                        --nAvailableFrames;
+                        nAvailableFrames.decrementAndGet();
                         mpw.nextFrame(buffer);
                         channel.recycleBuffer(buffer);
-                    } else if (eos) {
+                    } else if (eos.get()) {
                         break;
-                    } else if (failed) {
+                    } else if (failed.get()) {
                         throw new HyracksDataException("Failure occurred on input");
                     } else {
                         try {
-                            wait();
+                            synchronized (this) {
+                                if (nAvailableFrames.get() <= 0 && !eos.get() && !failed.get()) {
+                                    wait();
+                                }
+                            }
                         } catch (InterruptedException e) {
                             throw new HyracksDataException(e);
                         }
@@ -143,7 +150,7 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
                 mpw.close();
                 channel.close();
                 delegate.addPartitions(Collections.singleton(new PartitionChannel(pid,
-                        new MaterializedPartitionInputChannel(ctx, 5, pid, manager))));
+                        new MaterializedPartitionInputChannel(1, pid, manager))));
             } catch (HyracksException e) {
             }
         }

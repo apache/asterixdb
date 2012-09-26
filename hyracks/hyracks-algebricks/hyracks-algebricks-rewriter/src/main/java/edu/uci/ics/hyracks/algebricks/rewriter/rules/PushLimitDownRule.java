@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -32,7 +33,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LimitOperat
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.StreamLimitPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class PushLimitDownRule implements IAlgebraicRewriteRule {
@@ -45,7 +45,6 @@ public class PushLimitDownRule implements IAlgebraicRewriteRule {
     /**
      * When a global Limit over a merge-exchange is found, a local Limit is
      * pushed down.
-     * 
      */
 
     @Override
@@ -101,8 +100,8 @@ public class PushLimitDownRule implements IAlgebraicRewriteRule {
             clone2 = new LimitOperator(opLim.getMaxObjects().getValue(), false);
         } else {
             // push limit (max+offset)
-            IFunctionInfo finfoAdd = AlgebricksBuiltinFunctions
-                    .getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.NUMERIC_ADD);
+            IFunctionInfo finfoAdd = context.getMetadataProvider().lookupFunction(
+                    AlgebricksBuiltinFunctions.NUMERIC_ADD);
             ScalarFunctionCallExpression maxPlusOffset = new ScalarFunctionCallExpression(finfoAdd,
                     opLim.getMaxObjects(), opLim.getOffset());
             clone2 = new LimitOperator(maxPlusOffset, false);

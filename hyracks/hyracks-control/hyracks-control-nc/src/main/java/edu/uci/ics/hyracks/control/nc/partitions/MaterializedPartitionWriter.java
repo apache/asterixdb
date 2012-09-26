@@ -20,11 +20,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileHandle;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.io.IFileHandle;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.common.job.PartitionState;
@@ -33,7 +33,7 @@ import edu.uci.ics.hyracks.control.nc.io.IOManager;
 public class MaterializedPartitionWriter implements IFrameWriter {
     private static final Logger LOGGER = Logger.getLogger(MaterializedPartitionWriter.class.getName());
 
-    private final IHyracksRootContext ctx;
+    private final IHyracksTaskContext ctx;
 
     private final PartitionManager manager;
 
@@ -45,13 +45,13 @@ public class MaterializedPartitionWriter implements IFrameWriter {
 
     private FileReference fRef;
 
-    private FileHandle handle;
+    private IFileHandle handle;
 
     private long size;
 
     private boolean failed;
 
-    public MaterializedPartitionWriter(IHyracksRootContext ctx, PartitionManager manager, PartitionId pid,
+    public MaterializedPartitionWriter(IHyracksTaskContext ctx, PartitionManager manager, PartitionId pid,
             TaskAttemptId taId, Executor executor) {
         this.ctx = ctx;
         this.manager = manager;

@@ -18,6 +18,7 @@ import java.util.ArrayList;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -34,7 +35,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.typing.OpRefTypeEnvPointer;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.PropagatingTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class SelectOperator extends AbstractLogicalOperator {
     private final Mutable<ILogicalExpression> condition;
@@ -85,11 +85,11 @@ public class SelectOperator extends AbstractLogicalOperator {
                 ctx.getNullableTypeComputer(), ctx.getMetadataProvider(), TypePropagationPolicy.ALL, envPointers);
         if (condition.getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
             AbstractFunctionCallExpression f1 = (AbstractFunctionCallExpression) condition.getValue();
-            if (f1.getFunctionIdentifier() == AlgebricksBuiltinFunctions.NOT) {
+            if (f1.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.NOT)) {
                 ILogicalExpression a1 = f1.getArguments().get(0).getValue();
                 if (a1.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression f2 = (AbstractFunctionCallExpression) a1;
-                    if (f2.getFunctionIdentifier() == AlgebricksBuiltinFunctions.IS_NULL) {
+                    if (f2.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.IS_NULL)) {
                         ILogicalExpression a2 = f2.getArguments().get(0).getValue();
                         if (a2.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                             LogicalVariable var = ((VariableReferenceExpression) a2).getVariableReference();

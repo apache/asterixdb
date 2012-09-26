@@ -14,16 +14,17 @@
  */
 package edu.uci.ics.hyracks.algebricks.tests.pushruntime;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IUnnestingFunction;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IUnnestingFunctionFactory;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class IntArrayUnnester implements IUnnestingFunctionFactory {
+public class IntArrayUnnester implements IUnnestingEvaluatorFactory {
 
     private int[] x;
 
@@ -34,11 +35,9 @@ public class IntArrayUnnester implements IUnnestingFunctionFactory {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IUnnestingFunction createUnnestingFunction(IDataOutputProvider provider) throws AlgebricksException {
-
-        final DataOutput out = provider.getDataOutput();
-
-        return new IUnnestingFunction() {
+    public IUnnestingEvaluator createUnnestingEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+        final ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
+        return new IUnnestingEvaluator() {
 
             private int pos;
 
@@ -48,12 +47,14 @@ public class IntArrayUnnester implements IUnnestingFunctionFactory {
             }
 
             @Override
-            public boolean step() throws AlgebricksException {
+            public boolean step(IPointable result) throws AlgebricksException {
                 try {
                     if (pos < x.length) {
                         // Writes one byte to distinguish between null
                         // values and end of sequence.
-                        out.writeInt(x[pos]);
+                        abvs.reset();
+                        abvs.getDataOutput().writeInt(x[pos]);
+                        result.set(abvs);
                         ++pos;
                         return true;
                     } else {

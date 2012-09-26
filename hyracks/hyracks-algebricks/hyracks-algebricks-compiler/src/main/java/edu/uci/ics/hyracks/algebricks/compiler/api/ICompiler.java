@@ -14,7 +14,7 @@
  */
 package edu.uci.ics.hyracks.algebricks.compiler.api;
 
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public interface ICompiler {

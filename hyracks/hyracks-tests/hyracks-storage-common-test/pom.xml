@@ -33,12 +33,6 @@
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
-  		<artifactId>hyracks-control-nc</artifactId>
-  		<version>0.2.1-SNAPSHOT</version>
-  		<scope>compile</scope>
-  	</dependency>
-  	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-common</artifactId>
   		<version>0.2.1-SNAPSHOT</version>
   		<scope>compile</scope>
@@ -48,7 +42,7 @@
   		<artifactId>hyracks-test-support</artifactId>
   		<version>0.2.1-SNAPSHOT</version>
   		<type>jar</type>
-  		<scope>test</scope>
+  		<scope>compile</scope>
   	</dependency>
   </dependencies>
 </project>

@@ -16,7 +16,7 @@ package edu.uci.ics.hyracks.dataflow.std.sort;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -33,7 +33,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
  */
 public class BSTMemMgr implements IMemoryManager {
 
-    private final IHyracksCommonContext ctx;
+    private final IHyracksTaskContext ctx;
     public static int frameSize;
 
     private ByteBuffer[] frames;
@@ -50,7 +50,7 @@ public class BSTMemMgr implements IMemoryManager {
     private Slot[] parentRes;
     private int lastFrame;
 
-    public BSTMemMgr(IHyracksCommonContext ctx, int memSize) {
+    public BSTMemMgr(IHyracksTaskContext ctx, int memSize) {
         this.ctx = ctx;
         frameSize = ctx.getFrameSize();
         convertBuffer = ByteBuffer.allocate(4);
@@ -167,7 +167,6 @@ public class BSTMemMgr implements IMemoryManager {
         //clean up all frames
         for (int i = 0; i < frames.length; i++)
             frames[i] = null;
-        System.gc();
     }
 
     /**

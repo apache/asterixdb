@@ -19,7 +19,7 @@ import edu.uci.ics.hyracks.api.dataflow.IOpenableDataWriter;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
 import edu.uci.ics.hyracks.dataflow.std.util.DeserializedOperatorNodePushable;
@@ -28,7 +28,7 @@ import edu.uci.ics.hyracks.dataflow.std.util.StringSerializationUtils;
 public class PrinterOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 
-    public PrinterOperatorDescriptor(JobSpecification spec) {
+    public PrinterOperatorDescriptor(IOperatorDescriptorRegistry spec) {
         super(spec, 1, 0);
     }
 
@@ -64,6 +64,6 @@ public class PrinterOperatorDescriptor extends AbstractSingleActivityOperatorDes
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
         return new DeserializedOperatorNodePushable(ctx, new PrinterOperator(),
-                recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0));
+                recordDescProvider.getInputRecordDescriptor(getActivityId(), 0));
     }
 }

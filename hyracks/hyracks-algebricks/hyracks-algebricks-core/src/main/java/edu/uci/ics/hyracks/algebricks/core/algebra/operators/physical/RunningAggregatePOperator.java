@@ -18,13 +18,14 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ILogicalExpressionJobGen;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.StatefulFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
@@ -34,11 +35,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningRequi
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IRunningAggregateFunctionFactory;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.JobGenContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.JobGenHelper;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.operators.std.RunningAggregateRuntimeFactory;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
+import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.operators.std.RunningAggregateRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
 public class RunningAggregatePOperator extends AbstractPhysicalOperator {
@@ -91,11 +91,11 @@ public class RunningAggregatePOperator extends AbstractPhysicalOperator {
         for (int i = 0; i < outColumns.length; i++) {
             outColumns[i] = opSchema.findVariable(variables.get(i));
         }
-        IRunningAggregateFunctionFactory[] runningAggFuns = new IRunningAggregateFunctionFactory[expressions.size()];
-        ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
+        IRunningAggregateEvaluatorFactory[] runningAggFuns = new IRunningAggregateEvaluatorFactory[expressions.size()];
+        IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
         for (int i = 0; i < runningAggFuns.length; i++) {
             StatefulFunctionCallExpression expr = (StatefulFunctionCallExpression) expressions.get(i).getValue();
-            runningAggFuns[i] = exprJobGen.createRunningAggregateFunctionFactory(expr,
+            runningAggFuns[i] = expressionRuntimeProvider.createRunningAggregateFunctionFactory(expr,
                     context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas, context);
         }
 
@@ -106,7 +106,7 @@ public class RunningAggregatePOperator extends AbstractPhysicalOperator {
                 projectionList);
 
         // contribute one Asterix framewriter
-        RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(op, opSchema, context);
+        RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
         builder.contributeMicroOperator(ragg, runtime, recDesc);
         // and contribute one edge from its child
         ILogicalOperator src = ragg.getInputs().get(0).getValue();

@@ -28,14 +28,12 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.api.PageAllocationException;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifier;
-import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
-import edu.uci.ics.hyracks.storage.am.invertedindex.impls.FixedSizeElementInvertedListBuilder;
-import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
+import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex.InvertedIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndexSearchPredicate;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.OccurrenceThresholdPanicException;
-import edu.uci.ics.hyracks.storage.am.invertedindex.impls.SearchResultCursor;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.TOccurrenceSearcher;
 import edu.uci.ics.hyracks.storage.am.invertedindex.searchmodifiers.ConjunctiveSearchModifier;
 import edu.uci.ics.hyracks.storage.am.invertedindex.searchmodifiers.JaccardSearchModifier;
@@ -55,20 +53,20 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
 
 	protected List<String> tokens = new ArrayList<String>();
 
-	@Before
-	public void start() throws Exception {
-		super.start();
+	@Override
+	protected void setTokenizer() {
 		tokenFactory = new UTF8WordTokenFactory();
 		tokenizer = new DelimitedUTF8StringBinaryTokenizer(true, false,
 				tokenFactory);
-		searcher = new TOccurrenceSearcher(taskCtx, invIndex, tokenizer);
-		resultCursor = new SearchResultCursor(
-				searcher.createResultFrameTupleAccessor(),
-				searcher.createResultTupleReference());
+	}
+	
+	@Before
+	public void start() throws Exception {
+		super.start();
 		loadData();
 	}
 
-	public void loadData() throws HyracksDataException, TreeIndexException, PageAllocationException {
+	public void loadData() throws HyracksDataException, TreeIndexException {
 		tokens.add("compilers");
 		tokens.add("computer");
 		tokens.add("databases");
@@ -87,37 +85,23 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
 		int addProb = 0;
 		int addProbStep = 10;
 
-		IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(
-				invListTypeTraits);
-		InvertedIndex.BulkLoadContext ctx = invIndex.beginBulkLoad(
-				invListBuilder, HYRACKS_FRAME_SIZE, BTree.DEFAULT_FILL_FACTOR);
+		IIndexBulkLoadContext ctx = invIndex.beginBulkLoad(BTree.DEFAULT_FILL_FACTOR);
 
-		int totalElements = 0;
 		for (int i = 0; i < tokens.size(); i++) {
 
 			addProb += addProbStep * (i + 1);
 			for (int j = 0; j < maxId; j++) {
 				if ((Math.abs(rnd.nextInt()) % addProb) == 0) {
-
-					totalElements++;
-
 					tb.reset();
 					UTF8StringSerializerDeserializer.INSTANCE.serialize(
-							tokens.get(i), dos);
+							tokens.get(i), tb.getDataOutput());
 					tb.addFieldEndOffset();
-					IntegerSerializerDeserializer.INSTANCE.serialize(j, dos);
+					IntegerSerializerDeserializer.INSTANCE.serialize(j, tb.getDataOutput());
 					tb.addFieldEndOffset();
-
+					tuple.reset(tb.getFieldEndOffsets(), tb.getByteArray());
 					checkInvLists.get(i).add(j);
-
-					appender.reset(frame, true);
-					appender.append(tb.getFieldEndOffsets(), tb.getByteArray(),
-							0, tb.getSize());
-
-					tuple.reset(accessor, 0);
-
 					try {
-						invIndex.bulkLoadAddTuple(ctx, tuple);
+						invIndex.bulkLoadAddTuple(tuple, ctx);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -170,6 +154,9 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
 
 		rnd.setSeed(50);
 
+		InvertedIndexAccessor accessor = (InvertedIndexAccessor) invIndex.createAccessor();
+		InvertedIndexSearchPredicate searchPred = new InvertedIndexSearchPredicate(tokenizer, searchModifier);
+		
 		// generate random queries
 		int[] queryTokenIndexes = new int[tokens.size()];
 		for (int i = 0; i < numQueries; i++) {
@@ -182,31 +169,34 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
 			StringBuilder strBuilder = new StringBuilder();
 			for (int j = 0; j < numQueryTokens; j++) {
 				strBuilder.append(tokens.get(queryTokenIndexes[j]));
-				if (j + 1 != numQueryTokens)
+				if (j + 1 != numQueryTokens) {
 					strBuilder.append(" ");
+				}
 			}
 
 			String queryString = strBuilder.toString();
 
+			// Serialize query.
 			queryTb.reset();
 			UTF8StringSerializerDeserializer.INSTANCE.serialize(queryString,
-					queryDos);
+					queryTb.getDataOutput());
 			queryTb.addFieldEndOffset();
+			queryTuple.reset(queryTb.getFieldEndOffsets(), queryTb.getByteArray());
 
-			queryAppender.reset(frame, true);
-			queryAppender.append(queryTb.getFieldEndOffsets(),
-					queryTb.getByteArray(), 0, queryTb.getSize());
-			queryTuple.reset(queryAccessor, 0);
-
+			// Set query tuple in search predicate.
+			searchPred.setQueryTuple(queryTuple);
+			searchPred.setQueryFieldIndex(0);
+			
 			boolean panic = false;
 
+			resultCursor = accessor.createSearchCursor();
 			int repeats = 1;
 			double totalTime = 0;
 			for (int j = 0; j < repeats; j++) {
 				long timeStart = System.currentTimeMillis();
 				try {
-					searcher.reset();
-					searcher.search(resultCursor, queryTuple, 0, searchModifier);
+					resultCursor.reset();
+					accessor.search(resultCursor, searchPred);
 				} catch (OccurrenceThresholdPanicException e) {
 					panic = true;
 				}
@@ -220,10 +210,9 @@ public class SearchPerfTest extends AbstractInvIndexSearchTest {
 			}
 
 			if (!panic) {
-
+				TOccurrenceSearcher searcher = (TOccurrenceSearcher) accessor.getSearcher();
 				fillExpectedResults(queryTokenIndexes, numQueryTokens,
 						searcher.getOccurrenceThreshold());
-
 				// verify results
 				int checkIndex = 0;
 				while (resultCursor.hasNext()) {

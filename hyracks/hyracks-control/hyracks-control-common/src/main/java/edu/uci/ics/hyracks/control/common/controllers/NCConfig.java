@@ -37,9 +37,6 @@ public class NCConfig implements Serializable {
     @Option(name = "-data-ip-address", usage = "IP Address to bind data listener", required = true)
     public String dataIPAddress;
 
-    @Option(name = "-frame-size", usage = "Frame Size to use for data communication (default: 32768)")
-    public int frameSize = 32768;
-
     @Option(name = "-iodevices", usage = "Comma separated list of IO Device mount points (default: One device in default temp folder)", required = false)
     public String ioDevices = System.getProperty("java.io.tmpdir");
 
@@ -55,6 +52,9 @@ public class NCConfig implements Serializable {
     @Option(name = "-net-thread-count", usage = "Number of threads to use for Network I/O (default: 1)")
     public int nNetThreads = 1;
 
+    @Option(name = "-max-memory", usage = "Maximum memory usable at this Node Controller in bytes (default: -1 auto)")
+    public int maxMemory = -1;
+
     public void toCommandLine(List<String> cList) {
         cList.add("-cc-host");
         cList.add(ccHost);
@@ -66,8 +66,6 @@ public class NCConfig implements Serializable {
         cList.add(nodeId);
         cList.add("-data-ip-address");
         cList.add(dataIPAddress);
-        cList.add("-frame-size");
-        cList.add(String.valueOf(frameSize));
         cList.add("-iodevices");
         cList.add(ioDevices);
         cList.add("-dcache-client-servers");
@@ -80,5 +78,7 @@ public class NCConfig implements Serializable {
         cList.add(dcacheClientPath);
         cList.add("-net-thread-count");
         cList.add(String.valueOf(nNetThreads));
+        cList.add("-max-memory");
+        cList.add(String.valueOf(maxMemory));
     }
 }

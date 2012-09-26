@@ -14,11 +14,10 @@
  */
 package edu.uci.ics.hyracks.api.job;
 
-import edu.uci.ics.hyracks.api.dataflow.TaskId;
-import edu.uci.ics.hyracks.api.dataflow.state.ITaskState;
+import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
 
 public interface IOperatorEnvironment {
-    public void setTaskState(ITaskState taskState);
+    public void setStateObject(IStateObject taskState);
 
-    public ITaskState getTaskState(TaskId taskId);
+    public IStateObject getStateObject(Object id);
 }

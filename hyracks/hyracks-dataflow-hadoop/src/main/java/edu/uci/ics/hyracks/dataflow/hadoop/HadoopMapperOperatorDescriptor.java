@@ -40,7 +40,7 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.SerializingDataWriter;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.DatatypeHelper;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.IHadoopClassFactory;
@@ -230,9 +230,7 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
                             data[1] = value;
                             writer.writeData(data);
                         }
-                    };
-                    ;
-                    ;
+                    };;;
 
                     OutputCommitter outputCommitter = new org.apache.hadoop.mapreduce.lib.output.NullOutputFormat()
                             .getOutputCommitter(new TaskAttemptContext(conf, new TaskAttemptID()));
@@ -254,9 +252,7 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
                         public Counter getCounter(Enum<?> arg0) {
                             return null;
                         }
-                    };
-                    ;
-                    ;
+                    };;;
                     context = new org.apache.hadoop.mapreduce.Mapper().new Context(conf, new TaskAttemptID(),
                             newReader, recordWriter, outputCommitter, statusReporter,
                             (org.apache.hadoop.mapreduce.InputSplit) inputSplit);
@@ -308,12 +304,12 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
         inputSplitsProxy = new InputSplitsProxy(jobConf, splits);
     }
 
-    public HadoopMapperOperatorDescriptor(JobSpecification spec, JobConf jobConf, IHadoopClassFactory hadoopClassFactory)
-            throws IOException {
+    public HadoopMapperOperatorDescriptor(IOperatorDescriptorRegistry spec, JobConf jobConf,
+            IHadoopClassFactory hadoopClassFactory) throws IOException {
         super(spec, 1, getRecordDescriptor(jobConf, hadoopClassFactory), jobConf, hadoopClassFactory);
     }
 
-    public HadoopMapperOperatorDescriptor(JobSpecification spec, JobConf jobConf, Object[] splits,
+    public HadoopMapperOperatorDescriptor(IOperatorDescriptorRegistry spec, JobConf jobConf, Object[] splits,
             IHadoopClassFactory hadoopClassFactory) throws IOException {
         super(spec, 0, getRecordDescriptor(jobConf, hadoopClassFactory), jobConf, hadoopClassFactory);
         initializeSplitInfo(splits);
@@ -412,7 +408,7 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
                 return createSelfReadingMapper(ctx, recordDescriptor, partition);
             } else {
                 return new DeserializedOperatorNodePushable(ctx, new MapperOperator(partition),
-                        recordDescProvider.getInputRecordDescriptor(this.odId, 0));
+                        recordDescProvider.getInputRecordDescriptor(this.activityNodeId, 0));
             }
         } catch (Exception e) {
             throw new HyracksDataException(e);

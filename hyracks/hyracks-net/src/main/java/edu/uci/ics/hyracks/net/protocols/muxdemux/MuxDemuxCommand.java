@@ -5,11 +5,11 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.hyracks.net.exceptions.NetException;
 
 class MuxDemuxCommand {
-    static final int MAX_CHANNEL_ID = 0x3ff;
+    static final int MAX_CHANNEL_ID = Integer.MAX_VALUE - 1;
 
-    static final int COMMAND_SIZE = 4;
+    static final int COMMAND_SIZE = 8;
 
-    static final int MAX_DATA_VALUE = 0x7ffff;
+    static final int MAX_DATA_VALUE = 0x1fffffff;
 
     enum CommandType {
         OPEN_CHANNEL,
@@ -57,15 +57,15 @@ class MuxDemuxCommand {
     }
 
     public void write(ByteBuffer buffer) {
-        int cmd = (channelId << 22) | (type.ordinal() << 19) | (data & 0x7ffff);
-        buffer.putInt(cmd);
+        long cmd = (((long) channelId) << 32) | (((long) type.ordinal()) << 29) | (data & 0x1fffffff);
+        buffer.putLong(cmd);
     }
 
     public void read(ByteBuffer buffer) {
-        int cmd = buffer.getInt();
-        channelId = (cmd >> 22) & 0x3ff;
-        type = CommandType.values()[(cmd >> 19) & 0x7];
-        data = cmd & 0x7ffff;
+        long cmd = buffer.getLong();
+        channelId = (int) ((cmd >> 32) & 0x7fffffff);
+        type = CommandType.values()[(int) ((cmd >> 29) & 0x7)];
+        data = (int) (cmd & 0x1fffffff);
     }
 
     @Override

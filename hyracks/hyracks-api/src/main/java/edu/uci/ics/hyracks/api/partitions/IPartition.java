@@ -15,9 +15,12 @@
 package edu.uci.ics.hyracks.api.partitions;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
 
 public interface IPartition extends IDeallocatable {
+    public IHyracksTaskContext getTaskContext();
+
     public void writeTo(IFrameWriter writer);
 
     public boolean isReusable();

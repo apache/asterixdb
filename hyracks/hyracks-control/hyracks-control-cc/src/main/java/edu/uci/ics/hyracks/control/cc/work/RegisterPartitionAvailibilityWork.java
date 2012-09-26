@@ -15,7 +15,6 @@
 package edu.uci.ics.hyracks.control.cc.work;
 
 import java.util.List;
-import java.util.logging.Level;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -54,11 +53,6 @@ public class RegisterPartitionAvailibilityWork extends AbstractWork {
                 e.printStackTrace();
             }
         }
-    }
-
-    @Override
-    public Level logLevel() {
-        return Level.FINEST;
     }
 
     @Override

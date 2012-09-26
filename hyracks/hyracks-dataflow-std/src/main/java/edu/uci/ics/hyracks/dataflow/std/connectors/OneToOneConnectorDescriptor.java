@@ -24,11 +24,11 @@ import edu.uci.ics.hyracks.api.constraints.Constraint;
 import edu.uci.ics.hyracks.api.constraints.IConstraintAcceptor;
 import edu.uci.ics.hyracks.api.constraints.expressions.PartitionCountExpression;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
+import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobActivityGraph;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.ActivityCluster;
+import edu.uci.ics.hyracks.api.job.IConnectorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicChannelReader;
 import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicFrameReader;
@@ -37,7 +37,7 @@ import edu.uci.ics.hyracks.dataflow.std.collectors.PartitionCollector;
 public class OneToOneConnectorDescriptor extends AbstractConnectorDescriptor {
     private static final long serialVersionUID = 1L;
 
-    public OneToOneConnectorDescriptor(JobSpecification spec) {
+    public OneToOneConnectorDescriptor(IConnectorDescriptorRegistry spec) {
         super(spec);
     }
 
@@ -60,14 +60,13 @@ public class OneToOneConnectorDescriptor extends AbstractConnectorDescriptor {
     }
 
     @Override
-    public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, JobActivityGraph plan,
+    public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, ActivityCluster ac,
             ICCApplicationContext appCtx) {
-        JobSpecification jobSpec = plan.getJobSpecification();
-        IOperatorDescriptor consumer = jobSpec.getConsumer(this);
-        IOperatorDescriptor producer = jobSpec.getProducer(this);
+        OperatorDescriptorId consumer = ac.getConsumerActivity(getConnectorId()).getOperatorDescriptorId();
+        OperatorDescriptorId producer = ac.getProducerActivity(getConnectorId()).getOperatorDescriptorId();
 
-        constraintAcceptor.addConstraint(new Constraint(new PartitionCountExpression(consumer.getOperatorId()),
-                new PartitionCountExpression(producer.getOperatorId())));
+        constraintAcceptor.addConstraint(new Constraint(new PartitionCountExpression(consumer),
+                new PartitionCountExpression(producer)));
     }
 
     @Override

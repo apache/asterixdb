@@ -43,7 +43,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.hadoop.data.KeyComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.hadoop.data.RawComparingComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.DatatypeHelper;
@@ -311,8 +311,8 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
     private IComparatorFactory comparatorFactory;
     private boolean useAsCombiner = false;
 
-    public HadoopReducerOperatorDescriptor(JobSpecification spec, JobConf conf, IComparatorFactory comparatorFactory,
-            IHadoopClassFactory classFactory, boolean useAsCombiner) {
+    public HadoopReducerOperatorDescriptor(IOperatorDescriptorRegistry spec, JobConf conf,
+            IComparatorFactory comparatorFactory, IHadoopClassFactory classFactory, boolean useAsCombiner) {
         super(spec, 1, getRecordDescriptor(conf, classFactory), conf, classFactory);
         this.comparatorFactory = comparatorFactory;
         this.useAsCombiner = useAsCombiner;
@@ -371,7 +371,7 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
             IOpenableDataWriterOperator op = new DeserializedPreclusteredGroupOperator(new int[] { 0 },
                     new IComparator[] { comparatorFactory.createComparator() }, new ReducerAggregator(createReducer()));
             return new DeserializedOperatorNodePushable(ctx, op, recordDescProvider.getInputRecordDescriptor(
-                    getOperatorId(), 0));
+                    getActivityId(), 0));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

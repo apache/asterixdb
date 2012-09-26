@@ -35,7 +35,7 @@ import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
-public class JobSpecification implements Serializable {
+public class JobSpecification implements Serializable, IOperatorDescriptorRegistry, IConnectorDescriptorRegistry {
     private static final long serialVersionUID = 1L;
 
     private final List<OperatorDescriptorId> roots;
@@ -56,9 +56,13 @@ public class JobSpecification implements Serializable {
 
     private IConnectorPolicyAssignmentPolicy connectorPolicyAssignmentPolicy;
 
+    private int frameSize;
+
     private int maxReattempts;
 
     private IJobletEventListenerFactory jobletEventListenerFactory;
+
+    private IGlobalJobDataFactory globalJobDataFactory;
 
     private transient int operatorIdCounter;
 
@@ -75,15 +79,22 @@ public class JobSpecification implements Serializable {
         userConstraints = new HashSet<Constraint>();
         operatorIdCounter = 0;
         connectorIdCounter = 0;
+        frameSize = 32768;
         maxReattempts = 2;
     }
 
-    public OperatorDescriptorId createOperatorDescriptorId() {
-        return new OperatorDescriptorId(operatorIdCounter++);
+    @Override
+    public OperatorDescriptorId createOperatorDescriptorId(IOperatorDescriptor op) {
+        OperatorDescriptorId odId = new OperatorDescriptorId(operatorIdCounter++);
+        opMap.put(odId, op);
+        return odId;
     }
 
-    public ConnectorDescriptorId createConnectorDescriptor() {
-        return new ConnectorDescriptorId(connectorIdCounter++);
+    @Override
+    public ConnectorDescriptorId createConnectorDescriptor(IConnectorDescriptor conn) {
+        ConnectorDescriptorId cdId = new ConnectorDescriptorId(connectorIdCounter++);
+        connMap.put(cdId, conn);
+        return cdId;
     }
 
     public void addRoot(IOperatorDescriptor op) {
@@ -202,6 +213,14 @@ public class JobSpecification implements Serializable {
         this.connectorPolicyAssignmentPolicy = connectorPolicyAssignmentPolicy;
     }
 
+    public void setFrameSize(int frameSize) {
+        this.frameSize = frameSize;
+    }
+
+    public int getFrameSize() {
+        return frameSize;
+    }
+
     public void setMaxReattempts(int maxReattempts) {
         this.maxReattempts = maxReattempts;
     }
@@ -224,6 +243,14 @@ public class JobSpecification implements Serializable {
 
     public void setJobletEventListenerFactory(IJobletEventListenerFactory jobletEventListenerFactory) {
         this.jobletEventListenerFactory = jobletEventListenerFactory;
+    }
+
+    public IGlobalJobDataFactory getGlobalJobDataFactory() {
+        return globalJobDataFactory;
+    }
+
+    public void setGlobalJobDataFactory(IGlobalJobDataFactory globalJobDataFactory) {
+        this.globalJobDataFactory = globalJobDataFactory;
     }
 
     private <K, V> void insertIntoIndexedMap(Map<K, List<V>> map, K key, int index, V value) {
@@ -258,6 +285,8 @@ public class JobSpecification implements Serializable {
                 }
             }
         }
+
+        buffer.append("\n").append("Constraints:\n").append(userConstraints);
 
         return buffer.toString();
     }

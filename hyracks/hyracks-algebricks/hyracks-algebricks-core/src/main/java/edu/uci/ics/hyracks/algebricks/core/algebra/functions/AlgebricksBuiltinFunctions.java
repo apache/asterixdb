@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.functions;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,69 +27,27 @@ public class AlgebricksBuiltinFunctions {
         NEQ
     }
 
-    private static Map<FunctionIdentifier, FunctionIdentifier> algebricksBuiltinFunctions = new HashMap<FunctionIdentifier, FunctionIdentifier>();
-
-    private static Map<FunctionIdentifier, IFunctionInfo> _finfos = new HashMap<FunctionIdentifier, IFunctionInfo>();
-
     public static final String ALGEBRICKS_NS = "algebricks";
 
     // comparisons
-    public final static FunctionIdentifier EQ = new FunctionIdentifier(ALGEBRICKS_NS, "eq", 2, true);
-    public final static FunctionIdentifier LE = new FunctionIdentifier(ALGEBRICKS_NS, "le", 2, true);
-    public final static FunctionIdentifier GE = new FunctionIdentifier(ALGEBRICKS_NS, "ge", 2, true);
-    public final static FunctionIdentifier LT = new FunctionIdentifier(ALGEBRICKS_NS, "lt", 2, true);
-    public final static FunctionIdentifier GT = new FunctionIdentifier(ALGEBRICKS_NS, "gt", 2, true);
-    public final static FunctionIdentifier NEQ = new FunctionIdentifier(ALGEBRICKS_NS, "neq", 2, true);
+    public final static FunctionIdentifier EQ = new FunctionIdentifier(ALGEBRICKS_NS, "eq", 2);
+    public final static FunctionIdentifier LE = new FunctionIdentifier(ALGEBRICKS_NS, "le", 2);
+    public final static FunctionIdentifier GE = new FunctionIdentifier(ALGEBRICKS_NS, "ge", 2);
+    public final static FunctionIdentifier LT = new FunctionIdentifier(ALGEBRICKS_NS, "lt", 2);
+    public final static FunctionIdentifier GT = new FunctionIdentifier(ALGEBRICKS_NS, "gt", 2);
+    public final static FunctionIdentifier NEQ = new FunctionIdentifier(ALGEBRICKS_NS, "neq", 2);
 
     // booleans
-    public final static FunctionIdentifier NOT = new FunctionIdentifier(ALGEBRICKS_NS, "not", 1, true);
+    public final static FunctionIdentifier NOT = new FunctionIdentifier(ALGEBRICKS_NS, "not", 1);
     public final static FunctionIdentifier AND = new FunctionIdentifier(ALGEBRICKS_NS, "and",
-            FunctionIdentifier.VARARGS, true);
-    public final static FunctionIdentifier OR = new FunctionIdentifier(ALGEBRICKS_NS, "or", FunctionIdentifier.VARARGS,
-            true);
+            FunctionIdentifier.VARARGS);
+    public final static FunctionIdentifier OR = new FunctionIdentifier(ALGEBRICKS_NS, "or", FunctionIdentifier.VARARGS);
 
     // numerics
-    public final static FunctionIdentifier NUMERIC_ADD = new FunctionIdentifier(ALGEBRICKS_NS, "numeric-add", 2, true);
+    public final static FunctionIdentifier NUMERIC_ADD = new FunctionIdentifier(ALGEBRICKS_NS, "numeric-add", 2);
 
     // nulls
-    public final static FunctionIdentifier IS_NULL = new FunctionIdentifier(ALGEBRICKS_NS, "is-null", 1, true);
-
-    static {
-        // comparisons
-        add(EQ);
-        add(LE);
-        add(GE);
-        add(LT);
-        add(GT);
-        add(NEQ);
-        // booleans
-        add(NOT);
-        add(AND);
-        add(OR);
-        // numerics
-        add(NUMERIC_ADD);
-        // nulls
-        add(IS_NULL);
-        for (FunctionIdentifier fi : algebricksBuiltinFunctions.values()) {
-            _finfos.put(fi, new FunctionInfoImpl(fi));
-        }
-    }
-
-    private static void add(FunctionIdentifier fi) {
-        algebricksBuiltinFunctions.put(fi, fi);
-    }
-
-    public static final boolean isAlgebricksBuiltinFunction(FunctionIdentifier fi) {
-        return algebricksBuiltinFunctions.get(fi) != null;
-    }
-
-    public static final Collection<FunctionIdentifier> getAlgebricksBuiltinFunctions() {
-        return algebricksBuiltinFunctions.values();
-    }
-
-    public static final FunctionIdentifier getBuiltinFunctionIdentifier(FunctionIdentifier fi) {
-        return algebricksBuiltinFunctions.get(fi);
-    }
+    public final static FunctionIdentifier IS_NULL = new FunctionIdentifier(ALGEBRICKS_NS, "is-null", 1);
 
     private static final Map<FunctionIdentifier, ComparisonKind> comparisonFunctions = new HashMap<FunctionIdentifier, ComparisonKind>();
     static {
@@ -109,9 +66,4 @@ public class AlgebricksBuiltinFunctions {
     public static boolean isComparisonFunction(FunctionIdentifier fi) {
         return comparisonFunctions.get(fi) != null;
     }
-
-    public static IFunctionInfo getBuiltinFunctionInfo(FunctionIdentifier fi) {
-        return _finfos.get(fi);
-    }
-
 }

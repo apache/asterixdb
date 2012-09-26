@@ -20,6 +20,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -34,7 +35,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLog
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class OperatorPropertiesUtil {
 
@@ -169,15 +169,15 @@ public class OperatorPropertiesUtil {
             return false;
         }
         AbstractFunctionCallExpression f1 = (AbstractFunctionCallExpression) eu;
-        if (f1.getFunctionIdentifier() != AlgebricksBuiltinFunctions.NOT) {
+        if (!f1.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.NOT)) {
             return false;
         }
         ILogicalExpression a1 = f1.getArguments().get(0).getValue();
-        if (a1.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+        if (!a1.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
             return false;
         }
         AbstractFunctionCallExpression f2 = (AbstractFunctionCallExpression) a1;
-        if (f2.getFunctionIdentifier() != AlgebricksBuiltinFunctions.IS_NULL) {
+        if (!f2.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.IS_NULL)) {
             return false;
         }
         return true;

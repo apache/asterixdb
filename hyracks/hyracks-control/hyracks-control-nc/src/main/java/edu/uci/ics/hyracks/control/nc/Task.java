@@ -33,8 +33,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
-import edu.uci.ics.hyracks.api.dataflow.TaskId;
-import edu.uci.ics.hyracks.api.dataflow.state.ITaskState;
+import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -88,7 +87,9 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private volatile boolean aborted;
 
-    public Task(Joblet joblet, TaskAttemptId taskId, String displayName, Executor executor) {
+    private NodeControllerService ncs;
+
+    public Task(Joblet joblet, TaskAttemptId taskId, String displayName, Executor executor, NodeControllerService ncs) {
         this.joblet = joblet;
         this.taskAttemptId = taskId;
         this.displayName = displayName;
@@ -102,6 +103,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         failed = false;
         errorBaos = new ByteArrayOutputStream();
         errorWriter = new PrintWriter(errorBaos, true);
+        this.ncs = ncs;
     }
 
     public void setTaskRuntime(IPartitionCollector[] collectors, IOperatorNodePushable operator) {
@@ -306,19 +308,22 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                 reader.open();
                 try {
                     writer.open();
-                    ByteBuffer buffer = allocateFrame();
-                    while (reader.nextFrame(buffer)) {
-                        if (aborted) {
-                            return;
+                    try {
+                        ByteBuffer buffer = allocateFrame();
+                        while (reader.nextFrame(buffer)) {
+                            if (aborted) {
+                                return;
+                            }
+                            buffer.flip();
+                            writer.nextFrame(buffer);
+                            buffer.compact();
                         }
-                        buffer.flip();
-                        writer.nextFrame(buffer);
-                        buffer.compact();
+                    } catch (Exception e) {
+                        writer.fail();
+                        throw e;
+                    } finally {
+                        writer.close();
                     }
-                    writer.close();
-                } catch (Exception e) {
-                    writer.fail();
-                    throw e;
                 } finally {
                     reader.close();
                 }
@@ -333,12 +338,18 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     }
 
     @Override
-    public void setTaskState(ITaskState taskState) {
-        opEnv.setTaskState(taskState);
+    public void setStateObject(IStateObject taskState) {
+        opEnv.setStateObject(taskState);
     }
 
     @Override
-    public ITaskState getTaskState(TaskId taskId) {
-        return opEnv.getTaskState(taskId);
+    public IStateObject getStateObject(Object id) {
+        return opEnv.getStateObject(id);
+    }
+
+    @Override
+    public void sendApplicationMessageToCC(byte[] message, String nodeId) throws Exception {
+        this.ncs.sendApplicationMessageToCC(message, this.getJobletContext().getApplicationContext()
+                .getApplicationName(), nodeId);
     }
 }

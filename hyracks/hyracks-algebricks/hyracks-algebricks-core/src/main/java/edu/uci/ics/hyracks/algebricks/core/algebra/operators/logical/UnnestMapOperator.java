@@ -18,6 +18,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -26,22 +27,22 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.VariablePropagatio
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.NonPropagatingTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 /**
  * This operator may go away after we add indexes to Algebricks.
- * 
  */
 public class UnnestMapOperator extends AbstractUnnestOperator {
 
     private final List<Object> variableTypes; // TODO: get rid of this and
-
+    private final boolean propagateInput;
+    
     // deprecate UnnestMap
 
     public UnnestMapOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression,
-            List<Object> variableTypes) {
+            List<Object> variableTypes, boolean propagateInput) {
         super(variables, expression);
         this.variableTypes = variableTypes;
+        this.propagateInput = propagateInput;
     }
 
     @Override
@@ -55,19 +56,19 @@ public class UnnestMapOperator extends AbstractUnnestOperator {
     }
 
     /**
-     * 
      * UnnestMap doesn't propagate input variables, because currently it is only
      * used to search indexes. In the future, it would be nice to have the
      * choice to propagate input variables or not.
-     * 
      */
     @Override
     public VariablePropagationPolicy getVariablePropagationPolicy() {
         return new VariablePropagationPolicy() {
-
             @Override
             public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources)
                     throws AlgebricksException {
+                if (propagateInput) {
+                    target.addAllVariables(sources[0]);
+                }
                 for (LogicalVariable v : variables) {
                     target.addVariable(v);
                 }
@@ -81,13 +82,28 @@ public class UnnestMapOperator extends AbstractUnnestOperator {
 
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
-        IVariableTypeEnvironment env = new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(),
-                ctx.getMetadataProvider());
+        IVariableTypeEnvironment env = null;
+        if (propagateInput) {
+            env = createPropagatingAllInputsTypeEnvironment(ctx);
+        } else {
+            env = new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getMetadataProvider());
+        }
         int n = variables.size();
         for (int i = 0; i < n; i++) {
             env.setVarType(variables.get(i), variableTypes.get(i));
         }
         return env;
     }
+    
+    public boolean propagatesInput() {
+        return propagateInput;
+    }
+    
+    /*
+    @Override
+    public boolean isMap() {
+        return !propagateInput;
+    }
+    */
 
 }

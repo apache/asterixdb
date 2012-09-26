@@ -33,16 +33,18 @@ public interface IIOManager {
 
     public List<IODeviceHandle> getIODevices();
 
-    public FileHandle open(FileReference fileRef, FileReadWriteMode rwMode, FileSyncMode syncMode)
+    public IFileHandle open(FileReference fileRef, FileReadWriteMode rwMode, FileSyncMode syncMode)
             throws HyracksDataException;
 
-    public int syncWrite(FileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException;
+    public int syncWrite(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException;
 
-    public int syncRead(FileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException;
+    public int syncRead(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException;
 
-    public IIOFuture asyncWrite(FileHandle fHandle, long offset, ByteBuffer data);
+    public IIOFuture asyncWrite(IFileHandle fHandle, long offset, ByteBuffer data);
 
-    public IIOFuture asyncRead(FileHandle fHandle, long offset, ByteBuffer data);
+    public IIOFuture asyncRead(IFileHandle fHandle, long offset, ByteBuffer data);
 
-    public void close(FileHandle fHandle) throws HyracksDataException;
+    public void close(IFileHandle fHandle) throws HyracksDataException;
+
+    public void sync(IFileHandle fileHandle, boolean metadata) throws HyracksDataException;
 }

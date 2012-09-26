@@ -28,6 +28,11 @@ import edu.uci.ics.hyracks.net.buffers.IBufferAcceptor;
 import edu.uci.ics.hyracks.net.buffers.ICloseableBufferAcceptor;
 import edu.uci.ics.hyracks.net.exceptions.NetException;
 
+/**
+ * Handle to a channel that represents a logical full-duplex communication end-point.
+ * 
+ * @author vinayakb
+ */
 public class ChannelControlBlock {
     private static final Logger LOGGER = Logger.getLogger(ChannelControlBlock.class.getName());
 
@@ -45,6 +50,8 @@ public class ChannelControlBlock {
 
     private final AtomicBoolean remoteClose;
 
+    private final AtomicBoolean remoteCloseAck;
+
     ChannelControlBlock(ChannelSet cSet, int channelId) {
         this.cSet = cSet;
         this.channelId = channelId;
@@ -53,16 +60,27 @@ public class ChannelControlBlock {
         localClose = new AtomicBoolean();
         localCloseAck = new AtomicBoolean();
         remoteClose = new AtomicBoolean();
+        remoteCloseAck = new AtomicBoolean();
     }
 
     int getChannelId() {
         return channelId;
     }
 
+    /**
+     * Get the read inderface of this channel.
+     * 
+     * @return the read interface.
+     */
     public IChannelReadInterface getReadInterface() {
         return ri;
     }
 
+    /**
+     * Get the write interface of this channel.
+     * 
+     * @return the write interface.
+     */
     public IChannelWriteInterface getWriteInterface() {
         return wi;
     }
@@ -110,21 +128,21 @@ public class ChannelControlBlock {
                 if (size <= 0) {
                     return size;
                 }
-                if (ri.currentReadBuffer == null) {
-                    ri.currentReadBuffer = ri.riEmptyStack.poll();
-                    assert ri.currentReadBuffer != null;
+                if (currentReadBuffer == null) {
+                    currentReadBuffer = riEmptyStack.poll();
+                    assert currentReadBuffer != null;
                 }
-                int rSize = Math.min(size, ri.currentReadBuffer.remaining());
+                int rSize = Math.min(size, currentReadBuffer.remaining());
                 if (rSize > 0) {
-                    ri.currentReadBuffer.limit(ri.currentReadBuffer.position() + rSize);
+                    currentReadBuffer.limit(currentReadBuffer.position() + rSize);
                     int len;
                     try {
-                        len = sc.read(ri.currentReadBuffer);
+                        len = sc.read(currentReadBuffer);
                         if (len < 0) {
                             throw new NetException("Socket Closed");
                         }
                     } finally {
-                        ri.currentReadBuffer.limit(ri.currentReadBuffer.capacity());
+                        currentReadBuffer.limit(currentReadBuffer.capacity());
                     }
                     size -= len;
                     if (len < rSize) {
@@ -133,7 +151,7 @@ public class ChannelControlBlock {
                 } else {
                     return size;
                 }
-                if (ri.currentReadBuffer.remaining() <= 0) {
+                if (currentReadBuffer.remaining() <= 0) {
                     flush();
                 }
             }
@@ -142,7 +160,7 @@ public class ChannelControlBlock {
         void flush() {
             if (currentReadBuffer != null) {
                 currentReadBuffer.flip();
-                fba.accept(ri.currentReadBuffer);
+                fba.accept(currentReadBuffer);
                 currentReadBuffer = null;
             }
         }
@@ -241,7 +259,7 @@ public class ChannelControlBlock {
                 ecodeSent = true;
                 localClose.set(true);
                 adjustChannelWritability();
-            } else if (wi.eos && !wi.eosSent) {
+            } else if (eos && !eosSent) {
                 writerState.command.setChannelId(channelId);
                 writerState.command.setCommandType(MuxDemuxCommand.CommandType.CLOSE_CHANNEL);
                 writerState.command.setData(0);
@@ -321,11 +339,15 @@ public class ChannelControlBlock {
         remoteClose.set(true);
     }
 
+    void reportRemoteEOSAck() {
+        remoteCloseAck.set(true);
+    }
+
     boolean getRemoteEOS() {
         return remoteClose.get();
     }
 
-    synchronized void reportLocalEOSAck() {
+    void reportLocalEOSAck() {
         localCloseAck.set(true);
     }
 
@@ -336,12 +358,13 @@ public class ChannelControlBlock {
     }
 
     boolean completelyClosed() {
-        return localCloseAck.get() && remoteClose.get();
+        return localCloseAck.get() && remoteCloseAck.get();
     }
 
     @Override
     public String toString() {
         return "Channel:" + channelId + "[localClose: " + localClose + " localCloseAck: " + localCloseAck
-                + " remoteClose: " + remoteClose + " readCredits: " + ri.credits + " writeCredits: " + wi.credits + "]";
+                + " remoteClose: " + remoteClose + " remoteCloseAck:" + remoteCloseAck + " readCredits: " + ri.credits
+                + " writeCredits: " + wi.credits + "]";
     }
 }

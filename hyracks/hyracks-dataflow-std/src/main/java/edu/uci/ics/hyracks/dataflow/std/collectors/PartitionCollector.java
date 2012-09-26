@@ -51,7 +51,7 @@ public class PartitionCollector extends AbstractPartitionCollector {
             PartitionId pid = pc.getPartitionId();
             IInputChannel channel = pc.getInputChannel();
             pa.addPartition(pid, channel);
-            channel.open();
+            channel.open(ctx);
         }
     }
 

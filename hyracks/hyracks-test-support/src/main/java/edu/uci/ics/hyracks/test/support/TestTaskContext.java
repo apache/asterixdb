@@ -19,8 +19,7 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
-import edu.uci.ics.hyracks.api.dataflow.TaskId;
-import edu.uci.ics.hyracks.api.dataflow.state.ITaskState;
+import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -31,11 +30,11 @@ import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
 
 public class TestTaskContext implements IHyracksTaskContext {
-    private final IHyracksJobletContext jobletContext;
+    private final TestJobletContext jobletContext;
     private final TaskAttemptId taskId;
     private WorkspaceFileFactory fileFactory;
 
-    public TestTaskContext(IHyracksJobletContext jobletContext, TaskAttemptId taskId) throws HyracksException {
+    public TestTaskContext(TestJobletContext jobletContext, TaskAttemptId taskId) throws HyracksException {
         this.jobletContext = jobletContext;
         this.taskId = taskId;
         fileFactory = new WorkspaceFileFactory(this, (IOManager) getIOManager());
@@ -92,12 +91,18 @@ public class TestTaskContext implements IHyracksTaskContext {
     }
 
     @Override
-    public void setTaskState(ITaskState taskState) {
+    public void setStateObject(IStateObject taskState) {
 
     }
 
     @Override
-    public ITaskState getTaskState(TaskId taskId) {
+    public IStateObject getStateObject(Object id) {
         return null;
+    }
+
+    @Override
+    public void sendApplicationMessageToCC(byte[] message, String nodeId) throws Exception {
+        // TODO Auto-generated method stub
+
     }
 }

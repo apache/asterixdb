@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 
 public class AlgebricksConfig {
     public static final boolean DEBUG = true;
-    public static final String ALGEBRICKS_LOGGER_NAME = "edu.uci.ics.algebricks";
+    public static final String ALGEBRICKS_LOGGER_NAME = "edu.uci.ics.hyracks.algebricks";
     public static final Logger ALGEBRICKS_LOGGER = Logger.getLogger(ALGEBRICKS_LOGGER_NAME);
     public static final String HYRACKS_APP_NAME = "algebricks";
 

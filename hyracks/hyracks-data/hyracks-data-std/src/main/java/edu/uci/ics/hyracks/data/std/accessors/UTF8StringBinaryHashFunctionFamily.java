@@ -37,7 +37,7 @@ public class UTF8StringBinaryHashFunctionFamily implements IBinaryHashFunctionFa
             @Override
             public int hash(byte[] bytes, int offset, int length) {
                 int h = 0;
-                int utflen = UTF8StringPointable.getUTFLen(bytes, offset);
+                int utflen = UTF8StringPointable.getUTFLength(bytes, offset);
                 int sStart = offset + 2;
                 int c = 0;
 

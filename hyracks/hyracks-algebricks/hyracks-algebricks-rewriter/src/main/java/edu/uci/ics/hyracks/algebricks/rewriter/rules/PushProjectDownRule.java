@@ -23,6 +23,8 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -34,17 +36,13 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractOpe
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
-import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 
 /**
- * 
  * Pushes projections through its input operator, provided that operator does
  * not produce the projected variables.
  * 
  * @author Nicola
- * 
  */
 public class PushProjectDownRule implements IAlgebraicRewriteRule {
 
@@ -84,7 +82,8 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
             if (op2.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE
                     || op2.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE
                     || op2.getOperatorTag() == LogicalOperatorTag.PROJECT
-                    || op2.getOperatorTag() == LogicalOperatorTag.REPLICATE) {
+                    || op2.getOperatorTag() == LogicalOperatorTag.REPLICATE
+                    || op2.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
                 return new Pair<Boolean, Boolean>(false, false);
             }
             if (!op2.isMap()) {

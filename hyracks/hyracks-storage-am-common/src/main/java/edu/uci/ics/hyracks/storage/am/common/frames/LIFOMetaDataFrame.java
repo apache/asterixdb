@@ -27,11 +27,15 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
 
+    // Arbitrarily chosen magic integer.
+    protected static final int MAGIC_VALID_INT = 0x5bd1e995;
+    
 	protected static final int tupleCountOff = 0; //0
 	protected static final int freeSpaceOff = tupleCountOff + 4; //4
 	protected static final int maxPageOff = freeSpaceOff + 4; //8
 	protected static final int levelOff = maxPageOff + 12; //20
 	protected static final int nextPageOff = levelOff + 1; // 21
+	protected static final int validOff = nextPageOff + 4; // 25
 
 	protected ICachedPage page = null;
 	protected ByteBuffer buf = null;
@@ -65,7 +69,7 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
 		return buf.getInt(freeSpaceOff) + 4 < buf.capacity();
 	}
 
-	// on bounds checking is done, there must be free space
+	// no bounds checking is done, there must be free space
 	public void addFreePage(int freePage) {
 		int freeSpace = buf.getInt(freeSpaceOff);
 		buf.putInt(freeSpace, freePage);
@@ -97,10 +101,11 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
 	@Override
 	public void initBuffer(byte level) {
 		buf.putInt(tupleCountOff, 0);
-		buf.putInt(freeSpaceOff, nextPageOff + 4);
+		buf.putInt(freeSpaceOff, validOff + 4);
 		//buf.putInt(maxPageOff, -1);
 		buf.put(levelOff, level);
 		buf.putInt(nextPageOff, -1);
+		setValid(false);
 	}
 
 	@Override
@@ -112,4 +117,18 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
 	public void setNextPage(int nextPage) {
 		buf.putInt(nextPageOff, nextPage);
 	}
+
+    @Override
+    public boolean isValid() {
+        return buf.getInt(validOff) == MAGIC_VALID_INT;
+    }
+
+    @Override
+    public void setValid(boolean isValid) {
+        if (isValid) {
+            buf.putInt(validOff, MAGIC_VALID_INT);
+        } else {
+            buf.putInt(validOff, 0);
+        }
+    }
 }

@@ -17,32 +17,26 @@ package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
+import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
+import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
-import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.util.IndexUtils;
-import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public class BTreeDataflowHelper extends TreeIndexDataflowHelper {
-    public BTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            boolean createIfNotExists) {
-        super(opDesc, ctx, partition, createIfNotExists);
+    public BTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition) {
+        super(opDesc, ctx, partition);
     }
-    
+
     @Override
     public ITreeIndex createIndexInstance() throws HyracksDataException {
-        MultiComparator cmp = IndexUtils.createMultiComparator(treeOpDesc.getTreeIndexComparatorFactories());
-        IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
-        ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
-        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, indexFileId, 0,
-                metaDataFrameFactory);
-        return new BTree(bufferCache, treeOpDesc.getTreeIndexTypeTraits().length, cmp, freePageManager,
-                treeOpDesc.getTreeIndexInteriorFactory(), treeOpDesc.getTreeIndexLeafFactory());
+        try {
+            return BTreeUtils.createBTree(opDesc.getStorageManager().getBufferCache(ctx), opDesc
+                    .getOpCallbackProvider().getOperationCallback(), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
+                    .getTreeIndexComparatorFactories(), BTreeLeafFrameType.REGULAR_NSM);
+        } catch (BTreeException e) {
+            throw new HyracksDataException(e);
+        }
     }
 }

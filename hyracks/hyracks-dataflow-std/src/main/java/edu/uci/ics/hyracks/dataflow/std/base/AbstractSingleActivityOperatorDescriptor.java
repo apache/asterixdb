@@ -17,14 +17,14 @@ package edu.uci.ics.hyracks.dataflow.std.base;
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 
 public abstract class AbstractSingleActivityOperatorDescriptor extends AbstractOperatorDescriptor implements IActivity {
     private static final long serialVersionUID = 1L;
 
     protected final ActivityId activityNodeId;
 
-    public AbstractSingleActivityOperatorDescriptor(JobSpecification spec, int inputArity, int outputArity) {
+    public AbstractSingleActivityOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity) {
         super(spec, inputArity, outputArity);
         activityNodeId = new ActivityId(odId, 0);
     }
@@ -36,7 +36,7 @@ public abstract class AbstractSingleActivityOperatorDescriptor extends AbstractO
 
     @Override
     public final void contributeActivities(IActivityGraphBuilder builder) {
-        builder.addActivity(this);
+        builder.addActivity(this, this);
         for (int i = 0; i < getInputArity(); ++i) {
             builder.addSourceEdge(i, this, i);
         }

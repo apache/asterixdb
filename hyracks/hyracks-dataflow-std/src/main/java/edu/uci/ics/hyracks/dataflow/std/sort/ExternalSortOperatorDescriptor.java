@@ -32,11 +32,11 @@ import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractStateObject;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
@@ -51,12 +51,12 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final int framesLimit;
 
-    public ExternalSortOperatorDescriptor(JobSpecification spec, int framesLimit, int[] sortFields,
+    public ExternalSortOperatorDescriptor(IOperatorDescriptorRegistry spec, int framesLimit, int[] sortFields,
             IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor) {
         this(spec, framesLimit, sortFields, null, comparatorFactories, recordDescriptor);
     }
 
-    public ExternalSortOperatorDescriptor(JobSpecification spec, int framesLimit, int[] sortFields,
+    public ExternalSortOperatorDescriptor(IOperatorDescriptorRegistry spec, int framesLimit, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);
@@ -75,16 +75,16 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
         SortActivity sa = new SortActivity(new ActivityId(odId, SORT_ACTIVITY_ID));
         MergeActivity ma = new MergeActivity(new ActivityId(odId, MERGE_ACTIVITY_ID));
 
-        builder.addActivity(sa);
+        builder.addActivity(this, sa);
         builder.addSourceEdge(0, sa, 0);
 
-        builder.addActivity(ma);
+        builder.addActivity(this, ma);
         builder.addTargetEdge(0, ma, 0);
 
         builder.addBlockingEdge(sa, ma);
     }
 
-    public static class SortTaskState extends AbstractTaskState {
+    public static class SortTaskState extends AbstractStateObject {
         private List<IFrameReader> runs;
         private FrameSorter frameSorter;
 
@@ -138,7 +138,7 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                     runGen.close();
                     state.runs = runGen.getRuns();
                     state.frameSorter = runGen.getFrameSorter();
-                    ctx.setTaskState(state);
+                    ctx.setStateObject(state);
                 }
 
                 @Override
@@ -163,7 +163,7 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
             IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
                 public void initialize() throws HyracksDataException {
-                    SortTaskState state = (SortTaskState) ctx.getTaskState(new TaskId(new ActivityId(getOperatorId(),
+                    SortTaskState state = (SortTaskState) ctx.getStateObject(new TaskId(new ActivityId(getOperatorId(),
                             SORT_ACTIVITY_ID), partition));
                     List<IFrameReader> runs = state.runs;
                     FrameSorter frameSorter = state.frameSorter;

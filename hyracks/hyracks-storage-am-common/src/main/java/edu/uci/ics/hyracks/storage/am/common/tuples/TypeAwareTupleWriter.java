@@ -79,8 +79,6 @@ public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
 
         // write data fields
         for (int i = 0; i < tuple.getFieldCount(); i++) {
-            int s = tuple.getFieldStart(i);
-            int l = tuple.getFieldLength(i);
             System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), targetBuf, runner, tuple.getFieldLength(i));
             runner += tuple.getFieldLength(i);
         }
@@ -89,17 +87,17 @@ public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
     }
 
     @Override
-    public int writeTupleFields(ITupleReference tuple, int startField, int numFields, ByteBuffer targetBuf,
+    public int writeTupleFields(ITupleReference tuple, int startField, int numFields, byte[] targetBuf,
             int targetOff) {
         int runner = targetOff;
         int nullFlagsBytes = getNullFlagsBytes(numFields);
         // write null indicator bits
         for (int i = 0; i < nullFlagsBytes; i++) {
-            targetBuf.put(runner++, (byte) 0);
+            targetBuf[runner++] = (byte) 0;
         }
 
         // write field slots for variable length fields
-        encDec.reset(targetBuf.array(), runner);
+        encDec.reset(targetBuf, runner);
         for (int i = startField; i < startField + numFields; i++) {
             if (!typeTraits[i].isFixedLength()) {
                 encDec.encode(tuple.getFieldLength(i));
@@ -108,7 +106,7 @@ public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
         runner = encDec.getPos();
 
         for (int i = startField; i < startField + numFields; i++) {
-            System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), targetBuf.array(), runner,
+            System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), targetBuf, runner,
                     tuple.getFieldLength(i));
             runner += tuple.getFieldLength(i);
         }

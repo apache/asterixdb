@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -13,13 +14,13 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.VariablePropagatio
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.NonPropagatingTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class AggregateOperator extends AbstractAssignOperator {
 
     // private ArrayList<AggregateFunctionCallExpression> expressions;
     // TODO type safe list of expressions
     private List<Mutable<ILogicalExpression>> mergeExpressions;
+    private LogicalVariable partitioningVariable;
 
     public AggregateOperator(List<LogicalVariable> variables, List<Mutable<ILogicalExpression>> expressions) {
         super(variables, expressions);
@@ -66,6 +67,14 @@ public class AggregateOperator extends AbstractAssignOperator {
 
     public List<Mutable<ILogicalExpression>> getMergeExpressions() {
         return mergeExpressions;
+    }
+
+    public void setPartitioningVariable(LogicalVariable partitioningVariable) {
+        this.partitioningVariable = partitioningVariable;
+    }
+
+    public LogicalVariable getPartitioningVariable() {
+        return partitioningVariable;
     }
 
     @Override

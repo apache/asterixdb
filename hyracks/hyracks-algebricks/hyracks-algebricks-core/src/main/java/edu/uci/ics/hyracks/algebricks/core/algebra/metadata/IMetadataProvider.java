@@ -16,14 +16,18 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.metadata;
 
 import java.util.List;
 
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IPrinterFactory;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IPushRuntimeFactory;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.JobGenContext;
-import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksPartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
+import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
+import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -38,7 +42,8 @@ public interface IMetadataProvider<S, I> {
      */
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getScannerRuntime(IDataSource<S> dataSource,
             List<LogicalVariable> scanVariables, List<LogicalVariable> projectVariables, boolean projectPushed,
-            JobGenContext context, JobSpecification jobSpec) throws AlgebricksException;
+            IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec)
+            throws AlgebricksException;
 
     public boolean scannerOperatorIsLeaf(IDataSource<S> dataSource);
 
@@ -58,15 +63,77 @@ public interface IMetadataProvider<S, I> {
             IOperatorSchema propagatedSchema, List<LogicalVariable> keys, LogicalVariable payLoadVar,
             RecordDescriptor recordDesc, JobGenContext context, JobSpecification jobSpec) throws AlgebricksException;
 
+    /**
+     * Creates the insert runtime of IndexInsertDeletePOperator, which models
+     * insert/delete operations into a secondary index.
+     * 
+     * @param dataSource
+     *            Target secondary index.
+     * @param propagatedSchema
+     *            Output schema of the insert/delete operator to be created.
+     * @param inputSchemas
+     *            Output schemas of the insert/delete operator to be created.
+     * @param typeEnv
+     *            Type environment of the original IndexInsertDeleteOperator operator.
+     * @param primaryKeys
+     *            Variables for the dataset's primary keys that the dataSource secondary index belongs to.
+     * @param secondaryKeys
+     *            Variables for the secondary-index keys.
+     * @param filterExpr
+     *            Filtering expression to be pushed inside the runtime op.
+     *            Such a filter may, e.g., exclude NULLs from being inserted/deleted.
+     * @param recordDesc
+     *            Output record descriptor of the runtime op to be created.
+     * @param context
+     *            Job generation context.
+     * @param spec
+     *            Target job specification.
+     * @return
+     *         A Hyracks IOperatorDescriptor and its partition constraint.
+     * @throws AlgebricksException
+     */
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexInsertRuntime(
-            IDataSourceIndex<I, S> dataSource, IOperatorSchema propagatedSchema, List<LogicalVariable> primaryKeys,
-            List<LogicalVariable> secondaryKeys, RecordDescriptor recordDesc, JobGenContext context,
-            JobSpecification spec) throws AlgebricksException;
+            IDataSourceIndex<I, S> dataSource, IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas,
+            IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
+            ILogicalExpression filterExpr, RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec)
+            throws AlgebricksException;
 
+    /**
+     * Creates the delete runtime of IndexInsertDeletePOperator, which models
+     * insert/delete operations into a secondary index.
+     * 
+     * @param dataSource
+     *            Target secondary index.
+     * @param propagatedSchema
+     *            Output schema of the insert/delete operator to be created.
+     * @param inputSchemas
+     *            Output schemas of the insert/delete operator to be created.
+     * @param typeEnv
+     *            Type environment of the original IndexInsertDeleteOperator operator.
+     * @param primaryKeys
+     *            Variables for the dataset's primary keys that the dataSource secondary index belongs to.
+     * @param secondaryKeys
+     *            Variables for the secondary-index keys.
+     * @param filterExpr
+     *            Filtering expression to be pushed inside the runtime op.
+     *            Such a filter may, e.g., exclude NULLs from being inserted/deleted.
+     * @param recordDesc
+     *            Output record descriptor of the runtime op to be created.
+     * @param context
+     *            Job generation context.
+     * @param spec
+     *            Target job specification.
+     * @return
+     *         A Hyracks IOperatorDescriptor and its partition constraint.
+     * @throws AlgebricksException
+     */
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexDeleteRuntime(
-            IDataSourceIndex<I, S> dataSource, IOperatorSchema propagatedSchema, List<LogicalVariable> primaryKeys,
-            List<LogicalVariable> secondaryKeys, RecordDescriptor recordDesc, JobGenContext context,
-            JobSpecification spec) throws AlgebricksException;
+            IDataSourceIndex<I, S> dataSource, IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas,
+            IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
+            ILogicalExpression filterExpr, RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec)
+            throws AlgebricksException;
 
     public IDataSourceIndex<I, S> findDataSourceIndex(I indexId, S dataSourceId) throws AlgebricksException;
+
+    public IFunctionInfo lookupFunction(FunctionIdentifier fid);
 }

@@ -20,6 +20,7 @@ import java.util.Map;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
+import edu.uci.ics.hyracks.api.topology.ClusterTopology;
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
 import edu.uci.ics.hyracks.ipc.api.RPCInterface;
 
@@ -61,13 +62,6 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
     }
 
     @Override
-    public JobId createJob(String appName, byte[] jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
-        HyracksClientInterfaceFunctions.CreateJobFunction cjf = new HyracksClientInterfaceFunctions.CreateJobFunction(
-                appName, jobSpec, jobFlags);
-        return (JobId) rpci.call(ipcHandle, cjf);
-    }
-
-    @Override
     public JobStatus getJobStatus(JobId jobId) throws Exception {
         HyracksClientInterfaceFunctions.GetJobStatusFunction gjsf = new HyracksClientInterfaceFunctions.GetJobStatusFunction(
                 jobId);
@@ -75,10 +69,10 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
     }
 
     @Override
-    public void startJob(JobId jobId) throws Exception {
+    public JobId startJob(String appName, byte[] acggfBytes, EnumSet<JobFlag> jobFlags) throws Exception {
         HyracksClientInterfaceFunctions.StartJobFunction sjf = new HyracksClientInterfaceFunctions.StartJobFunction(
-                jobId);
-        rpci.call(ipcHandle, sjf);
+                appName, acggfBytes, jobFlags);
+        return (JobId) rpci.call(ipcHandle, sjf);
     }
 
     @Override
@@ -92,5 +86,11 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
     public Map<String, NodeControllerInfo> getNodeControllersInfo() throws Exception {
         HyracksClientInterfaceFunctions.GetNodeControllersInfoFunction gncif = new HyracksClientInterfaceFunctions.GetNodeControllersInfoFunction();
         return (Map<String, NodeControllerInfo>) rpci.call(ipcHandle, gncif);
+    }
+
+    @Override
+    public ClusterTopology getClusterTopology() throws Exception {
+        HyracksClientInterfaceFunctions.GetClusterTopologyFunction gctf = new HyracksClientInterfaceFunctions.GetClusterTopologyFunction();
+        return (ClusterTopology) rpci.call(ipcHandle, gctf);
     }
 }

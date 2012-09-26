@@ -14,5 +14,8 @@
  */
 package edu.uci.ics.hyracks.api.context;
 
-public interface IHyracksRootContext extends IHyracksCommonContext {
+import edu.uci.ics.hyracks.api.io.IIOManager;
+
+public interface IHyracksRootContext {
+    public IIOManager getIOManager();
 }

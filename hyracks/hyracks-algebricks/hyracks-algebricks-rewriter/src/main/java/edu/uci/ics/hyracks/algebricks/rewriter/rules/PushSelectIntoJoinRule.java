@@ -25,6 +25,7 @@ import java.util.ListIterator;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -39,7 +40,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLog
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
@@ -148,7 +148,7 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
                 pushOps(pushedOnLeft, joinBranchLeftRef, context);
                 pushOps(pushedOnRight, joinBranchRightRef, context);
             }
-            addCondToJoin(select, join);
+            addCondToJoin(select, join, context);
         } else { // push down
             Iterator<Mutable<ILogicalOperator>> branchIter = join.getInputs().iterator();
 
@@ -202,7 +202,8 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
         joinBranch.setValue(topOp);
     }
 
-    private static void addCondToJoin(SelectOperator select, AbstractBinaryJoinOperator join) {
+    private static void addCondToJoin(SelectOperator select, AbstractBinaryJoinOperator join,
+            IOptimizationContext context) {
         ILogicalExpression cond = join.getCondition().getValue();
         if (OperatorPropertiesUtil.isAlwaysTrueCond(cond)) { // the join was a product
             join.getCondition().setValue(select.getCondition().getValue());
@@ -211,8 +212,8 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
             if (cond.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 AbstractFunctionCallExpression fcond = (AbstractFunctionCallExpression) cond;
                 if (fcond.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.AND)) {
-                    AbstractFunctionCallExpression newCond = new ScalarFunctionCallExpression(
-                            AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
+                    AbstractFunctionCallExpression newCond = new ScalarFunctionCallExpression(context
+                            .getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.AND));
                     newCond.getArguments().add(select.getCondition());
                     newCond.getArguments().addAll(fcond.getArguments());
                     join.getCondition().setValue(newCond);
@@ -220,9 +221,9 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
                 }
             }
             if (!bAddedToConj) {
-                AbstractFunctionCallExpression newCond = new ScalarFunctionCallExpression(
-                        AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND),
-                        select.getCondition(), new MutableObject<ILogicalExpression>(join.getCondition().getValue()));
+                AbstractFunctionCallExpression newCond = new ScalarFunctionCallExpression(context.getMetadataProvider()
+                        .lookupFunction(AlgebricksBuiltinFunctions.AND), select.getCondition(),
+                        new MutableObject<ILogicalExpression>(join.getCondition().getValue()));
                 join.getCondition().setValue(newCond);
             }
         }

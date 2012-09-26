@@ -33,9 +33,8 @@ import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.work.GetJobActivityGraphJSONWork;
+import edu.uci.ics.hyracks.control.cc.work.GetActivityClusterGraphJSONWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobRunJSONWork;
-import edu.uci.ics.hyracks.control.cc.work.GetJobSpecificationJSONWork;
 
 public class JobDetailsPage extends AbstractPage {
     private static final long serialVersionUID = 1L;
@@ -49,19 +48,13 @@ public class JobDetailsPage extends AbstractPage {
 
         JobId jobId = JobId.parse(jobIdStr.toString());
 
-        GetJobSpecificationJSONWork gjsw = new GetJobSpecificationJSONWork(ccs, jobId);
-        ccs.getWorkQueue().scheduleAndSync(gjsw);
-        Label jobspec = new Label("job-specification", gjsw.getJSON().toString());
-        jobspec.setEscapeModelStrings(false);
-        add(jobspec);
-
-        GetJobActivityGraphJSONWork gjagw = new GetJobActivityGraphJSONWork(ccs, jobId);
-        ccs.getWorkQueue().scheduleAndSync(gjagw);
-        Label jag = new Label("job-activity-graph", gjagw.getJSON().toString());
+        GetActivityClusterGraphJSONWork gacgw = new GetActivityClusterGraphJSONWork(ccs, jobId);
+        ccs.getWorkQueue().scheduleAndSync(gacgw);
+        Label jag = new Label("activity-cluster-graph", gacgw.getJSON().toString());
         jag.setEscapeModelStrings(false);
         add(jag);
 
-        JSONObject jagO = gjagw.getJSON();
+        JSONObject jagO = gacgw.getJSON();
 
         Map<ActivityId, String> activityMap = new HashMap<ActivityId, String>();
         if (jagO.has("activities")) {

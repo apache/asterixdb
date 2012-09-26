@@ -15,9 +15,11 @@
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -26,26 +28,48 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.VariablePropagatio
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.runtime.operators.std.PartitioningSplitOperatorDescriptor;
 
+/**
+ * Partitions it's input based on a given list of expressions.
+ * Each expression is assumed to return true/false,
+ * and there is exactly one output branch per expression (optionally, plus one default branch).
+ * For each input tuple, the expressions are evaluated one-by-one,
+ * and the tuple is written to first output branch whose corresponding
+ * expression evaluates to true.
+ * If all expressions evaluate to false, then
+ * the tuple is written to the default output branch, if any was given.
+ * If no output branch was given, then such tuples are simply dropped.
+ * Given N expressions there may be N or N+1 output branches because the default output branch may be separate from the regular output branches.
+ */
 public class PartitioningSplitOperator extends AbstractLogicalOperator {
 
-    private Mutable<ILogicalExpression>[] expressions;
-    private boolean hasDefault;
+    private final List<Mutable<ILogicalExpression>> expressions;
+    private final int defaultBranchIndex;
 
-    public PartitioningSplitOperator(Mutable<ILogicalExpression>[] exprList, boolean defaultBranchDefined) {
-        expressions = exprList;
-        hasDefault = defaultBranchDefined;
+    public PartitioningSplitOperator(List<Mutable<ILogicalExpression>> expressions, int defaultBranchIndex) throws AlgebricksException {
+        this.expressions = expressions;
+        this.defaultBranchIndex = defaultBranchIndex;
+        // Check that the default output branch index is in [0, N], where N is the number of expressions.
+        if (defaultBranchIndex != PartitioningSplitOperatorDescriptor.NO_DEFAULT_BRANCH
+                && defaultBranchIndex > expressions.size()) {
+            throw new AlgebricksException("Default branch index out of bounds. Number of exprs given: "
+                    + expressions.size() + ". The maximum default branch index may therefore be: " + expressions.size());
+        }
     }
 
-    public Mutable<ILogicalExpression>[] getExpressions() {
+    public List<Mutable<ILogicalExpression>> getExpressions() {
         return expressions;
     }
 
-    public boolean hasDefault() {
-        return hasDefault;
+    public int getDefaultBranchIndex() {
+        return defaultBranchIndex;
     }
-
+    
+    public int getNumOutputBranches() {
+        return (defaultBranchIndex == expressions.size()) ? expressions.size() + 1 : expressions.size();
+    }
+    
     @Override
     public LogicalOperatorTag getOperatorTag() {
         return LogicalOperatorTag.PARTITIONINGSPLIT;
@@ -65,8 +89,8 @@ public class PartitioningSplitOperator extends AbstractLogicalOperator {
     @Override
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor) throws AlgebricksException {
         boolean b = false;
-        for (int i = 0; i < expressions.length; i++) {
-            if (visitor.transform(expressions[i])) {
+        for (int i = 0; i < expressions.size(); i++) {
+            if (visitor.transform(expressions.get(i))) {
                 b = true;
             }
         }

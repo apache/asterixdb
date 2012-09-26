@@ -21,4 +21,6 @@ import edu.uci.ics.hyracks.net.exceptions.NetException;
 public interface ITCPConnectionEventListener {
     public void notifyIOReady(TCPConnection connection, boolean readable, boolean writable) throws IOException,
             NetException;
+
+    public void notifyIOError(Exception e);
 }

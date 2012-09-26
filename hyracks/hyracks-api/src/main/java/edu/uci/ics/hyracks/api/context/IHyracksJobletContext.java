@@ -20,10 +20,12 @@ import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.resources.IDeallocatableRegistry;
 
-public interface IHyracksJobletContext extends IHyracksCommonContext, IWorkspaceFileFactory, IDeallocatableRegistry {
+public interface IHyracksJobletContext extends IWorkspaceFileFactory, IDeallocatableRegistry {
     public INCApplicationContext getApplicationContext();
 
     public JobId getJobId();
 
     public ICounterContext getCounterContext();
+
+    public Object getGlobalJobData();
 }

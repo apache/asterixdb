@@ -26,7 +26,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IConnectorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractMToNConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.collectors.IPartitionBatchManager;
 import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicPartitionBatchManager;
@@ -41,12 +41,12 @@ public class MToNPartitioningMergingConnectorDescriptor extends AbstractMToNConn
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final boolean stable;
 
-    public MToNPartitioningMergingConnectorDescriptor(JobSpecification spec, ITuplePartitionComputerFactory tpcf,
+    public MToNPartitioningMergingConnectorDescriptor(IConnectorDescriptorRegistry spec, ITuplePartitionComputerFactory tpcf,
             int[] sortFields, IBinaryComparatorFactory[] comparatorFactories) {
         this(spec, tpcf, sortFields, comparatorFactories, false);
     }
 
-    public MToNPartitioningMergingConnectorDescriptor(JobSpecification spec, ITuplePartitionComputerFactory tpcf,
+    public MToNPartitioningMergingConnectorDescriptor(IConnectorDescriptorRegistry spec, ITuplePartitionComputerFactory tpcf,
             int[] sortFields, IBinaryComparatorFactory[] comparatorFactories, boolean stable) {
         super(spec);
         this.tpcf = tpcf;

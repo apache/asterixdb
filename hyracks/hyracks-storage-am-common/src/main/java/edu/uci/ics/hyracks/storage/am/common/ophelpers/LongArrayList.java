@@ -35,6 +35,16 @@ public class LongArrayList {
 	public int first() {
 		return first;
 	}
+	
+	public void addFirst(long i) {
+	    long[] newData = new long[data.length + 1];
+        System.arraycopy(data, 0, newData, 0, first);
+        System.arraycopy(data, first, newData, first + 1, size - first);
+        data = newData;
+        data[first] = i;
+        size++;
+    }
+
 
 	public void add(long i) {
 		if (size == data.length) {

@@ -100,12 +100,9 @@ public class ExternalSortRunMerger {
                 }
                 /** recycle sort buffer */
                 frameSorter.close();
-                System.gc();
-
             } else {
                 /** recycle sort buffer */
                 frameSorter.close();
-                System.gc();
 
                 inFrames = new ArrayList<ByteBuffer>();
                 outFrame = ctx.allocateFrame();
@@ -114,12 +111,31 @@ public class ExternalSortRunMerger {
                 for (int i = 0; i < framesLimit - 1; ++i) {
                     inFrames.add(ctx.allocateFrame());
                 }
-                while (runs.size() > 0) {
-                    try {
-                        doPass(runs);
-                    } catch (Exception e) {
-                        throw new HyracksDataException(e);
+                int maxMergeWidth = framesLimit - 1;
+                while (runs.size() > maxMergeWidth) {
+                    int generationSeparator = 0;
+                    while (generationSeparator < runs.size() && runs.size() > maxMergeWidth) {
+                        int mergeWidth = Math.min(Math.min(runs.size() - generationSeparator, maxMergeWidth),
+                                runs.size() - maxMergeWidth + 1);
+                        FileReference newRun = ctx.createManagedWorkspaceFile(ExternalSortRunMerger.class
+                                .getSimpleName());
+                        IFrameWriter mergeResultWriter = new RunFileWriter(newRun, ctx.getIOManager());
+                        mergeResultWriter.open();
+                        IFrameReader[] runCursors = new RunFileReader[mergeWidth];
+                        for (int i = 0; i < mergeWidth; i++) {
+                            runCursors[i] = runs.get(generationSeparator + i);
+                        }
+                        merge(mergeResultWriter, runCursors);
+                        runs.subList(generationSeparator, mergeWidth + generationSeparator).clear();
+                        runs.add(generationSeparator++, ((RunFileWriter) mergeResultWriter).createReader());
                     }
+                }
+                if (!runs.isEmpty()) {
+                    IFrameReader[] runCursors = new RunFileReader[runs.size()];
+                    for (int i = 0; i < runCursors.length; i++) {
+                        runCursors[i] = runs.get(i);
+                    }
+                    merge(writer, runCursors);
                 }
             }
         } catch (Exception e) {
@@ -130,44 +146,16 @@ public class ExternalSortRunMerger {
         }
     }
 
-    // creates a new run from runs that can fit in memory.
-    private void doPass(List<IFrameReader> runs) throws HyracksDataException {
-        FileReference newRun = null;
-        IFrameWriter writer = this.writer;
-        boolean finalPass = false;
-        if (runs.size() + 1 <= framesLimit) { // + 1 outFrame
-            finalPass = true;
-            for (int i = inFrames.size() - 1; i >= runs.size(); i--) {
-                inFrames.remove(i);
-            }
-        } else {
-            newRun = ctx.createManagedWorkspaceFile(ExternalSortRunMerger.class.getSimpleName());
-            writer = new RunFileWriter(newRun, ctx.getIOManager());
-            writer.open();
-        }
+    private void merge(IFrameWriter mergeResultWriter, IFrameReader[] runCursors) throws HyracksDataException {
+        RunMergingFrameReader merger = new RunMergingFrameReader(ctx, runCursors, inFrames, sortFields, comparators,
+                recordDesc);
+        merger.open();
         try {
-            IFrameReader[] runCursors = new RunFileReader[inFrames.size()];
-            for (int i = 0; i < inFrames.size(); i++) {
-                runCursors[i] = runs.get(i);
-            }
-            RunMergingFrameReader merger = new RunMergingFrameReader(ctx, runCursors, inFrames, sortFields,
-                    comparators, recordDesc);
-            merger.open();
-            try {
-                while (merger.nextFrame(outFrame)) {
-                    FrameUtils.flushFrame(outFrame, writer);
-                }
-            } finally {
-                merger.close();
-            }
-            runs.subList(0, inFrames.size()).clear();
-            if (!finalPass) {
-                runs.add(0, ((RunFileWriter) writer).createReader());
+            while (merger.nextFrame(outFrame)) {
+                FrameUtils.flushFrame(outFrame, mergeResultWriter);
             }
         } finally {
-            if (!finalPass) {
-                writer.close();
-            }
+            merger.close();
         }
     }
 
@@ -186,7 +174,6 @@ public class ExternalSortRunMerger {
                         FrameUtils.flushFrame(nextFrame, writer);
                         outFrameAppender.reset(nextFrame, true);
                     }
-                    System.gc();
                     return;
                 }
                 // Limit on the output size
@@ -216,11 +203,9 @@ public class ExternalSortRunMerger {
                     FrameUtils.flushFrame(outFrame, writer);
                     outFrameAppender.reset(outFrame, true);
                 }
-                System.gc();
                 return;
             }
             // More than one run, actual merging is needed
-            System.gc();
             inFrames = new ArrayList<ByteBuffer>();
             for (int i = 0; i < framesLimit - 1; ++i) {
                 inFrames.add(ctx.allocateFrame());

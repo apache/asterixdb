@@ -17,12 +17,13 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical;
 import java.util.LinkedList;
 import java.util.List;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IBinaryBooleanInspector;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ILogicalExpressionJobGen;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -34,30 +35,29 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningRequi
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.JobGenContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.JobGenHelper;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.NotImplementedException;
+import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
+import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspector;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.std.join.NestedLoopJoinOperatorDescriptor;
 
 /**
- * 
  * Left input is broadcast and preserves its local properties.
- * 
  * Right input can be partitioned in any way.
- * 
  */
 public class NLJoinPOperator extends AbstractJoinPOperator {
 
@@ -97,7 +97,7 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
                 pp = pv1.getPartitioningProperty();
             }
         } else {
-            pp = null;
+        	pp = IPartitioningProperty.UNPARTITIONED;
         }
 
         List<ILocalStructuralProperty> localProps = new LinkedList<ILocalStructuralProperty>();
@@ -122,15 +122,15 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
         AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) op;
-        RecordDescriptor recDescriptor = JobGenHelper.mkRecordDescriptor(op, propagatedSchema, context);
+        RecordDescriptor recDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
         IOperatorSchema[] conditionInputSchemas = new IOperatorSchema[1];
         conditionInputSchemas[0] = propagatedSchema;
-        ILogicalExpressionJobGen exprJobGen = context.getExpressionJobGen();
-        IEvaluatorFactory cond = exprJobGen.createEvaluatorFactory(join.getCondition().getValue(),
+        IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
+        IScalarEvaluatorFactory cond = expressionRuntimeProvider.createEvaluatorFactory(join.getCondition().getValue(),
                 context.getTypeEnvironment(op), conditionInputSchemas, context);
         ITuplePairComparatorFactory comparatorFactory = new TuplePairEvaluatorFactory(cond,
-                context.getBinaryBooleanInspector());
-        JobSpecification spec = builder.getJobSpec();
+                context.getBinaryBooleanInspectorFactory());
+        IOperatorDescriptorRegistry spec = builder.getJobSpec();
         IOperatorDescriptor opDesc = null;
 
         switch (kind) {
@@ -154,36 +154,38 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
     public static class TuplePairEvaluatorFactory implements ITuplePairComparatorFactory {
 
         private static final long serialVersionUID = 1L;
-        private final IEvaluatorFactory cond;
-        private final IBinaryBooleanInspector binaryBooleanInspector;
+        private final IScalarEvaluatorFactory cond;
+        private final IBinaryBooleanInspectorFactory binaryBooleanInspectorFactory;
 
-        public TuplePairEvaluatorFactory(IEvaluatorFactory cond, IBinaryBooleanInspector binaryBooleanInspector) {
+        public TuplePairEvaluatorFactory(IScalarEvaluatorFactory cond,
+                IBinaryBooleanInspectorFactory binaryBooleanInspectorFactory) {
             this.cond = cond;
-            this.binaryBooleanInspector = binaryBooleanInspector;
+            this.binaryBooleanInspectorFactory = binaryBooleanInspectorFactory;
         }
 
         @Override
-        public synchronized ITuplePairComparator createTuplePairComparator() {
-            return new TuplePairEvaluator(cond, binaryBooleanInspector);
+        public synchronized ITuplePairComparator createTuplePairComparator(IHyracksTaskContext ctx) {
+            return new TuplePairEvaluator(ctx, cond, binaryBooleanInspectorFactory.createBinaryBooleanInspector(ctx));
         }
-
     }
 
     public static class TuplePairEvaluator implements ITuplePairComparator {
-
-        private IEvaluator condEvaluator;
-        private final IEvaluatorFactory condFactory;
+        private final IHyracksTaskContext ctx;
+        private IScalarEvaluator condEvaluator;
+        private final IScalarEvaluatorFactory condFactory;
+        private final IPointable p;
         private final CompositeFrameTupleReference compositeTupleRef;
         private final FrameTupleReference leftRef;
         private final FrameTupleReference rightRef;
-        private final ArrayBackedValueStorage evalOutput;
         private final IBinaryBooleanInspector binaryBooleanInspector;
 
-        public TuplePairEvaluator(IEvaluatorFactory condFactory, IBinaryBooleanInspector binaryBooleanInspector) {
+        public TuplePairEvaluator(IHyracksTaskContext ctx, IScalarEvaluatorFactory condFactory,
+                IBinaryBooleanInspector binaryBooleanInspector) {
+            this.ctx = ctx;
             this.condFactory = condFactory;
             this.binaryBooleanInspector = binaryBooleanInspector;
-            this.evalOutput = new ArrayBackedValueStorage();
             this.leftRef = new FrameTupleReference();
+            this.p = VoidPointable.FACTORY.createPointable();
             this.rightRef = new FrameTupleReference();
             this.compositeTupleRef = new CompositeFrameTupleReference(leftRef, rightRef);
         }
@@ -193,19 +195,19 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
                 int innerIndex) throws HyracksDataException {
             if (condEvaluator == null) {
                 try {
-                    this.condEvaluator = condFactory.createEvaluator(evalOutput);
+                    this.condEvaluator = condFactory.createScalarEvaluator(ctx);
                 } catch (AlgebricksException ae) {
                     throw new HyracksDataException(ae);
                 }
             }
             compositeTupleRef.reset(outerAccessor, outerIndex, innerAccessor, innerIndex);
             try {
-                condEvaluator.evaluate(compositeTupleRef);
+                condEvaluator.evaluate(compositeTupleRef, p);
             } catch (AlgebricksException ae) {
                 throw new HyracksDataException(ae);
             }
-            boolean result = binaryBooleanInspector.getBooleanValue(evalOutput.getBytes(), 0, evalOutput.getLength());
-            evalOutput.reset();
+            boolean result = binaryBooleanInspector
+                    .getBooleanValue(p.getByteArray(), p.getStartOffset(), p.getLength());
             if (result)
                 return 0;
             else

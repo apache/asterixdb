@@ -14,19 +14,17 @@
  */
 package edu.uci.ics.hyracks.algebricks.tests.pushruntime;
 
-import java.io.DataOutput;
-import java.io.IOException;
-
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
-public class IntegerConstantEvalFactory implements IEvaluatorFactory {
+public class IntegerConstantEvalFactory implements IScalarEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
     private final int value;
@@ -41,29 +39,22 @@ public class IntegerConstantEvalFactory implements IEvaluatorFactory {
     }
 
     @Override
-    public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-        return new IEvaluator() {
+    public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+        return new IScalarEvaluator() {
 
-            private DataOutput out = output.getDataOutput();
             private ArrayBackedValueStorage buf = new ArrayBackedValueStorage();
-            boolean first = true;
 
-            @Override
-            public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                if (first) {
-                    first = false;
-                    try {
-                        IntegerSerializerDeserializer.INSTANCE.serialize(value, buf.getDataOutput());
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
-                }
-
+            {
                 try {
-                    out.write(buf.getBytes(), 0, buf.getLength());
-                } catch (IOException e) {
+                    IntegerSerializerDeserializer.INSTANCE.serialize(value, buf.getDataOutput());
+                } catch (HyracksDataException e) {
                     throw new AlgebricksException(e);
                 }
+            }
+
+            @Override
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                result.set(buf);
             }
         };
     }

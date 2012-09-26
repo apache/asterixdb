@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.control.nc.partitions;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.partitions.IPartition;
@@ -24,6 +25,8 @@ import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.common.job.PartitionState;
 
 public class PipelinedPartition implements IFrameWriter, IPartition {
+    private final IHyracksTaskContext ctx;
+
     private final PartitionManager manager;
 
     private final PartitionId pid;
@@ -36,10 +39,16 @@ public class PipelinedPartition implements IFrameWriter, IPartition {
 
     private boolean failed;
 
-    public PipelinedPartition(PartitionManager manager, PartitionId pid, TaskAttemptId taId) {
+    public PipelinedPartition(IHyracksTaskContext ctx, PartitionManager manager, PartitionId pid, TaskAttemptId taId) {
+        this.ctx = ctx;
         this.manager = manager;
         this.pid = pid;
         this.taId = taId;
+    }
+
+    @Override
+    public IHyracksTaskContext getTaskContext() {
+        return ctx;
     }
 
     @Override
@@ -89,7 +98,6 @@ public class PipelinedPartition implements IFrameWriter, IPartition {
 
     @Override
     public void fail() throws HyracksDataException {
-        ensureConnected();
         failed = true;
         if (delegate != null) {
             delegate.fail();
@@ -98,10 +106,10 @@ public class PipelinedPartition implements IFrameWriter, IPartition {
 
     @Override
     public void close() throws HyracksDataException {
-        ensureConnected();
         if (!failed) {
+            ensureConnected();
             manager.updatePartitionState(pid, taId, this, PartitionState.COMMITTED);
+            delegate.close();
         }
-        delegate.close();
     }
 }

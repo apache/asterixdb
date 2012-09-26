@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.common.ipc;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +22,7 @@ import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
+import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
@@ -37,9 +39,9 @@ public class NodeControllerRemoteProxy implements INodeController {
 
     @Override
     public void startTasks(String appName, JobId jobId, byte[] planBytes, List<TaskAttemptDescriptor> taskDescriptors,
-            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies) throws Exception {
+            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies, EnumSet<JobFlag> flags) throws Exception {
         CCNCFunctions.StartTasksFunction stf = new CCNCFunctions.StartTasksFunction(appName, jobId, planBytes,
-                taskDescriptors, connectorPolicies);
+                taskDescriptors, connectorPolicies, flags);
         ipcHandle.send(-1, stf, null);
     }
 

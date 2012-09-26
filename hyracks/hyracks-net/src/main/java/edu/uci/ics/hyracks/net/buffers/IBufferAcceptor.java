@@ -16,6 +16,16 @@ package edu.uci.ics.hyracks.net.buffers;
 
 import java.nio.ByteBuffer;
 
+/**
+ * Accepts buffers.
+ * 
+ * @author vinayakb
+ */
 public interface IBufferAcceptor {
+    /**
+     * Accept a buffer.
+     * 
+     * @param buffer
+     */
     public void accept(ByteBuffer buffer);
 }

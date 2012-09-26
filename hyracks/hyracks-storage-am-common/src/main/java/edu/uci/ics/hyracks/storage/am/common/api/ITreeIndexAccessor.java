@@ -16,7 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.common.api;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 /**
  * Client handle for performing operations
@@ -25,68 +24,13 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
  * concurrently operate on the same ITreeIndex (i.e., the ITreeIndex must allow
  * concurrent operations).
  */
-public interface ITreeIndexAccessor {
+public interface ITreeIndexAccessor extends IIndexAccessor {
 	/**
-	 * Inserts the given tuple.
+	 * Creates a cursor appropriate for passing into diskOrderScan().
 	 * 
-	 * @param tuple
-	 *            Tuple to be inserted.
-	 * @throws HyracksDataException
-	 *             If the BufferCache throws while un/pinning or un/latching.
-	 * @throws TreeIndexException
-	 *             If an index-specific constraint is violated, e.g., the key
-	 *             already exists.
-	 * @throws PageAllocationException
 	 */
-	public void insert(ITupleReference tuple) throws HyracksDataException,
-			TreeIndexException, PageAllocationException;
-
-	/**
-	 * Updates the tuple in the index matching the given tuple with the new
-	 * contents in the given tuple.
-	 * 
-	 * @param tuple
-	 *            Tuple whose match in the index is to be update with the given
-	 *            tuples contents.
-	 * @throws HyracksDataException
-	 *             If the BufferCache throws while un/pinning or un/latching.
-	 * @throws TreeIndexException
-	 *             If there is no matching tuple in the index.
-	 * @throws PageAllocationException
-	 */
-	public void update(ITupleReference tuple) throws HyracksDataException,
-			TreeIndexException, PageAllocationException;
-
-	/**
-	 * Deletes the tuple in the index matching the given tuple.
-	 * 
-	 * @param tuple
-	 *            Tuple to be deleted.
-	 * @throws HyracksDataException
-	 *             If the BufferCache throws while un/pinning or un/latching.
-	 * @throws TreeIndexException
-	 *             If there is no matching tuple in the index.
-	 * @throws PageAllocationException
-	 */
-	public void delete(ITupleReference tuple) throws HyracksDataException,
-			TreeIndexException, PageAllocationException;
-
-	/**
-	 * Open the given cursor for an index search using the given predicate as
-	 * search condition.
-	 * 
-	 * @param icursor
-	 *            Cursor over the index entries satisfying searchPred.
-	 * @param searchPred
-	 *            Search condition.
-	 * @throws HyracksDataException
-	 *             If the BufferCache throws while un/pinning or un/latching.
-	 * @throws TreeIndexException
-	 * @throws PageAllocationException
-	 */
-	public void search(ITreeIndexCursor cursor, ISearchPredicate searchPred)
-			throws HyracksDataException, TreeIndexException, PageAllocationException;
-
+	public ITreeIndexCursor createDiskOrderScanCursor();
+	
 	/**
 	 * Open the given cursor for a disk-order scan, positioning the cursor to
 	 * the first leaf tuple.

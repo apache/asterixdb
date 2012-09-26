@@ -24,7 +24,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 
@@ -33,7 +33,7 @@ public class FrameFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
 
     private IFileSplitProvider fileSplitProvider;
 
-    public FrameFileWriterOperatorDescriptor(JobSpecification spec, IFileSplitProvider fileSplitProvider) {
+    public FrameFileWriterOperatorDescriptor(IOperatorDescriptorRegistry spec, IFileSplitProvider fileSplitProvider) {
         super(spec, 1, 0);
         this.fileSplitProvider = fileSplitProvider;
     }

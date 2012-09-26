@@ -33,6 +33,7 @@ import java.util.StringTokenizer;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,6 +62,7 @@ import edu.uci.ics.hyracks.control.nc.net.NetworkManager;
 import edu.uci.ics.hyracks.control.nc.partitions.PartitionManager;
 import edu.uci.ics.hyracks.control.nc.runtime.RootHyracksContext;
 import edu.uci.ics.hyracks.control.nc.work.AbortTasksWork;
+import edu.uci.ics.hyracks.control.nc.work.ApplicationMessageWork;
 import edu.uci.ics.hyracks.control.nc.work.BuildJobProfilesWork;
 import edu.uci.ics.hyracks.control.nc.work.CleanupJobletWork;
 import edu.uci.ics.hyracks.control.nc.work.CreateApplicationWork;
@@ -100,7 +102,7 @@ public class NodeControllerService extends AbstractRemoteService {
 
     private final Map<JobId, Joblet> jobletMap;
 
-    private final Executor executor;
+    private final ExecutorService executor;
 
     private NodeParameters nodeParameters;
 
@@ -127,12 +129,12 @@ public class NodeControllerService extends AbstractRemoteService {
         NodeControllerIPCI ipci = new NodeControllerIPCI();
         ipc = new IPCSystem(new InetSocketAddress(ncConfig.clusterNetIPAddress, 0), ipci,
                 new CCNCFunctions.SerializerDeserializer());
-        this.ctx = new RootHyracksContext(ncConfig.frameSize, new IOManager(getDevices(ncConfig.ioDevices), executor));
+        this.ctx = new RootHyracksContext(new IOManager(getDevices(ncConfig.ioDevices), executor));
         if (id == null) {
             throw new Exception("id not set");
         }
         partitionManager = new PartitionManager(this);
-        netManager = new NetworkManager(ctx, getIpAddress(ncConfig), partitionManager, ncConfig.nNetThreads);
+        netManager = new NetworkManager(getIpAddress(ncConfig), partitionManager, ncConfig.nNetThreads);
 
         queue = new WorkQueue();
         jobletMap = new Hashtable<JobId, Joblet>();
@@ -214,6 +216,7 @@ public class NodeControllerService extends AbstractRemoteService {
     @Override
     public void stop() throws Exception {
         LOGGER.log(Level.INFO, "Stopping NodeControllerService");
+        executor.shutdownNow();
         partitionManager.close();
         heartbeatTask.cancel();
         netManager.stop();
@@ -257,7 +260,7 @@ public class NodeControllerService extends AbstractRemoteService {
         return executor;
     }
 
-    public NCConfig getConfiguration() throws Exception {
+    public NCConfig getConfiguration() {
         return ncConfig;
     }
 
@@ -365,10 +368,16 @@ public class NodeControllerService extends AbstractRemoteService {
         public void deliverIncomingMessage(IIPCHandle handle, long mid, long rmid, Object payload, Exception exception) {
             CCNCFunctions.Function fn = (CCNCFunctions.Function) payload;
             switch (fn.getFunctionId()) {
+                case SEND_APPLICATION_MESSAGE: {
+                    CCNCFunctions.SendApplicationMessageFunction amf = (CCNCFunctions.SendApplicationMessageFunction) fn;
+                    queue.schedule(new ApplicationMessageWork(NodeControllerService.this, amf.getMessage(), amf
+                            .getAppName(), amf.getNodeId()));
+                    return;
+                }
                 case START_TASKS: {
                     CCNCFunctions.StartTasksFunction stf = (CCNCFunctions.StartTasksFunction) fn;
                     queue.schedule(new StartTasksWork(NodeControllerService.this, stf.getAppName(), stf.getJobId(), stf
-                            .getPlanBytes(), stf.getTaskDescriptors(), stf.getConnectorPolicies()));
+                            .getPlanBytes(), stf.getTaskDescriptors(), stf.getConnectorPolicies(), stf.getFlags()));
                     return;
                 }
 
@@ -413,5 +422,9 @@ public class NodeControllerService extends AbstractRemoteService {
             throw new IllegalArgumentException("Unknown function: " + fn.getFunctionId());
 
         }
+    }
+
+    public void sendApplicationMessageToCC(byte[] data, String appName, String nodeId) throws Exception {
+        ccs.sendApplicationMessageToCC(data, appName, nodeId);
     }
 }

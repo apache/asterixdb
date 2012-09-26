@@ -15,7 +15,6 @@
 package edu.uci.ics.hyracks.test.support;
 
 import java.io.File;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -27,24 +26,12 @@ import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 
 public class TestRootContext implements IHyracksRootContext {
-    private int frameSize;
     private IOManager ioManager;
 
-    public TestRootContext(int frameSize) throws HyracksException {
-        this.frameSize = frameSize;
+    public TestRootContext() throws HyracksException {
         List<IODeviceHandle> devices = new ArrayList<IODeviceHandle>();
         devices.add(new IODeviceHandle(new File(System.getProperty("java.io.tmpdir")), "."));
         ioManager = new IOManager(devices, Executors.newCachedThreadPool());
-    }
-
-    @Override
-    public ByteBuffer allocateFrame() {
-        return ByteBuffer.allocate(frameSize);
-    }
-
-    @Override
-    public int getFrameSize() {
-        return frameSize;
     }
 
     @Override

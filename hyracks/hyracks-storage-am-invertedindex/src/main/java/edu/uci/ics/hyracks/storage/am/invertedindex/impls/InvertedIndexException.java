@@ -15,7 +15,9 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.impls;
 
-public class InvertedIndexException extends Exception {
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+
+public class InvertedIndexException extends IndexException {
     private static final long serialVersionUID = 1L;
 
     public InvertedIndexException(String msg) {

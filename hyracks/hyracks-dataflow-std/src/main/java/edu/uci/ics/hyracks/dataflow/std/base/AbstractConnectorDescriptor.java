@@ -21,8 +21,8 @@ import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.constraints.IConstraintAcceptor;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
-import edu.uci.ics.hyracks.api.job.JobActivityGraph;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.ActivityCluster;
+import edu.uci.ics.hyracks.api.job.IConnectorDescriptorRegistry;
 
 public abstract class AbstractConnectorDescriptor implements IConnectorDescriptor {
     private static final long serialVersionUID = 1L;
@@ -30,9 +30,8 @@ public abstract class AbstractConnectorDescriptor implements IConnectorDescripto
 
     protected String displayName;
 
-    public AbstractConnectorDescriptor(JobSpecification spec) {
-        this.id = spec.createConnectorDescriptor();
-        spec.getConnectorMap().put(id, this);
+    public AbstractConnectorDescriptor(IConnectorDescriptorRegistry spec) {
+        this.id = spec.createConnectorDescriptor(this);
         displayName = getClass().getName() + "[" + id + "]";
     }
 
@@ -60,7 +59,7 @@ public abstract class AbstractConnectorDescriptor implements IConnectorDescripto
     }
 
     @Override
-    public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, JobActivityGraph plan,
+    public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, ActivityCluster ac,
             ICCApplicationContext appCtx) {
         // do nothing
     }

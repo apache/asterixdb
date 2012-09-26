@@ -33,12 +33,6 @@
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
-  		<artifactId>hyracks-control-nc</artifactId>
-  		<version>0.2.1-SNAPSHOT</version>
-  		<scope>compile</scope>
-  	</dependency>
-  	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-am-rtree</artifactId>
   		<version>0.2.1-SNAPSHOT</version>
   		<type>jar</type>

@@ -28,13 +28,13 @@ import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractStateObject;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
@@ -44,7 +44,7 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
     private final static int MATERIALIZER_ACTIVITY_ID = 0;
     private final static int READER_ACTIVITY_ID = 1;
 
-    public MaterializingOperatorDescriptor(JobSpecification spec, RecordDescriptor recordDescriptor) {
+    public MaterializingOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);
         recordDescriptors[0] = recordDescriptor;
     }
@@ -54,16 +54,16 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
         MaterializerActivityNode ma = new MaterializerActivityNode(new ActivityId(odId, MATERIALIZER_ACTIVITY_ID));
         ReaderActivityNode ra = new ReaderActivityNode(new ActivityId(odId, READER_ACTIVITY_ID));
 
-        builder.addActivity(ma);
+        builder.addActivity(this, ma);
         builder.addSourceEdge(0, ma, 0);
 
-        builder.addActivity(ra);
+        builder.addActivity(this, ra);
         builder.addTargetEdge(0, ra, 0);
 
         builder.addBlockingEdge(ma, ra);
     }
 
-    public static class MaterializerTaskState extends AbstractTaskState {
+    public static class MaterializerTaskState extends AbstractStateObject {
         private RunFileWriter out;
 
         public MaterializerTaskState() {
@@ -115,7 +115,7 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
                 @Override
                 public void close() throws HyracksDataException {
                     state.out.close();
-                    ctx.setTaskState(state);
+                    ctx.setStateObject(state);
                 }
 
                 @Override
@@ -139,7 +139,7 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
                 @Override
                 public void initialize() throws HyracksDataException {
                     ByteBuffer frame = ctx.allocateFrame();
-                    MaterializerTaskState state = (MaterializerTaskState) ctx.getTaskState(new TaskId(new ActivityId(
+                    MaterializerTaskState state = (MaterializerTaskState) ctx.getStateObject(new TaskId(new ActivityId(
                             getOperatorId(), MATERIALIZER_ACTIVITY_ID), partition));
                     RunFileReader in = state.out.createReader();
                     writer.open();

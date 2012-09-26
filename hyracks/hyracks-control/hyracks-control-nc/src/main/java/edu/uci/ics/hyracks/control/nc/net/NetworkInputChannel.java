@@ -23,9 +23,8 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.channels.IInputChannel;
 import edu.uci.ics.hyracks.api.channels.IInputChannelMonitor;
-import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.net.buffers.IBufferAcceptor;
 import edu.uci.ics.hyracks.net.buffers.ICloseableBufferAcceptor;
@@ -33,8 +32,6 @@ import edu.uci.ics.hyracks.net.protocols.muxdemux.ChannelControlBlock;
 
 public class NetworkInputChannel implements IInputChannel {
     private static final Logger LOGGER = Logger.getLogger(NetworkInputChannel.class.getName());
-
-    private IHyracksRootContext ctx;
 
     private final NetworkManager netManager;
 
@@ -52,9 +49,8 @@ public class NetworkInputChannel implements IInputChannel {
 
     private Object attachment;
 
-    public NetworkInputChannel(IHyracksRootContext ctx, NetworkManager netManager, SocketAddress remoteAddress,
-            PartitionId partitionId, int nBuffers) {
-        this.ctx = ctx;
+    public NetworkInputChannel(NetworkManager netManager, SocketAddress remoteAddress, PartitionId partitionId,
+            int nBuffers) {
         this.netManager = netManager;
         this.remoteAddress = remoteAddress;
         this.partitionId = partitionId;
@@ -89,7 +85,7 @@ public class NetworkInputChannel implements IInputChannel {
     }
 
     @Override
-    public void open() throws HyracksDataException {
+    public void open(IHyracksTaskContext ctx) throws HyracksDataException {
         try {
             ccb = netManager.connect(remoteAddress);
         } catch (Exception e) {

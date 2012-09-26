@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.cc.job;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,10 +30,15 @@ import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.job.JobActivityGraph;
+import edu.uci.ics.hyracks.api.job.ActivityCluster;
+import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
+import edu.uci.ics.hyracks.api.job.ActivityClusterId;
+import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGenerator;
+import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.partitions.PartitionMatchMaker;
 import edu.uci.ics.hyracks.control.cc.scheduler.ActivityPartitionDetails;
 import edu.uci.ics.hyracks.control.cc.scheduler.JobScheduler;
@@ -41,7 +47,17 @@ import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 public class JobRun implements IJobStatusConditionVariable {
     private final JobId jobId;
 
-    private final JobActivityGraph jag;
+    private final String applicationName;
+
+    private final IActivityClusterGraphGenerator acgg;
+
+    private final ActivityClusterGraph acg;
+
+    private final JobScheduler scheduler;
+
+    private final EnumSet<JobFlag> jobFlags;
+
+    private final Map<ActivityClusterId, ActivityClusterPlan> activityClusterPlanMap;
 
     private final PartitionMatchMaker pmm;
 
@@ -51,13 +67,7 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private final JobProfile profile;
 
-    private Set<ActivityCluster> activityClusters;
-
-    private final Map<ActivityId, ActivityCluster> activityClusterMap;
-
     private final Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicyMap;
-
-    private JobScheduler js;
 
     private long createTime;
 
@@ -73,14 +83,19 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private Exception pendingException;
 
-    public JobRun(JobId jobId, JobActivityGraph plan) {
+    public JobRun(ClusterControllerService ccs, JobId jobId, String applicationName,
+            IActivityClusterGraphGenerator acgg, EnumSet<JobFlag> jobFlags) {
         this.jobId = jobId;
-        this.jag = plan;
+        this.applicationName = applicationName;
+        this.acgg = acgg;
+        this.acg = acgg.initialize();
+        this.scheduler = new JobScheduler(ccs, this, acgg.getConstraints());
+        this.jobFlags = jobFlags;
+        activityClusterPlanMap = new HashMap<ActivityClusterId, ActivityClusterPlan>();
         pmm = new PartitionMatchMaker();
         participatingNodeIds = new HashSet<String>();
         cleanupPendingNodeIds = new HashSet<String>();
         profile = new JobProfile(jobId);
-        activityClusterMap = new HashMap<ActivityId, ActivityCluster>();
         connectorPolicyMap = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
     }
 
@@ -88,8 +103,20 @@ public class JobRun implements IJobStatusConditionVariable {
         return jobId;
     }
 
-    public JobActivityGraph getJobActivityGraph() {
-        return jag;
+    public String getApplicationName() {
+        return applicationName;
+    }
+
+    public ActivityClusterGraph getActivityClusterGraph() {
+        return acg;
+    }
+
+    public EnumSet<JobFlag> getFlags() {
+        return jobFlags;
+    }
+
+    public Map<ActivityClusterId, ActivityClusterPlan> getActivityClusterPlanMap() {
+        return activityClusterPlanMap;
     }
 
     public PartitionMatchMaker getPartitionMatchMaker() {
@@ -169,24 +196,8 @@ public class JobRun implements IJobStatusConditionVariable {
         return profile;
     }
 
-    public void setScheduler(JobScheduler js) {
-        this.js = js;
-    }
-
     public JobScheduler getScheduler() {
-        return js;
-    }
-
-    public Map<ActivityId, ActivityCluster> getActivityClusterMap() {
-        return activityClusterMap;
-    }
-
-    public Set<ActivityCluster> getActivityClusters() {
-        return activityClusters;
-    }
-
-    public void setActivityClusters(Set<ActivityCluster> activityClusters) {
-        this.activityClusters = activityClusters;
+        return scheduler;
     }
 
     public Map<ConnectorDescriptorId, IConnectorPolicy> getConnectorPolicyMap() {
@@ -197,37 +208,31 @@ public class JobRun implements IJobStatusConditionVariable {
         JSONObject result = new JSONObject();
 
         result.put("job-id", jobId.toString());
-        result.put("application-name", jag.getApplicationName());
+        result.put("application-name", applicationName);
         result.put("status", getStatus());
         result.put("create-time", getCreateTime());
         result.put("start-time", getCreateTime());
         result.put("end-time", getCreateTime());
 
         JSONArray aClusters = new JSONArray();
-        for (ActivityCluster ac : activityClusters) {
+        for (ActivityCluster ac : acg.getActivityClusterMap().values()) {
             JSONObject acJSON = new JSONObject();
 
-            acJSON.put("activity-cluster-id", String.valueOf(ac.getActivityClusterId()));
+            acJSON.put("activity-cluster-id", String.valueOf(ac.getId()));
 
             JSONArray activitiesJSON = new JSONArray();
-            for (ActivityId aid : ac.getActivities()) {
+            for (ActivityId aid : ac.getActivityMap().keySet()) {
                 activitiesJSON.put(aid);
             }
             acJSON.put("activities", activitiesJSON);
 
-            JSONArray dependentsJSON = new JSONArray();
-            for (ActivityCluster dependent : ac.getDependents()) {
-                dependentsJSON.put(String.valueOf(dependent.getActivityClusterId()));
-            }
-            acJSON.put("dependents", dependentsJSON);
-
             JSONArray dependenciesJSON = new JSONArray();
             for (ActivityCluster dependency : ac.getDependencies()) {
-                dependenciesJSON.put(String.valueOf(dependency.getActivityClusterId()));
+                dependenciesJSON.put(String.valueOf(dependency.getId()));
             }
             acJSON.put("dependencies", dependenciesJSON);
 
-            ActivityClusterPlan acp = ac.getPlan();
+            ActivityClusterPlan acp = activityClusterPlanMap.get(ac.getId());
             if (acp == null) {
                 acJSON.put("plan", (Object) null);
             } else {

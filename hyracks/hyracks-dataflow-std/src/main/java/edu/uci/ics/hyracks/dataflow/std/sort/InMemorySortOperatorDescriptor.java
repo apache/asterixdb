@@ -29,11 +29,11 @@ import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractStateObject;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
@@ -47,12 +47,12 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
     private INormalizedKeyComputerFactory firstKeyNormalizerFactory;
     private IBinaryComparatorFactory[] comparatorFactories;
 
-    public InMemorySortOperatorDescriptor(JobSpecification spec, int[] sortFields,
+    public InMemorySortOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] sortFields,
             IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor) {
         this(spec, sortFields, null, comparatorFactories, recordDescriptor);
     }
 
-    public InMemorySortOperatorDescriptor(JobSpecification spec, int[] sortFields,
+    public InMemorySortOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);
@@ -67,16 +67,16 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
         SortActivity sa = new SortActivity(new ActivityId(odId, SORT_ACTIVITY_ID));
         MergeActivity ma = new MergeActivity(new ActivityId(odId, MERGE_ACTIVITY_ID));
 
-        builder.addActivity(sa);
+        builder.addActivity(this, sa);
         builder.addSourceEdge(0, sa, 0);
 
-        builder.addActivity(ma);
+        builder.addActivity(this, ma);
         builder.addTargetEdge(0, ma, 0);
 
         builder.addBlockingEdge(sa, ma);
     }
 
-    public static class SortTaskState extends AbstractTaskState {
+    public static class SortTaskState extends AbstractStateObject {
         private FrameSorter frameSorter;
 
         public SortTaskState() {
@@ -124,7 +124,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
                 @Override
                 public void close() throws HyracksDataException {
                     state.frameSorter.sortFrames();
-                    ctx.setTaskState(state);
+                    ctx.setStateObject(state);
                 }
 
                 @Override
@@ -150,7 +150,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
                 public void initialize() throws HyracksDataException {
                     writer.open();
                     try {
-                        SortTaskState state = (SortTaskState) ctx.getTaskState(new TaskId(new ActivityId(
+                        SortTaskState state = (SortTaskState) ctx.getStateObject(new TaskId(new ActivityId(
                                 getOperatorId(), SORT_ACTIVITY_ID), partition));
                         state.frameSorter.flushFrames(writer);
                     } catch (Exception e) {

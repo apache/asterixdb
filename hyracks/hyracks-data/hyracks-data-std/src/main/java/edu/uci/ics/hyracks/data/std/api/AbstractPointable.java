@@ -29,7 +29,7 @@ public abstract class AbstractPointable implements IPointable {
     }
 
     @Override
-    public void set(IPointable pointer) {
+    public void set(IValueReference pointer) {
         set(pointer.getByteArray(), pointer.getStartOffset(), pointer.getLength());
     }
 

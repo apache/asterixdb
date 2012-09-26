@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.algebricks.compiler.api;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
@@ -21,10 +22,9 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionTypeCo
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.JobGenContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.PlanCompiler;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.config.AlgebricksConfig;
+import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
+import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.PlanCompiler;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.AlgebricksOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
@@ -85,10 +85,10 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                         AlgebricksConfig.ALGEBRICKS_LOGGER.fine("Starting Job Generation.\n");
                         JobGenContext context = new JobGenContext(null, metadata, appContext,
                                 serializerDeserializerProvider, hashFunctionFactoryProvider, comparatorFactoryProvider,
-                                typeTraitProvider, binaryBooleanInspector, binaryIntegerInspector, printerProvider,
-                                nullWriterFactory, normalizedKeyComputerFactoryProvider, exprJobGen,
-                                expressionTypeComputer, nullableTypeComputer, oc, expressionEvalSizeComputer,
-                                partialAggregationTypeComputer, frameSize, clusterLocations);
+                                typeTraitProvider, binaryBooleanInspectorFactory, binaryIntegerInspectorFactory,
+                                printerProvider, nullWriterFactory, normalizedKeyComputerFactoryProvider,
+                                expressionRuntimeProvider, expressionTypeComputer, nullableTypeComputer, oc,
+                                expressionEvalSizeComputer, partialAggregationTypeComputer, frameSize, clusterLocations);
                         PlanCompiler pc = new PlanCompiler(context);
                         return pc.compilePlan(plan, null);
                     }

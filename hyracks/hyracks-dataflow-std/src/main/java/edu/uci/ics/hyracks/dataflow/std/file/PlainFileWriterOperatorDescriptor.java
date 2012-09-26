@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
@@ -50,7 +50,8 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
      * @param inputArity
      * @param outputArity
      */
-    public PlainFileWriterOperatorDescriptor(JobSpecification spec, IFileSplitProvider fileSplitProvider, String delim) {
+    public PlainFileWriterOperatorDescriptor(IOperatorDescriptorRegistry spec, IFileSplitProvider fileSplitProvider,
+            String delim) {
         super(spec, 1, 0);
         this.fileSplitProvider = fileSplitProvider;
         this.delim = delim;
@@ -74,9 +75,9 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
         final FileSplit[] splits = fileSplitProvider.getFileSplits();
         // Frame accessor
         final FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(ctx.getFrameSize(),
-                recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0));
+                recordDescProvider.getInputRecordDescriptor(getActivityId(), 0));
         // Record descriptor
-        final RecordDescriptor recordDescriptor = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
+        final RecordDescriptor recordDescriptor = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
         return new AbstractUnaryInputSinkOperatorNodePushable() {
             private BufferedWriter out;
 

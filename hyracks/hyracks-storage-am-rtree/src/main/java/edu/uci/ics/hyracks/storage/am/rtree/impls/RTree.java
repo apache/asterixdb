@@ -20,11 +20,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoadContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
@@ -33,8 +35,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
-import edu.uci.ics.hyracks.storage.am.common.api.PageAllocationException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeDiskOrderScanCursor;
@@ -44,161 +46,119 @@ import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexUtils;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMFrame;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrame;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
 public class RTree implements ITreeIndex {
 
-    private boolean created = false;
-    private boolean loaded = false;
-    private final int rootPage = 1; // the root page never changes
+    private final int rootPage = 1;
 
-    private final AtomicLong globalNsn; // Global node sequence number
-    private int numOfPages = 1;
+    // Global node sequence number used for the concurrency control protocol
+    private final AtomicLong globalNsn;
     private final ReadWriteLock treeLatch;
 
     private final IFreePageManager freePageManager;
     private final IBufferCache bufferCache;
     private int fileId;
 
-    private final SearchPredicate diskOrderScanPredicate;
     private final ITreeIndexFrameFactory interiorFrameFactory;
     private final ITreeIndexFrameFactory leafFrameFactory;
     private final int fieldCount;
-    private final MultiComparator cmp;
+    private final IBinaryComparatorFactory[] cmpFactories;
 
-    public int rootSplits = 0;
-    public int[] splitsByLevel = new int[500];
-    public AtomicLong readLatchesAcquired = new AtomicLong();
-    public AtomicLong readLatchesReleased = new AtomicLong();
-    public AtomicLong writeLatchesAcquired = new AtomicLong();
-    public AtomicLong writeLatchesReleased = new AtomicLong();
-    public AtomicLong pins = new AtomicLong();
-    public AtomicLong unpins = new AtomicLong();
-    public byte currentLevel = 0;
-
-    // TODO: is MultiComparator needed at all?
-    public RTree(IBufferCache bufferCache, int fieldCount, MultiComparator cmp, IFreePageManager freePageManager,
-            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory) {
+    public RTree(IBufferCache bufferCache, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
+            IFreePageManager freePageManager, ITreeIndexFrameFactory interiorFrameFactory,
+            ITreeIndexFrameFactory leafFrameFactory) {
         this.bufferCache = bufferCache;
         this.fieldCount = fieldCount;
-        this.cmp = cmp;
+        this.cmpFactories = cmpFactories;
         this.freePageManager = freePageManager;
         this.interiorFrameFactory = interiorFrameFactory;
         this.leafFrameFactory = leafFrameFactory;
         globalNsn = new AtomicLong();
         this.treeLatch = new ReentrantReadWriteLock(true);
-        this.diskOrderScanPredicate = new SearchPredicate(null, cmp);
     }
 
-    public void incrementGlobalNsn() {
-        globalNsn.incrementAndGet();
+    private long incrementGlobalNsn() {
+        return globalNsn.incrementAndGet();
     }
 
-    public long getGlobalNsn() {
-        return globalNsn.get();
-    }
-
-    public void incrementReadLatchesAcquired() {
-        readLatchesAcquired.incrementAndGet();
-    }
-
-    public void incrementReadLatchesReleased() {
-        readLatchesReleased.incrementAndGet();
-    }
-
-    public void incrementWriteLatchesAcquired() {
-        writeLatchesAcquired.incrementAndGet();
-    }
-
-    public void incrementWriteLatchesReleased() {
-        writeLatchesReleased.incrementAndGet();
-    }
-
-    public void incrementPins() {
-        pins.incrementAndGet();
-    }
-
-    public void incrementUnpins() {
-        unpins.incrementAndGet();
-    }
-
-    public String printStats() {
-        StringBuilder strBuilder = new StringBuilder();
-        strBuilder.append("\n");
-        strBuilder.append("ROOTSPLITS: " + rootSplits + "\n");
-        strBuilder.append("SPLITS BY LEVEL\n");
-        for (int i = 0; i < currentLevel; i++) {
-            strBuilder.append(String.format("%3d ", i) + String.format("%8d ", splitsByLevel[i]) + "\n");
+    public byte getTreeHeight(IRTreeLeafFrame leafFrame) throws HyracksDataException {
+        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), false);
+        rootNode.acquireReadLatch();
+        try {
+            leafFrame.setPage(rootNode);
+            return leafFrame.getLevel();
+        } finally {
+            rootNode.releaseReadLatch();
+            bufferCache.unpin(rootNode);
         }
-        strBuilder.append(String.format("READ LATCHES:  %10d %10d\n", readLatchesAcquired.get(),
-                readLatchesReleased.get()));
-        strBuilder.append(String.format("WRITE LATCHES: %10d %10d\n", writeLatchesAcquired.get(),
-                writeLatchesReleased.get()));
-        strBuilder.append(String.format("PINS:          %10d %10d\n", pins.get(), unpins.get()));
+    }
 
-        strBuilder.append(String.format("Num of Pages:          %10d\n", numOfPages));
-
+    @SuppressWarnings("rawtypes")
+    public String printTree(IRTreeLeafFrame leafFrame, IRTreeInteriorFrame interiorFrame,
+            ISerializerDeserializer[] keySerdes) throws Exception {
+        MultiComparator cmp = MultiComparator.create(cmpFactories);
+        byte treeHeight = getTreeHeight(leafFrame);
+        StringBuilder strBuilder = new StringBuilder();
+        printTree(rootPage, null, false, leafFrame, interiorFrame, treeHeight, keySerdes, strBuilder, cmp);
         return strBuilder.toString();
     }
 
-    public void printTree(IRTreeFrame leafFrame, IRTreeFrame interiorFrame, ISerializerDeserializer[] keySerdes)
-            throws Exception {
-        printTree(rootPage, null, false, leafFrame, interiorFrame, keySerdes);
-    }
-
-    public void printTree(int pageId, ICachedPage parent, boolean unpin, IRTreeFrame leafFrame,
-            IRTreeFrame interiorFrame, ISerializerDeserializer[] keySerdes) throws Exception {
-
+    @SuppressWarnings("rawtypes")
+    public void printTree(int pageId, ICachedPage parent, boolean unpin, IRTreeLeafFrame leafFrame,
+            IRTreeInteriorFrame interiorFrame, byte treeHeight, ISerializerDeserializer[] keySerdes,
+            StringBuilder strBuilder, MultiComparator cmp) throws Exception {
         ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-        incrementPins();
         node.acquireReadLatch();
-        incrementReadLatchesAcquired();
-
         try {
             if (parent != null && unpin == true) {
                 parent.releaseReadLatch();
-                incrementReadLatchesReleased();
                 bufferCache.unpin(parent);
-                incrementUnpins();
             }
-
             interiorFrame.setPage(node);
             int level = interiorFrame.getLevel();
-
-            System.out.format("%1d ", level);
-            System.out.format("%3d ", pageId);
-            for (int i = 0; i < currentLevel - level; i++)
-                System.out.format("    ");
+            strBuilder.append(String.format("%1d ", level));
+            strBuilder.append(String.format("%3d ", pageId) + ": ");
+            for (int i = 0; i < treeHeight - level; i++) {
+                strBuilder.append("    ");
+            }
 
             String keyString;
+            long LSN, NSN;
+            int rightPage;
             if (interiorFrame.isLeaf()) {
                 leafFrame.setPage(node);
                 keyString = TreeIndexUtils.printFrameTuples(leafFrame, keySerdes);
+                LSN = leafFrame.getPageLsn();
+                NSN = leafFrame.getPageNsn();
+                rightPage = leafFrame.getRightPage();
+
             } else {
                 keyString = TreeIndexUtils.printFrameTuples(interiorFrame, keySerdes);
+                LSN = interiorFrame.getPageLsn();
+                NSN = interiorFrame.getPageNsn();
+                rightPage = interiorFrame.getRightPage();
             }
 
-            System.out.format(keyString);
+            strBuilder.append(keyString + "\n" + "pageId: " + pageId + " LSN: " + LSN + " NSN: " + NSN + " rightPage: "
+                    + rightPage + "\n");
             if (!interiorFrame.isLeaf()) {
-                ArrayList<Integer> children = ((RTreeNSMFrame) (interiorFrame)).getChildren(cmp);
+                ArrayList<Integer> children = ((RTreeNSMInteriorFrame) (interiorFrame)).getChildren(cmp);
                 for (int i = 0; i < children.size(); i++) {
-                    printTree(children.get(i), node, i == children.size() - 1, leafFrame, interiorFrame, keySerdes);
+                    printTree(children.get(i), node, i == children.size() - 1, leafFrame, interiorFrame, treeHeight,
+                            keySerdes, strBuilder, cmp);
                 }
             } else {
                 node.releaseReadLatch();
-                incrementReadLatchesReleased();
                 bufferCache.unpin(node);
-                incrementUnpins();
             }
         } catch (Exception e) {
             node.releaseReadLatch();
-            incrementReadLatchesReleased();
             bufferCache.unpin(node);
-            incrementUnpins();
-            throw e;
+            e.printStackTrace();
         }
     }
 
@@ -206,94 +166,108 @@ public class RTree implements ITreeIndex {
     public void create(int fileId) throws HyracksDataException {
         treeLatch.writeLock().lock();
         try {
-            if (created) {
-                return;
-            }
-
             ITreeIndexFrame leafFrame = leafFrameFactory.createFrame();
             ITreeIndexMetaDataFrame metaFrame = freePageManager.getMetaDataFrameFactory().createFrame();
+            freePageManager.open(fileId);
             freePageManager.init(metaFrame, rootPage);
 
             // initialize root page
             ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), true);
-            incrementPins();
 
             rootNode.acquireWriteLatch();
-            incrementWriteLatchesAcquired();
             try {
                 leafFrame.setPage(rootNode);
                 leafFrame.initBuffer((byte) 0);
             } finally {
                 rootNode.releaseWriteLatch();
-                incrementWriteLatchesReleased();
                 bufferCache.unpin(rootNode);
-                incrementUnpins();
             }
-            currentLevel = 0;
-
-            created = true;
         } finally {
             treeLatch.writeLock().unlock();
         }
     }
 
+    @Override
     public void open(int fileId) {
         this.fileId = fileId;
+        freePageManager.open(fileId);
     }
 
+    @Override
     public void close() {
         fileId = -1;
+        freePageManager.close();
+    }
+
+    @Override
+    public int getFileId() {
+        return fileId;
+    }
+
+    @Override
+    public IBufferCache getBufferCache() {
+        return bufferCache;
     }
 
     private RTreeOpContext createOpContext() {
         return new RTreeOpContext((IRTreeLeafFrame) leafFrameFactory.createFrame(),
                 (IRTreeInteriorFrame) interiorFrameFactory.createFrame(), freePageManager.getMetaDataFrameFactory()
-                        .createFrame(), 8);
+                        .createFrame(), cmpFactories, 8);
     }
 
-    private void insert(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException, PageAllocationException {
+    private void insert(ITupleReference tuple, IIndexOpContext ictx) throws HyracksDataException, TreeIndexException {
         RTreeOpContext ctx = (RTreeOpContext) ictx;
         ctx.reset();
         ctx.setTuple(tuple);
         ctx.splitKey.reset();
-        ctx.splitKey.getLeftTuple().setFieldCount(cmp.getKeyFieldCount());
-        ctx.splitKey.getRightTuple().setFieldCount(cmp.getKeyFieldCount());
+        ctx.splitKey.getLeftTuple().setFieldCount(cmpFactories.length);
+        ctx.splitKey.getRightTuple().setFieldCount(cmpFactories.length);
 
-        int maxFieldPos = cmp.getKeyFieldCount() / 2;
+        int maxFieldPos = cmpFactories.length / 2;
         for (int i = 0; i < maxFieldPos; i++) {
             int j = maxFieldPos + i;
-            int c = cmp.getComparators()[i].compare(tuple.getFieldData(i), tuple.getFieldStart(i),
+            int c = ctx.cmp.getComparators()[i].compare(tuple.getFieldData(i), tuple.getFieldStart(i),
                     tuple.getFieldLength(i), tuple.getFieldData(j), tuple.getFieldStart(j), tuple.getFieldLength(j));
             if (c > 0) {
                 throw new IllegalArgumentException("The low key point has larger coordinates than the high key point.");
             }
         }
+        try {
+            ICachedPage leafNode = findLeaf(ctx);
 
-        ICachedPage leafNode = findLeaf(ctx);
+            int pageId = ctx.pathList.getLastPageId();
+            ctx.pathList.moveLast();
+            insertTuple(leafNode, pageId, ctx.getTuple(), ctx, true);
 
-        int pageId = ctx.pathList.getLastPageId();
-        ctx.pathList.moveLast();
-        insertTuple(leafNode, pageId, ctx.getTuple(), ctx, true);
+            while (true) {
+                if (ctx.splitKey.getLeftPageBuffer() != null) {
+                    updateParentForInsert(ctx);
+                } else {
+                    break;
+                }
+            }
+        } finally {
+            for (int i = ctx.NSNUpdates.size() - 1; i >= 0; i--) {
+                ICachedPage node = ctx.NSNUpdates.get(i);
+                ctx.interiorFrame.setPage(node);
+                ctx.interiorFrame.setPageNsn(incrementGlobalNsn());
+            }
 
-        while (true) {
-            if (ctx.splitKey.getLeftPageBuffer() != null) {
-                updateParentForInsert(ctx);
-            } else {
-                break;
+            for (int i = ctx.LSNUpdates.size() - 1; i >= 0; i--) {
+                ICachedPage node = ctx.LSNUpdates.get(i);
+                ctx.interiorFrame.setPage(node);
+                ctx.interiorFrame.setPageLsn(incrementGlobalNsn());
+                node.releaseWriteLatch();
+                bufferCache.unpin(node);
             }
         }
-
-        leafNode.releaseWriteLatch();
-        incrementWriteLatchesReleased();
-        bufferCache.unpin(leafNode);
-        incrementUnpins();
     }
 
-    public ICachedPage findLeaf(RTreeOpContext ctx) throws HyracksDataException {
+    private ICachedPage findLeaf(RTreeOpContext ctx) throws HyracksDataException {
         int pageId = rootPage;
         boolean writeLatched = false;
         boolean readLatched = false;
-        boolean succeed = false;
+        boolean succeeded = false;
         ICachedPage node = null;
         boolean isLeaf = false;
         long pageLsn = 0, parentLsn = 0;
@@ -303,49 +277,38 @@ public class RTree implements ITreeIndex {
             while (true) {
                 if (!writeLatched) {
                     node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-                    incrementPins();
                     ctx.interiorFrame.setPage(node);
                     isLeaf = ctx.interiorFrame.isLeaf();
                     if (isLeaf) {
                         node.acquireWriteLatch();
                         writeLatched = true;
-                        incrementWriteLatchesAcquired();
 
                         if (!ctx.interiorFrame.isLeaf()) {
                             node.releaseWriteLatch();
                             writeLatched = false;
-                            incrementWriteLatchesReleased();
                             bufferCache.unpin(node);
-                            incrementUnpins();
                             continue;
                         }
                     } else {
                         // Be optimistic and grab read latch first. We will swap
-                        // it
-                        // to write latch if we need to enlarge the best child
-                        // tuple.
+                        // it to write latch if we need to enlarge the best
+                        // child tuple.
                         node.acquireReadLatch();
                         readLatched = true;
-                        incrementReadLatchesAcquired();
                     }
                 }
 
                 if (pageId != rootPage && parentLsn < ctx.interiorFrame.getPageNsn()) {
                     // Concurrent split detected, go back to parent and
-                    // re-choose
-                    // the best child
+                    // re-choose the best child
                     if (writeLatched) {
                         node.releaseWriteLatch();
                         writeLatched = false;
-                        incrementWriteLatchesReleased();
                         bufferCache.unpin(node);
-                        incrementUnpins();
                     } else {
                         node.releaseReadLatch();
                         readLatched = false;
-                        incrementReadLatchesReleased();
                         bufferCache.unpin(node);
-                        incrementUnpins();
                     }
 
                     pageId = ctx.pathList.getLastPageId();
@@ -361,72 +324,73 @@ public class RTree implements ITreeIndex {
 
                 if (!isLeaf) {
                     // findBestChild must be called *before* getBestChildPageId
-                    ctx.interiorFrame.findBestChild(ctx.getTuple(), cmp);
+                    boolean enlarementIsNeeded = ctx.interiorFrame.findBestChild(ctx.getTuple(), ctx.cmp);
                     int childPageId = ctx.interiorFrame.getBestChildPageId();
 
-                    if (!writeLatched) {
-                        node.releaseReadLatch();
-                        readLatched = false;
-                        incrementReadLatchesReleased();
-                        // TODO: do we need to un-pin and pin again?
+                    if (enlarementIsNeeded) {
+                        if (!writeLatched) {
+                            node.releaseReadLatch();
+                            readLatched = false;
+                            bufferCache.unpin(node);
+
+                            node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+                            node.acquireWriteLatch();
+                            writeLatched = true;
+                            ctx.interiorFrame.setPage(node);
+
+                            if (ctx.interiorFrame.getPageLsn() != pageLsn) {
+                                // The page was changed while we unlocked it;
+                                // thus, retry (re-choose best child)
+
+                                ctx.pathList.moveLast();
+                                continue;
+                            }
+                        }
+                        // We don't need to reset the frameTuple because it is
+                        // already pointing to the best child
+                        ctx.interiorFrame.enlarge(ctx.getTuple(), ctx.cmp);
+
+                        node.releaseWriteLatch();
+                        writeLatched = false;
                         bufferCache.unpin(node);
-                        incrementUnpins();
-
-                        node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-                        incrementPins();
-                        node.acquireWriteLatch();
-                        writeLatched = true;
-                        incrementWriteLatchesAcquired();
-                        ctx.interiorFrame.setPage(node);
-
-                        if (ctx.interiorFrame.getPageLsn() != pageLsn) {
-                            // The page was changed while we unlocked it; thus,
-                            // retry (re-choose best child)
-
-                            ctx.pathList.moveLast();
-                            continue;
+                    } else {
+                        if (readLatched) {
+                            node.releaseReadLatch();
+                            readLatched = false;
+                            bufferCache.unpin(node);
+                        } else if (writeLatched) {
+                            node.releaseWriteLatch();
+                            writeLatched = false;
+                            bufferCache.unpin(node);
                         }
                     }
-
-                    // We don't need to reset the frameTuple because it is
-                    // already pointing to the best child
-                    ctx.interiorFrame.enlarge(ctx.getTuple(), cmp);
-
-                    node.releaseWriteLatch();
-                    writeLatched = false;
-                    incrementWriteLatchesReleased();
-                    bufferCache.unpin(node);
-                    incrementUnpins();
 
                     pageId = childPageId;
                     parentLsn = pageLsn;
                 } else {
                     ctx.leafFrame.setPage(node);
-                    succeed = true;
+                    succeeded = true;
                     return node;
                 }
             }
         } finally {
-            if (!succeed) {
+            if (!succeeded) {
                 if (readLatched) {
                     node.releaseReadLatch();
                     readLatched = false;
-                    incrementReadLatchesReleased();
                     bufferCache.unpin(node);
-                    incrementUnpins();
                 } else if (writeLatched) {
                     node.releaseWriteLatch();
                     writeLatched = false;
-                    incrementWriteLatchesReleased();
                     bufferCache.unpin(node);
-                    incrementUnpins();
                 }
             }
         }
     }
 
     private void insertTuple(ICachedPage node, int pageId, ITupleReference tuple, RTreeOpContext ctx, boolean isLeaf)
-            throws HyracksDataException, TreeIndexException, PageAllocationException {
+            throws HyracksDataException, TreeIndexException {
+        boolean succeeded = false;
         FrameOpSpaceStatus spaceStatus;
         if (!isLeaf) {
             spaceStatus = ctx.interiorFrame.hasSpaceInsert(tuple);
@@ -436,139 +400,162 @@ public class RTree implements ITreeIndex {
 
         switch (spaceStatus) {
             case SUFFICIENT_CONTIGUOUS_SPACE: {
-                if (!isLeaf) {
-                    ctx.interiorFrame.insert(tuple, -1);
-                    incrementGlobalNsn();
-                    ctx.interiorFrame.setPageLsn(getGlobalNsn());
-                } else {
-                    ctx.leafFrame.insert(tuple, -1);
-                    incrementGlobalNsn();
-                    ctx.leafFrame.setPageLsn(getGlobalNsn());
+                try {
+                    if (!isLeaf) {
+                        ctx.interiorFrame.insert(tuple, -1);
+                    } else {
+                        ctx.leafFrame.insert(tuple, -1);
+                    }
+                    succeeded = true;
+                } finally {
+                    if (succeeded) {
+                        ctx.LSNUpdates.add(node);
+                        ctx.splitKey.reset();
+                    } else if (isLeaf) {
+                        // In case of a crash, we un-latch the interior node
+                        // inside updateParentForInsert.
+                        node.releaseWriteLatch();
+                        bufferCache.unpin(node);
+                    }
                 }
-                ctx.splitKey.reset();
                 break;
             }
 
             case SUFFICIENT_SPACE: {
-                if (!isLeaf) {
-                    ctx.interiorFrame.compact();
-                    ctx.interiorFrame.insert(tuple, -1);
-                    incrementGlobalNsn();
-                    ctx.interiorFrame.setPageLsn(getGlobalNsn());
-                } else {
-                    ctx.leafFrame.compact();
-                    ctx.leafFrame.insert(tuple, -1);
-                    incrementGlobalNsn();
-                    ctx.leafFrame.setPageLsn(getGlobalNsn());
+                try {
+                    if (!isLeaf) {
+                        ctx.interiorFrame.compact();
+                        ctx.interiorFrame.insert(tuple, -1);
+                    } else {
+                        ctx.leafFrame.compact();
+                        ctx.leafFrame.insert(tuple, -1);
+                    }
+                    succeeded = true;
+                } finally {
+                    if (succeeded) {
+                        ctx.LSNUpdates.add(node);
+                        ctx.splitKey.reset();
+                    } else if (isLeaf) {
+                        // In case of a crash, we un-latch the interior node
+                        // inside updateParentForInsert.
+                        node.releaseWriteLatch();
+                        bufferCache.unpin(node);
+                    }
                 }
-                ctx.splitKey.reset();
                 break;
             }
 
             case INSUFFICIENT_SPACE: {
                 int rightPageId = freePageManager.getFreePage(ctx.metaFrame);
                 ICachedPage rightNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rightPageId), true);
-                incrementPins();
                 rightNode.acquireWriteLatch();
-                incrementWriteLatchesAcquired();
 
                 try {
                     IRTreeFrame rightFrame;
-                    numOfPages++; // debug
                     if (!isLeaf) {
-                        splitsByLevel[ctx.interiorFrame.getLevel()]++; // debug
                         rightFrame = (IRTreeFrame) interiorFrameFactory.createFrame();
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) ctx.interiorFrame.getLevel());
+                        rightFrame.setRightPage(ctx.interiorFrame.getRightPage());
                         ctx.interiorFrame.split(rightFrame, tuple, ctx.splitKey);
                         ctx.interiorFrame.setRightPage(rightPageId);
-                        rightFrame.setPageNsn(ctx.interiorFrame.getPageNsn());
-                        incrementGlobalNsn();
-                        long newNsn = getGlobalNsn();
-                        rightFrame.setPageLsn(newNsn);
-                        ctx.interiorFrame.setPageNsn(newNsn);
-                        ctx.interiorFrame.setPageLsn(newNsn);
                     } else {
-                        splitsByLevel[0]++; // debug
                         rightFrame = (IRTreeFrame) leafFrameFactory.createFrame();
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) 0);
+                        rightFrame.setRightPage(ctx.interiorFrame.getRightPage());
                         ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey);
                         ctx.leafFrame.setRightPage(rightPageId);
-                        rightFrame.setPageNsn(ctx.leafFrame.getPageNsn());
-                        incrementGlobalNsn();
-                        long newNsn = getGlobalNsn();
-                        rightFrame.setPageLsn(newNsn);
-                        ctx.leafFrame.setPageNsn(newNsn);
-                        ctx.leafFrame.setPageLsn(newNsn);
                     }
-                    ctx.splitKey.setPages(pageId, rightPageId);
-                    if (pageId == rootPage) {
-                        rootSplits++; // debug
-                        splitsByLevel[currentLevel]++;
-                        currentLevel++;
-
-                        int newLeftId = freePageManager.getFreePage(ctx.metaFrame);
-                        ICachedPage newLeftNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, newLeftId),
-                                true);
-                        incrementPins();
-                        newLeftNode.acquireWriteLatch();
-                        incrementWriteLatchesAcquired();
-                        try {
-                            // copy left child to new left child
-                            System.arraycopy(node.getBuffer().array(), 0, newLeftNode.getBuffer().array(), 0,
-                                    newLeftNode.getBuffer().capacity());
-
-                            // initialize new root (leftNode becomes new root)
-                            ctx.interiorFrame.setPage(node);
-                            ctx.interiorFrame.initBuffer((byte) (ctx.interiorFrame.getLevel() + 1));
-
-                            ctx.splitKey.setLeftPage(newLeftId);
-
-                            ctx.interiorFrame.insert(ctx.splitKey.getLeftTuple(), -1);
-                            ctx.interiorFrame.insert(ctx.splitKey.getRightTuple(), -1);
-
-                            incrementGlobalNsn();
-                            long newNsn = getGlobalNsn();
-                            ctx.interiorFrame.setPageLsn(newNsn);
-                            ctx.interiorFrame.setPageNsn(newNsn);
-                        } finally {
-                            newLeftNode.releaseWriteLatch();
-                            incrementWriteLatchesReleased();
-                            bufferCache.unpin(newLeftNode);
-                            incrementUnpins();
-                        }
-
-                        ctx.splitKey.reset();
-                    }
+                    succeeded = true;
                 } finally {
-                    rightNode.releaseWriteLatch();
-                    incrementWriteLatchesReleased();
-                    bufferCache.unpin(rightNode);
-                    incrementUnpins();
+                    if (succeeded) {
+                        ctx.NSNUpdates.add(rightNode);
+                        ctx.LSNUpdates.add(rightNode);
+                        ctx.NSNUpdates.add(node);
+                        ctx.LSNUpdates.add(node);
+                    } else if (isLeaf) {
+                        // In case of a crash, we un-latch the interior node
+                        // inside updateParentForInsert.
+                        node.releaseWriteLatch();
+                        bufferCache.unpin(node);
+                        rightNode.releaseWriteLatch();
+                        bufferCache.unpin(rightNode);
+                    } else {
+                        rightNode.releaseWriteLatch();
+                        bufferCache.unpin(rightNode);
+                    }
+
+                }
+                ctx.splitKey.setPages(pageId, rightPageId);
+                if (pageId == rootPage) {
+                    int newLeftId = freePageManager.getFreePage(ctx.metaFrame);
+                    ICachedPage newLeftNode = bufferCache
+                            .pin(BufferedFileHandle.getDiskPageId(fileId, newLeftId), true);
+                    newLeftNode.acquireWriteLatch();
+                    succeeded = false;
+                    try {
+                        // copy left child to new left child
+                        System.arraycopy(node.getBuffer().array(), 0, newLeftNode.getBuffer().array(), 0, newLeftNode
+                                .getBuffer().capacity());
+
+                        // initialize new root (leftNode becomes new root)
+                        ctx.interiorFrame.setPage(node);
+                        ctx.interiorFrame.initBuffer((byte) (ctx.interiorFrame.getLevel() + 1));
+
+                        ctx.splitKey.setLeftPage(newLeftId);
+                        ctx.interiorFrame.insert(ctx.splitKey.getLeftTuple(), -1);
+                        ctx.interiorFrame.insert(ctx.splitKey.getRightTuple(), -1);
+
+                        succeeded = true;
+                    } finally {
+                        if (succeeded) {
+                            ctx.NSNUpdates.remove(ctx.NSNUpdates.size() - 1);
+                            ctx.LSNUpdates.remove(ctx.LSNUpdates.size() - 1);
+
+                            ctx.NSNUpdates.add(newLeftNode);
+                            ctx.LSNUpdates.add(newLeftNode);
+
+                            ctx.NSNUpdates.add(node);
+                            ctx.LSNUpdates.add(node);
+                            ctx.splitKey.reset();
+                        } else if (isLeaf) {
+                            // In case of a crash, we un-latch the interior node
+                            // inside updateParentForInsert.
+                            node.releaseWriteLatch();
+                            bufferCache.unpin(node);
+                            rightNode.releaseWriteLatch();
+                            bufferCache.unpin(rightNode);
+                            newLeftNode.releaseWriteLatch();
+                            bufferCache.unpin(newLeftNode);
+                        } else {
+                            rightNode.releaseWriteLatch();
+                            bufferCache.unpin(rightNode);
+                            newLeftNode.releaseWriteLatch();
+                            bufferCache.unpin(newLeftNode);
+                        }
+                    }
                 }
                 break;
             }
         }
     }
 
-    public void updateParentForInsert(RTreeOpContext ctx) throws HyracksDataException, TreeIndexException, PageAllocationException {
+    private void updateParentForInsert(RTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+        boolean succeeded = false;
         boolean writeLatched = false;
         int parentId = ctx.pathList.getLastPageId();
         ICachedPage parentNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, parentId), false);
-        incrementPins();
         parentNode.acquireWriteLatch();
         writeLatched = true;
-        incrementWriteLatchesAcquired();
         ctx.interiorFrame.setPage(parentNode);
         boolean foundParent = true;
 
         try {
-
             if (ctx.interiorFrame.getPageLsn() != ctx.pathList.getLastPageLsn()) {
                 foundParent = false;
                 while (true) {
-                    if (ctx.interiorFrame.findTupleByPointer(ctx.splitKey.getLeftTuple(), cmp) != -1) {
+                    if (ctx.interiorFrame.findTupleByPointer(ctx.splitKey.getLeftTuple(), ctx.cmp) != -1) {
                         // found the parent
                         foundParent = true;
                         break;
@@ -576,9 +563,7 @@ public class RTree implements ITreeIndex {
                     int rightPage = ctx.interiorFrame.getRightPage();
                     parentNode.releaseWriteLatch();
                     writeLatched = false;
-                    incrementWriteLatchesReleased();
                     bufferCache.unpin(parentNode);
-                    incrementUnpins();
 
                     if (rightPage == -1) {
                         break;
@@ -586,46 +571,45 @@ public class RTree implements ITreeIndex {
 
                     parentId = rightPage;
                     parentNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, parentId), false);
-                    incrementPins();
                     parentNode.acquireWriteLatch();
                     writeLatched = true;
-                    incrementWriteLatchesAcquired();
                     ctx.interiorFrame.setPage(parentNode);
                 }
             }
+
             if (foundParent) {
-                ctx.interiorFrame.adjustKey(ctx.splitKey.getLeftTuple(), -1, cmp);
+                try {
+                    ctx.interiorFrame.adjustKey(ctx.splitKey.getLeftTuple(), -1, ctx.cmp);
+                } catch (TreeIndexException e) {
+                    if (writeLatched) {
+                        parentNode.releaseWriteLatch();
+                        writeLatched = false;
+                        bufferCache.unpin(parentNode);
+                    }
+                    throw e;
+                }
                 insertTuple(parentNode, parentId, ctx.splitKey.getRightTuple(), ctx, ctx.interiorFrame.isLeaf());
                 ctx.pathList.moveLast();
-
-                parentNode.releaseWriteLatch();
-                writeLatched = false;
-                incrementWriteLatchesReleased();
-                bufferCache.unpin(parentNode);
-                incrementUnpins();
+                succeeded = true;
                 return;
-            }
 
+            }
         } finally {
-            if (writeLatched) {
-                parentNode.releaseWriteLatch();
-                writeLatched = false;
-                incrementWriteLatchesReleased();
-                bufferCache.unpin(parentNode);
-                incrementUnpins();
+            if (!succeeded) {
+                if (writeLatched) {
+                    parentNode.releaseWriteLatch();
+                    writeLatched = false;
+                    bufferCache.unpin(parentNode);
+                }
             }
         }
-        // very rare situation when the there is a root split, do an
-        // exhaustive
-        // breadth-first traversal looking for the parent tuple
 
-        ctx.pathList.clear();
         ctx.traverseList.clear();
         findPath(ctx);
         updateParentForInsert(ctx);
     }
 
-    public void findPath(RTreeOpContext ctx) throws HyracksDataException {
+    private void findPath(RTreeOpContext ctx) throws TreeIndexException, HyracksDataException {
         boolean readLatched = false;
         int pageId = rootPage;
         int parentIndex = -1;
@@ -640,10 +624,8 @@ public class RTree implements ITreeIndex {
                 parentIndex = ctx.traverseList.getFirstPageIndex();
 
                 node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-                incrementPins();
                 node.acquireReadLatch();
                 readLatched = true;
-                incrementReadLatchesAcquired();
                 ctx.interiorFrame.setPage(node);
                 pageLsn = ctx.interiorFrame.getPageLsn();
                 pageIndex = ctx.traverseList.first();
@@ -651,310 +633,199 @@ public class RTree implements ITreeIndex {
 
                 ctx.traverseList.moveFirst();
 
+                if (ctx.interiorFrame.isLeaf()) {
+                    throw new TreeIndexException("Error: Failed to re-find parent of a page in the tree.");
+                }
+
+                if (pageId != rootPage) {
+                    parentLsn = ctx.traverseList.getPageLsn(ctx.traverseList.getPageIndex(pageIndex));
+                }
                 if (pageId != rootPage && parentLsn < ctx.interiorFrame.getPageNsn()) {
                     int rightPage = ctx.interiorFrame.getRightPage();
                     if (rightPage != -1) {
-                        ctx.traverseList.add(rightPage, -1, parentIndex);
+                        ctx.traverseList.addFirst(rightPage, -1, parentIndex);
                     }
                 }
-                parentLsn = pageLsn;
 
-                if (ctx.interiorFrame.findTupleByPointer(ctx.splitKey.getLeftTuple(), ctx.traverseList, pageIndex, cmp) != -1) {
+                if (ctx.interiorFrame.findTupleByPointer(ctx.splitKey.getLeftTuple(), ctx.traverseList, pageIndex,
+                        ctx.cmp) != -1) {
+                    ctx.pathList.clear();
                     fillPath(ctx, pageIndex);
                     return;
                 }
                 node.releaseReadLatch();
                 readLatched = false;
-                incrementReadLatchesReleased();
                 bufferCache.unpin(node);
-                incrementUnpins();
             }
         } finally {
             if (readLatched) {
                 node.releaseReadLatch();
                 readLatched = false;
-                incrementReadLatchesReleased();
                 bufferCache.unpin(node);
-                incrementUnpins();
             }
         }
     }
 
-    public void fillPath(RTreeOpContext ctx, int pageIndex) {
+    private void fillPath(RTreeOpContext ctx, int pageIndex) {
         if (pageIndex != -1) {
             fillPath(ctx, ctx.traverseList.getPageIndex(pageIndex));
             ctx.pathList.add(ctx.traverseList.getPageId(pageIndex), ctx.traverseList.getPageLsn(pageIndex), -1);
         }
     }
 
-    public void delete(ITupleReference tuple, RTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+    private void delete(ITupleReference tuple, RTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         ctx.reset();
         ctx.setTuple(tuple);
         ctx.splitKey.reset();
-        ctx.splitKey.getLeftTuple().setFieldCount(cmp.getKeyFieldCount());
+        ctx.splitKey.getLeftTuple().setFieldCount(cmpFactories.length);
 
+        // We delete the first matching tuple (including the payload data.
+        // We don't update the MBRs of the parents after deleting the record.
         int tupleIndex = findTupleToDelete(ctx);
 
         if (tupleIndex != -1) {
-            int pageId = ctx.pathList.getLastPageId();
-            ctx.pathList.moveLast();
-            deleteTuple(pageId, tupleIndex, ctx);
-
-            while (true) {
-                if (ctx.splitKey.getLeftPageBuffer() != null) {
-                    updateParentForDelete(ctx);
-                } else {
-                    break;
-                }
+            try {
+                deleteTuple(tupleIndex, ctx);
+            } finally {
+                ctx.leafFrame.getPage().releaseWriteLatch();
+                bufferCache.unpin(ctx.leafFrame.getPage());
             }
-
-            ctx.leafFrame.getPage().releaseWriteLatch();
-            incrementWriteLatchesReleased();
-            bufferCache.unpin(ctx.leafFrame.getPage());
-            incrementUnpins();
         }
     }
 
-    public void updateParentForDelete(RTreeOpContext ctx) throws HyracksDataException {
-        boolean writeLatched = false;
-        int parentId = ctx.pathList.getLastPageId();
-        ICachedPage parentNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, parentId), false);
-        incrementPins();
-        parentNode.acquireWriteLatch();
-        writeLatched = true;
-        incrementWriteLatchesAcquired();
-        ctx.interiorFrame.setPage(parentNode);
-        boolean foundParent = true;
-        int tupleIndex = -1;
-
-        try {
-            if (ctx.interiorFrame.getPageLsn() != ctx.pathList.getLastPageLsn()) {
-                foundParent = false;
-                while (true) {
-                    tupleIndex = ctx.interiorFrame.findTupleByPointer(ctx.splitKey.getLeftTuple(), cmp);
-                    if (tupleIndex != -1) {
-                        // found the parent
-                        foundParent = true;
-                        break;
-                    }
-                    int rightPage = ctx.interiorFrame.getRightPage();
-                    parentNode.releaseWriteLatch();
-                    writeLatched = false;
-                    incrementWriteLatchesReleased();
-                    bufferCache.unpin(parentNode);
-                    incrementUnpins();
-
-                    if (rightPage == -1) {
-                        break;
-                    }
-
-                    parentId = rightPage;
-                    parentNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, parentId), false);
-                    incrementPins();
-                    parentNode.acquireWriteLatch();
-                    writeLatched = true;
-                    incrementWriteLatchesAcquired();
-                    ctx.interiorFrame.setPage(parentNode);
-                }
-            }
-            if (foundParent) {
-                if (tupleIndex == -1) {
-                    tupleIndex = ctx.interiorFrame.findTupleByPointer(ctx.splitKey.getLeftTuple(), cmp);
-                }
-                boolean recomputeMBR = ctx.interiorFrame.recomputeMBR(ctx.splitKey.getLeftTuple(), tupleIndex, cmp);
-
-                if (recomputeMBR) {
-                    ctx.interiorFrame.adjustKey(ctx.splitKey.getLeftTuple(), tupleIndex, cmp);
-                    ctx.pathList.moveLast();
-
-                    incrementGlobalNsn();
-                    ctx.interiorFrame.setPageLsn(getGlobalNsn());
-
-                    ctx.splitKey.reset();
-                    if (!ctx.pathList.isEmpty()) {
-                        ctx.interiorFrame.computeMBR(ctx.splitKey);
-                        ctx.splitKey.setLeftPage(parentId);
-                    }
-                } else {
-                    ctx.pathList.moveLast();
-                    ctx.splitKey.reset();
-                }
-
-                parentNode.releaseWriteLatch();
-                writeLatched = false;
-                incrementWriteLatchesReleased();
-                bufferCache.unpin(parentNode);
-                incrementUnpins();
-                return;
-            }
-        } finally {
-            if (writeLatched) {
-                parentNode.releaseWriteLatch();
-                writeLatched = false;
-                incrementWriteLatchesReleased();
-                bufferCache.unpin(parentNode);
-                incrementUnpins();
-            }
-        }
-
-        // very rare situation when the there is a root split, do an exhaustive
-        // breadth-first traversal looking for the parent tuple
-
-        ctx.pathList.clear();
-        ctx.traverseList.clear();
-        findPath(ctx);
-        updateParentForDelete(ctx);
-    }
-
-    public int findTupleToDelete(RTreeOpContext ctx) throws HyracksDataException {
+    private int findTupleToDelete(RTreeOpContext ctx) throws HyracksDataException {
         boolean writeLatched = false;
         boolean readLatched = false;
-        boolean succeed = false;
+        boolean succeeded = false;
         ICachedPage node = null;
-        ctx.traverseList.add(rootPage, -1, -1);
-        ctx.pathList.add(rootPage, -1, ctx.traverseList.size() - 1);
+        ctx.pathList.add(rootPage, -1, -1);
 
         try {
             while (!ctx.pathList.isEmpty()) {
                 int pageId = ctx.pathList.getLastPageId();
                 long parentLsn = ctx.pathList.getLastPageLsn();
-                int pageIndex = ctx.pathList.getLastPageIndex();
                 ctx.pathList.moveLast();
                 node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-                incrementPins();
                 node.acquireReadLatch();
                 readLatched = true;
-                incrementReadLatchesAcquired();
                 ctx.interiorFrame.setPage(node);
                 boolean isLeaf = ctx.interiorFrame.isLeaf();
                 long pageLsn = ctx.interiorFrame.getPageLsn();
-                int parentIndex = ctx.traverseList.getPageIndex(pageIndex);
-                ctx.traverseList.setPageLsn(pageIndex, pageLsn);
 
                 if (pageId != rootPage && parentLsn < ctx.interiorFrame.getPageNsn()) {
                     // Concurrent split detected, we need to visit the right
                     // page
                     int rightPage = ctx.interiorFrame.getRightPage();
                     if (rightPage != -1) {
-                        ctx.traverseList.add(rightPage, -1, parentIndex);
-                        ctx.pathList.add(rightPage, parentLsn, ctx.traverseList.size() - 1);
+                        ctx.pathList.add(rightPage, parentLsn, -1);
                     }
                 }
 
                 if (!isLeaf) {
                     for (int i = 0; i < ctx.interiorFrame.getTupleCount(); i++) {
-                        int childPageId = ctx.interiorFrame.getChildPageIdIfIntersect(ctx.tuple, i, cmp);
+                        int childPageId = ctx.interiorFrame.getChildPageIdIfIntersect(ctx.tuple, i, ctx.cmp);
                         if (childPageId != -1) {
-                            ctx.traverseList.add(childPageId, -1, pageIndex);
-                            ctx.pathList.add(childPageId, pageLsn, ctx.traverseList.size() - 1);
+                            ctx.pathList.add(childPageId, pageLsn, -1);
                         }
                     }
                 } else {
                     ctx.leafFrame.setPage(node);
-                    int tupleIndex = ctx.leafFrame.findTupleIndex(ctx.tuple, cmp);
+                    int tupleIndex = ctx.leafFrame.findTupleIndex(ctx.tuple, ctx.cmp);
                     if (tupleIndex != -1) {
 
                         node.releaseReadLatch();
                         readLatched = false;
-                        incrementReadLatchesReleased();
                         bufferCache.unpin(node);
-                        incrementUnpins();
 
                         node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
-                        incrementPins();
                         node.acquireWriteLatch();
                         writeLatched = true;
-                        incrementWriteLatchesAcquired();
                         ctx.leafFrame.setPage(node);
+
+                        // A rare case only happen when a root is no longer a
+                        // leaf page. Simply we restart the search.
+                        if (!ctx.leafFrame.isLeaf()) {
+                            ctx.pathList.add(pageId, -1, -1);
+
+                            node.releaseWriteLatch();
+                            writeLatched = false;
+                            bufferCache.unpin(node);
+                            continue;
+                        }
 
                         if (ctx.leafFrame.getPageLsn() != pageLsn) {
                             // The page was changed while we unlocked it
 
-                            tupleIndex = ctx.leafFrame.findTupleIndex(ctx.tuple, cmp);
+                            tupleIndex = ctx.leafFrame.findTupleIndex(ctx.tuple, ctx.cmp);
                             if (tupleIndex == -1) {
-                                ctx.traverseList.add(pageId, -1, parentIndex);
-                                ctx.pathList.add(pageId, parentLsn, ctx.traverseList.size() - 1);
+                                ctx.pathList.add(pageId, parentLsn, -1);
 
                                 node.releaseWriteLatch();
                                 writeLatched = false;
-                                incrementWriteLatchesReleased();
                                 bufferCache.unpin(node);
-                                incrementUnpins();
                                 continue;
                             } else {
-                                ctx.pathList.clear();
-                                fillPath(ctx, pageIndex);
-                                succeed = true;
+                                succeeded = true;
                                 return tupleIndex;
                             }
                         } else {
-                            ctx.pathList.clear();
-                            fillPath(ctx, pageIndex);
-                            succeed = true;
+                            succeeded = true;
                             return tupleIndex;
                         }
                     }
                 }
                 node.releaseReadLatch();
                 readLatched = false;
-                incrementReadLatchesReleased();
                 bufferCache.unpin(node);
-                incrementUnpins();
             }
         } finally {
-            if (!succeed) {
+            if (!succeeded) {
                 if (readLatched) {
                     node.releaseReadLatch();
                     readLatched = false;
-                    incrementReadLatchesReleased();
                     bufferCache.unpin(node);
-                    incrementUnpins();
                 } else if (writeLatched) {
                     node.releaseWriteLatch();
                     writeLatched = false;
-                    incrementWriteLatchesReleased();
                     bufferCache.unpin(node);
-                    incrementUnpins();
                 }
             }
         }
         return -1;
     }
 
-    public void deleteTuple(int pageId, int tupleIndex, RTreeOpContext ctx) throws HyracksDataException {
-        ctx.leafFrame.delete(tupleIndex, cmp);
-        incrementGlobalNsn();
-        ctx.leafFrame.setPageLsn(getGlobalNsn());
-
-        // if the page is empty, just leave it there for future inserts
-        if (pageId != rootPage && ctx.leafFrame.getTupleCount() > 0) {
-            ctx.leafFrame.computeMBR(ctx.splitKey);
-            ctx.splitKey.setLeftPage(pageId);
-        }
+    private void deleteTuple(int tupleIndex, RTreeOpContext ctx) throws HyracksDataException {
+        ctx.leafFrame.delete(tupleIndex, ctx.cmp);
+        ctx.leafFrame.setPageLsn(incrementGlobalNsn());
     }
 
-    private void search(ITreeIndexCursor cursor, ISearchPredicate searchPred, RTreeOpContext ctx)  throws HyracksDataException, TreeIndexException {
-    	ctx.reset();
+    private void search(ITreeIndexCursor cursor, ISearchPredicate searchPred, RTreeOpContext ctx)
+            throws HyracksDataException, TreeIndexException {
+        ctx.reset();
         ctx.cursor = cursor;
 
         cursor.setBufferCache(bufferCache);
         cursor.setFileId(fileId);
         ctx.cursorInitialState.setRootPage(rootPage);
-        ctx.cursor.open(ctx.cursorInitialState, (SearchPredicate)searchPred);
+        ctx.cursor.open(ctx.cursorInitialState, (SearchPredicate) searchPred);
     }
 
+    @Override
     public ITreeIndexFrameFactory getInteriorFrameFactory() {
         return interiorFrameFactory;
     }
 
+    @Override
     public ITreeIndexFrameFactory getLeafFrameFactory() {
         return leafFrameFactory;
     }
 
-    public MultiComparator getCmp() {
-        return cmp;
+    @Override
+    public IBinaryComparatorFactory[] getComparatorFactories() {
+        return cmpFactories;
     }
 
+    @Override
     public IFreePageManager getFreePageManager() {
         return freePageManager;
     }
@@ -963,20 +834,37 @@ public class RTree implements ITreeIndex {
         throw new UnsupportedOperationException("RTree Update not implemented.");
     }
 
+    public boolean isEmptyTree(IRTreeLeafFrame leafFrame) throws HyracksDataException {
+        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), false);
+        rootNode.acquireReadLatch();
+        try {
+            leafFrame.setPage(rootNode);
+            if (leafFrame.getLevel() == 0 && leafFrame.getTupleCount() == 0) {
+                return true;
+            } else {
+                return false;
+            }
+        } finally {
+            rootNode.releaseReadLatch();
+            bufferCache.unpin(rootNode);
+        }
+    }
+
     public final class BulkLoadContext implements IIndexBulkLoadContext {
 
         public ITreeIndexAccessor indexAccessor;
 
         public BulkLoadContext(float fillFactor, IRTreeFrame leafFrame, IRTreeFrame interiorFrame,
                 ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
-        	indexAccessor = createAccessor();
+            indexAccessor = createAccessor();
         }
     }
 
     @Override
     public IIndexBulkLoadContext beginBulkLoad(float fillFactor) throws HyracksDataException {
-        if (loaded) {
-            throw new HyracksDataException("Trying to bulk-load RTree but RTree has already been loaded.");
+        IRTreeLeafFrame leafFrame = (IRTreeLeafFrame) leafFrameFactory.createFrame();
+        if (!isEmptyTree(leafFrame)) {
+            throw new HyracksDataException("Trying to Bulk-load a non-empty RTree.");
         }
 
         BulkLoadContext ctx = new BulkLoadContext(fillFactor, (IRTreeFrame) leafFrameFactory.createFrame(),
@@ -988,20 +876,22 @@ public class RTree implements ITreeIndex {
     @Override
     public void bulkLoadAddTuple(ITupleReference tuple, IIndexBulkLoadContext ictx) throws HyracksDataException {
         try {
-        	((BulkLoadContext) ictx).indexAccessor.insert(tuple);
+            ((BulkLoadContext) ictx).indexAccessor.insert(tuple);
         } catch (Exception e) {
-            throw new HyracksDataException("BulkLoad Error");
+            throw new HyracksDataException("BulkLoad Error", e);
         }
     }
 
     @Override
     public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException {
-        loaded = true;
     }
 
     private void diskOrderScan(ITreeIndexCursor icursor, RTreeOpContext ctx) throws HyracksDataException {
         TreeDiskOrderScanCursor cursor = (TreeDiskOrderScanCursor) icursor;
         ctx.reset();
+
+        MultiComparator cmp = MultiComparator.create(cmpFactories);
+        SearchPredicate searchPred = new SearchPredicate(null, cmp);
 
         int currentPageId = rootPage + 1;
         int maxPageId = freePageManager.getMaxPage(ctx.metaFrame);
@@ -1014,7 +904,7 @@ public class RTree implements ITreeIndex {
             cursor.setCurrentPageId(currentPageId);
             cursor.setMaxPageId(maxPageId);
             ctx.cursorInitialState.setPage(page);
-            cursor.open(ctx.cursorInitialState, diskOrderScanPredicate);
+            cursor.open(ctx.cursorInitialState, searchPred);
         } catch (Exception e) {
             page.releaseReadLatch();
             bufferCache.unpin(page);
@@ -1036,23 +926,23 @@ public class RTree implements ITreeIndex {
     public IndexType getIndexType() {
         return IndexType.RTREE;
     }
-    
+
     @Override
-	public ITreeIndexAccessor createAccessor() {
-    	return new RTreeAccessor(this);
-	}
-    
-    private class RTreeAccessor implements ITreeIndexAccessor {
+    public ITreeIndexAccessor createAccessor() {
+        return new RTreeAccessor(this);
+    }
+
+    public class RTreeAccessor implements ITreeIndexAccessor {
         private RTree rtree;
         private RTreeOpContext ctx;
-        
+
         public RTreeAccessor(RTree rtree) {
             this.rtree = rtree;
             this.ctx = rtree.createOpContext();
         }
-        
+
         @Override
-        public void insert(ITupleReference tuple) throws HyracksDataException, TreeIndexException, PageAllocationException {
+        public void insert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
             ctx.reset(IndexOp.INSERT);
             rtree.insert(tuple, ctx);
         }
@@ -1070,16 +960,37 @@ public class RTree implements ITreeIndex {
         }
 
         @Override
-        public void search(ITreeIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
-                TreeIndexException {
+        public ITreeIndexCursor createSearchCursor() {
+            return new RTreeSearchCursor((IRTreeInteriorFrame) interiorFrameFactory.createFrame(),
+                    (IRTreeLeafFrame) leafFrameFactory.createFrame());
+        }
+
+        @Override
+        public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
+                IndexException {
             ctx.reset(IndexOp.SEARCH);
-            rtree.search(cursor, searchPred, ctx);
+            rtree.search((ITreeIndexCursor) cursor, searchPred, ctx);
+        }
+
+        @Override
+        public ITreeIndexCursor createDiskOrderScanCursor() {
+            return new TreeDiskOrderScanCursor(leafFrameFactory.createFrame());
         }
 
         @Override
         public void diskOrderScan(ITreeIndexCursor cursor) throws HyracksDataException {
             ctx.reset(IndexOp.DISKORDERSCAN);
             rtree.diskOrderScan(cursor, ctx);
+        }
+
+        public RTreeOpContext getOpContext() {
+            return ctx;
+        }
+
+        @Override
+        public void upsert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+            throw new UnsupportedOperationException(
+                    "The RTree does not suypport the notion of keys, therefore upsert does not make sense.");
         }
     }
 }

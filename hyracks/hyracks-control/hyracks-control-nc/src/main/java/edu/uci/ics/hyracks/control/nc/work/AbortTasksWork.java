@@ -21,12 +21,12 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
+import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 import edu.uci.ics.hyracks.control.nc.Joblet;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.Task;
 
-public class AbortTasksWork extends SynchronizableWork {
+public class AbortTasksWork extends AbstractWork {
     private static final Logger LOGGER = Logger.getLogger(AbortTasksWork.class.getName());
 
     private final NodeControllerService ncs;
@@ -42,7 +42,7 @@ public class AbortTasksWork extends SynchronizableWork {
     }
 
     @Override
-    protected void doRun() throws Exception {
+    public void run() {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Aborting Tasks: " + jobId + ":" + tasks);
         }

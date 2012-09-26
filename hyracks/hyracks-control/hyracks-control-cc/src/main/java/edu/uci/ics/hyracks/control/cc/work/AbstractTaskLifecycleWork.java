@@ -20,9 +20,9 @@ import java.util.Map;
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
+import edu.uci.ics.hyracks.api.job.ActivityCluster;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.job.ActivityCluster;
 import edu.uci.ics.hyracks.control.cc.job.ActivityPlan;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.job.Task;
@@ -49,10 +49,11 @@ public abstract class AbstractTaskLifecycleWork extends AbstractWork {
         JobRun run = ccs.getActiveRunMap().get(jobId);
         if (run != null) {
             TaskId tid = taId.getTaskId();
-            Map<ActivityId, ActivityCluster> activityClusterMap = run.getActivityClusterMap();
+            Map<ActivityId, ActivityCluster> activityClusterMap = run.getActivityClusterGraph().getActivityMap();
             ActivityCluster ac = activityClusterMap.get(tid.getActivityId());
             if (ac != null) {
-                Map<ActivityId, ActivityPlan> taskStateMap = ac.getPlan().getActivityPlanMap();
+                Map<ActivityId, ActivityPlan> taskStateMap = run.getActivityClusterPlanMap().get(ac.getId())
+                        .getActivityPlanMap();
                 Task[] taskStates = taskStateMap.get(tid.getActivityId()).getTasks();
                 if (taskStates != null && taskStates.length > tid.getPartition()) {
                     Task ts = taskStates[tid.getPartition()];

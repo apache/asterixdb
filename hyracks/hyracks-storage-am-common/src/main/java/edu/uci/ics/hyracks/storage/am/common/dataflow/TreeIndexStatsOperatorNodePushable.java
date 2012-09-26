@@ -38,7 +38,7 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
     public TreeIndexStatsOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
         treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
-                opDesc, ctx, partition, false);
+                opDesc, ctx, partition);
         this.ctx = ctx;
     }
 
@@ -55,7 +55,7 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
     public void initialize() throws HyracksDataException {
         try {
             writer.open();
-            treeIndexHelper.init();
+            treeIndexHelper.init(false);
             ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
             IBufferCache bufferCache = treeIndexHelper.getOperatorDescriptor().getStorageManager().getBufferCache(ctx);
             statsGatherer = new TreeIndexStatsGatherer(bufferCache, treeIndex.getFreePageManager(),

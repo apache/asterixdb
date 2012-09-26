@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.api.job;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 
 public interface IJobLifecycleListener {
-    public void notifyJobCreation(JobId jobId, JobSpecification jobSpec) throws HyracksException;
+    public void notifyJobCreation(JobId jobId, IActivityClusterGraphGeneratorFactory acggf) throws HyracksException;
 
     public void notifyJobStart(JobId jobId) throws HyracksException;
 

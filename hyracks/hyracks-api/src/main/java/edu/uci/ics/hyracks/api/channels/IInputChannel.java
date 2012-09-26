@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.api.channels;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public interface IInputChannel {
@@ -29,7 +30,7 @@ public interface IInputChannel {
 
     public void recycleBuffer(ByteBuffer buffer);
 
-    public void open() throws HyracksDataException;
+    public void open(IHyracksTaskContext ctx) throws HyracksDataException;
 
     public void close() throws HyracksDataException;
 }

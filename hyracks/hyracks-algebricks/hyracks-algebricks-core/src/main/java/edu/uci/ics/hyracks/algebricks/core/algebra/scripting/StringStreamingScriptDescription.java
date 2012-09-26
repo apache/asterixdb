@@ -16,9 +16,9 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.scripting;
 
 import java.util.List;
 
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IPrinterFactory;
-import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
+import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 public class StringStreamingScriptDescription implements IScriptDescription {

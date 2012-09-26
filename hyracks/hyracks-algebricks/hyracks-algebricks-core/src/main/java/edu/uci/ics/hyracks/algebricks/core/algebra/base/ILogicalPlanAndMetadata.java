@@ -14,8 +14,8 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.base;
 
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
-import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksPartitionConstraint;
 
 public interface ILogicalPlanAndMetadata {
     public ILogicalPlan getPlan();

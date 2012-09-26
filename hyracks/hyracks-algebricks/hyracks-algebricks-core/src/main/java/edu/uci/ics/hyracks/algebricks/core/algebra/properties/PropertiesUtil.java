@@ -16,7 +16,6 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.properties;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,6 +23,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
+import edu.uci.ics.hyracks.algebricks.common.utils.ListSet;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty.PropertyType;
@@ -31,7 +31,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILocalStructuralPr
 public class PropertiesUtil {
 
     public Set<LogicalVariable> closureUnderFDs(Collection<LogicalVariable> vars, List<FunctionalDependency> fdList) {
-        Set<LogicalVariable> k = new HashSet<LogicalVariable>(vars);
+        Set<LogicalVariable> k = new ListSet<LogicalVariable>(vars);
         boolean change;
         do {
             change = false;
@@ -65,8 +65,8 @@ public class PropertiesUtil {
 
         ListIterator<ILocalStructuralProperty> dlvdIter = dlvd.listIterator();
 
-        Set<LogicalVariable> rqdCols = new HashSet<LogicalVariable>();
-        Set<LogicalVariable> dlvdCols = new HashSet<LogicalVariable>();
+        Set<LogicalVariable> rqdCols = new ListSet<LogicalVariable>();
+        Set<LogicalVariable> dlvdCols = new ListSet<LogicalVariable>();
         for (ILocalStructuralProperty r : reqd) {
             if (r.getPropertyType() == PropertyType.LOCAL_GROUPING_PROPERTY) {
                 rqdCols.clear();
@@ -180,7 +180,6 @@ public class PropertiesUtil {
     }
 
     /**
-     * 
      * @param pref
      * @param target
      * @return true iff pref is a prefix of target
@@ -300,7 +299,7 @@ public class PropertiesUtil {
             ILocalStructuralProperty p = propIter.previous();
             ListIterator<ILocalStructuralProperty> secondIter = props.listIterator(pos);
             pos--;
-            Set<LogicalVariable> cols = new HashSet<LogicalVariable>();
+            Set<LogicalVariable> cols = new ListSet<LogicalVariable>();
             while (secondIter.hasPrevious()) {
                 secondIter.previous().getColumns(cols);
             }

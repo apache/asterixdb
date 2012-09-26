@@ -21,6 +21,7 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -31,26 +32,16 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOper
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
- * 
  * Looks for a nested group-by plan ending in
- * 
  * subplan {
- * 
  * ...
- * 
  * }
- * 
  * select (function-call: algebricks:not, Args:[function-call:
  * algebricks:is-null, Args:[...]])
- * 
  * nested tuple source -- |UNPARTITIONED|
- * 
- * 
- * 
  */
 
 public class SubplanOutOfGroupRule implements IAlgebraicRewriteRule {

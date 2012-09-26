@@ -14,41 +14,59 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
+import java.util.EnumSet;
+
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGenerator;
+import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
+import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
+import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.common.work.IResultCallback;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
 public class JobStartWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
+    private final byte[] acggfBytes;
+    private final EnumSet<JobFlag> jobFlags;
     private final JobId jobId;
-    private final IResultCallback<Object> callback;
+    private final String appName;
+    private final IResultCallback<JobId> callback;
 
-    public JobStartWork(ClusterControllerService ccs, JobId jobId, IResultCallback<Object> callback) {
-        this.ccs = ccs;
+    public JobStartWork(ClusterControllerService ccs, String appName, byte[] acggfBytes, EnumSet<JobFlag> jobFlags,
+            JobId jobId, IResultCallback<JobId> callback) {
         this.jobId = jobId;
+        this.ccs = ccs;
+        this.acggfBytes = acggfBytes;
+        this.jobFlags = jobFlags;
+        this.appName = appName;
         this.callback = callback;
     }
 
     @Override
     protected void doRun() throws Exception {
         try {
-            JobRun run = ccs.getActiveRunMap().get(jobId);
-            if (run == null) {
-                throw new Exception("Unable to find job with id = " + jobId);
+            final CCApplicationContext appCtx = ccs.getApplicationMap().get(appName);
+            if (appCtx == null) {
+                throw new HyracksException("No application with id " + appName + " found");
             }
-            if (run.getStatus() != JobStatus.INITIALIZED) {
-                throw new Exception("Job already started");
-            }
+            IActivityClusterGraphGeneratorFactory acggf = appCtx.createActivityClusterGraphGeneratorFactory(acggfBytes);
+            IActivityClusterGraphGenerator acgg = acggf.createActivityClusterGraphGenerator(appName, jobId, appCtx,
+                    jobFlags);
+            JobRun run = new JobRun(ccs, jobId, appName, acgg, jobFlags);
+            run.setStatus(JobStatus.INITIALIZED, null);
+            ccs.getActiveRunMap().put(jobId, run);
+            appCtx.notifyJobCreation(jobId, acggf);
             run.setStatus(JobStatus.RUNNING, null);
             try {
                 run.getScheduler().startJob();
             } catch (Exception e) {
                 ccs.getWorkQueue().schedule(new JobCleanupWork(ccs, run.getJobId(), JobStatus.FAILURE, e));
             }
-            callback.setValue(null);
+            callback.setValue(jobId);
         } catch (Exception e) {
             callback.setException(e);
         }

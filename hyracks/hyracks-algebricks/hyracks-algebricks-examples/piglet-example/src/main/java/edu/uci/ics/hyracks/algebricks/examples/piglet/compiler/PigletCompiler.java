@@ -12,6 +12,8 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.compiler.api.HeuristicCompilerFactoryBuilder;
 import edu.uci.ics.hyracks.algebricks.compiler.api.ICompiler;
 import edu.uci.ics.hyracks.algebricks.compiler.api.ICompilerFactory;
@@ -21,10 +23,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.ISerializerDeserializerProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.LogicalExpressionJobGenToExpressionRuntimeProviderAdapter;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
@@ -38,10 +40,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteOperat
 import edu.uci.ics.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
-import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
+import edu.uci.ics.hyracks.algebricks.data.ISerializerDeserializerProvider;
+import edu.uci.ics.hyracks.algebricks.data.ITypeTraitProvider;
 import edu.uci.ics.hyracks.algebricks.examples.piglet.ast.ASTNode;
 import edu.uci.ics.hyracks.algebricks.examples.piglet.ast.AssignmentNode;
 import edu.uci.ics.hyracks.algebricks.examples.piglet.ast.DumpNode;
@@ -64,6 +66,7 @@ import edu.uci.ics.hyracks.algebricks.examples.piglet.runtime.PigletExpressionJo
 import edu.uci.ics.hyracks.algebricks.examples.piglet.types.Schema;
 import edu.uci.ics.hyracks.algebricks.examples.piglet.types.Type;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public class PigletCompiler {
@@ -123,8 +126,14 @@ public class PigletCompiler {
                 return null;
             }
         });
+        builder.setTypeTraitProvider(new ITypeTraitProvider() {
+			public ITypeTraits getTypeTrait(Object type) {
+				return null;
+			}
+        });
         builder.setPrinterProvider(PigletPrinterFactoryProvider.INSTANCE);
-        builder.setExprJobGen(new PigletExpressionJobGen());
+        builder.setExpressionRuntimeProvider(new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(
+                new PigletExpressionJobGen()));
         builder.setExpressionTypeComputer(new IExpressionTypeComputer() {
             @Override
             public Object getType(ILogicalExpression expr, IMetadataProvider<?, ?> metadataProvider,
@@ -294,22 +303,22 @@ public class PigletCompiler {
     private IFunctionInfo lookupFunction(FunctionTag functionTag, String functionName) throws PigletException {
         switch (functionTag) {
             case EQ:
-                return AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.EQ);
+                return metadataProvider.lookupFunction(AlgebricksBuiltinFunctions.EQ);
 
             case NEQ:
-                return AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.NEQ);
+                return metadataProvider.lookupFunction(AlgebricksBuiltinFunctions.NEQ);
 
             case LT:
-                return AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.LT);
+                return metadataProvider.lookupFunction(AlgebricksBuiltinFunctions.LT);
 
             case LTE:
-                return AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.LE);
+                return metadataProvider.lookupFunction(AlgebricksBuiltinFunctions.LE);
 
             case GT:
-                return AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.GT);
+                return metadataProvider.lookupFunction(AlgebricksBuiltinFunctions.GT);
 
             case GTE:
-                return AlgebricksBuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.GE);
+                return metadataProvider.lookupFunction(AlgebricksBuiltinFunctions.GE);
         }
         throw new PigletException("Unsupported function: " + functionTag);
     }

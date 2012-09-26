@@ -16,8 +16,8 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.scripting;
 
 import java.util.List;
 
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 
 public interface IScriptDescription {
     public enum ScriptKind {

@@ -63,7 +63,7 @@ public abstract class AbstractUTF8StringBinaryTokenizer implements IBinaryTokeni
         if (sourceHasTypeTag) {
             index++; // skip type tag
         }
-        utf8Length = UTF8StringPointable.getUTFLen(data, index);
+        utf8Length = UTF8StringPointable.getUTFLength(data, index);
         index += 2; // skip utf8 length indicator
         this.data = data;
         this.length = length + start;

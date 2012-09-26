@@ -16,28 +16,29 @@
 package edu.uci.ics.hyracks.storage.am.rtree.api;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.PathList;
 
 public interface IRTreeInteriorFrame extends IRTreeFrame {
 
-	public boolean findBestChild(ITupleReference tuple, MultiComparator cmp);
+    public boolean findBestChild(ITupleReference tuple, MultiComparator cmp);
 
-	public int getBestChildPageId();
+    public int getBestChildPageId();
 
-	public int getChildPageIdIfIntersect(ITupleReference tuple, int tupleIndex,
-			MultiComparator cmp);
+    public int getChildPageId(int tupleIndex);
 
-	public int findTupleByPointer(ITupleReference tuple, MultiComparator cmp);
+    public int getChildPageIdIfIntersect(ITupleReference tuple, int tupleIndex, MultiComparator cmp);
 
-	public int findTupleByPointer(ITupleReference tuple, PathList traverseList,
-			int parentId, MultiComparator cmp);
+    public int findTupleByPointer(ITupleReference tuple, MultiComparator cmp);
 
-	public void adjustKey(ITupleReference tuple, int tupleIndex,
-			MultiComparator cmp);
+    public int findTupleByPointer(ITupleReference tuple, PathList traverseList, int parentIndex, MultiComparator cmp);
 
-	public boolean recomputeMBR(ITupleReference tuple, int tupleIndex,
-			MultiComparator cmp);
+    public void adjustKey(ITupleReference tuple, int tupleIndex, MultiComparator cmp) throws TreeIndexException;
 
-	public void enlarge(ITupleReference tuple, MultiComparator cmp);
+    public boolean recomputeMBR(ITupleReference tuple, int tupleIndex, MultiComparator cmp);
+
+    public void enlarge(ITupleReference tuple, MultiComparator cmp);
+
+    boolean checkEnlargement(ITupleReference tuple, MultiComparator cmp);
 }

@@ -16,6 +16,8 @@ package edu.uci.ics.hyracks.control.cc.job;
 
 import java.io.Serializable;
 
+import edu.uci.ics.hyracks.api.job.ActivityClusterId;
+
 public final class TaskClusterId implements Serializable {
     private static final long serialVersionUID = 1L;
 

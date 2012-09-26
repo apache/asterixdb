@@ -18,16 +18,17 @@ import java.io.File;
 import java.util.EnumSet;
 import java.util.Map;
 
+import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
+import edu.uci.ics.hyracks.api.topology.ClusterTopology;
 
 /**
  * Interface used by clients to communicate with the Hyracks Cluster Controller.
  * 
  * @author vinayakb
- * 
  */
 public interface IHyracksClientConnection {
     /**
@@ -51,35 +52,6 @@ public interface IHyracksClientConnection {
     public void destroyApplication(String appName) throws Exception;
 
     /**
-     * Creates a Job Instance in the specified Hyracks application using the
-     * specified {@link JobSpecification}.
-     * 
-     * @param appName
-     *            Name of the application
-     * @param jobSpec
-     *            Job Specification
-     * @return
-     * @throws Exception
-     */
-    public JobId createJob(String appName, JobSpecification jobSpec) throws Exception;
-
-    /**
-     * Creates a Job Instance in the specified Hyracks application using the
-     * specified {@link JobSpecification}. The specified flags are used to
-     * configure the Job creation process.
-     * 
-     * @param appName
-     *            Name of the application
-     * @param jobSpec
-     *            Job Specification
-     * @param jobFlags
-     *            Flags
-     * @return
-     * @throws Exception
-     */
-    public JobId createJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
-
-    /**
      * Gets the status of the specified Job.
      * 
      * @param jobId
@@ -92,11 +64,40 @@ public interface IHyracksClientConnection {
     /**
      * Start the specified Job.
      * 
-     * @param jobId
-     *            JobId of the Job.
+     * @param appName
+     *            Name of the application
+     * @param jobSpec
+     *            Job Specification
      * @throws Exception
      */
-    public void start(JobId jobId) throws Exception;
+    public JobId startJob(String appName, JobSpecification jobSpec) throws Exception;
+
+    /**
+     * Start the specified Job.
+     * 
+     * @param appName
+     *            Name of the application
+     * @param jobSpec
+     *            Job Specification
+     * @param jobFlags
+     *            Flags
+     * @throws Exception
+     */
+    public JobId startJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
+
+    /**
+     * Start the specified Job.
+     * 
+     * @param appName
+     *            Name of the application
+     * @param acggf
+     *            Activity Cluster Graph Generator Factory
+     * @param jobFlags
+     *            Flags
+     * @throws Exception
+     */
+    public JobId startJob(String appName, IActivityClusterGraphGeneratorFactory acggf, EnumSet<JobFlag> jobFlags)
+            throws Exception;
 
     /**
      * Waits until the specified job has completed, either successfully or has
@@ -114,4 +115,12 @@ public interface IHyracksClientConnection {
      * @return Map of node name to node information.
      */
     public Map<String, NodeControllerInfo> getNodeControllerInfos() throws Exception;
+
+    /**
+     * Get the cluster topology
+     * 
+     * @return the cluster topology
+     * @throws Exception
+     */
+    public ClusterTopology getClusterTopology() throws Exception;
 }

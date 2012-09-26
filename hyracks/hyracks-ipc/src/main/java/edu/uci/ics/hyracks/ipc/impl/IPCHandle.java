@@ -63,8 +63,8 @@ final class IPCHandle implements IIPCHandle {
     }
 
     @Override
-    public synchronized long send(long requestId, Object req, Exception exception) throws IPCException {
-        if (state != HandleState.CONNECTED) {
+    public long send(long requestId, Object req, Exception exception) throws IPCException {
+        if (!isConnected()) {
             throw new IPCException("Handle is not in Connected state");
         }
         Message msg = new Message(this);
@@ -131,7 +131,7 @@ final class IPCHandle implements IIPCHandle {
         setState(HandleState.CLOSED);
     }
 
-    synchronized void processIncomingMessages() {
+    void processIncomingMessages() {
         inBuffer.flip();
         while (Message.hasMessage(inBuffer)) {
             Message message = new Message(this);

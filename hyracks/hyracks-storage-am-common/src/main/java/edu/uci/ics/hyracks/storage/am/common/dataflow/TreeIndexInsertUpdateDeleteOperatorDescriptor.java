@@ -21,43 +21,36 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
-public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends
-		AbstractTreeIndexOperatorDescriptor {
+public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private final int[] fieldPermutation;
+    private final int[] fieldPermutation;
 
-	private IndexOp op;
+    private IndexOp op;
 
-	public TreeIndexInsertUpdateDeleteOperatorDescriptor(JobSpecification spec,
-			RecordDescriptor recDesc, IStorageManagerInterface storageManager,
-			IIndexRegistryProvider<IIndex> indexRegistryProvider,
-			IFileSplitProvider fileSplitProvider,
-			ITreeIndexFrameFactory interiorFrameFactory,
-			ITreeIndexFrameFactory leafFrameFactory, ITypeTraits[] typeTraits,
-			IBinaryComparatorFactory[] comparatorFactories,
-			int[] fieldPermutation, IndexOp op,
-			IIndexDataflowHelperFactory dataflowHelperFactory) {
-		super(spec, 1, 1, recDesc, storageManager, indexRegistryProvider,
-				fileSplitProvider, interiorFrameFactory, leafFrameFactory,
-				typeTraits, comparatorFactories,
-				dataflowHelperFactory);
-		this.fieldPermutation = fieldPermutation;
-		this.op = op;
-	}
+    public TreeIndexInsertUpdateDeleteOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
+            IStorageManagerInterface storageManager, IIndexRegistryProvider<IIndex> indexRegistryProvider,
+            IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
+            IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation, IndexOp op,
+            IIndexDataflowHelperFactory dataflowHelperFactory, ITupleFilterFactory tupleFilterFactory, IOperationCallbackProvider opCallbackProvider) {
+        super(spec, 1, 1, recDesc, storageManager, indexRegistryProvider, fileSplitProvider, typeTraits,
+                comparatorFactories, dataflowHelperFactory, tupleFilterFactory, false, opCallbackProvider);
+        this.fieldPermutation = fieldPermutation;
+        this.op = op;
+    }
 
-	@Override
-	public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
-			IRecordDescriptorProvider recordDescProvider,
-			int partition, int nPartitions) {
-		return new TreeIndexInsertUpdateDeleteOperatorNodePushable(this, ctx,
-				partition, fieldPermutation, recordDescProvider, op);
-	}
+    @Override
+    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
+            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+        return new TreeIndexInsertUpdateDeleteOperatorNodePushable(this, ctx, partition, fieldPermutation,
+                recordDescProvider, op);
+    }
 }

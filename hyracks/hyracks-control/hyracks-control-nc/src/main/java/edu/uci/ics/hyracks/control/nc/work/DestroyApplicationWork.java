@@ -15,17 +15,14 @@
 package edu.uci.ics.hyracks.control.nc.work;
 
 import java.util.Map;
-import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
 import edu.uci.ics.hyracks.control.common.application.ApplicationStatus;
-import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
+import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
 
-public class DestroyApplicationWork extends SynchronizableWork {
-    private static final Logger LOGGER = Logger.getLogger(DestroyApplicationWork.class.getName());
-
+public class DestroyApplicationWork extends AbstractWork {
     private final NodeControllerService ncs;
 
     private final String appName;
@@ -36,16 +33,17 @@ public class DestroyApplicationWork extends SynchronizableWork {
     }
 
     @Override
-    protected void doRun() throws Exception {
+    public void run() {
         try {
             Map<String, NCApplicationContext> applications = ncs.getApplications();
             ApplicationContext appCtx = applications.remove(appName);
             if (appCtx != null) {
                 appCtx.deinitialize();
             }
+            ncs.getClusterController().notifyApplicationStateChange(ncs.getId(), appName,
+                    ApplicationStatus.DEINITIALIZED);
         } catch (Exception e) {
-            LOGGER.warning("Error destroying application: " + e.getMessage());
+            throw new RuntimeException(e);
         }
-        ncs.getClusterController().notifyApplicationStateChange(ncs.getId(), appName, ApplicationStatus.DEINITIALIZED);
     }
 }

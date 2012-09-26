@@ -77,7 +77,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     public void insert(ITupleReference tuple, int tupleIndex) {
         int slotOff = slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
         int freeSpace = buf.getInt(freeSpaceOff);
-        int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, tuple.getFieldCount(), buf, freeSpace);
+        int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, tuple.getFieldCount(), buf.array(), freeSpace);
         System.arraycopy(tuple.getFieldData(tuple.getFieldCount() - 1), getLeftChildPageOff(tuple), buf.array(),
                 freeSpace + bytesWritten, childPtrSize);
         int tupleSize = bytesWritten + childPtrSize;
@@ -280,29 +280,15 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         ITupleReference tuple = null;
         FindTupleMode fsm = null;
         // The target comparator may be on a prefix of the BTree key fields.
-        MultiComparator targetCmp = null;
-        if (pred.isForward()) {            
-            tuple = pred.getLowKey();
-            if (tuple == null) {
-                return getLeftmostChildPageId();
-            }
-            if (pred.isLowKeyInclusive()) {
-                fsm = FindTupleMode.INCLUSIVE;
-            } else {
-                fsm = FindTupleMode.EXCLUSIVE;
-            }
-            targetCmp = pred.getLowKeyComparator();
+        MultiComparator targetCmp = pred.getLowKeyComparator();;
+        tuple = pred.getLowKey();
+        if (tuple == null) {
+            return getLeftmostChildPageId();
+        }
+        if (pred.isLowKeyInclusive()) {
+            fsm = FindTupleMode.INCLUSIVE;
         } else {
-            tuple = pred.getHighKey();
-            if (tuple == null) {
-                return getRightmostChildPageId();
-            }
-            if (pred.isHighKeyInclusive()) {
-                fsm = FindTupleMode.EXCLUSIVE;
-            } else {
-                fsm = FindTupleMode.INCLUSIVE;
-            }
-            targetCmp = pred.getHighKeyComparator();
+            fsm = FindTupleMode.EXCLUSIVE;
         }
         // Search for a matching key.
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, targetCmp, fsm,
@@ -320,37 +306,20 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         int origTupleOff = slotManager.getTupleOff(slotOff);
         cmpFrameTuple.resetByTupleOffset(buf, origTupleOff);
         int cmpTupleOff = origTupleOff;
-        if (pred.isForward()) {
-            // The answer set begins with the lowest key matching the prefix.
-            // We must follow the child pointer of the lowest (leftmost) key
-            // matching the given prefix.
-            int maxSlotOff = buf.capacity();
-            slotOff += slotManager.getSlotSize();
-            while (slotOff < maxSlotOff) {
-                cmpTupleOff = slotManager.getTupleOff(slotOff);
-                frameTuple.resetByTupleOffset(buf, cmpTupleOff);
-                if (targetCmp.compare(cmpFrameTuple, frameTuple) != 0) {
-                    break;
-                }
-                slotOff += slotManager.getSlotSize();
-            }
-            slotOff -= slotManager.getSlotSize();
-        } else {
-            // The answer set begins with the highest key matching the prefix.
-            // We must follow the child pointer of the highest (rightmost) key
-            // matching the given prefix.
-            int minSlotOff = slotManager.getSlotEndOff() - slotManager.getSlotSize();
-            slotOff -= slotManager.getSlotSize();
-            while (slotOff > minSlotOff) {
-                cmpTupleOff = slotManager.getTupleOff(slotOff);
-                frameTuple.resetByTupleOffset(buf, cmpTupleOff);
-                if (targetCmp.compare(cmpFrameTuple, frameTuple) != 0) {
-                    break;
-                }
-                slotOff -= slotManager.getSlotSize();
+        // The answer set begins with the lowest key matching the prefix.
+        // We must follow the child pointer of the lowest (leftmost) key
+        // matching the given prefix.
+        int maxSlotOff = buf.capacity();
+        slotOff += slotManager.getSlotSize();
+        while (slotOff < maxSlotOff) {
+            cmpTupleOff = slotManager.getTupleOff(slotOff);
+            frameTuple.resetByTupleOffset(buf, cmpTupleOff);
+            if (targetCmp.compare(cmpFrameTuple, frameTuple) != 0) {
+                break;
             }
             slotOff += slotManager.getSlotSize();
         }
+        slotOff -= slotManager.getSlotSize();
         frameTuple.resetByTupleOffset(buf, slotManager.getTupleOff(slotOff));
         int childPageOff = getLeftChildPageOff(frameTuple);
         return buf.getInt(childPageOff);

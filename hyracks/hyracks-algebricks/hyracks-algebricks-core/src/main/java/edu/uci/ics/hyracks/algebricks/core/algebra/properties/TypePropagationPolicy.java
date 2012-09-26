@@ -2,11 +2,11 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.properties;
 
 import java.util.List;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypeEnvPointer;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public abstract class TypePropagationPolicy {
     public static final TypePropagationPolicy ALL = new TypePropagationPolicy() {

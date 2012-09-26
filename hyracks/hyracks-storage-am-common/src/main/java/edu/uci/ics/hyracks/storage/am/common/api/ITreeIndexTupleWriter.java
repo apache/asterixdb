@@ -26,8 +26,7 @@ public interface ITreeIndexTupleWriter {
 
     public int bytesRequired(ITupleReference tuple);
 
-    // TODO: change to byte[] as well.
-    public int writeTupleFields(ITupleReference tuple, int startField, int numFields, ByteBuffer targetBuf,
+    public int writeTupleFields(ITupleReference tuple, int startField, int numFields, byte[] targetBuf,
             int targetOff);
 
     public int bytesRequired(ITupleReference tuple, int startField, int numFields);

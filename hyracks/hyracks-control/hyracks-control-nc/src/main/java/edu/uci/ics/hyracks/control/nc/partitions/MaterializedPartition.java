@@ -18,16 +18,16 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileHandle;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.io.IFileHandle;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.partitions.IPartition;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 
 public class MaterializedPartition implements IPartition {
-    private final IHyracksRootContext ctx;
+    private final IHyracksTaskContext ctx;
 
     private final FileReference partitionFile;
 
@@ -35,12 +35,17 @@ public class MaterializedPartition implements IPartition {
 
     private final IOManager ioManager;
 
-    public MaterializedPartition(IHyracksRootContext ctx, FileReference partitionFile, Executor executor,
+    public MaterializedPartition(IHyracksTaskContext ctx, FileReference partitionFile, Executor executor,
             IOManager ioManager) {
         this.ctx = ctx;
         this.partitionFile = partitionFile;
         this.executor = executor;
         this.ioManager = ioManager;
+    }
+
+    @Override
+    public IHyracksTaskContext getTaskContext() {
+        return ctx;
     }
 
     @Override
@@ -54,7 +59,7 @@ public class MaterializedPartition implements IPartition {
             @Override
             public void run() {
                 try {
-                    FileHandle fh = ioManager.open(partitionFile, IIOManager.FileReadWriteMode.READ_ONLY,
+                    IFileHandle fh = ioManager.open(partitionFile, IIOManager.FileReadWriteMode.READ_ONLY,
                             IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
                     try {
                         writer.open();

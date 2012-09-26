@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
@@ -32,7 +32,7 @@ public class LimitOperatorDescriptor extends AbstractSingleActivityOperatorDescr
     private static final long serialVersionUID = 1L;
     private final int outputLimit;
 
-    public LimitOperatorDescriptor(JobSpecification spec, RecordDescriptor rDesc, int outputLimit) {
+    public LimitOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc, int outputLimit) {
         super(spec, 1, 1);
         recordDescriptors[0] = rDesc;
         this.outputLimit = outputLimit;

@@ -22,6 +22,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -32,8 +33,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLog
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule {
@@ -98,6 +99,12 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
                 context.computeAndSetTypeEnvironmentForOperator(agg);
             }
             return agg.getVariables().size();
+        } else if (op.getOperatorTag() == LogicalOperatorTag.UNNEST) {
+            UnnestOperator uOp = (UnnestOperator) op;
+            LogicalVariable pVar = uOp.getPositionalVariable();
+            if (pVar != null && toRemove.contains(pVar)) {
+                uOp.setPositionalVariable(null);
+            }
         }
         return -1;
     }
@@ -141,6 +148,12 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
         } else if (op.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
             AggregateOperator agg = (AggregateOperator) op;
             toRemove.addAll(agg.getVariables());
+        } else if (op.getOperatorTag() == LogicalOperatorTag.UNNEST) {
+            UnnestOperator uOp = (UnnestOperator) op;
+            LogicalVariable pVar = uOp.getPositionalVariable();
+            if (pVar != null) {
+                toRemove.add(pVar);
+            }
         }
         List<LogicalVariable> used = new LinkedList<LogicalVariable>();
         VariableUtilities.getUsedVariables(op, used);

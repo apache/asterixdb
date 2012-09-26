@@ -21,7 +21,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
@@ -34,9 +33,10 @@ import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
+import edu.uci.ics.hyracks.control.nc.net.NetworkOutputChannel;
 import edu.uci.ics.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 
-public class PartitionManager implements IPartitionRequestListener {
+public class PartitionManager {
     private final NodeControllerService ncs;
 
     private final Map<PartitionId, List<IPartition>> partitionMap;
@@ -93,12 +93,12 @@ public class PartitionManager implements IPartitionRequestListener {
         }
     }
 
-    @Override
-    public synchronized void registerPartitionRequest(PartitionId partitionId, IFrameWriter writer)
+    public synchronized void registerPartitionRequest(PartitionId partitionId, NetworkOutputChannel writer)
             throws HyracksException {
         List<IPartition> pList = partitionMap.get(partitionId);
         if (pList != null && !pList.isEmpty()) {
             IPartition partition = pList.get(0);
+            writer.setTaskContext(partition.getTaskContext());
             partition.writeTo(writer);
             if (!partition.isReusable()) {
                 partitionMap.remove(partitionId);

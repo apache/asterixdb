@@ -16,25 +16,25 @@ package edu.uci.ics.hyracks.algebricks.compiler.api;
 
 import java.util.List;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IBinaryBooleanInspector;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IBinaryComparatorFactoryProvider;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IBinaryHashFunctionFactoryProvider;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IBinaryIntegerInspector;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.INormalizedKeyComputerFactoryProvider;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IPrinterFactoryProvider;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.ISerializerDeserializerProvider;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.ITypeTraitProvider;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ILogicalExpressionJobGen;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IPartialAggregationTypeComputer;
-import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
-import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
+import edu.uci.ics.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
+import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
+import edu.uci.ics.hyracks.algebricks.data.ISerializerDeserializerProvider;
+import edu.uci.ics.hyracks.algebricks.data.ITypeTraitProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
 
 public abstract class AbstractCompilerFactoryBuilder {
@@ -45,10 +45,10 @@ public abstract class AbstractCompilerFactoryBuilder {
     protected ISerializerDeserializerProvider serializerDeserializerProvider;
     protected IBinaryHashFunctionFactoryProvider hashFunctionFactoryProvider;
     protected IBinaryComparatorFactoryProvider comparatorFactoryProvider;
-    protected IBinaryBooleanInspector binaryBooleanInspector;
-    protected IBinaryIntegerInspector binaryIntegerInspector;
+    protected IBinaryBooleanInspectorFactory binaryBooleanInspectorFactory;
+    protected IBinaryIntegerInspectorFactory binaryIntegerInspectorFactory;
     protected IPrinterFactoryProvider printerProvider;
-    protected ILogicalExpressionJobGen exprJobGen;
+    protected IExpressionRuntimeProvider expressionRuntimeProvider;
     protected IExpressionTypeComputer expressionTypeComputer;
     protected INullableTypeComputer nullableTypeComputer;
     protected IExpressionEvalSizeComputer expressionEvalSizeComputer;
@@ -102,20 +102,20 @@ public abstract class AbstractCompilerFactoryBuilder {
         return comparatorFactoryProvider;
     }
 
-    public void setBinaryBooleanInspector(IBinaryBooleanInspector binaryBooleanInspector) {
-        this.binaryBooleanInspector = binaryBooleanInspector;
+    public void setBinaryBooleanInspectorFactory(IBinaryBooleanInspectorFactory binaryBooleanInspectorFactory) {
+        this.binaryBooleanInspectorFactory = binaryBooleanInspectorFactory;
     }
 
-    public IBinaryBooleanInspector getBinaryBooleanInspector() {
-        return binaryBooleanInspector;
+    public IBinaryBooleanInspectorFactory getBinaryBooleanInspectorFactory() {
+        return binaryBooleanInspectorFactory;
     }
 
-    public void setBinaryIntegerInspector(IBinaryIntegerInspector binaryIntegerInspector) {
-        this.binaryIntegerInspector = binaryIntegerInspector;
+    public void setBinaryIntegerInspectorFactory(IBinaryIntegerInspectorFactory binaryIntegerInspectorFactory) {
+        this.binaryIntegerInspectorFactory = binaryIntegerInspectorFactory;
     }
 
-    public IBinaryIntegerInspector getBinaryIntegerInspector() {
-        return binaryIntegerInspector;
+    public IBinaryIntegerInspectorFactory getBinaryIntegerInspectorFactory() {
+        return binaryIntegerInspectorFactory;
     }
 
     public void setPrinterProvider(IPrinterFactoryProvider printerProvider) {
@@ -126,12 +126,12 @@ public abstract class AbstractCompilerFactoryBuilder {
         return printerProvider;
     }
 
-    public void setExprJobGen(ILogicalExpressionJobGen exprJobGen) {
-        this.exprJobGen = exprJobGen;
+    public void setExpressionRuntimeProvider(IExpressionRuntimeProvider expressionRuntimeProvider) {
+        this.expressionRuntimeProvider = expressionRuntimeProvider;
     }
 
-    public ILogicalExpressionJobGen getExprJobGen() {
-        return exprJobGen;
+    public IExpressionRuntimeProvider getExpressionRuntimeProvider() {
+        return expressionRuntimeProvider;
     }
 
     public void setExpressionTypeComputer(IExpressionTypeComputer expressionTypeComputer) {

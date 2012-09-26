@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -41,7 +42,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.HybridHash
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.InMemoryHashJoinPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.NLJoinPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILogicalPropertiesVector;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.config.AlgebricksConfig;
 
 public class JoinUtils {
@@ -134,7 +134,7 @@ public class JoinUtils {
             case FUNCTION_CALL: {
                 AbstractFunctionCallExpression fexp = (AbstractFunctionCallExpression) e;
                 FunctionIdentifier fi = fexp.getFunctionIdentifier();
-                if (fi == AlgebricksBuiltinFunctions.AND) {
+                if (fi.equals(AlgebricksBuiltinFunctions.AND)) {
                     for (Mutable<ILogicalExpression> a : fexp.getArguments()) {
                         if (!isHashJoinCondition(a.getValue(), inLeftAll, inRightAll, outLeftFields,
                                 outRightFields)) {

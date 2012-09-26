@@ -14,8 +14,7 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.functions;
 
+
 public interface IFunctionInfo {
     FunctionIdentifier getFunctionIdentifier();
-
-    Object getInfo();
 }

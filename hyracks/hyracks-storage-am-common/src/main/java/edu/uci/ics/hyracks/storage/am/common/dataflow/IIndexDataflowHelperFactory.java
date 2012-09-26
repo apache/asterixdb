@@ -21,5 +21,5 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 public interface IIndexDataflowHelperFactory extends Serializable {
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc,
-            final IHyracksTaskContext ctx, int partition, boolean createIfNotExists);
+            final IHyracksTaskContext ctx, int partition);
 }

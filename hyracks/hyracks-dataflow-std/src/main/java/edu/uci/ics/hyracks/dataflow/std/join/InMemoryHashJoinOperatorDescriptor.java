@@ -33,24 +33,21 @@ import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractStateObject;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.structures.ISerializableTable;
 import edu.uci.ics.hyracks.dataflow.std.structures.SerializableHashTable;
 
 public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
-    private static final int BUILD_ACTIVITY_ID = 0;
-    private static final int PROBE_ACTIVITY_ID = 1;
-
     private static final long serialVersionUID = 1L;
     private final int[] keys0;
     private final int[] keys1;
@@ -60,7 +57,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
     private final INullWriterFactory[] nullWriterFactories1;
     private final int tableSize;
 
-    public InMemoryHashJoinOperatorDescriptor(JobSpecification spec, int[] keys0, int[] keys1,
+    public InMemoryHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] keys0, int[] keys1,
             IBinaryHashFunctionFactory[] hashFunctionFactories, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor, int tableSize) {
         super(spec, 2, 1);
@@ -74,7 +71,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
         this.tableSize = tableSize;
     }
 
-    public InMemoryHashJoinOperatorDescriptor(JobSpecification spec, int[] keys0, int[] keys1,
+    public InMemoryHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] keys0, int[] keys1,
             IBinaryHashFunctionFactory[] hashFunctionFactories, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor, boolean isLeftOuter, INullWriterFactory[] nullWriterFactories1,
             int tableSize) {
@@ -91,13 +88,15 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
 
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
-        HashBuildActivityNode hba = new HashBuildActivityNode(new ActivityId(odId, 0));
-        HashProbeActivityNode hpa = new HashProbeActivityNode(new ActivityId(odId, 1));
+        ActivityId hbaId = new ActivityId(odId, 0);
+        ActivityId hpaId = new ActivityId(odId, 1);
+        HashBuildActivityNode hba = new HashBuildActivityNode(hbaId, hpaId);
+        HashProbeActivityNode hpa = new HashProbeActivityNode(hpaId);
 
-        builder.addActivity(hba);
+        builder.addActivity(this, hba);
         builder.addSourceEdge(1, hba, 0);
 
-        builder.addActivity(hpa);
+        builder.addActivity(this, hpa);
         builder.addSourceEdge(0, hpa, 0);
 
         builder.addTargetEdge(0, hpa, 0);
@@ -105,7 +104,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
         builder.addBlockingEdge(hba, hpa);
     }
 
-    public static class HashBuildTaskState extends AbstractTaskState {
+    public static class HashBuildTaskState extends AbstractStateObject {
         private InMemoryHashJoin joiner;
 
         public HashBuildTaskState() {
@@ -129,17 +128,18 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
     private class HashBuildActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        public HashBuildActivityNode(ActivityId id) {
+        private final ActivityId hpaId;
+
+        public HashBuildActivityNode(ActivityId id, ActivityId hpaId) {
             super(id);
+            this.hpaId = hpaId;
         }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
-            final RecordDescriptor rd0 = recordDescProvider
-                    .getInputRecordDescriptor(getOperatorId(), BUILD_ACTIVITY_ID);
-            final RecordDescriptor rd1 = recordDescProvider
-                    .getInputRecordDescriptor(getOperatorId(), PROBE_ACTIVITY_ID);
+            final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(hpaId, 0);
+            final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
             final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
@@ -178,7 +178,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
 
                 @Override
                 public void close() throws HyracksDataException {
-                    ctx.setTaskState(state);
+                    ctx.setStateObject(state);
                 }
 
                 @Override
@@ -204,8 +204,8 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
 
                 @Override
                 public void open() throws HyracksDataException {
-                    state = (HashBuildTaskState) ctx.getTaskState(new TaskId(new ActivityId(getOperatorId(),
-                            BUILD_ACTIVITY_ID), partition));
+                    state = (HashBuildTaskState) ctx.getStateObject(new TaskId(new ActivityId(getOperatorId(), 0),
+                            partition));
                     writer.open();
                 }
 

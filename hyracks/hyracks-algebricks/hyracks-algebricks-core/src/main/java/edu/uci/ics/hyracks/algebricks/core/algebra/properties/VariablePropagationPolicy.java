@@ -14,9 +14,9 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.properties;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public abstract class VariablePropagationPolicy {
     public static final VariablePropagationPolicy ALL = new VariablePropagationPolicy() {

@@ -14,21 +14,26 @@
  */
 package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
@@ -42,7 +47,8 @@ public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        if (op.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN) {
+        if (op.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN
+                && op.getOperatorTag() != LogicalOperatorTag.UNNEST) {
             return false;
         }
 
@@ -52,6 +58,11 @@ public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
         if (!(op2 instanceof AbstractScanOperator) && !descOrSelfIsSourceScan(op2)) {
             return false;
         }
+        // Make sure that op does not use any variables produced by op2.
+        if (!opsAreIndependent(op, op2)) {
+            return false;
+        }
+
         InnerJoinOperator product = new InnerJoinOperator(
                 new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
 
@@ -69,7 +80,12 @@ public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
     }
 
     private boolean descOrSelfIsSourceScan(AbstractLogicalOperator op2) {
-        if (op2.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
+        // Disregard data source scans in a subplan.
+        if (op2.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
+            return false;
+        }
+        if (op2.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN
+                && op2.getOperatorTag() != LogicalOperatorTag.UNNEST) {
             return true;
         }
         for (Mutable<ILogicalOperator> cRef : op2.getInputs()) {
@@ -79,6 +95,19 @@ public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
             }
         }
         return false;
+    }
+
+    private boolean opsAreIndependent(ILogicalOperator unnestOp, ILogicalOperator outer) throws AlgebricksException {
+        List<LogicalVariable> opUsedVars = new ArrayList<LogicalVariable>();
+        VariableUtilities.getUsedVariables(unnestOp, opUsedVars);
+        Set<LogicalVariable> op2LiveVars = new HashSet<LogicalVariable>();
+        VariableUtilities.getLiveVariables(outer, op2LiveVars);
+        for (LogicalVariable usedVar : opUsedVars) {
+            if (op2LiveVars.contains(usedVar)) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

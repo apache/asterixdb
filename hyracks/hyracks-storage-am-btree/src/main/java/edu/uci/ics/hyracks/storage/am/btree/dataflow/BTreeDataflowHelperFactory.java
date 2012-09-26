@@ -26,7 +26,7 @@ public class BTreeDataflowHelperFactory implements IIndexDataflowHelperFactory {
 
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, boolean createIfNotExists) {
-        return new BTreeDataflowHelper(opDesc, ctx, partition, createIfNotExists);
+            int partition) {
+        return new BTreeDataflowHelper(opDesc, ctx, partition);
     }
 }

@@ -31,7 +31,7 @@ public class JaccardSearchModifier implements IInvertedIndexSearchModifier {
 
     @Override
     public int getOccurrenceThreshold(List<IInvertedListCursor> invListCursors) {
-        return (int) Math.floor((float) invListCursors.size() * jaccThresh);
+        return Math.max((int) Math.floor((float) invListCursors.size() * jaccThresh), 1);
     }
 
     @Override

@@ -15,7 +15,7 @@
 package edu.uci.ics.hyracks.api.dataflow;
 
 public interface IActivityGraphBuilder {
-    public void addActivity(IActivity task);
+    public void addActivity(IOperatorDescriptor op, IActivity task);
 
     public void addBlockingEdge(IActivity blocker, IActivity blocked);
 

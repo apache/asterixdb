@@ -14,34 +14,29 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.functions;
 
-public final class FunctionIdentifier {
-    final private String namespace;
-    final private String name;
-    final private boolean isBuiltin;
-    final private int arity;
+import java.io.Serializable;
+
+public final class FunctionIdentifier implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private final String namespace;
+    private final String name;
+    private final int arity;
 
     public final static int VARARGS = -1;
 
-    public FunctionIdentifier(String namespace, String name, boolean isBuiltin) {
-        this.namespace = namespace;
-        this.name = name;
-        this.arity = VARARGS;
-        this.isBuiltin = isBuiltin;
+    public FunctionIdentifier(String namespace, String name) {
+        this(namespace, name, VARARGS);
     }
 
-    public FunctionIdentifier(String namespace, String name, int arity, boolean isBuiltin) {
+    public FunctionIdentifier(String namespace, String name, int arity) {
         this.namespace = namespace;
         this.name = name;
         this.arity = arity;
-        this.isBuiltin = isBuiltin;
     }
 
     public String getName() {
         return name;
-    }
-
-    public boolean isBuiltin() {
-        return isBuiltin;
     }
 
     @Override

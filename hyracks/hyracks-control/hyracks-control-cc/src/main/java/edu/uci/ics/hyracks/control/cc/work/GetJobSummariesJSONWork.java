@@ -44,7 +44,7 @@ public class GetJobSummariesJSONWork extends SynchronizableWork {
             JSONObject jo = new JSONObject();
             jo.put("type", "job-summary");
             jo.put("job-id", run.getJobId().toString());
-            jo.put("application-name", run.getJobActivityGraph().getApplicationName());
+            jo.put("application-name", run.getApplicationName());
             jo.put("create-time", run.getCreateTime());
             jo.put("start-time", run.getCreateTime());
             jo.put("end-time", run.getCreateTime());

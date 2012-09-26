@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -15,21 +16,22 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.VariablePropagatio
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class IndexInsertDeleteOperator extends AbstractLogicalOperator {
 
     private final IDataSourceIndex<?, ?> dataSourceIndex;
     private final List<Mutable<ILogicalExpression>> primaryKeyExprs;
     private final List<Mutable<ILogicalExpression>> secondaryKeyExprs;
+    private final Mutable<ILogicalExpression> filterExpr;
     private final Kind operation;
 
     public IndexInsertDeleteOperator(IDataSourceIndex<?, ?> dataSourceIndex,
             List<Mutable<ILogicalExpression>> primaryKeyExprs, List<Mutable<ILogicalExpression>> secondaryKeyExprs,
-            Kind operation) {
+            Mutable<ILogicalExpression> filterExpr, Kind operation) {
         this.dataSourceIndex = dataSourceIndex;
         this.primaryKeyExprs = primaryKeyExprs;
         this.secondaryKeyExprs = secondaryKeyExprs;
+        this.filterExpr = filterExpr;
         this.operation = operation;
     }
 
@@ -92,6 +94,10 @@ public class IndexInsertDeleteOperator extends AbstractLogicalOperator {
         return secondaryKeyExprs;
     }
 
+    public Mutable<ILogicalExpression> getFilterExpression() {
+    	return filterExpr;
+    }
+    
     public Kind getOperation() {
         return operation;
     }

@@ -68,7 +68,7 @@ public class TreeIndexDropOperatorNodePushable extends AbstractOperatorNodePusha
             IndexRegistry<IIndex> treeIndexRegistry = treeIndexRegistryProvider.getRegistry(ctx);
             IBufferCache bufferCache = storageManager.getBufferCache(ctx);
             IFileMapProvider fileMapProvider = storageManager.getFileMapProvider(ctx);
-            
+
             FileReference f = fileSplitProvider.getFileSplits()[partition].getLocalFile();
             int indexFileId = -1;
             synchronized (fileMapProvider) {

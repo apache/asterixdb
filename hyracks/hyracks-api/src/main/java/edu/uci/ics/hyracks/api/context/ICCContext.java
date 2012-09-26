@@ -18,9 +18,12 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
+import edu.uci.ics.hyracks.api.topology.ClusterTopology;
 
 public interface ICCContext {
     public ClusterControllerInfo getClusterControllerInfo();
 
     public void getIPAddressNodeMap(Map<String, Set<String>> map) throws Exception;
+
+    public ClusterTopology getClusterTopology();
 }

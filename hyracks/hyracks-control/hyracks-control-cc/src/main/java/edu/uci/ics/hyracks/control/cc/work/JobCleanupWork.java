@@ -17,10 +17,16 @@ package edu.uci.ics.hyracks.control.cc.work;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
+import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
@@ -53,13 +59,44 @@ public class JobCleanupWork extends AbstractWork {
         Set<String> targetNodes = run.getParticipatingNodeIds();
         run.getCleanupPendingNodeIds().addAll(targetNodes);
         run.setPendingStatus(status, exception);
-        for (String n : targetNodes) {
-            NodeControllerState ncs = ccs.getNodeMap().get(n);
+        if (targetNodes != null && !targetNodes.isEmpty()) {
+            for (String n : targetNodes) {
+                NodeControllerState ncs = ccs.getNodeMap().get(n);
+                try {
+                    ncs.getNodeController().cleanUpJoblet(jobId, status);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            CCApplicationContext appCtx = ccs.getApplicationMap().get(run.getApplicationName());
+            if (appCtx != null) {
+                try {
+                    appCtx.notifyJobFinish(jobId);
+                } catch (HyracksException e) {
+                    e.printStackTrace();
+                }
+            }
+            run.setStatus(run.getPendingStatus(), run.getPendingException());
+            ccs.getActiveRunMap().remove(jobId);
+            ccs.getRunMapArchive().put(jobId, run);
             try {
-                ncs.getNodeController().cleanUpJoblet(jobId, status);
+                ccs.getJobLogFile().log(createJobLogObject(run));
             } catch (Exception e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
         }
+    }
+
+    private JSONObject createJobLogObject(final JobRun run) {
+        JSONObject jobLogObject = new JSONObject();
+        try {
+            ActivityClusterGraph acg = run.getActivityClusterGraph();
+            jobLogObject.put("activity-cluster-graph", acg.toJSON());
+            jobLogObject.put("job-run", run.toJSON());
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+        return jobLogObject;
     }
 }

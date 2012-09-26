@@ -27,7 +27,7 @@ import org.apache.hadoop.mapred.Counters.Counter;
 import edu.uci.ics.dcache.client.DCacheClient;
 import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.DatatypeHelper;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.IHadoopClassFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
@@ -63,7 +63,7 @@ public abstract class AbstractHadoopOperatorDescriptor extends AbstractSingleAct
     private final Map<String, String> jobConfMap;
     private IHadoopClassFactory hadoopClassFactory;
 
-    public AbstractHadoopOperatorDescriptor(JobSpecification spec, int inputArity, RecordDescriptor recordDescriptor,
+    public AbstractHadoopOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, RecordDescriptor recordDescriptor,
             JobConf jobConf, IHadoopClassFactory hadoopOperatorFactory) {
         super(spec, inputArity, 1);
         jobConfMap = DatatypeHelper.jobConf2Map(jobConf);

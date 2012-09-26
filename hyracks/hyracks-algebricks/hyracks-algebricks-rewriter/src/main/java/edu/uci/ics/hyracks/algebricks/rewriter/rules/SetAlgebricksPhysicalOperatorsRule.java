@@ -6,6 +6,9 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -58,11 +61,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.SubplanPOp
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.UnionAllPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.UnnestPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.WriteResultPOperator;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
-import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.rewriter.util.JoinUtils;
 
 public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule {
@@ -262,13 +262,13 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     break;
                 }
                 case INDEX_INSERT_DELETE: {
-                    IndexInsertDeleteOperator opLoad = (IndexInsertDeleteOperator) op;
+                    IndexInsertDeleteOperator opInsDel = (IndexInsertDeleteOperator) op;
                     List<LogicalVariable> primaryKeys = new ArrayList<LogicalVariable>();
                     List<LogicalVariable> secondaryKeys = new ArrayList<LogicalVariable>();
-                    getKeys(opLoad.getPrimaryKeyExpressions(), primaryKeys);
-                    getKeys(opLoad.getSecondaryKeyExpressions(), secondaryKeys);
-                    op.setPhysicalOperator(new IndexInsertDeletePOperator(primaryKeys, secondaryKeys, opLoad
-                            .getDataSourceIndex()));
+                    getKeys(opInsDel.getPrimaryKeyExpressions(), primaryKeys);
+                    getKeys(opInsDel.getSecondaryKeyExpressions(), secondaryKeys);
+                    op.setPhysicalOperator(new IndexInsertDeletePOperator(primaryKeys, secondaryKeys, 
+                    		opInsDel.getFilterExpression(), opInsDel.getDataSourceIndex()));
                     break;
                 }
                 case SINK: {

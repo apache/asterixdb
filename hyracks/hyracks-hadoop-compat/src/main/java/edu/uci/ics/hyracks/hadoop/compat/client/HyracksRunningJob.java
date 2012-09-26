@@ -8,13 +8,13 @@ import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.TaskAttemptID;
 import org.apache.hadoop.mapred.TaskCompletionEvent;
 
+import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public class HyracksRunningJob implements RunningJob {
 
     JobId jobId;
-    JobSpecification spec;
+    IOperatorDescriptorRegistry spec;
     HyracksClient hyracksClient;
 
     public JobId getJobId() {
@@ -25,15 +25,15 @@ public class HyracksRunningJob implements RunningJob {
         this.jobId = jobId;
     }
 
-    public JobSpecification getSpec() {
+    public IOperatorDescriptorRegistry getSpec() {
         return spec;
     }
 
-    public void setSpec(JobSpecification spec) {
+    public void setSpec(IOperatorDescriptorRegistry spec) {
         this.spec = spec;
     }
 
-    public HyracksRunningJob(JobId jobId, JobSpecification jobSpec, HyracksClient hyracksClient) {
+    public HyracksRunningJob(JobId jobId, IOperatorDescriptorRegistry jobSpec, HyracksClient hyracksClient) {
         this.spec = jobSpec;
         this.jobId = jobId;
         this.hyracksClient = hyracksClient;

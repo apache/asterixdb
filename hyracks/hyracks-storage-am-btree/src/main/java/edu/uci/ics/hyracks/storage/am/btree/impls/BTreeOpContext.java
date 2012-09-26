@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOpContext;
@@ -27,9 +28,10 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.LongArrayList;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class BTreeOpContext implements IIndexOpContext {
-    private final int INIT_ARRAYLIST_SIZE = 6; 
-    protected ITreeIndexFrameFactory leafFrameFactory;
-    protected ITreeIndexFrameFactory interiorFrameFactory;
+    private final int INIT_ARRAYLIST_SIZE = 6;
+    public MultiComparator cmp;
+    public ITreeIndexFrameFactory leafFrameFactory;
+    public ITreeIndexFrameFactory interiorFrameFactory;
     public IBTreeLeafFrame leafFrame;
     public IBTreeInteriorFrame interiorFrame;
     public ITreeIndexMetaDataFrame metaFrame;
@@ -45,7 +47,8 @@ public class BTreeOpContext implements IIndexOpContext {
     public boolean exceptionHandled;
     
     public BTreeOpContext(ITreeIndexFrameFactory leafFrameFactory, ITreeIndexFrameFactory interiorFrameFactory,
-            ITreeIndexMetaDataFrame metaFrame, MultiComparator cmp) {
+            ITreeIndexMetaDataFrame metaFrame, IBinaryComparatorFactory[] cmpFactories) {
+        this.cmp = MultiComparator.create(cmpFactories);
         this.leafFrameFactory = leafFrameFactory;
         this.leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
         if (leafFrame != null) {
@@ -78,7 +81,7 @@ public class BTreeOpContext implements IIndexOpContext {
                 cursorInitialState = new BTreeCursorInitialState(null);
             }
         } else {
-            // Insert, update or delete operation.
+            // Insert, delete, update or upsert operation.
             if (smPages == null) {
                 smPages = new IntArrayList(INIT_ARRAYLIST_SIZE, INIT_ARRAYLIST_SIZE);
             }
@@ -86,7 +89,7 @@ public class BTreeOpContext implements IIndexOpContext {
                 freePages = new IntArrayList(INIT_ARRAYLIST_SIZE, INIT_ARRAYLIST_SIZE);
             }
             if (pred == null) {
-                pred = new RangePredicate(true, null, null, true, true, null, null);
+                pred = new RangePredicate(null, null, true, true, null, null);
             }
             if (splitKey == null) {
                 splitKey = new BTreeSplitKey(leafFrame.getTupleWriter().createTupleReference());

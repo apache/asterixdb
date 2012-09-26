@@ -247,7 +247,7 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
                                 // buf.getInt(prevRec.getFieldOff()) + " " +
                                 // buf.getInt(prevRec.getFieldOff()+4));
                                 prefixFreeSpace += tupleWriter.writeTupleFields(prevTuple, 0, fieldCountToCompress,
-                                        byteBuffer, prefixFreeSpace);
+                                        byteBuffer.array(), prefixFreeSpace);
                                 // System.out.println("WRITING PREFIX RECORD " +
                                 // prefixSlotNum + " AT " + tmp + " " +
                                 // freeSpace);
@@ -265,7 +265,7 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
                                     newTupleSlots[tupleCount - 1 - currTupleIndex] = slotManager.encodeSlotFields(
                                             prefixTupleIndex, tupleFreeSpace);
                                     tupleFreeSpace += tupleWriter.writeTupleFields(tupleToWrite, fieldCountToCompress,
-                                            fieldCount - fieldCountToCompress, byteBuffer, tupleFreeSpace);
+                                            fieldCount - fieldCountToCompress, byteBuffer.array(), tupleFreeSpace);
                                 }
 
                                 prefixTupleIndex++;

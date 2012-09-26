@@ -15,7 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.common.api;
 
-public class TreeIndexException extends Exception {
+public class TreeIndexException extends IndexException {
 
 	private static final long serialVersionUID = 1L;
 	private boolean handled = false;

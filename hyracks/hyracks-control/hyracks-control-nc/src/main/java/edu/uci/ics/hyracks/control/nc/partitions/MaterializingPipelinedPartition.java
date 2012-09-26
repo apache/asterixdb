@@ -20,11 +20,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileHandle;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.io.IFileHandle;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.partitions.IPartition;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
@@ -34,7 +34,7 @@ import edu.uci.ics.hyracks.control.nc.io.IOManager;
 public class MaterializingPipelinedPartition implements IFrameWriter, IPartition {
     private static final Logger LOGGER = Logger.getLogger(MaterializingPipelinedPartition.class.getName());
 
-    private final IHyracksRootContext ctx;
+    private final IHyracksTaskContext ctx;
 
     private final Executor executor;
 
@@ -48,7 +48,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
 
     private FileReference fRef;
 
-    private FileHandle handle;
+    private IFileHandle handle;
 
     private long size;
 
@@ -56,7 +56,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
 
     private boolean failed;
 
-    public MaterializingPipelinedPartition(IHyracksRootContext ctx, PartitionManager manager, PartitionId pid,
+    public MaterializingPipelinedPartition(IHyracksTaskContext ctx, PartitionManager manager, PartitionId pid,
             TaskAttemptId taId, Executor executor) {
         this.ctx = ctx;
         this.executor = executor;
@@ -64,6 +64,11 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
         this.manager = manager;
         this.pid = pid;
         this.taId = taId;
+    }
+
+    @Override
+    public IHyracksTaskContext getTaskContext() {
+        return ctx;
     }
 
     @Override
@@ -77,7 +82,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
             @Override
             public void run() {
                 try {
-                    FileHandle fh = ioManager.open(fRef, IIOManager.FileReadWriteMode.READ_ONLY,
+                    IFileHandle fh = ioManager.open(fRef, IIOManager.FileReadWriteMode.READ_ONLY,
                             IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
                     try {
                         writer.open();

@@ -23,17 +23,17 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.util.IndexUtils;
 import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedListBuilder;
+import edu.uci.ics.hyracks.storage.am.invertedindex.impls.FixedSizeElementInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.invertedindex.impls.InvertedIndex;
 
 public final class InvertedIndexDataflowHelper extends IndexDataflowHelper {
     private final TreeIndexDataflowHelper btreeDataflowHelper;
 
     public InvertedIndexDataflowHelper(TreeIndexDataflowHelper btreeDataflowHelper, IIndexOperatorDescriptor opDesc,
-            IHyracksTaskContext ctx, int partition, boolean createIfNotExists) {
-        super(opDesc, ctx, partition, createIfNotExists);
+            IHyracksTaskContext ctx, int partition) {
+        super(opDesc, ctx, partition);
         this.btreeDataflowHelper = btreeDataflowHelper;
     }
 
@@ -46,10 +46,12 @@ public final class InvertedIndexDataflowHelper extends IndexDataflowHelper {
     @Override
     public IIndex createIndexInstance() throws HyracksDataException {
         IInvertedIndexOperatorDescriptor invIndexOpDesc = (IInvertedIndexOperatorDescriptor) opDesc;
-        MultiComparator cmp = IndexUtils.createMultiComparator(invIndexOpDesc.getInvListsComparatorFactories());
         // Assumes btreeDataflowHelper.init() has already been called.
         BTree btree = (BTree) btreeDataflowHelper.getIndex();
+        IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(
+                invIndexOpDesc.getInvListsTypeTraits());
         return new InvertedIndex(opDesc.getStorageManager().getBufferCache(ctx), btree,
-                invIndexOpDesc.getInvListsTypeTraits(), cmp);
+                invIndexOpDesc.getInvListsTypeTraits(), invIndexOpDesc.getInvListsComparatorFactories(),
+                invListBuilder);
     }
 }

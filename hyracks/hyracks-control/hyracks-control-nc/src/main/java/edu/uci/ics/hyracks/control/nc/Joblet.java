@@ -26,16 +26,17 @@ import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
 import edu.uci.ics.hyracks.api.comm.PartitionChannel;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
-import edu.uci.ics.hyracks.api.dataflow.TaskId;
-import edu.uci.ics.hyracks.api.dataflow.state.ITaskState;
+import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
+import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
+import edu.uci.ics.hyracks.api.job.IGlobalJobDataFactory;
 import edu.uci.ics.hyracks.api.job.IJobletEventListener;
+import edu.uci.ics.hyracks.api.job.IJobletEventListenerFactory;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
-import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
@@ -59,13 +60,13 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final JobId jobId;
 
-    private final JobActivityGraph jag;
+    private final ActivityClusterGraph acg;
 
     private final Map<PartitionId, IPartitionCollector> partitionRequestMap;
 
     private final IOperatorEnvironment env;
 
-    private final Map<TaskId, ITaskState> taskStateMap;
+    private final Map<Object, IStateObject> stateObjectMap;
 
     private final Map<TaskAttemptId, Task> taskMap;
 
@@ -75,25 +76,41 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final IWorkspaceFileFactory fileFactory;
 
-    private IJobletEventListener jobletEventListener;
+    private final Object globalJobData;
+
+    private final IJobletEventListener jobletEventListener;
+
+    private final int frameSize;
 
     private JobStatus cleanupStatus;
 
     private boolean cleanupPending;
 
-    public Joblet(NodeControllerService nodeController, JobId jobId, INCApplicationContext appCtx, JobActivityGraph jag) {
+    public Joblet(NodeControllerService nodeController, JobId jobId, INCApplicationContext appCtx,
+            ActivityClusterGraph acg) {
         this.nodeController = nodeController;
         this.appCtx = appCtx;
         this.jobId = jobId;
-        this.jag = jag;
+        this.frameSize = acg.getFrameSize();
+        this.acg = acg;
         partitionRequestMap = new HashMap<PartitionId, IPartitionCollector>();
         env = new OperatorEnvironmentImpl(nodeController.getId());
-        taskStateMap = new HashMap<TaskId, ITaskState>();
+        stateObjectMap = new HashMap<Object, IStateObject>();
         taskMap = new HashMap<TaskAttemptId, Task>();
         counterMap = new HashMap<String, Counter>();
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         fileFactory = new WorkspaceFileFactory(this, (IOManager) appCtx.getRootContext().getIOManager());
         cleanupPending = false;
+        IJobletEventListenerFactory jelf = acg.getJobletEventListenerFactory();
+        if (jelf != null) {
+            IJobletEventListener listener = jelf.createListener(this);
+            this.jobletEventListener = listener;
+            listener.jobletStart();
+        } else {
+            jobletEventListener = null;
+        }
+        IGlobalJobDataFactory gjdf = acg.getGlobalJobDataFactory();
+        globalJobData = gjdf != null ? gjdf.createGlobalJobData(this) : null;
     }
 
     @Override
@@ -101,8 +118,8 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         return jobId;
     }
 
-    public JobActivityGraph getJobActivityGraph() {
-        return jag;
+    public ActivityClusterGraph getActivityClusterGraph() {
+        return acg;
     }
 
     public IOperatorEnvironment getEnvironment() {
@@ -136,13 +153,13 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         }
 
         @Override
-        public void setTaskState(ITaskState taskState) {
-            taskStateMap.put(taskState.getTaskId(), taskState);
+        public synchronized void setStateObject(IStateObject taskState) {
+            stateObjectMap.put(taskState.getId(), taskState);
         }
 
         @Override
-        public ITaskState getTaskState(TaskId taskId) {
-            return taskStateMap.get(taskId);
+        public synchronized IStateObject getStateObject(Object id) {
+            return stateObjectMap.get(id);
         }
     }
 
@@ -187,18 +204,15 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         });
     }
 
-    @Override
-    public ByteBuffer allocateFrame() {
-        return appCtx.getRootContext().allocateFrame();
+    ByteBuffer allocateFrame() {
+        return ByteBuffer.allocate(getFrameSize());
     }
 
-    @Override
-    public int getFrameSize() {
-        return appCtx.getRootContext().getFrameSize();
+    int getFrameSize() {
+        return frameSize;
     }
 
-    @Override
-    public IIOManager getIOManager() {
+    IIOManager getIOManager() {
         return appCtx.getRootContext().getIOManager();
     }
 
@@ -222,6 +236,11 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         return counter;
     }
 
+    @Override
+    public Object getGlobalJobData() {
+        return globalJobData;
+    }
+
     public synchronized void advertisePartitionRequest(TaskAttemptId taId, Collection<PartitionId> pids,
             IPartitionCollector collector, PartitionState minState) throws Exception {
         for (PartitionId pid : pids) {
@@ -240,10 +259,6 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     public IJobletEventListener getJobletEventListener() {
         return jobletEventListener;
-    }
-
-    public void setJobletEventListener(IJobletEventListener jobletEventListener) {
-        this.jobletEventListener = jobletEventListener;
     }
 
     public void cleanup(JobStatus status) {

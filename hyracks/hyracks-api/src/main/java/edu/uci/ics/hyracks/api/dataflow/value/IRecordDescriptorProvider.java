@@ -14,10 +14,10 @@
  */
 package edu.uci.ics.hyracks.api.dataflow.value;
 
-import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
+import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 
 public interface IRecordDescriptorProvider {
-    public RecordDescriptor getInputRecordDescriptor(OperatorDescriptorId opId, int inputIndex);
+    public RecordDescriptor getInputRecordDescriptor(ActivityId aid, int inputIndex);
 
-    public RecordDescriptor getOutputRecordDescriptor(OperatorDescriptorId opId, int outputIndex);
+    public RecordDescriptor getOutputRecordDescriptor(ActivityId aid, int outputIndex);
 }

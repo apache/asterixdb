@@ -43,7 +43,7 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 	}
 
 	@Override
-	public void close() throws Exception {
+	public void close() throws HyracksDataException {
 		page.releaseReadLatch();
 		bufferCache.unpin(page);
 		page = null;
@@ -61,30 +61,31 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 
 	private boolean positionToNextLeaf(boolean skipCurrent)
 			throws HyracksDataException {
-		while ((frame.getLevel() != 0 || skipCurrent) && (currentPageId <= maxPageId)) {
+		while ((frame.getLevel() != 0 || skipCurrent || frame.getTupleCount() == 0) && (currentPageId <= maxPageId)) {
 			currentPageId++;
 
+			page.releaseReadLatch();
+            bufferCache.unpin(page);
+			
 			ICachedPage nextPage = bufferCache.pin(
 					BufferedFileHandle.getDiskPageId(fileId, currentPageId),
 					false);
 			nextPage.acquireReadLatch();
-
-			page.releaseReadLatch();
-			bufferCache.unpin(page);
 
 			page = nextPage;
 			frame.setPage(page);
 			tupleIndex = 0;
 			skipCurrent = false;
 		}
-		if (currentPageId <= maxPageId)
+		if (currentPageId <= maxPageId) {
 			return true;
-		else
+		} else {
 			return false;
+		}
 	}
 
 	@Override
-	public boolean hasNext() throws Exception {		
+	public boolean hasNext() throws HyracksDataException {		
 		if (currentPageId > maxPageId) {
 			return false;
 		}
@@ -102,7 +103,7 @@ public class TreeDiskOrderScanCursor implements ITreeIndexCursor {
 	}
 
 	@Override
-	public void next() throws Exception {
+	public void next() throws HyracksDataException {
 		tupleIndex++;
 	}
 

@@ -15,7 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.btree;
 
-import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -24,21 +23,13 @@ import java.util.logging.Level;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.btree.util.AbstractBTreeTest;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
-import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.sync.LatchType;
-import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 
-public class StorageManagerTest extends AbstractBTreeTest {
-    private static final int PAGE_SIZE = 256;
-    private static final int NUM_PAGES = 10;
-    private static final int MAX_OPEN_FILES = 10;
-    private static final int HYRACKS_FRAME_SIZE = 32768;
-
+public class StorageManagerTest extends AbstractBTreeTest {	
     public class PinnedLatchedPage {
         public final ICachedPage page;
         public final LatchType latch;
@@ -258,38 +249,11 @@ public class StorageManagerTest extends AbstractBTreeTest {
     }
 
     @Test
-    public void oneThreadOneFileTest() throws Exception {
-        TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
-        IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        FileReference file = new FileReference(new File(fileName));
-        bufferCache.createFile(file);
-        int fileId = fmp.lookupFileId(file);
-        bufferCache.openFile(fileId);
-
-        Thread worker = new Thread(new FileAccessWorker(0, bufferCache, FileAccessType.FTA_UNLATCHED, fileId, 10, 10,
-                100, 10, 0));
-
+    public void oneThreadOneFileTest() throws Exception { 
+		Thread worker = new Thread(new FileAccessWorker(0,
+				harness.getBufferCache(), FileAccessType.FTA_UNLATCHED,
+				harness.getBTreeFileId(), 10, 10, 100, 10, 0));
         worker.start();
-
         worker.join();
-
-        bufferCache.close();
-    }
-    
-    public int getPageSize() {
-        return PAGE_SIZE;
-    }
-    
-    public int getNumPages() {
-        return NUM_PAGES;
-    }
-    
-    public int getHyracksFrameSize() {
-        return HYRACKS_FRAME_SIZE;
-    }
-    
-    public int getMaxOpenFiles() {
-        return MAX_OPEN_FILES;
     }
 }
