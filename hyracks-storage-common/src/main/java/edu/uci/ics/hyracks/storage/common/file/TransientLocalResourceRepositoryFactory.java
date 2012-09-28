@@ -14,15 +14,12 @@
  */
 package edu.uci.ics.hyracks.storage.common.file;
 
-public class LSMBTreeLocalResourceClass extends AbstractIndexLocalResourceClass {
-    private static LSMBTreeLocalResourceClass instance = new LSMBTreeLocalResourceClass();
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-    public static LSMBTreeLocalResourceClass getInstance() {
-        return instance;
-    }
+public class TransientLocalResourceRepositoryFactory implements ILocalResourceRepositoryFactory {
 
     @Override
-    public int getResourceClassId() {
-        return ILocalResourceClass.LSMBTree;
+    public ILocalResourceRepository createRepository() throws HyracksDataException {
+        return new TransientLocalResourceRepository();
     }
 }

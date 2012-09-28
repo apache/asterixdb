@@ -23,8 +23,10 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 
-public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor implements IIndexOperatorDescriptor {
+public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor implements
+        IIndexOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
 
@@ -35,12 +37,14 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     protected final ITupleFilterFactory tupleFilterFactory;
     protected final boolean retainInput;
     protected final IOperationCallbackProvider opCallbackProvider;
+    protected final ILocalResourceFactoryProvider localResourceFactoryProvider;
 
     public AbstractIndexOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
             IIndexDataflowHelperFactory dataflowHelperFactory, ITupleFilterFactory tupleFilterFactory,
-            boolean retainInput, IOperationCallbackProvider opCallbackProvider) {
+            boolean retainInput, IOperationCallbackProvider opCallbackProvider,
+            ILocalResourceFactoryProvider localResourceFactoryProvider) {
         super(spec, inputArity, outputArity);
         this.fileSplitProvider = fileSplitProvider;
         this.storageManager = storageManager;
@@ -49,12 +53,12 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
         this.retainInput = retainInput;
         this.tupleFilterFactory = tupleFilterFactory;
         this.opCallbackProvider = opCallbackProvider;
+        this.localResourceFactoryProvider = localResourceFactoryProvider;
         if (outputArity > 0) {
             recordDescriptors[0] = recDesc;
         }
     }
-    
-    
+
     @Override
     public IFileSplitProvider getFileSplitProvider() {
         return fileSplitProvider;
@@ -93,5 +97,10 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     @Override
     public ITupleFilterFactory getTupleFilterFactory() {
         return tupleFilterFactory;
+    }
+    
+    @Override
+    public ILocalResourceFactoryProvider getLocalResourceFactoryProvider() {
+        return localResourceFactoryProvider;
     }
 }

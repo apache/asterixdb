@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 
 public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractIndexOperatorDescriptor {
 
@@ -37,9 +38,11 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractIndexO
             IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories,
             IIndexDataflowHelperFactory dataflowHelperFactory, ITupleFilterFactory tupleFilterFactory,
-            boolean retainInput, IOperationCallbackProvider opCallbackProvider) {
+            boolean retainInput, IOperationCallbackProvider opCallbackProvider,
+            ILocalResourceFactoryProvider localResourceFactoryProvider) {
         super(spec, inputArity, outputArity, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider,
-                dataflowHelperFactory, tupleFilterFactory, retainInput, opCallbackProvider);
+                dataflowHelperFactory, tupleFilterFactory, retainInput, opCallbackProvider,
+                localResourceFactoryProvider);
         this.typeTraits = typeTraits;
         this.comparatorFactories = comparatorFactories;
     }

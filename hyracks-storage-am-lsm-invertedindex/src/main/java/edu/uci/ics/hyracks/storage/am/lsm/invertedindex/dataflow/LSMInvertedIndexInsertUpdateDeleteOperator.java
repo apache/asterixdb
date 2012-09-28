@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexInsertUpdateDeleteOpe
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
+import edu.uci.ics.hyracks.storage.common.file.NoOpLocalResourceFactoryProvider;
 
 public class LSMInvertedIndexInsertUpdateDeleteOperator extends AbstractLSMInvertedIndexOperatorDescriptor {
 
@@ -46,7 +47,7 @@ public class LSMInvertedIndexInsertUpdateDeleteOperator extends AbstractLSMInver
             IOperationCallbackProvider opCallbackProvider) {
         super(spec, 0, 0, null, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, tokenizerFactory,
-                dataflowHelperFactory, null, false, opCallbackProvider);
+                dataflowHelperFactory, null, false, opCallbackProvider, NoOpLocalResourceFactoryProvider.INSTANCE);
         this.fieldPermutation = fieldPermutation;
         this.op = op;
     }

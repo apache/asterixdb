@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
+import edu.uci.ics.hyracks.storage.common.file.NoOpLocalResourceFactoryProvider;
 
 public class TreeIndexBulkLoadOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
 
@@ -41,7 +42,8 @@ public class TreeIndexBulkLoadOperatorDescriptor extends AbstractTreeIndexOperat
             boolean verifyInput, IIndexDataflowHelperFactory dataflowHelperFactory,
             IOperationCallbackProvider opCallbackProvider) {
         super(spec, 1, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, dataflowHelperFactory, null, false, opCallbackProvider);
+                comparatorFactories, dataflowHelperFactory, null, false, opCallbackProvider,
+                NoOpLocalResourceFactoryProvider.INSTANCE);
         this.fieldPermutation = fieldPermutation;
         this.fillFactor = fillFactor;
         this.verifyInput = verifyInput;
@@ -50,7 +52,7 @@ public class TreeIndexBulkLoadOperatorDescriptor extends AbstractTreeIndexOperat
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new IndexBulkLoadOperatorNodePushable(this, ctx, partition, fieldPermutation, fillFactor,
-        		verifyInput, recordDescProvider);
+        return new IndexBulkLoadOperatorNodePushable(this, ctx, partition, fieldPermutation, fillFactor, verifyInput,
+                recordDescProvider);
     }
 }

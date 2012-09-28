@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.storage.common.file;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -29,17 +28,14 @@ import java.util.Map;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-public class IndexLocalResourceRepository implements ILocalResourceRepository {
+public class PersistentLocalResourceRepository implements ILocalResourceRepository {
 
-    private final List<ILocalResourceClass> resourceClasses;
     private final List<String> mountPoints;
     private static final String METADATA_FILE_NAME = ".metadata";
-    private Map<String, ILocalResource> name2ResourceMap = new HashMap<String, ILocalResource>();
-    private Map<Long, ILocalResource> id2ResourceMap = new HashMap<Long, ILocalResource>();
+    private Map<String, LocalResource> name2ResourceMap = new HashMap<String, LocalResource>();
+    private Map<Long, LocalResource> id2ResourceMap = new HashMap<Long, LocalResource>();
 
-    public IndexLocalResourceRepository(List<ILocalResourceClass> resourceClasses, List<String> mountPoints,
-            String rootDir) throws HyracksDataException {
-        this.resourceClasses = resourceClasses;
+    public PersistentLocalResourceRepository(List<String> mountPoints, String rootDir) throws HyracksDataException {
         this.mountPoints = mountPoints;
 
         File rootFile = new File(this.mountPoints.get(0), rootDir);
@@ -62,7 +58,7 @@ public class IndexLocalResourceRepository implements ILocalResourceRepository {
             if (childFile.isDirectory()) {
                 File[] targetFileList = childFile.listFiles(filter);
                 for (File targetFile : targetFileList) {
-                    ILocalResource localResource = readLocalResource(targetFile);
+                    LocalResource localResource = readLocalResource(targetFile);
                     id2ResourceMap.put(localResource.getResourceId(), localResource);
                     name2ResourceMap.put(localResource.getResourceName(), localResource);
                 }
@@ -71,17 +67,17 @@ public class IndexLocalResourceRepository implements ILocalResourceRepository {
     }
 
     @Override
-    public ILocalResource getResourceById(long id) throws HyracksDataException {
+    public LocalResource getResourceById(long id) throws HyracksDataException {
         return id2ResourceMap.get(id);
     }
 
     @Override
-    public ILocalResource getResourceByName(String name) throws HyracksDataException {
-        return id2ResourceMap.get(name);
+    public LocalResource getResourceByName(String name) throws HyracksDataException {
+        return name2ResourceMap.get(name);
     }
 
     @Override
-    public synchronized void insert(ILocalResource resource) throws HyracksDataException {
+    public synchronized void insert(LocalResource resource) throws HyracksDataException {
         long id = resource.getResourceId();
 
         if (id2ResourceMap.containsKey(id)) {
@@ -95,10 +91,7 @@ public class IndexLocalResourceRepository implements ILocalResourceRepository {
         try {
             fos = new FileOutputStream(getFileName(mountPoints.get(0), resource.getResourceName()));
             oosToFos = new ObjectOutputStream(fos);
-            byte[] outputBytes = resource.getResourceClass().serialize(resource);
-            oosToFos.writeInt(resource.getResourceClass().getResourceClassId());
-            oosToFos.writeInt(outputBytes.length);
-            oosToFos.write(outputBytes);
+            oosToFos.writeObject(resource);
             oosToFos.flush();
         } catch (IOException e) {
             throw new HyracksDataException(e);
@@ -122,7 +115,7 @@ public class IndexLocalResourceRepository implements ILocalResourceRepository {
 
     @Override
     public synchronized void deleteResourceById(long id) throws HyracksDataException {
-        ILocalResource resource = id2ResourceMap.get(id);
+        LocalResource resource = id2ResourceMap.get(id);
         if (resource == null) {
             throw new HyracksDataException("Resource doesn't exist");
         }
@@ -134,20 +127,20 @@ public class IndexLocalResourceRepository implements ILocalResourceRepository {
 
     @Override
     public synchronized void deleteResourceByName(String name) throws HyracksDataException {
-        ILocalResource resource = id2ResourceMap.get(name);
+        LocalResource resource = name2ResourceMap.get(name);
         if (resource == null) {
             throw new HyracksDataException("Resource doesn't exist");
         }
-        id2ResourceMap.remove(name);
-        name2ResourceMap.remove(resource.getResourceId());
+        id2ResourceMap.remove(resource.getResourceId());
+        name2ResourceMap.remove(name);
         File file = new File(getFileName(mountPoints.get(0), resource.getResourceName()));
         file.delete();
     }
 
     @Override
-    public List<ILocalResource> getAllResources() throws HyracksDataException {
-        List<ILocalResource> resources = new ArrayList<ILocalResource>();
-        for (ILocalResource resource : id2ResourceMap.values()) {
+    public List<LocalResource> getAllResources() throws HyracksDataException {
+        List<LocalResource> resources = new ArrayList<LocalResource>();
+        for (LocalResource resource : id2ResourceMap.values()) {
             resources.add(resource);
         }
         return resources;
@@ -165,34 +158,16 @@ public class IndexLocalResourceRepository implements ILocalResourceRepository {
         return fileName;
     }
 
-    private ILocalResource readLocalResource(File file) throws HyracksDataException {
+    private LocalResource readLocalResource(File file) throws HyracksDataException {
         FileInputStream fis = null;
         ObjectInputStream oisFromFis = null;
-        ByteArrayInputStream bais = null;
-        ObjectInputStream oisFromBais = null;
-        ILocalResource resource = null;
 
         try {
             fis = new FileInputStream(file);
             oisFromFis = new ObjectInputStream(fis);
-
-            int resourceClassId = oisFromFis.readInt();
-            int inputLength = oisFromFis.readInt();
-            byte[] inputBytes = new byte[inputLength];
-            if (inputLength != oisFromFis.read(inputBytes)) {
-                throw new HyracksDataException("Corrupted file");
-            }
-
-            bais = new ByteArrayInputStream(inputBytes);
-            oisFromBais = new ObjectInputStream(bais);
-            for (ILocalResourceClass resourceClass : resourceClasses) {
-                if (resourceClass.getResourceClassId() == resourceClassId) {
-                    resource = resourceClass.deserialize(inputBytes);
-                    break;
-                }
-            }
+            LocalResource resource = (LocalResource) oisFromFis.readObject();
             return resource;
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new HyracksDataException(e);
         } finally {
             if (oisFromFis != null) {
@@ -200,8 +175,6 @@ public class IndexLocalResourceRepository implements ILocalResourceRepository {
                     oisFromFis.close();
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
-                } finally {
-                    closeInputStream(oisFromBais, bais);
                 }
             }
             if (oisFromFis == null && fis != null) {
@@ -209,26 +182,7 @@ public class IndexLocalResourceRepository implements ILocalResourceRepository {
                     fis.close();
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
-                } finally {
-                    closeInputStream(oisFromBais, bais);
                 }
-            }
-        }
-    }
-
-    private void closeInputStream(ObjectInputStream oisFromBais, ByteArrayInputStream bais) throws HyracksDataException {
-        if (oisFromBais != null) {
-            try {
-                oisFromBais.close();
-            } catch (IOException e) {
-                throw new HyracksDataException(e);
-            }
-        }
-        if (oisFromBais == null && bais != null) {
-            try {
-                bais.close();
-            } catch (IOException e) {
-                throw new HyracksDataException(e);
             }
         }
     }

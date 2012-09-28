@@ -73,6 +73,8 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokeni
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.ITokenFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8WordTokenFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactoryProvider;
+import edu.uci.ics.hyracks.storage.common.file.TransientLocalResourceFactoryProvider;
 import edu.uci.ics.hyracks.test.support.TestIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerInterface;
@@ -85,13 +87,13 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     }
 
     private static final int MERGE_THRESHOLD = 3;
-    
+
     private IStorageManagerInterface storageManager = new TestStorageManagerInterface();
     private IIndexLifecycleManagerProvider lcManagerProvider = new TestIndexLifecycleManagerProvider();
     private IIndexDataflowHelperFactory btreeDataflowHelperFactory = new BTreeDataflowHelperFactory();
-    private IIndexDataflowHelperFactory invertedIndexDataflowHelperFactory = new LSMInvertedIndexDataflowHelperFactory(new FlushControllerProvider(), new ConstantMergePolicyProvider(
-            ImmediateSchedulerProvider.INSTANCE, MERGE_THRESHOLD), new RefCountingOperationTrackerProvider(),
-            ImmediateSchedulerProvider.INSTANCE);
+    private IIndexDataflowHelperFactory invertedIndexDataflowHelperFactory = new LSMInvertedIndexDataflowHelperFactory(
+            new FlushControllerProvider(), new ConstantMergePolicyProvider(ImmediateSchedulerProvider.INSTANCE,
+                    MERGE_THRESHOLD), new RefCountingOperationTrackerProvider(), ImmediateSchedulerProvider.INSTANCE);
 
     private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     private final static String sep = System.getProperty("file.separator");
@@ -154,9 +156,10 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
 
     public void createPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
+        TransientLocalResourceFactoryProvider localResourceFactoryProvider = new TransientLocalResourceFactoryProvider();
         TreeIndexCreateOperatorDescriptor primaryCreateOp = new TreeIndexCreateOperatorDescriptor(spec, storageManager,
                 lcManagerProvider, primaryFileSplitProvider, primaryTypeTraits, primaryComparatorFactories,
-                btreeDataflowHelperFactory);
+                btreeDataflowHelperFactory, localResourceFactoryProvider);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryCreateOp, NC1_ID);
         spec.addRoot(primaryCreateOp);
         runTest(spec);
@@ -164,10 +167,11 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
 
     public void createInvertedIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
+        ILocalResourceFactoryProvider localResourceFactoryProvider = new TransientLocalResourceFactoryProvider();
         LSMInvertedIndexCreateOperatorDescriptor invIndexCreateOp = new LSMInvertedIndexCreateOperatorDescriptor(spec,
-                storageManager, btreeFileSplitProvider, lcManagerProvider, tokenTypeTraits,
-                tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories, tokenizerFactory,
-                invertedIndexDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+                storageManager, btreeFileSplitProvider, lcManagerProvider, tokenTypeTraits, tokenComparatorFactories,
+                invListsTypeTraits, invListsComparatorFactories, tokenizerFactory, invertedIndexDataflowHelperFactory,
+                NoOpOperationCallbackProvider.INSTANCE, localResourceFactoryProvider);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, invIndexCreateOp, NC1_ID);
         spec.addRoot(invIndexCreateOp);
         runTest(spec);
@@ -203,7 +207,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeBulkLoad, NC1_ID);
         return primaryBtreeBulkLoad;
     }
-    
+
     private IOperatorDescriptor createScanKeyProviderOp(JobSpecification spec) throws HyracksDataException {
         // build dummy tuple containing nothing
         ArrayTupleBuilder tb = new ArrayTupleBuilder(primaryKeyFieldCount * 2);
@@ -317,8 +321,8 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
 
     private IOperatorDescriptor createInvertedIndexSearchOp(JobSpecification spec,
             IInvertedIndexSearchModifierFactory searchModifierFactory) {
-        LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp = new LSMInvertedIndexSearchOperatorDescriptor(spec, 0,
-                storageManager, btreeFileSplitProvider, lcManagerProvider, tokenTypeTraits,
+        LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp = new LSMInvertedIndexSearchOperatorDescriptor(spec,
+                0, storageManager, btreeFileSplitProvider, lcManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories,
                 invertedIndexDataflowHelperFactory, tokenizerFactory, searchModifierFactory, invListsRecDesc, false,
                 NoOpOperationCallbackProvider.INSTANCE);

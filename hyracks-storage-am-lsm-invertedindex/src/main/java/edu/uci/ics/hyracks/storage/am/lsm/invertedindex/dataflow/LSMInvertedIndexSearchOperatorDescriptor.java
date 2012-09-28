@@ -31,6 +31,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearch
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifierFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
+import edu.uci.ics.hyracks.storage.common.file.NoOpLocalResourceFactoryProvider;
 
 public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInvertedIndexOperatorDescriptor {
     private static final long serialVersionUID = 1L;
@@ -48,7 +49,8 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInverte
             IOperationCallbackProvider opCallbackProvider) {
         super(spec, 1, 1, recDesc, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, queryTokenizerFactory,
-                btreeDataflowHelperFactory, null, retainInput, opCallbackProvider);
+                btreeDataflowHelperFactory, null, retainInput, opCallbackProvider,
+                NoOpLocalResourceFactoryProvider.INSTANCE);
         this.queryField = queryField;
         this.searchModifierFactory = searchModifierFactory;
     }

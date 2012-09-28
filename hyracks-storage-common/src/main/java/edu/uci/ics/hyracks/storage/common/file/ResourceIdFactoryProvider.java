@@ -18,17 +18,21 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-public interface ILocalResourceRepository {
+public class ResourceIdFactoryProvider {
+    private ILocalResourceRepository localResourceRepository;
 
-    public LocalResource getResourceById(long id) throws HyracksDataException;
+    public ResourceIdFactoryProvider(ILocalResourceRepository localResourceRepository) {
+        this.localResourceRepository = localResourceRepository;
+    }
 
-    public LocalResource getResourceByName(String name) throws HyracksDataException;
-
-    public void insert(LocalResource resource) throws HyracksDataException;
-
-    public void deleteResourceById(long id) throws HyracksDataException;
-
-    public void deleteResourceByName(String name) throws HyracksDataException;
-
-    public List<LocalResource> getAllResources() throws HyracksDataException;
+    public ResourceIdFactory createResourceIdFactory() throws HyracksDataException {
+        List<LocalResource> localResources = localResourceRepository.getAllResources();
+        long largestResourceId = 0;
+        for (LocalResource localResource : localResources) {
+            if (largestResourceId < localResource.getResourceId()) {
+                largestResourceId = localResource.getResourceId();
+            }
+        }
+        return new ResourceIdFactory(largestResourceId);
+    }
 }

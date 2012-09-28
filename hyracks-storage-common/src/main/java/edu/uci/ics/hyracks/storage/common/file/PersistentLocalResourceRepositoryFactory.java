@@ -21,26 +21,22 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 
-public class IndexLocalResourceRepositoryFactory implements ILocalResourceRepositoryFactory {
+public class PersistentLocalResourceRepositoryFactory implements ILocalResourceRepositoryFactory {
     private static final String rootDir = "";
     private IIOManager ioManager;
-    
-    public IndexLocalResourceRepositoryFactory(IIOManager ioManager) {
+
+    public PersistentLocalResourceRepositoryFactory(IIOManager ioManager) {
         this.ioManager = ioManager;
     }
-    
+
     @Override
     public ILocalResourceRepository createRepository() throws HyracksDataException {
-        List<ILocalResourceClass> resourceClasses = new ArrayList<ILocalResourceClass>();
-        resourceClasses.add(LSMBTreeLocalResourceClass.getInstance());
-        resourceClasses.add(LSMRTreeLocalResourceClass.getInstance());
-        resourceClasses.add(LSMInvertedIndexLocalResourceClass.getInstance());
-        
         List<String> mountPoints = new ArrayList<String>();
         List<IODeviceHandle> devices = ioManager.getIODevices();
+
         for (IODeviceHandle dev : devices) {
             mountPoints.add(dev.getPath().getPath());
         }
-        return new IndexLocalResourceRepository(resourceClasses, mountPoints, rootDir);
+        return new PersistentLocalResourceRepository(mountPoints, rootDir);
     }
 }

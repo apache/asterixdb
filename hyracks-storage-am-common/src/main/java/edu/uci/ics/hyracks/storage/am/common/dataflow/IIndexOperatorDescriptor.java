@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 
 public interface IIndexOperatorDescriptor extends IActivity {
     public IFileSplitProvider getFileSplitProvider();
@@ -39,4 +40,6 @@ public interface IIndexOperatorDescriptor extends IActivity {
     public IOperationCallbackProvider getOpCallbackProvider();
     
     public ITupleFilterFactory getTupleFilterFactory();
+    
+    public ILocalResourceFactoryProvider getLocalResourceFactoryProvider();
 }

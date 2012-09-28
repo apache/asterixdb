@@ -14,14 +14,12 @@
  */
 package edu.uci.ics.hyracks.storage.common.file;
 
-import java.io.Serializable;
+public class TransientLocalResourceFactory implements ILocalResourceFactory {
 
-public interface ILocalResource extends Serializable {
-    public long getResourceId();
-
-    public String getResourceName();
-
-    public Object getResourceObject();
-
-    public ILocalResourceClass getResourceClass();
+    public static final int TransientResource = 0;
+    
+    @Override
+    public LocalResource createLocalResource(long resourceId, String resourceName) {
+        return new LocalResource(resourceId, resourceName, TransientResource, null);
+    }
 }

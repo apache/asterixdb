@@ -14,15 +14,12 @@
  */
 package edu.uci.ics.hyracks.storage.common.file;
 
-public class LSMInvertedIndexLocalResourceClass extends AbstractIndexLocalResourceClass {
-    private static LSMInvertedIndexLocalResourceClass instance = new LSMInvertedIndexLocalResourceClass();
-
-    public static LSMInvertedIndexLocalResourceClass getInstance() {
-        return instance;
-    }
+public class TransientLocalResourceFactoryProvider implements ILocalResourceFactoryProvider {
+    
+    private static final long serialVersionUID = 1L;
 
     @Override
-    public int getResourceClassId() {
-        return ILocalResourceClass.LSMInvertedIndex;
+    public ILocalResourceFactory getLocalResourceFactory() {
+        return new TransientLocalResourceFactory();
     }
 }

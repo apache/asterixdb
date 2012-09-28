@@ -14,37 +14,35 @@
  */
 package edu.uci.ics.hyracks.storage.common.file;
 
-public class IndexLocalResource implements ILocalResource {
-    private static final long serialVersionUID = -8638308062094620884L;
+import java.io.Serializable;
+
+public class LocalResource implements Serializable {
+    private static final long serialVersionUID = 1L;
     private final long resourceId;
     private final String resourceName;
+    private final int resourceType;
     private final Object object;
-    private final ILocalResourceClass resourceClass;
 
-    public IndexLocalResource(long resourceId, String resourceName, Object object, ILocalResourceClass resourceClass) {
+    public LocalResource(long resourceId, String resourceName, int resourceType, Object object) {
         this.resourceId = resourceId;
         this.resourceName = resourceName;
         this.object = object;
-        this.resourceClass = resourceClass;
+        this.resourceType = resourceType;
     }
 
-    @Override
     public long getResourceId() {
         return resourceId;
     }
 
-    @Override
     public String getResourceName() {
         return resourceName;
     }
 
-    @Override
-    public Object getResourceObject() {
-        return object;
+    public int getResourceType() {
+        return resourceType;
     }
 
-    @Override
-    public ILocalResourceClass getResourceClass() {
-        return resourceClass;
+    public Object getResourceObject() {
+        return object;
     }
 }

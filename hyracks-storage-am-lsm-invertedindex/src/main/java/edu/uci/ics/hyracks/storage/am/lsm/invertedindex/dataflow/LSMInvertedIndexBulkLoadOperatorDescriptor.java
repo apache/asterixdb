@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactor
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexBulkLoadOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
+import edu.uci.ics.hyracks.storage.common.file.NoOpLocalResourceFactoryProvider;
 
 public class LSMInvertedIndexBulkLoadOperatorDescriptor extends AbstractLSMInvertedIndexOperatorDescriptor {
 
@@ -45,7 +46,8 @@ public class LSMInvertedIndexBulkLoadOperatorDescriptor extends AbstractLSMInver
             IOperationCallbackProvider opCallbackProvider) {
         super(spec, 1, 0, null, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, tokenizerFactory,
-                invertedIndexDataflowHelperFactory, null, false, opCallbackProvider);
+                invertedIndexDataflowHelperFactory, null, false, opCallbackProvider,
+                NoOpLocalResourceFactoryProvider.INSTANCE);
         this.fieldPermutation = fieldPermutation;
         this.verifyInput = verifyInput;
     }

@@ -14,15 +14,14 @@
  */
 package edu.uci.ics.hyracks.storage.common.file;
 
-public class LSMRTreeLocalResourceClass extends AbstractIndexLocalResourceClass {
-    private static LSMRTreeLocalResourceClass instance = new LSMRTreeLocalResourceClass();
-
-    public static LSMRTreeLocalResourceClass getInstance() {
-        return instance;
-    }
+/**
+ * Dummy operation factory provider that does nothing.
+ */
+public enum NoOpLocalResourceFactoryProvider implements ILocalResourceFactoryProvider {
+    INSTANCE;
 
     @Override
-    public int getResourceClassId() {
-        return ILocalResourceClass.LSMRTree;
+    public ILocalResourceFactory getLocalResourceFactory() {
+        return null;
     }
 }

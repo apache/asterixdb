@@ -14,18 +14,6 @@
  */
 package edu.uci.ics.hyracks.storage.common.file;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-
-public interface ILocalResourceClass {
-
-    public static final int LSMBTree = 0;
-    public static final int LSMRTree = 1;
-    public static final int LSMInvertedIndex = 2;
-
-    public byte[] serialize(ILocalResource resource) throws HyracksDataException;
-
-    public ILocalResource deserialize(byte[] bytes) throws HyracksDataException;
-
-    public int getResourceClassId();
-
+public interface ILocalResourceFactory {
+    public LocalResource createLocalResource(long resourceId, String resourceName);
 }
