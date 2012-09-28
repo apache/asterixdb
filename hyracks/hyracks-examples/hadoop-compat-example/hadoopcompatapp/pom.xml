@@ -2,12 +2,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks.examples.compat</groupId>
   <artifactId>hadoopcompatapp</artifactId>
-  <version>0.2.1</version>
+  <version>0.2.2-SNAPSHOT</version>
 
   <parent>
     <groupId>edu.uci.ics.hyracks.examples</groupId>
     <artifactId>hadoop-compat-example</artifactId>
-    <version>0.2.1</version>
+    <version>0.2.2-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -77,7 +77,7 @@
       <plugin>
       	<groupId>edu.uci.ics.hyracks</groupId>
       	<artifactId>hyracks-virtualcluster-maven-plugin</artifactId>
-      	<version>0.2.1</version>
+      	<version>0.2.2-SNAPSHOT</version>
         <configuration>
           <hyracksServerHome>${basedir}/../../../hyracks-server/target/hyracks-server-${project.version}-binary-assembly</hyracksServerHome>
           <hyracksCLIHome>${basedir}/../../../hyracks-cli/target/hyracks-cli-${project.version}-binary-assembly</hyracksCLIHome>
@@ -170,13 +170,13 @@
      <dependency>
         <groupId>edu.uci.ics.hyracks.examples.compat</groupId>
         <artifactId>hadoopcompathelper</artifactId>
-        <version>0.2.1</version>
+        <version>0.2.2-SNAPSHOT</version>
         <scope>compile</scope>
      </dependency>
      <dependency>
         <groupId>edu.uci.ics.hyracks.examples.compat</groupId>
   	    <artifactId>hadoopcompatclient</artifactId>
-  	    <version>0.2.1</version>
+  	    <version>0.2.2-SNAPSHOT</version>
   	    <type>jar</type>
   	    <scope>test</scope>
      </dependency>
