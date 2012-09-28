@@ -54,9 +54,16 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         };
 
         File[] childFileList = rootFile.listFiles();
+        if (childFileList == null) {
+        	return;
+        }
         for (File childFile : childFileList) {
             if (childFile.isDirectory()) {
                 File[] targetFileList = childFile.listFiles(filter);
+                if (targetFileList == null) {
+                	return;
+                }
+                
                 for (File targetFile : targetFileList) {
                     LocalResource localResource = readLocalResource(targetFile);
                     id2ResourceMap.put(localResource.getResourceId(), localResource);
