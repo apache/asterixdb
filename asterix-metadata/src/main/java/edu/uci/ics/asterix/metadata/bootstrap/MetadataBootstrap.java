@@ -64,10 +64,12 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManage
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactory;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
-import edu.uci.ics.hyracks.storage.common.file.IndexLocalResource;
-import edu.uci.ics.hyracks.storage.common.file.LSMBTreeLocalResourceClass;
+import edu.uci.ics.hyracks.storage.common.file.LocalResource;
 import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
+import edu.uci.ics.hyracks.storage.common.file.TransientLocalResourceFactoryProvider;
 
 /**
  * Initializes the remote metadata storage facilities ("universe") using a
@@ -306,7 +308,11 @@ public class MetadataBootstrap {
             lsmBtree.create();
             resourceID = runtimeContext.getResourceIdFactory().createId();
             //resourceID = indexArtifactMap.create(file.getFile().getPath(), ioManager.getIODevices());
-            localResourceRepository.insert(new IndexLocalResource(resourceID, file.getFile().getPath(), null, LSMBTreeLocalResourceClass.getInstance()));
+            //TODO
+            //replace the transient resource factory provider with the persistent one.
+            ILocalResourceFactoryProvider localResourceFactoryProvider = new TransientLocalResourceFactoryProvider();
+            ILocalResourceFactory localResourceFactory = localResourceFactoryProvider.getLocalResourceFactory();
+            localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, file.getFile().getPath()));
         } else {
             resourceID = localResourceRepository.getResourceByName(file.getFile().getPath()).getResourceId();
         }

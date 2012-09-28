@@ -34,6 +34,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorD
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.dataflow.LSMRTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import edu.uci.ics.hyracks.storage.common.file.TransientLocalResourceFactoryProvider;
 
 @SuppressWarnings("rawtypes")
 public class SecondaryRTreeCreator extends SecondaryIndexCreator {
@@ -49,6 +50,8 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
     @Override
     public JobSpecification buildCreationJobSpec() throws AsterixException, AlgebricksException {
         JobSpecification spec = new JobSpecification();
+        //TODO replace this transient one to the persistent one 
+        TransientLocalResourceFactoryProvider localResourceFactoryProvider = new TransientLocalResourceFactoryProvider();
         TreeIndexCreateOperatorDescriptor secondaryIndexCreateOp = new TreeIndexCreateOperatorDescriptor(spec,
                 AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
                 secondaryFileSplitProvider, secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories,
@@ -56,7 +59,7 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
                         primaryComparatorFactories, AsterixRuntimeComponentsProvider.INSTANCE,
                         AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
                         AsterixRuntimeComponentsProvider.INSTANCE, AqlMetadataProvider.proposeLinearizer(keyType,
-                                secondaryComparatorFactories.length)));
+                                secondaryComparatorFactories.length)), localResourceFactoryProvider);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
                 secondaryPartitionConstraint);
         spec.addRoot(secondaryIndexCreateOp);

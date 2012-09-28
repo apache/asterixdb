@@ -78,6 +78,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeDataflowHelperF
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.dataflow.LSMRTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import edu.uci.ics.hyracks.storage.common.file.TransientLocalResourceFactoryProvider;
 
 public class DatasetOperations {
 
@@ -196,11 +197,14 @@ public class DatasetOperations {
             sb.append(stringOf(fs[i]) + " ");
         }
         LOGGER.info("CREATING File Splits: " + sb.toString());
+        //TODO replace this transient one to the persistent one 
+        TransientLocalResourceFactoryProvider localResourceFactoryProvider = new TransientLocalResourceFactoryProvider();
         TreeIndexCreateOperatorDescriptor indexCreateOp = new TreeIndexCreateOperatorDescriptor(spec,
                 AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
                 splitsAndConstraint.first, typeTraits, comparatorFactories, new LSMBTreeDataflowHelperFactory(
                         AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
-                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE));
+                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE),
+                localResourceFactoryProvider);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp,
                 splitsAndConstraint.second);
         spec.addRoot(indexCreateOp);
@@ -220,8 +224,9 @@ public class DatasetOperations {
                     + dataset.getDatasetType());
         }
         JobSpecification spec = new JobSpecification();
-        
-        edu.uci.ics.asterix.transaction.management.service.transaction.JobId asterixJobId = JobIdFactory.generateJobId();
+
+        edu.uci.ics.asterix.transaction.management.service.transaction.JobId asterixJobId = JobIdFactory
+                .generateJobId();
 
         ARecordType itemType = (ARecordType) metadata.findType(dataset.getItemTypeName());
         IDataFormat format = metadata.getFormat();

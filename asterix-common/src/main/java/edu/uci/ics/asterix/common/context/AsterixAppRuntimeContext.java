@@ -28,9 +28,9 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
-import edu.uci.ics.hyracks.storage.common.file.IndexLocalResourceRepositoryFactory;
+import edu.uci.ics.hyracks.storage.common.file.PersistentLocalResourceRepositoryFactory;
 import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
-import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactoryFactory;
+import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactoryProvider;
 
 public class AsterixAppRuntimeContext {
     private static final int DEFAULT_BUFFER_CACHE_PAGE_SIZE = 32768;
@@ -69,10 +69,11 @@ public class AsterixAppRuntimeContext {
         lsmIOScheduler = ImmediateScheduler.INSTANCE;
         mergePolicy = new ConstantMergePolicy(lsmIOScheduler, 3);
         opTracker = new ReferenceCountingOperationTracker();
-        ILocalResourceRepositoryFactory indexLocalResourceRepositoryFactory = new IndexLocalResourceRepositoryFactory(
+
+        ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
                 ioMgr);
-        localResourceRepository = indexLocalResourceRepositoryFactory.createRepository();
-        resourceIdFactory = (new ResourceIdFactoryFactory(localResourceRepository)).createResourceIdFactory();
+        localResourceRepository = persistentLocalResourceRepositoryFactory.createRepository();
+        resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
     }
 
     private int getBufferCachePageSize() {

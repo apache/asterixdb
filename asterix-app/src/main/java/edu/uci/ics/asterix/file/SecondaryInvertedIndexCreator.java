@@ -33,6 +33,8 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedInde
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexCreateOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactoryProvider;
+import edu.uci.ics.hyracks.storage.common.file.TransientLocalResourceFactoryProvider;
 
 public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
 
@@ -120,13 +122,16 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
     @Override
     public JobSpecification buildCreationJobSpec() throws AsterixException, AlgebricksException {
         JobSpecification spec = new JobSpecification();
+        //TODO replace the transient one to persistent one
+        ILocalResourceFactoryProvider localResourceFactoryProvider = new TransientLocalResourceFactoryProvider();
         LSMInvertedIndexCreateOperatorDescriptor invIndexCreateOp = new LSMInvertedIndexCreateOperatorDescriptor(spec,
                 AsterixRuntimeComponentsProvider.INSTANCE, fileSplitProviders.first,
                 AsterixRuntimeComponentsProvider.INSTANCE, tokenTypeTraits, tokenComparatorFactories,
                 invListsTypeTraits, primaryComparatorFactories, tokenizerFactory,
                 new LSMInvertedIndexDataflowHelperFactory(AsterixRuntimeComponentsProvider.INSTANCE,
                         AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
-                        AsterixRuntimeComponentsProvider.INSTANCE), NoOpOperationCallbackProvider.INSTANCE);
+                        AsterixRuntimeComponentsProvider.INSTANCE), NoOpOperationCallbackProvider.INSTANCE,
+                localResourceFactoryProvider);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexCreateOp,
                 secondaryPartitionConstraint);
         spec.addRoot(invIndexCreateOp);
