@@ -3,11 +3,11 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks</artifactId>
-  <version>0.2.1-SNAPSHOT</version>
+  <version>0.2.1</version>
   <packaging>pom</packaging>
 
   <properties>
-    <jvm.extraargs></jvm.extraargs>
+    <jvm.extraargs />
   </properties>
 
   <profiles>
@@ -52,9 +52,9 @@
   </build>
 
   <scm>
-    <connection>scm:svn:https://hyracks.googlecode.com/svn/trunk/hyracks</connection>
-    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/trunk/hyracks</developerConnection>
-    <url>http://code.google.com/p/hyracks/source/browse/#svn/trunk/hyracks</url>
+    <connection>scm:svn:https://hyracks.googlecode.com/svn/tags/hyracks-0.2.1</connection>
+    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/tags/hyracks-0.2.1</developerConnection>
+    <url>http://code.google.com/p/hyracks/source/browse/#svn/tags/hyracks-0.2.1</url>
   </scm>
 
   <distributionManagement>

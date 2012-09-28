@@ -5,7 +5,7 @@
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks-algebricks</artifactId>
-    <version>0.2.1-SNAPSHOT</version>
+    <version>0.2.1</version>
   </parent>
 
   <build>
@@ -82,7 +82,7 @@
   <dependency>
   	<groupId>edu.uci.ics.hyracks</groupId>
   	<artifactId>hyracks-algebricks-compiler</artifactId>
-  	<version>0.2.1-SNAPSHOT</version>
+  	<version>0.2.1</version>
   </dependency>
   <dependency>
   	<groupId>junit</groupId>
@@ -93,17 +93,17 @@
   <dependency>
   	<groupId>edu.uci.ics.hyracks</groupId>
   	<artifactId>hyracks-control-cc</artifactId>
-  	<version>0.2.1-SNAPSHOT</version>
+  	<version>0.2.1</version>
   </dependency>
   <dependency>
   	<groupId>edu.uci.ics.hyracks</groupId>
   	<artifactId>hyracks-control-nc</artifactId>
-  	<version>0.2.1-SNAPSHOT</version>
+  	<version>0.2.1</version>
   </dependency>
   <dependency>
   	<groupId>edu.uci.ics.hyracks</groupId>
   	<artifactId>hyracks-data-std</artifactId>
-  	<version>0.2.1-SNAPSHOT</version>
+  	<version>0.2.1</version>
   </dependency>
   </dependencies>
 </project>
