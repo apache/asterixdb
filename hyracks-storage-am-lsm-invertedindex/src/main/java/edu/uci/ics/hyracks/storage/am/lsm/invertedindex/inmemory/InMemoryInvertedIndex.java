@@ -35,7 +35,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
@@ -128,7 +127,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
             }
         }
     }
-    
+
     public void delete(ITupleReference tuple, BTreeAccessor btreeAccessor, IIndexOperationContext ictx)
             throws HyracksDataException, IndexException {
         InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
@@ -145,7 +144,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     }
 
     @Override
-    public long getInMemorySize() {
+    public long getMemoryAllocationSize() {
         InMemoryBufferCache memBufferCache = (InMemoryBufferCache) btree.getBufferCache();
         return memBufferCache.getNumPages() * memBufferCache.getPageSize();
     }
@@ -159,7 +158,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey,
             IIndexOperationContext ictx) throws HyracksDataException, IndexException {
         InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
-        ctx.startOperation(IndexOperation.SEARCH);
+        ctx.setOperation(IndexOperation.SEARCH);
         InMemoryInvertedListCursor inMemListCursor = (InMemoryInvertedListCursor) listCursor;
         inMemListCursor.prepare(ctx.btreeAccessor, ctx.btreePred, ctx.tokenFieldsCmp, ctx.btreeCmp);
         inMemListCursor.reset(searchKey);
@@ -175,11 +174,6 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     @Override
     public IBufferCache getBufferCache() {
         return btree.getBufferCache();
-    }
-
-    @Override
-    public IndexType getIndexType() {
-        return IndexType.INVERTED;
     }
 
     public BTree getBTree() {

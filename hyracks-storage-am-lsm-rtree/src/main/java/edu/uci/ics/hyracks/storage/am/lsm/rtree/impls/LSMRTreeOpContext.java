@@ -57,11 +57,11 @@ public final class LSMRTreeOpContext implements IIndexOperationContext {
                 btreeMetaFrame, btreeCmpFactories, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
     }
 
-    public void startOperation(IndexOperation newOp) {
+    public void setOperation(IndexOperation newOp) {
         if (newOp == IndexOperation.INSERT) {
-            rtreeOpContext.startOperation(newOp);
+            rtreeOpContext.setOperation(newOp);
         } else if (newOp == IndexOperation.DELETE) {
-            btreeOpContext.startOperation(IndexOperation.INSERT);
+            btreeOpContext.setOperation(IndexOperation.INSERT);
         }
         this.op = newOp;
     }

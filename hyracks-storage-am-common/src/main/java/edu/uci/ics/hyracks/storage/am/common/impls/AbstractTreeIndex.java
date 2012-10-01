@@ -345,7 +345,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     }
 
     @Override
-    public long getInMemorySize() {
+    public long getMemoryAllocationSize() {
         return 0;
     }
 }

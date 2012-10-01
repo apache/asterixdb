@@ -57,7 +57,7 @@ public class LSMInvertedIndexOpContext implements IIndexOperationContext {
 
     @Override
     // TODO: Ignore opcallback for now.
-    public void startOperation(IndexOperation newOp) {
+    public void setOperation(IndexOperation newOp) {
         switch (newOp) {
             case INSERT:
             case DELETE:

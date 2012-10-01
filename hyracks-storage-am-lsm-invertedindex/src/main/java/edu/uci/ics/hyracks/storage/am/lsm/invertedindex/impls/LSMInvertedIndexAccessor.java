@@ -49,18 +49,18 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
 
     @Override
     public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
-        ctx.startOperation(IndexOperation.INSERT);
+        ctx.setOperation(IndexOperation.INSERT);
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
     }
 
     @Override
     public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
-        ctx.startOperation(IndexOperation.DELETE);        
+        ctx.setOperation(IndexOperation.DELETE);        
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
     }
     
     public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
-        ctx.startOperation(IndexOperation.SEARCH);
+        ctx.setOperation(IndexOperation.SEARCH);
         lsmHarness.search(cursor, searchPred, ctx, true);
     }
     

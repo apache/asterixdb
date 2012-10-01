@@ -37,32 +37,32 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
 
     @Override
     public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
-        ctx.startOperation(IndexOperation.INSERT);
+        ctx.setOperation(IndexOperation.INSERT);
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
     }
 
     @Override
     public void update(ITupleReference tuple) throws HyracksDataException, IndexException {
         // Update is the same as insert.
-        ctx.startOperation(IndexOperation.UPDATE);
+        ctx.setOperation(IndexOperation.UPDATE);
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
     }
 
     @Override
     public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
-        ctx.startOperation(IndexOperation.DELETE);
+        ctx.setOperation(IndexOperation.DELETE);
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
     }
 
     @Override
     public void upsert(ITupleReference tuple) throws HyracksDataException, IndexException {
-        ctx.startOperation(IndexOperation.UPSERT);
+        ctx.setOperation(IndexOperation.UPSERT);
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
     }
 
     @Override
     public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
-        ctx.startOperation(IndexOperation.SEARCH);
+        ctx.setOperation(IndexOperation.SEARCH);
         lsmHarness.search(cursor, searchPred, ctx, true);
     }
 
@@ -78,7 +78,7 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
 
     @Override
     public void physicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
-        ctx.startOperation(IndexOperation.PHYSICALDELETE);
+        ctx.setOperation(IndexOperation.PHYSICALDELETE);
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
     }
 

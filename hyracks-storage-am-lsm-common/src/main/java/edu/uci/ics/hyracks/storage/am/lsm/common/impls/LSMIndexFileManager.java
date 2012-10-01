@@ -260,9 +260,4 @@ public class LSMIndexFileManager implements ILSMIndexFileManager {
             return -a.interval[1].compareTo(b.interval[1]);
         }
     }
-
-    @Override
-    public IIOManager getIOManager() {
-        return ioManager;
-    }
 }

@@ -50,7 +50,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.UnsortedInputException;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
@@ -769,11 +768,6 @@ public class BTree extends AbstractTreeIndex {
                 .getMetaDataFrameFactory().createFrame(), cmpFactories, modificationCallback, searchCallback);
     }
 
-    @Override
-    public IndexType getIndexType() {
-        return IndexType.BTREE;
-    }
-
     @SuppressWarnings("rawtypes")
     public String printTree(IBTreeLeafFrame leafFrame, IBTreeInteriorFrame interiorFrame,
             ISerializerDeserializer[] keySerdes) throws Exception {
@@ -849,19 +843,19 @@ public class BTree extends AbstractTreeIndex {
 
         @Override
         public void insert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
-            ctx.startOperation(IndexOperation.INSERT);
+            ctx.setOperation(IndexOperation.INSERT);
             btree.insert(tuple, ctx);
         }
 
         @Override
         public void update(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
-            ctx.startOperation(IndexOperation.UPDATE);
+            ctx.setOperation(IndexOperation.UPDATE);
             btree.update(tuple, ctx);
         }
 
         @Override
         public void delete(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
-            ctx.startOperation(IndexOperation.DELETE);
+            ctx.setOperation(IndexOperation.DELETE);
             btree.delete(tuple, ctx);
         }
 
@@ -872,7 +866,7 @@ public class BTree extends AbstractTreeIndex {
 
         public void upsertIfConditionElseInsert(ITupleReference tuple, ITupleAcceptor acceptor)
                 throws HyracksDataException, TreeIndexException {
-            ctx.startOperation(IndexOperation.UPSERT);
+            ctx.setOperation(IndexOperation.UPSERT);
             ctx.acceptor = acceptor;
             btree.upsert(tuple, ctx);
         }
@@ -886,7 +880,7 @@ public class BTree extends AbstractTreeIndex {
         @Override
         public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
                 TreeIndexException {
-            ctx.startOperation(IndexOperation.SEARCH);
+            ctx.setOperation(IndexOperation.SEARCH);
             btree.search((ITreeIndexCursor) cursor, searchPred, ctx);
         }
 
@@ -898,7 +892,7 @@ public class BTree extends AbstractTreeIndex {
 
         @Override
         public void diskOrderScan(ITreeIndexCursor cursor) throws HyracksDataException {
-            ctx.startOperation(IndexOperation.DISKORDERSCAN);
+            ctx.setOperation(IndexOperation.DISKORDERSCAN);
             btree.diskOrderScan(cursor, ctx);
         }
 
@@ -908,7 +902,7 @@ public class BTree extends AbstractTreeIndex {
         public BTreeOpContext getOpContext() {
             return ctx;
         }
-        
+
         public ITreeIndexCursor createCountingSearchCursor() {
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
             return new BTreeCountingSearchCursor(leafFrame, false);

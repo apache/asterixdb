@@ -111,7 +111,7 @@ public class BTreeOpContext implements IIndexOperationContext {
     }
 
     @Override
-    public void startOperation(IndexOperation newOp) {
+    public void setOperation(IndexOperation newOp) {
         if (newOp == IndexOperation.SEARCH || newOp == IndexOperation.DISKORDERSCAN) {
             if (cursorInitialState == null) {
                 cursorInitialState = new BTreeCursorInitialState(null, searchCallback, accessor);

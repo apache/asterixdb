@@ -41,7 +41,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
@@ -76,7 +75,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
-	public class LSMInvertedIndexComponent {
+    public class LSMInvertedIndexComponent {
         private final IInvertedIndex invIndex;
         private final BTree deletedKeysBTree;
 
@@ -93,16 +92,16 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
             return deletedKeysBTree;
         }
     }
-	
+
     protected final LSMHarness lsmHarness;
-    
+
     // In-memory components.
     protected final LSMInvertedIndexComponent memComponent;
     protected final IBufferCache memBufferCache;
     protected final InMemoryFreePageManager memFreePageManager;
     protected final IBinaryTokenizerFactory tokenizerFactory;
     protected FileReference memDeleteKeysBTreeFile = new FileReference(new File("membtree"));
-    
+
     // On-disk components.
     protected final ILSMIndexFileManager fileManager;
     // For creating inverted indexes in flush and merge.
@@ -116,18 +115,18 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     protected final LinkedList<Object> diskComponents = new LinkedList<Object>();
     // Helps to guarantees physical consistency of LSM components.
     protected final ILSMComponentFinalizer componentFinalizer;
-    
+
     // Type traits and comparators for tokens and inverted-list elements.
     protected final ITypeTraits[] invListTypeTraits;
     protected final IBinaryComparatorFactory[] invListCmpFactories;
     protected final ITypeTraits[] tokenTypeTraits;
     protected final IBinaryComparatorFactory[] tokenCmpFactories;
-    
+
     private boolean isActivated = false;
 
     public LSMInvertedIndex(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
-            OnDiskInvertedIndexFactory diskInvIndexFactory, BTreeFactory deletedKeysBTreeFactory, ILSMIndexFileManager fileManager,
-            IFileMapProvider diskFileMapProvider, ITypeTraits[] invListTypeTraits,
+            OnDiskInvertedIndexFactory diskInvIndexFactory, BTreeFactory deletedKeysBTreeFactory,
+            ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizerFactory tokenizerFactory,
             ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
@@ -195,7 +194,8 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         }
     }
 
-    protected IInvertedIndex createDiskInvIndex(OnDiskInvertedIndexFactory invIndexFactory, FileReference dictBTreeFileRef, boolean create) throws HyracksDataException, IndexException {
+    protected IInvertedIndex createDiskInvIndex(OnDiskInvertedIndexFactory invIndexFactory,
+            FileReference dictBTreeFileRef, boolean create) throws HyracksDataException, IndexException {
         IInvertedIndex invIndex = invIndexFactory.createIndexInstance(dictBTreeFileRef);
         if (create) {
             invIndex.create();
@@ -204,8 +204,9 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         invIndex.activate();
         return invIndex;
     }
-    
-    protected ITreeIndex createDiskTree(BTreeFactory btreeFactory, FileReference btreeFileRef, boolean create) throws HyracksDataException, IndexException {
+
+    protected ITreeIndex createDiskTree(BTreeFactory btreeFactory, FileReference btreeFileRef, boolean create)
+            throws HyracksDataException, IndexException {
         ITreeIndex btree = btreeFactory.createIndexInstance(btreeFileRef);
         if (create) {
             btree.create();
@@ -214,7 +215,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         btree.activate();
         return btree;
     }
-    
+
     @Override
     public void clear() throws HyracksDataException {
         if (!isActivated) {
@@ -268,7 +269,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         }
 
         memComponent.getInvIndex().destroy();
-        memComponent.getDeletedKeysBTree().destroy();        
+        memComponent.getDeletedKeysBTree().destroy();
         for (Object o : diskComponents) {
             LSMInvertedIndexComponent component = (LSMInvertedIndexComponent) o;
             component.getInvIndex().destroy();
@@ -305,7 +306,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws IndexException {
         return new LSMInvertedIndexBulkLoader(fillFactor, verifyInput);
     }
-        
+
     /**
      * The keys in the in-memory deleted-keys BTree only refer to on-disk components.
      * We delete documents from the in-memory inverted index by deleting its entries directly,
@@ -321,12 +322,12 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
      * - Insert key into deleted-keys BTree.
      */
     @Override
-    public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ictx) throws HyracksDataException,
-            IndexException {
+    public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ictx)
+            throws HyracksDataException, IndexException {
         LSMInvertedIndexOpContext ctx = (LSMInvertedIndexOpContext) ictx;
         ctx.modificationCallback.before(tuple);
         switch (ctx.getIndexOp()) {
-            case INSERT: {                
+            case INSERT: {
                 // Insert into the in-memory inverted index.                
                 ctx.memInvIndexAccessor.insert(tuple);
                 break;
@@ -352,8 +353,9 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     }
 
     @Override
-    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOperationContext ictx,
-            boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, IndexException {
+    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred,
+            IIndexOperationContext ictx, boolean includeMemComponent, AtomicInteger searcherRefCount)
+            throws HyracksDataException, IndexException {
         int numComponents = (includeMemComponent) ? diskComponents.size() : diskComponents.size() + 1;
         ArrayList<IIndexAccessor> indexAccessors = new ArrayList<IIndexAccessor>(numComponents);
         ArrayList<IIndexAccessor> deletedKeysBTreeAccessors = new ArrayList<IIndexAccessor>(numComponents);
@@ -398,7 +400,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         }
         return initState;
     }
-    
+
     /**
      * Returns a permuting tuple reference that projects away the document field(s) of a tuple, only leaving the key fields.
      */
@@ -411,7 +413,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         }
         return new PermutingTupleReference(keyFieldPermutation);
     }
-    
+
     @Override
     public Object merge(List<Object> mergedComponents, ILSMIOOperation operation) throws HyracksDataException,
             IndexException {
@@ -439,15 +441,15 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
 
         // Add the merged components for cleanup.
         mergedComponents.addAll(mergeOp.getMergingComponents());
-        
+
         return new LSMInvertedIndexComponent(mergedDiskInvertedIndex, deletedKeysBTree);
     }
-    
+
     @Override
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
             IndexException {
         LSMInvertedIndexOpContext ctx = createOpContext(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-        ctx.startOperation(IndexOperation.SEARCH);
+        ctx.setOperation(IndexOperation.SEARCH);
         IIndexCursor cursor = new LSMInvertedIndexRangeSearchCursor();
         RangePredicate mergePred = new RangePredicate(null, null, true, true, null, null);
 
@@ -478,7 +480,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
 
         return mergeOp;
     }
-    
+
     @Override
     public void addMergedComponent(Object newComponent, List<Object> mergedComponents) {
         diskComponents.removeAll(mergedComponents);
@@ -531,8 +533,8 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
                 flushOp.getDeletedKeysBTreeFlushTarget(), true);
 
         // Create a scan cursor on the deleted keys BTree underlying the in-memory inverted index.
-        IIndexAccessor deletedKeysBTreeAccessor = memComponent.getDeletedKeysBTree()
-                .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        IIndexAccessor deletedKeysBTreeAccessor = memComponent.getDeletedKeysBTree().createAccessor(
+                NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         IIndexCursor deletedKeysScanCursor = deletedKeysBTreeAccessor.createSearchCursor();
         deletedKeysBTreeAccessor.search(deletedKeysScanCursor, nullPred);
 
@@ -609,7 +611,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
             lsmHarness.addBulkLoadedComponent(diskComponent);
         }
     }
-    
+
     @Override
     public void resetInMemoryComponent() throws HyracksDataException {
         memFreePageManager.reset();
@@ -618,16 +620,16 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     }
 
     @Override
-    public long getInMemorySize() {
+    public long getMemoryAllocationSize() {
         InMemoryBufferCache memBufferCache = (InMemoryBufferCache) memComponent.getInvIndex().getBufferCache();
         return memBufferCache.getNumPages() * memBufferCache.getPageSize();
     }
-    
+
     @Override
     public InMemoryFreePageManager getInMemoryFreePageManager() {
         return memFreePageManager;
     }
-    
+
     @Override
     public List<Object> getDiskComponents() {
         return diskComponents;
@@ -637,7 +639,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     public ILSMComponentFinalizer getComponentFinalizer() {
         return componentFinalizer;
     }
-    
+
     @Override
     public ILSMFlushController getFlushController() {
         return lsmHarness.getFlushController();
@@ -659,18 +661,13 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     }
 
     @Override
-    public IndexType getIndexType() {
-        return IndexType.INVERTED;
-    }
-
-    @Override
     public IInvertedListCursor createInvertedListCursor() {
         throw new UnsupportedOperationException("Cannot create inverted list cursor on lsm inverted index.");
     }
 
     @Override
-    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey, IIndexOperationContext ictx)
-            throws HyracksDataException, IndexException {
+    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey,
+            IIndexOperationContext ictx) throws HyracksDataException, IndexException {
         throw new UnsupportedOperationException("Cannot open inverted list cursor on lsm inverted index.");
     }
 
@@ -693,7 +690,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     public IBinaryComparatorFactory[] getTokenCmpFactories() {
         return tokenCmpFactories;
     }
-    
+
     public IBinaryTokenizerFactory getTokenizerFactory() {
         return tokenizerFactory;
     }

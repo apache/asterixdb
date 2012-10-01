@@ -50,7 +50,7 @@ public class InMemoryInvertedIndexOpContext implements IIndexOperationContext {
     }
 
     @Override
-    public void startOperation(IndexOperation newOp) {
+    public void setOperation(IndexOperation newOp) {
         switch (newOp) {
             case INSERT: 
             case DELETE: {

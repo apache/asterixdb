@@ -33,7 +33,7 @@ public class IndexLifecycleManager implements IIndexLifecycleManager {
         }
 
         info.index.deactivate();
-        memoryUsed -= info.index.getInMemorySize();
+        memoryUsed -= info.index.getMemoryAllocationSize();
         info.isOpen = false;
 
         return true;
@@ -68,7 +68,7 @@ public class IndexLifecycleManager implements IIndexLifecycleManager {
 
         if (info.isOpen) {
             info.index.deactivate();
-            memoryUsed -= info.index.getInMemorySize();
+            memoryUsed -= info.index.getMemoryAllocationSize();
         }
     }
 
@@ -80,7 +80,7 @@ public class IndexLifecycleManager implements IIndexLifecycleManager {
                     + " since it does not exist.");
         }
 
-        long inMemorySize = info.index.getInMemorySize();
+        long inMemorySize = info.index.getMemoryAllocationSize();
         while (memoryUsed + inMemorySize > memoryBudget) {
             if (!evictCandidateIndex()) {
                 throw new HyracksDataException("Cannot activate index since memory budget would be exceeded.");

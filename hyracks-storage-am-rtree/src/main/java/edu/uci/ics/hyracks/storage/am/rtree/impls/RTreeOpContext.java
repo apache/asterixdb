@@ -83,7 +83,7 @@ public class RTreeOpContext implements IIndexOperationContext {
     }
 
     @Override
-    public void startOperation(IndexOperation newOp) {
+    public void setOperation(IndexOperation newOp) {
         if (op != null && newOp == op) {
             return;
         }

@@ -53,13 +53,13 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
 
     @Override
     public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
-        opCtx.startOperation(IndexOperation.INSERT);
+        opCtx.setOperation(IndexOperation.INSERT);
         index.insert(tuple, btreeAccessor, opCtx);
     }
 
     @Override
     public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
-        opCtx.startOperation(IndexOperation.DELETE);
+        opCtx.setOperation(IndexOperation.DELETE);
         index.delete(tuple, btreeAccessor, opCtx);
     }
     

@@ -115,15 +115,10 @@ public interface IIndex {
     public IBufferCache getBufferCache();
 
     /**
-     * @return the {@link IndexType} of this index.
-     */
-    public IndexType getIndexType();
-    
-    /**
      * @return the size, in bytes, of pre-allocated memory space that this index was allotted.
      */
-    public long getInMemorySize();
-    
+    public long getMemoryAllocationSize();
+
     /**
      * @param fillFactor
      * @param verifyInput

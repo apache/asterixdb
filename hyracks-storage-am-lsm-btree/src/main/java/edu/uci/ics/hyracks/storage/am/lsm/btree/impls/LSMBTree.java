@@ -43,7 +43,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.api.IndexType;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -212,8 +211,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     }
 
     @Override
-    public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ictx) throws HyracksDataException,
-            IndexException {
+    public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ictx)
+            throws HyracksDataException, IndexException {
         LSMBTreeOpContext ctx = (LSMBTreeOpContext) ictx;
 
         switch (ctx.getIndexOp()) {
@@ -322,8 +321,9 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         return diskBTree;
     }
 
-    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred, IIndexOperationContext ictx,
-            boolean includeMemComponent, AtomicInteger searcherRefCount) throws HyracksDataException, IndexException {
+    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred,
+            IIndexOperationContext ictx, boolean includeMemComponent, AtomicInteger searcherRefCount)
+            throws HyracksDataException, IndexException {
         LSMBTreeOpContext ctx = (LSMBTreeOpContext) ictx;
         LSMBTreeRangeSearchCursor lsmTreeCursor = (LSMBTreeRangeSearchCursor) cursor;
         int numDiskBTrees = diskComponents.size();
@@ -485,11 +485,6 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     }
 
     @Override
-    public IndexType getIndexType() {
-        return memBTree.getIndexType();
-    }
-
-    @Override
     public int getFileId() {
         return memBTree.getFileId();
     }
@@ -600,7 +595,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     }
 
     @Override
-    public long getInMemorySize() {
+    public long getMemoryAllocationSize() {
         InMemoryBufferCache memBufferCache = (InMemoryBufferCache) memBTree.getBufferCache();
         return memBufferCache.getNumPages() * memBufferCache.getPageSize();
     }

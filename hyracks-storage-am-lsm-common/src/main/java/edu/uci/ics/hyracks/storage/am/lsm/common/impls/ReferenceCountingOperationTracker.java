@@ -32,7 +32,7 @@ public class ReferenceCountingOperationTracker implements ILSMOperationTracker {
     }
 
     @Override
-    public void threadExit(final ILSMIndex index) {
+    public void threadExit(final ILSMIndex index) throws HyracksDataException {
         synchronized (this) {
             threadRefCount--;
 

@@ -60,7 +60,7 @@ public final class LSMBTreeOpContext implements IIndexOperationContext {
     }
 
     @Override
-    public void startOperation(IndexOperation newOp) {
+    public void setOperation(IndexOperation newOp) {
         this.op = newOp;
         switch (newOp) {
             case SEARCH:
