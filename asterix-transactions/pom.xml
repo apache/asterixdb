@@ -28,7 +28,7 @@
 	    <dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-am-common</artifactId>
-  		<version>0.2.1-SNAPSHOT</version>
+  		<version>0.2.2-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
