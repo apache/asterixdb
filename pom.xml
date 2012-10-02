@@ -4,11 +4,11 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks</artifactId>
-  <version>0.2.1-SNAPSHOT</version>
+  <version>0.2.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <properties>
-    <jvm.extraargs></jvm.extraargs>
+    <jvm.extraargs />
   </properties>
 
   <build>
