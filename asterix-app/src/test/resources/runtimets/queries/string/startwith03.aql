@@ -25,7 +25,7 @@ insert into dataset testds({"name":"Johnny Walker"});
 insert into dataset testds({"name":"David Smith"});
 insert into dataset testds({"name":"Not a Name"});
 
-write output to nc1:"rttest/string_startwith03.adm;
+write output to nc1:"rttest/string_startwith03.adm";
 
 // Return all names that start with John
 
