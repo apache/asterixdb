@@ -32,6 +32,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeBulkLoader;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
@@ -47,6 +48,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -58,7 +60,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMFlushOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
@@ -77,7 +78,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     // In-memory components.   
     private final BTree memBTree;
     private final FileReference memBtreeFile = new FileReference(new File("memBtree"));
-    private final InMemoryFreePageManager memFreePageManager;
+    private final IInMemoryBufferCache memBufferCache;
+    private final IInMemoryFreePageManager memFreePageManager;
     private final AntimatterAwareTupleAcceptor acceptor = new AntimatterAwareTupleAcceptor();
 
     // On-disk components.    
@@ -101,7 +103,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
 
     private boolean isActivated = false;
 
-    public LSMBTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
+    public LSMBTree(IInMemoryBufferCache memBufferCache, IInMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMIndexFileManager fileNameManager,
             TreeIndexFactory<BTree> diskBTreeFactory, TreeIndexFactory<BTree> bulkLoadBTreeFactory,
@@ -111,6 +113,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         memBTree = new BTree(memBufferCache, ((InMemoryBufferCache) memBufferCache).getFileMapProvider(),
                 memFreePageManager, interiorFrameFactory, insertLeafFrameFactory, cmpFactories, fieldCount,
                 memBtreeFile);
+        this.memBufferCache = memBufferCache;
         this.memFreePageManager = memFreePageManager;
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
@@ -403,8 +406,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     }
 
     @Override
-    public InMemoryFreePageManager getInMemoryFreePageManager() {
-        return (InMemoryFreePageManager) memBTree.getFreePageManager();
+    public IInMemoryFreePageManager getInMemoryFreePageManager() {
+        return memFreePageManager;
     }
 
     @Override

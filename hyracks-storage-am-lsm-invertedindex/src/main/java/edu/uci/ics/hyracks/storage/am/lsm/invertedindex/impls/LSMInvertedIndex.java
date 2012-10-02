@@ -32,6 +32,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
+import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
@@ -46,6 +47,7 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -57,7 +59,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
@@ -97,8 +98,8 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
 
     // In-memory components.
     protected final LSMInvertedIndexComponent memComponent;
-    protected final IBufferCache memBufferCache;
-    protected final InMemoryFreePageManager memFreePageManager;
+    protected final IInMemoryBufferCache memBufferCache;
+    protected final IInMemoryFreePageManager memFreePageManager;
     protected final IBinaryTokenizerFactory tokenizerFactory;
     protected FileReference memDeleteKeysBTreeFile = new FileReference(new File("membtree"));
 
@@ -124,7 +125,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
 
     private boolean isActivated = false;
 
-    public LSMInvertedIndex(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
+    public LSMInvertedIndex(IInMemoryBufferCache memBufferCache, IInMemoryFreePageManager memFreePageManager,
             OnDiskInvertedIndexFactory diskInvIndexFactory, BTreeFactory deletedKeysBTreeFactory,
             ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
@@ -626,7 +627,7 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
     }
 
     @Override
-    public InMemoryFreePageManager getInMemoryFreePageManager() {
+    public IInMemoryFreePageManager getInMemoryFreePageManager() {
         return memFreePageManager;
     }
 

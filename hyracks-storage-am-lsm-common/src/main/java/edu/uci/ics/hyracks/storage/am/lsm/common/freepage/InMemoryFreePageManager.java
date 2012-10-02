@@ -18,11 +18,11 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.freepage;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 
-public class InMemoryFreePageManager implements IFreePageManager {
+public class InMemoryFreePageManager implements IInMemoryFreePageManager {
     protected final int capacity;
     protected final AtomicInteger currentPageId = new AtomicInteger();
     protected final ITreeIndexMetaDataFrameFactory metaDataFrameFactory;

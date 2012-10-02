@@ -28,14 +28,14 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushController;
@@ -64,8 +64,8 @@ public class LSMRTreeTestHarness {
     protected IOManager ioManager;
     protected IBufferCache diskBufferCache;
     protected IFileMapProvider diskFileMapProvider;
-    protected DualIndexInMemoryBufferCache memBufferCache;
-    protected DualIndexInMemoryFreePageManager memFreePageManager;
+    protected IInMemoryBufferCache memBufferCache;
+    protected IInMemoryFreePageManager memFreePageManager;
     protected IHyracksTaskContext ctx;
     protected ILSMIOOperationScheduler ioScheduler;
     protected ILSMFlushController flushController;
@@ -174,11 +174,11 @@ public class LSMRTreeTestHarness {
         return diskFileMapProvider;
     }
 
-    public InMemoryBufferCache getMemBufferCache() {
+    public IInMemoryBufferCache getMemBufferCache() {
         return memBufferCache;
     }
 
-    public InMemoryFreePageManager getMemFreePageManager() {
+    public IInMemoryFreePageManager getMemFreePageManager() {
         return memFreePageManager;
     }
 

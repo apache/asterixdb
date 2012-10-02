@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyExcept
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
@@ -36,6 +37,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -45,7 +47,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
@@ -83,7 +84,8 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
 
     // In-memory components.
     protected final LSMRTreeComponent memComponent;
-    protected final InMemoryFreePageManager memFreePageManager;
+    protected final IInMemoryBufferCache memBufferCache;
+    protected final IInMemoryFreePageManager memFreePageManager;
     protected FileReference memRtreeFile = new FileReference(new File("memrtree"));
     protected FileReference memBtreeFile = new FileReference(new File("membtree"));
 
@@ -116,7 +118,7 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
 
     private boolean isActivated = false;
 
-    public AbstractLSMRTree(IBufferCache memBufferCache, InMemoryFreePageManager memFreePageManager,
+    public AbstractLSMRTree(IInMemoryBufferCache memBufferCache, IInMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
             ILSMIndexFileManager fileManager, TreeIndexFactory<RTree> diskRTreeFactory,
@@ -132,6 +134,7 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
                 memFreePageManager, btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmpFactories, fieldCount,
                 memRtreeFile);
         memComponent = new LSMRTreeComponent(memRTree, memBTree);
+        this.memBufferCache = memBufferCache;
         this.memFreePageManager = memFreePageManager;
         this.diskBufferCache = diskRTreeFactory.getBufferCache();
         this.diskFileMapProvider = diskFileMapProvider;
@@ -330,7 +333,7 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
     }
 
     @Override
-    public InMemoryFreePageManager getInMemoryFreePageManager() {
+    public IInMemoryFreePageManager getInMemoryFreePageManager() {
         return memFreePageManager;
     }
 
