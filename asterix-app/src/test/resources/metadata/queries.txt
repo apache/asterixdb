@@ -25,3 +25,7 @@ metadata_node.aql
 metadata_nodegroup.aql
 custord_q9.aql
 custord_q10.aql
+regress_01_create_type.aql
+regress_02_refer_existing_type.aql
+regress_03_repeated_create_drop.aql
+regress_04_drop_nested_type.aql

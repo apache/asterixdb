@@ -3,4 +3,5 @@ use dataverse custord;
 write output to nc1:"rttest/custord_q2.adm";
       
 for $c in dataset('Customers')
+order by $c.cid
 return $c.address

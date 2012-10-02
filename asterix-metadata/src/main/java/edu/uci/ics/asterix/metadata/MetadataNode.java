@@ -440,9 +440,10 @@ public class MetadataNode implements IMetadataNode {
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'datatype' dataset.
             ITupleReference tuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.DATATYPE_DATASET, searchKey);
+            // This call uses the secondary index on datatype. Get nested types before deleting entry from secondary index.
+            List<String> nestedTypes = getNestedDatatypeNames(jobId, dataverseName, datatypeName);
             deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.DATATYPE_DATASET, tuple);
             deleteFromDatatypeSecondaryIndex(jobId, dataverseName, datatypeName);
-            List<String> nestedTypes = getNestedDatatypeNames(jobId, dataverseName, datatypeName);
             for (String nestedType : nestedTypes) {
                 Datatype dt = getDatatype(jobId, dataverseName, nestedType);
                 if (dt != null && dt.getIsAnonymous()) {
