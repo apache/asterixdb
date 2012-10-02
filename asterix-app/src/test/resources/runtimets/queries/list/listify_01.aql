@@ -7,8 +7,3 @@ write output to nc1:"rttest/list_listify_01.adm";
 let $token_list := 
   for $token in [1, 2, 3] return $token
 return $token_list
-
-
-
-
-
