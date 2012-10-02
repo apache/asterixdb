@@ -163,10 +163,6 @@ public class AqlCompiledMetadataDeclarations {
         return ng.getNodeNames();
     }
 
-    public String[] getStores(String nodeName) {
-        return stores.get(nodeName);
-    }
-
     public Map<String, String[]> getAllStores() {
         return stores;
     }
@@ -180,13 +176,13 @@ public class AqlCompiledMetadataDeclarations {
     }
 
     public List<Index> getDatasetIndexes(String dataverseName, String datasetName) throws AlgebricksException {
-    	try {
+        try {
             return metadataManager.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
         } catch (MetadataException e) {
             throw new AlgebricksException(e);
         }
     }
-    
+
     public Index getDatasetPrimaryIndex(String dataverseName, String datasetName) throws AlgebricksException {
         try {
             return metadataManager.getIndex(mdTxnCtx, dataverseName, datasetName, datasetName);
@@ -202,7 +198,7 @@ public class AqlCompiledMetadataDeclarations {
             throw new AlgebricksException(e);
         }
     }
-    
+
     public void setOutputFile(FileSplit outputFile) {
         this.outputFile = outputFile;
     }
