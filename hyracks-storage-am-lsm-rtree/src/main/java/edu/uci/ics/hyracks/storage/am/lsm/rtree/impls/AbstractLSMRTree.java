@@ -40,6 +40,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
@@ -76,7 +77,7 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
         }
     }
 
-    protected final LSMHarness lsmHarness;
+    protected final ILSMHarness lsmHarness;
 
     protected final ILinearizeComparatorFactory linearizer;
     protected final int[] comparatorFields;
@@ -86,14 +87,12 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
     protected final LSMRTreeComponent memComponent;
     protected final IInMemoryBufferCache memBufferCache;
     protected final IInMemoryFreePageManager memFreePageManager;
-    protected FileReference memRtreeFile = new FileReference(new File("memrtree"));
-    protected FileReference memBtreeFile = new FileReference(new File("membtree"));
 
     // This is used to estimate number of tuples in the memory RTree and BTree
     // for efficient memory allocation in the sort operation prior to flushing
-    protected int memRTreeTuples = 0;
-    protected int memBTreeTuples = 0;
-    protected TreeTupleSorter rTreeTupleSorter = null;
+    protected int memRTreeTuples;
+    protected int memBTreeTuples;
+    protected TreeTupleSorter rTreeTupleSorter;
 
     // On-disk components.
     protected final ILSMIndexFileManager fileManager;
@@ -103,7 +102,7 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
     protected final TreeIndexFactory<RTree> diskRTreeFactory;
     // List of LSMRTreeComponent instances. Using Object for better sharing via
     // ILSMIndex + LSMHarness.
-    protected final LinkedList<Object> diskComponents = new LinkedList<Object>();
+    protected final LinkedList<Object> diskComponents;
     // Helps to guarantees physical consistency of LSM components.
     protected final ILSMComponentFinalizer componentFinalizer;
 
@@ -116,7 +115,7 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
     protected final ITreeIndexFrameFactory rtreeLeafFrameFactory;
     protected final ITreeIndexFrameFactory btreeLeafFrameFactory;
 
-    private boolean isActivated = false;
+    private boolean isActivated;
 
     public AbstractLSMRTree(IInMemoryBufferCache memBufferCache, IInMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
@@ -129,10 +128,10 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
             ILSMIOOperationScheduler ioScheduler) {
         RTree memRTree = new RTree(memBufferCache, ((InMemoryBufferCache) memBufferCache).getFileMapProvider(),
                 memFreePageManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories, fieldCount,
-                memBtreeFile);
+                new FileReference(new File("membtree")));
         BTree memBTree = new BTree(memBufferCache, ((InMemoryBufferCache) memBufferCache).getFileMapProvider(),
                 memFreePageManager, btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmpFactories, fieldCount,
-                memRtreeFile);
+                new FileReference(new File("memrtree")));
         memComponent = new LSMRTreeComponent(memRTree, memBTree);
         this.memBufferCache = memBufferCache;
         this.memFreePageManager = memFreePageManager;
@@ -151,6 +150,11 @@ public abstract class AbstractLSMRTree implements ILSMIndex, ITreeIndex {
         this.linearizer = linearizer;
         this.comparatorFields = comparatorFields;
         this.linearizerArray = linearizerArray;
+        diskComponents = new LinkedList<Object>();
+        memRTreeTuples = 0;
+        memBTreeTuples = 0;
+        rTreeTupleSorter = null;
+        isActivated = false;
     }
 
     @Override

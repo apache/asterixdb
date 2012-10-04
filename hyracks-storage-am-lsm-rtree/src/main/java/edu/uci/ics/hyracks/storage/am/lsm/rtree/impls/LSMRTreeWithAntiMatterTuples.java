@@ -45,6 +45,7 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -52,7 +53,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMFlushOperation;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexComponentFinalizer;
@@ -65,7 +65,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
 
-    private TreeTupleSorter bTreeTupleSorter = null;
+    private TreeTupleSorter bTreeTupleSorter;
 
     // On-disk components.
     // For creating RTree's used in bulk load. Different from diskRTreeFactory
@@ -86,7 +86,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
                 new TreeIndexComponentFinalizer(diskFileMapProvider), fieldCount, rtreeCmpFactories, btreeCmpFactories,
                 linearizer, comparatorFields, linearizerArray, flushController, mergePolicy, opTracker, ioScheduler);
         this.bulkLoadRTreeFactory = bulkLoadRTreeFactory;
-
+        this.bTreeTupleSorter = null;
     }
 
     @Override
@@ -309,7 +309,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     }
 
     public class LSMRTreeWithAntiMatterTuplesAccessor extends LSMTreeIndexAccessor {
-        public LSMRTreeWithAntiMatterTuplesAccessor(LSMHarness lsmHarness, IIndexOperationContext ctx) {
+        public LSMRTreeWithAntiMatterTuplesAccessor(ILSMHarness lsmHarness, IIndexOperationContext ctx) {
             super(lsmHarness, ctx);
         }
 

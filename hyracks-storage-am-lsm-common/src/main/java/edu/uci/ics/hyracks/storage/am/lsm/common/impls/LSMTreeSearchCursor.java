@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -38,7 +39,7 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
     protected boolean needPush;
     protected boolean includeMemComponent;
     protected AtomicInteger searcherRefCount;
-    protected LSMHarness lsmHarness;
+    protected ILSMHarness lsmHarness;
 
     public LSMTreeSearchCursor() {
         outputElement = null;

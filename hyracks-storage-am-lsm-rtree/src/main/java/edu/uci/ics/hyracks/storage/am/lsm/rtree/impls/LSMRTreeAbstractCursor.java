@@ -11,7 +11,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
@@ -40,7 +40,7 @@ public abstract class LSMRTreeAbstractCursor {
     protected ITupleReference frameTuple;
     protected AtomicInteger searcherRefCount;
     protected boolean includeMemRTree;
-    protected LSMHarness lsmHarness;
+    protected ILSMHarness lsmHarness;
     protected boolean foundNext;
 
     public LSMRTreeAbstractCursor() {

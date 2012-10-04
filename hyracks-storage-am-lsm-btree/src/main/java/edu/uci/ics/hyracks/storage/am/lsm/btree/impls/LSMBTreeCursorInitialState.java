@@ -23,7 +23,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMBTreeCursorInitialState implements ICursorInitialState {
@@ -33,14 +33,14 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
     private MultiComparator cmp;
     private final boolean includeMemComponent;
     private final AtomicInteger searcherfRefCount;
-    private final LSMHarness lsmHarness;
+    private final ILSMHarness lsmHarness;
 
     private final IIndexAccessor memBtreeAccessor;
     private final ISearchPredicate predicate;
     private ISearchOperationCallback searchCallback;
 
     public LSMBTreeCursorInitialState(int numBTrees, ITreeIndexFrameFactory leafFrameFactory, MultiComparator cmp,
-            boolean includeMemComponent, AtomicInteger searcherfRefCount, LSMHarness lsmHarness,
+            boolean includeMemComponent, AtomicInteger searcherfRefCount, ILSMHarness lsmHarness,
             IIndexAccessor memBtreeAccessor, ISearchPredicate predicate, ISearchOperationCallback searchCallback) {
         this.numBTrees = numBTrees;
         this.leafFrameFactory = leafFrameFactory;
@@ -78,7 +78,7 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
         return includeMemComponent;
     }
 
-    public LSMHarness getLSMHarness() {
+    public ILSMHarness getLSMHarness() {
         return lsmHarness;
     }
 

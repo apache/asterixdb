@@ -32,7 +32,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree.LSMBTreeIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree.LSMBTreeAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeInProgressException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
@@ -53,7 +53,7 @@ public class LSMBTreeTestWorker extends AbstractIndexTestWorker {
 
     @Override
     public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, IndexException {
-        LSMBTreeIndexAccessor accessor = (LSMBTreeIndexAccessor) indexAccessor;
+        LSMBTreeAccessor accessor = (LSMBTreeAccessor) indexAccessor;
         IIndexCursor searchCursor = accessor.createSearchCursor();
         MultiComparator cmp = accessor.getMultiComparator();
         RangePredicate rangePred = new RangePredicate(tuple, tuple, true, true, cmp, cmp);

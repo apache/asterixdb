@@ -24,14 +24,14 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialState {
 
     private final boolean includeMemComponent;
     private final AtomicInteger searcherfRefCount;
-    private final LSMHarness lsmHarness;
+    private final ILSMHarness lsmHarness;
     private final List<IIndexAccessor> indexAccessors;
     private final List<IIndexAccessor> deletedKeysBTreeAccessors;
     private final LSMInvertedIndexOpContext ctx;
@@ -43,7 +43,7 @@ public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialS
     public LSMInvertedIndexSearchCursorInitialState(final MultiComparator keyCmp,
             PermutingTupleReference keysOnlyTuple, List<IIndexAccessor> indexAccessors,
             List<IIndexAccessor> deletedKeysBTreeAccessors, IIndexOperationContext ctx, boolean includeMemComponent,
-            AtomicInteger searcherfRefCount, LSMHarness lsmHarness) {
+            AtomicInteger searcherfRefCount, ILSMHarness lsmHarness) {
         this.keyCmp = keyCmp;
         this.keysOnlyTuple = keysOnlyTuple;
         this.indexAccessors = indexAccessors;
@@ -76,7 +76,7 @@ public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialS
         return includeMemComponent;
     }
 
-    public LSMHarness getLSMHarness() {
+    public ILSMHarness getLSMHarness() {
         return lsmHarness;
     }
 
@@ -103,15 +103,15 @@ public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialS
     public void setOriginialKeyComparator(MultiComparator originalCmp) {
         this.originalCmp = originalCmp;
     }
-    
+
     public MultiComparator getKeyComparator() {
         return keyCmp;
     }
-    
+
     public List<IIndexAccessor> getDeletedKeysBTreeAccessors() {
         return deletedKeysBTreeAccessors;
     }
-    
+
     public PermutingTupleReference getKeysOnlyTuple() {
         return keysOnlyTuple;
     }

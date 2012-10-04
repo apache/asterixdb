@@ -50,6 +50,7 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -94,36 +95,33 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
         }
     }
 
-    protected final LSMHarness lsmHarness;
+    private final ILSMHarness lsmHarness;
 
     // In-memory components.
-    protected final LSMInvertedIndexComponent memComponent;
-    protected final IInMemoryBufferCache memBufferCache;
-    protected final IInMemoryFreePageManager memFreePageManager;
-    protected final IBinaryTokenizerFactory tokenizerFactory;
-    protected FileReference memDeleteKeysBTreeFile = new FileReference(new File("membtree"));
+    private final LSMInvertedIndexComponent memComponent;
+    private final IInMemoryFreePageManager memFreePageManager;
+    private final IBinaryTokenizerFactory tokenizerFactory;
 
     // On-disk components.
-    protected final ILSMIndexFileManager fileManager;
+    private final ILSMIndexFileManager fileManager;
     // For creating inverted indexes in flush and merge.
-    protected final OnDiskInvertedIndexFactory diskInvIndexFactory;
+    private final OnDiskInvertedIndexFactory diskInvIndexFactory;
     // For creating deleted-keys BTrees in flush and merge.
-    protected final BTreeFactory deletedKeysBTreeFactory;
-    protected final IBufferCache diskBufferCache;
-    protected final IFileMapProvider diskFileMapProvider;
+    private final BTreeFactory deletedKeysBTreeFactory;
+    private final IBufferCache diskBufferCache;
     // List of LSMInvertedIndexComponent instances. Using Object for better sharing via
     // ILSMIndex + LSMHarness.
-    protected final LinkedList<Object> diskComponents = new LinkedList<Object>();
+    private final LinkedList<Object> diskComponents;
     // Helps to guarantees physical consistency of LSM components.
-    protected final ILSMComponentFinalizer componentFinalizer;
+    private final ILSMComponentFinalizer componentFinalizer;
 
     // Type traits and comparators for tokens and inverted-list elements.
-    protected final ITypeTraits[] invListTypeTraits;
-    protected final IBinaryComparatorFactory[] invListCmpFactories;
-    protected final ITypeTraits[] tokenTypeTraits;
-    protected final IBinaryComparatorFactory[] tokenCmpFactories;
+    private final ITypeTraits[] invListTypeTraits;
+    private final IBinaryComparatorFactory[] invListCmpFactories;
+    private final ITypeTraits[] tokenTypeTraits;
+    private final IBinaryComparatorFactory[] tokenCmpFactories;
 
-    private boolean isActivated = false;
+    private boolean isActivated;
 
     public LSMInvertedIndex(IInMemoryBufferCache memBufferCache, IInMemoryFreePageManager memFreePageManager,
             OnDiskInvertedIndexFactory diskInvIndexFactory, BTreeFactory deletedKeysBTreeFactory,
@@ -137,22 +135,22 @@ public class LSMInvertedIndex implements ILSMIndex, IInvertedIndex {
                 tokenizerFactory);
         BTree deleteKeysBTree = BTreeUtils.createBTree(memBufferCache, memFreePageManager,
                 ((InMemoryBufferCache) memBufferCache).getFileMapProvider(), invListTypeTraits, invListCmpFactories,
-                BTreeLeafFrameType.REGULAR_NSM, memDeleteKeysBTreeFile);
+                BTreeLeafFrameType.REGULAR_NSM, new FileReference(new File("membtree")));
         memComponent = new LSMInvertedIndexComponent(memInvIndex, deleteKeysBTree);
-        this.memBufferCache = memBufferCache;
         this.memFreePageManager = memFreePageManager;
         this.tokenizerFactory = tokenizerFactory;
         this.fileManager = fileManager;
         this.diskInvIndexFactory = diskInvIndexFactory;
         this.deletedKeysBTreeFactory = deletedKeysBTreeFactory;
         this.diskBufferCache = diskInvIndexFactory.getBufferCache();
-        this.diskFileMapProvider = diskFileMapProvider;
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
         this.lsmHarness = new LSMHarness(this, flushController, mergePolicy, opTracker, ioScheduler);
         this.componentFinalizer = new LSMInvertedIndexComponentFinalizer(diskFileMapProvider);
+        diskComponents = new LinkedList<Object>();
+        isActivated = false;
     }
 
     @Override

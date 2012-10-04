@@ -4,7 +4,8 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.ITupleAcceptor;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
 
-public class AntimatterAwareTupleAcceptor implements ITupleAcceptor {
+public enum AntimatterAwareTupleAcceptor implements ITupleAcceptor {
+    INSTANCE;
 
     @Override
     public boolean accept(ITupleReference tuple) {

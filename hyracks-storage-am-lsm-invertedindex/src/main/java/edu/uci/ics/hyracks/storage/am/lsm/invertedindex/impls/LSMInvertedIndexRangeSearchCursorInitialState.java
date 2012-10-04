@@ -24,7 +24,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMInvertedIndexRangeSearchCursorInitialState implements ICursorInitialState {
@@ -32,19 +32,19 @@ public class LSMInvertedIndexRangeSearchCursorInitialState implements ICursorIni
     private final MultiComparator tokensAndKeysCmp;
     private final MultiComparator keyCmp;
     private final AtomicInteger searcherRefCount;
-    private final LSMHarness lsmHarness;
+    private final ILSMHarness lsmHarness;
 
     private final ArrayList<IIndexAccessor> indexAccessors;
     private final ArrayList<IIndexAccessor> deletedKeysBTreeAccessors;
     private final ISearchPredicate predicate;
     private final PermutingTupleReference keysOnlyTuple;
-    
+
     private final boolean includeMemComponent;
 
     public LSMInvertedIndexRangeSearchCursorInitialState(MultiComparator tokensAndKeysCmp, MultiComparator keyCmp,
-            PermutingTupleReference keysOnlyTuple, boolean includeMemComponent, AtomicInteger searcherRefCount, LSMHarness lsmHarness,
-            ArrayList<IIndexAccessor> indexAccessors, ArrayList<IIndexAccessor> deletedKeysBTreeAccessors,
-            ISearchPredicate predicate) {
+            PermutingTupleReference keysOnlyTuple, boolean includeMemComponent, AtomicInteger searcherRefCount,
+            ILSMHarness lsmHarness, ArrayList<IIndexAccessor> indexAccessors,
+            ArrayList<IIndexAccessor> deletedKeysBTreeAccessors, ISearchPredicate predicate) {
         this.tokensAndKeysCmp = tokensAndKeysCmp;
         this.keyCmp = keyCmp;
         this.keysOnlyTuple = keysOnlyTuple;
@@ -73,7 +73,7 @@ public class LSMInvertedIndexRangeSearchCursorInitialState implements ICursorIni
         return searcherRefCount;
     }
 
-    public LSMHarness getLSMHarness() {
+    public ILSMHarness getLSMHarness() {
         return lsmHarness;
     }
 
@@ -94,7 +94,7 @@ public class LSMInvertedIndexRangeSearchCursorInitialState implements ICursorIni
     public ArrayList<IIndexAccessor> getDeletedKeysBTreeAccessors() {
         return deletedKeysBTreeAccessors;
     }
-    
+
     public ISearchPredicate getSearchPredicate() {
         return predicate;
     }
@@ -103,7 +103,7 @@ public class LSMInvertedIndexRangeSearchCursorInitialState implements ICursorIni
     public void setOriginialKeyComparator(MultiComparator originalCmp) {
         // Do nothing.
     }
-    
+
     @Override
     public MultiComparator getOriginalKeyComparator() {
         return tokensAndKeysCmp;
@@ -112,11 +112,11 @@ public class LSMInvertedIndexRangeSearchCursorInitialState implements ICursorIni
     public MultiComparator getKeyComparator() {
         return keyCmp;
     }
-    
+
     public boolean getIncludeMemComponent() {
         return includeMemComponent;
     }
-    
+
     public PermutingTupleReference getKeysOnlyTuple() {
         return keysOnlyTuple;
     }

@@ -23,7 +23,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMRTreeCursorInitialState implements ICursorInitialState {
@@ -38,7 +38,7 @@ public class LSMRTreeCursorInitialState implements ICursorInitialState {
     private ITreeIndexAccessor[] bTreeAccessors;
     private AtomicInteger searcherRefCount;
     private final boolean includeMemRTree;
-    private final LSMHarness lsmHarness;
+    private final ILSMHarness lsmHarness;
     private final int[] comparatorFields;
 
     private ISearchOperationCallback searchCallback;
@@ -46,7 +46,7 @@ public class LSMRTreeCursorInitialState implements ICursorInitialState {
     public LSMRTreeCursorInitialState(int numberOfTrees, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
             MultiComparator btreeCmp, ITreeIndexAccessor[] rTreeAccessors, ITreeIndexAccessor[] bTreeAccessors,
-            AtomicInteger searcherRefCount, boolean includeMemRTree, LSMHarness lsmHarness, int[] comparatorFields,
+            AtomicInteger searcherRefCount, boolean includeMemRTree, ILSMHarness lsmHarness, int[] comparatorFields,
             IBinaryComparatorFactory[] linearizerArray, ISearchOperationCallback searchCallback) {
         this.numberOfTrees = numberOfTrees;
         this.rtreeLeafFrameFactory = rtreeLeafFrameFactory;
@@ -116,7 +116,7 @@ public class LSMRTreeCursorInitialState implements ICursorInitialState {
         return searcherRefCount;
     }
 
-    public LSMHarness getLSMHarness() {
+    public ILSMHarness getLSMHarness() {
         return lsmHarness;
     }
 

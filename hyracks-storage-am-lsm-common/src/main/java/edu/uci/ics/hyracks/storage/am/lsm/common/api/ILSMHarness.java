@@ -35,12 +35,15 @@ public interface ILSMHarness {
     public void closeSearchCursor(AtomicInteger searcherRefCount, boolean includeMemComponent)
             throws HyracksDataException;
 
+    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
+            IndexException;
+
     public void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException;
 
     public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
 
     public void addBulkLoadedComponent(Object index) throws HyracksDataException, IndexException;
-    
+
     public ILSMIndex getIndex();
 
     public ILSMFlushController getFlushController();

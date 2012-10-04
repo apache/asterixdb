@@ -20,7 +20,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -51,6 +50,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -71,16 +71,11 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMBTree implements ILSMIndex, ITreeIndex {
-    protected final Logger LOGGER = Logger.getLogger(LSMBTree.class.getName());
-
-    private final LSMHarness lsmHarness;
+    private final ILSMHarness lsmHarness;
 
     // In-memory components.   
     private final BTree memBTree;
-    private final FileReference memBtreeFile = new FileReference(new File("memBtree"));
-    private final IInMemoryBufferCache memBufferCache;
     private final IInMemoryFreePageManager memFreePageManager;
-    private final AntimatterAwareTupleAcceptor acceptor = new AntimatterAwareTupleAcceptor();
 
     // On-disk components.    
     private final ILSMIndexFileManager fileManager;
@@ -92,7 +87,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     private final IBufferCache diskBufferCache;
     private final IFileMapProvider diskFileMapProvider;
     // List of BTree instances. Using Object for better sharing via ILSMTree + LSMHarness.
-    private LinkedList<Object> diskBTrees = new LinkedList<Object>();
+    private LinkedList<Object> diskBTrees;
     // Helps to guarantees physical consistency of LSM components.
     private final ILSMComponentFinalizer componentFinalizer;
 
@@ -101,7 +96,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     private final ITreeIndexFrameFactory deleteLeafFrameFactory;
     private final IBinaryComparatorFactory[] cmpFactories;
 
-    private boolean isActivated = false;
+    private boolean isActivated;
 
     public LSMBTree(IInMemoryBufferCache memBufferCache, IInMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
@@ -112,8 +107,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
             ILSMIOOperationScheduler ioScheduler) {
         memBTree = new BTree(memBufferCache, ((InMemoryBufferCache) memBufferCache).getFileMapProvider(),
                 memFreePageManager, interiorFrameFactory, insertLeafFrameFactory, cmpFactories, fieldCount,
-                memBtreeFile);
-        this.memBufferCache = memBufferCache;
+                new FileReference(new File("membtree")));
         this.memFreePageManager = memFreePageManager;
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
@@ -126,6 +120,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         this.fileManager = fileNameManager;
         lsmHarness = new LSMHarness(this, flushController, mergePolicy, opTracker, ioScheduler);
         componentFinalizer = new TreeIndexComponentFinalizer(diskFileMapProvider);
+        diskBTrees = new LinkedList<Object>();
+        isActivated = false;
     }
 
     @Override
@@ -249,7 +245,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
                     throw new BTreeDuplicateKeyException("Failed to insert key since key already exists.");
                 } else {
                     memCursor.close();
-                    ctx.memBTreeAccessor.upsertIfConditionElseInsert(tuple, acceptor);
+                    ctx.memBTreeAccessor.upsertIfConditionElseInsert(tuple, AntimatterAwareTupleAcceptor.INSTANCE);
                     return true;
                 }
             }
@@ -266,7 +262,7 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
         } finally {
             searchCursor.close();
         }
-        ctx.memBTreeAccessor.upsertIfConditionElseInsert(tuple, acceptor);
+        ctx.memBTreeAccessor.upsertIfConditionElseInsert(tuple, AntimatterAwareTupleAcceptor.INSTANCE);
 
         return true;
     }
@@ -505,11 +501,11 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     @Override
     public ILSMIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
-        return new LSMBTreeIndexAccessor(lsmHarness, createOpContext(modificationCallback, searchCallback));
+        return new LSMBTreeAccessor(lsmHarness, createOpContext(modificationCallback, searchCallback));
     }
 
-    public class LSMBTreeIndexAccessor extends LSMTreeIndexAccessor {
-        public LSMBTreeIndexAccessor(LSMHarness lsmHarness, IIndexOperationContext ctx) {
+    public class LSMBTreeAccessor extends LSMTreeIndexAccessor {
+        public LSMBTreeAccessor(ILSMHarness lsmHarness, IIndexOperationContext ctx) {
             super(lsmHarness, ctx);
         }
 

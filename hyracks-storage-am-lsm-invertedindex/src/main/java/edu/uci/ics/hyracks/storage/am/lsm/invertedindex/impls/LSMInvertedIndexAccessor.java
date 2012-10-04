@@ -23,24 +23,24 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexFileManager.LSMInvertedIndexFileNameComponent;
 
 public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedIndexAccessor {
 
-    protected final LSMHarness lsmHarness;
+    protected final ILSMHarness lsmHarness;
     protected final ILSMIndexFileManager fileManager;
     protected final IIndexOperationContext ctx;
     protected final LSMInvertedIndex invIndex;
 
-    public LSMInvertedIndexAccessor(LSMInvertedIndex invIndex, LSMHarness lsmHarness, ILSMIndexFileManager fileManager,
-            IIndexOperationContext ctx) {
+    public LSMInvertedIndexAccessor(LSMInvertedIndex invIndex, ILSMHarness lsmHarness,
+            ILSMIndexFileManager fileManager, IIndexOperationContext ctx) {
         this.lsmHarness = lsmHarness;
         this.fileManager = fileManager;
         this.ctx = ctx;
@@ -55,19 +55,19 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
 
     @Override
     public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
-        ctx.setOperation(IndexOperation.DELETE);        
+        ctx.setOperation(IndexOperation.DELETE);
         lsmHarness.insertUpdateOrDelete(tuple, ctx);
     }
-    
+
     public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.SEARCH);
         lsmHarness.search(cursor, searchPred, ctx, true);
     }
-    
+
     public IIndexCursor createSearchCursor() {
-        return new LSMInvertedIndexSearchCursor(); 
+        return new LSMInvertedIndexSearchCursor();
     }
-    
+
     @Override
     public ILSMIOOperation createFlushOperation(ILSMIOOperationCallback callback) {
         LSMInvertedIndexFileNameComponent fileNameComponent = (LSMInvertedIndexFileNameComponent) fileManager
@@ -78,7 +78,7 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
         return new LSMInvertedIndexFlushOperation(lsmHarness.getIndex(), dictBTreeFileRef, deletedKeysBTreeFileRef,
                 callback);
     }
-    
+
     @Override
     public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         lsmHarness.flush(operation);
@@ -89,7 +89,7 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
             IndexException {
         return lsmHarness.createMergeOperation(callback);
     }
-    
+
     @Override
     public void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         lsmHarness.merge(operation);
@@ -99,7 +99,7 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     public IIndexCursor createRangeSearchCursor() {
         return new LSMInvertedIndexRangeSearchCursor();
     }
-    
+
     @Override
     public void rangeSearch(IIndexCursor cursor, ISearchPredicate searchPred) throws IndexException,
             HyracksDataException {
