@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.asterix.api.aqlj.server;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
@@ -38,9 +37,8 @@ import edu.uci.ics.asterix.aql.expression.Query;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.hyracks.bootstrap.AsterixNodeState;
+import edu.uci.ics.asterix.hyracks.bootstrap.CCBootstrapImpl;
 import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
 import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -67,9 +65,9 @@ public class APIClientThread extends Thread {
     private final AQLJStream clientStream;
     private final String outputFilePath;
     private final String outputNodeName;
-    private final String outputNodeIP;
     private final String binaryOutputClause;
 
+    private String outputNodeIP;
     private AQLJStream nodeDataServerStream;
     private int nodeDataServerPort;
     private String dataverse;
@@ -79,42 +77,28 @@ public class APIClientThread extends Thread {
         this.hcc = hcc;
         clientStream = new AQLJStream(clientSocket);
         this.appContext = appCtx;
+        outputNodeName = AsterixProperties.INSTANCE.getMetadataNodeName();
+        outputFilePath = AsterixProperties.INSTANCE.getOutputDir() + System.currentTimeMillis() + ".adm";
 
-        // get the name of the first node controller that we find
-        // all query results will be written to this node
         Map<String, Set<String>> nodeNameMap = new HashMap<String, Set<String>>();
         try {
             this.appContext.getCCContext().getIPAddressNodeMap(nodeNameMap);
         } catch (Exception e) {
             throw new IOException(" unable to obtain IP address node map", e);
         }
-        outputNodeIP = (String) nodeNameMap.keySet().toArray()[0];
-        outputNodeName = (String) nodeNameMap.get(outputNodeIP).toArray()[0];
-
-        // get the port of the node data server that is running on the first nc
-        IAsterixStateProxy proxy = (IAsterixStateProxy) appCtx.getDistributedState();
-        nodeDataServerPort = ((AsterixNodeState) proxy.getAsterixNodeState(outputNodeName)).getAPINodeDataServerPort();
-        nodeDataServerStream = null;
-
-        // write the data into the output stores directory of the nc
-        // if output stores are unavailable (could they ever be?), then write to
-        // tmpdir which can be overridden
-        // Also, use milliseconds in path name of output file to differentiate
-        // queries
-        Map<String, String[]> storesMap = AsterixProperties.INSTANCE.getStores();
-        String[] outputStores = storesMap.get(outputNodeName);
-        if (outputStores.length > 0) {
-            outputFilePath = outputStores[0] + System.currentTimeMillis() + ".adm";
-        } else {
-            outputFilePath = System.getProperty("java.io.tmpdir") + File.pathSeparator + System.currentTimeMillis()
-                    + ".adm";
+        for (String ip : nodeNameMap.keySet()) {
+            Set<String> nodeNames = nodeNameMap.get(ip);
+            if (nodeNames.contains(outputNodeName)) {
+                outputNodeIP = ip;
+                break;
+            }
         }
 
+        nodeDataServerPort = CCBootstrapImpl.DEFAULT_API_NODEDATA_SERVER_PORT;
+        nodeDataServerStream = null;
+
         // the "write output..." clause is inserted into incoming AQL statements
-        binaryOutputClause = "write output to "
-                + outputNodeName
-                + ":\""
-                + outputFilePath
+        binaryOutputClause = "write output to " + outputNodeName + ":\"" + outputFilePath
                 + "\" using \"edu.uci.ics.hyracks.algebricks.runtime.writers.SerializedDataWriterFactory\";";
 
     }

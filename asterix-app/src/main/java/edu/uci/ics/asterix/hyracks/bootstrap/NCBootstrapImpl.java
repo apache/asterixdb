@@ -65,15 +65,14 @@ public class NCBootstrapImpl implements INCBootstrap {
             MetadataManager.INSTANCE.init();
             MetadataBootstrap.startUniverse(proxy.getAsterixProperties(), ncApplicationContext);
 
+            // Start a sub-component for the API server. This server is only connected to by the 
+            // API server that lives on the CC and never by a client wishing to execute AQL.
+            // TODO: The API sub-system will change dramatically in the future and this code will go away, 
+            // but leave it for now.
+            apiNodeDataServer = new ThreadedServer(CCBootstrapImpl.DEFAULT_API_NODEDATA_SERVER_PORT,
+                    new NodeDataClientThreadFactory());
+            apiNodeDataServer.start();
         }
-
-        // Start a sub-component for the API server. This server is only connected to by the 
-        // API server that lives on the CC and never by a client wishing to execute AQL.
-        // TODO: The API sub-system will change dramatically in the future and this code will go away, 
-        // but leave it for now.
-        AsterixNodeState ns = (AsterixNodeState) proxy.getAsterixNodeState(nodeId);
-        apiNodeDataServer = new ThreadedServer(ns.getAPINodeDataServerPort(), new NodeDataClientThreadFactory());
-        apiNodeDataServer.start();
     }
 
     public void registerRemoteMetadataNode(IAsterixStateProxy proxy) throws RemoteException {
