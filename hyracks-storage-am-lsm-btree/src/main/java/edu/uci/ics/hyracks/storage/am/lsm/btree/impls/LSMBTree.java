@@ -54,9 +54,9 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
@@ -70,7 +70,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class LSMBTree implements ILSMIndex, ITreeIndex {
+public class LSMBTree implements ILSMIndexInternal, ITreeIndex {
     private final ILSMHarness lsmHarness;
 
     // In-memory components.   
@@ -210,8 +210,8 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
     }
 
     @Override
-    public boolean insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ictx)
-            throws HyracksDataException, IndexException {
+    public void insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ictx) throws HyracksDataException,
+            IndexException {
         LSMBTreeOpContext ctx = (LSMBTreeOpContext) ictx;
 
         switch (ctx.getIndexOp()) {
@@ -225,8 +225,6 @@ public class LSMBTree implements ILSMIndex, ITreeIndex {
                 ctx.memBTreeAccessor.upsert(tuple);
                 break;
         }
-
-        return true;
     }
 
     private boolean insert(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException, IndexException {

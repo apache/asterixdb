@@ -34,6 +34,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 
@@ -51,7 +52,7 @@ public class LSMHarness implements ILSMHarness {
     protected final Logger LOGGER = Logger.getLogger(LSMHarness.class.getName());
     protected static final long AFTER_MERGE_CLEANUP_SLEEP = 100;
 
-    private ILSMIndex lsmIndex;
+    private ILSMIndexInternal lsmIndex;
 
     // All accesses to the LSM-Tree's on-disk components are synchronized on diskComponentsSync.
     private Object diskComponentsSync = new Object();
@@ -72,7 +73,7 @@ public class LSMHarness implements ILSMHarness {
     private final ILSMOperationTracker opTracker;
     private final ILSMIOOperationScheduler ioScheduler;
 
-    public LSMHarness(ILSMIndex lsmIndex, ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
+    public LSMHarness(ILSMIndexInternal lsmIndex, ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler) {
         this.lsmIndex = lsmIndex;
         this.opTracker = opTracker;
@@ -94,11 +95,8 @@ public class LSMHarness implements ILSMHarness {
         // It is possible, due to concurrent execution of operations, that an operation will 
         // fail. In such a case, simply retry the operation. Refer to the specific LSMIndex code 
         // to see exactly why an operation might fail.
-        boolean operationComplete = true;
         try {
-            do {
-                operationComplete = lsmIndex.insertUpdateOrDelete(tuple, ctx);
-            } while (!operationComplete);
+            lsmIndex.insertUpdateOrDelete(tuple, ctx);
         } finally {
             threadExit();
         }
