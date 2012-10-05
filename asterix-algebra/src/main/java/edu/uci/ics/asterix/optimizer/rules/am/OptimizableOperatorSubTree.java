@@ -27,8 +27,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceS
  * (select)? <-- (datasource scan)
  */
 public class OptimizableOperatorSubTree {
-    public ILogicalOperator root;
-    public Mutable<ILogicalOperator> rootRef;
+    public ILogicalOperator root = null;
+    public Mutable<ILogicalOperator> rootRef = null;
     public final List<Mutable<ILogicalOperator>> assignRefs = new ArrayList<Mutable<ILogicalOperator>>();
     public final List<AssignOperator> assigns = new ArrayList<AssignOperator>();
     public Mutable<ILogicalOperator> dataSourceScanRef = null;
@@ -38,6 +38,7 @@ public class OptimizableOperatorSubTree {
     public ARecordType recordType = null;
 
     public boolean initFromSubTree(Mutable<ILogicalOperator> subTreeOpRef) {
+        reset();
         rootRef = subTreeOpRef;
         root = subTreeOpRef.getValue();
         // Examine the op's children to match the expected patterns.
@@ -110,5 +111,16 @@ public class OptimizableOperatorSubTree {
 
     public boolean hasDataSourceScan() {
         return dataSourceScan != null;
+    }
+    
+    public void reset() {
+        assignRefs.clear();
+        assigns.clear();
+        root = null;
+        rootRef = null;
+        dataSourceScanRef = null;
+        dataSourceScan = null;
+        dataset = null;
+        recordType = null;
     }
 }
