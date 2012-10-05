@@ -14,30 +14,32 @@
  */
 package edu.uci.ics.asterix.transaction.management.service.logging;
 
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.uci.ics.asterix.transaction.management.service.transaction.MutableResourceId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 
-public class TreeLoggerRepository {
+public class IndexLoggerRepository {
 
-    private final Map<ByteBuffer, TreeLogger> loggers = new HashMap<ByteBuffer, TreeLogger>();
+    private final Map<MutableResourceId, IndexLogger> loggers = new HashMap<MutableResourceId, IndexLogger>();
     private final TransactionProvider provider;
+    private MutableResourceId mutableResourceId;
 
-    public TreeLoggerRepository(TransactionProvider provider) {
+    public IndexLoggerRepository(TransactionProvider provider) {
         this.provider = provider;
+        mutableResourceId = new MutableResourceId(0);
     }
 
-    public synchronized TreeLogger getTreeLogger(byte[] resourceIdBytes) {
-        ByteBuffer resourceId = ByteBuffer.wrap(resourceIdBytes);
-        TreeLogger logger = loggers.get(resourceId);
+    public synchronized IndexLogger getIndexLogger(long resourceId, byte resourceType) {
+        mutableResourceId.setId(resourceId);
+        IndexLogger logger = loggers.get(mutableResourceId);
         if (logger == null) {
-            ITreeIndex treeIndex = (ITreeIndex) provider.getTransactionalResourceRepository().getTransactionalResource(
-                    resourceIdBytes);
-            logger = new TreeLogger(resourceIdBytes, treeIndex);
-            loggers.put(resourceId, logger);
+            MutableResourceId newMutableResourceId = new MutableResourceId(resourceId);
+            IIndex index = (IIndex) provider.getTransactionalResourceRepository().getTransactionalResource(resourceId);
+            logger = new IndexLogger(resourceId, resourceType, index);
+            loggers.put(newMutableResourceId, logger);
         }
         return logger;
     }

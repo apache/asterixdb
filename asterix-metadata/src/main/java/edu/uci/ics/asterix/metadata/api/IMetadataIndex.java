@@ -19,14 +19,14 @@ import java.util.List;
 
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.logging.TreeLogger;
+import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger;
 import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 
 /**
  * Descriptor interface for a primary or secondary index on metadata datasets.
@@ -66,7 +66,7 @@ public interface IMetadataIndex {
 
     public void setFileId(int fileId);
 
-    public void initTreeLogger(ITreeIndex treeIndex) throws ACIDException;
+    public void initIndexLogger(IIndex index) throws ACIDException;
 
     public int getFileId();
 
@@ -74,9 +74,7 @@ public interface IMetadataIndex {
 
     public long getResourceID();
 
-    public byte[] getResourceId();
-
-    public TreeLogger getTreeLogger();
+    public IndexLogger getIndexLogger();
     
     public DatasetId getDatasetId();
 }

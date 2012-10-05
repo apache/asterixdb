@@ -20,7 +20,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogActionType;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 
 /**
@@ -90,13 +89,9 @@ public class TransactionManager implements ITransactionManager {
             }
 
             try {
-                if (txnContext.getTransactionType().equals(TransactionContext.TransactionType.READ_WRITE)) { // conditionally
-                    // write
-                    // commit
-                    // log
-                    // record
-                    transactionProvider.getLogManager().log(txnContext.getLastLogLocator(), txnContext, (byte) (-1), 0,
-                            LogType.COMMIT, LogActionType.NO_OP, 0, null, null);
+                if (txnContext.getTransactionType().equals(TransactionContext.TransactionType.READ_WRITE)) { 
+                    transactionProvider.getLogManager().log(LogType.COMMIT, txnContext, -1, -1, -1, (byte) 0, 0, null,
+                            null, txnContext.getLastLogLocator());
                 }
             } catch (ACIDException ae) {
                 if (LOGGER.isLoggable(Level.SEVERE)) {
@@ -125,5 +120,4 @@ public class TransactionManager implements ITransactionManager {
     public TransactionProvider getTransactionProvider() {
         return transactionProvider;
     }
-
 }

@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
+import edu.uci.ics.asterix.transaction.management.service.transaction.MutableResourceId;
 
 /**
  * Represents a repository containing Resource Managers and Resources in the
@@ -32,17 +33,18 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceM
  */
 public class TransactionalResourceRepository {
 
-    private Map<ByteBuffer, Object> resourceRepository = new HashMap<ByteBuffer, Object>(); // repository
+    private Map<MutableResourceId, Object> resourceRepository = new HashMap<MutableResourceId, Object>(); // repository
 
     private Map<Byte, IResourceManager> resourceMgrRepository = new HashMap<Byte, IResourceManager>(); // repository
+    
+    private MutableResourceId mutableResourceId = new MutableResourceId(0);
 
-    public void registerTransactionalResource(byte[] resourceBytes, Object resource) {
-        // convert to ByteBuffer so that a byte[] can be used as a key in a hash map.
-        ByteBuffer resourceId = ByteBuffer.wrap(resourceBytes); // need to
-
+    public void registerTransactionalResource(long resourceId, Object resource) {
         synchronized (resourceRepository) {
+            mutableResourceId.setId(resourceId);
             if (resourceRepository.get(resourceId) == null) {
-                resourceRepository.put(resourceId, resource);
+                MutableResourceId newMutableResourceId = new MutableResourceId(resourceId);
+                resourceRepository.put(newMutableResourceId, resource);
                 
                 // wake up threads waiting for the resource
                 resourceRepository.notifyAll();
@@ -61,10 +63,10 @@ public class TransactionalResourceRepository {
         }
     }
 
-    public Object getTransactionalResource(byte[] resourceIdBytes) {
-        ByteBuffer buffer = ByteBuffer.wrap(resourceIdBytes);
+    public Object getTransactionalResource(long resourceId) {
         synchronized (resourceRepository) {
-            while (resourceRepository.get(buffer) == null) {
+            mutableResourceId.setId(resourceId);
+            while (resourceRepository.get(mutableResourceId) == null) {
                 try {
                     resourceRepository.wait();
                 } catch (InterruptedException ie) {
@@ -73,7 +75,7 @@ public class TransactionalResourceRepository {
                     // failures occurring elsewhere, break from the loop
                 }
             }
-            return resourceRepository.get(buffer);
+            return resourceRepository.get(mutableResourceId);
         }
     }
 

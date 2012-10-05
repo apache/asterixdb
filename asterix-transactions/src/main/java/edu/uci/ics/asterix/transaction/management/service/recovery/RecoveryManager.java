@@ -115,15 +115,7 @@ public class RecoveryManager implements IRecoveryManager {
                 if (resourceMgr == null) {
                     throw new ACIDException("unknown resource mgr with id " + resourceMgrId);
                 } else {
-                    byte actionType = parser.getLogActionType(memLSN);
-                    switch (actionType) {
-                        case LogActionType.REDO:
-                            resourceMgr.redo(parser, memLSN);
-                            break;
-                        case LogActionType.UNDO: /* skip these records */
-                            break;
-                        default: /* do nothing */
-                    }
+                    resourceMgr.redo(parser, memLSN);
                 }
                 writeCheckpointRecord(memLSN.getLsn());
             }
@@ -204,7 +196,7 @@ public class RecoveryManager implements IRecoveryManager {
             byte logType = parser.getLogType(logLocator);
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.fine(" reading LSN value inside rollback transaction method " + txnContext.getLastLogLocator()
-                        + " txn id " + parser.getLogTransactionId(logLocator) + " log type  " + logType);
+                        + " jodId " + parser.getJobId(logLocator) + " log type  " + logType);
             }
 
             switch (logType) {
@@ -222,23 +214,13 @@ public class RecoveryManager implements IRecoveryManager {
                     if (resourceMgr == null) {
                         throw new ACIDException(txnContext, " unknown resource manager " + resourceMgrId);
                     } else {
-                        byte actionType = parser.getLogActionType(logLocator);
-                        switch (actionType) {
-                            case LogActionType.REDO: // no need to do anything
-                                break;
-                            case LogActionType.UNDO: // undo the log record
-                                resourceMgr.undo(parser, logLocator);
-                                break;
-                            case LogActionType.REDO_UNDO: // undo log record
-                                resourceMgr.undo(parser, logLocator);
-                                break;
-                            default:
-                        }
+                        resourceMgr.undo(parser, logLocator);
                     }
-                case LogType.CLR: // skip the CLRs as they are not undone
                     break;
                 case LogType.COMMIT:
                     throw new ACIDException(txnContext, " cannot rollback commmitted transaction");
+                default:
+                    throw new ACIDException("Unsupported LogType: " + logType);
 
             }
 
@@ -248,7 +230,7 @@ public class RecoveryManager implements IRecoveryManager {
             // the logLocator object has been
             // appropriately set to the location of the next log record to be
             // processed as part of the roll back
-            boolean moreLogs = parser.getPreviousLsnByTransaction(lsn, logLocator);
+            boolean moreLogs = parser.getPrevLSN(lsn, logLocator);
             if (!moreLogs) {
                 // no more logs to process
                 break;

@@ -32,5 +32,10 @@
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
+	    <dependency>
+	    	<groupId>edu.uci.ics.hyracks</groupId>
+	    	<artifactId>hyracks-storage-am-lsm-common</artifactId>
+	    	<version>0.2.2-SNAPSHOT</version>
+	    </dependency>
 	</dependencies>
 </project>

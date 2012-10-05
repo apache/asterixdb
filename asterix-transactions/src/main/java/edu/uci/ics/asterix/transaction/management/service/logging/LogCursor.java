@@ -77,8 +77,11 @@ public class LogCursor implements ILogCursor {
         int integerRead = -1;
         boolean logRecordBeginPosFound = false;
         long bytesSkipped = 0;
+        
+        //check whether the currentOffset has enough space to have new log record by comparing
+        //the smallest log record type(which is commit)'s log header.
         while (logicalLogLocator.getMemoryOffset() <= readOnlyBuffer.getSize()
-                - logManager.getLogManagerProperties().getLogHeaderSize()) {
+                - logManager.getLogRecordHelper().getLogHeaderSize(LogType.COMMIT)) {
             integerRead = readOnlyBuffer.readInt(logicalLogLocator.getMemoryOffset());
             if (integerRead == logManager.getLogManagerProperties().logMagicNumber) {
                 logRecordBeginPosFound = true;
@@ -109,8 +112,8 @@ public class LogCursor implements ILogCursor {
             }
         }
 
-        int logLength = logManager.getLogRecordHelper().getLogLength(logicalLogLocator);
-        if (logManager.getLogRecordHelper().validateLogRecord(logManager.getLogManagerProperties(), logicalLogLocator)) {
+        int logLength = logManager.getLogRecordHelper().getLogRecordSize(logicalLogLocator);
+        if (logManager.getLogRecordHelper().validateLogRecord(logicalLogLocator)) {
             if (nextLogicalLogLocator == null) {
                 nextLogicalLogLocator = new LogicalLogLocator(0, readOnlyBuffer, -1, logManager);
             }

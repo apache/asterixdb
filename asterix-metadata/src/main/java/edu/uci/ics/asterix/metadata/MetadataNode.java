@@ -78,6 +78,7 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTreeRangeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
 
 public class MetadataNode implements IMetadataNode {
     private static final long serialVersionUID = 1L;
@@ -263,7 +264,9 @@ public class MetadataNode implements IMetadataNode {
         transactionProvider.getLockManager().lock(index.getDatasetId(), -1, LockMode.X, txnCtx);
         // TODO: fix exceptions once new BTree exception model is in hyracks.
         indexAccessor.insert(tuple);
-        index.getTreeLogger().generateLogRecord(transactionProvider, txnCtx, IndexOperation.INSERT, tuple);
+        //TODO: extract the key from the tuple and get the PKHashValue from the key.
+        //index.getIndexLogger().generateLogRecord(transactionProvider, txnCtx, index.getDatasetId().getId(), null,
+        //        resourceID, IndexOperation.INSERT, tuple, null, null);
         indexLifecycleManager.close(resourceID);
     }
 
@@ -515,7 +518,10 @@ public class MetadataNode implements IMetadataNode {
         // regular waiters in the LockManager.
         transactionProvider.getLockManager().lock(index.getDatasetId(), -1, LockMode.X, txnCtx);
         indexAccessor.delete(tuple);
-        index.getTreeLogger().generateLogRecord(transactionProvider, txnCtx, IndexOperation.DELETE, tuple);
+        //TODO: extract the key from the tuple and get the PKHashValue from the key.
+        //check how to get the oldValue.
+        //index.getIndexLogger().generateLogRecord(transactionProvider, txnCtx, index.getDatasetId().getId(), null,
+        //        resourceID, IndexOperation.DELETE, tuple, operation, null);
         indexLifecycleManager.close(resourceID);
     }
 

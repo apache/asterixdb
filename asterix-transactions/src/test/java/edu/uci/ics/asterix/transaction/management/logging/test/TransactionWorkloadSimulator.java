@@ -29,6 +29,7 @@ import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
+import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
@@ -180,14 +181,14 @@ class Transaction extends Thread {
                 }
                 tempDatasetId.setId(resourceID);
                 TransactionWorkloadSimulator.lockManager.lock(tempDatasetId, -1, lockMode, context);
-                TransactionWorkloadSimulator.logManager.log(memLSN, context, ResourceMgrInfo.BTreeResourceMgrId,
-                        pageId, logType, logActionType, logSize, logger, null);
+                TransactionWorkloadSimulator.logManager.log(logType, context, resourceID,
+                        -1, resourceID, ResourceType.LSM_BTREE, logSize, null, logger, memLSN);
                 retry = false;
                 Thread.currentThread().sleep(TransactionWorkloadSimulator.workload.thinkTime);
                 logCount.incrementAndGet();
                 logByteCount.addAndGet(logSize
-                        + TransactionWorkloadSimulator.logManager.getLogManagerProperties().getLogHeaderSize()
-                        + TransactionWorkloadSimulator.logManager.getLogManagerProperties().getLogChecksumSize());
+                        + TransactionWorkloadSimulator.logManager.getLogRecordHelper().getLogHeaderSize(logType)
+                        + TransactionWorkloadSimulator.logManager.getLogRecordHelper().getLogChecksumSize());
                 myLogCount++;
             }
         } catch (ACIDException acide) {

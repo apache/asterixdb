@@ -44,8 +44,8 @@ import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceRepository;
-import edu.uci.ics.asterix.transaction.management.service.logging.DataUtil;
-import edu.uci.ics.asterix.transaction.management.service.logging.TreeResourceManager;
+import edu.uci.ics.asterix.transaction.management.service.logging.IndexResourceManager;
+import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -54,8 +54,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
@@ -128,8 +128,8 @@ public class MetadataBootstrap {
         boolean isNewUniverse = true;
         TransactionalResourceRepository resourceRepository = runtimeContext.getTransactionProvider()
                 .getTransactionalResourceRepository();
-        resourceRepository.registerTransactionalResourceManager(TreeResourceManager.ID, new TreeResourceManager(
-                runtimeContext.getTransactionProvider()));
+        resourceRepository.registerTransactionalResourceManager(ResourceType.LSM_BTREE, new IndexResourceManager(
+                ResourceType.LSM_BTREE, runtimeContext.getTransactionProvider()));
 
         metadataNodeName = asterixProperties.getMetadataNodeName();
         isNewUniverse = asterixProperties.isNewUniverse();
@@ -205,13 +205,12 @@ public class MetadataBootstrap {
         }
     }
 
-    private static void registerTransactionalResource(IMetadataIndex index,
+    private static void registerTransactionalResource(IMetadataIndex metadataIndex,
             TransactionalResourceRepository resourceRepository) throws ACIDException {
-        long resourceID = index.getResourceID();
-        ITreeIndex treeIndex = (ITreeIndex) indexLifecycleManager.getIndex(resourceID);
-        byte[] resourceId = DataUtil.longToByteArray(resourceID);
-        resourceRepository.registerTransactionalResource(resourceId, treeIndex);
-        index.initTreeLogger(treeIndex);
+        long resourceId = metadataIndex.getResourceID();
+        IIndex index = indexLifecycleManager.getIndex(resourceId);
+        resourceRepository.registerTransactionalResource(resourceId, index);
+        metadataIndex.initIndexLogger(index);
     }
 
     public static void insertInitialDataverses(MetadataTransactionContext mdTxnCtx) throws Exception {

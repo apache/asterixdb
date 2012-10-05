@@ -21,7 +21,6 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,6 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger.ReusableLogContentObject;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
@@ -495,33 +495,33 @@ public class LogManager implements ILogManager {
         }
     }
 
-    public void log(LogicalLogLocator logLocator, TransactionContext context, byte resourceMgrId, long pageId,
-            byte logType, byte logActionType, int requestedSpaceForLog, ILogger logger,
-            Map<Object, Object> loggerArguments) throws ACIDException {
+    @Override
+    public void log(byte logType, TransactionContext context, int datasetId, int PKHashValue, long resourceId,
+            byte resourceMgrId, int logContentSize, ReusableLogContentObject reusableLogContentObject,
+            ILogger logger, LogicalLogLocator logicalLogLocator) throws ACIDException {
         /*
          * logLocator is a re-usable object that is appropriately set in each
          * invocation. If the reference is null, the log manager must throw an
          * exception
          */
-        if (logLocator == null) {
+        if (logicalLogLocator == null) {
             throw new ACIDException(
                     " you need to pass in a non-null logLocator, if you dont have it, then pass in a dummy so that the +"
                             + "log manager can set it approporiately for you");
         }
 
         // compute the total log size including the header and the checksum.
-        int totalLogSize = logManagerProperties.getLogHeaderSize() + requestedSpaceForLog
-                + logManagerProperties.getLogChecksumSize();
+        int totalLogSize = logRecordHelper.getLogRecordSize(logType, logContentSize);
 
         // check for the total space requirement to be less than a log page.
         if (totalLogSize > logManagerProperties.getLogPageSize()) {
             throw new ACIDException(
                     " Maximum Log Content Size is "
-                            + (logManagerProperties.getLogPageSize() - logManagerProperties.getLogHeaderSize() - logManagerProperties
+                            + (logManagerProperties.getLogPageSize() - logRecordHelper.getLogHeaderSize(LogType.UPDATE) - logRecordHelper
                                     .getLogChecksumSize()));
         }
 
-        // all constraints checked and we are goot to go and acquire a lsn.
+        // all constraints checked and we are good to go and acquire a lsn.
         long previousLogLocator = -1;
         long myLogLocator; // the will be set to the location (a long value)
         // where the log record needs to be placed.
@@ -537,7 +537,7 @@ public class LogManager implements ILogManager {
             previousLogLocator = context.getLastLogLocator().getLsn();
             myLogLocator = getLsn(totalLogSize, logType);
             context.getLastLogLocator().setLsn(myLogLocator);
-            logLocator.setLsn(myLogLocator);
+            logicalLogLocator.setLsn(myLogLocator);
         }
 
         /*
@@ -564,43 +564,43 @@ public class LogManager implements ILogManager {
 
         try {
 
-            logLocator.setBuffer(logPages[pageIndex]);
+            logicalLogLocator.setBuffer(logPages[pageIndex]);
             int pageOffset = getLogPageOffset(myLogLocator);
-            logLocator.setMemoryOffset(pageOffset);
+            logicalLogLocator.setMemoryOffset(pageOffset);
 
             /*
              * write the log header.
              */
-            logRecordHelper.writeLogHeader(context, logLocator, resourceMgrId, pageId, logType, logActionType,
-                    requestedSpaceForLog, previousLogLocator);
-
+            logRecordHelper.writeLogHeader(logicalLogLocator, logType, context, datasetId, PKHashValue, previousLogLocator,
+                    resourceId, resourceMgrId, logContentSize);
+            
             // increment the offset so that the transaction can fill up the
             // content in the correct region of the allocated space.
-            logLocator.increaseMemoryOffset(logManagerProperties.getLogHeaderSize());
+            logicalLogLocator.increaseMemoryOffset(logRecordHelper.getLogHeaderSize(logType));
 
             // a COMMIT log record does not have any content
             // and hence the logger (responsible for putting the log content) is
             // not invoked.
-            if (requestedSpaceForLog != 0) {
-                logger.preLog(context, loggerArguments);
+            if (logContentSize != 0) {
+                logger.preLog(context, reusableLogContentObject);
             }
 
-            if (requestedSpaceForLog != 0) {
+            if (logContentSize != 0) {
                 // call the logger implementation and ask to fill in the log
                 // record content at the allocated space.
-                logger.log(context, logLocator, requestedSpaceForLog, loggerArguments);
-                logger.postLog(context, loggerArguments);
+                logger.log(context, logicalLogLocator, logContentSize, reusableLogContentObject);
+                logger.postLog(context, reusableLogContentObject);
             }
 
             /*
              * The log record has been written. For integrity checks, compute
              * the checksum and put it at the end of the log record.
              */
-            int startPosChecksum = logLocator.getMemoryOffset() - logManagerProperties.getLogHeaderSize();
-            int length = totalLogSize - logManagerProperties.getLogChecksumSize();
+            int startPosChecksum = logicalLogLocator.getMemoryOffset() - logRecordHelper.getLogHeaderSize(logType);
+            int length = totalLogSize - logRecordHelper.getLogChecksumSize();
             long checksum = DataUtil.getChecksum(logPages[pageIndex], startPosChecksum, length);
-            logPages[pageIndex].writeLong(pageOffset + logManagerProperties.getLogHeaderSize() + requestedSpaceForLog,
-                    checksum);
+            logPages[pageIndex].writeLong(pageOffset + logRecordHelper.getLogHeaderSize(logType)
+                    + logContentSize, checksum);
 
             /*
              * release the ownership as the log record has been placed in
@@ -704,7 +704,7 @@ public class LogManager implements ILogManager {
             buffer.limit(buffer.getInt(4));
             MemBasedBuffer memBuffer = new MemBasedBuffer(buffer.slice());
             logicalLogLocator = new LogicalLogLocator(physicalLogLocator.getLsn(), memBuffer, 0, this);
-            if (!logRecordHelper.validateLogRecord(logManagerProperties, logicalLogLocator)) {
+            if (!logRecordHelper.validateLogRecord(logicalLogLocator)) {
                 throw new ACIDException(" invalid log record at lsn " + physicalLogLocator.getLsn());
             }
         } catch (Exception fnfe) {
@@ -761,7 +761,7 @@ public class LogManager implements ILogManager {
                     logLocator = new LogicalLogLocator(lsnValue, memBuffer, 0, this);
                     try {
                         // validate the log record by comparing checksums
-                        if (!logRecordHelper.validateLogRecord(logManagerProperties, logLocator)) {
+                        if (!logRecordHelper.validateLogRecord(logLocator)) {
                             throw new ACIDException(" invalid log record at lsn " + physicalLogLocator);
                         }
                     } catch (Exception e) {
@@ -779,6 +779,7 @@ public class LogManager implements ILogManager {
         return readDiskLog(physicalLogLocator);
     }
 
+    @Override
     public ILogRecordHelper getLogRecordHelper() {
         return logRecordHelper;
     }
@@ -789,6 +790,7 @@ public class LogManager implements ILogManager {
      * logic to event based when log manager support is integrated with the
      * Buffer Manager.
      */
+    @Override
     public synchronized void flushLog(LogicalLogLocator logicalLogLocator) throws ACIDException {
         if (logicalLogLocator.getLsn() > lsn.get()) {
             throw new ACIDException(" invalid lsn " + logicalLogLocator.getLsn());
@@ -828,6 +830,7 @@ public class LogManager implements ILogManager {
         return pageNo == 0 ? numLogPages - 1 : pageNo - 1;
     }
 
+    @Override
     public LogManagerProperties getLogManagerProperties() {
         return logManagerProperties;
     }

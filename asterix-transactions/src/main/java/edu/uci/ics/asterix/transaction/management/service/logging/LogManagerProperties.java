@@ -48,14 +48,6 @@ public class LogManagerProperties implements Serializable {
     // flushing.
     private int logBufferSize = logPageSize * numLogPages;
 
-    private final int logHeaderSize = 43; /*
-                                           * ( magic number(4) + (length(4) +
-                                           * type(1) + actionType(1) +
-                                           * timestamp(8) + transacitonId(8) +
-                                           * resourceMgrId(1) + pageId(8) +
-                                           * prevLSN(8)
-                                           */
-    private int logTailSize = 8; /* checksum(8) */
     public int logMagicNumber = 123456789;
 
     public static final String LOG_PARTITION_SIZE_KEY = "log_partition_size";
@@ -102,18 +94,6 @@ public class LogManagerProperties implements Serializable {
 
     public String getLogDir() {
         return logDir;
-    }
-
-    public int getLogHeaderSize() {
-        return logHeaderSize;
-    }
-
-    public int getLogChecksumSize() {
-        return logTailSize;
-    }
-
-    public int getTotalLogRecordLength(int logContentSize) {
-        return logContentSize + logHeaderSize + logTailSize;
     }
 
     public int getLogPageSize() {

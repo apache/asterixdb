@@ -20,7 +20,7 @@ import edu.uci.ics.asterix.transaction.management.service.locking.ILockManager;
 import edu.uci.ics.asterix.transaction.management.service.locking.LockManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.ILogManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
-import edu.uci.ics.asterix.transaction.management.service.logging.TreeLoggerRepository;
+import edu.uci.ics.asterix.transaction.management.service.logging.IndexLoggerRepository;
 import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager;
 import edu.uci.ics.asterix.transaction.management.service.recovery.RecoveryManager;
 
@@ -35,7 +35,7 @@ public class TransactionProvider {
     private final ITransactionManager transactionManager;
     private final IRecoveryManager recoveryManager;
     private final TransactionalResourceRepository resourceRepository;
-    private final TreeLoggerRepository loggerRepository;
+    private final IndexLoggerRepository loggerRepository;
 
     public TransactionProvider(String id) throws ACIDException {
         this.id = id;
@@ -43,7 +43,7 @@ public class TransactionProvider {
         this.logManager = new LogManager(this);
         this.lockManager = new LockManager(this);
         this.recoveryManager = new RecoveryManager(this);
-        this.loggerRepository = new TreeLoggerRepository(this);
+        this.loggerRepository = new IndexLoggerRepository(this);
         this.resourceRepository = new TransactionalResourceRepository();
     }
 
@@ -67,7 +67,7 @@ public class TransactionProvider {
         return resourceRepository;
     }
     
-    public TreeLoggerRepository getTreeLoggerRepository() {
+    public IndexLoggerRepository getTreeLoggerRepository() {
         return loggerRepository;
     }
 
