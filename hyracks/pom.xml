@@ -52,8 +52,8 @@
   </build>
 
   <scm>
-    <connection>scm:svn:https://hyracks.googlecode.com/svn/trunk/hyracks</connection>
-    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/trunk/hyracks</developerConnection>
+    <connection>scm:svn:https://hyracks.googlecode.com/svn/trunk/fullstack/hyracks</connection>
+    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/trunk/fullstack/hyracks</developerConnection>
     <url>http://code.google.com/p/hyracks/source/browse/#svn/trunk/hyracks</url>
   </scm>
 
