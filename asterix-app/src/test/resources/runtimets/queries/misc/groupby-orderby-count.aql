@@ -13,7 +13,7 @@ create external dataset TwitterData(Tweet)
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/twitter/extrasmalltweets.txt"),("format"="adm"));
 
-write output to nc1:"rttest/groupby-orderby-count.adm";
+write output to nc1:"rttest/misc_groupby-orderby-count.adm";
 
 for $t in dataset('TwitterData')
 let $tokens := word-tokens($t.text)

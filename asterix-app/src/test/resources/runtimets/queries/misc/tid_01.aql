@@ -1,7 +1,7 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/tid_01.adm";
+write output to nc1:"rttest/misc_tid_01.adm";
 
 for $x at $i in ["a","b","c"]
 return $i

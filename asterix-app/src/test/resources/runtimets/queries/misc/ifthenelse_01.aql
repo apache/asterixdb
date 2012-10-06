@@ -1,6 +1,6 @@
 use dataverse test;
 
-write output to nc1:"rttest/ifthenelse_01.adm";
+write output to nc1:"rttest/misc_ifthenelse_01.adm";
 
 if (2>1) then
     20

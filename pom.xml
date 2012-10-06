@@ -78,6 +78,7 @@
                 <module>asterix-external-data</module>
                 <module>asterix-metadata</module>
                 <module>asterix-dist</module>
+                <module>asterix-test-framework</module>
         </modules>
 
 	<repositories>

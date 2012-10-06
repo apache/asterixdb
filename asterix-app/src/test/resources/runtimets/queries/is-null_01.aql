@@ -1,8 +1,0 @@
-drop dataverse test if exists;
-create dataverse test;
-
-use dataverse test;
-
-write output to nc1:"rttest/is-null_01.adm";
-
-[is-null(null), is-null(10)]
