@@ -1,0 +1,50 @@
+0|real time active range finder using light intensity modulation
+1|strategies for registering range images from unknown camera positions
+2|high resolution ultrafast 3d imaging
+3|optoelectronic dimensional integral inspection of hollow cylinder type articles for conveyor line
+4|development of a 3d digitizer for breast surgery procedures
+5|automatic reconstruction of large 3d models of real environments from unregistered data sets
+6|three line high power three dimensional sensor
+7|9multispectral pattern projection range finder
+8|high speed three dimensional laser sensor
+9|3d range optical sensor analysis of the measurement errors and development of procedures for their compensation
+10|3d profilometry using a dynamically configurable confocal microscope
+11|examining laser triangulation system performance using a software simulation
+12|effect of sway on image fidelity in whole body digitizing
+13|moly a prototype handheld 3d digitizer with diffraction optics
+14|reconstruction of the surface of the human body from 3d scanner data using 13 splines
+15|reverse engineering using optical 3d sensors
+16|wrapping 3d scanning data
+17|spherical harmonic surface representation with feedback control
+18|efficient free form surface representation with application in orthodontics
+19|real time 3d shape measurement with digital stripe projection by texas instruments micro mirror devices dmd
+20|multiscale analysis of 3d surface image application to clam shell characterization
+21|multiple structured light system for the 3d measurement of feet
+22|pose and motion estimation using dual quaternion based extended kalman filtering
+23|direct estimation of 3d motion parameters and relative depth using the minimum description length principle
+24|depth based selective image reconstruction using spatiotemporal image analysis
+25|toward a handheld laser range scanner integrating observation based motion compensation
+26|slicing, fitting, and linking (sfl) a modular triangulation approach
+27|3d object reconstruction from a sequence of images using voxel coloring
+28|3d profiling by optical demodulation with an image intensifier
+29|restoration of broken earthenware using close range photogrammetry and a cad system
+30|real time 3d reconstruction system using cam based highly parallel processing board
+31|novel fully integrated computer system for custom footwear from 3d digitization to manufacturing
+32|reconstruction of complete 3d object model from multiview range images
+33|color digitizing and modeling of free form 3d objects
+34|object modeling in multiple object 3d scene using deformable simplex meshes
+35|robust 3d reconstruction system for human jaw modeling
+36|acquisition of 3d image representation in multimedia ambiance communication using 3d laser scanner and digital camera
+37|new approach for the modeling and smoothing of scattered 3d data
+38|fast shape from focus using dynamic programming
+39|axi vision camera a three dimensional camera
+40|real time structured light depth extraction
+41|impact of intensity edge map on segmentation of noisy range images
+42|interpolation of ray space data by adaptive filtering
+43|three steps to make shape from shading work consistently on real scenes
+44|robust cooperation concept for low level vision modules
+45|error sensitivity of rotation angles in the icp algorithm
+46|3d surface real time measurement using phase shifted interference fringe technique for craniofacial identification
+47|automated fudicial labeling on human body data
+48|segmenting 3d surface scan data of the human body by 2d projection
+49|extracting surface area coverage by superimposing 3d scan data

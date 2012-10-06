@@ -1,0 +1,91 @@
+Hyracks is a data-parallel platform that allows users to run jobs on a cluster of shared-nothing computers.
+
+QUICKSTART
+__________
+
+Hyracks is made up of two parts that need to run on a cluster to accept and run users' jobs. The Hyracks Cluster Controller must be run on one machine designated as the
+master node. This machine should be able to be accessed from the other nodes in the cluster that would do work as well as the client machines that would submit jobs to Hyracks.
+The worker nodes (machines) must run a Hyracks Node Controller.
+
+1. Starting the Hyracks Cluster Controller
+
+The simplest way to start the cluster controller is to run bin/hyrackscc.
+By default, the cluster controller listens on port 1099 for connections from Node Controllers. However, it can be made to listen on a different port by passing an optional
+parameter as shown below:
+
+bin/hyrackscc -port <port>
+
+2. Starting the Hyracks Node Controller
+
+The node controller is started by running bin/hyracksnc. It requires at least the following two command line arguments.
+
+ -cc-host VAL                    : Cluster Controller host name
+ -data-ip-address VAL            : IP Address to bind data listener
+
+If the cluster controller was directed to listen on a port other than the default, you will need to pass one more argument to hyracksnc.
+
+ -cc-port N                      : Cluster Controller port (default: 1099)
+
+The data-ip-address is the interface on which the Node Controller must listen on -- in the event the machine is multi-homed it must listen on an IP that is reachable from
+other Node Controllers. Make sure that the value passed to the data-ip-address is a valid IPv4 address (four octets separated by .).
+
+3. Running a job on Hyracks
+
+There are a few examples in the source distribution under src/test/integration that outline the construction and issue of a Job to the Hyracks Cluster Controller. The
+basic steps that need to be performed on the client to execute jobs are:
+
+Registry registry = LocateRegistry.getRegistry(ccHost, ccPort);
+IClusterController cc = registry.lookup(IClusterController.class.getName()); // Get a handle to the Cluster Controller
+
+JobSpecification spec = createJob(); // User code to create a Job
+
+UUID jobId = cc.createJob(spec); // Install the Job on the Cluster Controller
+
+cc.start(jobId); // Start the job
+cc.waitForCompletion(jobId); // Jobs run asynchronously -- Wait for this one to complete
+
+
+
+BUILDING FROM SOURCE
+____________________
+
+Prerequisites:
+
+1. JDK 1.6
+2. Maven2 (maven.apache.org)
+
+Steps:
+
+1. Checkout source from SVN
+2. Download dcache-client-0.0.1.jar from the Downloads page at http://code.google.com/p/hyracks/downloads/list
+3. Run the following command: (Replacing /path/to/file with the path to the dcache-client jar file).
+
+ mvn install:install-file -DgroupId=edu.uci.ics.dcache -DartifactId=dcache-client -Dversion=0.0.1 -Dpackaging=jar -Dfile=/path/to/file/dcache-client-0.0.1.jar
+
+4. Download jol.jar from the Downloads page at http://code.google.com/p/hyracks/downloads/list
+5. Run the following command: (Replacing /path/to/file with the path to the jol jar file).
+
+ mvn install:install-file -DgroupId=jol -DartifactId=jol -Dversion=0.0.1 -Dpackaging=jar -Dfile=/path/to/file/jol.jar
+
+6. cd into the hyracks folder where the source was checked out
+7. Run
+
+ mvn package
+
+6. That's it!
+
+
+IMPORTING INTO ECLIPSE
+______________________
+
+Prerequisites:
+
+You will need to have the Eclipse Maven plugin (http://m2eclipse.sonatype.org/)
+
+1. Open eclipse
+2. Right click in the Package Explorer pane.
+3. Click on Import...
+4. Under "General" choose "Existing Projects into Workspace"
+5. Pick the project root option and browse to the hyracks folder
+6. Import all projects.
+7. Click on Finish

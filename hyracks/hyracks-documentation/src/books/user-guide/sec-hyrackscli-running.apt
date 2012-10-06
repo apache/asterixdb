@@ -1,0 +1,9 @@
+Running Hyracks CLI
+
+  The Hyracks CLI is contained in the hyracks-cli subproject under the Hyracks source tree. The Hyracks CLI binary distribution contains the scripts to start the CLI in the bin folder.
+
+  On a Unix like system, the CLI can be started by running
+    hyracks-cli-xxx-binary-assembly/bin/hyrackscli
+
+  On a Windows system, the CLI is started by running
+    hyracks-cli-xxx-binary-assembly\bin\hyrackscli.bat
