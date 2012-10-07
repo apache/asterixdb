@@ -1,0 +1,3380 @@
+<test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
+  <test-group name="aggregate">
+    <test-case FilePath="aggregate">
+      <compilation-unit name="avg_double">
+        <output-file compare="Text">avg_double.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="avg_double_null">
+        <output-file compare="Text">avg_double_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="avg_empty_01">
+        <output-file compare="Text">avg_empty_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="avg_empty_02">
+        <output-file compare="Text">avg_empty_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="avg_float">
+        <output-file compare="Text">avg_float.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="avg_float_null">
+        <output-file compare="Text">avg_float_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="avg_int16">
+        <output-file compare="Text">avg_int16.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="avg_int16_null">
+        <output-file compare="Text">avg_int16_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="avg_int32">
+        <output-file compare="Text">avg_int32.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="avg_int32_null">
+        <output-file compare="Text">avg_int32_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="avg_int64">
+        <output-file compare="Text">avg_int64.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="avg_int64_null">
+        <output-file compare="Text">avg_int64_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="avg_int8">
+        <output-file compare="Text">avg_int8.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="avg_int8_null">
+        <output-file compare="Text">avg_int8_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="count_01">
+        <output-file compare="Text">count_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="count_empty_01">
+        <output-file compare="Text">count_empty_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="count_empty_02">
+        <output-file compare="Text">count_empty_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="count_null">
+        <output-file compare="Text">count_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="droptype">
+        <output-file compare="Text">droptype.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="global-avg_01">
+        <output-file compare="Text">global-avg_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="global-avg_null">
+        <output-file compare="Text">global-avg_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="local-avg_double">
+        <output-file compare="Text">local-avg_double.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="local-avg_double_null">
+        <output-file compare="Text">local-avg_double_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="local-avg_float">
+        <output-file compare="Text">local-avg_float.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="local-avg_float_null">
+        <output-file compare="Text">local-avg_float_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="local-avg_int16">
+        <output-file compare="Text">local-avg_int16.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="local-avg_int16_null">
+        <output-file compare="Text">local-avg_int16_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="local-avg_int32">
+        <output-file compare="Text">local-avg_int32.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="local-avg_int32_null">
+        <output-file compare="Text">local-avg_int32_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="local-avg_int64">
+        <output-file compare="Text">local-avg_int64.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="local-avg_int64_null">
+        <output-file compare="Text">local-avg_int64_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="local-avg_int8">
+        <output-file compare="Text">local-avg_int8.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="local-avg_int8_null">
+        <output-file compare="Text">local-avg_int8_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="max_empty_01">
+        <output-file compare="Text">max_empty_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="max_empty_02">
+        <output-file compare="Text">max_empty_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="min_empty_01">
+        <output-file compare="Text">min_empty_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="min_empty_02">
+        <output-file compare="Text">min_empty_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_avg">
+        <output-file compare="Text">scalar_avg.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_avg_empty">
+        <output-file compare="Text">scalar_avg_empty.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_avg_null">
+        <output-file compare="Text">scalar_avg_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_count">
+        <output-file compare="Text">scalar_count.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_count_empty">
+        <output-file compare="Text">scalar_count_empty.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_count_null">
+        <output-file compare="Text">scalar_count_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_max">
+        <output-file compare="Text">scalar_max.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_max_empty">
+        <output-file compare="Text">scalar_max_empty.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_max_null">
+        <output-file compare="Text">scalar_max_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_min">
+        <output-file compare="Text">scalar_min.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_min_empty">
+        <output-file compare="Text">scalar_min_empty.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_min_null">
+        <output-file compare="Text">scalar_min_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_sum">
+        <output-file compare="Text">scalar_sum.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_sum_empty">
+        <output-file compare="Text">scalar_sum_empty.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_sum_null">
+        <output-file compare="Text">scalar_sum_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_double">
+        <output-file compare="Text">sum_double.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_double_null">
+        <output-file compare="Text">sum_double_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_empty_01">
+        <output-file compare="Text">sum_empty_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_empty_02">
+        <output-file compare="Text">sum_empty_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_float">
+        <output-file compare="Text">sum_float.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_float_null">
+        <output-file compare="Text">sum_float_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_int16">
+        <output-file compare="Text">sum_int16.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_int16_null">
+        <output-file compare="Text">sum_int16_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_int32">
+        <output-file compare="Text">sum_int32.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_int32_null">
+        <output-file compare="Text">sum_int32_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_int64">
+        <output-file compare="Text">sum_int64.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_int64_null">
+        <output-file compare="Text">sum_int64_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_int8">
+        <output-file compare="Text">sum_int8.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_int8_null">
+        <output-file compare="Text">sum_int8_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_null-with-pred">
+        <output-file compare="Text">sum_null-with-pred.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_numeric_null">
+        <output-file compare="Text">sum_numeric_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="boolean">
+    <test-case FilePath="boolean">
+      <compilation-unit name="and_01">
+        <output-file compare="Text">and_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="boolean">
+      <compilation-unit name="and_null">
+        <output-file compare="Text">and_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="boolean">
+      <compilation-unit name="and_null_false">
+        <output-file compare="Text">and_null_false.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="boolean">
+      <compilation-unit name="not_01">
+        <output-file compare="Text">not_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="comparison">
+    <test-case FilePath="comparison">
+      <compilation-unit name="datetime_order">
+        <output-file compare="Text">datetime_order.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="datetime_range">
+        <output-file compare="Text">datetime_range.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="datetime_tzeq">
+        <output-file compare="Text">datetime_tzeq.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="double">
+        <output-file compare="Text">double.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="double_gte_01">
+        <output-file compare="Text">double_gte_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="double_null">
+        <output-file compare="Text">double_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="eq_01">
+        <output-file compare="Text">eq_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="float">
+        <output-file compare="Text">float.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="float_null">
+        <output-file compare="Text">float_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="gt_01">
+        <output-file compare="Text">gt_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="gte_01">
+        <output-file compare="Text">gte_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="int16">
+        <output-file compare="Text">int16.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="int16_null">
+        <output-file compare="Text">int16_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="int32">
+        <output-file compare="Text">int32.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="int32_null">
+        <output-file compare="Text">int32_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="int64">
+        <output-file compare="Text">int64.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="int64_null">
+        <output-file compare="Text">int64_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="int8">
+        <output-file compare="Text">int8.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="int8_null">
+        <output-file compare="Text">int8_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="lt_01">
+        <output-file compare="Text">lt_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="lte_01">
+        <output-file compare="Text">lte_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="neq_01">
+        <output-file compare="Text">neq_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="numeric-comparison_01">
+        <output-file compare="Text">numeric-comparison_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="string">
+        <output-file compare="Text">string.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="string_null">
+        <output-file compare="Text">string_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="constructor">
+    <test-case FilePath="constructor">
+      <compilation-unit name="add-null">
+        <output-file compare="Text">add-null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="boolean_01">
+        <output-file compare="Text">boolean_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="circle_01">
+        <output-file compare="Text">circle_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="date_01">
+        <output-file compare="Text">date_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="datetime_01">
+        <output-file compare="Text">datetime_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="double_01">
+        <output-file compare="Text">double_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="duration_01">
+        <output-file compare="Text">duration_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="float_01">
+        <output-file compare="Text">float_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="int_01">
+        <output-file compare="Text">int_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="line_01">
+        <output-file compare="Text">line_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="point_01">
+        <output-file compare="Text">point_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="polygon_01">
+        <output-file compare="Text">polygon_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="primitive-01">
+        <output-file compare="Text">primitive-01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="primitive-02">
+        <output-file compare="Text">primitive-02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="primitive-03">
+        <output-file compare="Text">primitive-03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="primitive-04">
+        <output-file compare="Text">primitive-04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="string_01">
+        <output-file compare="Text">string_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="time_01">
+        <output-file compare="Text">time_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="custord">
+    <test-case FilePath="custord">
+      <compilation-unit name="co">
+        <output-file compare="Text">co.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="customer_q_01">
+        <output-file compare="Text">customer_q_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="customer_q_02">
+        <output-file compare="Text">customer_q_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="customer_q_03">
+        <output-file compare="Text">customer_q_03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="customer_q_04">
+        <output-file compare="Text">customer_q_04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="customer_q_05">
+        <output-file compare="Text">customer_q_05.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="customer_q_06">
+        <output-file compare="Text">customer_q_06.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="customer_q_07">
+        <output-file compare="Text">customer_q_07.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="customer_q_08">
+        <output-file compare="Text">customer_q_08.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="denorm-cust-order_01">
+        <output-file compare="Text">denorm-cust-order_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="denorm-cust-order_02">
+        <output-file compare="Text">denorm-cust-order_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="denorm-cust-order_03">
+        <output-file compare="Text">denorm-cust-order_03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="freq-clerk">
+        <output-file compare="Text">freq-clerk.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="join_q_01">
+        <output-file compare="Text">join_q_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="join_q_02">
+        <output-file compare="Text">join_q_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="join_q_03">
+        <output-file compare="Text">join_q_03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="join_q_04">
+        <output-file compare="Text">join_q_04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="load-test">
+        <output-file compare="Text">load-test.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="order_q_01">
+        <output-file compare="Text">order_q_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="order_q_02">
+        <output-file compare="Text">order_q_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="order_q_03">
+        <output-file compare="Text">order_q_03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="order_q_04">
+        <output-file compare="Text">order_q_04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="order_q_05">
+        <output-file compare="Text">order_q_05.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="order_q_06">
+        <output-file compare="Text">order_q_06.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="dapd">
+    <test-case FilePath="dapd">
+      <compilation-unit name="q1">
+        <output-file compare="Text">q1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dapd">
+      <compilation-unit name="q2">
+        <output-file compare="Text">q2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dapd">
+      <compilation-unit name="q3">
+        <output-file compare="Text">q3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="dml">
+    <test-case FilePath="dml">
+      <compilation-unit name="delete-from-loaded-dataset-with-index">
+        <output-file compare="Text">delete-from-loaded-dataset-with-index.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="delete-from-loaded-dataset">
+        <output-file compare="Text">delete-from-loaded-dataset.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="drop-index">
+        <output-file compare="Text">drop-index.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="empty-load-with-index">
+        <output-file compare="Text">empty-load-with-index.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="empty-load">
+        <output-file compare="Text">empty-load.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-into-empty-dataset-with-index">
+        <output-file compare="Text">insert-into-empty-dataset-with-index.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-into-empty-dataset">
+        <output-file compare="Text">insert-into-empty-dataset.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-into-loaded-dataset-with-index_01">
+        <output-file compare="Text">insert-into-loaded-dataset-with-index_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-into-loaded-dataset-with-index_02">
+        <output-file compare="Text">insert-into-loaded-dataset-with-index_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-into-loaded-dataset_01">
+        <output-file compare="Text">insert-into-loaded-dataset_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-into-loaded-dataset_02">
+        <output-file compare="Text">insert-into-loaded-dataset_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-src-dst-01">
+        <output-file compare="Text">insert-src-dst-01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert">
+        <output-file compare="Text">insert.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert_less_nc">
+        <output-file compare="Text">insert_less_nc.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="load-from-hdfs">
+        <output-file compare="Text">load-from-hdfs.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="load-with-index">
+        <output-file compare="Text">load-with-index.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="opentype-c2o-recursive">
+        <output-file compare="Text">opentype-c2o-recursive.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="opentype-c2o">
+        <output-file compare="Text">opentype-c2o.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="opentype-closed-optional">
+        <output-file compare="Text">opentype-closed-optional.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="opentype-insert">
+        <output-file compare="Text">opentype-insert.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="opentype-insert2">
+        <output-file compare="Text">opentype-insert2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="opentype-noexpand">
+        <output-file compare="Text">opentype-noexpand.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="opentype-o2c-recursive">
+        <output-file compare="Text">opentype-o2c-recursive.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="opentype-o2c">
+        <output-file compare="Text">opentype-o2c.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="opentype-o2o">
+        <output-file compare="Text">opentype-o2o.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-btree-secondary-index-nullable">
+        <output-file compare="Text">scan-delete-btree-secondary-index-nullable.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-rtree-secondary-index-nullable">
+        <output-file compare="Text">scan-delete-rtree-secondary-index-nullable.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-rtree-secondary-index">
+        <output-file compare="Text">scan-delete-rtree-secondary-index.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-btree-secondary-index-nullable">
+        <output-file compare="Text">scan-insert-btree-secondary-index-nullable.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-rtree-secondary-index-nullable">
+        <output-file compare="Text">scan-insert-rtree-secondary-index-nullable.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-rtree-secondary-index">
+        <output-file compare="Text">scan-insert-rtree-secondary-index.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="employee">
+    <test-case FilePath="employee">
+      <compilation-unit name="q_01">
+        <output-file compare="Text">q_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="employee">
+      <compilation-unit name="q_02">
+        <output-file compare="Text">q_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="failure">
+    <test-case FilePath="failure">
+      <compilation-unit name="delete-rtree">
+        <output-file compare="Text">delete-rtree.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="failure">
+      <compilation-unit name="delete">
+        <output-file compare="Text">delete.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="failure">
+      <compilation-unit name="insert-rtree">
+        <output-file compare="Text">insert-rtree.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="failure">
+      <compilation-unit name="insert">
+        <output-file compare="Text">insert.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="failure">
+      <compilation-unit name="q1_pricing_summary_report_failure">
+        <output-file compare="Text">q1_pricing_summary_report_failure.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="flwor">
+    <test-case FilePath="flwor">
+      <compilation-unit name="for01">
+        <output-file compare="Text">for01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for02">
+        <output-file compare="Text">for02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for03">
+        <output-file compare="Text">for03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for04">
+        <output-file compare="Text">for04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for05">
+        <output-file compare="Text">for05.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for06">
+        <output-file compare="Text">for06.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for07">
+        <output-file compare="Text">for07.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for08">
+        <output-file compare="Text">for08.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for09">
+        <output-file compare="Text">for09.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for10">
+        <output-file compare="Text">for10.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for11">
+        <output-file compare="Text">for11.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for12">
+        <output-file compare="Text">for12.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for13">
+        <output-file compare="Text">for13.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for14">
+        <output-file compare="Text">for14.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for15">
+        <output-file compare="Text">for15.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for16">
+        <output-file compare="Text">for16.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for17">
+        <output-file compare="Text">for17.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for18">
+        <output-file compare="Text">for18.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="for19">
+        <output-file compare="Text">for19.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="grpby01">
+        <output-file compare="Text">grpby01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="grpby02">
+        <output-file compare="Text">grpby02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let01">
+        <output-file compare="Text">let01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let02">
+        <output-file compare="Text">let02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let03">
+        <output-file compare="Text">let03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let04">
+        <output-file compare="Text">let04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let05">
+        <output-file compare="Text">let05.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let06">
+        <output-file compare="Text">let06.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let07">
+        <output-file compare="Text">let07.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let08">
+        <output-file compare="Text">let08.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let09">
+        <output-file compare="Text">let09.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let10">
+        <output-file compare="Text">let10.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let11">
+        <output-file compare="Text">let11.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let12">
+        <output-file compare="Text">let12.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let13">
+        <output-file compare="Text">let13.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let14">
+        <output-file compare="Text">let14.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let15">
+        <output-file compare="Text">let15.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let16">
+        <output-file compare="Text">let16.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let17">
+        <output-file compare="Text">let17.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let18">
+        <output-file compare="Text">let18.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let19">
+        <output-file compare="Text">let19.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let20">
+        <output-file compare="Text">let20.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let21">
+        <output-file compare="Text">let21.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let22">
+        <output-file compare="Text">let22.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let23">
+        <output-file compare="Text">let23.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let24">
+        <output-file compare="Text">let24.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let25">
+        <output-file compare="Text">let25.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let26">
+        <output-file compare="Text">let26.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let27">
+        <output-file compare="Text">let27.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let28">
+        <output-file compare="Text">let28.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let29">
+        <output-file compare="Text">let29.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let30">
+        <output-file compare="Text">let30.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let31">
+        <output-file compare="Text">let31.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let32">
+        <output-file compare="Text">let32.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="order-by-01">
+        <output-file compare="Text">order-by-01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="order-by-02">
+        <output-file compare="Text">order-by-02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="order-by-03">
+        <output-file compare="Text">order-by-03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="order-by-04">
+        <output-file compare="Text">order-by-04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="order-by-05">
+        <output-file compare="Text">order-by-05.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="order-by-06">
+        <output-file compare="Text">order-by-06.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="order-by-07">
+        <output-file compare="Text">order-by-07.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="order-by-08">
+        <output-file compare="Text">order-by-08.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="order-by-09">
+        <output-file compare="Text">order-by-09.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="order-by-10">
+        <output-file compare="Text">order-by-10.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="order-by-11">
+        <output-file compare="Text">order-by-11.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="order-by-12">
+        <output-file compare="Text">order-by-12.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-01">
+        <output-file compare="Text">ret-01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-02">
+        <output-file compare="Text">ret-02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-03">
+        <output-file compare="Text">ret-03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-04">
+        <output-file compare="Text">ret-04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-05">
+        <output-file compare="Text">ret-05.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-06">
+        <output-file compare="Text">ret-06.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-07">
+        <output-file compare="Text">ret-07.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-08">
+        <output-file compare="Text">ret-08.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-09">
+        <output-file compare="Text">ret-09.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-10">
+        <output-file compare="Text">ret-10.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-11">
+        <output-file compare="Text">ret-11.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-12">
+        <output-file compare="Text">ret-12.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-13">
+        <output-file compare="Text">ret-13.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-14">
+        <output-file compare="Text">ret-14.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-15">
+        <output-file compare="Text">ret-15.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-16">
+        <output-file compare="Text">ret-16.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-17">
+        <output-file compare="Text">ret-17.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-18">
+        <output-file compare="Text">ret-18.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="ret-19">
+        <output-file compare="Text">ret-19.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="fuzzyjoin">
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-1_1">
+        <output-file compare="Text">dblp-1_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-1_2">
+        <output-file compare="Text">dblp-1_2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-1_2">
+        <output-file compare="Text">dblp-1_2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-1_2">
+        <output-file compare="Text">dblp-1_2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-2">
+        <output-file compare="Text">dblp-2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-2">
+        <output-file compare="Text">dblp-2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-2_1">
+        <output-file compare="Text">dblp-2_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-2_2">
+        <output-file compare="Text">dblp-2_2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-2_3">
+        <output-file compare="Text">dblp-2_3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-2_4">
+        <output-file compare="Text">dblp-2_4.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-2_5">
+        <output-file compare="Text">dblp-2_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-2_5">
+        <output-file compare="Text">dblp-2_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-2_5">
+        <output-file compare="Text">dblp-2_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-2_5">
+        <output-file compare="Text">dblp-2_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-2_5">
+        <output-file compare="Text">dblp-2_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-3_1">
+        <output-file compare="Text">dblp-3_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-3_1">
+        <output-file compare="Text">dblp-3_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-3_1">
+        <output-file compare="Text">dblp-3_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-aqlplus_1">
+        <output-file compare="Text">dblp-aqlplus_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-2_1">
+        <output-file compare="Text">dblp-csx-2_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-2_2">
+        <output-file compare="Text">dblp-csx-2_2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-2_3">
+        <output-file compare="Text">dblp-csx-2_3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-2_4">
+        <output-file compare="Text">dblp-csx-2_4.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-2_5">
+        <output-file compare="Text">dblp-csx-2_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-2_5">
+        <output-file compare="Text">dblp-csx-2_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-2_5">
+        <output-file compare="Text">dblp-csx-2_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-2_5">
+        <output-file compare="Text">dblp-csx-2_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-2_5">
+        <output-file compare="Text">dblp-csx-2_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-3_1">
+        <output-file compare="Text">dblp-csx-3_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-3_2">
+        <output-file compare="Text">dblp-csx-3_2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-3_3">
+        <output-file compare="Text">dblp-csx-3_3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-3_4">
+        <output-file compare="Text">dblp-csx-3_4.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-3_5">
+        <output-file compare="Text">dblp-csx-3_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-3_5">
+        <output-file compare="Text">dblp-csx-3_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-3_5">
+        <output-file compare="Text">dblp-csx-3_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-3_5">
+        <output-file compare="Text">dblp-csx-3_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-3_5">
+        <output-file compare="Text">dblp-csx-3_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-3_5">
+        <output-file compare="Text">dblp-csx-3_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-3_5">
+        <output-file compare="Text">dblp-csx-3_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-aqlplus_1">
+        <output-file compare="Text">dblp-csx-aqlplus_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-aqlplus_2">
+        <output-file compare="Text">dblp-csx-aqlplus_2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-aqlplus_3">
+        <output-file compare="Text">dblp-csx-aqlplus_3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-dblp-aqlplus_1">
+        <output-file compare="Text">dblp-csx-dblp-aqlplus_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-lookup_1">
+        <output-file compare="Text">dblp-lookup_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-splits-3_1">
+        <output-file compare="Text">dblp-splits-3_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="events-users-aqlplus_1">
+        <output-file compare="Text">events-users-aqlplus_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-int-aqlplus_1">
+        <output-file compare="Text">user-int-aqlplus_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-int-aqlplus_2">
+        <output-file compare="Text">user-int-aqlplus_2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-int-aqlplus_3">
+        <output-file compare="Text">user-int-aqlplus_3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-lot-aqlplus_1">
+        <output-file compare="Text">user-lot-aqlplus_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-lot-aqlplus_1">
+        <output-file compare="Text">user-lot-aqlplus_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-lot-aqlplus_2">
+        <output-file compare="Text">user-lot-aqlplus_2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-lot-aqlplus_3">
+        <output-file compare="Text">user-lot-aqlplus_3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-vis-int-3_1">
+        <output-file compare="Text">user-vis-int-3_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-vis-int-aqlplus_1">
+        <output-file compare="Text">user-vis-int-aqlplus_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-vis-int-aqlplus_2">
+        <output-file compare="Text">user-vis-int-aqlplus_2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-vis-int-aqlplus_3">
+        <output-file compare="Text">user-vis-int-aqlplus_3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-vis-int-vis-user-lot-aqlplus_1">
+        <output-file compare="Text">user-vis-int-vis-user-lot-aqlplus_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-vis-lot-3_1">
+        <output-file compare="Text">user-vis-lot-3_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-vis-lot-aqlplus_1">
+        <output-file compare="Text">user-vis-lot-aqlplus_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-vis-lot-aqlplus_2">
+        <output-file compare="Text">user-vis-lot-aqlplus_2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-vis-lot-aqlplus_3">
+        <output-file compare="Text">user-vis-lot-aqlplus_3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-vis-lot-aqlplus_4">
+        <output-file compare="Text">user-vis-lot-aqlplus_4.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-vis-lot-aqlplus_5">
+        <output-file compare="Text">user-vis-lot-aqlplus_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-vis-lot-int-aqlplus_1">
+        <output-file compare="Text">user-vis-lot-int-aqlplus_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="user-vis-lot-int-aqlplus_2">
+        <output-file compare="Text">user-vis-lot-int-aqlplus_2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="index-join">
+    <test-case FilePath="index-join">
+      <compilation-unit name="inverted-index-ngram-edit-distance">
+        <output-file compare="Text">inverted-index-ngram-edit-distance.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="inverted-index-ngram-jaccard">
+        <output-file compare="Text">inverted-index-ngram-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="inverted-index-olist-edit-distance">
+        <output-file compare="Text">inverted-index-olist-edit-distance.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="inverted-index-olist-jaccard">
+        <output-file compare="Text">inverted-index-olist-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="inverted-index-ulist-jaccard">
+        <output-file compare="Text">inverted-index-ulist-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="inverted-index-word-jaccard">
+        <output-file compare="Text">inverted-index-word-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="index-selection">
+    <test-case FilePath="index-selection">
+      <compilation-unit name="btree-index-composite-key">
+        <output-file compare="Text">btree-index-composite-key.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="cust-index-age-nullable">
+        <output-file compare="Text">cust-index-age-nullable.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="inverted-index-ngram-contains">
+        <output-file compare="Text">inverted-index-ngram-contains.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="inverted-index-ngram-edit-distance-panic">
+        <output-file compare="Text">inverted-index-ngram-edit-distance-panic.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="inverted-index-ngram-edit-distance">
+        <output-file compare="Text">inverted-index-ngram-edit-distance.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="inverted-index-ngram-jaccard">
+        <output-file compare="Text">inverted-index-ngram-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="inverted-index-olist-edit-distance-panic">
+        <output-file compare="Text">inverted-index-olist-edit-distance-panic.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="inverted-index-olist-edit-distance">
+        <output-file compare="Text">inverted-index-olist-edit-distance.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="inverted-index-olist-jaccard">
+        <output-file compare="Text">inverted-index-olist-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="inverted-index-ulist-jaccard">
+        <output-file compare="Text">inverted-index-ulist-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="inverted-index-word-contains">
+        <output-file compare="Text">inverted-index-word-contains.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="inverted-index-word-jaccard">
+        <output-file compare="Text">inverted-index-word-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="orders-index-custkey-conjunctive-open">
+        <output-file compare="Text">orders-index-custkey-conjunctive-open.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="orders-index-custkey-conjunctive">
+        <output-file compare="Text">orders-index-custkey-conjunctive.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="orders-index-custkey-open">
+        <output-file compare="Text">orders-index-custkey-open.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="orders-index-custkey">
+        <output-file compare="Text">orders-index-custkey.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="range-search-open">
+        <output-file compare="Text">range-search-open.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="range-search">
+        <output-file compare="Text">range-search.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="rtree-secondary-index-nullable">
+        <output-file compare="Text">rtree-secondary-index-nullable.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="rtree-secondary-index-open">
+        <output-file compare="Text">rtree-secondary-index-open.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="rtree-secondary-index">
+        <output-file compare="Text">rtree-secondary-index.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="list">
+    <test-case FilePath="list">
+      <compilation-unit name="any-collection-member_01">
+        <output-file compare="Text">any-collection-member_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="get-item_01">
+        <output-file compare="Text">get-item_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="len_01">
+        <output-file compare="Text">len_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="len_null_01">
+        <output-file compare="Text">len_null_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="listify_01">
+        <output-file compare="Text">listify_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="listify_02">
+        <output-file compare="Text">listify_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="ordered-list-constructor_01">
+        <output-file compare="Text">ordered-list-constructor_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="ordered-list-constructor_02">
+        <output-file compare="Text">ordered-list-constructor_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="ordered-list-constructor_03">
+        <output-file compare="Text">ordered-list-constructor_03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="scan-collection_01">
+        <output-file compare="Text">scan-collection_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="union_01">
+        <output-file compare="Text">union_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="union_02">
+        <output-file compare="Text">union_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="unordered-list-constructor_01">
+        <output-file compare="Text">unordered-list-constructor_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="unordered-list-constructor_02">
+        <output-file compare="Text">unordered-list-constructor_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="unordered-list-constructor_03">
+        <output-file compare="Text">unordered-list-constructor_03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="misc">
+    <test-case FilePath="misc">
+      <compilation-unit name="float_01">
+        <output-file compare="Text">float_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="groupby-orderby-count">
+        <output-file compare="Text">groupby-orderby-count.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="ifthenelse_01">
+        <output-file compare="Text">ifthenelse_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="is-null_01">
+        <output-file compare="Text">is-null_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="nested-loop-join_01">
+        <output-file compare="Text">nested-loop-join_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="range_01">
+        <output-file compare="Text">range_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="tid_01">
+        <output-file compare="Text">tid_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="year_01">
+        <output-file compare="Text">year_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="nestrecords">
+    <test-case FilePath="nestrecords">
+      <compilation-unit name="nestrecord">
+        <output-file compare="Text">nestrecord.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="numeric">
+    <test-case FilePath="numeric">
+      <compilation-unit name="abs0">
+        <output-file compare="Text">abs0.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="abs1">
+        <output-file compare="Text">abs1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="abs2">
+        <output-file compare="Text">abs2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="abs3">
+        <output-file compare="Text">abs3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="abs4">
+        <output-file compare="Text">abs4.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="add_double">
+        <output-file compare="Text">add_double.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="add_float">
+        <output-file compare="Text">add_float.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="add_int16">
+        <output-file compare="Text">add_int16.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="add_int32">
+        <output-file compare="Text">add_int32.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="add_int64">
+        <output-file compare="Text">add_int64.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="add_int8">
+        <output-file compare="Text">add_int8.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="ceiling0">
+        <output-file compare="Text">ceiling0.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="ceiling1">
+        <output-file compare="Text">ceiling1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="ceiling2">
+        <output-file compare="Text">ceiling2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="ceiling3">
+        <output-file compare="Text">ceiling3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="ceiling4">
+        <output-file compare="Text">ceiling4.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="divide_double">
+        <output-file compare="Text">divide_double.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="divide_float">
+        <output-file compare="Text">divide_float.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="divide_int16">
+        <output-file compare="Text">divide_int16.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="divide_int32">
+        <output-file compare="Text">divide_int32.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="divide_int64">
+        <output-file compare="Text">divide_int64.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="divide_int8">
+        <output-file compare="Text">divide_int8.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="floor0">
+        <output-file compare="Text">floor0.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="floor1">
+        <output-file compare="Text">floor1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="floor2">
+        <output-file compare="Text">floor2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="floor3">
+        <output-file compare="Text">floor3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="floor4">
+        <output-file compare="Text">floor4.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="multiply_double">
+        <output-file compare="Text">multiply_double.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="multiply_float">
+        <output-file compare="Text">multiply_float.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="multiply_int16">
+        <output-file compare="Text">multiply_int16.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="multiply_int32">
+        <output-file compare="Text">multiply_int32.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="multiply_int64">
+        <output-file compare="Text">multiply_int64.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="multiply_int8">
+        <output-file compare="Text">multiply_int8.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round-half-to-even0">
+        <output-file compare="Text">round-half-to-even0.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round-half-to-even1">
+        <output-file compare="Text">round-half-to-even1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round-half-to-even2">
+        <output-file compare="Text">round-half-to-even2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round-half-to-even20">
+        <output-file compare="Text">round-half-to-even20.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round-half-to-even21">
+        <output-file compare="Text">round-half-to-even21.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round-half-to-even22">
+        <output-file compare="Text">round-half-to-even22.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round-half-to-even23">
+        <output-file compare="Text">round-half-to-even23.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round-half-to-even24">
+        <output-file compare="Text">round-half-to-even24.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round-half-to-even3">
+        <output-file compare="Text">round-half-to-even3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round-half-to-even4">
+        <output-file compare="Text">round-half-to-even4.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round-half-to-even5">
+        <output-file compare="Text">round-half-to-even5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round0">
+        <output-file compare="Text">round0.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round1">
+        <output-file compare="Text">round1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round2">
+        <output-file compare="Text">round2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round3">
+        <output-file compare="Text">round3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round4">
+        <output-file compare="Text">round4.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="subtract_double">
+        <output-file compare="Text">subtract_double.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="subtract_float">
+        <output-file compare="Text">subtract_float.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="subtract_int16">
+        <output-file compare="Text">subtract_int16.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="subtract_int32">
+        <output-file compare="Text">subtract_int32.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="subtract_int64">
+        <output-file compare="Text">subtract_int64.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="subtract_int8">
+        <output-file compare="Text">subtract_int8.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="unary-minus_double_01">
+        <output-file compare="Text">unary-minus_double_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="unary-minus_double_02">
+        <output-file compare="Text">unary-minus_double_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="unary-minus_float_01">
+        <output-file compare="Text">unary-minus_float_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="unary-minus_float_02">
+        <output-file compare="Text">unary-minus_float_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="unary-minus_int_01">
+        <output-file compare="Text">unary-minus_int_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="unary-minus_int_02">
+        <output-file compare="Text">unary-minus_int_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="unary-minus_null">
+        <output-file compare="Text">unary-minus_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="open-closed">
+    <test-case FilePath="open-closed">
+      <compilation-unit name="c2c-w-optional">
+        <output-file compare="Text">c2c-w-optional.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="c2c-wo-optional">
+        <output-file compare="Text">c2c-wo-optional.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="c2c">
+        <output-file compare="Text">c2c.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="heterog-list-ordered01">
+        <output-file compare="Text">heterog-list-ordered01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="heterog-list01">
+        <output-file compare="Text">heterog-list01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="heterog-list02">
+        <output-file compare="Text">heterog-list02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="heterog-list03">
+        <output-file compare="Text">heterog-list03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-01">
+        <output-file compare="Text">open-closed-01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-12">
+        <output-file compare="Text">open-closed-12.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-14">
+        <output-file compare="Text">open-closed-14.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-15">
+        <output-file compare="Text">open-closed-15.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-16">
+        <output-file compare="Text">open-closed-16.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-17">
+        <output-file compare="Text">open-closed-17.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-19">
+        <output-file compare="Text">open-closed-19.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-20">
+        <output-file compare="Text">open-closed-20.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-21">
+        <output-file compare="Text">open-closed-21.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-22">
+        <output-file compare="Text">open-closed-22.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-24">
+        <output-file compare="Text">open-closed-24.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-25">
+        <output-file compare="Text">open-closed-25.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-26">
+        <output-file compare="Text">open-closed-26.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-28">
+        <output-file compare="Text">open-closed-28.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-29">
+        <output-file compare="Text">open-closed-29.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-30">
+        <output-file compare="Text">open-closed-30.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-31">
+        <output-file compare="Text">open-closed-31.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-32">
+        <output-file compare="Text">open-closed-32.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="open-closed-33">
+        <output-file compare="Text">open-closed-33.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="quantifiers">
+    <test-case FilePath="quantifiers">
+      <compilation-unit name="everysat_01">
+        <output-file compare="Text">everysat_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="quantifiers">
+      <compilation-unit name="everysat_02">
+        <output-file compare="Text">everysat_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="quantifiers">
+      <compilation-unit name="everysat_03">
+        <output-file compare="Text">everysat_03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="quantifiers">
+      <compilation-unit name="everysat_04">
+        <output-file compare="Text">everysat_04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="quantifiers">
+      <compilation-unit name="somesat_01">
+        <output-file compare="Text">somesat_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="quantifiers">
+      <compilation-unit name="somesat_02">
+        <output-file compare="Text">somesat_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="quantifiers">
+      <compilation-unit name="somesat_03">
+        <output-file compare="Text">somesat_03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="quantifiers">
+      <compilation-unit name="somesat_04">
+        <output-file compare="Text">somesat_04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="quantifiers">
+      <compilation-unit name="somesat_05">
+        <output-file compare="Text">somesat_05.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="quantifiers">
+      <compilation-unit name="somesat_06">
+        <output-file compare="Text">somesat_06.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="records">
+    <test-case FilePath="records">
+      <compilation-unit name="closed-record-constructor_01">
+        <output-file compare="Text">closed-record-constructor_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="records">
+      <compilation-unit name="closed-record-constructor_02">
+        <output-file compare="Text">closed-record-constructor_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="records">
+      <compilation-unit name="closed-record-constructor_03">
+        <output-file compare="Text">closed-record-constructor_03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="records">
+      <compilation-unit name="expFieldName">
+        <output-file compare="Text">expFieldName.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="records">
+      <compilation-unit name="field-access-by-index_01">
+        <output-file compare="Text">field-access-by-index_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="records">
+      <compilation-unit name="open-record-constructor_01">
+        <output-file compare="Text">open-record-constructor_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="records">
+      <compilation-unit name="open-record-constructor_02">
+        <output-file compare="Text">open-record-constructor_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="scan">
+    <test-case FilePath="scan">
+      <compilation-unit name="10">
+        <output-file compare="Text">10.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
+      <compilation-unit name="20">
+        <output-file compare="Text">20.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
+      <compilation-unit name="30">
+        <output-file compare="Text">30.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
+      <compilation-unit name="alltypes_01">
+        <output-file compare="Text">alltypes_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
+      <compilation-unit name="numeric_types_01">
+        <output-file compare="Text">numeric_types_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
+      <compilation-unit name="spatial_types_01">
+        <output-file compare="Text">spatial_types_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
+      <compilation-unit name="spatial_types_02">
+        <output-file compare="Text">spatial_types_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
+      <compilation-unit name="temp_types_01">
+        <output-file compare="Text">temp_types_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
+      <compilation-unit name="temp_types_02">
+        <output-file compare="Text">temp_types_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="semistructured">
+    <test-case FilePath="semistructured">
+      <compilation-unit name="count-nullable">
+        <output-file compare="Text">count-nullable.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="semistructured">
+      <compilation-unit name="cust-filter">
+        <output-file compare="Text">cust-filter.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="semistructured">
+      <compilation-unit name="has-param1">
+        <output-file compare="Text">has-param1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="similarity">
+    <test-case FilePath="similarity">
+      <compilation-unit name="edit-distance-check_ints">
+        <output-file compare="Text">edit-distance-check_ints.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="edit-distance-check_strings">
+        <output-file compare="Text">edit-distance-check_strings.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="edit-distance-list-is-filterable">
+        <output-file compare="Text">edit-distance-list-is-filterable.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="edit-distance-string-is-filterable">
+        <output-file compare="Text">edit-distance-string-is-filterable.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="edit-distance_ints">
+        <output-file compare="Text">edit-distance_ints.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="edit-distance_strings">
+        <output-file compare="Text">edit-distance_strings.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="fuzzyeq-edit-distance">
+        <output-file compare="Text">fuzzyeq-edit-distance.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="fuzzyeq-similarity-jaccard">
+        <output-file compare="Text">fuzzyeq-similarity-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="prefix-len-jaccard">
+        <output-file compare="Text">prefix-len-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="similarity-jaccard-check_ints">
+        <output-file compare="Text">similarity-jaccard-check_ints.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="similarity-jaccard-check_query">
+        <output-file compare="Text">similarity-jaccard-check_query.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="similarity-jaccard-check_strings">
+        <output-file compare="Text">similarity-jaccard-check_strings.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="similarity-jaccard-prefix-check">
+        <output-file compare="Text">similarity-jaccard-prefix-check.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="similarity-jaccard-prefix">
+        <output-file compare="Text">similarity-jaccard-prefix.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="similarity-jaccard-sorted-check_ints">
+        <output-file compare="Text">similarity-jaccard-sorted-check_ints.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="similarity-jaccard-sorted-check_query">
+        <output-file compare="Text">similarity-jaccard-sorted-check_query.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="similarity-jaccard-sorted-check_strings">
+        <output-file compare="Text">similarity-jaccard-sorted-check_strings.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="similarity-jaccard-sorted_ints">
+        <output-file compare="Text">similarity-jaccard-sorted_ints.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="similarity-jaccard-sorted_query">
+        <output-file compare="Text">similarity-jaccard-sorted_query.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="similarity-jaccard-sorted_strings">
+        <output-file compare="Text">similarity-jaccard-sorted_strings.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="similarity-jaccard_ints">
+        <output-file compare="Text">similarity-jaccard_ints.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="similarity-jaccard_query">
+        <output-file compare="Text">similarity-jaccard_query.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="similarity-jaccard_strings">
+        <output-file compare="Text">similarity-jaccard_strings.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="spatial">
+    <test-case FilePath="spatial">
+      <compilation-unit name="cell-aggregation-with-filtering">
+        <output-file compare="Text">cell-aggregation-with-filtering.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="cell-aggregation">
+        <output-file compare="Text">cell-aggregation.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="circle-intersect-circle">
+        <output-file compare="Text">circle-intersect-circle.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="distance-between-points">
+        <output-file compare="Text">distance-between-points.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="line-intersect-circle">
+        <output-file compare="Text">line-intersect-circle.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="line-intersect-line">
+        <output-file compare="Text">line-intersect-line.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="line-intersect-polygon">
+        <output-file compare="Text">line-intersect-polygon.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="line-intersect-rectangle">
+        <output-file compare="Text">line-intersect-rectangle.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="point-equals-point">
+        <output-file compare="Text">point-equals-point.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="point-in-circle">
+        <output-file compare="Text">point-in-circle.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="point-in-polygon">
+        <output-file compare="Text">point-in-polygon.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="point-in-rectangle">
+        <output-file compare="Text">point-in-rectangle.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="point-on-line">
+        <output-file compare="Text">point-on-line.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="polygon-intersect-circle">
+        <output-file compare="Text">polygon-intersect-circle.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="polygon-intersect-polygon">
+        <output-file compare="Text">polygon-intersect-polygon.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="polygon-intersect-rectangle">
+        <output-file compare="Text">polygon-intersect-rectangle.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="rectangle-intersect-circle">
+        <output-file compare="Text">rectangle-intersect-circle.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="rectangle-intersect-rectangle">
+        <output-file compare="Text">rectangle-intersect-rectangle.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="spatial-area">
+        <output-file compare="Text">spatial-area.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="string">
+    <test-case FilePath="string">
+      <compilation-unit name="codepoint-to-string1">
+        <output-file compare="Text">codepoint-to-string1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="codepoint-to-string2">
+        <output-file compare="Text">codepoint-to-string2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="concat_01">
+        <output-file compare="Text">concat_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="concat_02">
+        <output-file compare="Text">concat_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="contains_01">
+        <output-file compare="Text">contains_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="cpttostr01">
+        <output-file compare="Text">cpttostr01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="cpttostr02">
+        <output-file compare="Text">cpttostr02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="cpttostr04">
+        <output-file compare="Text">cpttostr04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="end-with1">
+        <output-file compare="Text">end-with1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="end-with2">
+        <output-file compare="Text">end-with2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="end-with3">
+        <output-file compare="Text">end-with3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="end-with4">
+        <output-file compare="Text">end-with4.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="end-with5">
+        <output-file compare="Text">end-with5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="ends-with_01">
+        <output-file compare="Text">ends-with_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="endwith02">
+        <output-file compare="Text">endwith02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="endwith03">
+        <output-file compare="Text">endwith03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="length_01">
+        <output-file compare="Text">length_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="length_02">
+        <output-file compare="Text">length_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="like_01">
+        <output-file compare="Text">like_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="like_null">
+        <output-file compare="Text">like_null.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="lowercase">
+        <output-file compare="Text">lowercase.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="matches02">
+        <output-file compare="Text">matches02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="matches03">
+        <output-file compare="Text">matches03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="matches04">
+        <output-file compare="Text">matches04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="matches05">
+        <output-file compare="Text">matches05.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="matches06">
+        <output-file compare="Text">matches06.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="matches1">
+        <output-file compare="Text">matches1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="matches11">
+        <output-file compare="Text">matches11.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="matches2">
+        <output-file compare="Text">matches2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="matches21">
+        <output-file compare="Text">matches21.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="matches22">
+        <output-file compare="Text">matches22.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="matches23">
+        <output-file compare="Text">matches23.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="matches3">
+        <output-file compare="Text">matches3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="matchesnull">
+        <output-file compare="Text">matchesnull.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="replace1">
+        <output-file compare="Text">replace1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="replace2">
+        <output-file compare="Text">replace2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="replace21">
+        <output-file compare="Text">replace21.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="replace22">
+        <output-file compare="Text">replace22.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="replace3">
+        <output-file compare="Text">replace3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="start-with1">
+        <output-file compare="Text">start-with1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="start-with2">
+        <output-file compare="Text">start-with2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="start-with3">
+        <output-file compare="Text">start-with3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="start-with4">
+        <output-file compare="Text">start-with4.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="start-with5">
+        <output-file compare="Text">start-with5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="starts-with_01">
+        <output-file compare="Text">starts-with_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="startwith02">
+        <output-file compare="Text">startwith02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="startwith03">
+        <output-file compare="Text">startwith03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="strconcat01">
+        <output-file compare="Text">strconcat01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="strconcat02">
+        <output-file compare="Text">strconcat02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="string-concat1">
+        <output-file compare="Text">string-concat1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="string-equal1">
+        <output-file compare="Text">string-equal1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="string-equal2">
+        <output-file compare="Text">string-equal2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="string-equal3">
+        <output-file compare="Text">string-equal3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="string-equal4">
+        <output-file compare="Text">string-equal4.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="string-join1">
+        <output-file compare="Text">string-join1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="string-to-codepoint">
+        <output-file compare="Text">string-to-codepoint.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="string-to-codepoint1">
+        <output-file compare="Text">string-to-codepoint1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="strlen02">
+        <output-file compare="Text">strlen02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="strlen03">
+        <output-file compare="Text">strlen03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="strtocpt01">
+        <output-file compare="Text">strtocpt01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="strtocpt02">
+        <output-file compare="Text">strtocpt02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="strtocpt03">
+        <output-file compare="Text">strtocpt03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substr01">
+        <output-file compare="Text">substr01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substr04">
+        <output-file compare="Text">substr04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substr05">
+        <output-file compare="Text">substr05.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substr06">
+        <output-file compare="Text">substr06.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substring-after-1">
+        <output-file compare="Text">substring-after-1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substring-after-2">
+        <output-file compare="Text">substring-after-2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substring-after-3">
+        <output-file compare="Text">substring-after-3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substring-after-4">
+        <output-file compare="Text">substring-after-4.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substring-before-1">
+        <output-file compare="Text">substring-before-1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substring-before-2">
+        <output-file compare="Text">substring-before-2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substring-before-3">
+        <output-file compare="Text">substring-before-3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substring2-1">
+        <output-file compare="Text">substring2-1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substring2-2">
+        <output-file compare="Text">substring2-2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substring2-3">
+        <output-file compare="Text">substring2-3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substring2-4">
+        <output-file compare="Text">substring2-4.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substring_01">
+        <output-file compare="Text">substring_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="toLowerCase02">
+        <output-file compare="Text">toLowerCase02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="toLowerCase03">
+        <output-file compare="Text">toLowerCase03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="toLowerCase04">
+        <output-file compare="Text">toLowerCase04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="subset-collection">
+    <test-case FilePath="subset-collection">
+      <compilation-unit name="01">
+        <output-file compare="Text">01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subset-collection">
+      <compilation-unit name="02">
+        <output-file compare="Text">02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subset-collection">
+      <compilation-unit name="03">
+        <output-file compare="Text">03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subset-collection">
+      <compilation-unit name="04">
+        <output-file compare="Text">04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subset-collection">
+      <compilation-unit name="05">
+        <output-file compare="Text">05.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subset-collection">
+      <compilation-unit name="06">
+        <output-file compare="Text">06.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subset-collection">
+      <compilation-unit name="07">
+        <output-file compare="Text">07.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="tokenizers">
+    <test-case FilePath="tokenizers">
+      <compilation-unit name="counthashed-gram-tokens_01">
+        <output-file compare="Text">counthashed-gram-tokens_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tokenizers">
+      <compilation-unit name="counthashed-gram-tokens_02">
+        <output-file compare="Text">counthashed-gram-tokens_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tokenizers">
+      <compilation-unit name="counthashed-word-tokens_01">
+        <output-file compare="Text">counthashed-word-tokens_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tokenizers">
+      <compilation-unit name="gram-tokens_01">
+        <output-file compare="Text">gram-tokens_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tokenizers">
+      <compilation-unit name="gram-tokens_02">
+        <output-file compare="Text">gram-tokens_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tokenizers">
+      <compilation-unit name="hashed-gram-tokens_01">
+        <output-file compare="Text">hashed-gram-tokens_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tokenizers">
+      <compilation-unit name="hashed-gram-tokens_02">
+        <output-file compare="Text">hashed-gram-tokens_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tokenizers">
+      <compilation-unit name="hashed-word-tokens_01">
+        <output-file compare="Text">hashed-word-tokens_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tokenizers">
+      <compilation-unit name="word-tokens_01">
+        <output-file compare="Text">word-tokens_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tokenizers">
+      <compilation-unit name="word-tokens_02">
+        <output-file compare="Text">word-tokens_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="tpch">
+    <test-case FilePath="tpch">
+      <compilation-unit name="distinct_by">
+        <output-file compare="Text">distinct_by.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="group_no_agg">
+        <output-file compare="Text">group_no_agg.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q10_returned_item">
+        <output-file compare="Text">q10_returned_item.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q11_important_stock">
+        <output-file compare="Text">q11_important_stock.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q12_shipping">
+        <output-file compare="Text">q12_shipping.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q13_customer_distribution">
+        <output-file compare="Text">q13_customer_distribution.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q14_promotion_effect">
+        <output-file compare="Text">q14_promotion_effect.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q15_top_supplier">
+        <output-file compare="Text">q15_top_supplier.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q16_parts_supplier_relationship">
+        <output-file compare="Text">q16_parts_supplier_relationship.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q17_small_quantity_order_revenue">
+        <output-file compare="Text">q17_small_quantity_order_revenue.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q18_large_volume_customer">
+        <output-file compare="Text">q18_large_volume_customer.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q19_discounted_revenue">
+        <output-file compare="Text">q19_discounted_revenue.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q1_pricing_summary_report_nt">
+        <output-file compare="Text">q1_pricing_summary_report_nt.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q20_potential_part_promotion">
+        <output-file compare="Text">q20_potential_part_promotion.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q21_suppliers_who_kept_orders_waiting">
+        <output-file compare="Text">q21_suppliers_who_kept_orders_waiting.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q22_global_sales_opportunity">
+        <output-file compare="Text">q22_global_sales_opportunity.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q2_minimum_cost_supplier">
+        <output-file compare="Text">q2_minimum_cost_supplier.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q3_shipping_priority_nt">
+        <output-file compare="Text">q3_shipping_priority_nt.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q4_order_priority">
+        <output-file compare="Text">q4_order_priority.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q5_local_supplier_volume">
+        <output-file compare="Text">q5_local_supplier_volume.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q6_forecast_revenue_change">
+        <output-file compare="Text">q6_forecast_revenue_change.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q7_volume_shipping">
+        <output-file compare="Text">q7_volume_shipping.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q8_national_market_share">
+        <output-file compare="Text">q8_national_market_share.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q9_product_type_profit_nt">
+        <output-file compare="Text">q9_product_type_profit_nt.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="writers">
+    <test-case FilePath="writers">
+      <compilation-unit name="print_01">
+        <output-file compare="Text">print_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="writers">
+      <compilation-unit name="serialized_01">
+        <output-file compare="Text">serialized_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+</test-suite>
