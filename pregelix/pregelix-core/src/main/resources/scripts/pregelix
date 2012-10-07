@@ -1,0 +1,115 @@
+#!/bin/sh
+# ----------------------------------------------------------------------------
+#  Copyright 2001-2006 The Apache Software Foundation.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+# ----------------------------------------------------------------------------
+#
+#   Copyright (c) 2001-2006 The Apache Software Foundation.  All rights
+#   reserved.
+
+
+# resolve links - $0 may be a softlink
+PRG="$0"
+
+while [ -h "$PRG" ]; do
+  ls=`ls -ld "$PRG"`
+  link=`expr "$ls" : '.*-> \(.*\)$'`
+  if expr "$link" : '/.*' > /dev/null; then
+    PRG="$link"
+  else
+    PRG=`dirname "$PRG"`/"$link"
+  fi
+done
+
+PRGDIR=`dirname "$PRG"`
+BASEDIR=`cd "$PRGDIR/.." >/dev/null; pwd`
+
+
+
+# OS specific support.  $var _must_ be set to either true or false.
+cygwin=false;
+darwin=false;
+case "`uname`" in
+  CYGWIN*) cygwin=true ;;
+  Darwin*) darwin=true
+           if [ -z "$JAVA_VERSION" ] ; then
+             JAVA_VERSION="CurrentJDK"
+           else
+             echo "Using Java version: $JAVA_VERSION"
+           fi
+           if [ -z "$JAVA_HOME" ] ; then
+             JAVA_HOME=/System/Library/Frameworks/JavaVM.framework/Versions/${JAVA_VERSION}/Home
+           fi
+           ;;
+esac
+
+if [ -z "$JAVA_HOME" ] ; then
+  if [ -r /etc/gentoo-release ] ; then
+    JAVA_HOME=`java-config --jre-home`
+  fi
+fi
+
+# For Cygwin, ensure paths are in UNIX format before anything is touched
+if $cygwin ; then
+  [ -n "$JAVA_HOME" ] && JAVA_HOME=`cygpath --unix "$JAVA_HOME"`
+  [ -n "$CLASSPATH" ] && CLASSPATH=`cygpath --path --unix "$CLASSPATH"`
+fi
+
+# If a specific java binary isn't specified search for the standard 'java' binary
+if [ -z "$JAVACMD" ] ; then
+  if [ -n "$JAVA_HOME"  ] ; then
+    if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
+      # IBM's JDK on AIX uses strange locations for the executables
+      JAVACMD="$JAVA_HOME/jre/sh/java"
+    else
+      JAVACMD="$JAVA_HOME/bin/java"
+    fi
+  else
+    JAVACMD=`which java`
+  fi
+fi
+
+if [ ! -x "$JAVACMD" ] ; then
+  echo "Error: JAVA_HOME is not defined correctly." 1>&2
+  echo "  We cannot execute $JAVACMD" 1>&2
+  exit 1
+fi
+
+if [ -z "$REPO" ]
+then
+  REPO="$BASEDIR"/lib
+fi
+
+cp $BASEDIR"/../a-hadoop-patch.jar "$REPO"/
+
+CLASSPATH=$CLASSPATH_PREFIX:"$BASEDIR"/etc:"$REPO"/a-hadoop-patch.jar:"$REPO"/pregelix-api-0.0.1-SNAPSHOT.jar:"$REPO"/hyracks-dataflow-common-0.2.2-SNAPSHOT.jar:"$REPO"/hyracks-api-0.2.2-SNAPSHOT.jar:"$REPO"/json-20090211.jar:"$REPO"/httpclient-4.1-alpha2.jar:"$REPO"/httpcore-4.1-beta1.jar:"$REPO"/commons-logging-1.1.1.jar:"$REPO"/commons-codec-1.3.jar:"$REPO"/args4j-2.0.12.jar:"$REPO"/hyracks-ipc-0.2.2-SNAPSHOT.jar:"$REPO"/commons-lang3-3.1.jar:"$REPO"/hyracks-data-std-0.2.2-SNAPSHOT.jar:"$REPO"/hadoop-core-0.20.2.jar:"$REPO"/commons-cli-1.2.jar:"$REPO"/xmlenc-0.52.jar:"$REPO"/commons-httpclient-3.0.1.jar:"$REPO"/commons-net-1.4.1.jar:"$REPO"/oro-2.0.8.jar:"$REPO"/jetty-6.1.14.jar:"$REPO"/jetty-util-6.1.14.jar:"$REPO"/servlet-api-2.5-6.1.14.jar:"$REPO"/jasper-runtime-5.5.12.jar:"$REPO"/jasper-compiler-5.5.12.jar:"$REPO"/jsp-api-2.1-6.1.14.jar:"$REPO"/jsp-2.1-6.1.14.jar:"$REPO"/core-3.1.1.jar:"$REPO"/ant-1.6.5.jar:"$REPO"/commons-el-1.0.jar:"$REPO"/jets3t-0.7.1.jar:"$REPO"/kfs-0.3.jar:"$REPO"/hsqldb-1.8.0.10.jar:"$REPO"/pregelix-dataflow-std-0.0.1-SNAPSHOT.jar:"$REPO"/pregelix-dataflow-std-base-0.0.1-SNAPSHOT.jar:"$REPO"/hyracks-dataflow-std-0.2.2-SNAPSHOT.jar:"$REPO"/hyracks-dataflow-hadoop-0.2.2-SNAPSHOT.jar:"$REPO"/dcache-client-0.0.1.jar:"$REPO"/jetty-client-8.0.0.M0.jar:"$REPO"/jetty-http-8.0.0.RC0.jar:"$REPO"/jetty-io-8.0.0.RC0.jar:"$REPO"/jetty-util-8.0.0.RC0.jar:"$REPO"/hyracks-storage-am-common-0.2.2-SNAPSHOT.jar:"$REPO"/hyracks-storage-common-0.2.2-SNAPSHOT.jar:"$REPO"/hyracks-storage-am-btree-0.2.2-SNAPSHOT.jar:"$REPO"/btreehelper-0.2.2-SNAPSHOT.jar:"$REPO"/hyracks-control-cc-0.2.2-SNAPSHOT.jar:"$REPO"/hyracks-control-common-0.2.2-SNAPSHOT.jar:"$REPO"/commons-io-1.3.1.jar:"$REPO"/jetty-server-8.0.0.RC0.jar:"$REPO"/servlet-api-3.0.20100224.jar:"$REPO"/jetty-continuation-8.0.0.RC0.jar:"$REPO"/jetty-webapp-8.0.0.RC0.jar:"$REPO"/jetty-xml-8.0.0.RC0.jar:"$REPO"/jetty-servlet-8.0.0.RC0.jar:"$REPO"/jetty-security-8.0.0.RC0.jar:"$REPO"/wicket-core-1.5.2.jar:"$REPO"/wicket-util-1.5.2.jar:"$REPO"/slf4j-api-1.6.1.jar:"$REPO"/wicket-request-1.5.2.jar:"$REPO"/slf4j-jcl-1.6.3.jar:"$REPO"/hyracks-control-nc-0.2.2-SNAPSHOT.jar:"$REPO"/hyracks-net-0.2.2-SNAPSHOT.jar:"$REPO"/hyracks-hadoop-compat-0.2.2-SNAPSHOT.jar:"$REPO"/pregelix-dataflow-0.0.1-SNAPSHOT.jar:"$REPO"/pregelix-runtime-0.0.1-SNAPSHOT.jar:"$REPO"/hadoop-test-0.20.2.jar:"$REPO"/ftplet-api-1.0.0.jar:"$REPO"/mina-core-2.0.0-M5.jar:"$REPO"/ftpserver-core-1.0.0.jar:"$REPO"/ftpserver-deprecated-1.0.0-M2.jar:"$REPO"/javax.servlet-api-3.0.1.jar:"$REPO"/pregelix-core-0.0.1-SNAPSHOT.jar
+
+# For Cygwin, switch paths to Windows format before running java
+if $cygwin; then
+  [ -n "$CLASSPATH" ] && CLASSPATH=`cygpath --path --windows "$CLASSPATH"`
+  [ -n "$JAVA_HOME" ] && JAVA_HOME=`cygpath --path --windows "$JAVA_HOME"`
+  [ -n "$HOME" ] && HOME=`cygpath --path --windows "$HOME"`
+  [ -n "$BASEDIR" ] && BASEDIR=`cygpath --path --windows "$BASEDIR"`
+  [ -n "$REPO" ] && REPO=`cygpath --path --windows "$REPO"`
+fi
+
+exec "$JAVACMD" $JAVA_OPTS  \
+  -classpath "$CLASSPATH" \
+  -Dapp.name="pregelix" \
+  -Dapp.pid="$$" \
+  -Dapp.repo="$REPO" \
+  -Dapp.home="$BASEDIR" \
+  -Dbasedir="$BASEDIR" \
+  org.apache.hadoop.util.RunJar \
+  "$@"

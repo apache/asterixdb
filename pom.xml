@@ -5,6 +5,7 @@
   <artifactId>fullstack</artifactId>
   <version>0.2.2-SNAPSHOT</version>
   <packaging>pom</packaging>
+  <name>hyracks-ecosystem-full-stack</name>
 
   <build>
     <plugins>
@@ -32,5 +33,6 @@
 
   <modules>
     <module>hyracks</module>
+    <module>pregelix</module>
   </modules>
 </project>
