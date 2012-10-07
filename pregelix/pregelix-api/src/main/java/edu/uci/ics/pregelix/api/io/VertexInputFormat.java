@@ -46,18 +46,9 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 public abstract class VertexInputFormat<I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable> {
     /**
      * Logically split the vertices for a graph processing application.
-     * 
      * Each {@link InputSplit} is then assigned to a worker for processing.
-     * 
      * <p>
-     * <i>Note</i>: The split is a <i>logical</i> split of the inputs and the
-     * input files are not physically split into chunks. For e.g. a split could
-     * be <i>&lt;input-file-path, start, offset&gt;</i> tuple. The InputFormat
-     * also creates the {@link VertexReader} to read the {@link InputSplit}.
-     * 
-     * Also, the number of workers is a hint given to the developer to try to
-     * intelligently determine how many splits to create (if this is adjustable)
-     * at runtime.
+     * <i>Note</i>: The split is a <i>logical</i> split of the inputs and the input files are not physically split into chunks. For e.g. a split could be <i>&lt;input-file-path, start, offset&gt;</i> tuple. The InputFormat also creates the {@link VertexReader} to read the {@link InputSplit}. Also, the number of workers is a hint given to the developer to try to intelligently determine how many splits to create (if this is adjustable) at runtime.
      * 
      * @param context
      *            Context of the job
@@ -69,8 +60,7 @@ public abstract class VertexInputFormat<I extends WritableComparable, V extends 
             InterruptedException;
 
     /**
-     * Create a vertex reader for a given split. The framework will call
-     * {@link VertexReader#initialize(InputSplit, TaskAttemptContext)} before
+     * Create a vertex reader for a given split. The framework will call {@link VertexReader#initialize(InputSplit, TaskAttemptContext)} before
      * the split is used.
      * 
      * @param split

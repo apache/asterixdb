@@ -26,7 +26,6 @@ import org.apache.hadoop.mapred.TextInputFormat;
 
 /**
  * generate graph data from a base dataset
- * 
  */
 @SuppressWarnings("deprecation")
 public class DataGenerator {

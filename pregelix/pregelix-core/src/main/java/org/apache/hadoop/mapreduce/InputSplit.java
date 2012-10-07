@@ -22,13 +22,9 @@ import java.io.IOException;
 import java.io.Serializable;
 
 /**
- * <code>InputSplit</code> represents the data to be processed by an individual
- * {@link Mapper}.
- * 
+ * <code>InputSplit</code> represents the data to be processed by an individual {@link Mapper}.
  * <p>
- * Typically, it presents a byte-oriented view on the input and is the
- * responsibility of {@link RecordReader} of the job to process this and present
- * a record-oriented view.
+ * Typically, it presents a byte-oriented view on the input and is the responsibility of {@link RecordReader} of the job to process this and present a record-oriented view.
  * 
  * @see InputFormat
  * @see RecordReader

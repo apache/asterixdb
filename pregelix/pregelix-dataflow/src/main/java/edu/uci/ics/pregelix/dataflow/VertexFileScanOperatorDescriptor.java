@@ -89,7 +89,6 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
              * Load the vertices
              * 
              * @parameter IHyracks ctx
-             * 
              * @throws IOException
              * @throws IllegalAccessException
              * @throws InstantiationException

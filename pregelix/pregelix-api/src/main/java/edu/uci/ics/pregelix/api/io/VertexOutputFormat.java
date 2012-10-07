@@ -41,8 +41,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 @SuppressWarnings("rawtypes")
 public abstract class VertexOutputFormat<I extends WritableComparable, V extends Writable, E extends Writable> {
     /**
-     * Create a vertex writer for a given split. The framework will call
-     * {@link VertexReader#initialize(InputSplit, TaskAttemptContext)} before
+     * Create a vertex writer for a given split. The framework will call {@link VertexReader#initialize(InputSplit, TaskAttemptContext)} before
      * the split is used.
      * 
      * @param context
@@ -57,11 +56,8 @@ public abstract class VertexOutputFormat<I extends WritableComparable, V extends
     /**
      * Check for validity of the output-specification for the job. (Copied from
      * Hadoop OutputFormat)
-     * 
      * <p>
-     * This is to validate the output specification for the job when it is a job
-     * is submitted. Typically checks that it does not already exist, throwing
-     * an exception when it already exists, so that output is not overwritten.
+     * This is to validate the output specification for the job when it is a job is submitted. Typically checks that it does not already exist, throwing an exception when it already exists, so that output is not overwritten.
      * </p>
      * 
      * @param context

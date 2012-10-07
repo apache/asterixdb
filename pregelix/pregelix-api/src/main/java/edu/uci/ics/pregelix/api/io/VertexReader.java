@@ -57,7 +57,6 @@ public interface VertexReader<I extends WritableComparable, V extends Writable, 
     void initialize(InputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException;
 
     /**
-     * 
      * @return false iff there are no more vertices
      * @throws IOException
      * @throws InterruptedException

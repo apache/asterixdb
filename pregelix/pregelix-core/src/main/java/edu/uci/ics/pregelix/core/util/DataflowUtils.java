@@ -32,7 +32,8 @@ import edu.uci.ics.pregelix.runtime.simpleagg.AggregationFunctionFactory;
 public class DataflowUtils {
 
     public enum AggregationMode {
-        PARTIAL, FINAL
+        PARTIAL,
+        FINAL
     }
 
     @SuppressWarnings("unchecked")
