@@ -39,7 +39,7 @@ public class BufferCache implements IBufferCacheInternal {
 
     private static final int MIN_CLEANED_COUNT_DIFF = 3;
     private static final int PIN_MAX_WAIT_TIME = 50;
-    
+
     private final int maxOpenFiles;
 
     private final IIOManager ioManager;
@@ -48,6 +48,7 @@ public class BufferCache implements IBufferCacheInternal {
     private final CachedPage[] cachedPages;
     private final CacheBucket[] pageMap;
     private final IPageReplacementStrategy pageReplacementStrategy;
+    private final IPageCleanerPolicy pageCleanerPolicy;
     private final IFileMapManager fileMapManager;
     private final CleanerThread cleanerThread;
     private final Map<Integer, BufferedFileHandle> fileInfoMap;
@@ -55,8 +56,8 @@ public class BufferCache implements IBufferCacheInternal {
     private boolean closed;
 
     public BufferCache(IIOManager ioManager, ICacheMemoryAllocator allocator,
-            IPageReplacementStrategy pageReplacementStrategy, IFileMapManager fileMapManager, int pageSize,
-            int numPages, int maxOpenFiles) {
+            IPageReplacementStrategy pageReplacementStrategy, IPageCleanerPolicy pageCleanerPolicy,
+            IFileMapManager fileMapManager, int pageSize, int numPages, int maxOpenFiles) {
         this.ioManager = ioManager;
         this.pageSize = pageSize;
         this.numPages = numPages;
@@ -72,6 +73,7 @@ public class BufferCache implements IBufferCacheInternal {
             pageMap[i] = new CacheBucket();
         }
         this.pageReplacementStrategy = pageReplacementStrategy;
+        this.pageCleanerPolicy = pageCleanerPolicy;
         this.fileMapManager = fileMapManager;
         fileInfoMap = new HashMap<Integer, BufferedFileHandle>();
         cleanerThread = new CleanerThread();
@@ -157,7 +159,7 @@ public class BufferCache implements IBufferCacheInternal {
         return cPage;
     }
 
-    private CachedPage findPage(long dpid, boolean newPage) {
+    private CachedPage findPage(long dpid, boolean newPage) throws HyracksDataException {
         while (true) {
             int startCleanedCount = cleanerThread.cleanedCount;
 
@@ -300,7 +302,7 @@ public class BufferCache implements IBufferCacheInternal {
                 }
             }
             synchronized (cleanerThread) {
-                cleanerThread.notifyAll();
+                pageCleanerPolicy.notifyVictimNotFound(cleanerThread);
             }
             // Heuristic optimization. Check whether the cleaner thread has
             // cleaned pages since we did our last pin attempt.
@@ -502,6 +504,7 @@ public class BufferCache implements IBufferCacheInternal {
 
         public CleanerThread() {
             setPriority(MAX_PRIORITY);
+            setDaemon(true);
         }
 
         public void cleanPage(CachedPage cPage, boolean force) {
@@ -551,6 +554,7 @@ public class BufferCache implements IBufferCacheInternal {
         public synchronized void run() {
             try {
                 while (true) {
+                    pageCleanerPolicy.notifyCleanCycleStart(this);
                     for (int i = 0; i < numPages; ++i) {
                         CachedPage cPage = cachedPages[i];
                         cleanPage(cPage, false);
@@ -558,12 +562,10 @@ public class BufferCache implements IBufferCacheInternal {
                     if (shutdownStart) {
                         break;
                     }
-                    try {
-                        wait(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    pageCleanerPolicy.notifyCleanCycleFinish(this);
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             } finally {
                 shutdownComplete = true;
                 notifyAll();

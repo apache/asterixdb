@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
+import edu.uci.ics.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
@@ -40,7 +41,7 @@ public class TestStorageManagerComponentHolder {
     private static IFileMapProvider fileMapProvider;
     private static IndexRegistry<IIndex> indexRegistry;
     private static IOManager ioManager;
-    
+
     private static int pageSize;
     private static int numPages;
     private static int maxOpenFiles;
@@ -59,8 +60,8 @@ public class TestStorageManagerComponentHolder {
             ICacheMemoryAllocator allocator = new HeapBufferAllocator();
             IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
             IFileMapProvider fileMapProvider = getFileMapProvider(ctx);
-            bufferCache = new BufferCache(ctx.getIOManager(), allocator, prs, (IFileMapManager) fileMapProvider,
-                    pageSize, numPages, maxOpenFiles);
+            bufferCache = new BufferCache(ctx.getIOManager(), allocator, prs, new DelayPageCleanerPolicy(1000),
+                    (IFileMapManager) fileMapProvider, pageSize, numPages, maxOpenFiles);
         }
         return bufferCache;
     }
@@ -78,13 +79,13 @@ public class TestStorageManagerComponentHolder {
         }
         return indexRegistry;
     }
-    
+
     public synchronized static IOManager getIOManager() throws HyracksException {
-    	if (ioManager == null) {
-    		List<IODeviceHandle> devices = new ArrayList<IODeviceHandle>();
-    		devices.add(new IODeviceHandle(new File(System.getProperty("java.io.tmpdir")), "iodev_test_wa"));
-    		ioManager = new IOManager(devices, Executors.newCachedThreadPool());
-    	}
-    	return ioManager;
+        if (ioManager == null) {
+            List<IODeviceHandle> devices = new ArrayList<IODeviceHandle>();
+            devices.add(new IODeviceHandle(new File(System.getProperty("java.io.tmpdir")), "iodev_test_wa"));
+            ioManager = new IOManager(devices, Executors.newCachedThreadPool());
+        }
+        return ioManager;
     }
 }

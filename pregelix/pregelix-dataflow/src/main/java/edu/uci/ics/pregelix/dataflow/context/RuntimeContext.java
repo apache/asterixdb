@@ -32,6 +32,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
+import edu.uci.ics.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
@@ -61,8 +62,8 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         long memSize = Runtime.getRuntime().maxMemory();
         long bufferSize = memSize / 4;
         int numPages = (int) (bufferSize / pageSize);
-        bufferCache = new BufferCache(appCtx.getRootContext().getIOManager(), allocator, prs, fileMapManager, pageSize,
-                numPages, 1000000);
+        bufferCache = new BufferCache(appCtx.getRootContext().getIOManager(), allocator, prs,
+                new DelayPageCleanerPolicy(100000), fileMapManager, pageSize, numPages, 1000000);
         treeIndexRegistry = new IndexRegistry<IIndex>();
         ioManager = (IOManager) appCtx.getRootContext().getIOManager();
     }
