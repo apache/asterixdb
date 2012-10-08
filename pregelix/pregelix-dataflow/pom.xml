@@ -6,9 +6,9 @@
 	<name>pregelix-dataflow</name>
 
 	<parent>
-    		<groupId>edu.uci.ics.pregelix</groupId>
+    		<groupId>edu.uci.ics.hyracks</groupId>
     		<artifactId>pregelix</artifactId>
-    		<version>0.0.1-SNAPSHOT</version>
+    		<version>0.2.2-SNAPSHOT</version>
   	</parent>
 
 
@@ -70,16 +70,16 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.pregelix</groupId>
+			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>pregelix-api</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.2.2-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.pregelix</groupId>
+			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>pregelix-dataflow-std-base</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.2.2-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>

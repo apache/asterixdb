@@ -4,9 +4,9 @@
 	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>edu.uci.ics.pregelix</groupId>
+		<groupId>edu.uci.ics.hyracks</groupId>
 		<artifactId>pregelix</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.2.2-SNAPSHOT</version>
 	</parent>
 	<artifactId>pregelix-dist</artifactId>
 	<name>pregelix-dist</name>
@@ -51,9 +51,9 @@
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>edu.uci.ics.pregelix</groupId>
+			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>pregelix-core</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.2.2-SNAPSHOT</version>
 			<scope>comile</scope>
 		</dependency>
 	</dependencies>
