@@ -6,10 +6,10 @@
 	<name>pregelix-core</name>
 
 	<parent>
-    		<groupId>edu.uci.ics.hyracks</groupId>
-    		<artifactId>pregelix</artifactId>
-    		<version>0.2.2-SNAPSHOT</version>
-  	</parent>
+		<groupId>edu.uci.ics.hyracks</groupId>
+		<artifactId>pregelix</artifactId>
+		<version>0.2.2-SNAPSHOT</version>
+	</parent>
 
 
 	<properties>
@@ -31,11 +31,11 @@
 							<classifier>balancer</classifier>
 							<archive>
 								<manifest>
-									<MainClass>edu.uci.ics.hyracks.giraph.util.DataBalancer</MainClass>
+									<MainClass>edu.uci.ics.pregelix.util.DataBalancer</MainClass>
 								</manifest>
 							</archive>
 							<includes>
-								<include>**/uci/ics/hyracks/giraph/util/DataBalancer*</include>
+								<include>**/uci/ics/pregelix/util/DataBalancer*</include>
 							</includes>
 						</configuration>
 					</execution>
@@ -54,11 +54,11 @@
 							<classifier>generator</classifier>
 							<archive>
 								<manifest>
-									<MainClass>edu.uci.ics.hyracks.giraph.util.DataGenerator</MainClass>
+									<MainClass>edu.uci.ics.pregelix.util.DataGenerator</MainClass>
 								</manifest>
 							</archive>
 							<includes>
-								<include>**/uci/ics/hyracks/giraph/util/DataGenerator*</include>
+								<include>**/uci/ics/pregelix/util/DataGenerator*</include>
 							</includes>
 						</configuration>
 					</execution>
@@ -163,6 +163,25 @@
 							<resources>
 								<resource>
 									<directory>src/main/resources/conf</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-hadoop-patch</id>
+						<!-- here the phase you need -->
+						<phase>package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>target/appassembler/lib</outputDirectory>
+							<resources>
+								<resource>
+									<directory>target</directory>
+									<includes>
+										<include>a-hadoop-patch.jar</include>
+									</includes>
 								</resource>
 							</resources>
 						</configuration>

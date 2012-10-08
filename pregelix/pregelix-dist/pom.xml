@@ -45,6 +45,24 @@
 							</resources>
 						</configuration>
 					</execution>
+					<execution>
+						<id>copy-examples</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>target/appassembler/examples</outputDirectory>
+							<resources>
+								<resource>
+									<directory>../pregelix-example/target</directory>
+									<includes>
+										<include>*.jar</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 		</plugins>
@@ -55,6 +73,11 @@
 			<artifactId>pregelix-core</artifactId>
 			<version>0.2.2-SNAPSHOT</version>
 			<scope>comile</scope>
+		</dependency>
+		<dependency>
+			<groupId>edu.uci.ics.hyracks</groupId>
+			<artifactId>pregelix-example</artifactId>
+			<version>0.2.2-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 </project>

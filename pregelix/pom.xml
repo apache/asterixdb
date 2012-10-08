@@ -106,7 +106,7 @@
     <module>pregelix-dataflow</module>
     <module>pregelix-runtime</module>
     <module>pregelix-core</module>
-    <module>pregelix-dist</module>
     <module>pregelix-example</module>
+    <module>pregelix-dist</module>
   </modules>
 </project>
