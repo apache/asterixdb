@@ -31,11 +31,11 @@
 							<classifier>balancer</classifier>
 							<archive>
 								<manifest>
-									<MainClass>edu.uci.ics.pregelix.util.DataBalancer</MainClass>
+									<MainClass>edu.uci.ics.pregelix.core.util.DataBalancer</MainClass>
 								</manifest>
 							</archive>
 							<includes>
-								<include>**/uci/ics/pregelix/util/DataBalancer*</include>
+								<include>**/edu/uci/ics/pregelix/core/util/DataBalancer*</include>
 							</includes>
 						</configuration>
 					</execution>
@@ -54,11 +54,11 @@
 							<classifier>generator</classifier>
 							<archive>
 								<manifest>
-									<MainClass>edu.uci.ics.pregelix.util.DataGenerator</MainClass>
+									<MainClass>edu.uci.ics.pregelix.core.util.DataGenerator</MainClass>
 								</manifest>
 							</archive>
 							<includes>
-								<include>**/uci/ics/pregelix/util/DataGenerator*</include>
+								<include>**/edu/uci/ics/pregelix/core/util/DataGenerator*</include>
 							</includes>
 						</configuration>
 					</execution>
