@@ -33,6 +33,7 @@
 
   <modules>
     <module>hyracks</module>
+    <module>algebricks</module>
     <module>pregelix</module>
   </modules>
 </project>

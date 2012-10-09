@@ -1,10 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>hyracks-algebricks-core</artifactId>
+  <artifactId>algebricks-data</artifactId>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
-    <artifactId>hyracks-algebricks</artifactId>
+    <artifactId>algebricks</artifactId>
     <version>0.2.2-SNAPSHOT</version>
   </parent>
 
@@ -24,27 +24,12 @@
   <dependencies>
   <dependency>
   	<groupId>edu.uci.ics.hyracks</groupId>
-  	<artifactId>hyracks-storage-am-btree</artifactId>
+  	<artifactId>algebricks-common</artifactId>
   	<version>0.2.2-SNAPSHOT</version>
   </dependency>
   <dependency>
   	<groupId>edu.uci.ics.hyracks</groupId>
-  	<artifactId>hyracks-storage-am-rtree</artifactId>
-  	<version>0.2.2-SNAPSHOT</version>
-  </dependency>
-  <dependency>
-  	<groupId>edu.uci.ics.hyracks</groupId>
-  	<artifactId>hyracks-dataflow-std</artifactId>
-  	<version>0.2.2-SNAPSHOT</version>
-  </dependency>
-  <dependency>
-  	<groupId>edu.uci.ics.hyracks</groupId>
-  	<artifactId>hyracks-algebricks-runtime</artifactId>
-  	<version>0.2.2-SNAPSHOT</version>
-  </dependency>
-  <dependency>
-  	<groupId>edu.uci.ics.hyracks</groupId>
-  	<artifactId>hyracks-algebricks-common</artifactId>
+  	<artifactId>hyracks-data-std</artifactId>
   	<version>0.2.2-SNAPSHOT</version>
   </dependency>
   </dependencies>
