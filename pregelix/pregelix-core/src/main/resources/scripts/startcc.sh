@@ -1,4 +1,5 @@
 #!/bin/bash
+hostname
 
 #Import cluster properties
 . conf/cluster.properties
@@ -18,9 +19,6 @@ mkdir $CCLOGS_DIR
 #Export JAVA_HOME and JAVA_OPTS
 export JAVA_HOME=$JAVA_HOME
 export JAVA_OPTS=$CCJAVA_OPTS
-
-echo $JAVA_HOME
-echo $JAVA_OPTS
 
 #Launch hyracks cc script
 chmod -R 755 $HYRACKS_HOME
