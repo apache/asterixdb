@@ -14,8 +14,13 @@
  */
 package edu.uci.ics.hyracks.api.context;
 
+import java.util.Map;
+
+import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 
 public interface IHyracksRootContext {
     public IIOManager getIOManager();
+
+    public Map<String, NodeControllerInfo> getNodeControllerInfos() throws Exception;
 }

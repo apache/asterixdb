@@ -48,6 +48,8 @@ public class LongParserFactory implements IValueParserFactory {
 
                         case '-':
                             sign = -1;
+                            pre = false;
+                            break;
 
                         case '0':
                         case '1':
@@ -60,6 +62,7 @@ public class LongParserFactory implements IValueParserFactory {
                         case '8':
                         case '9':
                             pre = false;
+                            n = n * 10 + (ch - '0');
                             break;
 
                         default:

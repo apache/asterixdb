@@ -17,8 +17,10 @@ package edu.uci.ics.hyracks.test.support;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 
+import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IIOManager;
@@ -37,5 +39,10 @@ public class TestRootContext implements IHyracksRootContext {
     @Override
     public IIOManager getIOManager() {
         return ioManager;
+    }
+
+    @Override
+    public Map<String, NodeControllerInfo> getNodeControllerInfos() throws Exception {
+        return null;
     }
 }

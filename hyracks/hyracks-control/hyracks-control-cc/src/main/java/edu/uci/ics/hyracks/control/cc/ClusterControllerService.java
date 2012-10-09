@@ -70,6 +70,7 @@ import edu.uci.ics.hyracks.control.common.ipc.CCNCFunctions;
 import edu.uci.ics.hyracks.control.common.ipc.CCNCFunctions.Function;
 import edu.uci.ics.hyracks.control.common.logs.LogFile;
 import edu.uci.ics.hyracks.control.common.work.IPCResponder;
+import edu.uci.ics.hyracks.control.common.work.IResultCallback;
 import edu.uci.ics.hyracks.control.common.work.WorkQueue;
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
 import edu.uci.ics.hyracks.ipc.api.IIPCI;
@@ -352,7 +353,8 @@ public class ClusterControllerService extends AbstractRemoteService {
 
     private class ClusterControllerIPCI implements IIPCI {
         @Override
-        public void deliverIncomingMessage(IIPCHandle handle, long mid, long rmid, Object payload, Exception exception) {
+        public void deliverIncomingMessage(final IIPCHandle handle, long mid, long rmid, Object payload,
+                Exception exception) {
             CCNCFunctions.Function fn = (Function) payload;
             switch (fn.getFunctionId()) {
                 case REGISTER_NODE: {
@@ -423,6 +425,23 @@ public class ClusterControllerService extends AbstractRemoteService {
                     CCNCFunctions.SendApplicationMessageFunction rsf = (CCNCFunctions.SendApplicationMessageFunction) fn;
                     workQueue.schedule(new ApplicationMessageWork(ClusterControllerService.this, rsf.getMessage(), rsf
                             .getAppName(), rsf.getNodeId()));
+                    return;
+                }
+
+                case GET_NODE_CONTROLLERS_INFO: {
+                    workQueue.schedule(new GetNodeControllersInfoWork(ClusterControllerService.this,
+                            new IResultCallback<Map<String, NodeControllerInfo>>() {
+                                @Override
+                                public void setValue(Map<String, NodeControllerInfo> result) {
+                                    new IPCResponder<CCNCFunctions.GetNodeControllersInfoResponseFunction>(handle, -1)
+                                            .setValue(new CCNCFunctions.GetNodeControllersInfoResponseFunction(result));
+                                }
+
+                                @Override
+                                public void setException(Exception e) {
+
+                                }
+                            }));
                     return;
                 }
             }

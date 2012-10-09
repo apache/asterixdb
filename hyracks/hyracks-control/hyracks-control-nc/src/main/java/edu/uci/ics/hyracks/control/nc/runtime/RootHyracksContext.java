@@ -14,18 +14,30 @@
  */
 package edu.uci.ics.hyracks.control.nc.runtime;
 
+import java.util.Map;
+
+import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.io.IIOManager;
+import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 
 public class RootHyracksContext implements IHyracksRootContext {
+    private final NodeControllerService ncs;
+
     private final IIOManager ioManager;
 
-    public RootHyracksContext(IIOManager ioManager) {
+    public RootHyracksContext(NodeControllerService ncs, IIOManager ioManager) {
+        this.ncs = ncs;
         this.ioManager = ioManager;
     }
 
     @Override
     public IIOManager getIOManager() {
         return ioManager;
+    }
+
+    @Override
+    public Map<String, NodeControllerInfo> getNodeControllerInfos() throws Exception {
+        return ncs.getNodeControllersInfo();
     }
 }

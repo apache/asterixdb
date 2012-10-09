@@ -40,6 +40,10 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
+import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.api.job.JobId;
@@ -122,6 +126,8 @@ public class NodeControllerService extends AbstractRemoteService {
 
     private final OperatingSystemMXBean osMXBean;
 
+    private final Mutable<FutureValue<Map<String, NodeControllerInfo>>> getNodeControllerInfosAcceptor;
+
     public NodeControllerService(NCConfig ncConfig) throws Exception {
         this.ncConfig = ncConfig;
         id = ncConfig.nodeId;
@@ -129,7 +135,7 @@ public class NodeControllerService extends AbstractRemoteService {
         NodeControllerIPCI ipci = new NodeControllerIPCI();
         ipc = new IPCSystem(new InetSocketAddress(ncConfig.clusterNetIPAddress, 0), ipci,
                 new CCNCFunctions.SerializerDeserializer());
-        this.ctx = new RootHyracksContext(new IOManager(getDevices(ncConfig.ioDevices), executor));
+        this.ctx = new RootHyracksContext(this, new IOManager(getDevices(ncConfig.ioDevices), executor));
         if (id == null) {
             throw new Exception("id not set");
         }
@@ -148,6 +154,7 @@ public class NodeControllerService extends AbstractRemoteService {
         runtimeMXBean = ManagementFactory.getRuntimeMXBean();
         osMXBean = ManagementFactory.getOperatingSystemMXBean();
         registrationPending = true;
+        getNodeControllerInfosAcceptor = new MutableObject<FutureValue<Map<String, NodeControllerInfo>>>();
     }
 
     public IHyracksRootContext getRootContext() {
@@ -169,6 +176,28 @@ public class NodeControllerService extends AbstractRemoteService {
         this.registrationException = exception;
         this.registrationPending = false;
         notifyAll();
+    }
+
+    public Map<String, NodeControllerInfo> getNodeControllersInfo() throws Exception {
+        FutureValue<Map<String, NodeControllerInfo>> fv = new FutureValue<Map<String, NodeControllerInfo>>();
+        synchronized (getNodeControllerInfosAcceptor) {
+            while (getNodeControllerInfosAcceptor.getValue() != null) {
+                getNodeControllerInfosAcceptor.wait();
+            }
+            getNodeControllerInfosAcceptor.setValue(fv);
+        }
+        ccs.getNodeControllerInfos();
+        return fv.get();
+    }
+
+    private void setNodeControllersInfo(Map<String, NodeControllerInfo> ncInfos) {
+        FutureValue<Map<String, NodeControllerInfo>> fv;
+        synchronized (getNodeControllerInfosAcceptor) {
+            fv = getNodeControllerInfosAcceptor.getValue();
+            getNodeControllerInfosAcceptor.setValue(null);
+            getNodeControllerInfosAcceptor.notifyAll();
+        }
+        fv.setValue(ncInfos);
     }
 
     @Override
@@ -416,6 +445,12 @@ public class NodeControllerService extends AbstractRemoteService {
                 case NODE_REGISTRATION_RESULT: {
                     CCNCFunctions.NodeRegistrationResult nrrf = (CCNCFunctions.NodeRegistrationResult) fn;
                     setNodeRegistrationResult(nrrf.getNodeParameters(), nrrf.getException());
+                    return;
+                }
+
+                case GET_NODE_CONTROLLERS_INFO_RESPONSE: {
+                    CCNCFunctions.GetNodeControllersInfoResponseFunction gncirf = (CCNCFunctions.GetNodeControllersInfoResponseFunction) fn;
+                    setNodeControllersInfo(gncirf.getNodeControllerInfos());
                     return;
                 }
             }

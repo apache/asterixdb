@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
@@ -77,6 +78,8 @@ public class CCNCFunctions {
         DESTROY_APPLICATION,
         REPORT_PARTITION_AVAILABILITY,
         SEND_APPLICATION_MESSAGE,
+        GET_NODE_CONTROLLERS_INFO,
+        GET_NODE_CONTROLLERS_INFO_RESPONSE,
 
         OTHER
     }
@@ -640,6 +643,34 @@ public class CCNCFunctions {
 
         public String getAppName() {
             return appName;
+        }
+    }
+
+    public static class GetNodeControllersInfoFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.GET_NODE_CONTROLLERS_INFO;
+        }
+    }
+
+    public static class GetNodeControllersInfoResponseFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final Map<String, NodeControllerInfo> ncInfos;
+
+        public GetNodeControllersInfoResponseFunction(Map<String, NodeControllerInfo> ncInfos) {
+            this.ncInfos = ncInfos;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.GET_NODE_CONTROLLERS_INFO_RESPONSE;
+        }
+
+        public Map<String, NodeControllerInfo> getNodeControllerInfos() {
+            return ncInfos;
         }
     }
 
