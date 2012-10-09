@@ -88,11 +88,14 @@ public class ARectangleConstructorDescriptor extends AbstractScalarFunctionDynam
                                 commaIndex = s.indexOf(',', spaceIndex + 1);
                                 aPoint[1].setValue(Double.parseDouble(s.substring(spaceIndex + 1, commaIndex)),
                                         Double.parseDouble(s.substring(commaIndex + 1, s.length())));
-                                if (aPoint[0].getX() > aPoint[1].getX() || aPoint[0].getY() > aPoint[1].getY()) {
+                                if (aPoint[0].getX() > aPoint[1].getX() && aPoint[0].getY() > aPoint[1].getY()) {
+                                    aRectangle.setValue(aPoint[1], aPoint[0]);
+                                } else if (aPoint[0].getX() < aPoint[1].getX() && aPoint[0].getY() < aPoint[1].getY()) {
+                                    aRectangle.setValue(aPoint[0], aPoint[1]);
+                                } else {
                                     throw new IllegalArgumentException(
-                                            "The low point in the rectangle cannot be larger than the high point");
+                                            "Rectangle arugment must be either (bottom left point, top right point) or (top right point, bottom left point)");
                                 }
-                                aRectangle.setValue(aPoint[0], aPoint[1]);
                                 rectangle2DSerde.serialize(aRectangle, out);
                             } else if (serString[0] == SER_NULL_TYPE_TAG)
                                 nullSerde.serialize(ANull.NULL, out);
