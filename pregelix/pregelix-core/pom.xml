@@ -77,7 +77,7 @@
 							<classifier>patch</classifier>
 							<finalName>a-hadoop</finalName>
 							<includes>
-								<include>**/org/apache/*</include>
+								<include>**/org/apache/**</include>
 							</includes>
 						</configuration>
 					</execution>
