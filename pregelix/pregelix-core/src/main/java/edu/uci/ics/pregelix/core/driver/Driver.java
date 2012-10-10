@@ -4,10 +4,11 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -90,13 +91,13 @@ public class Driver implements IDriver {
             ClusterConfig.loadClusterConfig(ipAddress, port);
 
             URLClassLoader classLoader = (URLClassLoader) exampleClass.getClassLoader();
+            List<File> jars = new ArrayList<File>();
             URL[] urls = classLoader.getURLs();
-            String jarFile = "";
             for (URL url : urls)
                 if (url.toString().endsWith(".jar"))
-                    jarFile = url.getPath();
+                    jars.add(new File(url.getPath()));
 
-            installApplication(jarFile);
+            installApplication(jars);
             FileSystem dfs = FileSystem.get(job.getConfiguration());
             dfs.delete(FileOutputFormat.getOutputPath(job), true);
 
@@ -187,22 +188,9 @@ public class Driver implements IDriver {
         hcc.waitForCompletion(jobId);
     }
 
-    public void installApplication(String jarFile) throws Exception {
-        System.out.println(jarFile);
-        applicationName = job.getJobName() + new UUID(System.currentTimeMillis(), System.nanoTime());
-        String home = System.getProperty(PREGELIX_HOME);
-        if (home == null)
-            home = "./";
-        String libDir = home + LIB;
-        File dir = new File(libDir);
-        if (!dir.isDirectory()) {
-            throw new HyracksException(libDir + " is not a directory!");
-        }
-        System.out.println(dir.getAbsolutePath());
-        File[] libJars = dir.listFiles(new FileFilter("jar"));
+    public void installApplication(List<File> jars) throws Exception {
         Set<String> allJars = new TreeSet<String>();
-        allJars.add(jarFile);
-        for (File jar : libJars) {
+        for (File jar : jars) {
             allJars.add(jar.getAbsolutePath());
         }
         File appZip = Utilities.getHyracksArchive(applicationName, allJars);
