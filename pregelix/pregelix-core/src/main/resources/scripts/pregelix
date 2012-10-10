@@ -91,7 +91,7 @@ then
   REPO="$BASEDIR"/lib
 fi
 
-CLASSPATH=$CLASSPATH_PREFIX:"$BASEDIR"/etc:$(echo ${REPO}/*.jar | tr ' ' ':')
+CLASSPATH=$CLASSPATH_PREFIX:"$HADOOP_HOME"/conf:"$BASEDIR"/etc:$(echo ${REPO}/*.jar | tr ' ' ':')
 
 # For Cygwin, switch paths to Windows format before running java
 if $cygwin; then

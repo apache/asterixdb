@@ -52,6 +52,14 @@ public class Driver implements IDriver {
     @Override
     public void runJob(PregelixJob job, Plan planChoice, String ipAddress, int port, boolean profiling)
             throws HyracksException {
+        /** add hadoop configurations */
+        URL hadoopCore = job.getClass().getClassLoader().getResource("core-site.xml");
+        job.getConfiguration().addResource(hadoopCore);
+        URL hadoopMapRed = job.getClass().getClassLoader().getResource("mapred-site.xml");
+        job.getConfiguration().addResource(hadoopMapRed);
+        URL hadoopHdfs = job.getClass().getClassLoader().getResource("hdfs-site.xml");
+        job.getConfiguration().addResource(hadoopHdfs);
+
         LOG.info("job started");
         long start = System.currentTimeMillis();
         long end = start;

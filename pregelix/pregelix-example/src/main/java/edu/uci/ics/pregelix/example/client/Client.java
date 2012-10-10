@@ -62,15 +62,6 @@ public class Client {
 		CmdLineParser parser = new CmdLineParser(options);
 		parser.parseArgument(args);
 
-		/** add hadoop configurations */
-		String hadoopPath = System.getProperty("HADOOP_HOME", "/hadoop");
-		Path pathCore = new Path(hadoopPath + "/conf/core-site.xml");
-		job.getConfiguration().addResource(pathCore);
-		Path pathMapRed = new Path(hadoopPath + "/conf/mapred-site.xml");
-		job.getConfiguration().addResource(pathMapRed);
-		Path pathHDFS = new Path(hadoopPath + "/conf/hdfs-site.xml");
-		job.getConfiguration().addResource(pathHDFS);
-
 		String[] inputs = options.inputPaths.split(";");
 		FileInputFormat.setInputPaths(job, inputs[0]);
 		for (int i = 1; i < inputs.length; i++)
