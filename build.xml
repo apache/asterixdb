@@ -63,7 +63,7 @@
     </target>
 
 <property environment="env"/>
-    <property name="COBERTURA_HOME" value="/home/kfmohamm/.m2/repository/net/sourceforge/cobertura/cobertura/1.9.4.1"/>
+    <property name="COBERTURA_HOME" value="../../.m2/repository/net/sourceforge/cobertura/cobertura/1.9.4.1"/>
     <property name="cobertura.dir" value="${COBERTURA_HOME}"/>
     <path id="cobertura.classpath">
         <fileset dir="${cobertura.dir}">
