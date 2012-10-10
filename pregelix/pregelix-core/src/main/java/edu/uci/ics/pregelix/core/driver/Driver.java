@@ -9,6 +9,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,13 +36,10 @@ import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 @SuppressWarnings("rawtypes")
 public class Driver implements IDriver {
     private static final Log LOG = LogFactory.getLog(Driver.class);
-    private static String LIB = "lib";
     private JobGen jobGen;
-    private PregelixJob job;
     private boolean profiling;
 
     private String applicationName;
-    private String PREGELIX_HOME = "PREGELIX_HOME";
     private IHyracksClientConnection hcc;
 
     private Class exampleClass;
@@ -53,6 +51,7 @@ public class Driver implements IDriver {
     @Override
     public void runJob(PregelixJob job, Plan planChoice, String ipAddress, int port, boolean profiling)
             throws HyracksException {
+        applicationName = exampleClass.getSimpleName() + UUID.randomUUID();
         /** add hadoop configurations */
         URL hadoopCore = job.getClass().getClassLoader().getResource("core-site.xml");
         job.getConfiguration().addResource(hadoopCore);
@@ -66,7 +65,6 @@ public class Driver implements IDriver {
         long end = start;
         long time = 0;
 
-        this.job = job;
         this.profiling = profiling;
         try {
             switch (planChoice) {
