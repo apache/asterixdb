@@ -100,7 +100,7 @@ public class ClusterConfig {
             throw new HyracksDataException(e);
         }
         String store = properties.getProperty("store");
-        stores = store.split(";");
+        stores = store.split(",");
     }
 
     /**
