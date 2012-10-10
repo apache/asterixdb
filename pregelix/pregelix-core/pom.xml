@@ -313,13 +313,6 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks.examples.btree</groupId>
-			<artifactId>btreehelper</artifactId>
-			<version>0.2.2-SNAPSHOT</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-control-cc</artifactId>
 			<version>0.2.2-SNAPSHOT</version>
