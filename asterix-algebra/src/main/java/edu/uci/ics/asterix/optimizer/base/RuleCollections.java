@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import edu.uci.ics.asterix.optimizer.rules.AsterixInlineVariablesRule;
+import edu.uci.ics.asterix.optimizer.rules.AsterixProperInlineVariablesRule;
 import edu.uci.ics.asterix.optimizer.rules.ByNameToByIndexFieldAccessRule;
 import edu.uci.ics.asterix.optimizer.rules.ConstantFoldingRule;
 import edu.uci.ics.asterix.optimizer.rules.CountVarToCountOneRule;
@@ -116,7 +117,7 @@ public final class RuleCollections {
 
     public final static List<IAlgebraicRewriteRule> buildCondPushDownAndJoinInferenceRuleCollection() {
         List<IAlgebraicRewriteRule> condPushDownAndJoinInference = new LinkedList<IAlgebraicRewriteRule>();
-
+                
         condPushDownAndJoinInference.add(new PushSelectDownRule());
         condPushDownAndJoinInference.add(new PushDieUpRule());
         condPushDownAndJoinInference.add(new RemoveRedundantListifyRule());
@@ -131,6 +132,7 @@ public final class RuleCollections {
         condPushDownAndJoinInference.add(new SubplanOutOfGroupRule());
         condPushDownAndJoinInference.add(new InsertOuterJoinRule());
         condPushDownAndJoinInference.add(new AsterixInlineVariablesRule());
+        condPushDownAndJoinInference.add(new AsterixProperInlineVariablesRule());
         condPushDownAndJoinInference.add(new RemoveUnusedAssignAndAggregateRule());
         condPushDownAndJoinInference.add(new FactorRedundantGroupAndDecorVarsRule());
         condPushDownAndJoinInference.add(new PushAggregateIntoGroupbyRule());
