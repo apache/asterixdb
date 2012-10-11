@@ -196,6 +196,7 @@ public class JobGenOuterJoinSingleSort extends JobGen {
         spec.addRoot(emptySink2);
 
         spec.setConnectorPolicyAssignmentPolicy(new NonCombinerConnectorPolicyAssignmentPolicy());
+        spec.setFrameSize(frameSize);
         return spec;
     }
 
@@ -332,6 +333,7 @@ public class JobGenOuterJoinSingleSort extends JobGen {
         spec.addRoot(emptySink);
 
         spec.setConnectorPolicyAssignmentPolicy(new NonCombinerConnectorPolicyAssignmentPolicy());
+        spec.setFrameSize(frameSize);
         return spec;
     }
 

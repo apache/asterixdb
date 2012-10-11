@@ -233,6 +233,7 @@ public class JobGenInnerJoin extends JobGen {
         spec.addRoot(terminateWriter);
 
         spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+        spec.setFrameSize(frameSize);
         return spec;
     }
 
@@ -404,6 +405,7 @@ public class JobGenInnerJoin extends JobGen {
         spec.addRoot(terminateWriter);
 
         spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+        spec.setFrameSize(frameSize);
         return spec;
     }
 

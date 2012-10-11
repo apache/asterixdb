@@ -207,6 +207,7 @@ public class JobGenOuterJoin extends JobGen {
         spec.addRoot(emptySink2);
 
         spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+        spec.setFrameSize(frameSize);
         return spec;
     }
 
@@ -353,6 +354,7 @@ public class JobGenOuterJoin extends JobGen {
         spec.addRoot(emptySink);
 
         spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+        spec.setFrameSize(frameSize);
         return spec;
     }
 

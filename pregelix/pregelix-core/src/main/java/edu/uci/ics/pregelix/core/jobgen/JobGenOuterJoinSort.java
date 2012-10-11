@@ -211,6 +211,7 @@ public class JobGenOuterJoinSort extends JobGen {
         spec.addRoot(terminateWriter);
         spec.addRoot(emptySink2);
 
+        spec.setFrameSize(frameSize);
         return spec;
     }
 
@@ -362,6 +363,8 @@ public class JobGenOuterJoinSort extends JobGen {
 
         spec.addRoot(terminateWriter);
         spec.addRoot(emptySink);
+        
+        spec.setFrameSize(frameSize);
         return spec;
     }
 
