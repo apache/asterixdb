@@ -361,6 +361,10 @@ public class ActivityClusterPlanner {
         if (cpap != null) {
             return cpap.getConnectorPolicyAssignment(c, nProducers, nConsumers, fanouts);
         }
+        cpap = ac.getActivityClusterGraph().getConnectorPolicyAssignmentPolicy();
+        if (cpap != null) {
+            return cpap.getConnectorPolicyAssignment(c, nProducers, nConsumers, fanouts);
+        }
         return new PipeliningConnectorPolicy();
     }
 
