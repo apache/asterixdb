@@ -26,8 +26,7 @@ import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
 
 /**
- * Limits the functions that can be called by the user. Job is too flexible for
- * our needs. For instance, our job should not have any reduce tasks.
+ * This class represents a Pregelix job.
  */
 public class PregelixJob extends Job {
     /** Vertex class - required */

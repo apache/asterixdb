@@ -27,8 +27,7 @@ import org.apache.hadoop.io.WritableComparable;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
 /**
- * A complete edge, the destination vertex and the edge value. Can only be one
- * edge with a destination vertex id per edge map.
+ * The Edge class, represent an outgoing edge inside an {@link Vertex} object.
  * 
  * @param <I>
  *            Vertex index
@@ -41,8 +40,9 @@ public class Edge<I extends WritableComparable, E extends Writable> implements W
     private I destVertexId = null;
     /** Edge value */
     private E edgeValue = null;
-    /** Configuration - Used to instiantiate classes */
+    /** Configuration - Used to instantiate classes */
     private Configuration conf = null;
+    /** Whether the edgeValue field is not null*/
     private boolean hasEdgeValue = false;
 
     /**
