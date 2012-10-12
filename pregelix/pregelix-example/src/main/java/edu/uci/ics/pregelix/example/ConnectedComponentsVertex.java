@@ -30,7 +30,6 @@ import edu.uci.ics.pregelix.api.io.VertexWriter;
 import edu.uci.ics.pregelix.api.io.text.TextVertexOutputFormat;
 import edu.uci.ics.pregelix.api.io.text.TextVertexOutputFormat.TextVertexWriter;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
-import edu.uci.ics.pregelix.example.PageRankVertex.SimplePageRankVertexOutputFormat;
 import edu.uci.ics.pregelix.example.client.Client;
 import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
 import edu.uci.ics.pregelix.example.io.VLongWritable;
@@ -101,7 +100,7 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
         PregelixJob job = new PregelixJob(ConnectedComponentsVertex.class.getSimpleName());
         job.setVertexClass(ConnectedComponentsVertex.class);
         job.setVertexInputFormatClass(TextPageRankInputFormat.class);
-        job.setVertexOutputFormatClass(SimplePageRankVertexOutputFormat.class);
+        job.setVertexOutputFormatClass(SimpleConnectedComponentsVertexOutputFormat.class);
         job.setVertexCombinerClass(ConnectedComponentsVertex.SimpleMinCombiner.class);
         Client.run(args, job);
     }
