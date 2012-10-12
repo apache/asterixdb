@@ -1,14 +1,11 @@
 /*
- * Licensed to Yahoo! under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  Yahoo! licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,13 +40,13 @@ import edu.uci.ics.pregelix.api.util.SerDeUtils;
  * prevent users from accessing internal methods.
  * 
  * @param <I>
- *            Vertex index value
+ *            Vertex id type
  * @param <V>
- *            Vertex value
+ *            Vertex value type
  * @param <E>
- *            Edge value
+ *            Edge value type
  * @param <M>
- *            Message value
+ *            Message value type
  */
 @SuppressWarnings("rawtypes")
 public abstract class Vertex<I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable>
