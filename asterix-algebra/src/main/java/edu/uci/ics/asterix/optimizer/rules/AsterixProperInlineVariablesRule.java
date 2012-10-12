@@ -25,7 +25,6 @@ import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -34,7 +33,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -139,14 +137,18 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
             case PROJECT:
             // We can currently only order/group by a variable reference expression.
             case ORDER:
-            case GROUP:
-            case DISTINCT:
-            case AGGREGATE:
             case INNERJOIN:
             case LEFTOUTERJOIN: {
                 break;
             }
+            // Remove non-live vars here.
+            case GROUP:
+            case DISTINCT:
+            case AGGREGATE: {
+                break;
+            }
             default: {
+                inlineVisitor.setOperator(op);
                 if (op.acceptExpressionTransform(inlineVisitor)) {
                     modified = true;
                 }
@@ -162,8 +164,12 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
     }
 
     private class InlineVariablesVisitor implements ILogicalExpressionReferenceTransform {
-        private IOptimizationContext context;
+        
         private final Map<LogicalVariable, ILogicalExpression> varAssignRhs;
+        private final Set<LogicalVariable> liveVars = new HashSet<LogicalVariable>();
+        private final List<LogicalVariable> rhsUsedVars = new ArrayList<LogicalVariable>();        
+        private ILogicalOperator op;
+        private IOptimizationContext context;
         
         public InlineVariablesVisitor(Map<LogicalVariable, ILogicalExpression> varAssignRhs) {
             this.varAssignRhs = varAssignRhs;
@@ -173,12 +179,17 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
             this.context = context;
         }
 
+        public void setOperator(ILogicalOperator op) throws AlgebricksException {
+            this.op = op;
+            liveVars.clear();
+        }
+        
         @Override
-        public boolean transform(Mutable<ILogicalExpression> exprRef) {
+        public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {            
             ILogicalExpression e = exprRef.getValue();
             switch (((AbstractLogicalExpression) e).getExpressionTag()) {
                 case VARIABLE: {
-                    // look for a required substitution
+                    // Make sure has not been excluded from inlining.
                     LogicalVariable var = ((VariableReferenceExpression) e).getVariableReference();
                     if (context.shouldNotBeInlined(var)) {
                         return false;
@@ -188,6 +199,18 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
                         // Variable was not produced by an assign.
                         return false;
                     }
+                    // Make sure used variables from rhs are live.
+                    if (liveVars.isEmpty()) {
+                        VariableUtilities.getLiveVariables(op, liveVars);
+                    }
+                    rhsUsedVars.clear();
+                    rhs.getUsedVariables(rhsUsedVars);
+                    for (LogicalVariable rhsUsedVar : rhsUsedVars) {
+                        if (!liveVars.contains(rhsUsedVar)) {
+                            return false;
+                        }
+                    }
+                    
                     // Replace variable reference with rhs expr.
                     exprRef.setValue(rhs);
                     

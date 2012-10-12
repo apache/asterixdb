@@ -248,6 +248,9 @@ public class AsterixInlineVariablesRule implements IAlgebraicRewriteRule {
                 }
             }
         }
+        if (modified) {
+            context.computeAndSetTypeEnvironmentForOperator(op);
+        }
         return new Pair<Boolean, Boolean>(modified, ecChange);
     }
 
