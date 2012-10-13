@@ -43,14 +43,11 @@ public class BTreeAccessMethod implements IAccessMethod {
 
     // Describes whether a search predicate is an open/closed interval.
     private enum LimitType {
-        LOW_INCLUSIVE,
-        LOW_EXCLUSIVE,
-        HIGH_INCLUSIVE,
-        HIGH_EXCLUSIVE,
-        EQUAL
+        LOW_INCLUSIVE, LOW_EXCLUSIVE, HIGH_INCLUSIVE, HIGH_EXCLUSIVE, EQUAL
     }
 
-    // TODO: There is some redundancy here, since these are listed in AlgebricksBuiltinFunctions as well.
+    // TODO: There is some redundancy here, since these are listed in
+    // AlgebricksBuiltinFunctions as well.
     private static List<FunctionIdentifier> funcIdents = new ArrayList<FunctionIdentifier>();
     static {
         funcIdents.add(AlgebricksBuiltinFunctions.EQ);
@@ -80,7 +77,8 @@ public class BTreeAccessMethod implements IAccessMethod {
 
     @Override
     public boolean matchPrefixIndexExprs() {
-        // TODO: The BTree can support prefix searches. Enable this later and add tests.
+        // TODO: The BTree can support prefix searches. Enable this later and
+        // add tests.
         return false;
     }
 
@@ -109,20 +107,25 @@ public class BTreeAccessMethod implements IAccessMethod {
 
         List<Integer> exprList = analysisCtx.indexExprs.get(chosenIndex);
         List<IOptimizableFuncExpr> matchedFuncExprs = analysisCtx.matchedFuncExprs;
-        // List of function expressions that will be replaced by the secondary-index search.
-        // These func exprs will be removed from the select condition at the very end of this method.
+        // List of function expressions that will be replaced by the
+        // secondary-index search.
+        // These func exprs will be removed from the select condition at the
+        // very end of this method.
         Set<ILogicalExpression> replacedFuncExprs = new HashSet<ILogicalExpression>();
-        // TODO: For now we don't do any sophisticated analysis of the func exprs to come up with "the best" range predicate.
-        // If we can't figure out how to integrate a certain funcExpr into the current predicate, we just bail by setting this flag.
+        // TODO: For now we don't do any sophisticated analysis of the func
+        // exprs to come up with "the best" range predicate.
+        // If we can't figure out how to integrate a certain funcExpr into the
+        // current predicate, we just bail by setting this flag.
         boolean couldntFigureOut = false;
         boolean doneWithExprs = false;
         // TODO: For now don't consider prefix searches.
         BitSet setLowKeys = new BitSet(numSecondaryKeys);
         BitSet setHighKeys = new BitSet(numSecondaryKeys);
-        // Go through the func exprs listed as optimizable by the chosen index, 
+        // Go through the func exprs listed as optimizable by the chosen index,
         // and formulate a range predicate on the secondary-index keys.
         for (Integer exprIndex : exprList) {
-            // Position of the field of matchedFuncExprs.get(exprIndex) in the chosen index's indexed exprs.
+            // Position of the field of matchedFuncExprs.get(exprIndex) in the
+            // chosen index's indexed exprs.
             IOptimizableFuncExpr optFuncExpr = matchedFuncExprs.get(exprIndex);
             int keyPos = indexOf(optFuncExpr.getFieldName(0), chosenIndex.getKeyFieldNames());
             if (keyPos < 0) {
@@ -142,10 +145,9 @@ public class BTreeAccessMethod implements IAccessMethod {
                     }
                     // TODO: For now don't consider prefix searches.
                     // If high and low keys are set, we exit for now.
-                    if (setLowKeys.cardinality() == numSecondaryKeys
-                            && setHighKeys.cardinality() == numSecondaryKeys) {
-                    	doneWithExprs = true;
-                    }             
+                    if (setLowKeys.cardinality() == numSecondaryKeys && setHighKeys.cardinality() == numSecondaryKeys) {
+                        doneWithExprs = true;
+                    }
                     break;
                 }
                 case HIGH_EXCLUSIVE: {
@@ -230,7 +232,8 @@ public class BTreeAccessMethod implements IAccessMethod {
             highKeyInclusive[0] = true;
         }
 
-        // Here we generate vars and funcs for assigning the secondary-index keys to be fed into the secondary-index search.
+        // Here we generate vars and funcs for assigning the secondary-index
+        // keys to be fed into the secondary-index search.
         // List of variables for the assign.
         ArrayList<LogicalVariable> keyVarList = new ArrayList<LogicalVariable>();
         // List of expressions for the assign.
@@ -247,50 +250,57 @@ public class BTreeAccessMethod implements IAccessMethod {
 
         // Assign operator that sets the secondary-index search-key fields.
         AssignOperator assignSearchKeys = new AssignOperator(keyVarList, keyExprList);
-        // Input to this assign is the EmptyTupleSource (which the dataSourceScan also must have had as input).
+        // Input to this assign is the EmptyTupleSource (which the
+        // dataSourceScan also must have had as input).
         assignSearchKeys.getInputs().add(dataSourceScan.getInputs().get(0));
         assignSearchKeys.setExecutionMode(dataSourceScan.getExecutionMode());
 
         UnnestMapOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
                 chosenIndex, assignSearchKeys, jobGenParams, context, false, false);
 
-        // Generate the rest of the upstream plan which feeds the search results into the primary index.        
+        // Generate the rest of the upstream plan which feeds the search results
+        // into the primary index.
         UnnestMapOperator primaryIndexUnnestOp;
         boolean isPrimaryIndex = chosenIndex.getIndexName().equals(dataset.getDatasetName());
         if (!isPrimaryIndex) {
             primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceScan, dataset, recordType,
                     secondaryIndexUnnestOp, context, true, false, false);
+
+            // Replace the datasource scan with the new plan rooted at
+            // primaryIndexUnnestMap.
+            subTree.dataSourceScanRef.setValue(primaryIndexUnnestOp);
         } else {
             List<Object> primaryIndexOutputTypes = new ArrayList<Object>();
             AccessMethodUtils.appendPrimaryIndexTypes(dataset, recordType, primaryIndexOutputTypes);
             primaryIndexUnnestOp = new UnnestMapOperator(dataSourceScan.getVariables(),
                     secondaryIndexUnnestOp.getExpressionRef(), primaryIndexOutputTypes, false);
             primaryIndexUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(assignSearchKeys));
+
+            List<Mutable<ILogicalExpression>> remainingFuncExprs = new ArrayList<Mutable<ILogicalExpression>>();
+            getNewSelectExprs(select, replacedFuncExprs, remainingFuncExprs);
+            // Generate new select using the new condition.
+            if (!remainingFuncExprs.isEmpty()) {
+                ILogicalExpression pulledCond = createSelectCondition(remainingFuncExprs);
+                SelectOperator selectRest = new SelectOperator(new MutableObject<ILogicalExpression>(pulledCond));
+                if (assign != null) {
+                    subTree.dataSourceScanRef.setValue(primaryIndexUnnestOp);
+                    selectRest.getInputs().add(new MutableObject<ILogicalOperator>(assign));
+                } else {
+                    selectRest.getInputs().add(new MutableObject<ILogicalOperator>(primaryIndexUnnestOp));
+                }
+                selectRest.setExecutionMode(((AbstractLogicalOperator) selectRef.getValue()).getExecutionMode());
+                selectRef.setValue(selectRest);
+            } else {
+                primaryIndexUnnestOp.setExecutionMode(ExecutionMode.PARTITIONED);
+                if (assign != null) {
+                    subTree.dataSourceScanRef.setValue(primaryIndexUnnestOp);
+                    selectRef.setValue(assign);
+                } else {
+                    selectRef.setValue(primaryIndexUnnestOp);
+                }
+            }
         }
 
-        List<Mutable<ILogicalExpression>> remainingFuncExprs = new ArrayList<Mutable<ILogicalExpression>>();
-        getNewSelectExprs(select, replacedFuncExprs, remainingFuncExprs);
-        // Generate new select using the new condition.
-        if (!remainingFuncExprs.isEmpty()) {
-            ILogicalExpression pulledCond = createSelectCondition(remainingFuncExprs);
-            SelectOperator selectRest = new SelectOperator(new MutableObject<ILogicalExpression>(pulledCond));
-            if (assign != null) {
-                subTree.dataSourceScanRef.setValue(primaryIndexUnnestOp);
-                selectRest.getInputs().add(new MutableObject<ILogicalOperator>(assign));
-            } else {
-                selectRest.getInputs().add(new MutableObject<ILogicalOperator>(primaryIndexUnnestOp));
-            }
-            selectRest.setExecutionMode(((AbstractLogicalOperator) selectRef.getValue()).getExecutionMode());
-            selectRef.setValue(selectRest);
-        } else {
-            primaryIndexUnnestOp.setExecutionMode(ExecutionMode.PARTITIONED);
-            if (assign != null) {
-                subTree.dataSourceScanRef.setValue(primaryIndexUnnestOp);
-                selectRef.setValue(assign);
-            } else {
-                selectRef.setValue(primaryIndexUnnestOp);
-            }
-        }
         return true;
     }
 
@@ -399,7 +409,8 @@ public class BTreeAccessMethod implements IAccessMethod {
         return limit;
     }
 
-    // Returns true if there is a constant value on the left-hand side  if the given optimizable function (assuming a binary function).
+    // Returns true if there is a constant value on the left-hand side if the
+    // given optimizable function (assuming a binary function).
     public boolean constantIsOnLhs(IOptimizableFuncExpr optFuncExpr) {
         return optFuncExpr.getFuncExpr().getArguments().get(0) == optFuncExpr.getConstantVal(0);
     }
