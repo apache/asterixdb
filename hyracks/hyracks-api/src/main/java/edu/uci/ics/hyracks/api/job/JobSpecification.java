@@ -64,6 +64,8 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     private IGlobalJobDataFactory globalJobDataFactory;
 
+    private boolean useConnectorPolicyForScheduling;
+
     private transient int operatorIdCounter;
 
     private transient int connectorIdCounter;
@@ -81,6 +83,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
         connectorIdCounter = 0;
         frameSize = 32768;
         maxReattempts = 2;
+        useConnectorPolicyForScheduling = true;
     }
 
     @Override
@@ -251,6 +254,14 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     public void setGlobalJobDataFactory(IGlobalJobDataFactory globalJobDataFactory) {
         this.globalJobDataFactory = globalJobDataFactory;
+    }
+
+    public boolean isUseConnectorPolicyForScheduling() {
+        return useConnectorPolicyForScheduling;
+    }
+
+    public void setUseConnectorPolicyForScheduling(boolean useConnectorPolicyForScheduling) {
+        this.useConnectorPolicyForScheduling = useConnectorPolicyForScheduling;
     }
 
     private <K, V> void insertIntoIndexedMap(Map<K, List<V>> map, K key, int index, V value) {

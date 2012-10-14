@@ -48,6 +48,8 @@ public class ActivityClusterGraph implements Serializable {
 
     private IConnectorPolicyAssignmentPolicy connectorPolicyAssignmentPolicy;
 
+    private boolean useConnectorPolicyForScheduling;
+
     public ActivityClusterGraph() {
         version = 0;
         activityClusterMap = new HashMap<ActivityClusterId, ActivityCluster>();
@@ -123,6 +125,14 @@ public class ActivityClusterGraph implements Serializable {
 
     public void setConnectorPolicyAssignmentPolicy(IConnectorPolicyAssignmentPolicy connectorPolicyAssignmentPolicy) {
         this.connectorPolicyAssignmentPolicy = connectorPolicyAssignmentPolicy;
+    }
+
+    public boolean isUseConnectorPolicyForScheduling() {
+        return useConnectorPolicyForScheduling;
+    }
+
+    public void setUseConnectorPolicyForScheduling(boolean useConnectorPolicyForScheduling) {
+        this.useConnectorPolicyForScheduling = useConnectorPolicyForScheduling;
     }
 
     public JSONObject toJSON() throws JSONException {
