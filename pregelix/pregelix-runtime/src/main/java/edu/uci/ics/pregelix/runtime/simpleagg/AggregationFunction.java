@@ -34,7 +34,7 @@ import edu.uci.ics.pregelix.api.graph.MsgList;
 import edu.uci.ics.pregelix.api.graph.VertexCombiner;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
-import edu.uci.ics.pregelix.runtime.base.IAggregateFunction;
+import edu.uci.ics.pregelix.dataflow.std.base.IAggregateFunction;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class AggregationFunction implements IAggregateFunction {

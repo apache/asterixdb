@@ -12,13 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.pregelix.runtime.base;
+package edu.uci.ics.pregelix.dataflow.std.base;
 
-import java.io.Serializable;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+public interface IAggregateFunction {
+    /** should be called each time a new aggregate value is computed */
+    public void init() throws HyracksDataException;
 
-public interface IAggregateFunctionFactory extends Serializable {
-    public IAggregateFunction createAggregateFunction(IDataOutputProvider provider) throws HyracksException;
+    public void step(IFrameTupleReference tuple) throws HyracksDataException;
+
+    public void finish() throws HyracksDataException;
 }

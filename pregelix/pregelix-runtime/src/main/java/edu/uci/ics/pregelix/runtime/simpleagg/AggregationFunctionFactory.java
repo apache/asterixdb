@@ -20,8 +20,8 @@ import java.io.DataOutput;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
-import edu.uci.ics.pregelix.runtime.base.IAggregateFunction;
-import edu.uci.ics.pregelix.runtime.base.IAggregateFunctionFactory;
+import edu.uci.ics.pregelix.dataflow.std.base.IAggregateFunction;
+import edu.uci.ics.pregelix.dataflow.std.base.IAggregateFunctionFactory;
 
 public class AggregationFunctionFactory implements IAggregateFunctionFactory {
     private static final long serialVersionUID = 1L;

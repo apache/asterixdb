@@ -26,15 +26,15 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
-import edu.uci.ics.pregelix.runtime.base.IAggregateFunction;
-import edu.uci.ics.pregelix.runtime.base.IAggregateFunctionFactory;
+import edu.uci.ics.pregelix.dataflow.std.base.IAggregateFunction;
+import edu.uci.ics.pregelix.dataflow.std.base.IAggregateFunctionFactory;
 
 public class AccumulatingAggregatorFactory implements IAggregatorDescriptorFactory {
 
     private static final long serialVersionUID = 1L;
     private IAggregateFunctionFactory[] aggFactories;
 
-    public AccumulatingAggregatorFactory(IAggregateFunctionFactory[] aggFactories, int[] keys, int[] fdColumns) {
+    public AccumulatingAggregatorFactory(IAggregateFunctionFactory[] aggFactories) {
         this.aggFactories = aggFactories;
     }
 
