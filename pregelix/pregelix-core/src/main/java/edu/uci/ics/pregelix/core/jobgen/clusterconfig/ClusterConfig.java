@@ -44,18 +44,24 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 public class ClusterConfig {
 
     private static String[] NCs;
-    private static String propertiesPath = "conf/stores.properties";
+    private static String storePropertiesPath = "conf/stores.properties";
+    private static String clusterPropertiesPath = "conf/cluster.properties";
+    private static Properties clusterProperties = new Properties();
     private static Map<String, List<String>> ipToNcMapping;
     private static String[] stores;
 
     /**
      * let tests set config path to be whatever
      * 
-     * @param confPath
      * @param propertiesPath
+     *            stores properties file path
      */
-    public static void setStorePath(String propertiesPath) {
-        ClusterConfig.propertiesPath = propertiesPath;
+    public static void setStorePath(String storePropertiesPath) throws HyracksException {
+        ClusterConfig.storePropertiesPath = storePropertiesPath;
+    }
+
+    public static void setClusterPropertiesPath(String clusterPropertiesPath) throws HyracksException {
+        ClusterConfig.clusterPropertiesPath = clusterPropertiesPath;
     }
 
     /**
@@ -77,9 +83,6 @@ public class ClusterConfig {
      * @throws HyracksDataException
      */
     public static IFileSplitProvider getFileSplitProvider(String jobId, String indexName) throws HyracksException {
-        if (stores == null) {
-            loadStores();
-        }
         FileSplit[] fileSplits = new FileSplit[stores.length * NCs.length];
         int i = 0;
         for (String nc : NCs) {
@@ -95,12 +98,24 @@ public class ClusterConfig {
     private static void loadStores() throws HyracksException {
         Properties properties = new Properties();
         try {
-            properties.load(new FileInputStream(propertiesPath));
+            properties.load(new FileInputStream(storePropertiesPath));
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
         String store = properties.getProperty("store");
         stores = store.split(",");
+    }
+
+    private static void loadClusterProperties() throws HyracksException {
+        try {
+            clusterProperties.load(new FileInputStream(clusterPropertiesPath));
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    public static int getFrameSize() {
+        return Integer.parseInt(clusterProperties.getProperty("FRAME_SIZE"));
     }
 
     /**
@@ -112,9 +127,6 @@ public class ClusterConfig {
      */
     public static void setLocationConstraint(JobSpecification spec, IOperatorDescriptor operator,
             List<InputSplit> splits) throws HyracksException {
-        if (stores == null) {
-            loadStores();
-        }
         int count = splits.size();
         String[] locations = new String[splits.size()];
         Random random = new Random(System.currentTimeMillis());
@@ -157,9 +169,6 @@ public class ClusterConfig {
      */
     public static void setLocationConstraint(JobSpecification spec, IOperatorDescriptor operator)
             throws HyracksException {
-        if (stores == null) {
-            loadStores();
-        }
         int count = 0;
         String[] locations = new String[NCs.length * stores.length];
         for (String nc : NCs) {
@@ -179,9 +188,6 @@ public class ClusterConfig {
      * @throws HyracksDataException
      */
     public static void setCountConstraint(JobSpecification spec, IOperatorDescriptor operator) throws HyracksException {
-        if (stores == null) {
-            loadStores();
-        }
         int count = NCs.length * stores.length;
         PartitionConstraintHelper.addPartitionCountConstraint(spec, operator, count);
     }
@@ -208,5 +214,8 @@ public class ClusterConfig {
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
+
+        loadClusterProperties();
+        loadStores();
     }
 }

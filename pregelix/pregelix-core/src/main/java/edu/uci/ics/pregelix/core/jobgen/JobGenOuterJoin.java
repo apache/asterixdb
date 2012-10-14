@@ -98,7 +98,7 @@ public class JobGenOuterJoin extends JobGen {
         ClusterConfig.setLocationConstraint(spec, preSuperStep);
 
         /**
-         * construct btree search operator
+         * construct btree search function update operator
          */
         RecordDescriptor recordDescriptor = DataflowUtils.getRecordDescriptorFromKeyValueClasses(
                 vertexIdClass.getName(), vertexClass.getName());
@@ -110,14 +110,7 @@ public class JobGenOuterJoin extends JobGen {
         ITypeTraits[] typeTraits = new ITypeTraits[2];
         typeTraits[0] = new TypeTraits(false);
         typeTraits[1] = new TypeTraits(false);
-        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(new TypeAwareTupleWriterFactory(
-                typeTraits));
-        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(new TypeAwareTupleWriterFactory(
-                typeTraits));
-
-        /**
-         * construct compute operator
-         */
+        
         RecordDescriptor rdDummy = DataflowUtils.getRecordDescriptorFromWritableClasses(VLongWritable.class.getName());
         RecordDescriptor rdMessage = DataflowUtils.getRecordDescriptorFromKeyValueClasses(vertexIdClass.getName(),
                 MessageList.class.getName());
@@ -127,7 +120,7 @@ public class JobGenOuterJoin extends JobGen {
                 vertexIdClass.getName(), vertexClass.getName());
         BTreeSearchFunctionUpdateOperatorDescriptor scanner = new BTreeSearchFunctionUpdateOperatorDescriptor(spec,
                 recordDescriptor, storageManagerInterface, treeRegistryProvider, fileSplitProvider,
-                interiorFrameFactory, leafFrameFactory, typeTraits, comparatorFactories,
+                typeTraits, comparatorFactories,
                 JobGenUtil.getForwardScan(iteration), null, null, true, true, new BTreeDataflowHelperFactory(),
                 inputRdFactory, 2, StartComputeUpdateFunctionFactory.INSTANCE, preHookFactory, null, rdMessage, rdDummy);
         ClusterConfig.setLocationConstraint(spec, scanner);

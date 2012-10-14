@@ -79,6 +79,7 @@ public class JoinTest {
     private static final String NC2_ID = "nc2";
 
     private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/data.properties";
+    private static final String PATH_TO_CLUSTER_PROPERTIES = "src/test/resources/cluster/cluster.properties";
 
     private static final float DEFAULT_BTREE_FILL_FACTOR = 1.00f;
     private IIndexRegistryProvider<IIndex> treeRegistry = TreeIndexRegistryProvider.INSTANCE;
@@ -99,6 +100,7 @@ public class JoinTest {
     @Test
     public void customerOrderCIDJoinMulti() throws Exception {
         ClusterConfig.setStorePath(PATH_TO_CLUSTER_STORE);
+        ClusterConfig.setClusterPropertiesPath(PATH_TO_CLUSTER_PROPERTIES);
         cleanupStores();
         PregelixHyracksIntegrationUtil.init();
         PregelixHyracksIntegrationUtil.createApp(HYRACKS_APP_NAME);
@@ -350,14 +352,9 @@ public class JoinTest {
         ITypeTraits[] typeTraits = new ITypeTraits[custDesc.getFields().length];
         for (int i = 0; i < typeTraits.length; i++)
             typeTraits[i] = new TypeTraits(false);
-        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(new TypeAwareTupleWriterFactory(
-                typeTraits));
-        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(new TypeAwareTupleWriterFactory(
-                typeTraits));
         IndexNestedLoopJoinOperatorDescriptor join = new IndexNestedLoopJoinOperatorDescriptor(spec, custOrderJoinDesc,
-                storageManagerInterface, treeRegistry, fileSplitProvider, interiorFrameFactory, leafFrameFactory,
-                typeTraits, keyComparatorFactories, true, keyFields, keyFields, true, true,
-                new BTreeDataflowHelperFactory());
+                storageManagerInterface, treeRegistry, fileSplitProvider, typeTraits, keyComparatorFactories, true,
+                keyFields, keyFields, true, true, new BTreeDataflowHelperFactory());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID, NC2_ID);
 
         /** results (already in sorted order) */

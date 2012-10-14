@@ -49,7 +49,8 @@ public class DataLoadTest {
     private static final Logger LOGGER = Logger.getLogger(DataLoadTest.class.getName());
 
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
-    private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/data.properties";
+    private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";
+    private static final String PATH_TO_CLUSTER_PROPERTIES = "src/test/resources/cluster/cluster.properties";
 
     private static final String HYRACKS_APP_NAME = "giraph";
     private static final String GIRAPH_JOB_NAME = "DataLoadTest";
@@ -69,11 +70,11 @@ public class DataLoadTest {
         job.getConfiguration().setClass(PregelixJob.VERTEX_VALUE_CLASS, DoubleWritable.class, Writable.class);
         job.getConfiguration().setClass(PregelixJob.EDGE_VALUE_CLASS, FloatWritable.class, Writable.class);
         job.getConfiguration().setClass(PregelixJob.MESSAGE_VALUE_CLASS, DoubleWritable.class, Writable.class);
-        giraphTestJobGen = new JobGenOuterJoin(job);
     }
 
     public void setUp() throws Exception {
         ClusterConfig.setStorePath(PATH_TO_CLUSTER_STORE);
+        ClusterConfig.setClusterPropertiesPath(PATH_TO_CLUSTER_PROPERTIES);
         cleanupStores();
         PregelixHyracksIntegrationUtil.init();
         PregelixHyracksIntegrationUtil.createApp(HYRACKS_APP_NAME);
@@ -83,7 +84,7 @@ public class DataLoadTest {
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(EXPECT_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
-
+        giraphTestJobGen = new JobGenOuterJoin(job);
     }
 
     private void cleanupStores() throws IOException {

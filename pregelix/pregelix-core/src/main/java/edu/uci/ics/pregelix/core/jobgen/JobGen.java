@@ -87,7 +87,7 @@ public abstract class JobGen implements IJobGen {
     private static final Logger LOGGER = Logger.getLogger(JobGen.class.getName());
     protected static final int MB = 1048576;
     protected static final float DEFAULT_BTREE_FILL_FACTOR = 1.00f;
-    protected static final int frameSize = 65536;
+    protected static final int frameSize = ClusterConfig.getFrameSize();
     protected static final int maxFrameSize = (int) (((long) 32 * MB) / frameSize);
     protected static final int tableSize = 10485767;
     protected static final String PRIMARY_INDEX = "primary";

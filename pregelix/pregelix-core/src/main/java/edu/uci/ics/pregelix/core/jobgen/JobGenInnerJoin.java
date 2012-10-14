@@ -103,7 +103,7 @@ public class JobGenInnerJoin extends JobGen {
         IFileSplitProvider fileSplitProvider = ClusterConfig.getFileSplitProvider(jobId, PRIMARY_INDEX);
 
         /**
-         * construct btree search operator
+         * construct btree search and function call update operator
          */
         RecordDescriptor recordDescriptor = DataflowUtils.getRecordDescriptorFromKeyValueClasses(
                 vertexIdClass.getName(), vertexClass.getName());
@@ -114,14 +114,7 @@ public class JobGenInnerJoin extends JobGen {
         ITypeTraits[] typeTraits = new ITypeTraits[2];
         typeTraits[0] = new TypeTraits(false);
         typeTraits[1] = new TypeTraits(false);
-        ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(new TypeAwareTupleWriterFactory(
-                typeTraits));
-        ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(new TypeAwareTupleWriterFactory(
-                typeTraits));
 
-        /**
-         * construct compute operator
-         */
         RecordDescriptor rdDummy = DataflowUtils.getRecordDescriptorFromWritableClasses(VLongWritable.class.getName());
         RecordDescriptor rdMessage = DataflowUtils.getRecordDescriptorFromKeyValueClasses(vertexIdClass.getName(),
                 MessageList.class.getName());
@@ -133,11 +126,10 @@ public class JobGenInnerJoin extends JobGen {
                 MsgList.class.getName());
 
         BTreeSearchFunctionUpdateOperatorDescriptor scanner = new BTreeSearchFunctionUpdateOperatorDescriptor(spec,
-                recordDescriptor, storageManagerInterface, treeRegistryProvider, fileSplitProvider,
-                interiorFrameFactory, leafFrameFactory, typeTraits, comparatorFactories,
-                JobGenUtil.getForwardScan(iteration), null, null, true, true, new BTreeDataflowHelperFactory(),
-                inputRdFactory, 3, StartComputeUpdateFunctionFactory.INSTANCE, preHookFactory, null, rdMessage,
-                rdDummy, rdFinal);
+                recordDescriptor, storageManagerInterface, treeRegistryProvider, fileSplitProvider, typeTraits,
+                comparatorFactories, JobGenUtil.getForwardScan(iteration), null, null, true, true,
+                new BTreeDataflowHelperFactory(), inputRdFactory, 3, StartComputeUpdateFunctionFactory.INSTANCE,
+                preHookFactory, null, rdMessage, rdDummy, rdFinal);
         ClusterConfig.setLocationConstraint(spec, scanner);
 
         /**
@@ -155,9 +147,8 @@ public class JobGenInnerJoin extends JobGen {
         indexCmpFactories[0] = JobGenUtil.getIBinaryComparatorFactory(iteration + 1,
                 WritableComparator.get(vertexIdClass).getClass());
         TreeIndexBulkReLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkReLoadOperatorDescriptor(spec,
-                storageManagerInterface, treeRegistryProvider, secondaryFileSplitProvider, interiorFrameFactory,
-                leafFrameFactory, typeTraits, indexCmpFactories, fieldPermutation, DEFAULT_BTREE_FILL_FACTOR,
-                new BTreeDataflowHelperFactory());
+                storageManagerInterface, treeRegistryProvider, secondaryFileSplitProvider, typeTraits,
+                indexCmpFactories, fieldPermutation, DEFAULT_BTREE_FILL_FACTOR, new BTreeDataflowHelperFactory());
         ClusterConfig.setLocationConstraint(spec, btreeBulkLoad);
 
         /**
@@ -310,10 +301,10 @@ public class JobGenInnerJoin extends JobGen {
                 vertexIdClass.getName(), MsgList.class.getName(), vertexIdClass.getName(), vertexClass.getName());
 
         IndexNestedLoopJoinFunctionUpdateOperatorDescriptor join = new IndexNestedLoopJoinFunctionUpdateOperatorDescriptor(
-                spec, storageManagerInterface, treeRegistryProvider, fileSplitProvider, interiorFrameFactory,
-                leafFrameFactory, typeTraits, comparatorFactories, JobGenUtil.getForwardScan(iteration), keyFields,
-                keyFields, true, true, new BTreeDataflowHelperFactory(), inputRdFactory, 3,
-                ComputeUpdateFunctionFactory.INSTANCE, preHookFactory, null, rdMessage, rdDummy, rdFinal);
+                spec, storageManagerInterface, treeRegistryProvider, fileSplitProvider, typeTraits,
+                comparatorFactories, JobGenUtil.getForwardScan(iteration), keyFields, keyFields, true, true,
+                new BTreeDataflowHelperFactory(), inputRdFactory, 3, ComputeUpdateFunctionFactory.INSTANCE,
+                preHookFactory, null, rdMessage, rdDummy, rdFinal);
         ClusterConfig.setLocationConstraint(spec, join);
 
         /**
@@ -326,9 +317,8 @@ public class JobGenInnerJoin extends JobGen {
         String writeFile = iteration % 2 == 0 ? SECONDARY_INDEX_EVEN : SECONDARY_INDEX_ODD;
         IFileSplitProvider secondaryFileSplitProviderWrite = ClusterConfig.getFileSplitProvider(jobId, writeFile);
         TreeIndexBulkReLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkReLoadOperatorDescriptor(spec,
-                storageManagerInterface, treeRegistryProvider, secondaryFileSplitProviderWrite, interiorFrameFactory,
-                leafFrameFactory, typeTraits, indexCmpFactories, fieldPermutation, DEFAULT_BTREE_FILL_FACTOR,
-                new BTreeDataflowHelperFactory());
+                storageManagerInterface, treeRegistryProvider, secondaryFileSplitProviderWrite, typeTraits,
+                indexCmpFactories, fieldPermutation, DEFAULT_BTREE_FILL_FACTOR, new BTreeDataflowHelperFactory());
         ClusterConfig.setLocationConstraint(spec, btreeBulkLoad);
 
         /**

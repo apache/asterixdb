@@ -46,7 +46,8 @@ public class RunJobTestSuite extends TestSuite {
     private static final String ACTUAL_RESULT_DIR = "actual";
     private static final String EXPECTED_RESULT_DIR = "src/test/resources/expected";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
-    private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/data.properties";
+    private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";
+    private static final String PATH_TO_CLUSTER_PROPERTIES = "src/test/resources/cluster/cluster.properties";
     private static final String PATH_TO_JOBS = "src/test/resources/jobs/";
     private static final String PATH_TO_IGNORE = "src/test/resources/ignore.txt";
     private static final String PATH_TO_ONLY = "src/test/resources/only.txt";
@@ -67,6 +68,7 @@ public class RunJobTestSuite extends TestSuite {
 
     public void setUp() throws Exception {
         ClusterConfig.setStorePath(PATH_TO_CLUSTER_STORE);
+        ClusterConfig.setClusterPropertiesPath(PATH_TO_CLUSTER_PROPERTIES);
         cleanupStores();
         PregelixHyracksIntegrationUtil.init();
         PregelixHyracksIntegrationUtil.createApp(HYRACKS_APP_NAME);
