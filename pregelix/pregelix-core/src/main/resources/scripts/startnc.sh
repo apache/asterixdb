@@ -46,6 +46,9 @@ NODEID=`hostname | cut -d '.' -f 1`
 #Set JAVA_OPTS
 export JAVA_OPTS=$NCJAVA_OPTS
 
+cd $HYRACKS_HOME
+HYRACKS_HOME=`pwd`
+
 #Enter the temp dir
 cd $NCTMP_DIR
 

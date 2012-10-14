@@ -74,6 +74,7 @@ public class Driver implements IDriver {
         job.getConfiguration().addResource(hadoopMapRed);
         URL hadoopHdfs = job.getClass().getClassLoader().getResource("hdfs-site.xml");
         job.getConfiguration().addResource(hadoopHdfs);
+        ClusterConfig.loadClusterConfig(ipAddress, port);
 
         LOG.info("job started");
         long start = System.currentTimeMillis();
@@ -101,7 +102,6 @@ public class Driver implements IDriver {
 
             if (hcc == null)
                 hcc = new HyracksConnection(ipAddress, port);
-            ClusterConfig.loadClusterConfig(ipAddress, port);
 
             URLClassLoader classLoader = (URLClassLoader) exampleClass.getClassLoader();
             List<File> jars = new ArrayList<File>();
