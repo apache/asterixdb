@@ -59,6 +59,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDes
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDropOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
+import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -118,6 +119,13 @@ public abstract class JobGen implements IJobGen {
         conf.setClass(PregelixJob.VERTEX_VALUE_CLASS, (Class<?>) vertexValueType, Writable.class);
         conf.setClass(PregelixJob.EDGE_VALUE_CLASS, (Class<?>) edgeValueType, Writable.class);
         conf.setClass(PregelixJob.MESSAGE_VALUE_CLASS, (Class<?>) messageValueType, Writable.class);
+
+        Class aggregatorClass = conf.getClass(PregelixJob.GLOBAL_AGGREGATOR_CLASS, GlobalAggregator.class);
+        if (!aggregatorClass.equals(GlobalAggregator.class)) {
+            List<Type> argTypes = ReflectionUtils.getTypeArguments(GlobalAggregator.class, aggregatorClass);
+            Type aggregateValueType = argTypes.get(4);
+            conf.setClass(PregelixJob.Aggregate_VALUE_CLASS, (Class<?>) aggregateValueType, Writable.class);
+        }
     }
 
     public String getJobId() {

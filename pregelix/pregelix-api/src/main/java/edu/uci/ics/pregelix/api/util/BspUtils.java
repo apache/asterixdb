@@ -20,6 +20,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.graph.VertexCombiner;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
@@ -109,6 +110,20 @@ public class BspUtils {
     }
 
     /**
+     * Get the user's subclassed {@link GlobalAggregator}.
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return User's vertex combiner class
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable, T extends Writable> Class<? extends GlobalAggregator<I, V, E, M, T>> getGlobalAggregatorClass(
+            Configuration conf) {
+        return (Class<? extends GlobalAggregator<I, V, E, M, T>>) conf.getClass(PregelixJob.GLOBAL_AGGREGATOR_CLASS,
+                null, GlobalAggregator.class);
+    }
+
+    /**
      * Create a user vertex combiner class
      * 
      * @param conf
@@ -120,6 +135,20 @@ public class BspUtils {
             Configuration conf) {
         Class<? extends VertexCombiner<I, M>> vertexCombinerClass = getVertexCombinerClass(conf);
         return ReflectionUtils.newInstance(vertexCombinerClass, conf);
+    }
+
+    /**
+     * Create a global aggregator class
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return Instantiated user vertex combiner class
+     */
+    @SuppressWarnings("rawtypes")
+    public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable, T extends Writable> GlobalAggregator<I, V, E, M, T> createGlobalAggregator(
+            Configuration conf) {
+        Class<? extends GlobalAggregator<I, V, E, M, T>> globalAggregatorClass = getGlobalAggregatorClass(conf);
+        return ReflectionUtils.newInstance(globalAggregatorClass, conf);
     }
 
     /**
@@ -258,6 +287,20 @@ public class BspUtils {
     }
 
     /**
+     * Get the user's subclassed global aggregator value class.
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return User's global aggregate value class
+     */
+    @SuppressWarnings("unchecked")
+    public static <M extends Writable> Class<M> getAggregateValueClass(Configuration conf) {
+        if (conf == null)
+            conf = defaultConf;
+        return (Class<M>) conf.getClass(PregelixJob.Aggregate_VALUE_CLASS, Writable.class);
+    }
+
+    /**
      * Create a user vertex message value
      * 
      * @param conf
@@ -268,6 +311,24 @@ public class BspUtils {
         Class<M> messageValueClass = getMessageValueClass(conf);
         try {
             return messageValueClass.newInstance();
+        } catch (InstantiationException e) {
+            throw new IllegalArgumentException("createMessageValue: Failed to instantiate", e);
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException("createMessageValue: Illegally accessed", e);
+        }
+    }
+
+    /**
+     * Create a user aggregate value
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return Instantiated user aggregate value
+     */
+    public static <M extends Writable> M createAggregateValue(Configuration conf) {
+        Class<M> aggregateValueClass = getAggregateValueClass(conf);
+        try {
+            return aggregateValueClass.newInstance();
         } catch (InstantiationException e) {
             throw new IllegalArgumentException("createMessageValue: Failed to instantiate", e);
         } catch (IllegalAccessException e) {

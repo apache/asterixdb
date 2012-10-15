@@ -20,6 +20,7 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 
+import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.graph.VertexCombiner;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
@@ -30,29 +31,31 @@ import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
  */
 public class PregelixJob extends Job {
     /** Vertex class - required */
-    public static final String VERTEX_CLASS = "giraph.vertexClass";
+    public static final String VERTEX_CLASS = "pregelix.vertexClass";
     /** VertexInputFormat class - required */
-    public static final String VERTEX_INPUT_FORMAT_CLASS = "giraph.vertexInputFormatClass";
+    public static final String VERTEX_INPUT_FORMAT_CLASS = "pregelix.vertexInputFormatClass";
     /** VertexOutputFormat class - optional */
-    public static final String VERTEX_OUTPUT_FORMAT_CLASS = "giraph.vertexOutputFormatClass";
+    public static final String VERTEX_OUTPUT_FORMAT_CLASS = "pregelix.vertexOutputFormatClass";
     /** Vertex combiner class - optional */
-    public static final String VERTEX_COMBINER_CLASS = "giraph.combinerClass";
+    public static final String VERTEX_COMBINER_CLASS = "pregelix.combinerClass";
+    /** Global aggregator class - optional */
+    public static final String GLOBAL_AGGREGATOR_CLASS = "pregelix.aggregatorClass";
     /** Vertex resolver class - optional */
-    public static final String VERTEX_RESOLVER_CLASS = "giraph.vertexResolverClass";
+    public static final String VERTEX_RESOLVER_CLASS = "pregelix.vertexResolverClass";
     /** Vertex index class */
-    public static final String VERTEX_INDEX_CLASS = "giraph.vertexIndexClass";
+    public static final String VERTEX_INDEX_CLASS = "pregelix.vertexIndexClass";
     /** Vertex value class */
-    public static final String VERTEX_VALUE_CLASS = "giraph.vertexValueClass";
+    public static final String VERTEX_VALUE_CLASS = "pregelix.vertexValueClass";
     /** Edge value class */
-    public static final String EDGE_VALUE_CLASS = "giraph.edgeValueClass";
+    public static final String EDGE_VALUE_CLASS = "pregelix.edgeValueClass";
     /** Message value class */
-    public static final String MESSAGE_VALUE_CLASS = "giraph.messageValueClass";
-    /** Aggregator class */
-    public static final String AGGREGATOR_NAME = "giraph.aggregatorClass";
+    public static final String MESSAGE_VALUE_CLASS = "pregelix.messageValueClass";
+    /** Aggregate value class */
+    public static final String Aggregate_VALUE_CLASS = "pregelix.aggregateValueClass";
     /** num of vertices */
-    public static final String NUM_VERTICE = "giraph.numVertices";
+    public static final String NUM_VERTICE = "pregelix.numVertices";
     /** num of edges */
-    public static final String NUM_EDGES = "giraph.numEdges";
+    public static final String NUM_EDGES = "pregelix.numEdges";
 
     /**
      * Constructor that will instantiate the configuration
@@ -116,5 +119,15 @@ public class PregelixJob extends Job {
      */
     final public void setVertexCombinerClass(Class<?> vertexCombinerClass) {
         getConfiguration().setClass(VERTEX_COMBINER_CLASS, vertexCombinerClass, VertexCombiner.class);
+    }
+
+    /**
+     * Set the global aggregator class (optional)
+     * 
+     * @param vertexCombinerClass
+     *            Determines how vertex messages are combined
+     */
+    final public void setGlobalAggregatorClass(Class<?> globalAggregatorClass) {
+        getConfiguration().setClass(GLOBAL_AGGREGATOR_CLASS, globalAggregatorClass, GlobalAggregator.class);
     }
 }

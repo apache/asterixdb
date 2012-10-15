@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?><configuration>
-<property><name>giraph.combinerClass</name><value>edu.uci.ics.pregelix.example.ShortestPathsVertex$SimpleMinCombiner</value></property>
 <property><name>mapred.tasktracker.dns.nameserver</name><value>default</value></property>
 <property><name>mapred.queue.default.acl-administer-jobs</name><value>*</value></property>
 <property><name>mapred.skip.map.auto.incr.proc.count</name><value>true</value></property>
@@ -19,7 +18,6 @@
 <property><name>io.bytes.per.checksum</name><value>512</value></property>
 <property><name>mapred.task.tracker.report.address</name><value>127.0.0.1:0</value></property>
 <property><name>hadoop.util.hash.type</name><value>murmur</value></property>
-<property><name>giraph.numVertices</name><value>20</value></property>
 <property><name>fs.hdfs.impl</name><value>org.apache.hadoop.hdfs.DistributedFileSystem</value></property>
 <property><name>fs.ramfs.impl</name><value>org.apache.hadoop.fs.InMemoryFileSystem</value></property>
 <property><name>mapred.jobtracker.restart.recover</name><value>false</value></property>
@@ -31,7 +29,6 @@
 <property><name>hadoop.logfile.count</name><value>10</value></property>
 <property><name>ipc.client.connection.maxidletime</name><value>10000</value></property>
 <property><name>mapred.output.dir</name><value>/result</value></property>
-<property><name>giraph.vertexClass</name><value>edu.uci.ics.pregelix.example.ShortestPathsVertex</value></property>
 <property><name>io.map.index.skip</name><value>0</value></property>
 <property><name>mapred.tasktracker.expiry.interval</name><value>600000</value></property>
 <property><name>mapred.output.compress</name><value>false</value></property>
@@ -57,6 +54,7 @@
 <property><name>hadoop.security.authorization</name><value>false</value></property>
 <property><name>mapred.max.tracker.failures</name><value>4</value></property>
 <property><name>mapred.jobtracker.taskScheduler</name><value>org.apache.hadoop.mapred.JobQueueTaskScheduler</value></property>
+<property><name>pregelix.numVertices</name><value>20</value></property>
 <property><name>mapred.tasktracker.dns.interface</name><value>default</value></property>
 <property><name>mapred.map.tasks</name><value>2</value></property>
 <property><name>mapred.job.tracker.persist.jobstatus.hours</name><value>0</value></property>
@@ -67,6 +65,7 @@
 <property><name>hadoop.rpc.socket.factory.class.default</name><value>org.apache.hadoop.net.StandardSocketFactory</value></property>
 <property><name>mapred.reduce.tasks</name><value>1</value></property>
 <property><name>topology.node.switch.mapping.impl</name><value>org.apache.hadoop.net.ScriptBasedMapping</value></property>
+<property><name>pregelix.vertexClass</name><value>edu.uci.ics.pregelix.example.ShortestPathsVertex</value></property>
 <property><name>mapred.skip.reduce.max.skip.groups</name><value>0</value></property>
 <property><name>io.file.buffer.size</name><value>4096</value></property>
 <property><name>mapred.jobtracker.maxtasks.per.job</name><value>-1</value></property>
@@ -87,7 +86,6 @@
 <property><name>io.mapfile.bloom.error.rate</name><value>0.005</value></property>
 <property><name>mapred.job.tracker</name><value>local</value></property>
 <property><name>io.skip.checksum.errors</name><value>false</value></property>
-<property><name>giraph.vertexInputFormatClass</name><value>edu.uci.ics.pregelix.example.inputformat.TextShortestPathsInputFormat</value></property>
 <property><name>mapred.reduce.max.attempts</name><value>4</value></property>
 <property><name>fs.s3.maxRetries</name><value>4</value></property>
 <property><name>ipc.server.listen.queue.size</name><value>128</value></property>
@@ -106,7 +104,7 @@
 <property><name>mapred.task.profile.reduces</name><value>0-2</value></property>
 <property><name>webinterface.private.actions</name><value>false</value></property>
 <property><name>hadoop.tmp.dir</name><value>/tmp/hadoop-${user.name}</value></property>
-<property><name>giraph.vertexOutputFormatClass</name><value>edu.uci.ics.pregelix.example.PageRankVertex$SimplePageRankVertexOutputFormat</value></property>
+<property><name>pregelix.combinerClass</name><value>edu.uci.ics.pregelix.example.ShortestPathsVertex$SimpleMinCombiner</value></property>
 <property><name>mapred.output.compression.codec</name><value>org.apache.hadoop.io.compress.DefaultCodec</value></property>
 <property><name>mapred.skip.attempts.to.start.skipping</name><value>2</value></property>
 <property><name>mapred.temp.dir</name><value>${hadoop.tmp.dir}/mapred/temp</value></property>
@@ -121,10 +119,12 @@
 <property><name>mapred.line.input.format.linespermap</name><value>1</value></property>
 <property><name>job.end.retry.attempts</name><value>0</value></property>
 <property><name>ipc.client.idlethreshold</name><value>4000</value></property>
+<property><name>pregelix.vertexOutputFormatClass</name><value>edu.uci.ics.pregelix.example.PageRankVertex$SimplePageRankVertexOutputFormat</value></property>
 <property><name>mapred.reduce.copy.backoff</name><value>300</value></property>
 <property><name>mapred.map.tasks.speculative.execution</name><value>true</value></property>
 <property><name>mapred.inmem.merge.threshold</name><value>1000</value></property>
 <property><name>hadoop.logfile.size</name><value>10000000</value></property>
+<property><name>pregelix.vertexInputFormatClass</name><value>edu.uci.ics.pregelix.example.inputformat.TextShortestPathsInputFormat</value></property>
 <property><name>mapred.job.queue.name</name><value>default</value></property>
 <property><name>mapred.job.tracker.persist.jobstatus.active</name><value>false</value></property>
 <property><name>mapred.reduce.slowstart.completed.maps</name><value>0.05</value></property>
