@@ -25,6 +25,7 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.graph.VertexCombiner;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
+import edu.uci.ics.pregelix.api.util.GlobalCountAggregator;
 
 /**
  * This class represents a Pregelix job.
@@ -50,8 +51,10 @@ public class PregelixJob extends Job {
     public static final String EDGE_VALUE_CLASS = "pregelix.edgeValueClass";
     /** Message value class */
     public static final String MESSAGE_VALUE_CLASS = "pregelix.messageValueClass";
-    /** Aggregate value class */
-    public static final String Aggregate_VALUE_CLASS = "pregelix.aggregateValueClass";
+    /** Partial aggregate value class */
+    public static final String PARTIAL_AGGREGATE_VALUE_CLASS = "pregelix.partialAggregateValueClass";
+    /** Final aggregate value class */
+    public static final String FINAL_AGGREGATE_VALUE_CLASS = "pregelix.finalAggregateValueClass";
     /** num of vertices */
     public static final String NUM_VERTICE = "pregelix.numVertices";
     /** num of edges */
@@ -66,6 +69,7 @@ public class PregelixJob extends Job {
      */
     public PregelixJob(String jobName) throws IOException {
         super(new Configuration(), jobName);
+        getConfiguration().setClass(GLOBAL_AGGREGATOR_CLASS, GlobalCountAggregator.class, GlobalAggregator.class);
     }
 
     /**

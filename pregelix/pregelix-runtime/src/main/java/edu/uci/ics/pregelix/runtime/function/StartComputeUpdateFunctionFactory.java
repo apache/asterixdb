@@ -21,6 +21,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.io.Writable;
+
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -28,10 +30,13 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.MsgList;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.util.ArrayListWritable.ArrayIterator;
+import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.api.util.FrameTupleUtils;
+import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IUpdateFunction;
 import edu.uci.ics.pregelix.dataflow.std.base.IUpdateFunctionFactory;
 import edu.uci.ics.pregelix.dataflow.util.ResetableByteArrayOutputStream;
@@ -39,7 +44,11 @@ import edu.uci.ics.pregelix.dataflow.util.ResetableByteArrayOutputStream;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
     private static final long serialVersionUID = 1L;
-    public static IUpdateFunctionFactory INSTANCE = new StartComputeUpdateFunctionFactory();
+    private final IConfigurationFactory confFactory;
+
+    public StartComputeUpdateFunctionFactory(IConfigurationFactory confFactory) {
+        this.confFactory = confFactory;
+    }
 
     @Override
     public IUpdateFunction createFunction() {
@@ -48,6 +57,7 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             private final ArrayTupleBuilder tbMsg = new ArrayTupleBuilder(2);
             private final ArrayTupleBuilder tbAlive = new ArrayTupleBuilder(2);
             private final ArrayTupleBuilder tbTerminate = new ArrayTupleBuilder(1);
+            private final ArrayTupleBuilder tbGlobalAggregate = new ArrayTupleBuilder(1);
 
             // for writing out to message channel
             private IFrameWriter writerMsg;
@@ -61,6 +71,12 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             private boolean pushAlive;
 
             // for writing out termination detection control channel
+            private IFrameWriter writerGlobalAggregate;
+            private FrameTupleAppender appenderGlobalAggregate;
+            private ByteBuffer bufferGlobalAggregate;
+            private GlobalAggregator aggregator;
+
+            //for writing out the global aggregate
             private IFrameWriter writerTerminate;
             private FrameTupleAppender appenderTerminate;
             private ByteBuffer bufferTerminate;
@@ -81,6 +97,9 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             @Override
             public void open(IHyracksTaskContext ctx, RecordDescriptor rd, IFrameWriter... writers)
                     throws HyracksDataException {
+                this.aggregator = BspUtils.createGlobalAggregator(confFactory.createConfiguration());
+                this.aggregator.init();
+
                 this.writerMsg = writers[0];
                 this.bufferMsg = ctx.allocateFrame();
                 this.appenderMsg = new FrameTupleAppender(ctx.getFrameSize());
@@ -93,8 +112,13 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 this.appenderTerminate = new FrameTupleAppender(ctx.getFrameSize());
                 this.appenderTerminate.reset(bufferTerminate, true);
 
-                if (writers.length > 2) {
-                    this.writerAlive = writers[2];
+                this.writerGlobalAggregate = writers[2];
+                this.bufferGlobalAggregate = ctx.allocateFrame();
+                this.appenderGlobalAggregate = new FrameTupleAppender(ctx.getFrameSize());
+                this.appenderGlobalAggregate.reset(bufferGlobalAggregate, true);
+
+                if (writers.length > 3) {
+                    this.writerAlive = writers[3];
                     this.bufferAlive = ctx.allocateFrame();
                     this.appenderAlive = new FrameTupleAppender(ctx.getFrameSize());
                     this.appenderAlive.reset(bufferAlive, true);
@@ -134,6 +158,11 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                  */
                 if (terminate && (!vertex.isHalted() || vertex.hasMessage()))
                     terminate = false;
+
+                /**
+                 * call the global aggregator
+                 */
+                aggregator.step(vertex);
             }
 
             @Override
@@ -143,6 +172,25 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                     FrameTupleUtils.flushTuplesFinal(appenderAlive, writerAlive);
                 if (!terminate) {
                     writeOutTerminationState();
+                }
+                
+                /**write out global aggregate value*/
+                writeOutGlobalAggregate();
+            }
+
+            private void writeOutGlobalAggregate() throws HyracksDataException {
+                try {
+                    /**
+                     * get partial aggregate result and flush to the final aggregator
+                     */
+                    Writable agg = aggregator.finishPartial();
+                    agg.write(tbGlobalAggregate.getDataOutput());
+                    tbGlobalAggregate.addFieldEndOffset();
+                    appenderGlobalAggregate.append(tbGlobalAggregate.getFieldEndOffsets(),
+                            tbGlobalAggregate.getByteArray(), 0, tbGlobalAggregate.getSize());
+                    FrameTupleUtils.flushTuplesFinal(appenderGlobalAggregate, writerGlobalAggregate);
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
                 }
             }
 

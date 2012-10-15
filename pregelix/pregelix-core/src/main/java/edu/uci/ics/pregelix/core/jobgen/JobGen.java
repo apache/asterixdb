@@ -123,8 +123,11 @@ public abstract class JobGen implements IJobGen {
         Class aggregatorClass = conf.getClass(PregelixJob.GLOBAL_AGGREGATOR_CLASS, GlobalAggregator.class);
         if (!aggregatorClass.equals(GlobalAggregator.class)) {
             List<Type> argTypes = ReflectionUtils.getTypeArguments(GlobalAggregator.class, aggregatorClass);
-            Type aggregateValueType = argTypes.get(4);
-            conf.setClass(PregelixJob.Aggregate_VALUE_CLASS, (Class<?>) aggregateValueType, Writable.class);
+            Type partialAggregateValueType = argTypes.get(4);
+            conf.setClass(PregelixJob.PARTIAL_AGGREGATE_VALUE_CLASS, (Class<?>) partialAggregateValueType,
+                    Writable.class);
+            Type finalAggregateValueType = argTypes.get(5);
+            conf.setClass(PregelixJob.FINAL_AGGREGATE_VALUE_CLASS, (Class<?>) finalAggregateValueType, Writable.class);
         }
     }
 

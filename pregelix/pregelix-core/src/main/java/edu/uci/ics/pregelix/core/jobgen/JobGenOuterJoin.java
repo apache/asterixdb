@@ -52,6 +52,7 @@ import edu.uci.ics.pregelix.core.util.DataflowUtils;
 import edu.uci.ics.pregelix.dataflow.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.pregelix.dataflow.EmptySinkOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.EmptyTupleSourceOperatorDescriptor;
+import edu.uci.ics.pregelix.dataflow.FinalAggregateOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.MaterializingReadOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.MaterializingWriteOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.TerminationStateWriterOperatorDescriptor;
@@ -83,6 +84,7 @@ public class JobGenOuterJoin extends JobGen {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
         Class<? extends Writable> messageValueClass = BspUtils.getMessageValueClass(conf);
+        Class<? extends Writable> partialAggregateValueClass = BspUtils.getPartialAggregateValueClass(conf);
         IConfigurationFactory confFactory = new ConfigurationFactory(conf);
         JobSpecification spec = new JobSpecification();
 
@@ -110,19 +112,22 @@ public class JobGenOuterJoin extends JobGen {
         ITypeTraits[] typeTraits = new ITypeTraits[2];
         typeTraits[0] = new TypeTraits(false);
         typeTraits[1] = new TypeTraits(false);
-        
+
         RecordDescriptor rdDummy = DataflowUtils.getRecordDescriptorFromWritableClasses(VLongWritable.class.getName());
         RecordDescriptor rdMessage = DataflowUtils.getRecordDescriptorFromKeyValueClasses(vertexIdClass.getName(),
                 MessageList.class.getName());
+        RecordDescriptor rdPartialAggregate = DataflowUtils
+                .getRecordDescriptorFromWritableClasses(partialAggregateValueClass.getName());
         IConfigurationFactory configurationFactory = new ConfigurationFactory(conf);
         IRuntimeHookFactory preHookFactory = new RuntimeHookFactory(configurationFactory);
         IRecordDescriptorFactory inputRdFactory = DataflowUtils.getWritableRecordDescriptorFactoryFromWritableClasses(
                 vertexIdClass.getName(), vertexClass.getName());
         BTreeSearchFunctionUpdateOperatorDescriptor scanner = new BTreeSearchFunctionUpdateOperatorDescriptor(spec,
-                recordDescriptor, storageManagerInterface, treeRegistryProvider, fileSplitProvider,
-                typeTraits, comparatorFactories,
-                JobGenUtil.getForwardScan(iteration), null, null, true, true, new BTreeDataflowHelperFactory(),
-                inputRdFactory, 2, StartComputeUpdateFunctionFactory.INSTANCE, preHookFactory, null, rdMessage, rdDummy);
+                recordDescriptor, storageManagerInterface, treeRegistryProvider, fileSplitProvider, typeTraits,
+                comparatorFactories, JobGenUtil.getForwardScan(iteration), null, null, true, true,
+                new BTreeDataflowHelperFactory(), inputRdFactory, 3,
+                new StartComputeUpdateFunctionFactory(confFactory), preHookFactory, null, rdMessage, rdDummy,
+                rdPartialAggregate);
         ClusterConfig.setLocationConstraint(spec, scanner);
 
         RecordDescriptor rdUnnestedMessage = DataflowUtils.getRecordDescriptorFromKeyValueClasses(
@@ -181,6 +186,15 @@ public class JobGenOuterJoin extends JobGen {
         PartitionConstraintHelper.addPartitionCountConstraint(spec, terminateWriter, 1);
         ITuplePartitionComputerFactory hashPartitionComputerFactory = new MergePartitionComputerFactory();
 
+        /**
+         * final aggregate write operator
+         */
+        IRecordDescriptorFactory aggRdFactory = DataflowUtils
+                .getWritableRecordDescriptorFactoryFromWritableClasses(partialAggregateValueClass.getName());
+        FinalAggregateOperatorDescriptor finalAggregator = new FinalAggregateOperatorDescriptor(spec,
+                configurationFactory, aggRdFactory, jobId);
+        PartitionConstraintHelper.addPartitionCountConstraint(spec, finalAggregator, 1);
+
         ITuplePartitionComputerFactory partionFactory = new VertexIdPartitionComputerFactory(
                 rdUnnestedMessage.getFields()[0]);
         /** connect all operators **/
@@ -189,6 +203,8 @@ public class JobGenOuterJoin extends JobGen {
         spec.connect(new OneToOneConnectorDescriptor(spec), scanner, 0, localSort, 0);
         spec.connect(new MToNPartitioningConnectorDescriptor(spec, hashPartitionComputerFactory), scanner, 1,
                 terminateWriter, 0);
+        spec.connect(new MToNPartitioningConnectorDescriptor(spec, hashPartitionComputerFactory), scanner, 2,
+                finalAggregator, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), localSort, 0, localGby, 0);
         spec.connect(new MToNPartitioningMergingConnectorDescriptor(spec, partionFactory, keyFields, sortCmpFactories),
                 localGby, 0, globalGby, 0);
@@ -197,6 +213,7 @@ public class JobGenOuterJoin extends JobGen {
         spec.connect(new OneToOneConnectorDescriptor(spec), postSuperStep, 0, emptySink2, 0);
 
         spec.addRoot(terminateWriter);
+        spec.addRoot(finalAggregator);
         spec.addRoot(emptySink2);
 
         spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
@@ -210,6 +227,7 @@ public class JobGenOuterJoin extends JobGen {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
         Class<? extends Writable> messageValueClass = BspUtils.getMessageValueClass(conf);
+        Class<? extends Writable> partialAggregateValueClass = BspUtils.getPartialAggregateValueClass(conf);
         JobSpecification spec = new JobSpecification();
 
         /**
@@ -262,6 +280,8 @@ public class JobGenOuterJoin extends JobGen {
         RecordDescriptor rdDummy = DataflowUtils.getRecordDescriptorFromWritableClasses(VLongWritable.class.getName());
         RecordDescriptor rdMessage = DataflowUtils.getRecordDescriptorFromKeyValueClasses(vertexIdClass.getName(),
                 MessageList.class.getName());
+        RecordDescriptor rdPartialAggregate = DataflowUtils
+                .getRecordDescriptorFromWritableClasses(partialAggregateValueClass.getName());
         IConfigurationFactory configurationFactory = new ConfigurationFactory(conf);
         IRuntimeHookFactory preHookFactory = new RuntimeHookFactory(configurationFactory);
         IRecordDescriptorFactory inputRdFactory = DataflowUtils.getWritableRecordDescriptorFactoryFromWritableClasses(
@@ -270,8 +290,9 @@ public class JobGenOuterJoin extends JobGen {
         IndexNestedLoopJoinFunctionUpdateOperatorDescriptor join = new IndexNestedLoopJoinFunctionUpdateOperatorDescriptor(
                 spec, storageManagerInterface, treeRegistryProvider, fileSplitProvider, interiorFrameFactory,
                 leafFrameFactory, typeTraits, comparatorFactories, JobGenUtil.getForwardScan(iteration), keyFields,
-                keyFields, true, true, new BTreeDataflowHelperFactory(), true, nullWriterFactories, inputRdFactory, 2,
-                ComputeUpdateFunctionFactory.INSTANCE, preHookFactory, null, rdMessage, rdDummy);
+                keyFields, true, true, new BTreeDataflowHelperFactory(), true, nullWriterFactories, inputRdFactory, 3,
+                new ComputeUpdateFunctionFactory(confFactory), preHookFactory, null, rdMessage, rdDummy,
+                rdPartialAggregate);
         ClusterConfig.setLocationConstraint(spec, join);
 
         /**
@@ -325,6 +346,15 @@ public class JobGenOuterJoin extends JobGen {
                 configurationFactory, jobId);
         PartitionConstraintHelper.addPartitionCountConstraint(spec, terminateWriter, 1);
 
+        /**
+         * final aggregate write operator
+         */
+        IRecordDescriptorFactory aggRdFactory = DataflowUtils
+                .getWritableRecordDescriptorFactoryFromWritableClasses(partialAggregateValueClass.getName());
+        FinalAggregateOperatorDescriptor finalAggregator = new FinalAggregateOperatorDescriptor(spec,
+                configurationFactory, aggRdFactory, jobId);
+        PartitionConstraintHelper.addPartitionCountConstraint(spec, finalAggregator, 1);
+
         ITuplePartitionComputerFactory hashPartitionComputerFactory = new MergePartitionComputerFactory();
         ITuplePartitionComputerFactory partionFactory = new VertexIdPartitionComputerFactory(
                 rdUnnestedMessage.getFields()[0]);
@@ -336,6 +366,8 @@ public class JobGenOuterJoin extends JobGen {
         spec.connect(new OneToOneConnectorDescriptor(spec), join, 0, localSort, 0);
         spec.connect(new MToNPartitioningConnectorDescriptor(spec, hashPartitionComputerFactory), join, 1,
                 terminateWriter, 0);
+        spec.connect(new MToNPartitioningConnectorDescriptor(spec, hashPartitionComputerFactory), join, 2,
+                finalAggregator, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), localSort, 0, localGby, 0);
         spec.connect(new MToNPartitioningMergingConnectorDescriptor(spec, partionFactory, keyFields, sortCmpFactories),
                 localGby, 0, globalGby, 0);
@@ -344,6 +376,7 @@ public class JobGenOuterJoin extends JobGen {
         spec.connect(new OneToOneConnectorDescriptor(spec), postSuperStep, 0, emptySink, 0);
 
         spec.addRoot(terminateWriter);
+        spec.addRoot(finalAggregator);
         spec.addRoot(emptySink);
 
         spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());

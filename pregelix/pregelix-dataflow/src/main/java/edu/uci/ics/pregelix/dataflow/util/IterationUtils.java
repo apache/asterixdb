@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -29,6 +30,7 @@ import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
+import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.context.RuntimeContext;
 import edu.uci.ics.pregelix.dataflow.context.StateKey;
 
@@ -89,6 +91,21 @@ public class IterationUtils {
         }
     }
 
+    public static void writeGlobalAggregateValue(Configuration conf, String jobId, Writable agg)
+            throws HyracksDataException {
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            String pathStr = IterationUtils.TMP_DIR + jobId + "agg";
+            Path path = new Path(pathStr);
+            FSDataOutputStream output = dfs.create(path, true);
+            agg.write(output);
+            output.flush();
+            output.close();
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
     public static boolean readTerminationState(Configuration conf, String jobId) throws HyracksDataException {
         try {
             FileSystem dfs = FileSystem.get(conf);
@@ -98,6 +115,21 @@ public class IterationUtils {
             boolean terminate = input.readBoolean();
             input.close();
             return terminate;
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    public static Writable readGlobalAggregateValue(Configuration conf, String jobId) throws HyracksDataException {
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            String pathStr = IterationUtils.TMP_DIR + jobId + "agg";
+            Path path = new Path(pathStr);
+            FSDataInputStream input = dfs.open(path);
+            Writable agg = BspUtils.createFinalAggregateValue(conf);
+            agg.readFields(input);
+            input.close();
+            return agg;
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }

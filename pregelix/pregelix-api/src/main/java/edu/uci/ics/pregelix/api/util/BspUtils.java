@@ -117,10 +117,10 @@ public class BspUtils {
      * @return User's vertex combiner class
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable, T extends Writable> Class<? extends GlobalAggregator<I, V, E, M, T>> getGlobalAggregatorClass(
+    public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable, P extends Writable, F extends Writable> Class<? extends GlobalAggregator<I, V, E, M, P, F>> getGlobalAggregatorClass(
             Configuration conf) {
-        return (Class<? extends GlobalAggregator<I, V, E, M, T>>) conf.getClass(PregelixJob.GLOBAL_AGGREGATOR_CLASS,
-                null, GlobalAggregator.class);
+        return (Class<? extends GlobalAggregator<I, V, E, M, P, F>>) conf.getClass(PregelixJob.GLOBAL_AGGREGATOR_CLASS,
+                GlobalAggregator.class);
     }
 
     /**
@@ -145,9 +145,9 @@ public class BspUtils {
      * @return Instantiated user vertex combiner class
      */
     @SuppressWarnings("rawtypes")
-    public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable, T extends Writable> GlobalAggregator<I, V, E, M, T> createGlobalAggregator(
+    public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable, P extends Writable, F extends Writable> GlobalAggregator<I, V, E, M, P, F> createGlobalAggregator(
             Configuration conf) {
-        Class<? extends GlobalAggregator<I, V, E, M, T>> globalAggregatorClass = getGlobalAggregatorClass(conf);
+        Class<? extends GlobalAggregator<I, V, E, M, P, F>> globalAggregatorClass = getGlobalAggregatorClass(conf);
         return ReflectionUtils.newInstance(globalAggregatorClass, conf);
     }
 
@@ -287,17 +287,31 @@ public class BspUtils {
     }
 
     /**
-     * Get the user's subclassed global aggregator value class.
+     * Get the user's subclassed global aggregator's partial aggregate value class.
      * 
      * @param conf
      *            Configuration to check
      * @return User's global aggregate value class
      */
     @SuppressWarnings("unchecked")
-    public static <M extends Writable> Class<M> getAggregateValueClass(Configuration conf) {
+    public static <M extends Writable> Class<M> getPartialAggregateValueClass(Configuration conf) {
         if (conf == null)
             conf = defaultConf;
-        return (Class<M>) conf.getClass(PregelixJob.Aggregate_VALUE_CLASS, Writable.class);
+        return (Class<M>) conf.getClass(PregelixJob.PARTIAL_AGGREGATE_VALUE_CLASS, Writable.class);
+    }
+
+    /**
+     * Get the user's subclassed global aggregator's global value class.
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return User's global aggregate value class
+     */
+    @SuppressWarnings("unchecked")
+    public static <M extends Writable> Class<M> getFinalAggregateValueClass(Configuration conf) {
+        if (conf == null)
+            conf = defaultConf;
+        return (Class<M>) conf.getClass(PregelixJob.FINAL_AGGREGATE_VALUE_CLASS, Writable.class);
     }
 
     /**
@@ -325,8 +339,26 @@ public class BspUtils {
      *            Configuration to check
      * @return Instantiated user aggregate value
      */
-    public static <M extends Writable> M createAggregateValue(Configuration conf) {
-        Class<M> aggregateValueClass = getAggregateValueClass(conf);
+    public static <M extends Writable> M createPartialAggregateValue(Configuration conf) {
+        Class<M> aggregateValueClass = getPartialAggregateValueClass(conf);
+        try {
+            return aggregateValueClass.newInstance();
+        } catch (InstantiationException e) {
+            throw new IllegalArgumentException("createMessageValue: Failed to instantiate", e);
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException("createMessageValue: Illegally accessed", e);
+        }
+    }
+
+    /**
+     * Create a user aggregate value
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return Instantiated user aggregate value
+     */
+    public static <M extends Writable> M createFinalAggregateValue(Configuration conf) {
+        Class<M> aggregateValueClass = getFinalAggregateValueClass(conf);
         try {
             return aggregateValueClass.newInstance();
         } catch (InstantiationException e) {

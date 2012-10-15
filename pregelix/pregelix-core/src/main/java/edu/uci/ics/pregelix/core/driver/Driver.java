@@ -196,6 +196,7 @@ public class Driver implements IDriver {
     }
 
     private void execute(JobSpecification job) throws Exception {
+        job.setUseConnectorPolicyForScheduling(false);
         JobId jobId = hcc.startJob(applicationName, job,
                 profiling ? EnumSet.of(JobFlag.PROFILE_RUNTIME) : EnumSet.noneOf(JobFlag.class));
         hcc.waitForCompletion(jobId);
