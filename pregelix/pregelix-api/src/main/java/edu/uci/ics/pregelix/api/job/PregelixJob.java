@@ -21,11 +21,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
+import edu.uci.ics.pregelix.api.graph.MessageCombiner;
 import edu.uci.ics.pregelix.api.graph.Vertex;
-import edu.uci.ics.pregelix.api.graph.VertexCombiner;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
-import edu.uci.ics.pregelix.api.util.GlobalCountAggregator;
 
 /**
  * This class represents a Pregelix job.
@@ -38,7 +37,7 @@ public class PregelixJob extends Job {
     /** VertexOutputFormat class - optional */
     public static final String VERTEX_OUTPUT_FORMAT_CLASS = "pregelix.vertexOutputFormatClass";
     /** Vertex combiner class - optional */
-    public static final String VERTEX_COMBINER_CLASS = "pregelix.combinerClass";
+    public static final String Message_COMBINER_CLASS = "pregelix.combinerClass";
     /** Global aggregator class - optional */
     public static final String GLOBAL_AGGREGATOR_CLASS = "pregelix.aggregatorClass";
     /** Vertex resolver class - optional */
@@ -51,6 +50,8 @@ public class PregelixJob extends Job {
     public static final String EDGE_VALUE_CLASS = "pregelix.edgeValueClass";
     /** Message value class */
     public static final String MESSAGE_VALUE_CLASS = "pregelix.messageValueClass";
+    /** Partial combiner value class */
+    public static final String PARTIAL_COMBINE_VALUE_CLASS = "pregelix.partialCombinedValueClass";
     /** Partial aggregate value class */
     public static final String PARTIAL_AGGREGATE_VALUE_CLASS = "pregelix.partialAggregateValueClass";
     /** Final aggregate value class */
@@ -69,7 +70,6 @@ public class PregelixJob extends Job {
      */
     public PregelixJob(String jobName) throws IOException {
         super(new Configuration(), jobName);
-        getConfiguration().setClass(GLOBAL_AGGREGATOR_CLASS, GlobalCountAggregator.class, GlobalAggregator.class);
     }
 
     /**
@@ -122,7 +122,7 @@ public class PregelixJob extends Job {
      *            Determines how vertex messages are combined
      */
     final public void setVertexCombinerClass(Class<?> vertexCombinerClass) {
-        getConfiguration().setClass(VERTEX_COMBINER_CLASS, vertexCombinerClass, VertexCombiner.class);
+        getConfiguration().setClass(Message_COMBINER_CLASS, vertexCombinerClass, MessageCombiner.class);
     }
 
     /**

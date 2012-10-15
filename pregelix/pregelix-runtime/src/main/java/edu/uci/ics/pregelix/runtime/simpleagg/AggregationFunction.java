@@ -30,8 +30,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import edu.uci.ics.pregelix.api.graph.MessageCombiner;
 import edu.uci.ics.pregelix.api.graph.MsgList;
-import edu.uci.ics.pregelix.api.graph.VertexCombiner;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IAggregateFunction;
@@ -41,7 +41,7 @@ public class AggregationFunction implements IAggregateFunction {
     private final Configuration conf;
     private final boolean isFinalStage;
     private final DataOutput output;
-    private VertexCombiner combiner;
+    private MessageCombiner combiner;
     private ByteBufferInputStream keyInputStream = new ByteBufferInputStream();
     private ByteBufferInputStream valueInputStream = new ByteBufferInputStream();
     private DataInput keyInput = new DataInputStream(keyInputStream);
@@ -59,17 +59,15 @@ public class AggregationFunction implements IAggregateFunction {
         this.isFinalStage = isFinalStage;
         msgList.setConf(this.conf);
 
-        combiner = BspUtils.createVertexCombiner(conf);
+        combiner = BspUtils.createMessageCombiner(conf);
         key = BspUtils.createVertexIndex(conf);
-        value = BspUtils.createMessageValue(conf);
-        combinedResult = BspUtils.createMessageValue(conf);
+        value = !isFinalStage ? BspUtils.createMessageValue(conf) : BspUtils.createPartialCombineValue(conf);
     }
 
     @Override
     public void init() throws HyracksDataException {
-        msgList.clear();
         keyRead = false;
-        combiner.init();
+        combiner.init(msgList);
     }
 
     @Override
@@ -89,10 +87,14 @@ public class AggregationFunction implements IAggregateFunction {
         try {
             if (!keyRead) {
                 key.readFields(keyInput);
-                keyRead = false;
+                keyRead = true;
             }
             value.readFields(valueInput);
-            combiner.step(key, value);
+            if (!isFinalStage) {
+                combiner.step(key, value);
+            } else {
+                combiner.step(value);
+            }
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
@@ -102,13 +104,12 @@ public class AggregationFunction implements IAggregateFunction {
     @Override
     public void finish() throws HyracksDataException {
         try {
-            combinedResult = combiner.finish();
             if (!isFinalStage) {
-                combinedResult.write(output);
+                combinedResult = combiner.finishPartial();
             } else {
-                msgList.add(combinedResult);
-                msgList.write(output);
+                combinedResult = combiner.finishFinal();
             }
+            combinedResult.write(output);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }

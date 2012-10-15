@@ -60,6 +60,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDropOperatorDescr
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
+import edu.uci.ics.pregelix.api.graph.MessageCombiner;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -128,6 +129,13 @@ public abstract class JobGen implements IJobGen {
                     Writable.class);
             Type finalAggregateValueType = argTypes.get(5);
             conf.setClass(PregelixJob.FINAL_AGGREGATE_VALUE_CLASS, (Class<?>) finalAggregateValueType, Writable.class);
+        }
+
+        Class combinerClass = conf.getClass(PregelixJob.Message_COMBINER_CLASS, MessageCombiner.class);
+        if (!combinerClass.equals(MessageCombiner.class)) {
+            List<Type> argTypes = ReflectionUtils.getTypeArguments(MessageCombiner.class, combinerClass);
+            Type partialCombineValueType = argTypes.get(2);
+            conf.setClass(PregelixJob.PARTIAL_COMBINE_VALUE_CLASS, (Class<?>) partialCombineValueType, Writable.class);
         }
     }
 

@@ -30,8 +30,10 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import com.google.common.collect.Maps;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.pregelix.api.graph.MessageCombiner;
+import edu.uci.ics.pregelix.api.graph.MsgList;
 import edu.uci.ics.pregelix.api.graph.Vertex;
-import edu.uci.ics.pregelix.api.graph.VertexCombiner;
 import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
 import edu.uci.ics.pregelix.api.io.generated.GeneratedVertexInputFormat;
@@ -56,24 +58,40 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
     /**
      * Test whether combiner is called by summing up the messages.
      */
-    public static class SimpleSumCombiner implements VertexCombiner<VLongWritable, DoubleWritable> {
+    public static class SimpleSumCombiner extends MessageCombiner<VLongWritable, DoubleWritable, DoubleWritable> {
         private double sum = 0.0;
         private DoubleWritable agg = new DoubleWritable();
+        private MsgList<DoubleWritable> msgList;
+
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        @Override
+        public void init(MsgList msgList) {
+            sum = 0.0;
+            this.msgList = msgList;
+        }
 
         @Override
-        public void step(VLongWritable vertexIndex, DoubleWritable msg) throws IOException {
+        public void step(VLongWritable vertexIndex, DoubleWritable msg) throws HyracksDataException {
             sum += msg.get();
         }
 
         @Override
-        public void init() {
-            sum = 0.0;
+        public DoubleWritable finishPartial() {
+            agg.set(sum);
+            return agg;
         }
 
         @Override
-        public DoubleWritable finish() {
+        public void step(DoubleWritable partialAggregate) throws HyracksDataException {
+            sum += partialAggregate.get();
+        }
+
+        @Override
+        public MsgList<DoubleWritable> finishFinal() {
             agg.set(sum);
-            return agg;
+            msgList.clear();
+            msgList.add(agg);
+            return msgList;
         }
     }
 

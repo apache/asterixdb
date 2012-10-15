@@ -23,9 +23,11 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.pregelix.api.graph.Edge;
+import edu.uci.ics.pregelix.api.graph.MessageCombiner;
+import edu.uci.ics.pregelix.api.graph.MsgList;
 import edu.uci.ics.pregelix.api.graph.Vertex;
-import edu.uci.ics.pregelix.api.graph.VertexCombiner;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
 import edu.uci.ics.pregelix.api.io.text.TextVertexOutputFormat;
 import edu.uci.ics.pregelix.api.io.text.TextVertexOutputFormat.TextVertexWriter;
@@ -41,26 +43,43 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
     /**
      * Test whether combiner is called to get the minimum ID in the cluster
      */
-    public static class SimpleMinCombiner implements VertexCombiner<VLongWritable, VLongWritable> {
+    public static class SimpleMinCombiner extends MessageCombiner<VLongWritable, VLongWritable, VLongWritable> {
         private long min = Long.MAX_VALUE;
         private VLongWritable agg = new VLongWritable();
+        private MsgList<VLongWritable> msgList;
 
         @Override
-        public void step(VLongWritable vertexIndex, VLongWritable msg) throws IOException {
+        public void step(VLongWritable vertexIndex, VLongWritable msg) throws HyracksDataException {
             long value = msg.get();
             if (min > value)
                 min = value;
         }
 
+        @SuppressWarnings({ "rawtypes", "unchecked" })
         @Override
-        public void init() {
+        public void init(MsgList msgList) {
             min = Long.MAX_VALUE;
+            this.msgList = msgList;
         }
 
         @Override
-        public VLongWritable finish() {
+        public void step(VLongWritable partialAggregate) throws HyracksDataException {
+            if (min > partialAggregate.get())
+                min = partialAggregate.get();
+        }
+
+        @Override
+        public VLongWritable finishPartial() {
             agg.set(min);
             return agg;
+        }
+
+        @Override
+        public MsgList<VLongWritable> finishFinal() {
+            agg.set(min);
+            msgList.clear();
+            msgList.add(agg);
+            return msgList;
         }
     }
 

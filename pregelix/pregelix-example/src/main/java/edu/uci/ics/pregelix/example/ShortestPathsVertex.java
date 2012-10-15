@@ -15,7 +15,6 @@
 
 package edu.uci.ics.pregelix.example;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,9 +22,11 @@ import java.util.logging.Logger;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.pregelix.api.graph.Edge;
+import edu.uci.ics.pregelix.api.graph.MessageCombiner;
+import edu.uci.ics.pregelix.api.graph.MsgList;
 import edu.uci.ics.pregelix.api.graph.Vertex;
-import edu.uci.ics.pregelix.api.graph.VertexCombiner;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.example.PageRankVertex.SimplePageRankVertexOutputFormat;
 import edu.uci.ics.pregelix.example.client.Client;
@@ -39,26 +40,44 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
     /**
      * Test whether combiner is called by summing up the messages.
      */
-    public static class SimpleMinCombiner implements VertexCombiner<VLongWritable, DoubleWritable> {
+    public static class SimpleMinCombiner extends MessageCombiner<VLongWritable, DoubleWritable, DoubleWritable> {
         private double min = Double.MAX_VALUE;
         private DoubleWritable agg = new DoubleWritable();
+        private MsgList<DoubleWritable> msgList;
 
         @Override
-        public void step(VLongWritable vertexIndex, DoubleWritable msg) throws IOException {
+        public void step(VLongWritable vertexIndex, DoubleWritable msg) throws HyracksDataException {
             double value = msg.get();
             if (min > value)
                 min = value;
         }
 
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
-        public void init() {
+        public void init(MsgList msgList) {
             min = Double.MAX_VALUE;
+            this.msgList = msgList;
         }
 
         @Override
-        public DoubleWritable finish() {
+        public DoubleWritable finishPartial() {
             agg.set(min);
             return agg;
+        }
+
+        @Override
+        public void step(DoubleWritable partialAggregate) throws HyracksDataException {
+            double value = partialAggregate.get();
+            if (min > value)
+                min = value;
+        }
+
+        @Override
+        public MsgList<DoubleWritable> finishFinal() {
+            agg.set(min);
+            msgList.clear();
+            msgList.add(agg);
+            return msgList;
         }
     }
 

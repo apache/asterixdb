@@ -21,8 +21,9 @@ import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
+import edu.uci.ics.pregelix.api.graph.MessageCombiner;
+import edu.uci.ics.pregelix.api.graph.MsgList;
 import edu.uci.ics.pregelix.api.graph.Vertex;
-import edu.uci.ics.pregelix.api.graph.VertexCombiner;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -96,17 +97,17 @@ public class BspUtils {
     }
 
     /**
-     * Get the user's subclassed {@link VertexCombiner}.
+     * Get the user's subclassed {@link MessageCombiner}.
      * 
      * @param conf
      *            Configuration to check
      * @return User's vertex combiner class
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static <I extends WritableComparable, M extends Writable> Class<? extends VertexCombiner<I, M>> getVertexCombinerClass(
+    public static <I extends WritableComparable, M extends Writable, P extends Writable> Class<? extends MessageCombiner<I, M, P>> getMessageCombinerClass(
             Configuration conf) {
-        return (Class<? extends VertexCombiner<I, M>>) conf.getClass(PregelixJob.VERTEX_COMBINER_CLASS, null,
-                VertexCombiner.class);
+        return (Class<? extends MessageCombiner<I, M, P>>) conf.getClass(PregelixJob.Message_COMBINER_CLASS,
+                DefaultMessageCombiner.class, MessageCombiner.class);
     }
 
     /**
@@ -120,7 +121,7 @@ public class BspUtils {
     public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable, P extends Writable, F extends Writable> Class<? extends GlobalAggregator<I, V, E, M, P, F>> getGlobalAggregatorClass(
             Configuration conf) {
         return (Class<? extends GlobalAggregator<I, V, E, M, P, F>>) conf.getClass(PregelixJob.GLOBAL_AGGREGATOR_CLASS,
-                GlobalAggregator.class);
+                GlobalCountAggregator.class, GlobalAggregator.class);
     }
 
     /**
@@ -131,9 +132,9 @@ public class BspUtils {
      * @return Instantiated user vertex combiner class
      */
     @SuppressWarnings("rawtypes")
-    public static <I extends WritableComparable, M extends Writable> VertexCombiner<I, M> createVertexCombiner(
+    public static <I extends WritableComparable, M extends Writable, P extends Writable> MessageCombiner<I, M, P> createMessageCombiner(
             Configuration conf) {
-        Class<? extends VertexCombiner<I, M>> vertexCombinerClass = getVertexCombinerClass(conf);
+        Class<? extends MessageCombiner<I, M, P>> vertexCombinerClass = getMessageCombinerClass(conf);
         return ReflectionUtils.newInstance(vertexCombinerClass, conf);
     }
 
@@ -301,6 +302,20 @@ public class BspUtils {
     }
 
     /**
+     * Get the user's subclassed combiner's partial combine value class.
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return User's global aggregate value class
+     */
+    @SuppressWarnings("unchecked")
+    public static <M extends Writable> Class<M> getPartialCombineValueClass(Configuration conf) {
+        if (conf == null)
+            conf = defaultConf;
+        return (Class<M>) conf.getClass(PregelixJob.PARTIAL_COMBINE_VALUE_CLASS, Writable.class);
+    }
+
+    /**
      * Get the user's subclassed global aggregator's global value class.
      * 
      * @param conf
@@ -333,7 +348,7 @@ public class BspUtils {
     }
 
     /**
-     * Create a user aggregate value
+     * Create a user partial aggregate value
      * 
      * @param conf
      *            Configuration to check
@@ -343,6 +358,30 @@ public class BspUtils {
         Class<M> aggregateValueClass = getPartialAggregateValueClass(conf);
         try {
             return aggregateValueClass.newInstance();
+        } catch (InstantiationException e) {
+            throw new IllegalArgumentException("createMessageValue: Failed to instantiate", e);
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException("createMessageValue: Illegally accessed", e);
+        }
+    }
+
+    /**
+     * Create a user partial combine value
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return Instantiated user aggregate value
+     */
+    @SuppressWarnings("rawtypes")
+    public static <M extends Writable> M createPartialCombineValue(Configuration conf) {
+        Class<M> aggregateValueClass = getPartialCombineValueClass(conf);
+        try {
+            M instance = aggregateValueClass.newInstance();
+            if (instance instanceof MsgList) {
+                // set conf for msg list, if the value type is msglist
+                ((MsgList) instance).setConf(conf);
+            }
+            return instance;
         } catch (InstantiationException e) {
             throw new IllegalArgumentException("createMessageValue: Failed to instantiate", e);
         } catch (IllegalAccessException e) {

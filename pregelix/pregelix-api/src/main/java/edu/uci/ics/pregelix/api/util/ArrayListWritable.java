@@ -16,6 +16,7 @@
 package edu.uci.ics.pregelix.api.util;
 
 import java.io.DataInput;
+import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,6 +27,8 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
+
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 
 /**
  * A Writable for ListArray containing instances of a class.
@@ -41,6 +44,14 @@ public abstract class ArrayListWritable<M extends Writable> extends ArrayList<M>
     private List<M> pool = new ArrayList<M>();
     /** how many instance in the pool has been used */
     private int used = 0;
+    /** intermediate buffer for copy data element */
+    private final ArrayBackedValueStorage intermediateBuffer = new ArrayBackedValueStorage();
+    /** intermediate data output */
+    private final DataOutput intermediateOutput = intermediateBuffer.getDataOutput();
+    /** input stream */
+    private final ResetableByteArrayInputStream inputStream = new ResetableByteArrayInputStream();
+    /** data input */
+    private final DataInput dataInput = new DataInputStream(inputStream);
 
     /**
      * Using the default constructor requires that the user implement
@@ -48,6 +59,49 @@ public abstract class ArrayListWritable<M extends Writable> extends ArrayList<M>
      * readFields()
      */
     public ArrayListWritable() {
+    }
+
+    /**
+     * clear all the elements
+     */
+    public void clearElements() {
+        this.used = 0;
+        this.clear();
+    }
+
+    /**
+     * Add all elements from another list
+     * 
+     * @param list
+     *            the list of M
+     * @return true if successful, else false
+     */
+    public boolean addAllElements(List<M> list) {
+        for (int i = 0; i < list.size(); i++) {
+            addElement(list.get(i));
+        }
+        return true;
+    }
+
+    /**
+     * Add an element
+     * 
+     * @param element
+     *            M
+     * @return true if successful, else false
+     */
+    public boolean addElement(M element) {
+        try {
+            intermediateBuffer.reset();
+            element.write(intermediateOutput);
+            inputStream.setByteArray(intermediateBuffer.getByteArray(), 0);
+            M value = allocateValue();
+            value.readFields(dataInput);
+            add(value);
+            return true;
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /**
@@ -109,6 +163,9 @@ public abstract class ArrayListWritable<M extends Writable> extends ArrayList<M>
 
     public final void setConf(Configuration conf) {
         this.conf = conf;
+        if (this.refClass == null) {
+            setClass();
+        }
     }
 
     private M allocateValue() {

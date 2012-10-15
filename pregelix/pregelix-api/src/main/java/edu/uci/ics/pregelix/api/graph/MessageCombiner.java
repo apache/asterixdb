@@ -20,6 +20,8 @@ import java.io.IOException;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+
 /**
  * interface to implement for combining of messages sent to the same vertex.
  * 
@@ -27,26 +29,40 @@ import org.apache.hadoop.io.WritableComparable;
  * @param <M extends Writable> message data
  */
 @SuppressWarnings("rawtypes")
-public interface VertexCombiner<I extends WritableComparable, M extends Writable> {
+public abstract class MessageCombiner<I extends WritableComparable, M extends Writable, P extends Writable> {
 
     /**
      * initialize combiner
      */
-    public void init();
+    public abstract void init(MsgList providedMsgList);
 
     /**
-     * step call
+     * step call for local combiner
      * 
      * @param vertexIndex
      * @param msg
      * @throws IOException
      */
-    public void step(I vertexIndex, M msg) throws IOException;
+    public abstract void step(I vertexIndex, M msg) throws HyracksDataException;
 
     /**
-     * finish aggregate
+     * step call for global combiner
+     * 
+     * @param vertexIndex
+     * @param msg
+     * @throws IOException
+     */
+    public abstract void step(P partialAggregate) throws HyracksDataException;
+
+    /**
+     * finish partial combiner
+     */
+    public abstract P finishPartial();
+
+    /**
+     * finish final combiner
      * 
      * @return Message
      */
-    public M finish();
+    public abstract MsgList<M> finishFinal();
 }

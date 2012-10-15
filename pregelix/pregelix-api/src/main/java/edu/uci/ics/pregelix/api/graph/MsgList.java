@@ -32,7 +32,7 @@ public class MsgList<M extends Writable> extends ArrayListWritable<M> {
     private static final long serialVersionUID = 100L;
 
     /**
-     * Default constructor.
+     * Default constructor.s
      */
     public MsgList() {
         super();
