@@ -131,9 +131,6 @@ public final class RuleCollections {
         condPushDownAndJoinInference.add(new IntroduceGroupByForSubplanRule());
         condPushDownAndJoinInference.add(new SubplanOutOfGroupRule());
         condPushDownAndJoinInference.add(new InsertOuterJoinRule());
-        condPushDownAndJoinInference.add(new AsterixInlineVariablesRule());
-        condPushDownAndJoinInference.add(new AsterixProperInlineVariablesRule());
-        condPushDownAndJoinInference.add(new RemoveUnusedAssignAndAggregateRule());
         condPushDownAndJoinInference.add(new FactorRedundantGroupAndDecorVarsRule());
         condPushDownAndJoinInference.add(new PushAggregateIntoGroupbyRule());
         condPushDownAndJoinInference.add(new EliminateSubplanRule());
@@ -174,11 +171,19 @@ public final class RuleCollections {
         consolidation.add(new IntroduceGroupByCombinerRule());
         consolidation.add(new IntroduceAggregateCombinerRule());
         consolidation.add(new CountVarToCountOneRule());
-        consolidation.add(new IntroduceSelectAccessMethodRule());
-        consolidation.add(new IntroduceJoinAccessMethodRule());
         consolidation.add(new RemoveUnusedAssignAndAggregateRule());
         consolidation.add(new IntroduceSecondaryIndexInsertDeleteRule());
         return consolidation;
+    }
+    
+    public final static List<IAlgebraicRewriteRule> buildAccessMethodRuleCollection() {
+        List<IAlgebraicRewriteRule> accessMethod = new LinkedList<IAlgebraicRewriteRule>();        
+        accessMethod.add(new IntroduceSelectAccessMethodRule());
+        //accessMethod.add(new AsterixProperInlineVariablesRule());
+        //accessMethod.add(new PushSelectIntoJoinRule());
+        //accessMethod.add(new RemoveUnusedAssignAndAggregateRule());        
+        accessMethod.add(new IntroduceJoinAccessMethodRule());
+        return accessMethod;
     }
 
     public final static List<IAlgebraicRewriteRule> buildOpPushDownRuleCollection() {

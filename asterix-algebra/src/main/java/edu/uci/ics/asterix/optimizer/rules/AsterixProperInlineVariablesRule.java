@@ -59,6 +59,8 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
     static {
         doNotInlineFuncs.add(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR);
         doNotInlineFuncs.add(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR);
+        //doNotInlineFuncs.add(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX);
+        //doNotInlineFuncs.add(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME);
     }
     
     @Override
@@ -136,15 +138,14 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
             case INDEX_INSERT_DELETE:
             case PROJECT:
             // We can currently only order/group by a variable reference expression.
-            case ORDER:
-            case INNERJOIN:
-            case LEFTOUTERJOIN: {
-                break;
-            }
-            // Remove non-live vars here.
             case GROUP:
             case DISTINCT:
-            case AGGREGATE: {
+            case AGGREGATE:
+            case ORDER:
+            case INNERJOIN:
+            case LEFTOUTERJOIN:
+            // TODO: Enabling this will require fixes in the access method rewrite rules.
+            case UNNEST_MAP: {
                 break;
             }
             default: {

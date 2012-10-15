@@ -101,6 +101,8 @@ public class APIFramework {
         defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlNoDfs,
                 RuleCollections.buildConsolidationRuleCollection()));
         defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlNoDfs,
+                RuleCollections.buildAccessMethodRuleCollection()));
+        defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlNoDfs,
                 RuleCollections.buildOpPushDownRuleCollection()));
         return defaultLogicalRewrites;
     }
