@@ -121,7 +121,7 @@ public abstract class JobGen implements IJobGen {
         conf.setClass(PregelixJob.EDGE_VALUE_CLASS, (Class<?>) edgeValueType, Writable.class);
         conf.setClass(PregelixJob.MESSAGE_VALUE_CLASS, (Class<?>) messageValueType, Writable.class);
 
-        Class aggregatorClass = conf.getClass(PregelixJob.GLOBAL_AGGREGATOR_CLASS, GlobalAggregator.class);
+        Class aggregatorClass = BspUtils.getGlobalAggregatorClass(conf);
         if (!aggregatorClass.equals(GlobalAggregator.class)) {
             List<Type> argTypes = ReflectionUtils.getTypeArguments(GlobalAggregator.class, aggregatorClass);
             Type partialAggregateValueType = argTypes.get(4);
@@ -131,7 +131,7 @@ public abstract class JobGen implements IJobGen {
             conf.setClass(PregelixJob.FINAL_AGGREGATE_VALUE_CLASS, (Class<?>) finalAggregateValueType, Writable.class);
         }
 
-        Class combinerClass = conf.getClass(PregelixJob.Message_COMBINER_CLASS, MessageCombiner.class);
+        Class combinerClass = BspUtils.getMessageCombinerClass(conf);
         if (!combinerClass.equals(MessageCombiner.class)) {
             List<Type> argTypes = ReflectionUtils.getTypeArguments(MessageCombiner.class, combinerClass);
             Type partialCombineValueType = argTypes.get(2);

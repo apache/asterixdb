@@ -207,7 +207,7 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
         job.setVertexClass(PageRankVertex.class);
         job.setVertexInputFormatClass(TextPageRankInputFormat.class);
         job.setVertexOutputFormatClass(SimplePageRankVertexOutputFormat.class);
-        job.setVertexCombinerClass(PageRankVertex.SimpleSumCombiner.class);
+        job.setMessageCombinerClass(PageRankVertex.SimpleSumCombiner.class);
         Client.run(args, job);
     }
 

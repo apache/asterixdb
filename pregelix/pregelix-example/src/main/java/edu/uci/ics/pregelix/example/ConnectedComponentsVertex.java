@@ -120,7 +120,7 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
         job.setVertexClass(ConnectedComponentsVertex.class);
         job.setVertexInputFormatClass(TextPageRankInputFormat.class);
         job.setVertexOutputFormatClass(SimpleConnectedComponentsVertexOutputFormat.class);
-        job.setVertexCombinerClass(ConnectedComponentsVertex.SimpleMinCombiner.class);
+        job.setMessageCombinerClass(ConnectedComponentsVertex.SimpleMinCombiner.class);
         Client.run(args, job);
     }
 

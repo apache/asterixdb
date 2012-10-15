@@ -121,7 +121,7 @@ public class PregelixJob extends Job {
      * @param vertexCombinerClass
      *            Determines how vertex messages are combined
      */
-    final public void setVertexCombinerClass(Class<?> vertexCombinerClass) {
+    final public void setMessageCombinerClass(Class<?> vertexCombinerClass) {
         getConfiguration().setClass(Message_COMBINER_CLASS, vertexCombinerClass, MessageCombiner.class);
     }
 

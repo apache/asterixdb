@@ -40,6 +40,7 @@ import edu.uci.ics.pregelix.dataflow.std.base.IAggregateFunction;
 public class AggregationFunction implements IAggregateFunction {
     private final Configuration conf;
     private final boolean isFinalStage;
+    private final boolean partialAggAsInput;
     private final DataOutput output;
     private MessageCombiner combiner;
     private ByteBufferInputStream keyInputStream = new ByteBufferInputStream();
@@ -52,16 +53,17 @@ public class AggregationFunction implements IAggregateFunction {
     private MsgList msgList = new MsgList();
     private boolean keyRead = false;
 
-    public AggregationFunction(IConfigurationFactory confFactory, DataOutput output, boolean isFinalStage)
-            throws HyracksDataException {
+    public AggregationFunction(IConfigurationFactory confFactory, DataOutput output, boolean isFinalStage,
+            boolean partialAggAsInput) throws HyracksDataException {
         this.conf = confFactory.createConfiguration();
         this.output = output;
         this.isFinalStage = isFinalStage;
+        this.partialAggAsInput = partialAggAsInput;
         msgList.setConf(this.conf);
 
         combiner = BspUtils.createMessageCombiner(conf);
         key = BspUtils.createVertexIndex(conf);
-        value = !isFinalStage ? BspUtils.createMessageValue(conf) : BspUtils.createPartialCombineValue(conf);
+        value = !partialAggAsInput ? BspUtils.createMessageValue(conf) : BspUtils.createPartialCombineValue(conf);
     }
 
     @Override
@@ -90,7 +92,7 @@ public class AggregationFunction implements IAggregateFunction {
                 keyRead = true;
             }
             value.readFields(valueInput);
-            if (!isFinalStage) {
+            if (!partialAggAsInput) {
                 combiner.step(key, value);
             } else {
                 combiner.step(value);

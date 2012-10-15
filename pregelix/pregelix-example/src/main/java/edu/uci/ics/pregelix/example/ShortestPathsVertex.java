@@ -132,7 +132,7 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
         job.setVertexClass(ShortestPathsVertex.class);
         job.setVertexInputFormatClass(TextShortestPathsInputFormat.class);
         job.setVertexOutputFormatClass(SimplePageRankVertexOutputFormat.class);
-        job.setVertexCombinerClass(ShortestPathsVertex.SimpleMinCombiner.class);
+        job.setMessageCombinerClass(ShortestPathsVertex.SimpleMinCombiner.class);
         job.getConfiguration().setLong(SOURCE_ID, 0);
         Client.run(args, job);
     }

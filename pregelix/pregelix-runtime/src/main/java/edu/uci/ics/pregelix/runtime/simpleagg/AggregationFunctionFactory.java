@@ -27,15 +27,17 @@ public class AggregationFunctionFactory implements IAggregateFunctionFactory {
     private static final long serialVersionUID = 1L;
     private final IConfigurationFactory confFactory;
     private final boolean isFinalStage;
+    private final boolean partialAggAsInput;
 
-    public AggregationFunctionFactory(IConfigurationFactory confFactory, boolean isFinalStage) {
+    public AggregationFunctionFactory(IConfigurationFactory confFactory, boolean isFinalStage, boolean partialAggAsInput) {
         this.confFactory = confFactory;
         this.isFinalStage = isFinalStage;
+        this.partialAggAsInput = partialAggAsInput;
     }
 
     @Override
     public IAggregateFunction createAggregateFunction(IDataOutputProvider provider) throws HyracksException {
         DataOutput output = provider.getDataOutput();
-        return new AggregationFunction(confFactory, output, isFinalStage);
+        return new AggregationFunction(confFactory, output, isFinalStage, partialAggAsInput);
     }
 }
