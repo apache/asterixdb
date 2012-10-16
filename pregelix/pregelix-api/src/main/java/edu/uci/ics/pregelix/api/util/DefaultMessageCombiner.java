@@ -19,12 +19,12 @@ public class DefaultMessageCombiner<I extends WritableComparable, M extends Writ
     }
 
     @Override
-    public void step(I vertexIndex, M msg) throws HyracksDataException {
+    public void stepPartial(I vertexIndex, M msg) throws HyracksDataException {
         msgList.addElement(msg);
     }
 
     @Override
-    public void step(MsgList partialAggregate) throws HyracksDataException {
+    public void stepFinal(I vertexIndex, MsgList partialAggregate) throws HyracksDataException {
         msgList.addAllElements(partialAggregate);
     }
 

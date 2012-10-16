@@ -15,24 +15,35 @@
 
 package edu.uci.ics.pregelix.api.graph;
 
-import java.io.IOException;
-
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * interface to implement for combining of messages sent to the same vertex.
+ * This is the abstract class to implement for combining of messages that are sent to the same vertex.
+ * </p>
+ * This is similar to the concept of Combiner in Hadoop. The combining of messages in a distributed
+ * cluster include two phase:
+ * 1. a local phase which combines messages sent from a single machine and produces
+ * the partially combined message;
+ * 2. a final phase which combines messages at each receiver machine after the repartitioning (shuffling)
+ * and produces the final combined message
  * 
- * @param <I extends Writable> index
- * @param <M extends Writable> message data
+ * @param <I extends Writable> vertex identifier
+ * @param <M extends Writable> message body type
+ * @param <P extends Writable>
+ *        the type of the partially combined messages
  */
 @SuppressWarnings("rawtypes")
 public abstract class MessageCombiner<I extends WritableComparable, M extends Writable, P extends Writable> {
 
     /**
      * initialize combiner
+     * 
+     * @param providedMsgList
+     *            the provided msg list for user implementation to update, which *should* be returned
+     *            by the finishFinal() method
      */
     public abstract void init(MsgList providedMsgList);
 
@@ -40,29 +51,35 @@ public abstract class MessageCombiner<I extends WritableComparable, M extends Wr
      * step call for local combiner
      * 
      * @param vertexIndex
+     *            the receiver vertex identifier
      * @param msg
-     * @throws IOException
+     *            a single message body
+     * @throws HyracksDataException
      */
-    public abstract void step(I vertexIndex, M msg) throws HyracksDataException;
+    public abstract void stepPartial(I vertexIndex, M msg) throws HyracksDataException;
 
     /**
      * step call for global combiner
      * 
      * @param vertexIndex
-     * @param msg
-     * @throws IOException
+     *            the receiver vertex identifier
+     * @param partialAggregate
+     *            the partial aggregate value
+     * @throws HyracksDataException
      */
-    public abstract void step(P partialAggregate) throws HyracksDataException;
+    public abstract void stepFinal(I vertexIndex, P partialAggregate) throws HyracksDataException;
 
     /**
      * finish partial combiner
+     * 
+     * @return the intermediate combined message of type P
      */
     public abstract P finishPartial();
 
     /**
      * finish final combiner
      * 
-     * @return Message
+     * @return the final message List
      */
     public abstract MsgList<M> finishFinal();
 }

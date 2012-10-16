@@ -93,9 +93,9 @@ public class AggregationFunction implements IAggregateFunction {
             }
             value.readFields(valueInput);
             if (!partialAggAsInput) {
-                combiner.step(key, value);
+                combiner.stepPartial(key, value);
             } else {
-                combiner.step(value);
+                combiner.stepFinal(key, value);
             }
         } catch (IOException e) {
             throw new HyracksDataException(e);

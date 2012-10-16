@@ -46,7 +46,7 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
         private MsgList<DoubleWritable> msgList;
 
         @Override
-        public void step(VLongWritable vertexIndex, DoubleWritable msg) throws HyracksDataException {
+        public void stepPartial(VLongWritable vertexIndex, DoubleWritable msg) throws HyracksDataException {
             double value = msg.get();
             if (min > value)
                 min = value;
@@ -66,7 +66,7 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
         }
 
         @Override
-        public void step(DoubleWritable partialAggregate) throws HyracksDataException {
+        public void stepFinal(VLongWritable vertexIndex, DoubleWritable partialAggregate) throws HyracksDataException {
             double value = partialAggregate.get();
             if (min > value)
                 min = value;

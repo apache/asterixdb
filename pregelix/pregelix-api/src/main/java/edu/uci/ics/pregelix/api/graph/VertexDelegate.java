@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.pregelix.api.delegate;
+package edu.uci.ics.pregelix.api.graph;
 
 import java.io.DataOutput;
 import java.io.IOException;
@@ -25,12 +25,10 @@ import org.apache.hadoop.io.WritableComparable;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import edu.uci.ics.pregelix.api.graph.MsgList;
-import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.util.FrameTupleUtils;
 
 @SuppressWarnings("rawtypes")
-public class VertexDelegate<I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable> {
+class VertexDelegate<I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable> {
     /** Vertex id */
     private I vertexId = null;
     /** Vertex value */

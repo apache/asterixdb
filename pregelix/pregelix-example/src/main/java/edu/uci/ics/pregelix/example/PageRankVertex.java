@@ -71,7 +71,7 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
         }
 
         @Override
-        public void step(VLongWritable vertexIndex, DoubleWritable msg) throws HyracksDataException {
+        public void stepPartial(VLongWritable vertexIndex, DoubleWritable msg) throws HyracksDataException {
             sum += msg.get();
         }
 
@@ -82,7 +82,7 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
         }
 
         @Override
-        public void step(DoubleWritable partialAggregate) throws HyracksDataException {
+        public void stepFinal(VLongWritable vertexIndex, DoubleWritable partialAggregate) throws HyracksDataException {
             sum += partialAggregate.get();
         }
 

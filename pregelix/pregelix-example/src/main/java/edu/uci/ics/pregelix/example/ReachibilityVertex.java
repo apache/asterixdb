@@ -60,13 +60,13 @@ public class ReachibilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
         }
 
         @Override
-        public void step(VLongWritable vertexIndex, ByteWritable msg) throws HyracksDataException {
+        public void stepPartial(VLongWritable vertexIndex, ByteWritable msg) throws HyracksDataException {
             int newState = agg.get() | msg.get();
             agg.set((byte) newState);
         }
 
         @Override
-        public void step(ByteWritable partialAggregate) throws HyracksDataException {
+        public void stepFinal(VLongWritable vertexIndex, ByteWritable partialAggregate) throws HyracksDataException {
             int newState = agg.get() | partialAggregate.get();
             agg.set((byte) newState);
         }

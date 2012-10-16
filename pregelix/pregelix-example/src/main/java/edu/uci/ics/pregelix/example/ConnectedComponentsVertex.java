@@ -50,7 +50,7 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
         private MsgList<VLongWritable> msgList;
 
         @Override
-        public void step(VLongWritable vertexIndex, VLongWritable msg) throws HyracksDataException {
+        public void stepPartial(VLongWritable vertexIndex, VLongWritable msg) throws HyracksDataException {
             long value = msg.get();
             if (min > value)
                 min = value;
@@ -64,7 +64,7 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
         }
 
         @Override
-        public void step(VLongWritable partialAggregate) throws HyracksDataException {
+        public void stepFinal(VLongWritable vertexIndex, VLongWritable partialAggregate) throws HyracksDataException {
             if (min > partialAggregate.get())
                 min = partialAggregate.get();
         }
