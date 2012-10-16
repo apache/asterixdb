@@ -91,6 +91,22 @@ public class IterationUtils {
         }
     }
 
+    public static void writeForceTerminationState(Configuration conf, String jobId) throws HyracksDataException {
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            String pathStr = IterationUtils.TMP_DIR + jobId + "fterm";
+            Path path = new Path(pathStr);
+            if (!dfs.exists(path)) {
+                FSDataOutputStream output = dfs.create(path, true);
+                output.writeBoolean(true);
+                output.flush();
+                output.close();
+            }
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
     public static void writeGlobalAggregateValue(Configuration conf, String jobId, Writable agg)
             throws HyracksDataException {
         try {
@@ -115,6 +131,21 @@ public class IterationUtils {
             boolean terminate = input.readBoolean();
             input.close();
             return terminate;
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    public static boolean readForceTerminationState(Configuration conf, String jobId) throws HyracksDataException {
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            String pathStr = IterationUtils.TMP_DIR + jobId + "fterm";
+            Path path = new Path(pathStr);
+            if (dfs.exists(path)) {
+                return true;
+            } else {
+                return false;
+            }
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }

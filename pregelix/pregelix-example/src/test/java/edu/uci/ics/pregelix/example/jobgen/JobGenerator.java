@@ -28,9 +28,12 @@ import edu.uci.ics.pregelix.example.ConnectedComponentsVertex.SimpleConnectedCom
 import edu.uci.ics.pregelix.example.PageRankVertex;
 import edu.uci.ics.pregelix.example.PageRankVertex.SimplePageRankVertexInputFormat;
 import edu.uci.ics.pregelix.example.PageRankVertex.SimplePageRankVertexOutputFormat;
+import edu.uci.ics.pregelix.example.ReachibilityVertex;
+import edu.uci.ics.pregelix.example.ReachibilityVertex.SimpleReachibilityVertexOutputFormat;
 import edu.uci.ics.pregelix.example.ShortestPathsVertex;
 import edu.uci.ics.pregelix.example.inputformat.TextConnectedComponentsInputFormat;
 import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
+import edu.uci.ics.pregelix.example.inputformat.TextReachibilityVertexInputFormat;
 import edu.uci.ics.pregelix.example.inputformat.TextShortestPathsInputFormat;
 
 public class JobGenerator {
@@ -113,6 +116,20 @@ public class JobGenerator {
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
+    private static void generateReachibilityRealComplex(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(ReachibilityVertex.class);
+        job.setVertexInputFormatClass(TextReachibilityVertexInputFormat.class);
+        job.setVertexOutputFormatClass(SimpleReachibilityVertexOutputFormat.class);
+        job.setMessageCombinerClass(ReachibilityVertex.SimpleReachibilityCombiner.class);
+        FileInputFormat.setInputPaths(job, HDFS_INPUTPATH2);
+        FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH2));
+        job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 23);
+        job.getConfiguration().setLong(ReachibilityVertex.SOURCE_ID, 1);
+        job.getConfiguration().setLong(ReachibilityVertex.DEST_ID, 10);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
     private static void generatePageRankJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(PageRankVertex.class);
@@ -156,10 +173,15 @@ public class JobGenerator {
                 + "ConnectedComponentsRealComplex.xml");
     }
 
+    private static void genReachibility() throws IOException {
+        generateReachibilityRealComplex("Reachibility", outputBase + "ReachibilityRealComplex.xml");
+    }
+
     public static void main(String[] args) throws IOException {
         genPageRank();
         genShortestPath();
         genConnectedComponents();
+        genReachibility();
     }
 
 }

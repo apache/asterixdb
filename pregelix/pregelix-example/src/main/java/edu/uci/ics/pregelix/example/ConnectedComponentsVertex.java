@@ -17,6 +17,7 @@ package edu.uci.ics.pregelix.example;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.Text;
@@ -37,7 +38,7 @@ import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
 import edu.uci.ics.pregelix.example.io.VLongWritable;
 
 /**
- * Demonstrates the basic Pregel connected components implementation.
+ * Demonstrates the basic Pregel connected components implementation, for undirected graph (e.g., Facebook, LinkedIn graph).
  */
 public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritable, FloatWritable, VLongWritable> {
     /**
@@ -91,6 +92,14 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
     public void compute(Iterator<VLongWritable> msgIterator) {
         if (getSuperstep() == 1) {
             minID = getVertexId().get();
+            List<Edge<VLongWritable, FloatWritable>> edges = this.getEdges();
+            for (int i = 0; i < edges.size(); i++) {
+                Edge<VLongWritable, FloatWritable> edge = edges.get(i);
+                long neighbor = edge.getDestVertexId().get();
+                if (minID > neighbor) {
+                    minID = neighbor;
+                }
+            }
             vertexValue.set(minID);
             setVertexValue(vertexValue);
             sendOutMsgs();
@@ -109,8 +118,10 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
     }
 
     private void sendOutMsgs() {
-        for (Edge<VLongWritable, FloatWritable> edge : getEdges()) {
-            outputValue.set(minID);
+        List<Edge<VLongWritable, FloatWritable>> edges = this.getEdges();
+        outputValue.set(minID);
+        for (int i = 0; i < edges.size(); i++) {
+            Edge<VLongWritable, FloatWritable> edge = edges.get(i);
             sendMsg(edge.getDestVertexId(), outputValue);
         }
     }

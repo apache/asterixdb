@@ -124,6 +124,10 @@ public class BspUtils {
                 GlobalCountAggregator.class, GlobalAggregator.class);
     }
 
+    public static String getJobId(Configuration conf) {
+        return conf.get(PregelixJob.JOB_ID);
+    }
+
     /**
      * Create a user vertex combiner class
      * 

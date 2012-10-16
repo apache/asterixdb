@@ -127,7 +127,8 @@ public class Driver implements IDriver {
                 end = System.currentTimeMillis();
                 time = end - start;
                 LOG.info("iteration " + i + " finished " + time + "ms");
-                terminate = IterationUtils.readTerminationState(job.getConfiguration(), jobGen.getJobId());
+                terminate = IterationUtils.readTerminationState(job.getConfiguration(), jobGen.getJobId())
+                        || IterationUtils.readForceTerminationState(job.getConfiguration(), jobGen.getJobId());
                 i++;
             } while (!terminate);
 

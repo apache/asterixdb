@@ -32,18 +32,18 @@ import edu.uci.ics.pregelix.api.io.text.TextVertexInputFormat.TextVertexReader;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.example.io.VLongWritable;
 
-public class TextConnectedComponentsInputFormat extends
+public class TextReachibilityVertexInputFormat extends
         TextVertexInputFormat<VLongWritable, VLongWritable, FloatWritable, VLongWritable> {
 
     @Override
     public VertexReader<VLongWritable, VLongWritable, FloatWritable, VLongWritable> createVertexReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
-        return new TextReachibilityGraphReader(textInputFormat.createRecordReader(split, context));
+        return new TextConnectedComponentsGraphReader(textInputFormat.createRecordReader(split, context));
     }
 }
 
 @SuppressWarnings("rawtypes")
-class TextConnectedComponentsGraphReader extends
+class TextReachibilityGraphReader extends
         TextVertexReader<VLongWritable, VLongWritable, FloatWritable, VLongWritable> {
 
     private final static String separator = " ";
@@ -52,7 +52,7 @@ class TextConnectedComponentsGraphReader extends
     private List<VLongWritable> pool = new ArrayList<VLongWritable>();
     private int used = 0;
 
-    public TextConnectedComponentsGraphReader(RecordReader<LongWritable, Text> lineRecordReader) {
+    public TextReachibilityGraphReader(RecordReader<LongWritable, Text> lineRecordReader) {
         super(lineRecordReader);
     }
 

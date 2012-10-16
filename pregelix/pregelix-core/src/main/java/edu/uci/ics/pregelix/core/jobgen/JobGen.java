@@ -106,6 +106,7 @@ public abstract class JobGen implements IJobGen {
         this.conf = job.getConfiguration();
         this.giraphJob = job;
         this.initJobConfiguration();
+        job.setJobId(jobId);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
