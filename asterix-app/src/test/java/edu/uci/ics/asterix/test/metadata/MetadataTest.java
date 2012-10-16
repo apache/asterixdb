@@ -41,7 +41,8 @@ public class MetadataTest {
     private static final String SEPARATOR = System.getProperty("file.separator");
 
     private static String _oldConfigFileName;
-    private static final String TEST_CONFIG_FILE_NAME = "asterix-metadata.properties";
+    //private static final String TEST_CONFIG_FILE_NAME = "asterix-metadata.properties";
+    private static final String TEST_CONFIG_FILE_NAME = "test.properties";
     private static final String[] ASTERIX_DATA_DIRS = new String[] { "nc1data", "nc2data" };
 
     private static String aqlExtToResExt(String fname) {
