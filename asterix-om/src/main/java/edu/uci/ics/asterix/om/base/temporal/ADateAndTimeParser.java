@@ -213,53 +213,111 @@ public class ADateAndTimeParser {
         }
 
         if (length > offset) {
-            if (charAccessor.getCharAt(offset) != 'Z') {
-                if ((charAccessor.getCharAt(offset) != '+' && charAccessor.getCharAt(offset) != '-')
-                        || (isExtendedForm && charAccessor.getCharAt(offset + 3) != ':')) {
-                    throw new Exception("Wrong timezone format: missing sign or missing colon in an extended form");
-                }
-
-                short timezoneHour = 0;
-                short timezoneMinute = 0;
-
-                for (int i = 0; i < 2; i++) {
-                    if ((charAccessor.getCharAt(offset + 1 + i) >= '0' && charAccessor.getCharAt(offset + 1 + i) <= '9')) {
-                        timezoneHour = (short) (timezoneHour * 10 + charAccessor.getCharAt(offset + 1 + i) - '0');
-                    } else {
-                        throw new Exception("Non-numeric value in timezone hour field");
-                    }
-                }
-
-                if (timezoneHour < GregorianCalendarSystem.TIMEZONE_HOUR_MIN
-                        || timezoneHour > GregorianCalendarSystem.TIMEZONE_HOUR_MAX) {
-                    throw new Exception(timeErrorMessage + ": time zone hour " + timezoneHour);
-                }
-
-                int temp_offset = (isExtendedForm) ? 1 : 0;
-
-                for (int i = 0; i < 2; i++) {
-                    if ((charAccessor.getCharAt(offset + temp_offset + 3 + i) >= '0' && charAccessor.getCharAt(offset
-                            + temp_offset + 3 + i) <= '9')) {
-                        timezoneMinute = (short) (timezoneMinute * 10
-                                + charAccessor.getCharAt(offset + temp_offset + 3 + i) - '0');
-                    } else {
-                        throw new Exception("Non-numeric value in timezone minute field");
-                    }
-                }
-
-                if (timezoneMinute < GregorianCalendarSystem.TIMEZONE_MIN_MIN
-                        || timezoneMinute > GregorianCalendarSystem.TIMEZONE_MIN_MAX) {
-                    throw new Exception(timeErrorMessage + ": time zone minute " + timezoneMinute);
-                }
-
-                if (charAccessor.getCharAt(offset) == '-') {
-                    timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-                } else {
-                    timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
-                }
-            }
+            //            if (charAccessor.getCharAt(offset) != 'Z') {
+            //                if ((charAccessor.getCharAt(offset) != '+' && charAccessor.getCharAt(offset) != '-')
+            //                        || (isExtendedForm && charAccessor.getCharAt(offset + 3) != ':')) {
+            //                    throw new Exception("Wrong timezone format: missing sign or missing colon in an extended form");
+            //                }
+            //
+            //                short timezoneHour = 0;
+            //                short timezoneMinute = 0;
+            //
+            //                for (int i = 0; i < 2; i++) {
+            //                    if ((charAccessor.getCharAt(offset + 1 + i) >= '0' && charAccessor.getCharAt(offset + 1 + i) <= '9')) {
+            //                        timezoneHour = (short) (timezoneHour * 10 + charAccessor.getCharAt(offset + 1 + i) - '0');
+            //                    } else {
+            //                        throw new Exception("Non-numeric value in timezone hour field");
+            //                    }
+            //                }
+            //
+            //                if (timezoneHour < GregorianCalendarSystem.TIMEZONE_HOUR_MIN
+            //                        || timezoneHour > GregorianCalendarSystem.TIMEZONE_HOUR_MAX) {
+            //                    throw new Exception(timeErrorMessage + ": time zone hour " + timezoneHour);
+            //                }
+            //
+            //                int temp_offset = (isExtendedForm) ? 1 : 0;
+            //
+            //                for (int i = 0; i < 2; i++) {
+            //                    if ((charAccessor.getCharAt(offset + temp_offset + 3 + i) >= '0' && charAccessor.getCharAt(offset
+            //                            + temp_offset + 3 + i) <= '9')) {
+            //                        timezoneMinute = (short) (timezoneMinute * 10
+            //                                + charAccessor.getCharAt(offset + temp_offset + 3 + i) - '0');
+            //                    } else {
+            //                        throw new Exception("Non-numeric value in timezone minute field");
+            //                    }
+            //                }
+            //
+            //                if (timezoneMinute < GregorianCalendarSystem.TIMEZONE_MIN_MIN
+            //                        || timezoneMinute > GregorianCalendarSystem.TIMEZONE_MIN_MAX) {
+            //                    throw new Exception(timeErrorMessage + ": time zone minute " + timezoneMinute);
+            //                }
+            //
+            //                if (charAccessor.getCharAt(offset) == '-') {
+            //                    timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
+            //                } else {
+            //                    timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
+            //                }
+            //            }
+            timezone = parseTimezonePart(charAccessor, offset);
         }
 
         return gCalInstance.getChronon(hour, min, sec, millis, timezone);
+    }
+
+    /**
+     * Parse the given char sequence as a time string, and return the milliseconds represented by the time.
+     * 
+     * @param charAccessor
+     * @return
+     * @throws Exception
+     */
+    public static <T> int parseTimezonePart(ICharSequenceAccessor<T> charAccessor, int offset) throws Exception {
+        int timezone = 0;
+
+        if (charAccessor.getCharAt(offset) != 'Z') {
+            if ((charAccessor.getCharAt(offset) != '+' && charAccessor.getCharAt(offset) != '-')) {
+                throw new Exception("Wrong timezone format: missing sign or missing colon for a time zone");
+            }
+
+            short timezoneHour = 0;
+            short timezoneMinute = 0;
+
+            for (int i = 0; i < 2; i++) {
+                if ((charAccessor.getCharAt(offset + 1 + i) >= '0' && charAccessor.getCharAt(offset + 1 + i) <= '9')) {
+                    timezoneHour = (short) (timezoneHour * 10 + charAccessor.getCharAt(offset + 1 + i) - '0');
+                } else {
+                    throw new Exception("Non-numeric value in timezone hour field");
+                }
+            }
+
+            if (timezoneHour < GregorianCalendarSystem.TIMEZONE_HOUR_MIN
+                    || timezoneHour > GregorianCalendarSystem.TIMEZONE_HOUR_MAX) {
+                throw new Exception(timeErrorMessage + ": time zone hour " + timezoneHour);
+            }
+
+            int temp_offset = (charAccessor.getCharAt(offset + 3) == ':') ? 1 : 0;
+
+            for (int i = 0; i < 2; i++) {
+                if ((charAccessor.getCharAt(offset + temp_offset + 3 + i) >= '0' && charAccessor.getCharAt(offset
+                        + temp_offset + 3 + i) <= '9')) {
+                    timezoneMinute = (short) (timezoneMinute * 10
+                            + charAccessor.getCharAt(offset + temp_offset + 3 + i) - '0');
+                } else {
+                    throw new Exception("Non-numeric value in timezone minute field");
+                }
+            }
+
+            if (timezoneMinute < GregorianCalendarSystem.TIMEZONE_MIN_MIN
+                    || timezoneMinute > GregorianCalendarSystem.TIMEZONE_MIN_MAX) {
+                throw new Exception(timeErrorMessage + ": time zone minute " + timezoneMinute);
+            }
+
+            if (charAccessor.getCharAt(offset) == '-') {
+                timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
+            } else {
+                timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
+            }
+        }
+        return timezone;
     }
 }

@@ -427,6 +427,14 @@ public class AsterixBuiltinFunctions {
             "subtract_datetime", 2);
     public final static FunctionIdentifier ADD_DATETIME_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "add_datetime_duration", 2);
+    public final static FunctionIdentifier CALENDAR_DURATION_FROM_DATETIME = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "calendar_duration_from_datetime", 2);
+    public final static FunctionIdentifier CALENDAR_DURATION_FROM_DATE = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "calendar_duration_from_date", 2);
+    public final static FunctionIdentifier ADJUST_TIME_FOR_TIMEZONE = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "adjust_time_for_timezone", 2);
+    public final static FunctionIdentifier ADJUST_DATETIME_FOR_TIMEZONE = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "adjust_datetime_for_timezone", 2);
 
     public static final FunctionIdentifier EQ = AlgebricksBuiltinFunctions.EQ;
     public static final FunctionIdentifier LE = AlgebricksBuiltinFunctions.LE;
@@ -702,6 +710,10 @@ public class AsterixBuiltinFunctions {
         add(DATETIME_FROM_UNIX_TIME_IN_MS, OptionalADateTimeTypeComputer.INSTANCE);
         add(SUBTRACT_DATETIME, OptionalADurationTypeComputer.INSTANCE);
         add(ADD_DATETIME_DURATION, OptionalADateTimeTypeComputer.INSTANCE);
+        add(CALENDAR_DURATION_FROM_DATETIME, OptionalADurationTypeComputer.INSTANCE);
+        add(CALENDAR_DURATION_FROM_DATE, OptionalADurationTypeComputer.INSTANCE);
+        add(ADJUST_DATETIME_FOR_TIMEZONE, OptionalAStringTypeComputer.INSTANCE);
+        add(ADJUST_TIME_FOR_TIMEZONE, OptionalAStringTypeComputer.INSTANCE);
 
         String metadataFunctionLoaderClassName = "edu.uci.ics.asterix.metadata.functions.MetadataBuiltinFunctions";
         try {

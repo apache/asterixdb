@@ -165,6 +165,10 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.StringJoinDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AddDateDurationDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AddDatetimeDurationDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AddTimeDurationDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AdjustDateTimeForTimeZoneDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AdjustTimeForTimeZoneDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.CalendarDuartionFromDateDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.CalendarDurationFromDateTimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DateFromDatetimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DateFromUnixTimeInDaysDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DatetimeFromDateAndTimeDescriptor;
@@ -412,6 +416,10 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(DatetimeFromDateAndTimeDescriptor.FACTORY);
         temp.add(SubtractDatetimeDescriptor.FACTORY);
         temp.add(AddDatetimeDurationDescriptor.FACTORY);
+        temp.add(CalendarDurationFromDateTimeDescriptor.FACTORY);
+        temp.add(CalendarDuartionFromDateDescriptor.FACTORY);
+        temp.add(AdjustDateTimeForTimeZoneDescriptor.FACTORY);
+        temp.add(AdjustTimeForTimeZoneDescriptor.FACTORY);
 
         IFunctionManager mgr = new FunctionManagerImpl();
         for (IFunctionDescriptorFactory fdFactory : temp) {
