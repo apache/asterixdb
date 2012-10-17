@@ -18,7 +18,6 @@ package edu.uci.ics.asterix.optimizer.base;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.uci.ics.asterix.optimizer.rules.AsterixInlineVariablesRule;
 import edu.uci.ics.asterix.optimizer.rules.AsterixProperInlineVariablesRule;
 import edu.uci.ics.asterix.optimizer.rules.ByNameToByIndexFieldAccessRule;
 import edu.uci.ics.asterix.optimizer.rules.ConstantFoldingRule;
@@ -41,7 +40,6 @@ import edu.uci.ics.asterix.optimizer.rules.PushFieldAccessRule;
 import edu.uci.ics.asterix.optimizer.rules.PushGroupByThroughProduct;
 import edu.uci.ics.asterix.optimizer.rules.PushProperJoinThroughProduct;
 import edu.uci.ics.asterix.optimizer.rules.RemoveRedundantListifyRule;
-import edu.uci.ics.asterix.optimizer.rules.RemoveRedundantVariablesRule;
 import edu.uci.ics.asterix.optimizer.rules.SetAsterixPhysicalOperatorsRule;
 import edu.uci.ics.asterix.optimizer.rules.SetClosedRecordConstructorsRule;
 import edu.uci.ics.asterix.optimizer.rules.SimilarityCheckRule;
@@ -80,6 +78,8 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectDownRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectIntoJoinRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSubplanWithAggregateDownThroughProductRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ReinferAllTypesRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveRedundantGroupByDecorVars;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveRedundantVariablesRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveUnusedAssignAndAggregateRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.SetAlgebricksPhysicalOperatorsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.SetExecutionModeRule;
@@ -101,7 +101,7 @@ public final class RuleCollections {
         normalization.add(new BreakSelectIntoConjunctsRule());
         normalization.add(new ExtractGbyExpressionsRule());
         normalization.add(new ExtractDistinctByExpressionsRule());
-        normalization.add(new ExtractOrderExpressionsRule());
+        normalization.add(new ExtractOrderExpressionsRule());        
 
         // IntroduceStaticTypeCastRule should go before
         // IntroduceDynamicTypeCastRule to
@@ -150,7 +150,7 @@ public final class RuleCollections {
         fieldLoads.add(new ByNameToByIndexFieldAccessRule());
         //fieldLoads.add(new AsterixInlineVariablesRule());
         fieldLoads.add(new RemoveRedundantVariablesRule());
-        //fieldLoads.add(new AsterixProperInlineVariablesRule());
+        fieldLoads.add(new AsterixProperInlineVariablesRule());
         fieldLoads.add(new RemoveUnusedAssignAndAggregateRule());        
         fieldLoads.add(new ConstantFoldingRule());        
         fieldLoads.add(new FeedScanCollectionToUnnest());
@@ -173,7 +173,8 @@ public final class RuleCollections {
         consolidation.add(new IntroduceGroupByCombinerRule());
         consolidation.add(new IntroduceAggregateCombinerRule());
         consolidation.add(new CountVarToCountOneRule());
-        consolidation.add(new RemoveUnusedAssignAndAggregateRule());        
+        consolidation.add(new RemoveUnusedAssignAndAggregateRule());
+        consolidation.add(new RemoveRedundantGroupByDecorVars());
         return consolidation;
     }
     

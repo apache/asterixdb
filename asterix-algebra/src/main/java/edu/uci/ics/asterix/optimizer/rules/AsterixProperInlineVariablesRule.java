@@ -71,6 +71,9 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+        if (context.checkIfInDontApplySet(this, opRef.getValue())) {
+            return false;
+        }
         varAssignRhs.clear();
         affectedProjects.clear();
         inlineVisitor.setContext(context);
@@ -91,7 +94,7 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
             List<Mutable<ILogicalExpression>> exprs = assignOp.getExpressions();            
             for (int i = 0; i < vars.size(); i++) {
                 ILogicalExpression expr = exprs.get(i).getValue();
-                // Ignore functions that are in the doNotInline set.
+                // Ignore functions that are in the doNotInline set.                
                 if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
                     if (doNotInlineFuncs.contains(funcExpr.getFunctionIdentifier())) {
@@ -134,7 +137,7 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
         if (modified) {
             context.computeAndSetTypeEnvironmentForOperator(op);
             context.addToDontApplySet(this, op);
-            // Re-enable rules that we had already tried since they could be applicable after inlining.
+            // Re-enable rules that we may have already tried. They could be applicable now after inlining.
             context.removeFromAlreadyCompared(opRef.getValue());
         }
 
