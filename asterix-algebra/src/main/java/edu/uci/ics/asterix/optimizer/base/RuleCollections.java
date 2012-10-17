@@ -41,6 +41,7 @@ import edu.uci.ics.asterix.optimizer.rules.PushFieldAccessRule;
 import edu.uci.ics.asterix.optimizer.rules.PushGroupByThroughProduct;
 import edu.uci.ics.asterix.optimizer.rules.PushProperJoinThroughProduct;
 import edu.uci.ics.asterix.optimizer.rules.RemoveRedundantListifyRule;
+import edu.uci.ics.asterix.optimizer.rules.RemoveRedundantVariablesRule;
 import edu.uci.ics.asterix.optimizer.rules.SetAsterixPhysicalOperatorsRule;
 import edu.uci.ics.asterix.optimizer.rules.SetClosedRecordConstructorsRule;
 import edu.uci.ics.asterix.optimizer.rules.SimilarityCheckRule;
@@ -147,12 +148,13 @@ public final class RuleCollections {
         fieldLoads.add(new PushFieldAccessRule());
         // fieldLoads.add(new ByNameToByHandleFieldAccessRule()); -- disabled
         fieldLoads.add(new ByNameToByIndexFieldAccessRule());
-        fieldLoads.add(new AsterixInlineVariablesRule());
-        // fieldLoads.add(new InlineRecordAccessRule());
-        fieldLoads.add(new RemoveUnusedAssignAndAggregateRule());
-        fieldLoads.add(new ConstantFoldingRule());
+        //fieldLoads.add(new AsterixInlineVariablesRule());
+        fieldLoads.add(new RemoveRedundantVariablesRule());
+        //fieldLoads.add(new AsterixProperInlineVariablesRule());
+        fieldLoads.add(new RemoveUnusedAssignAndAggregateRule());        
+        fieldLoads.add(new ConstantFoldingRule());        
         fieldLoads.add(new FeedScanCollectionToUnnest());
-        fieldLoads.add(new ComplexJoinInferenceRule());
+        fieldLoads.add(new ComplexJoinInferenceRule());        
         return fieldLoads;
     }
 
@@ -171,18 +173,15 @@ public final class RuleCollections {
         consolidation.add(new IntroduceGroupByCombinerRule());
         consolidation.add(new IntroduceAggregateCombinerRule());
         consolidation.add(new CountVarToCountOneRule());
-        consolidation.add(new RemoveUnusedAssignAndAggregateRule());
-        consolidation.add(new IntroduceSecondaryIndexInsertDeleteRule());
+        consolidation.add(new RemoveUnusedAssignAndAggregateRule());        
         return consolidation;
     }
     
     public final static List<IAlgebraicRewriteRule> buildAccessMethodRuleCollection() {
-        List<IAlgebraicRewriteRule> accessMethod = new LinkedList<IAlgebraicRewriteRule>();        
+        List<IAlgebraicRewriteRule> accessMethod = new LinkedList<IAlgebraicRewriteRule>();
         accessMethod.add(new IntroduceSelectAccessMethodRule());
-        //accessMethod.add(new AsterixProperInlineVariablesRule());
-        //accessMethod.add(new PushSelectIntoJoinRule());
-        //accessMethod.add(new RemoveUnusedAssignAndAggregateRule());        
         accessMethod.add(new IntroduceJoinAccessMethodRule());
+        accessMethod.add(new IntroduceSecondaryIndexInsertDeleteRule());
         return accessMethod;
     }
 

@@ -53,14 +53,15 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
     
     private InlineVariablesVisitor inlineVisitor = new InlineVariablesVisitor(varAssignRhs);
     
+    // Do not inline field accesses because doing so would interfere with our access method rewrites.
     // TODO: For now we must exclude these functions to avoid breaking our type casting rules
-    // IntroduceStaticTypeCastRule and IntroduceDynamicTypeCastRule.
+    // IntroduceStaticTypeCastRule and IntroduceDynamicTypeCastRule. 
     private static Set<FunctionIdentifier> doNotInlineFuncs = new HashSet<FunctionIdentifier>();
     static {
+        doNotInlineFuncs.add(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME);
+        doNotInlineFuncs.add(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX);
         doNotInlineFuncs.add(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR);
         doNotInlineFuncs.add(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR);
-        //doNotInlineFuncs.add(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX);
-        //doNotInlineFuncs.add(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME);
     }
     
     @Override
@@ -69,18 +70,13 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    /**
-     * 
-     * Does one big DFS sweep over the plan.
-     * 
-     */
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
         varAssignRhs.clear();
         affectedProjects.clear();
         inlineVisitor.setContext(context);
         boolean modified = inlineVariables(opRef, context);
         if (modified) {
-            context.addToDontApplySet(this, opRef.getValue());
+            context.addToDontApplySet(this, opRef.getValue());            
         }
         return modified;
     }
@@ -88,10 +84,6 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
     private boolean inlineVariables(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        if (context.checkIfInDontApplySet(this, op)) {
-            return false;
-        }
-
         // Update mapping from variables to expressions during descent.
         if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             AssignOperator assignOp = (AssignOperator) op;
@@ -131,34 +123,19 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
             }
         }
 
-        switch (op.getOperatorTag()) {
-            case WRITE: 
-            case WRITE_RESULT:
-            case INSERT_DELETE:
-            case INDEX_INSERT_DELETE:
-            case PROJECT:
-            // We can currently only order/group by a variable reference expression.
-            case GROUP:
-            case DISTINCT:
-            case AGGREGATE:
-            case ORDER:
-            case INNERJOIN:
-            case LEFTOUTERJOIN:
-            // TODO: Enabling this will require fixes in the access method rewrite rules.
-            case UNNEST_MAP: {
-                break;
-            }
-            default: {
-                inlineVisitor.setOperator(op);
-                if (op.acceptExpressionTransform(inlineVisitor)) {
-                    modified = true;
-                }
+        // Only inline for operators that can deal with arbitrary expressions.
+        if (!op.requiresVariableReferenceExpressions()) {
+            inlineVisitor.setOperator(op);
+            if (op.acceptExpressionTransform(inlineVisitor)) {
+                modified = true;
             }
         }
         
         if (modified) {
             context.computeAndSetTypeEnvironmentForOperator(op);
             context.addToDontApplySet(this, op);
+            // Re-enable rules that we had already tried since they could be applicable after inlining.
+            context.removeFromAlreadyCompared(opRef.getValue());
         }
 
         return modified;
