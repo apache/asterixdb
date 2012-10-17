@@ -37,7 +37,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReference
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -45,16 +44,14 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
 
     // Map of variables that could be replaced by their producing expression.
-    // Populated during the top-down sweep of the plan
+    // Populated during the top-down sweep of the plan.
     private Map<LogicalVariable, ILogicalExpression> varAssignRhs = new HashMap<LogicalVariable, ILogicalExpression>();
-    
-    // Maps from variable to parents of project operators that project that var.
-    private Map<LogicalVariable, List<ILogicalOperator>> affectedProjects = new HashMap<LogicalVariable, List<ILogicalOperator>>();
-    
+
+    // Visitor for replacing variable reference expressions with their originating expression.
     private InlineVariablesVisitor inlineVisitor = new InlineVariablesVisitor(varAssignRhs);
     
     // Do not inline field accesses because doing so would interfere with our access method rewrites.
-    // TODO: For now we must exclude these functions to avoid breaking our type casting rules
+    // TODO: For now we must also exclude record constructor functions to avoid breaking our type casting rules
     // IntroduceStaticTypeCastRule and IntroduceDynamicTypeCastRule. 
     private static Set<FunctionIdentifier> doNotInlineFuncs = new HashSet<FunctionIdentifier>();
     static {
@@ -75,7 +72,6 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
             return false;
         }
         varAssignRhs.clear();
-        affectedProjects.clear();
         inlineVisitor.setContext(context);
         boolean modified = inlineVariables(opRef, context);
         if (modified) {
@@ -87,7 +83,8 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
     private boolean inlineVariables(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        // Update mapping from variables to expressions during descent.
+        
+        // Update mapping from variables to expressions during top-down traversal.
         if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             AssignOperator assignOp = (AssignOperator) op;
             List<LogicalVariable> vars = assignOp.getVariables();
@@ -105,28 +102,15 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
             }
         }
 
+        // Descend into children removing projects on the way.
         boolean modified = false;
         for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
-            AbstractLogicalOperator inputOp = (AbstractLogicalOperator) inputOpRef.getValue();
-            if (inputOp.getOperatorTag() == LogicalOperatorTag.PROJECT) {
-                ProjectOperator projectOp = (ProjectOperator) inputOp;
-                List<LogicalVariable> projectVars = projectOp.getVariables();
-                for (LogicalVariable var : projectVars) {
-                    List<ILogicalOperator> projectParents = affectedProjects.get(var);
-                    if (projectParents == null) {
-                        projectParents = new ArrayList<ILogicalOperator>();
-                        affectedProjects.put(var, projectParents);
-                    }
-                    projectParents.add(op);
-                }
-            }
-            
             if (inlineVariables(inputOpRef, context)) {
                 modified = true;
-            }
+            }            
         }
 
-        // Only inline for operators that can deal with arbitrary expressions.
+        // Only inline variables in operators that can deal with arbitrary expressions.
         if (!op.requiresVariableReferenceExpressions()) {
             inlineVisitor.setOperator(op);
             if (op.acceptExpressionTransform(inlineVisitor)) {
@@ -180,6 +164,7 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
                         // Variable was not produced by an assign.
                         return false;
                     }
+                    
                     // Make sure used variables from rhs are live.
                     if (liveVars.isEmpty()) {
                         VariableUtilities.getLiveVariables(op, liveVars);
@@ -194,26 +179,6 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
                     
                     // Replace variable reference with rhs expr.
                     exprRef.setValue(rhs);
-                    
-                    // Remove affected projects.
-                    List<ILogicalOperator> projectParents = affectedProjects.get(var);
-                    if (projectParents != null) {
-                        for (ILogicalOperator parentOp : projectParents) {
-                            int numInputs = parentOp.getInputs().size();
-                            for (int i = 0; i < numInputs; i++) {
-                                Mutable<ILogicalOperator> inputOpRef = parentOp.getInputs().get(i);
-                                AbstractLogicalOperator inputOp = (AbstractLogicalOperator) inputOpRef.getValue();
-                                if (inputOp.getOperatorTag() != LogicalOperatorTag.PROJECT) {
-                                    continue;
-                                }
-                                ProjectOperator projectOp = (ProjectOperator) inputOp;
-                                if (projectOp.getVariables().contains(var)) {
-                                    // Remove project op.
-                                    parentOp.getInputs().set(i, inputOp.getInputs().get(0));
-                                }
-                            }
-                        }
-                    }
                     return true;
                 }
                 case FUNCTION_CALL: {
