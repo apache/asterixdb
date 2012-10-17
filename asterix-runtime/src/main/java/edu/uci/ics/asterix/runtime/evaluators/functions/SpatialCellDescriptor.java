@@ -10,6 +10,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APointSerializerDeseria
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AMutablePoint;
 import edu.uci.ics.asterix.om.base.AMutableRectangle;
+import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.ARectangle;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -46,20 +47,24 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new ICopyEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
+                    private final DataOutput out = output.getDataOutput();
 
-                    private ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
-                    private ArrayBackedValueStorage outInput1 = new ArrayBackedValueStorage();
-                    private ArrayBackedValueStorage outInput2 = new ArrayBackedValueStorage();
-                    private ArrayBackedValueStorage outInput3 = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval0 = args[0].createEvaluator(outInput0);
-                    private ICopyEvaluator eval1 = args[1].createEvaluator(outInput1);
-                    private ICopyEvaluator eval2 = args[2].createEvaluator(outInput2);
-                    private ICopyEvaluator eval3 = args[3].createEvaluator(outInput3);
-                    private AMutableRectangle aRectangle = new AMutableRectangle(null, null);
-                    private AMutablePoint[] aPoint = { new AMutablePoint(0, 0), new AMutablePoint(0, 0) };
+                    private final ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
+                    private final ArrayBackedValueStorage outInput1 = new ArrayBackedValueStorage();
+                    private final ArrayBackedValueStorage outInput2 = new ArrayBackedValueStorage();
+                    private final ArrayBackedValueStorage outInput3 = new ArrayBackedValueStorage();
+                    private final ICopyEvaluator eval0 = args[0].createEvaluator(outInput0);
+                    private final ICopyEvaluator eval1 = args[1].createEvaluator(outInput1);
+                    private final ICopyEvaluator eval2 = args[2].createEvaluator(outInput2);
+                    private final ICopyEvaluator eval3 = args[3].createEvaluator(outInput3);
+                    private final AMutableRectangle aRectangle = new AMutableRectangle(null, null);
+                    private final AMutablePoint[] aPoint = { new AMutablePoint(0, 0), new AMutablePoint(0, 0) };
+
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ARectangle> rectangleSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.ANULL);
+                    @SuppressWarnings("unchecked")
+                    private final ISerializerDeserializer<ARectangle> rectangleSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ARECTANGLE);
 
                     @Override
@@ -96,6 +101,8 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                                 aPoint[1].setValue(x + xInc, y + yInc);
                                 aRectangle.setValue(aPoint[0], aPoint[1]);
                                 rectangleSerde.serialize(aRectangle, out);
+                            } else if (tag == ATypeTag.NULL) {
+                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new NotImplementedException("spatial-cell does not support the type: " + tag
                                         + " It is only implemented for POINT.");
