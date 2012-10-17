@@ -285,7 +285,6 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(NonEmptyStreamAggregateDescriptor.FACTORY);
         temp.add(RangeDescriptor.FACTORY);
 
-        // Xiaoyu Ma add for numeric unary functions
         temp.add(NumericAbsDescriptor.FACTORY);
         temp.add(NumericCeilingDescriptor.FACTORY);
         temp.add(NumericFloorDescriptor.FACTORY);

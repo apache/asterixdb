@@ -23,6 +23,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeseri
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADouble;
 import edu.uci.ics.asterix.om.base.AMutableDouble;
+import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -43,6 +44,7 @@ public class CircleRadiusAccessor extends AbstractScalarFunctionDynamicDescripto
 
     private static final FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-radius", 1);
     private static final byte SER_CICLE_TAG = ATypeTag.CIRCLE.serialize();
+    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
@@ -61,13 +63,16 @@ public class CircleRadiusAccessor extends AbstractScalarFunctionDynamicDescripto
             @Override
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new ICopyEvaluator() {
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(argOut);
+                    private final DataOutput out = output.getDataOutput();
+                    private final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
+                    private final ICopyEvaluator eval = args[0].createEvaluator(argOut);
 
-                    private AMutableDouble aDouble = new AMutableDouble(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADouble> doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.ANULL);
+                    private final AMutableDouble aDouble = new AMutableDouble(0);
+                    @SuppressWarnings("unchecked")
+                    private final ISerializerDeserializer<ADouble> doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADOUBLE);
 
                     @Override
@@ -81,13 +86,14 @@ public class CircleRadiusAccessor extends AbstractScalarFunctionDynamicDescripto
                             if (bytes[0] == SER_CICLE_TAG) {
                                 radius = ADoubleSerializerDeserializer.getDouble(bytes,
                                         ACircleSerializerDeserializer.getRadiusOffset());
+                                aDouble.setValue(radius);
+                                doubleSerde.serialize(aDouble, out);
+                            } else if (bytes[0] == SER_NULL_TYPE_TAG) {
+                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException("get-radius does not support the type: " + bytes[0]
                                         + " It is only implemented for CIRCLE.");
                             }
-
-                            aDouble.setValue(radius);
-                            doubleSerde.serialize(aDouble, out);
 
                         } catch (IOException e) {
                             throw new AlgebricksException(e);

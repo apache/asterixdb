@@ -24,6 +24,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APointSerializerDeseria
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADouble;
 import edu.uci.ics.asterix.om.base.AMutableDouble;
+import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -44,6 +45,7 @@ public class PointYCoordinateAccessor extends AbstractScalarFunctionDynamicDescr
 
     private static final FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-y", 1);
     private static final byte SER_POINT_TAG = ATypeTag.POINT.serialize();
+    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
@@ -62,13 +64,16 @@ public class PointYCoordinateAccessor extends AbstractScalarFunctionDynamicDescr
             @Override
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new ICopyEvaluator() {
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(argOut);
+                    private final DataOutput out = output.getDataOutput();
+                    private final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
+                    private final ICopyEvaluator eval = args[0].createEvaluator(argOut);
 
-                    private AMutableDouble aDouble = new AMutableDouble(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADouble> doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.ANULL);
+                    private final AMutableDouble aDouble = new AMutableDouble(0);
+                    @SuppressWarnings("unchecked")
+                    private final ISerializerDeserializer<ADouble> doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADOUBLE);
 
                     @Override
@@ -82,13 +87,14 @@ public class PointYCoordinateAccessor extends AbstractScalarFunctionDynamicDescr
                             if (bytes[0] == SER_POINT_TAG) {
                                 y = ADoubleSerializerDeserializer.getDouble(bytes,
                                         APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
+                                aDouble.setValue(y);
+                                doubleSerde.serialize(aDouble, out);
+                            } else if (bytes[0] == SER_NULL_TYPE_TAG) {
+                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException("get-y does not support the type: " + bytes[0]
                                         + " It is only implemented for POINT.");
                             }
-
-                            aDouble.setValue(y);
-                            doubleSerde.serialize(aDouble, out);
 
                         } catch (IOException e) {
                             throw new AlgebricksException(e);

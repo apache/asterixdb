@@ -23,6 +23,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeseri
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AMutablePoint;
+import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.APoint;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -44,6 +45,7 @@ public class CircleCenterAccessor extends AbstractScalarFunctionDynamicDescripto
 
     private static final FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-center", 1);
     private static final byte SER_CICLE_TAG = ATypeTag.CIRCLE.serialize();
+    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
@@ -62,13 +64,16 @@ public class CircleCenterAccessor extends AbstractScalarFunctionDynamicDescripto
             @Override
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new ICopyEvaluator() {
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(argOut);
+                    private final DataOutput out = output.getDataOutput();
+                    private final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
+                    private final ICopyEvaluator eval = args[0].createEvaluator(argOut);
 
-                    private AMutablePoint aPoint = new AMutablePoint(0, 0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<APoint> pointSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.ANULL);
+                    private final AMutablePoint aPoint = new AMutablePoint(0, 0);
+                    @SuppressWarnings("unchecked")
+                    private final ISerializerDeserializer<APoint> pointSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.APOINT);
 
                     @Override
@@ -85,12 +90,14 @@ public class CircleCenterAccessor extends AbstractScalarFunctionDynamicDescripto
                                         ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.X));
                                 cY = ADoubleSerializerDeserializer.getDouble(bytes,
                                         ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.Y));
+                                aPoint.setValue(cX, cY);
+                                pointSerde.serialize(aPoint, out);
+                            } else if (bytes[0] == SER_NULL_TYPE_TAG) {
+                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException("get-center does not support the type: " + bytes[0]
                                         + " It is only implemented for CIRCLE.");
                             }
-                            aPoint.setValue(cX, cY);
-                            pointSerde.serialize(aPoint, out);
 
                         } catch (IOException e) {
                             throw new AlgebricksException(e);

@@ -7,9 +7,12 @@ import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.Coordinate;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
+import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -17,6 +20,7 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -42,11 +46,15 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new ICopyEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
-                    private ArrayBackedValueStorage outInput1 = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval0 = args[0].createEvaluator(outInput0);
-                    private ICopyEvaluator eval1 = args[1].createEvaluator(outInput1);
+                    private final DataOutput out = output.getDataOutput();
+                    private final ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
+                    private final ArrayBackedValueStorage outInput1 = new ArrayBackedValueStorage();
+                    private final ICopyEvaluator eval0 = args[0].createEvaluator(outInput0);
+                    private final ICopyEvaluator eval1 = args[1].createEvaluator(outInput1);
+
+                    @SuppressWarnings("unchecked")
+                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -76,6 +84,8 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
                                     throw new NotImplementedException("spatial-distance does not support the type: "
                                             + tag1 + " It is only implemented for POINT.");
                                 }
+                            } else if (tag0 == ATypeTag.NULL || tag1 == ATypeTag.NULL) {
+                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new NotImplementedException("spatial-distance does not support the type: " + tag0
                                         + " It is only implemented for POINT.");

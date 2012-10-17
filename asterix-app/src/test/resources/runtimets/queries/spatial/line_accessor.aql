@@ -1,0 +1,16 @@
+/*
+ * Description      :   Test spatial accessors
+ * Expected Result  :   Success
+ * Date             :   Oct 17, 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/spatial_line_accessor.adm";
+
+let $line := create-line(create-point(100.6,999.4), create-point(-872.0,-876.9))
+let $line_list := get-points($line)
+for $p in $line_list
+return $p

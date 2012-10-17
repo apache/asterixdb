@@ -28,6 +28,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeser
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AMutablePoint;
+import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.APoint;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -53,6 +54,7 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
     private static final byte SER_LINE_TAG = ATypeTag.LINE.serialize();
     private static final byte SER_RECTANGLE_TAG = ATypeTag.RECTANGLE.serialize();
     private static final byte SER_POLYGON_TAG = ATypeTag.POLYGON.serialize();
+    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
@@ -71,17 +73,20 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
             @Override
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new ICopyEvaluator() {
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(argOut);
+                    private final DataOutput out = output.getDataOutput();
+                    private final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
+                    private final ICopyEvaluator eval = args[0].createEvaluator(argOut);
 
-                    private IAOrderedListBuilder listBuilder = new OrderedListBuilder();
-                    private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-                    protected final AOrderedListType pointListType = new AOrderedListType(BuiltinType.APOINT, null);
+                    private final IAOrderedListBuilder listBuilder = new OrderedListBuilder();
+                    private final ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
+                    private final AOrderedListType pointListType = new AOrderedListType(BuiltinType.APOINT, null);
 
-                    private AMutablePoint aPoint = new AMutablePoint(0, 0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<APoint> pointSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.ANULL);
+                    private final AMutablePoint aPoint = new AMutablePoint(0, 0);
+                    @SuppressWarnings("unchecked")
+                    private final ISerializerDeserializer<APoint> pointSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.APOINT);
 
                     @Override
@@ -111,6 +116,7 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                                 aPoint.setValue(endX, endY);
                                 pointSerde.serialize(aPoint, inputVal.getDataOutput());
                                 listBuilder.addItem(inputVal);
+                                listBuilder.write(out, true);
 
                             } else if (bytes[0] == SER_RECTANGLE_TAG) {
                                 listBuilder.reset(pointListType);
@@ -132,6 +138,7 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                                 aPoint.setValue(x2, y2);
                                 pointSerde.serialize(aPoint, inputVal.getDataOutput());
                                 listBuilder.addItem(inputVal);
+                                listBuilder.write(out, true);
 
                             } else if (bytes[0] == SER_POLYGON_TAG) {
                                 int numOfPoints = AInt16SerializerDeserializer.getShort(bytes,
@@ -151,12 +158,13 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                                     pointSerde.serialize(aPoint, inputVal.getDataOutput());
                                     listBuilder.addItem(inputVal);
                                 }
+                                listBuilder.write(out, true);
+                            } else if (bytes[0] == SER_NULL_TYPE_TAG) {
+                                nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 throw new AlgebricksException("get-points does not support the type: " + bytes[0]
                                         + " It is only implemented for LINE, RECTANGLE, or POLYGON.");
                             }
-                            listBuilder.write(out, true);
-
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
                         }
