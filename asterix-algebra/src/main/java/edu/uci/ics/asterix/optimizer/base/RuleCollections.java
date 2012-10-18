@@ -18,6 +18,7 @@ package edu.uci.ics.asterix.optimizer.base;
 import java.util.LinkedList;
 import java.util.List;
 
+import edu.uci.ics.asterix.optimizer.rules.AsterixInlineVariablesRule;
 import edu.uci.ics.asterix.optimizer.rules.AsterixProperInlineVariablesRule;
 import edu.uci.ics.asterix.optimizer.rules.ByNameToByIndexFieldAccessRule;
 import edu.uci.ics.asterix.optimizer.rules.ConstantFoldingRule;
@@ -132,6 +133,11 @@ public final class RuleCollections {
         condPushDownAndJoinInference.add(new IntroduceGroupByForSubplanRule());
         condPushDownAndJoinInference.add(new SubplanOutOfGroupRule());
         condPushDownAndJoinInference.add(new InsertOuterJoinRule());
+        
+        condPushDownAndJoinInference.add(new RemoveRedundantVariablesRule());
+        condPushDownAndJoinInference.add(new AsterixProperInlineVariablesRule());
+        condPushDownAndJoinInference.add(new RemoveUnusedAssignAndAggregateRule());
+        
         condPushDownAndJoinInference.add(new FactorRedundantGroupAndDecorVarsRule());
         condPushDownAndJoinInference.add(new PushAggregateIntoGroupbyRule());
         condPushDownAndJoinInference.add(new EliminateSubplanRule());
@@ -150,9 +156,9 @@ public final class RuleCollections {
         fieldLoads.add(new ByNameToByIndexFieldAccessRule());
         //fieldLoads.add(new AsterixInlineVariablesRule());
         fieldLoads.add(new RemoveRedundantVariablesRule());
-        fieldLoads.add(new AsterixProperInlineVariablesRule());
-        fieldLoads.add(new RemoveUnusedAssignAndAggregateRule());        
-        fieldLoads.add(new ConstantFoldingRule());        
+        //fieldLoads.add(new AsterixProperInlineVariablesRule());
+        fieldLoads.add(new RemoveUnusedAssignAndAggregateRule());
+        fieldLoads.add(new ConstantFoldingRule());
         fieldLoads.add(new FeedScanCollectionToUnnest());
         fieldLoads.add(new ComplexJoinInferenceRule());        
         return fieldLoads;
@@ -183,6 +189,7 @@ public final class RuleCollections {
         accessMethod.add(new IntroduceSelectAccessMethodRule());
         accessMethod.add(new IntroduceJoinAccessMethodRule());
         accessMethod.add(new IntroduceSecondaryIndexInsertDeleteRule());
+        accessMethod.add(new RemoveUnusedAssignAndAggregateRule());
         return accessMethod;
     }
 
