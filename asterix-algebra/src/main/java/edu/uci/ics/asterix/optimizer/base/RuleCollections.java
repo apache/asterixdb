@@ -79,6 +79,7 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectDownRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectIntoJoinRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSubplanWithAggregateDownThroughProductRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ReinferAllTypesRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveCommonExpressions;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveRedundantGroupByDecorVars;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveRedundantVariablesRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveUnusedAssignAndAggregateRule;
@@ -103,7 +104,8 @@ public final class RuleCollections {
         normalization.add(new ExtractGbyExpressionsRule());
         normalization.add(new ExtractDistinctByExpressionsRule());
         normalization.add(new ExtractOrderExpressionsRule());        
-
+        normalization.add(new RemoveCommonExpressions());
+        
         // IntroduceStaticTypeCastRule should go before
         // IntroduceDynamicTypeCastRule to
         // avoid unnecessary dynamic casting
@@ -136,7 +138,7 @@ public final class RuleCollections {
         
         condPushDownAndJoinInference.add(new RemoveRedundantVariablesRule());
         condPushDownAndJoinInference.add(new AsterixProperInlineVariablesRule());
-        condPushDownAndJoinInference.add(new RemoveUnusedAssignAndAggregateRule());        
+        condPushDownAndJoinInference.add(new RemoveUnusedAssignAndAggregateRule());
         
         condPushDownAndJoinInference.add(new FactorRedundantGroupAndDecorVarsRule());
         condPushDownAndJoinInference.add(new PushAggregateIntoGroupbyRule());
@@ -154,7 +156,6 @@ public final class RuleCollections {
         fieldLoads.add(new PushFieldAccessRule());
         // fieldLoads.add(new ByNameToByHandleFieldAccessRule()); -- disabled
         fieldLoads.add(new ByNameToByIndexFieldAccessRule());
-        //fieldLoads.add(new AsterixInlineVariablesRule());
         fieldLoads.add(new RemoveRedundantVariablesRule());
         fieldLoads.add(new AsterixProperInlineVariablesRule());
         fieldLoads.add(new RemoveUnusedAssignAndAggregateRule());

@@ -7,13 +7,13 @@
             -- ONE_TO_ONE_EXCHANGE  |LOCAL|
               -- STABLE_SORT [$$44(DESC), $$4(ASC)]  |LOCAL|
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- EXTERNAL_GROUP_BY[$$55, $$56, $$57]  |PARTITIONED|
+                  -- EXTERNAL_GROUP_BY[$$56, $$57, $$58]  |PARTITIONED|
                           {
                             -- AGGREGATE  |LOCAL|
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
                           }
-                    -- HASH_PARTITION_EXCHANGE [$$55, $$56, $$57]  |PARTITIONED|
-                      -- EXTERNAL_GROUP_BY[$$42, $$46, $$39]  |LOCAL|
+                    -- HASH_PARTITION_EXCHANGE [$$56, $$57, $$58]  |PARTITIONED|
+                      -- EXTERNAL_GROUP_BY[$$42, $$47, $$39]  |LOCAL|
                               {
                                 -- AGGREGATE  |LOCAL|
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -25,7 +25,7 @@
                                 -- HASH_PARTITION_EXCHANGE [$$41]  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- HYBRID_HASH_JOIN [$$40][$$48]  |PARTITIONED|
+                                      -- HYBRID_HASH_JOIN [$$40][$$49]  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             -- STREAM_SELECT  |PARTITIONED|
@@ -34,7 +34,7 @@
                                                   -- DATASOURCE_SCAN  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                        -- HASH_PARTITION_EXCHANGE [$$48]  |PARTITIONED|
+                                        -- HASH_PARTITION_EXCHANGE [$$49]  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             -- ASSIGN  |PARTITIONED|
                                               -- STREAM_SELECT  |PARTITIONED|
