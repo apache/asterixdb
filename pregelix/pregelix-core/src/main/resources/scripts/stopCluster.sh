@@ -1,3 +1,3 @@
 bin/stopAllNCs.sh
-sleep 10
+sleep 2
 bin/stopcc.sh
