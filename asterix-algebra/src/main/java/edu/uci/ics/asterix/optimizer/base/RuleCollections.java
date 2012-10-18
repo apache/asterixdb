@@ -136,14 +136,14 @@ public final class RuleCollections {
         
         condPushDownAndJoinInference.add(new RemoveRedundantVariablesRule());
         condPushDownAndJoinInference.add(new AsterixProperInlineVariablesRule());
-        condPushDownAndJoinInference.add(new RemoveUnusedAssignAndAggregateRule());
+        condPushDownAndJoinInference.add(new RemoveUnusedAssignAndAggregateRule());        
         
         condPushDownAndJoinInference.add(new FactorRedundantGroupAndDecorVarsRule());
         condPushDownAndJoinInference.add(new PushAggregateIntoGroupbyRule());
         condPushDownAndJoinInference.add(new EliminateSubplanRule());
         condPushDownAndJoinInference.add(new PushProperJoinThroughProduct());
         condPushDownAndJoinInference.add(new PushGroupByThroughProduct());
-        condPushDownAndJoinInference.add(new NestGroupByRule());
+        condPushDownAndJoinInference.add(new NestGroupByRule());                
 
         return condPushDownAndJoinInference;
     }
@@ -156,7 +156,7 @@ public final class RuleCollections {
         fieldLoads.add(new ByNameToByIndexFieldAccessRule());
         //fieldLoads.add(new AsterixInlineVariablesRule());
         fieldLoads.add(new RemoveRedundantVariablesRule());
-        //fieldLoads.add(new AsterixProperInlineVariablesRule());
+        fieldLoads.add(new AsterixProperInlineVariablesRule());
         fieldLoads.add(new RemoveUnusedAssignAndAggregateRule());
         fieldLoads.add(new ConstantFoldingRule());
         fieldLoads.add(new FeedScanCollectionToUnnest());

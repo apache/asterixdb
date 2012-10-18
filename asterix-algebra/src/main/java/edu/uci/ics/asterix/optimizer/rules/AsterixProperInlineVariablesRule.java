@@ -177,8 +177,8 @@ public class AsterixProperInlineVariablesRule implements IAlgebraicRewriteRule {
                         }
                     }
                     
-                    // Replace variable reference with rhs expr.
-                    exprRef.setValue(rhs);
+                    // Replace variable reference with a clone of the rhs expr.
+                    exprRef.setValue(rhs.cloneExpression());
                     return true;
                 }
                 case FUNCTION_CALL: {
