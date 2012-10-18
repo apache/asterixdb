@@ -53,7 +53,7 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
 
     public static final String ITERATIONS = "HyracksPageRankVertex.iteration";
     private DoubleWritable outputValue = new DoubleWritable();
-    private DoubleWritable vertexValue = new DoubleWritable();
+    private DoubleWritable tmpVertexValue = new DoubleWritable();
 
     /**
      * Test whether combiner is called by summing up the messages.
@@ -99,16 +99,16 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
     public void compute(Iterator<DoubleWritable> msgIterator) {
         int maxIteration = this.getContext().getConfiguration().getInt(ITERATIONS, 10);
         if (getSuperstep() == 1) {
-            vertexValue.set(1.0 / getNumVertices());
-            setVertexValue(vertexValue);
+            tmpVertexValue.set(1.0 / getNumVertices());
+            setVertexValue(tmpVertexValue);
         }
         if (getSuperstep() >= 2 && getSuperstep() <= maxIteration) {
             double sum = 0;
             while (msgIterator.hasNext()) {
                 sum += msgIterator.next().get();
             }
-            vertexValue.set((0.15 / getNumVertices()) + 0.85 * sum);
-            setVertexValue(vertexValue);
+            tmpVertexValue.set((0.15 / getNumVertices()) + 0.85 * sum);
+            setVertexValue(tmpVertexValue);
         }
 
         if (getSuperstep() >= 1 && getSuperstep() < maxIteration) {

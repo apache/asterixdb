@@ -84,7 +84,7 @@ public class ReachibilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
         }
     }
 
-    private ByteWritable vertexValue = new ByteWritable();
+    private ByteWritable tmpVertexValue = new ByteWritable();
 
     /** The source vertex id */
     public static final String SOURCE_ID = "ReachibilityVertex.sourceId";
@@ -118,13 +118,13 @@ public class ReachibilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
         if (getSuperstep() == 1) {
             boolean isSource = isSource(getVertexId());
             if (isSource) {
-                vertexValue.set((byte) 1);
-                setVertexValue(vertexValue);
+                tmpVertexValue.set((byte) 1);
+                setVertexValue(tmpVertexValue);
             }
             boolean isDest = isDest(getVertexId());
             if (isDest) {
-                vertexValue.set((byte) 2);
-                setVertexValue(vertexValue);
+                tmpVertexValue.set((byte) 2);
+                setVertexValue(tmpVertexValue);
             }
             if (isSource && isDest) {
                 signalTerminate();
@@ -133,8 +133,8 @@ public class ReachibilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
             if (isSource || isDest) {
                 sendOutMsgs();
             } else {
-                vertexValue.set((byte) 0);
-                setVertexValue(vertexValue);
+                tmpVertexValue.set((byte) 0);
+                setVertexValue(tmpVertexValue);
             }
         } else {
             while (msgIterator.hasNext()) {
@@ -145,8 +145,8 @@ public class ReachibilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
                     int newState = state | msgValue;
                     boolean changed = state == newState ? false : true;
                     if (changed) {
-                        vertexValue.set((byte) newState);
-                        setVertexValue(vertexValue);
+                        tmpVertexValue.set((byte) newState);
+                        setVertexValue(tmpVertexValue);
                         if (newState < 3) {
                             sendOutMsgs();
                         } else {
@@ -173,7 +173,7 @@ public class ReachibilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
 
     private void sendOutMsgs() {
         for (Edge<VLongWritable, FloatWritable> edge : getEdges()) {
-            sendMsg(edge.getDestVertexId(), vertexValue);
+            sendMsg(edge.getDestVertexId(), tmpVertexValue);
         }
     }
 

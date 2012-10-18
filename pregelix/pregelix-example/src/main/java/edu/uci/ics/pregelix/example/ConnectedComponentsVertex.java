@@ -85,7 +85,7 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
     }
 
     private VLongWritable outputValue = new VLongWritable();
-    private VLongWritable vertexValue = new VLongWritable();
+    private VLongWritable tmpVertexValue = new VLongWritable();
     private long minID;
 
     @Override
@@ -100,8 +100,8 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
                     minID = neighbor;
                 }
             }
-            vertexValue.set(minID);
-            setVertexValue(vertexValue);
+            tmpVertexValue.set(minID);
+            setVertexValue(tmpVertexValue);
             sendOutMsgs();
         } else {
             minID = getVertexId().get();
@@ -109,8 +109,8 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
                 minID = Math.min(minID, msgIterator.next().get());
             }
             if (minID < getVertexValue().get()) {
-                vertexValue.set(minID);
-                setVertexValue(vertexValue);
+                tmpVertexValue.set(minID);
+                setVertexValue(tmpVertexValue);
                 sendOutMsgs();
             }
         }

@@ -82,7 +82,7 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
     }
 
     private DoubleWritable outputValue = new DoubleWritable();
-    private DoubleWritable vertexValue = new DoubleWritable();
+    private DoubleWritable tmpVertexValue = new DoubleWritable();
     /** Class logger */
     private static final Logger LOG = Logger.getLogger(ShortestPathsVertex.class.getName());
     /** The shortest paths id */
@@ -102,8 +102,8 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
     @Override
     public void compute(Iterator<DoubleWritable> msgIterator) {
         if (getSuperstep() == 1) {
-            vertexValue.set(Double.MAX_VALUE);
-            setVertexValue(vertexValue);
+            tmpVertexValue.set(Double.MAX_VALUE);
+            setVertexValue(tmpVertexValue);
         }
         double minDist = isSource() ? 0d : Double.MAX_VALUE;
         while (msgIterator.hasNext()) {
@@ -113,8 +113,8 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
             LOG.fine("Vertex " + getVertexId() + " got minDist = " + minDist + " vertex value = " + getVertexValue());
         }
         if (minDist < getVertexValue().get()) {
-            vertexValue.set(minDist);
-            setVertexValue(vertexValue);
+            tmpVertexValue.set(minDist);
+            setVertexValue(tmpVertexValue);
             for (Edge<VLongWritable, FloatWritable> edge : getEdges()) {
                 if (LOG.getLevel() == Level.FINE) {
                     LOG.fine("Vertex " + getVertexId() + " sent to " + edge.getDestVertexId() + " = "
