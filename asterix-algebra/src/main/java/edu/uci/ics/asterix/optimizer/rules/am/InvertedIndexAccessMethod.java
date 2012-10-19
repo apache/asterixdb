@@ -50,7 +50,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLog
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
@@ -430,19 +429,12 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         topSelect.getInputs().add(indexSubTree.rootRef);
         topSelect.setExecutionMode(ExecutionMode.LOCAL);
         context.computeAndSetTypeEnvironmentForOperator(topSelect);
-
-        // Add a project operator on top to guarantee that our new index-based plan returns exactly the same variables as the original plan.
-        ProjectOperator projectOp = new ProjectOperator(originalLiveVars);
-        projectOp.getInputs().add(new MutableObject<ILogicalOperator>(topSelect));
-        projectOp.setExecutionMode(ExecutionMode.LOCAL);
-        context.computeAndSetTypeEnvironmentForOperator(projectOp);
-        joinRef.setValue(projectOp);
+        joinRef.setValue(topSelect);
 
         // Hook up the indexed-nested loop join path with the "panic" (non indexed) nested-loop join path by putting a union all on top.
         if (panicJoinRef != null) {
             // Gather live variables from the index plan and the panic plan.
-            List<LogicalVariable> indexPlanLiveVars = new ArrayList<LogicalVariable>();
-            VariableUtilities.getLiveVariables(joinRef.getValue(), indexPlanLiveVars);
+            List<LogicalVariable> indexPlanLiveVars = originalLiveVars;
             List<LogicalVariable> panicPlanLiveVars = new ArrayList<LogicalVariable>();
             VariableUtilities.getLiveVariables(panicJoinRef.getValue(), panicPlanLiveVars);
             if (indexPlanLiveVars.size() != panicPlanLiveVars.size()) {
