@@ -1,14 +1,14 @@
 -- SINK_WRITE  |PARTITIONED|
   -- STREAM_PROJECT  |PARTITIONED|
     -- ASSIGN  |PARTITIONED|
-      -- SORT_MERGE_EXCHANGE [$$11(ASC) ]  |PARTITIONED|
+      -- SORT_MERGE_EXCHANGE [$$12(ASC) ]  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- STREAM_SELECT  |PARTITIONED|
             -- ASSIGN  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                 -- BTREE_SEARCH  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                    -- STABLE_SORT [$$20(ASC)]  |LOCAL|
+                    -- STABLE_SORT [$$19(ASC)]  |LOCAL|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                         -- STREAM_PROJECT  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

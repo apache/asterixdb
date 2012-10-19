@@ -124,13 +124,13 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         Iterator<Map.Entry<Index, List<Integer>>> it = analysisCtx.indexExprs.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<Index, List<Integer>> entry = it.next();
-            Index index = entry.getKey();
-            Iterator<Integer> exprsIter = entry.getValue().iterator();
+            Index index = entry.getKey();            
             boolean allUsed = true;
             int lastFieldMatched = -1;
             for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
                 String keyField = index.getKeyFieldNames().get(i);
                 boolean foundKeyField = false;
+                Iterator<Integer> exprsIter = entry.getValue().iterator();
                 while (exprsIter.hasNext()) {
                     Integer ix = exprsIter.next();
                     IOptimizableFuncExpr optFuncExpr = analysisCtx.matchedFuncExprs.get(ix);

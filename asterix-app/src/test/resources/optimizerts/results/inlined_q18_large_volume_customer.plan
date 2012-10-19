@@ -7,31 +7,31 @@
             -- ONE_TO_ONE_EXCHANGE  |LOCAL|
               -- STABLE_SORT [$$12(DESC), $$11(ASC)]  |LOCAL|
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- PRE_CLUSTERED_GROUP_BY[$$73, $$74]  |PARTITIONED|
+                  -- PRE_CLUSTERED_GROUP_BY[$$72, $$73]  |PARTITIONED|
                           {
                             -- AGGREGATE  |LOCAL|
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
                           }
-                    -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$73(ASC), $$74(ASC)] HASH:[$$73, $$74]  |PARTITIONED|
-                      -- PRE_CLUSTERED_GROUP_BY[$$54, $$55]  |LOCAL|
+                    -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$72(ASC), $$73(ASC)] HASH:[$$72, $$73]  |PARTITIONED|
+                      -- PRE_CLUSTERED_GROUP_BY[$$56, $$57]  |LOCAL|
                               {
                                 -- AGGREGATE  |LOCAL|
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                               }
                         -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                          -- STABLE_SORT [$$54(ASC), $$55(ASC)]  |LOCAL|
+                          -- STABLE_SORT [$$56(ASC), $$57(ASC)]  |LOCAL|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- HYBRID_HASH_JOIN [$$55][$$58]  |PARTITIONED|
+                                  -- HYBRID_HASH_JOIN [$$57][$$60]  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- STREAM_PROJECT  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- HYBRID_HASH_JOIN [$$55][$$4]  |PARTITIONED|
-                                            -- HASH_PARTITION_EXCHANGE [$$55]  |PARTITIONED|
+                                          -- HYBRID_HASH_JOIN [$$57][$$4]  |PARTITIONED|
+                                            -- HASH_PARTITION_EXCHANGE [$$57]  |PARTITIONED|
                                               -- STREAM_PROJECT  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  -- HYBRID_HASH_JOIN [$$54][$$63]  |PARTITIONED|
+                                                  -- HYBRID_HASH_JOIN [$$56][$$64]  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                       -- STREAM_PROJECT  |PARTITIONED|
                                                         -- ASSIGN  |PARTITIONED|
@@ -39,7 +39,7 @@
                                                             -- DATASOURCE_SCAN  |PARTITIONED|
                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                                    -- HASH_PARTITION_EXCHANGE [$$63]  |PARTITIONED|
+                                                    -- HASH_PARTITION_EXCHANGE [$$64]  |PARTITIONED|
                                                       -- STREAM_PROJECT  |PARTITIONED|
                                                         -- ASSIGN  |PARTITIONED|
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -50,13 +50,13 @@
                                               -- STREAM_PROJECT  |PARTITIONED|
                                                 -- STREAM_SELECT  |PARTITIONED|
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- PRE_CLUSTERED_GROUP_BY[$$70]  |PARTITIONED|
+                                                    -- PRE_CLUSTERED_GROUP_BY[$$69]  |PARTITIONED|
                                                             {
                                                               -- AGGREGATE  |LOCAL|
                                                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                             }
-                                                      -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$70(ASC)] HASH:[$$70]  |PARTITIONED|
-                                                        -- PRE_CLUSTERED_GROUP_BY[$$56]  |LOCAL|
+                                                      -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$69(ASC)] HASH:[$$69]  |PARTITIONED|
+                                                        -- PRE_CLUSTERED_GROUP_BY[$$58]  |LOCAL|
                                                                 {
                                                                   -- AGGREGATE  |LOCAL|
                                                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -70,7 +70,7 @@
                                                                       -- DATASOURCE_SCAN  |PARTITIONED|
                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                    -- HASH_PARTITION_EXCHANGE [$$58]  |PARTITIONED|
+                                    -- HASH_PARTITION_EXCHANGE [$$60]  |PARTITIONED|
                                       -- STREAM_PROJECT  |UNPARTITIONED|
                                         -- ASSIGN  |UNPARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
