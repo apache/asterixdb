@@ -5,16 +5,17 @@
         -- STABLE_SORT [$$24(ASC), $$25(ASC), $$26(ASC), $$27(ASC)]  |LOCAL|
           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
             -- ASSIGN  |UNPARTITIONED|
-              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- INSERT_DELETE  |PARTITIONED|
-                  -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                    -- STABLE_SORT [$$13(ASC)]  |LOCAL|
-                      -- HASH_PARTITION_EXCHANGE [$$13]  |PARTITIONED|
-                        -- ASSIGN  |PARTITIONED|
-                          -- STREAM_PROJECT  |PARTITIONED|
-                            -- ASSIGN  |PARTITIONED|
-                              -- STREAM_SELECT  |PARTITIONED|
-                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN  |PARTITIONED|
-                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              -- ASSIGN  |UNPARTITIONED|
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  -- INSERT_DELETE  |PARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                      -- STABLE_SORT [$$13(ASC)]  |LOCAL|
+                        -- HASH_PARTITION_EXCHANGE [$$13]  |PARTITIONED|
+                          -- ASSIGN  |PARTITIONED|
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              -- ASSIGN  |PARTITIONED|
+                                -- STREAM_SELECT  |PARTITIONED|
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
