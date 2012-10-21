@@ -64,6 +64,11 @@ public class Driver implements IDriver {
     }
 
     @Override
+    public void runJob(PregelixJob job, String ipAddress, int port) throws HyracksException {
+        runJob(job, Plan.OUTER_JOIN, ipAddress, port, false);
+    }
+
+    @Override
     public void runJob(PregelixJob job, Plan planChoice, String ipAddress, int port, boolean profiling)
             throws HyracksException {
         applicationName = exampleClass.getSimpleName() + UUID.randomUUID();

@@ -43,11 +43,11 @@ public class Client {
         @Option(name = "-ip", usage = "ip address of cluster controller", required = true)
         public String ipAddress;
 
-        @Option(name = "-port", usage = "port of cluster controller", required = true)
+        @Option(name = "-port", usage = "port of cluster controller", required = false)
         public int port;
 
-        @Option(name = "-plan", usage = "query plan choice", required = true)
-        public Plan planChoice;
+        @Option(name = "-plan", usage = "query plan choice", required = false)
+        public Plan planChoice = Plan.OUTER_JOIN;
 
         @Option(name = "-vnum", usage = "number of vertices", required = false)
         public long numVertices;

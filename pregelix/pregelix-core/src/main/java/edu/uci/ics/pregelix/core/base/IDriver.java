@@ -27,6 +27,8 @@ public interface IDriver {
         OUTER_JOIN_SINGLE_SORT
     }
 
+    public void runJob(PregelixJob job, String ipAddress, int port) throws HyracksException;
+
     public void runJob(PregelixJob job, Plan planChoice, String ipAddress, int port, boolean profiling)
             throws HyracksException;
 }
