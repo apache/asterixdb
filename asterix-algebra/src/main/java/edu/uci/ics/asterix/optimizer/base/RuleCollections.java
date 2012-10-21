@@ -60,6 +60,7 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.ExtractGbyExpressionsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.FactorRedundantGroupAndDecorVarsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.InferTypesRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.InlineAssignIntoAggregateRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.InlineSingleReferenceVariables;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.InsertOuterJoinRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.InsertProjectBeforeUnionRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroHashPartitionMergeExchange;
@@ -189,7 +190,7 @@ public final class RuleCollections {
         accessMethod.add(new IntroduceSelectAccessMethodRule());
         accessMethod.add(new IntroduceJoinAccessMethodRule());
         accessMethod.add(new IntroduceSecondaryIndexInsertDeleteRule());
-        accessMethod.add(new RemoveUnusedAssignAndAggregateRule());
+        accessMethod.add(new RemoveCommonExpressions());
         return accessMethod;
     }
 
@@ -217,6 +218,10 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new PullPositionalVariableFromUnnestRule());
         physicalRewritesAllLevels.add(new PushProjectDownRule());
         physicalRewritesAllLevels.add(new InsertProjectBeforeUnionRule());
+                
+        physicalRewritesAllLevels.add(new InlineSingleReferenceVariables());
+        physicalRewritesAllLevels.add(new RemoveUnusedAssignAndAggregateRule());
+        physicalRewritesAllLevels.add(new ConsolidateAssignsRule());
         return physicalRewritesAllLevels;
     }
 
