@@ -44,7 +44,6 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "time", 1);
     private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static ByteArrayCharSequenceAccessor charAccessor = new ByteArrayCharSequenceAccessor();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -73,6 +72,8 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
+
+                    private ByteArrayCharSequenceAccessor charAccessor = new ByteArrayCharSequenceAccessor();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
