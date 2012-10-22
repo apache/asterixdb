@@ -3,6 +3,7 @@
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks-storage-am-btree</artifactId>
   <version>0.2.2-SNAPSHOT</version>
+  <name>hyracks-storage-am-btree</name>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>

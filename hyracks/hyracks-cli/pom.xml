@@ -3,6 +3,7 @@
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks-cli</artifactId>
   <version>0.2.2-SNAPSHOT</version>
+  <name>hyracks-cli</name>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>

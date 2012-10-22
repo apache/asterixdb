@@ -2,6 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks-control-common</artifactId>
+  <name>hyracks-control-common</name>
   <version>0.2.2-SNAPSHOT</version>
 
   <parent>

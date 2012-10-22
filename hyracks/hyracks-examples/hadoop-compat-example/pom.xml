@@ -4,6 +4,7 @@
   <artifactId>hadoop-compat-example</artifactId>
   <version>0.2.2-SNAPSHOT</version>
   <packaging>pom</packaging>
+  <name>hadoop-compat-example</name>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>

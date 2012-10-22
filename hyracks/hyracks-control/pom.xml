@@ -2,6 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>hyracks-control</artifactId>
   <packaging>pom</packaging>
+  <name>hyracks-control</name>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>

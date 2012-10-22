@@ -4,6 +4,7 @@
   <artifactId>btree-example</artifactId>
   <version>0.2.2-SNAPSHOT</version>
   <packaging>pom</packaging>
+  <name>btree-example</name>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>

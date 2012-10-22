@@ -3,6 +3,7 @@
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks-hadoop-compat</artifactId>
   <version>0.2.2-SNAPSHOT</version>
+  <name>hyracks-hadoop-compat</name>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>

@@ -2,6 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks.examples.text</groupId>
   <artifactId>texthelper</artifactId>
+  <name>texthelper</name>
 
   <parent>
     <groupId>edu.uci.ics.hyracks.examples</groupId>

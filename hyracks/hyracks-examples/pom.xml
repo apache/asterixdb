@@ -4,6 +4,7 @@
   <artifactId>hyracks-examples</artifactId>
   <version>0.2.2-SNAPSHOT</version>
   <packaging>pom</packaging>
+  <name>hyracks-examples</name>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>

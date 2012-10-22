@@ -4,6 +4,7 @@
   <artifactId>algebricks</artifactId>
   <version>0.2.2-SNAPSHOT</version>
   <packaging>pom</packaging>
+  <name>algebricks</name>
 
   <modules>
     <module>algebricks-compiler</module>
