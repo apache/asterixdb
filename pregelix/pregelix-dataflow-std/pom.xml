@@ -33,7 +33,7 @@
 				<version>2.7.2</version>
 				<configuration>
 					<forkMode>pertest</forkMode>
-					<argLine>-enableassertions -Xmx2047m -Dfile.encoding=UTF-8
+					<argLine>-enableassertions -Xmx1000m -Dfile.encoding=UTF-8
 						-Djava.util.logging.config.file=src/test/resources/logging.properties</argLine>
 					<includes>
 						<include>**/*TestSuite.java</include>
