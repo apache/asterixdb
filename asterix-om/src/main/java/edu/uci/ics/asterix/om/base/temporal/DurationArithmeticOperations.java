@@ -38,13 +38,13 @@ public class DurationArithmeticOperations {
      */
     public static long addDuration(long pointChronon, int yearMonthDuration, long dayTimeDuration) {
 
-        long resultChronon = 0;
-
         int year = calSystem.getYear(pointChronon);
         int month = calSystem.getMonthOfYear(pointChronon, year);
         int day = calSystem.getDayOfMonthYear(pointChronon, year, month);
-
-        resultChronon += (pointChronon % GregorianCalendarSystem.CHRONON_OF_DAY);
+        int hour = calSystem.getHourOfDay(pointChronon);
+        int min = calSystem.getMinOfHour(pointChronon);
+        int sec = calSystem.getSecOfMin(pointChronon);
+        int ms = calSystem.getMillisOfSec(pointChronon);
 
         // Apply the year-month duration
         int carry = yearMonthDuration / 12;
@@ -72,12 +72,7 @@ public class DurationArithmeticOperations {
             }
         }
 
-        resultChronon += calSystem.getChronon(year, month, day, 0, 0, 0, 0, 0);
-
-        // Apply the day-time duration
-        resultChronon += dayTimeDuration;
-
-        return resultChronon;
+        return calSystem.getChronon(year, month, day, hour, min, sec, ms, 0) + dayTimeDuration;
     }
 
     public static int addDuration(int pointChronon, long dayTimeDuration) {

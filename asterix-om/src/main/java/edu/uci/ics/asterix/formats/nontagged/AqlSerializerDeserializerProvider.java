@@ -16,6 +16,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeseria
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ALineSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ANullSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
@@ -110,6 +111,9 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
             }
             case DURATION: {
                 return ADurationSerializerDeserializer.INSTANCE;
+            }
+            case INTERVAL: {
+                return AIntervalSerializerDeserializer.INSTANCE;
             }
             case ORDEREDLIST: {
                 return new AOrderedListSerializerDeserializer((AOrderedListType) aqlType);

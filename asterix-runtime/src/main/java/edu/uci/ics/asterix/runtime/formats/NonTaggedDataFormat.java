@@ -75,6 +75,12 @@ import edu.uci.ics.asterix.runtime.evaluators.constructors.AInt16ConstructorDesc
 import edu.uci.ics.asterix.runtime.evaluators.constructors.AInt32ConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.AInt64ConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.AInt8ConstructorDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.constructors.AIntervalFromDateConstructorDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.constructors.AIntervalFromDateTimeConstructorDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.constructors.AIntervalFromTimeConstructorDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.constructors.AIntervalStartFromDateConstructorDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.constructors.AIntervalStartFromDateTimeConstructorDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.constructors.AIntervalStartFromTimeConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ALineConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ANullConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.APoint3DConstructorDescriptor;
@@ -420,6 +426,14 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(CalendarDuartionFromDateDescriptor.FACTORY);
         temp.add(AdjustDateTimeForTimeZoneDescriptor.FACTORY);
         temp.add(AdjustTimeForTimeZoneDescriptor.FACTORY);
+
+        // Interval constructor
+        temp.add(AIntervalFromDateConstructorDescriptor.FACTORY);
+        temp.add(AIntervalFromTimeConstructorDescriptor.FACTORY);
+        temp.add(AIntervalFromDateTimeConstructorDescriptor.FACTORY);
+        temp.add(AIntervalStartFromDateConstructorDescriptor.FACTORY);
+        temp.add(AIntervalStartFromDateTimeConstructorDescriptor.FACTORY);
+        temp.add(AIntervalStartFromTimeConstructorDescriptor.FACTORY);
 
         IFunctionManager mgr = new FunctionManagerImpl();
         for (IFunctionDescriptorFactory fdFactory : temp) {

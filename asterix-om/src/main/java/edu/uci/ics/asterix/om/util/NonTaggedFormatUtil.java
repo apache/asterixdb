@@ -95,6 +95,8 @@ public final class NonTaggedFormatUtil {
                 return 12;
             case POINT:
                 return 16;
+            case INTERVAL:
+                return 17;
             case POINT3D:
             case CIRCLE:
                 return 24;

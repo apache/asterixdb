@@ -243,6 +243,18 @@ public class GregorianCalendarSystem implements ICalendarSystem {
         return chronon + timezone / 4 * CHRONON_OF_HOUR + (timezone % 4) * 15 * CHRONON_OF_MINUTE;
     }
 
+    public static int getChrononInDays(long chronon) {
+        if (chronon >= 0) {
+            return (int) (chronon / CHRONON_OF_DAY);
+        } else {
+            if (chronon % CHRONON_OF_DAY != 0) {
+                return (int) (chronon / CHRONON_OF_DAY - 1);
+            } else {
+                return (int) (chronon / CHRONON_OF_DAY);
+            }
+        }
+    }
+
     /**
      * Get the extended string representation of the given UTC chronon time under the given time zone. Only fields
      * before

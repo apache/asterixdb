@@ -49,6 +49,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAInt16TypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAInt32TypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAInt64TypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAInt8TypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAIntervalTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalALineTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAPoint3DTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAPointTypeComputer;
@@ -355,6 +356,18 @@ public class AsterixBuiltinFunctions {
             "datetime", 1);
     public final static FunctionIdentifier DURATION_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "duration", 1);
+    public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_DATE = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "interval_from_date", 2);
+    public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_TIME = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "interval_from_time", 2);
+    public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_DATETIME = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "interval_from_datetime", 2);
+    public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_DATE = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "interval_start_from_date", 2);
+    public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_TIME = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "interval_start_from_time", 2);
+    public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_DATETIME = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "interval_start_from_datetime", 2);
 
     // spatial
     public final static FunctionIdentifier CREATE_POINT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -688,7 +701,7 @@ public class AsterixBuiltinFunctions {
             }
         });
 
-        // spatial and temporal type accessors
+        // temporal type accessors
         add(ACCESSOR_TEMPORAL_YEAR, OptionalAInt32TypeComputer.INSTANCE);
         add(ACCESSOR_TEMPORAL_MONTH, OptionalAInt32TypeComputer.INSTANCE);
         add(ACCESSOR_TEMPORAL_DAY, OptionalAInt32TypeComputer.INSTANCE);
@@ -714,6 +727,14 @@ public class AsterixBuiltinFunctions {
         add(CALENDAR_DURATION_FROM_DATE, OptionalADurationTypeComputer.INSTANCE);
         add(ADJUST_DATETIME_FOR_TIMEZONE, OptionalAStringTypeComputer.INSTANCE);
         add(ADJUST_TIME_FOR_TIMEZONE, OptionalAStringTypeComputer.INSTANCE);
+
+        // interval constructors
+        add(INTERVAL_CONSTRUCTOR_DATE, OptionalAIntervalTypeComputer.INSTANCE);
+        add(INTERVAL_CONSTRUCTOR_TIME, OptionalAIntervalTypeComputer.INSTANCE);
+        add(INTERVAL_CONSTRUCTOR_DATETIME, OptionalAIntervalTypeComputer.INSTANCE);
+        add(INTERVAL_CONSTRUCTOR_START_FROM_DATE, OptionalAIntervalTypeComputer.INSTANCE);
+        add(INTERVAL_CONSTRUCTOR_START_FROM_DATETIME, OptionalAIntervalTypeComputer.INSTANCE);
+        add(INTERVAL_CONSTRUCTOR_START_FROM_TIME, OptionalAIntervalTypeComputer.INSTANCE);
 
         String metadataFunctionLoaderClassName = "edu.uci.ics.asterix.metadata.functions.MetadataBuiltinFunctions";
         try {

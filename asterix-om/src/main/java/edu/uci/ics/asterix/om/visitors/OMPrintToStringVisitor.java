@@ -15,6 +15,7 @@ import edu.uci.ics.asterix.om.base.AInt16;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AInt64;
 import edu.uci.ics.asterix.om.base.AInt8;
+import edu.uci.ics.asterix.om.base.AInterval;
 import edu.uci.ics.asterix.om.base.ALine;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.AOrderedList;
@@ -85,6 +86,12 @@ public class OMPrintToStringVisitor implements IOMVisitor {
 
     @Override
     public void visitADuration(ADuration obj) throws AsterixException {
+        // TODO Auto-generated method stub
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void visitAInterval(AInterval obj) throws AsterixException {
         // TODO Auto-generated method stub
         throw new NotImplementedException();
     }

@@ -173,6 +173,7 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
                 case DATE:
                 case TIME:
                 case DURATION:
+                case INTERVAL:
                 case POINT:
                 case POINT3D:
                 case POLYGON:
