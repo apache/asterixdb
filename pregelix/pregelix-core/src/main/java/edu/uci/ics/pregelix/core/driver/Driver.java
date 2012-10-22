@@ -114,11 +114,11 @@ public class Driver implements IDriver {
             for (URL url : urls)
                 if (url.toString().endsWith(".jar"))
                     jars.add(new File(url.getPath()));
-
             installApplication(jars);
+
+            start = System.currentTimeMillis();
             FileSystem dfs = FileSystem.get(job.getConfiguration());
             dfs.delete(FileOutputFormat.getOutputPath(job), true);
-
             runCreate(jobGen);
             runDataLoad(jobGen);
             end = System.currentTimeMillis();
@@ -213,8 +213,15 @@ public class Driver implements IDriver {
         for (File jar : jars) {
             allJars.add(jar.getAbsolutePath());
         }
+        long start = System.currentTimeMillis();
         File appZip = Utilities.getHyracksArchive(applicationName, allJars);
+        long end = System.currentTimeMillis();
+        LOG.info("jar packing finished " + (end - start) + "ms");
+
+        start = System.currentTimeMillis();
         hcc.createApplication(applicationName, appZip);
+        end = System.currentTimeMillis();
+        LOG.info("jar deployment finished " + (end - start) + "ms");
     }
 
     public void destroyApplication(String jarFile) throws Exception {
