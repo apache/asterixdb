@@ -30,10 +30,6 @@ done
 #Set JAVA_HOME
 export JAVA_HOME=$JAVA_HOME
 
-#Get OS
-OS_NAME=`uname -a|awk '{print $1}'`
-LINUX_OS='Linux'
-
 IPADDR=`bin/getip.sh`
 #echo $IPADDR
 
