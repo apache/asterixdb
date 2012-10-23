@@ -4,7 +4,7 @@ MY_NAME=`hostname`
 #Get the IP address of the cc
 CCHOST_NAME=`cat conf/master`
 CURRENT_PATH=`pwd`
-CCHOST=`host $CCHOST_NAME|awk '{print $4}'`
+CCHOST=`bin/getip.sh`
 
 #Import cluster properties
 . conf/cluster.properties
