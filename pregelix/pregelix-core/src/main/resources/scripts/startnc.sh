@@ -1,8 +1,10 @@
 hostname
 
+MY_NAME=`hostname`
 #Get the IP address of the cc
 CCHOST_NAME=`cat conf/master`
-CCHOST=`dig +short $CCHOST_NAME`
+CURRENT_PATH=`pwd`
+CCHOST=`host $CCHOST_NAME|awk '{print $4}'`
 
 #Import cluster properties
 . conf/cluster.properties
@@ -32,13 +34,8 @@ export JAVA_HOME=$JAVA_HOME
 OS_NAME=`uname -a|awk '{print $1}'`
 LINUX_OS='Linux'
 
-if [ $OS_NAME = $LINUX_OS ];
-then
-	#Get IP Address
-	IPADDR=`/sbin/ifconfig eth0 | grep "inet addr" | awk '{print $2}' | cut -f 2 -d ':'`
-else
-	IPADDR=`/sbin/ifconfig en1 | grep "inet " | awk '{print $2}' | cut -f 2 -d ':'`
-fi
+IPADDR=`bin/getip.sh`
+#echo $IPADDR
 
 #Get node ID
 NODEID=`hostname | cut -d '.' -f 1`

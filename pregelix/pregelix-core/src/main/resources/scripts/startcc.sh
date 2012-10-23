@@ -6,7 +6,7 @@ hostname
 
 #Get the IP address of the cc
 CCHOST_NAME=`cat conf/master`
-CCHOST=`dig +short $CCHOST_NAME`
+CCHOST=`host $CCHOST_NAME|awk '{print $4}'`
 
 #Remove the temp dir
 rm -rf $CCTMP_DIR
