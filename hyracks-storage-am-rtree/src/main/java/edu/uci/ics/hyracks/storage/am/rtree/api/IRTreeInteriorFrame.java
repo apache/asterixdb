@@ -36,9 +36,6 @@ public interface IRTreeInteriorFrame extends IRTreeFrame {
 
     public void adjustKey(ITupleReference tuple, int tupleIndex, MultiComparator cmp) throws TreeIndexException;
 
-    public boolean recomputeMBR(ITupleReference tuple, int tupleIndex, MultiComparator cmp);
-
     public void enlarge(ITupleReference tuple, MultiComparator cmp);
 
-    boolean checkEnlargement(ITupleReference tuple, MultiComparator cmp);
 }

@@ -236,52 +236,6 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     }
 
     @Override
-    public boolean recomputeMBR(ITupleReference tuple, int tupleIndex, MultiComparator cmp) {
-        frameTuple.setFieldCount(cmp.getKeyFieldCount());
-        frameTuple.resetByTupleIndex(this, tupleIndex);
-
-        int maxFieldPos = cmp.getKeyFieldCount() / 2;
-        for (int i = 0; i < maxFieldPos; i++) {
-            int j = maxFieldPos + i;
-            int c = cmp.getComparators()[i].compare(frameTuple.getFieldData(i), frameTuple.getFieldStart(i),
-                    frameTuple.getFieldLength(i), tuple.getFieldData(i), tuple.getFieldStart(i),
-                    tuple.getFieldLength(i));
-            if (c != 0) {
-                return true;
-            }
-            c = cmp.getComparators()[j].compare(frameTuple.getFieldData(j), frameTuple.getFieldStart(j),
-                    frameTuple.getFieldLength(j), tuple.getFieldData(j), tuple.getFieldStart(j),
-                    tuple.getFieldLength(j));
-
-            if (c != 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public boolean checkEnlargement(ITupleReference tuple, MultiComparator cmp) {
-        int maxFieldPos = cmp.getKeyFieldCount() / 2;
-        for (int i = 0; i < maxFieldPos; i++) {
-            int j = maxFieldPos + i;
-            int c = cmp.getComparators()[i].compare(frameTuple.getFieldData(i), frameTuple.getFieldStart(i),
-                    frameTuple.getFieldLength(i), tuple.getFieldData(i), tuple.getFieldStart(i),
-                    tuple.getFieldLength(i));
-            if (c > 0) {
-                return true;
-            }
-            c = cmp.getComparators()[j].compare(frameTuple.getFieldData(j), frameTuple.getFieldStart(j),
-                    frameTuple.getFieldLength(j), tuple.getFieldData(j), tuple.getFieldStart(j),
-                    tuple.getFieldLength(j));
-            if (c < 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
     public void enlarge(ITupleReference tuple, MultiComparator cmp) {
         int maxFieldPos = cmp.getKeyFieldCount() / 2;
         for (int i = 0; i < maxFieldPos; i++) {
