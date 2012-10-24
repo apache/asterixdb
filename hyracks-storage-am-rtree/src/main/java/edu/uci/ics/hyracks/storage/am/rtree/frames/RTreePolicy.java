@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreePolicy;
@@ -54,8 +55,8 @@ public class RTreePolicy implements IRTreePolicy {
         }
     }
 
-    public boolean split(ITreeIndexFrame leftFrame, ByteBuffer buf, ITreeIndexFrame rightFrame, ISlotManager slotManager,
-            ITreeIndexTupleReference frameTuple, ITupleReference tuple, ISplitKey splitKey) {
+    public boolean split(ITreeIndexFrame leftFrame, ByteBuffer buf, ITreeIndexFrame rightFrame,
+            ISlotManager slotManager, ITreeIndexTupleReference frameTuple, ITupleReference tuple, ISplitKey splitKey) {
         RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
         RTreeTypeAwareTupleWriter rTreeTupleWriterLeftFrame = ((RTreeTypeAwareTupleWriter) tupleWriter);
         RTreeTypeAwareTupleWriter rTreeTupleWriterRightFrame = ((RTreeTypeAwareTupleWriter) rightFrame.getTupleWriter());
@@ -68,15 +69,18 @@ public class RTreePolicy implements IRTreePolicy {
         for (int i = 0; i < maxFieldPos; i++) {
             int j = maxFieldPos + i;
             frameTuple.resetByTupleIndex(leftRTreeFrame, 0);
-            double leastLowerValue = keyValueProviders[i].getValue(tuple.getFieldData(i), tuple.getFieldStart(i));
-            double greatestUpperValue = keyValueProviders[j].getValue(tuple.getFieldData(j), tuple.getFieldStart(j));
+            double leastLowerValue = keyValueProviders[i].getValue(frameTuple.getFieldData(i),
+                    frameTuple.getFieldStart(i));
+            double greatestUpperValue = keyValueProviders[j].getValue(frameTuple.getFieldData(j),
+                    frameTuple.getFieldStart(j));
             double leastUpperValue = leastLowerValue;
             double greatestLowerValue = greatestUpperValue;
-            int leastUpperIndex = -1;
-            int greatestLowerIndex = -1;
+            int leastUpperIndex = 0;
+            int greatestLowerIndex = 0;
             double width;
 
-            for (int k = 0; k < leftRTreeFrame.getTupleCount(); ++k) {
+            int tupleCount = leftRTreeFrame.getTupleCount();
+            for (int k = 1; k < tupleCount; ++k) {
                 frameTuple.resetByTupleIndex(leftRTreeFrame, k);
                 double lowerValue = keyValueProviders[i].getValue(frameTuple.getFieldData(i),
                         frameTuple.getFieldStart(i));
@@ -113,35 +117,26 @@ public class RTreePolicy implements IRTreePolicy {
             }
         }
 
-        if (seed1 == -1 && seed1 == seed2) {
-            seed2 = 0;
-        } else if (seed1 == seed2) {
-            if (seed2 == 0) {
-                ++seed2;
+        if (seed1 == seed2) {
+            if (seed1 == 0) {
+                seed2 = 1;
             } else {
                 --seed2;
             }
         }
 
         int totalBytes = 0, numOfDeletedTuples = 0;
-        if (seed1 == -1) {
-            rightFrame.insert(tuple, -1);
-            rec[0].set(tuple, keyValueProviders);
-        } else {
-            frameTuple.resetByTupleIndex(leftRTreeFrame, seed1);
-            rec[0].set(frameTuple, keyValueProviders);
-            rightFrame.insert(frameTuple, -1);
-            ((UnorderedSlotManager) slotManager).modifySlot(slotManager.getSlotOff(seed1), -1);
-            totalBytes += leftRTreeFrame.getTupleSize(frameTuple);
-            numOfDeletedTuples++;
-        }
 
-        if (seed2 == -1) {
-            rec[1].set(tuple, keyValueProviders);
-        } else {
-            frameTuple.resetByTupleIndex(leftRTreeFrame, seed2);
-            rec[1].set(frameTuple, keyValueProviders);
-        }
+        frameTuple.resetByTupleIndex(leftRTreeFrame, seed1);
+        rec[0].set(frameTuple, keyValueProviders);
+        rightFrame.insert(frameTuple, -1);
+        ((UnorderedSlotManager) slotManager).modifySlot(slotManager.getSlotOff(seed1), -1);
+        totalBytes += leftRTreeFrame.getTupleSize(frameTuple);
+        numOfDeletedTuples++;
+
+        frameTuple.resetByTupleIndex(leftRTreeFrame, seed2);
+        rec[1].set(frameTuple, keyValueProviders);
+
         int remainingTuplestoBeInsertedInRightFrame;
         for (int k = 0; k < leftRTreeFrame.getTupleCount(); ++k) {
             remainingTuplestoBeInsertedInRightFrame = leftRTreeFrame.getTupleCount() / 2 - rightFrame.getTupleCount();
@@ -175,13 +170,14 @@ public class RTreePolicy implements IRTreePolicy {
         rightFrame.compact();
         leftRTreeFrame.compact();
 
-        if (seed2 == -1) {
-            leftRTreeFrame.insert(tuple, -1);
-        } else if (seed1 != -1
-                && rec[0].enlargedArea(tuple, keyValueProviders) < rec[1].enlargedArea(tuple, keyValueProviders)) {
+        boolean insertedNewTuple = false;
+        if (rec[0].enlargedArea(tuple, keyValueProviders) < rec[1].enlargedArea(tuple, keyValueProviders)
+                && rightFrame.hasSpaceInsert(tuple) == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
             rightFrame.insert(tuple, -1);
-        } else if (seed1 != -1) {
+            insertedNewTuple = true;
+        } else if (leftRTreeFrame.hasSpaceInsert(tuple) == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
             leftRTreeFrame.insert(tuple, -1);
+            insertedNewTuple = true;
         }
 
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
@@ -197,7 +193,7 @@ public class RTreePolicy implements IRTreePolicy {
         rTreeTupleWriterRightFrame.writeTupleFields(((RTreeNSMFrame) rightFrame).getTuples(), 0,
                 rTreeSplitKey.getRightPageBuffer(), 0);
         rTreeSplitKey.getRightTuple().resetByTupleOffset(rTreeSplitKey.getRightPageBuffer(), 0);
-        return true;
+        return insertedNewTuple;
     }
 
     public boolean findBestChild(ITreeIndexFrame frame, ITupleReference tuple, ITreeIndexTupleReference frameTuple,

@@ -26,15 +26,15 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -163,33 +163,36 @@ public class RTree extends AbstractTreeIndex {
                 throw new IllegalArgumentException("The low key point has larger coordinates than the high key point.");
             }
         }
-        try {
-            ICachedPage leafNode = findLeaf(ctx);
+        boolean tupleInserted = false;
+        while (!tupleInserted) {
+            try {
+                ICachedPage leafNode = findLeaf(ctx);
 
-            int pageId = ctx.pathList.getLastPageId();
-            ctx.pathList.moveLast();
-            insertTuple(leafNode, pageId, ctx.getTuple(), ctx, true);
+                int pageId = ctx.pathList.getLastPageId();
+                ctx.pathList.moveLast();
+                tupleInserted = insertTuple(leafNode, pageId, ctx.getTuple(), ctx, true);
 
-            while (true) {
-                if (ctx.splitKey.getLeftPageBuffer() != null) {
-                    updateParentForInsert(ctx);
-                } else {
-                    break;
+                while (true) {
+                    if (ctx.splitKey.getLeftPageBuffer() != null) {
+                        updateParentForInsert(ctx);
+                    } else {
+                        break;
+                    }
                 }
-            }
-        } finally {
-            for (int i = ctx.NSNUpdates.size() - 1; i >= 0; i--) {
-                ICachedPage node = ctx.NSNUpdates.get(i);
-                ctx.interiorFrame.setPage(node);
-                ctx.interiorFrame.setPageNsn(incrementGlobalNsn());
-            }
+            } finally {
+                for (int i = ctx.NSNUpdates.size() - 1; i >= 0; i--) {
+                    ICachedPage node = ctx.NSNUpdates.get(i);
+                    ctx.interiorFrame.setPage(node);
+                    ctx.interiorFrame.setPageNsn(incrementGlobalNsn());
+                }
 
-            for (int i = ctx.LSNUpdates.size() - 1; i >= 0; i--) {
-                ICachedPage node = ctx.LSNUpdates.get(i);
-                ctx.interiorFrame.setPage(node);
-                ctx.interiorFrame.setPageLsn(incrementGlobalNsn());
-                node.releaseWriteLatch();
-                bufferCache.unpin(node);
+                for (int i = ctx.LSNUpdates.size() - 1; i >= 0; i--) {
+                    ICachedPage node = ctx.LSNUpdates.get(i);
+                    ctx.interiorFrame.setPage(node);
+                    ctx.interiorFrame.setPageLsn(incrementGlobalNsn());
+                    node.releaseWriteLatch();
+                    bufferCache.unpin(node);
+                }
             }
         }
     }
@@ -319,7 +322,7 @@ public class RTree extends AbstractTreeIndex {
         }
     }
 
-    private void insertTuple(ICachedPage node, int pageId, ITupleReference tuple, RTreeOpContext ctx, boolean isLeaf)
+    private boolean insertTuple(ICachedPage node, int pageId, ITupleReference tuple, RTreeOpContext ctx, boolean isLeaf)
             throws HyracksDataException, TreeIndexException {
         boolean succeeded = false;
         FrameOpSpaceStatus spaceStatus;
@@ -329,6 +332,7 @@ public class RTree extends AbstractTreeIndex {
             spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple);
         }
 
+        boolean tupleInserted = true;
         switch (spaceStatus) {
             case SUFFICIENT_CONTIGUOUS_SPACE: {
                 try {
@@ -398,7 +402,7 @@ public class RTree extends AbstractTreeIndex {
                         rightFrame.initBuffer((byte) 0);
                         rightFrame.setRightPage(ctx.interiorFrame.getRightPage());
                         ctx.modificationCallback.found(null);
-                        ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey);
+                        tupleInserted = ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey);
                         ctx.leafFrame.setRightPage(rightPageId);
                     }
                     succeeded = true;
@@ -473,6 +477,7 @@ public class RTree extends AbstractTreeIndex {
                 break;
             }
         }
+        return tupleInserted;
     }
 
     private void updateParentForInsert(RTreeOpContext ctx) throws HyracksDataException, TreeIndexException {

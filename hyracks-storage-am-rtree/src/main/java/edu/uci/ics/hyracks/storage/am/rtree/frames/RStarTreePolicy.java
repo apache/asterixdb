@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreePolicy;
@@ -173,7 +174,7 @@ public class RStarTreePolicy implements IRTreePolicy {
             startIndex = splitPoint;
             endIndex = (leftRTreeFrame.getTupleCount() + 1);
         }
-        boolean tupleInserted = false;
+        boolean insertedNewTupleInRightFrame = false;
         int totalBytes = 0, numOfDeletedTuples = 0;
         for (int i = startIndex; i < endIndex; i++) {
             if (tupleEntries1.get(i).getTupleIndex() != -1) {
@@ -184,8 +185,7 @@ public class RStarTreePolicy implements IRTreePolicy {
                 totalBytes += leftRTreeFrame.getTupleSize(frameTuple);
                 numOfDeletedTuples++;
             } else {
-                rightFrame.insert(tuple, -1);
-                tupleInserted = true;
+                insertedNewTupleInRightFrame = true;
             }
         }
 
@@ -198,9 +198,18 @@ public class RStarTreePolicy implements IRTreePolicy {
         // compact both pages
         rightFrame.compact();
         leftRTreeFrame.compact();
-
-        if (!tupleInserted) {
-            leftRTreeFrame.insert(tuple, -1);
+        
+        boolean insertedNewTuple = false;
+        if (insertedNewTupleInRightFrame) {
+            if (rightFrame.hasSpaceInsert(tuple) == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
+                rightFrame.insert(tuple, -1);
+                insertedNewTuple = true;
+            }
+        } else {
+            if (leftRTreeFrame.hasSpaceInsert(tuple) == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
+                leftRTreeFrame.insert(tuple, -1);
+                insertedNewTuple = true;
+            }
         }
 
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
@@ -220,7 +229,7 @@ public class RStarTreePolicy implements IRTreePolicy {
 
         tupleEntries1.clear();
         tupleEntries2.clear();
-        return true;
+        return insertedNewTuple;
     }
 
     public void generateDist(ITreeIndexFrame leftRTreeFrame, ITreeIndexTupleReference frameTuple,
