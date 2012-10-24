@@ -134,7 +134,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
 
     @Override
-    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) {
+    public boolean split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) {
         ByteBuffer right = rightFrame.getBuffer();
         int tupleCount = getTupleCount();
 
@@ -188,6 +188,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         splitKey.initData(splitKeySize);
         tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer().array(), 0);
         splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer(), 0);
+        return true;
     }
 
     @Override

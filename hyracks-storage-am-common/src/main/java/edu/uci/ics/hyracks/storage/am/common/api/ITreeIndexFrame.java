@@ -62,7 +62,8 @@ public interface ITreeIndexFrame {
     // for debugging
     public String printHeader();
 
-    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey);
+    // Return true if the new tuple has been successfully inserted.
+    public boolean split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey);
 
     public ISlotManager getSlotManager();
 
@@ -90,7 +91,7 @@ public interface ITreeIndexFrame {
     public int getPageHeaderSize();
 
     public ITreeIndexTupleReference createTupleReference();
-    
+
     public void setMultiComparator(MultiComparator cmp);
 
 }

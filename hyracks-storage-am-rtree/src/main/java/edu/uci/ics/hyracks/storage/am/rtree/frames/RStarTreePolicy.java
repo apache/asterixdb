@@ -63,7 +63,7 @@ public class RStarTreePolicy implements IRTreePolicy {
         }
     }
 
-    public void split(ITreeIndexFrame leftFrame, ByteBuffer buf, ITreeIndexFrame rightFrame, ISlotManager slotManager,
+    public boolean split(ITreeIndexFrame leftFrame, ByteBuffer buf, ITreeIndexFrame rightFrame, ISlotManager slotManager,
             ITreeIndexTupleReference frameTuple, ITupleReference tuple, ISplitKey splitKey) {
         RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
         RTreeTypeAwareTupleWriter rTreeTupleWriterleftRTreeFrame = ((RTreeTypeAwareTupleWriter) tupleWriter);
@@ -220,6 +220,7 @@ public class RStarTreePolicy implements IRTreePolicy {
 
         tupleEntries1.clear();
         tupleEntries2.clear();
+        return true;
     }
 
     public void generateDist(ITreeIndexFrame leftRTreeFrame, ITreeIndexTupleReference frameTuple,

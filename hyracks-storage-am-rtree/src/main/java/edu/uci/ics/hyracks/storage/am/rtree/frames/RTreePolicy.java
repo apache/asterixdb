@@ -54,7 +54,7 @@ public class RTreePolicy implements IRTreePolicy {
         }
     }
 
-    public void split(ITreeIndexFrame leftFrame, ByteBuffer buf, ITreeIndexFrame rightFrame, ISlotManager slotManager,
+    public boolean split(ITreeIndexFrame leftFrame, ByteBuffer buf, ITreeIndexFrame rightFrame, ISlotManager slotManager,
             ITreeIndexTupleReference frameTuple, ITupleReference tuple, ISplitKey splitKey) {
         RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
         RTreeTypeAwareTupleWriter rTreeTupleWriterLeftFrame = ((RTreeTypeAwareTupleWriter) tupleWriter);
@@ -197,7 +197,7 @@ public class RTreePolicy implements IRTreePolicy {
         rTreeTupleWriterRightFrame.writeTupleFields(((RTreeNSMFrame) rightFrame).getTuples(), 0,
                 rTreeSplitKey.getRightPageBuffer(), 0);
         rTreeSplitKey.getRightTuple().resetByTupleOffset(rTreeSplitKey.getRightPageBuffer(), 0);
-
+        return true;
     }
 
     public boolean findBestChild(ITreeIndexFrame frame, ITupleReference tuple, ITreeIndexTupleReference frameTuple,

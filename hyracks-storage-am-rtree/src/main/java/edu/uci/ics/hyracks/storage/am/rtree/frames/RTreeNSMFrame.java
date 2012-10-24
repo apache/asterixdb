@@ -25,8 +25,6 @@ import edu.uci.ics.hyracks.storage.am.common.frames.TreeIndexNSMFrame;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreePolicy;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.Rectangle;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.TupleEntryArrayList;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.UnorderedSlotManager;
 
 public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeFrame {
@@ -35,14 +33,8 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
 
     protected ITreeIndexTupleReference[] tuples;
     protected ITreeIndexTupleReference cmpFrameTuple;
-    protected TupleEntryArrayList tupleEntries1; // used for split and checking
-                                                 // enlargement
-    protected TupleEntryArrayList tupleEntries2; // used for split
-
-    protected Rectangle[] rec;
 
     private static final double doubleEpsilon = computeDoubleEpsilon();
-    private static final int numTuplesEntries = 500;
     protected final IPrimitiveValueProvider[] keyValueProviders;
 
     protected IRTreePolicy rtreePolicy;
@@ -55,13 +47,6 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
             this.tuples[i] = tupleWriter.createTupleReference();
         }
         cmpFrameTuple = tupleWriter.createTupleReference();
-
-        tupleEntries1 = new TupleEntryArrayList(numTuplesEntries, numTuplesEntries);
-        tupleEntries2 = new TupleEntryArrayList(numTuplesEntries, numTuplesEntries);
-        rec = new Rectangle[4];
-        for (int i = 0; i < 4; i++) {
-            rec[i] = new Rectangle(keyValueProviders.length / 2);
-        }
         this.keyValueProviders = keyValueProviders;
 
         if (rtreePolicyType == RTreePolicyType.RTREE) {
@@ -127,30 +112,11 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
     }
 
     @Override
-    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) {
-        rtreePolicy.split(this, buf, rightFrame, slotManager, frameTuple, tuple, splitKey);
+    public boolean split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) {
+        return rtreePolicy.split(this, buf, rightFrame, slotManager, frameTuple, tuple, splitKey);
     }
 
     abstract public int getTupleSize(ITupleReference tuple);
-
-    public void generateDist(ITupleReference tuple, TupleEntryArrayList entries, Rectangle rec, int start, int end) {
-        int j = 0;
-        while (entries.get(j).getTupleIndex() == -1) {
-            j++;
-        }
-        frameTuple.resetByTupleIndex(this, entries.get(j).getTupleIndex());
-        rec.set(frameTuple, keyValueProviders);
-        for (int i = start; i < end; ++i) {
-            if (i != j) {
-                if (entries.get(i).getTupleIndex() != -1) {
-                    frameTuple.resetByTupleIndex(this, entries.get(i).getTupleIndex());
-                    rec.enlarge(frameTuple, keyValueProviders);
-                } else {
-                    rec.enlarge(tuple, keyValueProviders);
-                }
-            }
-        }
-    }
 
     public void adjustMBRImpl(ITreeIndexTupleReference[] tuples) {
         int maxFieldPos = keyValueProviders.length / 2;

@@ -176,7 +176,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     }
 
     @Override
-    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) {
+    public boolean split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) {
         ByteBuffer right = rightFrame.getBuffer();
         int tupleCount = getTupleCount();
 
@@ -237,6 +237,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
             throw new IllegalStateException(e);
         }
         targetFrame.insert(savedSplitKey.getTuple(), targetTupleIndex);
+        return true;
     }
 
     @Override
