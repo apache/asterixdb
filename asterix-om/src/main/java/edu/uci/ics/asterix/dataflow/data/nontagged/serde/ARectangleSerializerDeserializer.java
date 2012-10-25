@@ -86,11 +86,14 @@ public class ARectangleSerializerDeserializer implements ISerializerDeserializer
                     Double.parseDouble(points[0].split(",")[1]));
             aRectanglePoint2.setValue(Double.parseDouble(points[1].split(",")[0]),
                     Double.parseDouble(points[1].split(",")[1]));
-            if (aRectanglePoint1.getX() > aRectanglePoint2.getX() || aRectanglePoint1.getY() > aRectanglePoint2.getY()) {
+            if (aRectanglePoint1.getX() > aRectanglePoint2.getX() && aRectanglePoint1.getY() > aRectanglePoint2.getY()) {
+                aRectangle.setValue(aRectanglePoint2, aRectanglePoint1);
+            } else if (aRectanglePoint1.getX() < aRectanglePoint2.getX() && aRectanglePoint1.getY() < aRectanglePoint2.getY()) {
+                aRectangle.setValue(aRectanglePoint1, aRectanglePoint2);
+            } else {
                 throw new IllegalArgumentException(
-                        "The low point in the rectangle cannot be larger than the high point");
+                        "Rectangle arugment must be either (bottom left point, top right point) or (top right point, bottom left point)");
             }
-            aRectangle.setValue(aRectanglePoint1, aRectanglePoint2);
             rectangleSerde.serialize(aRectangle, out);
         } catch (HyracksDataException e) {
             throw new HyracksDataException(rectangle + " can not be an instance of rectangle");

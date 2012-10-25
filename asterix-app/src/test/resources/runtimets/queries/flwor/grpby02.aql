@@ -4,6 +4,8 @@
  * Date             :  31st July 2012
  */
 
+write output to nc1:"rttest/flwor_grpby02.adm";
+
 for $sales in [{"storeno":"S101","itemno":"P78395","qty":125},
 {"storeno":"S101","itemno":"P71395","qty":135},
 {"storeno":"S102","itemno":"P78395","qty":225},
@@ -11,5 +13,5 @@ for $sales in [{"storeno":"S101","itemno":"P78395","qty":125},
 {"storeno":"S104","itemno":"P71395","qty":115},
 {"storeno":"S105","itemno":"P74395","qty":120}]
 group by $strNum:=$sales.storeno with $sales
-order by $strNum desc
+order by $strNum asc
 return {"store-number":$strNum,"total-qty":sum(for $l in $sales return $l.qty)}
