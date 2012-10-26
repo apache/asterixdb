@@ -84,23 +84,19 @@ public class LSMIndexFileManager implements ILSMIndexFileManager {
     public void deleteDirs() {
         for (IODeviceHandle dev : ioManager.getIODevices()) {
             File f = new File(dev.getPath(), baseDir);
-            if (f.isDirectory()) {
-                deleteDir(f);
-            }
+            delete(f);
         }
     }
 
-    private void deleteDir(File dir) {
-        for (File f : dir.listFiles()) {
-            if (f.isDirectory()) {
-                deleteDir(f);
-            } else {
-                f.delete();
+    private void delete(File f) {
+        if (f.isDirectory()) {
+            for (File c : f.listFiles()) {
+                delete(c);
             }
         }
-        dir.delete();
+        f.delete();
     }
-
+    
     public FileReference createFlushFile(String relFlushFileName) {
         // Assigns new files to I/O devices in round-robin fashion.
         IODeviceHandle dev = ioManager.getIODevices().get(ioDeviceIndex);
