@@ -38,7 +38,6 @@ import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.api.UnsortedInputException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
@@ -46,6 +45,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.api.UnsortedInputException;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
@@ -58,10 +58,9 @@ public abstract class OrderedIndexExamplesTest {
             throws TreeIndexException;
 
     /**
-     * Fixed-Length Key,Value Example.
-     * Create a tree index with one fixed-length key field and one fixed-length value
-     * field. Fill index with random values using insertions (not bulk load).
-     * Perform scans and range search.
+     * Fixed-Length Key,Value Example. Create a tree index with one fixed-length
+     * key field and one fixed-length value field. Fill index with random values
+     * using insertions (not bulk load). Perform scans and range search.
      */
     @Test
     public void fixedLengthKeyValueExample() throws Exception {
@@ -136,10 +135,79 @@ public abstract class OrderedIndexExamplesTest {
     }
 
     /**
-     * Composite Key Example (Non-Unique Index).
-     * Create a tree index with two fixed-length key fields and one fixed-length
-     * value field. Fill index with random values using insertions (not bulk
-     * load) Perform scans and range search.
+     * This test the btree page split. Originally this test didn't pass since
+     * the btree was spliting by cardinality and not size. Now, it split page by
+     * size.
+     */
+    @Test
+    public void pageSplitTestExample() throws Exception {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("BTree page split test.");
+        }
+
+        // Declare fields.
+        int fieldCount = 2;
+        ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
+        typeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
+        typeTraits[1] = UTF8StringPointable.TYPE_TRAITS;
+        // Declare field serdes.
+        ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE,
+                UTF8StringSerializerDeserializer.INSTANCE };
+
+        // Declare keys.
+        int keyFieldCount = 1;
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
+        cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
+        treeIndex.create();
+        treeIndex.activate();
+
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
+        ArrayTupleReference tuple = new ArrayTupleReference();
+        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(TestOperationCallback.INSTANCE,
+                TestOperationCallback.INSTANCE);
+
+        String key = "111";
+        String data = "XXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, key, data);
+        indexAccessor.insert(tuple);
+
+        key = "222";
+        data = "XXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, key, data);
+        indexAccessor.insert(tuple);
+
+        key = "333";
+        data = "XXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, key, data);
+        indexAccessor.insert(tuple);
+
+        key = "444";
+        data = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, key, data);
+        indexAccessor.insert(tuple);
+
+        key = "555";
+        data = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, key, data);
+        indexAccessor.insert(tuple);
+
+        key = "666";
+        data = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, key, data);
+        indexAccessor.insert(tuple);
+
+        treeIndex.validate();
+        treeIndex.deactivate();
+        treeIndex.destroy();
+    }
+
+    /**
+     * Composite Key Example (Non-Unique Index). Create a tree index with two
+     * fixed-length key fields and one fixed-length value field. Fill index with
+     * random values using insertions (not bulk load) Perform scans and range
+     * search.
      */
     @Test
     public void twoFixedLengthKeysOneFixedLengthValueExample() throws Exception {
@@ -297,10 +365,10 @@ public abstract class OrderedIndexExamplesTest {
     }
 
     /**
-     * Deletion Example.
-     * Create a BTree with one variable-length key field and one variable-length
-     * value field. Fill B-tree with random values using insertions, then delete
-     * entries one-by-one. Repeat procedure a few times on same BTree.
+     * Deletion Example. Create a BTree with one variable-length key field and
+     * one variable-length value field. Fill B-tree with random values using
+     * insertions, then delete entries one-by-one. Repeat procedure a few times
+     * on same BTree.
      */
     @Test
     public void deleteExample() throws Exception {
@@ -399,10 +467,10 @@ public abstract class OrderedIndexExamplesTest {
     }
 
     /**
-     * Update example.
-     * Create a BTree with one variable-length key field and one variable-length
-     * value field. Fill B-tree with random values using insertions, then update
-     * entries one-by-one. Repeat procedure a few times on same BTree.
+     * Update example. Create a BTree with one variable-length key field and one
+     * variable-length value field. Fill B-tree with random values using
+     * insertions, then update entries one-by-one. Repeat procedure a few times
+     * on same BTree.
      */
     @Test
     public void updateExample() throws Exception {
@@ -486,9 +554,8 @@ public abstract class OrderedIndexExamplesTest {
     }
 
     /**
-     * Bulk load example.
-     * Load a tree with 100,000 tuples. BTree has a composite key to "simulate"
-     * non-unique index creation.
+     * Bulk load example. Load a tree with 100,000 tuples. BTree has a composite
+     * key to "simulate" non-unique index creation.
      */
     @Test
     public void bulkLoadExample() throws Exception {
@@ -554,11 +621,11 @@ public abstract class OrderedIndexExamplesTest {
         treeIndex.deactivate();
         treeIndex.destroy();
     }
-    
+
     /**
-     * Bulk load failure example.
-     * Repeatedly loads a tree with 1,000 tuples, of which one tuple at each possible position
-     * does not conform to the expected order. We expect the bulk load to fail with an exception.
+     * Bulk load failure example. Repeatedly loads a tree with 1,000 tuples, of
+     * which one tuple at each possible position does not conform to the
+     * expected order. We expect the bulk load to fail with an exception.
      */
     @Test
     public void bulkOrderVerificationExample() throws Exception {
@@ -581,38 +648,38 @@ public abstract class OrderedIndexExamplesTest {
         ArrayTupleReference tuple = new ArrayTupleReference();
         int ins = 1000;
         for (int i = 1; i < ins; i++) {
-        	ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
+            ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
             treeIndex.create();
             treeIndex.activate();
 
             // Load sorted records, and expect to fail at tuple i.
             IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, true);
             for (int j = 0; j < ins; j++) {
-            	if (j > i) {
-            		fail("Bulk load failure test unexpectedly succeeded past tuple: " + j);
-            	}
-            	int key = j;
-            	if (j == i) {
-            		int swapElementCase = Math.abs(rnd.nextInt()) % 2;
-            		if (swapElementCase == 0) {
-            			// Element equal to previous element.
-            			key--;
-            		} else {
-            			// Element smaller than previous element.
-            			key -= Math.abs(Math.random() % (ins-1)) + 1;
-            		}
-            	}
-            	TupleUtils.createIntegerTuple(tb, tuple, key, 5);
-            	try {
-            		bulkLoader.add(tuple);
-            	} catch (UnsortedInputException e) {
-            		if (j != i) {
-            			fail("Unexpected exception: " + e.getMessage());
-            		}
-            		// Success.
-            		break;
-            	}
-            }            
+                if (j > i) {
+                    fail("Bulk load failure test unexpectedly succeeded past tuple: " + j);
+                }
+                int key = j;
+                if (j == i) {
+                    int swapElementCase = Math.abs(rnd.nextInt()) % 2;
+                    if (swapElementCase == 0) {
+                        // Element equal to previous element.
+                        key--;
+                    } else {
+                        // Element smaller than previous element.
+                        key -= Math.abs(Math.random() % (ins - 1)) + 1;
+                    }
+                }
+                TupleUtils.createIntegerTuple(tb, tuple, key, 5);
+                try {
+                    bulkLoader.add(tuple);
+                } catch (UnsortedInputException e) {
+                    if (j != i) {
+                        fail("Unexpected exception: " + e.getMessage());
+                    }
+                    // Success.
+                    break;
+                }
+            }
 
             treeIndex.deactivate();
             treeIndex.destroy();

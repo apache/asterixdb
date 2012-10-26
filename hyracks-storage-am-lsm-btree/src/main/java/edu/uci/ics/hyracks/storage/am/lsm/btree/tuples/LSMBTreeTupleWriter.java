@@ -41,6 +41,11 @@ public class LSMBTreeTupleWriter extends TypeAwareTupleWriter {
     }
 	
 	@Override
+	public int getCopySpaceRequired(ITupleReference tuple) {
+        return super.bytesRequired(tuple);
+    }
+	
+	@Override
     public ITreeIndexTupleReference createTupleReference() {
         return new LSMBTreeTupleReference(typeTraits, numKeyFields);
     }

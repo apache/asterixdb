@@ -180,14 +180,28 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         ByteBuffer right = rightFrame.getBuffer();
         int tupleCount = getTupleCount();
 
-        // Find split point, and determine into which frame the new tuple should be inserted into.
-        int tuplesToLeft = (tupleCount / 2) + (tupleCount % 2);
+        // Find split point, and determine into which frame the new tuple should
+        // be inserted into.
+        int tuplesToLeft;
         ITreeIndexFrame targetFrame = null;
-        frameTuple.resetByTupleIndex(this, tuplesToLeft - 1);
-        if (cmp.compare(tuple, frameTuple) <= 0) {
-            targetFrame = this;
-        } else {
+
+        int totalSize = 0;
+        int halfPageSize = buf.capacity() / 2 - getPageHeaderSize();
+        int i;
+        for (i = 0; i < tupleCount; ++i) {
+            frameTuple.resetByTupleIndex(this, i);
+            totalSize += tupleWriter.bytesRequired(frameTuple) + slotManager.getSlotSize();
+            if (totalSize >= halfPageSize) {
+                break;
+            }
+        }
+
+        if (cmp.compare(tuple, frameTuple) > 0) {
+            tuplesToLeft = i;
             targetFrame = rightFrame;
+        } else {
+            tuplesToLeft = i + 1;
+            targetFrame = this;
         }
         int tuplesToRight = tupleCount - tuplesToLeft;
 
@@ -208,7 +222,8 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
 
         // Copy the split key to be inserted.
         // We must do so because setting the new split key will overwrite the
-        // old split key, and we cannot insert the existing split key at this point.
+        // old split key, and we cannot insert the existing split key at this
+        // point.
         ISplitKey savedSplitKey = splitKey.duplicate(tupleWriter.createTupleReference());
 
         // Set split key to be highest value in left page.
@@ -230,7 +245,8 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
 
         // Insert the saved split key.
         int targetTupleIndex;
-        // it's safe to catch this exception since it will have been caught before reaching here
+        // it's safe to catch this exception since it will have been caught
+        // before reaching here
         try {
             targetTupleIndex = ((BTreeNSMInteriorFrame) targetFrame).findInsertTupleIndex(savedSplitKey.getTuple());
         } catch (TreeIndexException e) {

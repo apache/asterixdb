@@ -36,4 +36,9 @@ public interface ITreeIndexTupleWriter {
     // the main idea is that the format of the written tuple may not be the same
     // as the format written by this writer
     public ITreeIndexTupleReference createTupleReference();
+    
+    // This method is only used by the BTree leaf frame split method since tuples
+    // in the LSM-BTree can be either matter or anti-matter tuple and we want to
+    // to calculate the size of all tuples in the frame.
+    public int getCopySpaceRequired(ITupleReference tuple);
 }

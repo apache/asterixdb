@@ -87,7 +87,8 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     public int findUpsertTupleIndex(ITupleReference tuple) throws TreeIndexException {
         int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
                 FindTupleNoExactMatchPolicy.HIGHER_KEY);
-        // Just return the found tupleIndex. The caller will make the final decision whether to insert or update.
+        // Just return the found tupleIndex. The caller will make the final
+        // decision whether to insert or update.
         return tupleIndex;
     }
 
@@ -95,14 +96,16 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     public ITupleReference getMatchingKeyTuple(ITupleReference searchTuple, int targetTupleIndex) {
         // Examine the tuple index to determine whether it is valid or not.
         if (targetTupleIndex != slotManager.getGreatestKeyIndicator()) {
-            // We need to check the key to determine whether it's an insert or an update/delete
+            // We need to check the key to determine whether it's an insert or
+            // an update/delete
             frameTuple.resetByTupleIndex(this, targetTupleIndex);
             if (cmp.compare(searchTuple, frameTuple) == 0) {
                 // The keys match, it's an update/delete
                 return frameTuple;
             }
         }
-        // Either the tuple index is a special indicator, or the keys don't match.
+        // Either the tuple index is a special indicator, or the keys don't
+        // match.
         // In those cases, we are definitely dealing with an insert.
         return null;
     }
@@ -138,17 +141,26 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         ByteBuffer right = rightFrame.getBuffer();
         int tupleCount = getTupleCount();
 
-        // Find split point, and determine into which frame the new tuple should be inserted into.
+        // Find split point, and determine into which frame the new tuple should
+        // be inserted into.
         int tuplesToLeft;
-        int mid = tupleCount / 2;
         ITreeIndexFrame targetFrame = null;
-        int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff() + slotManager.getSlotSize() * mid);
-        frameTuple.resetByTupleOffset(buf, tupleOff);
+        int totalSize = 0;
+        int halfPageSize = buf.capacity() / 2 - getPageHeaderSize();
+        int i;
+        for (i = 0; i < tupleCount; ++i) {
+            frameTuple.resetByTupleIndex(this, i);
+            totalSize += tupleWriter.getCopySpaceRequired(frameTuple) + slotManager.getSlotSize();
+            if (totalSize >= halfPageSize) {
+                break;
+            }
+        }
+
         if (cmp.compare(tuple, frameTuple) >= 0) {
-            tuplesToLeft = mid + (tupleCount % 2);
+            tuplesToLeft = i + 1;
             targetFrame = rightFrame;
         } else {
-            tuplesToLeft = mid;
+            tuplesToLeft = i;
             targetFrame = this;
         }
         int tuplesToRight = tupleCount - tuplesToLeft;
@@ -173,7 +185,8 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
 
         // Insert the new tuple.
         int targetTupleIndex;
-        // it's safe to catch this exception since it will have been caught before reaching here
+        // it's safe to catch this exception since it will have been caught
+        // before reaching here
         try {
             targetTupleIndex = ((BTreeNSMLeafFrame) targetFrame).findInsertTupleIndex(tuple);
         } catch (TreeIndexException e) {
@@ -182,8 +195,12 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         targetFrame.insert(tuple, targetTupleIndex);
 
         // Set the split key to be highest key in the left page.
-        tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
+        int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
+        try {
         frameTuple.resetByTupleOffset(buf, tupleOff);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
         int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
         splitKey.initData(splitKeySize);
         tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer().array(), 0);
