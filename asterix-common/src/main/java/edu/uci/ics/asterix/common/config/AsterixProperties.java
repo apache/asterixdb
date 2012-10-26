@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.bootstrap;
+package edu.uci.ics.asterix.common.config;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,7 +27,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 
-import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 /**
@@ -41,6 +40,7 @@ public class AsterixProperties implements Serializable {
     private static Boolean isNewUniverse;
     private static HashSet<String> nodeNames;
     private static Map<String, String[]> stores;
+    private static Map<String, String[]> ioDevicePaths;
     private static String outputDir;
 
     public static AsterixProperties INSTANCE = new AsterixProperties();
@@ -78,6 +78,8 @@ public class AsterixProperties implements Serializable {
         }
         Enumeration<String> pNames = (Enumeration<String>) p.propertyNames();
         stores = new HashMap<String, String[]>();
+        ioDevicePaths = new HashMap<String, String[]>();
+        nodeNames = new HashSet<String>();
         boolean newUniverseChosen = false;
         String pn;
         String val;
@@ -95,6 +97,13 @@ public class AsterixProperties implements Serializable {
                 outputDir = val;
             } else {
                 String ncName = pn.substring(0, pn.indexOf('.'));
+                String ncAttribute = pn.substring(pn.indexOf('.') + 1).toLowerCase();
+                Map<String, String[]> targetMap = null;
+                if (ncAttribute.equals("stores")) {
+                    targetMap = stores;
+                } else if (ncAttribute.equals("iodevices")) {
+                    targetMap = ioDevicePaths;
+                }
                 val = p.getProperty(pn);
                 String[] folderNames = val.split("\\s*,\\s*");
                 int i = 0;
@@ -110,11 +119,11 @@ public class AsterixProperties implements Serializable {
                     }
                     i++;
                 }
-                stores.put(ncName, folderNames);
-                nodeNames = new HashSet<String>();
-                nodeNames.addAll(stores.keySet());
-            }
+                targetMap.put(ncName, folderNames);
+            }            
         }
+        nodeNames.addAll(stores.keySet());
+        nodeNames.addAll(ioDevicePaths.keySet());
         if (metadataNodeName == null)
             throw new AlgebricksException("You need to specify the metadata node!");
         if (!newUniverseChosen)
@@ -137,6 +146,14 @@ public class AsterixProperties implements Serializable {
         return stores;
     }
 
+    public Map<String, String[]> getIODevicePaths() {
+        return ioDevicePaths;
+    }
+    
+    public String[] getIODevicePaths(String nodeId) {
+        return ioDevicePaths.get(nodeId);
+    }
+    
     public HashSet<String> getNodeNames() {
         return nodeNames;
     }

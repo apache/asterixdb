@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.config.AsterixProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
@@ -146,7 +147,7 @@ public class MetadataBootstrap {
         localResourceRepository = runtimeContext.getLocalResourceRepository();
         bufferCache = runtimeContext.getBufferCache();
         fileMapProvider = runtimeContext.getFileMapManager();
-        ioManager = ncApplicationContext.getRootContext().getIOManager();
+        ioManager = runtimeContext.getIOManager();
 
         // Begin a transaction against the metadata.
         // Lock the metadata in X mode.

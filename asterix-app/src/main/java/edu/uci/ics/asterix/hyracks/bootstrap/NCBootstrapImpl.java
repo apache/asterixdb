@@ -48,10 +48,8 @@ public class NCBootstrapImpl implements INCBootstrap {
 
         runtimeContext = new AsterixAppRuntimeContext(ncApplicationContext);
         runtimeContext.initialize();
-
         ncApplicationContext.setApplicationObject(runtimeContext);
 
-        // Initialize metadata if this node is the metadata node
         IAsterixStateProxy proxy = (IAsterixStateProxy) ncApplicationContext.getDistributedState();
         isMetadataNode = nodeId.equals(proxy.getAsterixProperties().getMetadataNodeName());
         if (isMetadataNode) {

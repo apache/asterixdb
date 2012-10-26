@@ -13,19 +13,18 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.api;
+package edu.uci.ics.asterix.common.api;
 
 import java.io.Serializable;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import edu.uci.ics.asterix.common.api.IAsterixPropertiesProxy;
+import edu.uci.ics.asterix.common.config.AsterixProperties;
 
 /**
- * Interface for setting/getting distributed state of Asterix.
+ * Interface for setting/getting the remote Asterix properties.
  */
-public interface IAsterixStateProxy extends Remote, Serializable, IAsterixPropertiesProxy {
-    public void setMetadataNode(IMetadataNode metadataNode) throws RemoteException;
-
-    public IMetadataNode getMetadataNode() throws RemoteException;
+public interface IAsterixPropertiesProxy extends Remote, Serializable {
+    public void setAsterixProperties(AsterixProperties asterixProperties) throws RemoteException;
+    public AsterixProperties getAsterixProperties() throws RemoteException;
 }

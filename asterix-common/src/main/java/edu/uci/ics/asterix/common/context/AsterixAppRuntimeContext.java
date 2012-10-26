@@ -1,13 +1,22 @@
 package edu.uci.ics.asterix.common.context;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 
+import edu.uci.ics.asterix.common.api.IAsterixPropertiesProxy;
+import edu.uci.ics.asterix.common.config.AsterixProperties;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.io.IIOManager;
+import edu.uci.ics.hyracks.api.io.IODeviceHandle;
+import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
@@ -37,6 +46,7 @@ public class AsterixAppRuntimeContext {
     private static final int DEFAULT_LIFECYCLEMANAGER_MEMORY_BUDGET = 1024 * 1024 * 1024; // 1GB
     private final INCApplicationContext ncApplicationContext;
 
+    private IIOManager ioManager;
     private IIndexLifecycleManager indexLifecycleManager;
     private IFileMapManager fileMapManager;
     private IBufferCache bufferCache;
@@ -53,15 +63,24 @@ public class AsterixAppRuntimeContext {
         this.ncApplicationContext = ncApplicationContext;
     }
 
-    public void initialize() throws IOException, ACIDException {
+    public void initialize() throws AsterixException, IOException, ACIDException {
         int pageSize = getBufferCachePageSize();
         int numPages = getBufferCacheNumPages();
 
+        // Create a new IOManager based on the I/O device paths given in the Asterix .properties configuration file.
+        IAsterixPropertiesProxy proxy = (IAsterixPropertiesProxy) ncApplicationContext.getDistributedState();
+        AsterixProperties asterixProperties = proxy.getAsterixProperties();
+        String[] ioDevicePaths = asterixProperties.getIODevicePaths(ncApplicationContext.getNodeId());
+        if (ioDevicePaths == null) {
+            throw new AsterixException("I/O devices not configured for Node Controller '" + ncApplicationContext.getNodeId() + "'."); 
+        }
+        ioManager = new IOManager(getDevices(ioDevicePaths), Executors.newCachedThreadPool());
+        
         fileMapManager = new AsterixFileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
-        IIOManager ioMgr = ncApplicationContext.getRootContext().getIOManager();
-        bufferCache = new BufferCache(ioMgr, allocator, prs, fileMapManager, pageSize, numPages, Integer.MAX_VALUE);
+        
+        bufferCache = new BufferCache(ioManager, allocator, prs, fileMapManager, pageSize, numPages, Integer.MAX_VALUE);
         indexLifecycleManager = new IndexLifecycleManager(DEFAULT_LIFECYCLEMANAGER_MEMORY_BUDGET);
         provider = new TransactionProvider(ncApplicationContext.getNodeId());
 
@@ -71,7 +90,7 @@ public class AsterixAppRuntimeContext {
         opTracker = new ReferenceCountingOperationTracker();
 
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
-                ioMgr);
+                ioManager);
         localResourceRepository = persistentLocalResourceRepositoryFactory.createRepository();
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
     }
@@ -119,10 +138,22 @@ public class AsterixAppRuntimeContext {
         return numPages;
     }
 
+    private List<IODeviceHandle> getDevices(String[] ioDevicePaths) {
+        List<IODeviceHandle> devices = new ArrayList<IODeviceHandle>();
+        for (String ioDevStr : ioDevicePaths) {
+            devices.add(new IODeviceHandle(new File(ioDevStr), "."));
+        }
+        return devices;
+    }
+    
     public void deinitialize() {
         bufferCache.close();
     }
 
+    public IIOManager getIOManager() {
+        return ioManager;
+    }
+    
     public IBufferCache getBufferCache() {
         return bufferCache;
     }
