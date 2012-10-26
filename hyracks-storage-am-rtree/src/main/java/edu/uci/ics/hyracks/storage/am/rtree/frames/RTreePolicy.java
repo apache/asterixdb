@@ -55,8 +55,8 @@ public class RTreePolicy implements IRTreePolicy {
         }
     }
 
-    public boolean split(ITreeIndexFrame leftFrame, ByteBuffer buf, ITreeIndexFrame rightFrame,
-            ISlotManager slotManager, ITreeIndexTupleReference frameTuple, ITupleReference tuple, ISplitKey splitKey) {
+    public void split(ITreeIndexFrame leftFrame, ByteBuffer buf, ITreeIndexFrame rightFrame, ISlotManager slotManager,
+            ITreeIndexTupleReference frameTuple, ITupleReference tuple, ISplitKey splitKey) {
         RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
         RTreeTypeAwareTupleWriter rTreeTupleWriterLeftFrame = ((RTreeTypeAwareTupleWriter) tupleWriter);
         RTreeTypeAwareTupleWriter rTreeTupleWriterRightFrame = ((RTreeTypeAwareTupleWriter) rightFrame.getTupleWriter());
@@ -170,14 +170,18 @@ public class RTreePolicy implements IRTreePolicy {
         rightFrame.compact();
         leftRTreeFrame.compact();
 
-        boolean insertedNewTuple = false;
-        if (rec[0].enlargedArea(tuple, keyValueProviders) < rec[1].enlargedArea(tuple, keyValueProviders)
-                && rightFrame.hasSpaceInsert(tuple) == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
-            rightFrame.insert(tuple, -1);
-            insertedNewTuple = true;
+        // The assumption here is that the new tuple cannot be larger than page
+        // size, thus it must fit in either pages.
+        if (rec[0].enlargedArea(tuple, keyValueProviders) < rec[1].enlargedArea(tuple, keyValueProviders)) {
+            if (rightFrame.hasSpaceInsert(tuple) == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
+                rightFrame.insert(tuple, -1);
+            } else {
+                leftRTreeFrame.insert(tuple, -1);
+            }
         } else if (leftRTreeFrame.hasSpaceInsert(tuple) == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
             leftRTreeFrame.insert(tuple, -1);
-            insertedNewTuple = true;
+        } else {
+            rightFrame.insert(tuple, -1);
         }
 
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
@@ -193,7 +197,6 @@ public class RTreePolicy implements IRTreePolicy {
         rTreeTupleWriterRightFrame.writeTupleFields(((RTreeNSMFrame) rightFrame).getTuples(), 0,
                 rTreeSplitKey.getRightPageBuffer(), 0);
         rTreeSplitKey.getRightTuple().resetByTupleOffset(rTreeSplitKey.getRightPageBuffer(), 0);
-        return insertedNewTuple;
     }
 
     public boolean findBestChild(ITreeIndexFrame frame, ITupleReference tuple, ITreeIndexTupleReference frameTuple,

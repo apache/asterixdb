@@ -54,7 +54,6 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
         } else {
             rtreePolicy = new RStarTreePolicy(tupleWriter, keyValueProviders, cmpFrameTuple, totalFreeSpaceOff);
         }
-
     }
 
     private static double computeDoubleEpsilon() {
@@ -112,8 +111,8 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
     }
 
     @Override
-    public boolean split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) {
-        return rtreePolicy.split(this, buf, rightFrame, slotManager, frameTuple, tuple, splitKey);
+    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) {
+        rtreePolicy.split(this, buf, rightFrame, slotManager, frameTuple, tuple, splitKey);
     }
 
     abstract public int getTupleSize(ITupleReference tuple);
@@ -152,7 +151,7 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
 
     @Override
     public int getPageHeaderSize() {
-        return rightPageOff;
+        return rightPageOff + 4;
     }
 
     @Override

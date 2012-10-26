@@ -137,7 +137,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
 
     @Override
-    public boolean split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) {
+    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) {
         ByteBuffer right = rightFrame.getBuffer();
         int tupleCount = getTupleCount();
 
@@ -196,16 +196,11 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
 
         // Set the split key to be highest key in the left page.
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
-        try {
         frameTuple.resetByTupleOffset(buf, tupleOff);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
         int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
         splitKey.initData(splitKeySize);
         tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer().array(), 0);
         splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer(), 0);
-        return true;
     }
 
     @Override
@@ -227,7 +222,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
 
     @Override
     public int getPageHeaderSize() {
-        return nextLeafOff;
+        return nextLeafOff + 4;
     }
 
     @Override

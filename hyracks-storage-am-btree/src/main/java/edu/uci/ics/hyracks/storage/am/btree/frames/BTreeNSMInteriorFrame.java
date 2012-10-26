@@ -94,9 +94,12 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
             System.arraycopy(tuple.getFieldData(tuple.getFieldCount() - 1), getLeftChildPageOff(tuple) + childPtrSize,
                     buf.array(), rightLeafOff, childPtrSize);
         } else {
-            // If slotOff has a right (slot-)neighbor then update its child pointer.
-            // The only time when this is NOT the case, is when this is the very first tuple 
-            // (or when the splitkey goes into the rightmost slot but that case is handled in the if above).
+            // If slotOff has a right (slot-)neighbor then update its child
+            // pointer.
+            // The only time when this is NOT the case, is when this is the very
+            // first tuple
+            // (or when the splitkey goes into the rightmost slot but that case
+            // is handled in the if above).
             if (buf.getInt(tupleCountOff) > 1) {
                 int rightNeighborOff = slotOff - slotManager.getSlotSize();
                 frameTuple.resetByTupleOffset(buf, slotManager.getTupleOff(rightNeighborOff));
@@ -176,7 +179,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     }
 
     @Override
-    public boolean split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) {
+    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) {
         ByteBuffer right = rightFrame.getBuffer();
         int tupleCount = getTupleCount();
 
@@ -253,7 +256,6 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
             throw new IllegalStateException(e);
         }
         targetFrame.insert(savedSplitKey.getTuple(), targetTupleIndex);
-        return true;
     }
 
     @Override
@@ -270,7 +272,8 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
             sortedTupleOffs.add(new SlotOffTupleOff(i, slotOff, tupleOff));
         }
         Collections.sort(sortedTupleOffs);
-        // Iterate over the sorted slots, and move their corresponding tuples to the left, reclaiming free space.
+        // Iterate over the sorted slots, and move their corresponding tuples to
+        // the left, reclaiming free space.
         for (int i = 0; i < sortedTupleOffs.size(); i++) {
             int tupleOff = sortedTupleOffs.get(i).tupleOff;
             frameTuple.resetByTupleOffset(buf, tupleOff);
@@ -293,11 +296,13 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         if (buf.getInt(tupleCountOff) == 0) {
             return buf.getInt(rightLeafOff);
         }
-        // Trivial cases where no low key or high key was given (e.g. during an index scan).
+        // Trivial cases where no low key or high key was given (e.g. during an
+        // index scan).
         ITupleReference tuple = null;
         FindTupleMode fsm = null;
         // The target comparator may be on a prefix of the BTree key fields.
-        MultiComparator targetCmp = pred.getLowKeyComparator();;
+        MultiComparator targetCmp = pred.getLowKeyComparator();
+        ;
         tuple = pred.getLowKey();
         if (tuple == null) {
             return getLeftmostChildPageId();
@@ -369,7 +374,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
 
     @Override
     public int getPageHeaderSize() {
-        return rightLeafOff;
+        return rightLeafOff + 4;
     }
 
     private int getLeftChildPageOff(ITupleReference tuple) {

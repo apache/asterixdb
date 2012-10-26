@@ -118,7 +118,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
         int tupleCount = buf.getInt(tupleCountOff);
 
-        // determine start of target free space (depends on assumptions stated above)
+        // determine start of target free space (depends on assumptions stated
+        // above)
         int freeSpace = buf.getInt(freeSpaceOff);
         int prefixTupleCount = buf.getInt(prefixTupleCountOff);
         if (prefixTupleCount > 0) {
@@ -183,7 +184,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int length = tupleSlotOff - slotEndOff;
         System.arraycopy(buf.array(), slotEndOff, buf.array(), slotEndOff + slotManager.getSlotSize(), length);
 
-        // maintain space information, get size of tuple suffix (suffix could be entire tuple)
+        // maintain space information, get size of tuple suffix (suffix could be
+        // entire tuple)
         int tupleSize = 0;
         int suffixFieldStart = 0;
         if (prefixSlotNum == FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
@@ -217,7 +219,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         if (bytesRequired + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff))
             return FrameOpSpaceStatus.SUFFICIENT_SPACE;
 
-        // See if the tuple matches a prefix and will fit after truncating the prefix.
+        // See if the tuple matches a prefix and will fit after truncating the
+        // prefix.
         int prefixSlotNum = slotManager.findPrefix(tuple, framePrefixTuple);
         if (prefixSlotNum != FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
             int prefixSlotOff = slotManager.getPrefixSlotOff(prefixSlotNum);
@@ -266,7 +269,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int numPrefixFields = frameTuple.getNumPrefixFields();
         int fieldCount = frameTuple.getFieldCount();
         if (numPrefixFields != 0) {
-            // Check the space requirements for updating the suffix of the original tuple.            
+            // Check the space requirements for updating the suffix of the
+            // original tuple.
             oldTupleBytes = frameTuple.getSuffixTupleSize();
             newTupleBytes = tupleWriter.bytesRequired(newTuple, numPrefixFields, fieldCount - numPrefixFields);
         } else {
@@ -284,7 +288,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int freeContiguous = buf.capacity() - buf.getInt(freeSpaceOff)
                 - ((buf.getInt(tupleCountOff) + buf.getInt(prefixTupleCountOff)) * slotManager.getSlotSize());
 
-        // Enough space if we delete the old tuple and insert the new one without compaction? 
+        // Enough space if we delete the old tuple and insert the new one
+        // without compaction?
         if (newTupleBytes <= freeContiguous) {
             return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
         }
@@ -314,7 +319,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             bytesWritten = tupleWriter.writeTupleFields(newTuple, numPrefixFields, fieldCount - numPrefixFields,
                     buf.array(), suffixTupleStartOff);
         } else {
-            // Insert the new tuple suffix at the end of the free space, and change 
+            // Insert the new tuple suffix at the end of the free space, and
+            // change
             // the slot value (effectively "deleting" the old tuple).
             int newSuffixTupleStartOff = buf.getInt(freeSpaceOff);
             bytesWritten = tupleWriter.writeTupleFields(newTuple, numPrefixFields, fieldCount - numPrefixFields,
@@ -382,14 +388,16 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int tupleIndex = slotManager.decodeSecondSlotField(targetTupleIndex);
         // Examine the tuple index to determine whether it is valid or not.
         if (tupleIndex != slotManager.getGreatestKeyIndicator()) {
-            // We need to check the key to determine whether it's an insert or an update.
+            // We need to check the key to determine whether it's an insert or
+            // an update.
             frameTuple.resetByTupleIndex(this, tupleIndex);
             if (cmp.compare(searchTuple, frameTuple) == 0) {
                 // The keys match, it's an update.
                 return frameTuple;
             }
         }
-        // Either the tuple index is a special indicator, or the keys don't match.
+        // Either the tuple index is a special indicator, or the keys don't
+        // match.
         // In those cases, we are definitely dealing with an insert.
         return null;
     }
@@ -537,7 +545,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public boolean split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) {
+    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) {
 
         BTreeFieldPrefixNSMLeafFrame rf = (BTreeFieldPrefixNSMLeafFrame) rightFrame;
 
@@ -545,7 +553,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int tupleCount = getTupleCount();
         int prefixTupleCount = getPrefixTupleCount();
 
-        // Find split point, and determine into which frame the new tuple should be inserted into.
+        // Find split point, and determine into which frame the new tuple should
+        // be inserted into.
         int tuplesToLeft;
         int midSlotNum = tupleCount / 2;
         ITreeIndexFrame targetFrame = null;
@@ -575,7 +584,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             }
         }
 
-        // if we are splitting in the middle of a prefix both pages need to have the prefix slot and tuple
+        // if we are splitting in the middle of a prefix both pages need to have
+        // the prefix slot and tuple
         int boundaryTupleSlotOff = rf.slotManager.getTupleSlotOff(tuplesToLeft - 1);
         int boundaryTupleSlot = buf.getInt(boundaryTupleSlotOff);
         int boundaryPrefixSlotNum = rf.slotManager.decodeFirstSlotField(boundaryTupleSlot);
@@ -585,7 +595,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             prefixesToLeft++; // tuples on both pages share one prefix
         }
 
-        // move prefix tuples on right page to beginning of page and adjust prefix slots
+        // move prefix tuples on right page to beginning of page and adjust
+        // prefix slots
         if (prefixesToRight > 0 && prefixesToLeft > 0 && prefixTupleCount > 1) {
 
             int freeSpace = rf.getOrigFreeSpaceOff();
@@ -650,7 +661,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
         // insert last key
         int targetTupleIndex;
-        // it's safe to catch this exception since it will have been caught before reaching here
+        // it's safe to catch this exception since it will have been caught
+        // before reaching here
         try {
             targetTupleIndex = ((IBTreeLeafFrame) targetFrame).findInsertTupleIndex(tuple);
         } catch (TreeIndexException e) {
@@ -665,7 +677,6 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         splitKey.initData(splitKeySize);
         tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer().array(), 0);
         splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer(), 0);
-        return true;
     }
 
     @Override
@@ -719,7 +730,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) {
         int slot = slotManager.findSlot(searchKey, pageTuple, framePrefixTuple, cmp, ftm, ftp);
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
-        // TODO: Revisit this one. Maybe there is a cleaner way to solve this in the RangeSearchCursor.
+        // TODO: Revisit this one. Maybe there is a cleaner way to solve this in
+        // the RangeSearchCursor.
         if (tupleIndex == FieldPrefixSlotManager.GREATEST_KEY_INDICATOR
                 || tupleIndex == FieldPrefixSlotManager.ERROR_INDICATOR)
             return -1;

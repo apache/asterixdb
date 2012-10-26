@@ -163,36 +163,34 @@ public class RTree extends AbstractTreeIndex {
                 throw new IllegalArgumentException("The low key point has larger coordinates than the high key point.");
             }
         }
-        boolean tupleInserted = false;
-        while (!tupleInserted) {
-            try {
-                ICachedPage leafNode = findLeaf(ctx);
 
-                int pageId = ctx.pathList.getLastPageId();
-                ctx.pathList.moveLast();
-                tupleInserted = insertTuple(leafNode, pageId, ctx.getTuple(), ctx, true);
+        try {
+            ICachedPage leafNode = findLeaf(ctx);
 
-                while (true) {
-                    if (ctx.splitKey.getLeftPageBuffer() != null) {
-                        updateParentForInsert(ctx);
-                    } else {
-                        break;
-                    }
-                }
-            } finally {
-                for (int i = ctx.NSNUpdates.size() - 1; i >= 0; i--) {
-                    ICachedPage node = ctx.NSNUpdates.get(i);
-                    ctx.interiorFrame.setPage(node);
-                    ctx.interiorFrame.setPageNsn(incrementGlobalNsn());
-                }
+            int pageId = ctx.pathList.getLastPageId();
+            ctx.pathList.moveLast();
+            insertTuple(leafNode, pageId, ctx.getTuple(), ctx, true);
 
-                for (int i = ctx.LSNUpdates.size() - 1; i >= 0; i--) {
-                    ICachedPage node = ctx.LSNUpdates.get(i);
-                    ctx.interiorFrame.setPage(node);
-                    ctx.interiorFrame.setPageLsn(incrementGlobalNsn());
-                    node.releaseWriteLatch();
-                    bufferCache.unpin(node);
+            while (true) {
+                if (ctx.splitKey.getLeftPageBuffer() != null) {
+                    updateParentForInsert(ctx);
+                } else {
+                    break;
                 }
+            }
+        } finally {
+            for (int i = ctx.NSNUpdates.size() - 1; i >= 0; i--) {
+                ICachedPage node = ctx.NSNUpdates.get(i);
+                ctx.interiorFrame.setPage(node);
+                ctx.interiorFrame.setPageNsn(incrementGlobalNsn());
+            }
+
+            for (int i = ctx.LSNUpdates.size() - 1; i >= 0; i--) {
+                ICachedPage node = ctx.LSNUpdates.get(i);
+                ctx.interiorFrame.setPage(node);
+                ctx.interiorFrame.setPageLsn(incrementGlobalNsn());
+                node.releaseWriteLatch();
+                bufferCache.unpin(node);
             }
         }
     }
@@ -322,7 +320,7 @@ public class RTree extends AbstractTreeIndex {
         }
     }
 
-    private boolean insertTuple(ICachedPage node, int pageId, ITupleReference tuple, RTreeOpContext ctx, boolean isLeaf)
+    private void insertTuple(ICachedPage node, int pageId, ITupleReference tuple, RTreeOpContext ctx, boolean isLeaf)
             throws HyracksDataException, TreeIndexException {
         boolean succeeded = false;
         FrameOpSpaceStatus spaceStatus;
@@ -332,7 +330,6 @@ public class RTree extends AbstractTreeIndex {
             spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple);
         }
 
-        boolean tupleInserted = true;
         switch (spaceStatus) {
             case SUFFICIENT_CONTIGUOUS_SPACE: {
                 try {
@@ -402,7 +399,7 @@ public class RTree extends AbstractTreeIndex {
                         rightFrame.initBuffer((byte) 0);
                         rightFrame.setRightPage(ctx.interiorFrame.getRightPage());
                         ctx.modificationCallback.found(null);
-                        tupleInserted = ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey);
+                        ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey);
                         ctx.leafFrame.setRightPage(rightPageId);
                     }
                     succeeded = true;
@@ -477,7 +474,6 @@ public class RTree extends AbstractTreeIndex {
                 break;
             }
         }
-        return tupleInserted;
     }
 
     private void updateParentForInsert(RTreeOpContext ctx) throws HyracksDataException, TreeIndexException {

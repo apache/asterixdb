@@ -27,12 +27,15 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
+import edu.uci.ics.hyracks.storage.am.common.TestOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
@@ -58,10 +61,10 @@ public abstract class AbstractRTreeExamplesTest {
             throws TreeIndexException;
 
     /**
-     * Two Dimensions Example.
-     * Create an RTree index of two dimensions, where they keys are of type
-     * integer, and the payload is two integer values. Fill index with random
-     * values using insertions (not bulk load). Perform scans and range search.
+     * Two Dimensions Example. Create an RTree index of two dimensions, where
+     * they keys are of type integer, and the payload is two integer values.
+     * Fill index with random values using insertions (not bulk load). Perform
+     * scans and range search.
      */
     @Test
     public void twoDimensionsExample() throws Exception {
@@ -162,10 +165,240 @@ public abstract class AbstractRTreeExamplesTest {
     }
 
     /**
-     * Two Dimensions Example.
-     * Create an RTree index of three dimensions, where they keys are of type
-     * double, and the payload is one double value. Fill index with random
-     * values using insertions (not bulk load). Perform scans and range search.
+     * This test the rtree page split. Originally this test didn't pass since
+     * the rtree assumes always that there will be enough space for the new
+     * tuple after split. Now it passes since if there is not space in the
+     * designated page, then we will just insert it in the other split page.
+     */
+    @Test
+    public void rTreePageSplitTestExample() throws Exception {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("RTree page split test.");
+        }
+
+        // Declare fields.
+        int fieldCount = 5;
+        ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
+        typeTraits[0] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[1] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[2] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[3] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[4] = UTF8StringPointable.TYPE_TRAITS;
+        // Declare field serdes.
+        ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
+                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
+                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
+
+        // Declare RTree keys.
+        int rtreeKeyFieldCount = 4;
+        IBinaryComparatorFactory[] rtreeCmpFactories = new IBinaryComparatorFactory[rtreeKeyFieldCount];
+        rtreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        rtreeCmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        rtreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        rtreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+
+        // Declare BTree keys, this will only be used for LSMRTree
+        int btreeKeyFieldCount = 5;
+        IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+        btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        btreeCmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        btreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        btreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+
+        // create value providers
+        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
+                rtreeCmpFactories.length, IntegerPointable.FACTORY);
+
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
+                valueProviderFactories, RTreePolicyType.RTREE);
+
+        treeIndex.create();
+        treeIndex.activate();
+
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
+        ArrayTupleReference tuple = new ArrayTupleReference();
+        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(TestOperationCallback.INSTANCE,
+                TestOperationCallback.INSTANCE);
+
+        int p1x = rnd.nextInt();
+        int p1y = rnd.nextInt();
+        int p2x = rnd.nextInt();
+        int p2y = rnd.nextInt();
+        String data = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
+                Math.max(p1y, p2y), data);
+        indexAccessor.insert(tuple);
+
+        p1x = rnd.nextInt();
+        p1y = rnd.nextInt();
+        p2x = rnd.nextInt();
+        p2y = rnd.nextInt();
+        data = "XXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
+                Math.max(p1y, p2y), data);
+        indexAccessor.insert(tuple);
+
+        p1x = rnd.nextInt();
+        p1y = rnd.nextInt();
+        p2x = rnd.nextInt();
+        p2y = rnd.nextInt();
+        data = "XXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
+                Math.max(p1y, p2y), data);
+        indexAccessor.insert(tuple);
+
+        p1x = rnd.nextInt();
+        p1y = rnd.nextInt();
+        p2x = rnd.nextInt();
+        p2y = rnd.nextInt();
+        data = "XXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
+                Math.max(p1y, p2y), data);
+        indexAccessor.insert(tuple);
+
+        p1x = rnd.nextInt();
+        p1y = rnd.nextInt();
+        p2x = rnd.nextInt();
+        p2y = rnd.nextInt();
+        data = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
+                Math.max(p1y, p2y), data);
+        indexAccessor.insert(tuple);
+
+        p1x = rnd.nextInt();
+        p1y = rnd.nextInt();
+        p2x = rnd.nextInt();
+        p2y = rnd.nextInt();
+        data = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
+                Math.max(p1y, p2y), data);
+        indexAccessor.insert(tuple);
+
+        treeIndex.deactivate();
+        treeIndex.destroy();
+    }
+
+    /**
+     * This test the r*tree page split. Originally this test didn't pass since
+     * the r*tree assumes always that there will be enough space for the new
+     * tuple after split. Now it passes since if there is not space in the
+     * designated page, then we will just insert it in the other split page.
+     */
+    @Test
+    public void rStarTreePageSplitTestExample() throws Exception {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("R*Tree page split test.");
+        }
+
+        // Declare fields.
+        int fieldCount = 5;
+        ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
+        typeTraits[0] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[1] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[2] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[3] = IntegerPointable.TYPE_TRAITS;
+        typeTraits[4] = UTF8StringPointable.TYPE_TRAITS;
+        // Declare field serdes.
+        ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
+                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
+                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
+
+        // Declare RTree keys.
+        int rtreeKeyFieldCount = 4;
+        IBinaryComparatorFactory[] rtreeCmpFactories = new IBinaryComparatorFactory[rtreeKeyFieldCount];
+        rtreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        rtreeCmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        rtreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        rtreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+
+        // Declare BTree keys, this will only be used for LSMRTree
+        int btreeKeyFieldCount = 5;
+        IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+        btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        btreeCmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        btreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        btreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+
+        // create value providers
+        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
+                rtreeCmpFactories.length, IntegerPointable.FACTORY);
+
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
+                valueProviderFactories, RTreePolicyType.RSTARTREE);
+
+        treeIndex.create();
+        treeIndex.activate();
+
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
+        ArrayTupleReference tuple = new ArrayTupleReference();
+        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(TestOperationCallback.INSTANCE,
+                TestOperationCallback.INSTANCE);
+
+        int p1x = rnd.nextInt();
+        int p1y = rnd.nextInt();
+        int p2x = rnd.nextInt();
+        int p2y = rnd.nextInt();
+        String data = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
+                Math.max(p1y, p2y), data);
+        indexAccessor.insert(tuple);
+
+        p1x = rnd.nextInt();
+        p1y = rnd.nextInt();
+        p2x = rnd.nextInt();
+        p2y = rnd.nextInt();
+        data = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
+                Math.max(p1y, p2y), data);
+        indexAccessor.insert(tuple);
+
+        p1x = rnd.nextInt();
+        p1y = rnd.nextInt();
+        p2x = rnd.nextInt();
+        p2y = rnd.nextInt();
+        data = "XXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
+                Math.max(p1y, p2y), data);
+        indexAccessor.insert(tuple);
+
+        p1x = rnd.nextInt();
+        p1y = rnd.nextInt();
+        p2x = rnd.nextInt();
+        p2y = rnd.nextInt();
+        data = "XXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
+                Math.max(p1y, p2y), data);
+        indexAccessor.insert(tuple);
+
+        p1x = rnd.nextInt();
+        p1y = rnd.nextInt();
+        p2x = rnd.nextInt();
+        p2y = rnd.nextInt();
+        data = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
+                Math.max(p1y, p2y), data);
+        indexAccessor.insert(tuple);
+
+        p1x = rnd.nextInt();
+        p1y = rnd.nextInt();
+        p2x = rnd.nextInt();
+        p2y = rnd.nextInt();
+        data = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
+                Math.max(p1y, p2y), data);
+        indexAccessor.insert(tuple);
+
+        treeIndex.deactivate();
+        treeIndex.destroy();
+    }
+
+    /**
+     * Two Dimensions Example. Create an RTree index of three dimensions, where
+     * they keys are of type double, and the payload is one double value. Fill
+     * index with random values using insertions (not bulk load). Perform scans
+     * and range search.
      */
     @Test
     public void threeDimensionsExample() throws Exception {
@@ -272,11 +505,10 @@ public abstract class AbstractRTreeExamplesTest {
     }
 
     /**
-     * Deletion Example.
-     * Create an RTree index of two dimensions, where they keys are of type
-     * integer, and the payload is one integer value. Fill index with random
-     * values using insertions, then delete entries one-by-one. Repeat procedure
-     * a few times on same RTree.
+     * Deletion Example. Create an RTree index of two dimensions, where they
+     * keys are of type integer, and the payload is one integer value. Fill
+     * index with random values using insertions, then delete entries
+     * one-by-one. Repeat procedure a few times on same RTree.
      */
     @Test
     public void deleteExample() throws Exception {
@@ -403,8 +635,7 @@ public abstract class AbstractRTreeExamplesTest {
     }
 
     /**
-     * Bulk load example.
-     * Load a tree with 10,000 tuples.
+     * Bulk load example. Load a tree with 10,000 tuples.
      */
     @Test
     public void bulkLoadExample() throws Exception {

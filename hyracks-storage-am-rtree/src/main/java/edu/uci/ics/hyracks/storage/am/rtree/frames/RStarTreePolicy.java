@@ -64,7 +64,7 @@ public class RStarTreePolicy implements IRTreePolicy {
         }
     }
 
-    public boolean split(ITreeIndexFrame leftFrame, ByteBuffer buf, ITreeIndexFrame rightFrame, ISlotManager slotManager,
+    public void split(ITreeIndexFrame leftFrame, ByteBuffer buf, ITreeIndexFrame rightFrame, ISlotManager slotManager,
             ITreeIndexTupleReference frameTuple, ITupleReference tuple, ISplitKey splitKey) {
         RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
         RTreeTypeAwareTupleWriter rTreeTupleWriterleftRTreeFrame = ((RTreeTypeAwareTupleWriter) tupleWriter);
@@ -198,18 +198,19 @@ public class RStarTreePolicy implements IRTreePolicy {
         // compact both pages
         rightFrame.compact();
         leftRTreeFrame.compact();
-        
-        boolean insertedNewTuple = false;
+
+        // The assumption here is that the new tuple cannot be larger than page
+        // size, thus it must fit in either pages.
         if (insertedNewTupleInRightFrame) {
             if (rightFrame.hasSpaceInsert(tuple) == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
                 rightFrame.insert(tuple, -1);
-                insertedNewTuple = true;
-            }
-        } else {
-            if (leftRTreeFrame.hasSpaceInsert(tuple) == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
+            } else {
                 leftRTreeFrame.insert(tuple, -1);
-                insertedNewTuple = true;
             }
+        } else if (leftRTreeFrame.hasSpaceInsert(tuple) == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
+            leftRTreeFrame.insert(tuple, -1);
+        } else {
+            rightFrame.insert(tuple, -1);
         }
 
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
@@ -229,7 +230,6 @@ public class RStarTreePolicy implements IRTreePolicy {
 
         tupleEntries1.clear();
         tupleEntries2.clear();
-        return insertedNewTuple;
     }
 
     public void generateDist(ITreeIndexFrame leftRTreeFrame, ITreeIndexTupleReference frameTuple,
@@ -252,7 +252,8 @@ public class RStarTreePolicy implements IRTreePolicy {
         }
     }
 
-    public boolean findBestChild(ITreeIndexFrame frame, ITupleReference tuple, ITreeIndexTupleReference frameTuple, MultiComparator cmp) {
+    public boolean findBestChild(ITreeIndexFrame frame, ITupleReference tuple, ITreeIndexTupleReference frameTuple,
+            MultiComparator cmp) {
         cmpFrameTuple.setFieldCount(cmp.getKeyFieldCount());
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
 
@@ -292,18 +293,22 @@ public class RStarTreePolicy implements IRTreePolicy {
                         frameTuple.resetByTupleIndex(frame, j);
                         cmpFrameTuple.resetByTupleIndex(frame, tupleEntries1.get(i).getTupleIndex());
 
-                        int c = ((RTreeNSMInteriorFrame)frame).pointerCmp(frameTuple, cmpFrameTuple, cmp);
+                        int c = ((RTreeNSMInteriorFrame) frame).pointerCmp(frameTuple, cmpFrameTuple, cmp);
                         if (c != 0) {
-                            double intersection = RTreeComputationUtils.overlappedArea(frameTuple, tuple, cmpFrameTuple, cmp, keyValueProviders);
+                            double intersection = RTreeComputationUtils.overlappedArea(frameTuple, tuple,
+                                    cmpFrameTuple, cmp, keyValueProviders);
                             if (intersection != 0.0) {
-                                difference += intersection - RTreeComputationUtils.overlappedArea(frameTuple, null, cmpFrameTuple, cmp, keyValueProviders);
+                                difference += intersection
+                                        - RTreeComputationUtils.overlappedArea(frameTuple, null, cmpFrameTuple, cmp,
+                                                keyValueProviders);
                             }
                         } else {
                             id = j;
                         }
                     }
 
-                    double enlargedArea = RTreeComputationUtils.enlargedArea(cmpFrameTuple, tuple, cmp, keyValueProviders);
+                    double enlargedArea = RTreeComputationUtils.enlargedArea(cmpFrameTuple, tuple, cmp,
+                            keyValueProviders);
                     if (difference < minOverlap) {
                         minOverlap = difference;
                         minEnlargedArea = enlargedArea;

@@ -62,8 +62,7 @@ public interface ITreeIndexFrame {
     // for debugging
     public String printHeader();
 
-    // Return true if the new tuple has been successfully inserted.
-    public boolean split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey);
+    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey);
 
     public ISlotManager getSlotManager();
 

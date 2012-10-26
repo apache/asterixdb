@@ -52,7 +52,6 @@ public class LSMRTreeTestHarness {
     protected static final Logger LOGGER = Logger.getLogger(LSMRTreeTestHarness.class.getName());
 
     private static final long RANDOM_SEED = 50;
-    private static final int DUMMY_FILE_ID = -1;
 
     protected final int diskPageSize;
     protected final int diskNumPages;

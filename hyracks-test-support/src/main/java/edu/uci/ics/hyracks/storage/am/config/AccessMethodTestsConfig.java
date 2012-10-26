@@ -47,10 +47,10 @@ public class AccessMethodTestsConfig {
     public static final int RTREE_HYRACKS_FRAME_SIZE = 128;
 
     // Mem configuration for LSMRTree and LSMRTreeWithAntiMatterTuples.
-    public static final int LSM_RTREE_DISK_PAGE_SIZE = 256;
+    public static final int LSM_RTREE_DISK_PAGE_SIZE = 512;
     public static final int LSM_RTREE_DISK_NUM_PAGES = 1000;
     public static final int LSM_RTREE_DISK_MAX_OPEN_FILES = 2000;
-    public static final int LSM_RTREE_MEM_PAGE_SIZE = 256;
+    public static final int LSM_RTREE_MEM_PAGE_SIZE = 512;
     public static final int LSM_RTREE_MEM_NUM_PAGES = 1000;
     public static final int LSM_RTREE_HYRACKS_FRAME_SIZE = 128;
 
