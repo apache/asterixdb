@@ -22,10 +22,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
+import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager.TransactionState;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
@@ -40,13 +43,13 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
  * @author pouria, kisskys
  */
 
-public class LockManager implements ILockManager {
+public class LockManager implements ILockManager{
 
     private static final Logger LOGGER = Logger.getLogger(LockManager.class.getName());
     private static final int LOCK_MANAGER_INITIAL_HASH_TABLE_SIZE = 50;// do we need this?
     public static final boolean IS_DEBUG_MODE = false;//true
 
-    private TransactionProvider txnProvider;
+    private TransactionProvider transactionProvider;
 
     //all threads accessing to LockManager's tables such as jobHT and datasetResourceHT
     //are serialized through LockTableLatch. All threads waiting the latch will be fairly served
@@ -68,9 +71,14 @@ public class LockManager implements ILockManager {
 
     private LockRequestTracker lockRequestTracker; //for debugging
     private ConsecutiveWakeupContext consecutiveWakeupContext;
+    
+    //----------------------------------------------------------
+    // ITransactionManager Members
+    //----------------------------------------------------------    
+    private Map<JobId, TransactionContext> transactionContextRepository = new HashMap<JobId, TransactionContext>();
 
     public LockManager(TransactionProvider txnProvider) throws ACIDException {
-        this.txnProvider = txnProvider;
+        this.transactionProvider = txnProvider;
         this.lockTableLatch = new ReentrantReadWriteLock(true);
         this.waiterLatch = new ReentrantReadWriteLock(true);
         this.jobHT = new HashMap<JobId, JobInfo>();
@@ -1662,37 +1670,3 @@ class ConsecutiveWakeupContext {
     }
 
 }
-
-/******************************************
- * datasetResourceHT
- ******************************************/
-/*
-class DatasetId implements Serializable {
-    int id;
-
-    public DatasetId(int id) {
-        this.id = id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    @Override
-    public int hashCode() {
-        return id;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if ((o == null) || !(o instanceof DatasetId)) {
-            return false;
-        }
-        return ((DatasetId) o).id == this.id;
-    }
-};
-*/

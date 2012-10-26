@@ -64,22 +64,26 @@ public interface ITransactionManager {
      * 
      * @param txnContext
      *            the transaction context associated with the transaction
+     * @param datasetId TODO
+     * @param PKHashVal TODO
      * @throws ACIDException
      * @see transactionContextimport edu.uci.ics.hyracks.api.job.JobId;
      * @see ACIDException
      */
-    public void commitTransaction(TransactionContext txnContext) throws ACIDException;
+    public void commitTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal) throws ACIDException;
 
     /**
      * Aborts a transaction.
      * 
      * @param txnContext
      *            the transaction context associated with the transaction
+     * @param datasetId TODO
+     * @param PKHashVal TODO
      * @throws ACIDException
      * @see transactionContext
      * @see ACIDException
      */
-    public void abortTransaction(TransactionContext txnContext) throws ACIDException;
+    public void abortTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal) throws ACIDException;
 
     /**
      * Indicates end of all activity for a transaction. In other words, all
@@ -88,12 +92,14 @@ public interface ITransactionManager {
      * 
      * @param txnContext
      *            the transaction context associated with the transaction
+     * @param datasetId TODO
+     * @param PKHashVal TODO
      * @param success
      *            indicates the success or failure. The transaction is committed
      *            or aborted accordingly.
      * @throws ACIDException
      */
-    public void completedTransaction(TransactionContext txnContext, boolean success) throws ACIDException;
+    public void completedTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal, boolean success) throws ACIDException;
 
     /**
      * Returns the Transaction Provider for the transaction eco-system. A

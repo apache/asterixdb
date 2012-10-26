@@ -109,14 +109,14 @@ public class MetadataNode implements IMetadataNode {
     @Override
     public void commitTransaction(JobId jobId) throws RemoteException, ACIDException {
         TransactionContext txnCtx = transactionProvider.getTransactionManager().getTransactionContext(jobId);
-        transactionProvider.getTransactionManager().commitTransaction(txnCtx);
+        transactionProvider.getTransactionManager().commitTransaction(txnCtx, new DatasetId(-1), -1);
     }
 
     @Override
     public void abortTransaction(JobId jobId) throws RemoteException, ACIDException {
         try {
             TransactionContext txnCtx = transactionProvider.getTransactionManager().getTransactionContext(jobId);
-            transactionProvider.getTransactionManager().abortTransaction(txnCtx);
+            transactionProvider.getTransactionManager().abortTransaction(txnCtx, new DatasetId(-1), -1);
         } catch (ACIDException e) {
             e.printStackTrace();
             throw e;

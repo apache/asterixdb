@@ -68,7 +68,7 @@ public class TransactionWorkloadSimulator {
         }
 
         for (int i = 0; i < workload.numActiveThreads; i++) {
-            provider.getTransactionManager().commitTransaction(transactions[i].getContext());
+            provider.getTransactionManager().commitTransaction(transactions[i].getContext(), new DatasetId(-1), -1);
         }
 
         long endTime = System.nanoTime();

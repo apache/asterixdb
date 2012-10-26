@@ -36,7 +36,7 @@ public class TransactionManager implements ITransactionManager {
     }
 
     @Override
-    public void abortTransaction(TransactionContext txnContext) throws ACIDException {
+    public void abortTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal) throws ACIDException {
         synchronized (txnContext) {
             if (txnContext.getTxnState().equals(TransactionState.ABORTED)) {
                 return;
@@ -82,7 +82,7 @@ public class TransactionManager implements ITransactionManager {
     }
 
     @Override
-    public void commitTransaction(TransactionContext txnContext) throws ACIDException {
+    public void commitTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal) throws ACIDException {
         synchronized (txnContext) {
             if ((txnContext.getTxnState().equals(TransactionState.COMMITTED))) {
                 return;
@@ -108,11 +108,11 @@ public class TransactionManager implements ITransactionManager {
     }
 
     @Override
-    public void completedTransaction(TransactionContext txnContext, boolean success) throws ACIDException {
+    public void completedTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal, boolean success) throws ACIDException {
         if (!success) {
-            abortTransaction(txnContext);
+            abortTransaction(txnContext, datasetId, PKHashVal);
         } else {
-            commitTransaction(txnContext);
+            commitTransaction(txnContext, datasetId, PKHashVal);
         }
     }
 

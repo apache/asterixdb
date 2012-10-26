@@ -27,6 +27,7 @@ import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager;
 import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager.SystemState;
+import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager;
@@ -91,7 +92,7 @@ public class TransactionSimulator {
     }
 
     public void commitTransaction(TransactionContext context) throws ACIDException {
-        transactionManager.commitTransaction(context);
+        transactionManager.commitTransaction(context, new DatasetId(-1), -1);
     }
 
     public SystemState recover() throws ACIDException, IOException {
