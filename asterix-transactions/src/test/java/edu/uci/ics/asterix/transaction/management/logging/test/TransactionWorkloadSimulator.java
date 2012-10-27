@@ -32,13 +32,13 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceM
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public class TransactionWorkloadSimulator {
 
     public static ILogManager logManager;
     public static ILockManager lockManager;
-    TransactionProvider provider;
+    TransactionSubsystem provider;
 
     public static WorkloadProperties workload;
     Transaction[] transactions;
@@ -49,7 +49,7 @@ public class TransactionWorkloadSimulator {
     }
 
     public void beginWorkload() throws ACIDException {
-        provider = new TransactionProvider("nc1");
+        provider = new TransactionSubsystem("nc1");
         logManager = provider.getLogManager();
         lockManager = provider.getLockManager();
         provider.getTransactionalResourceRepository().registerTransactionalResourceManager(DummyResourceMgr.id,
@@ -98,7 +98,7 @@ public class TransactionWorkloadSimulator {
 class SingleTransactionContextFactory {
     private static TransactionContext context;
 
-    public static TransactionContext getContext(TransactionProvider provider) throws ACIDException {
+    public static TransactionContext getContext(TransactionSubsystem provider) throws ACIDException {
         if (context == null) {
             context = new TransactionContext(JobIdFactory.generateJobId(), provider);
         }
@@ -108,7 +108,7 @@ class SingleTransactionContextFactory {
 
 class MultipleTransactionContextFactory {
 
-    public static TransactionContext getContext(TransactionProvider provider) throws ACIDException {
+    public static TransactionContext getContext(TransactionSubsystem provider) throws ACIDException {
         return new TransactionContext(JobIdFactory.generateJobId(), provider);
     }
 }
@@ -125,11 +125,11 @@ class Transaction extends Thread {
     //private byte[] resourceID = new byte[1];
     private int resourceID;
     private int myLogCount = 0;
-    private TransactionProvider transactionProvider;
+    private TransactionSubsystem transactionProvider;
     private ILogManager logManager;
     private DatasetId tempDatasetId = new DatasetId(-1);
 
-    public Transaction(TransactionProvider provider, String name, boolean singleTransaction) throws ACIDException {
+    public Transaction(TransactionSubsystem provider, String name, boolean singleTransaction) throws ACIDException {
         this.name = name;
         this.transactionProvider = provider;
         if (singleTransaction) {

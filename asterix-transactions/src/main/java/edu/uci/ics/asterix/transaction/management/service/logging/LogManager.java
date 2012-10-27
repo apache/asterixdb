@@ -32,7 +32,7 @@ import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger.ReusableLogContentObject;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public class LogManager implements ILogManager {
 
@@ -45,7 +45,7 @@ public class LogManager implements ILogManager {
      */
 
     private static final Logger LOGGER = Logger.getLogger(LogManager.class.getName());
-    private TransactionProvider provider;
+    private TransactionSubsystem provider;
     private LogManagerProperties logManagerProperties;
 
     /*
@@ -181,13 +181,13 @@ public class LogManager implements ILogManager {
         return lastFlushedLsn.addAndGet(delta);
     }
 
-    public LogManager(TransactionProvider provider) throws ACIDException {
+    public LogManager(TransactionSubsystem provider) throws ACIDException {
         this.provider = provider;
         initLogManagerProperties(null);
         initLogManager();
     }
 
-    public LogManager(TransactionProvider provider, LogManagerProperties logConfiguration) throws ACIDException {
+    public LogManager(TransactionSubsystem provider, LogManagerProperties logConfiguration) throws ACIDException {
         this.provider = provider;
         initLogManagerProperties(logConfiguration);
         initLogManager();
@@ -864,7 +864,7 @@ public class LogManager implements ILogManager {
     }
 
     @Override
-    public TransactionProvider getTransactionProvider() {
+    public TransactionSubsystem getTransactionSubsystem() {
         return provider;
     }
 }

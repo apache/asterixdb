@@ -19,7 +19,7 @@ import java.io.IOException;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger.ReusableLogContentObject;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public interface ILogManager {
 
@@ -102,8 +102,8 @@ public interface ILogManager {
      * Returns the Transaction Provider associated with this ILogManager
      * instance
      * 
-     * @return TransactionProvider
+     * @return TransactionSubsystem
      */
-    public TransactionProvider getTransactionProvider();
+    public TransactionSubsystem getTransactionSubsystem();
 
 }

@@ -28,13 +28,13 @@ import edu.uci.ics.asterix.transaction.management.service.logging.LogManagerProp
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.logging.PhysicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public class LogRecordReader {
 
     ILogManager logManager;
 
-    public LogRecordReader(TransactionProvider factory) throws ACIDException {
+    public LogRecordReader(TransactionSubsystem factory) throws ACIDException {
         logManager = factory.getLogManager();
     }
 

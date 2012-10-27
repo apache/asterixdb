@@ -34,7 +34,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.ITransacti
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public class TransactionSimulator {
 
@@ -46,11 +46,11 @@ public class TransactionSimulator {
     private ILogger logger;
     private IResource resource;
     private LogicalLogLocator memLSN;
-    private TransactionProvider transactionProvider;
+    private TransactionSubsystem transactionProvider;
 
     public TransactionSimulator(IResource resource, IResourceManager resourceMgr) throws ACIDException {
         String id = "nc1";
-        transactionProvider = new TransactionProvider(id);
+        transactionProvider = new TransactionSubsystem(id);
         transactionManager = transactionProvider.getTransactionManager();
         logManager = transactionProvider.getLogManager();
         lockManager = transactionProvider.getLockManager();

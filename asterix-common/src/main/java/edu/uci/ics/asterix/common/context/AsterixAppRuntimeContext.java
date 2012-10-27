@@ -5,7 +5,7 @@ import java.util.logging.Level;
 
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
@@ -40,7 +40,7 @@ public class AsterixAppRuntimeContext {
     private IIndexLifecycleManager indexLifecycleManager;
     private IFileMapManager fileMapManager;
     private IBufferCache bufferCache;
-    private TransactionProvider provider;
+    private TransactionSubsystem txnSubsystem;
 
     private ILSMFlushController flushController;
     private ILSMMergePolicy mergePolicy;
@@ -63,7 +63,7 @@ public class AsterixAppRuntimeContext {
         IIOManager ioMgr = ncApplicationContext.getRootContext().getIOManager();
         bufferCache = new BufferCache(ioMgr, allocator, prs, fileMapManager, pageSize, numPages, Integer.MAX_VALUE);
         indexLifecycleManager = new IndexLifecycleManager(DEFAULT_LIFECYCLEMANAGER_MEMORY_BUDGET);
-        provider = new TransactionProvider(ncApplicationContext.getNodeId());
+        txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId());
 
         flushController = new FlushController();
         lsmIOScheduler = ImmediateScheduler.INSTANCE;
@@ -131,8 +131,8 @@ public class AsterixAppRuntimeContext {
         return fileMapManager;
     }
 
-    public TransactionProvider getTransactionProvider() {
-        return provider;
+    public TransactionSubsystem getTransactionSubsystem() {
+        return txnSubsystem;
     }
 
     public IIndexLifecycleManager getIndexLifecycleManager() {

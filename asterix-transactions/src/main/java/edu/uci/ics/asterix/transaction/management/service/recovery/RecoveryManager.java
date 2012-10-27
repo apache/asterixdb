@@ -43,7 +43,7 @@ import edu.uci.ics.asterix.transaction.management.service.logging.PhysicalLogLoc
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 /**
  * This is the Recovery Manager and is responsible for rolling back a
@@ -54,7 +54,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 public class RecoveryManager implements IRecoveryManager {
 
     private static final Logger LOGGER = Logger.getLogger(RecoveryManager.class.getName());
-    private TransactionProvider transactionProvider;
+    private TransactionSubsystem transactionProvider;
 
     /**
      * A file at a known location that contains the LSN of the last log record
@@ -65,7 +65,7 @@ public class RecoveryManager implements IRecoveryManager {
     private Map<Long, TransactionTableEntry> transactionTable;
     private Map<Long, List<PhysicalLogLocator>> dirtyPagesTable;
 
-    public RecoveryManager(TransactionProvider TransactionProvider) throws ACIDException {
+    public RecoveryManager(TransactionSubsystem TransactionProvider) throws ACIDException {
         this.transactionProvider = TransactionProvider;
         try {
             FileUtil.createFileIfNotExists(checkpoint_record_file);

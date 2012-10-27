@@ -58,7 +58,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetIdF
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -88,7 +88,7 @@ public class MetadataNode implements IMetadataNode {
     private static final DatasetId METADATA_DATASET_ID = new DatasetId(MetadataPrimaryIndexes.METADATA_DATASET_ID);
 
     private IIndexLifecycleManager indexLifecycleManager;
-    private TransactionProvider transactionProvider;
+    private TransactionSubsystem transactionProvider;
 
     public static final MetadataNode INSTANCE = new MetadataNode();
 
@@ -97,7 +97,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     public void initialize(AsterixAppRuntimeContext runtimeContext) {
-        this.transactionProvider = runtimeContext.getTransactionProvider();
+        this.transactionProvider = runtimeContext.getTransactionSubsystem();
         this.indexLifecycleManager = runtimeContext.getIndexLifecycleManager();
     }
 

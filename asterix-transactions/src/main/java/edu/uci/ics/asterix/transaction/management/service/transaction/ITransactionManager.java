@@ -106,9 +106,9 @@ public interface ITransactionManager {
      * transaction eco-system consists of a Log Manager, a Recovery Manager, a
      * Transaction Manager and a Lock Manager.
      * 
-     * @see TransactionProvider
+     * @see TransactionSubsystem
      * @return TransactionProvider
      */
-    public TransactionProvider getTransactionProvider();
+    public TransactionSubsystem getTransactionProvider();
 
 }

@@ -22,7 +22,7 @@ import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.resource.ICloseable;
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
@@ -62,7 +62,7 @@ public class IndexLogger implements ILogger, ICloseable {
         jobId2ReusableLogContentObjectRepositoryMap.remove(context.getJobId());
     }
 
-    public void generateLogRecord(TransactionProvider provider, TransactionContext context, int datasetId,
+    public void generateLogRecord(TransactionSubsystem txnSubsystem, TransactionContext context, int datasetId,
             int PKHashValue, long resourceId, IndexOperation newOperation, ITupleReference newValue,
             IndexOperation oldOperation, ITupleReference oldValue) throws ACIDException {
 
@@ -96,7 +96,7 @@ public class IndexLogger implements ILogger, ICloseable {
 
         reusableLogContentObject = reusableLogContentObjectRepository.getObject(Thread.currentThread().getId());
         if (reusableLogContentObject == null) {
-            LogicalLogLocator logicalLogLocator = LogUtil.getDummyLogicalLogLocator(provider.getLogManager());
+            LogicalLogLocator logicalLogLocator = LogUtil.getDummyLogicalLogLocator(txnSubsystem.getLogManager());
             reusableLogContentObject = new ReusableLogContentObject(logicalLogLocator, newOperation, newValue,
                     oldOperation, oldValue);
             reusableLogContentObjectRepository.putObject(Thread.currentThread().getId(), reusableLogContentObject);
@@ -111,7 +111,7 @@ public class IndexLogger implements ILogger, ICloseable {
                 .bytesRequired(newValue);
         logContentSize += 1/*OldOperation*/+ 4/*oldValueLength*/+ tupleWriter.bytesRequired(oldValue);
 
-        provider.getLogManager().log(LogType.UPDATE, context, datasetId, PKHashValue, resourceId, resourceType,
+        txnSubsystem.getLogManager().log(LogType.UPDATE, context, datasetId, PKHashValue, resourceId, resourceType,
                 logContentSize, reusableLogContentObject, this, reusableLogContentObject.getLogicalLogLocator());
     }
 

@@ -28,10 +28,10 @@ import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
  */
 public class TransactionManager implements ITransactionManager {
     private static final Logger LOGGER = Logger.getLogger(TransactionManager.class.getName());
-    private final TransactionProvider transactionProvider;
+    private final TransactionSubsystem transactionProvider;
     private Map<JobId, TransactionContext> transactionContextRepository = new HashMap<JobId, TransactionContext>();
 
-    public TransactionManager(TransactionProvider provider) {
+    public TransactionManager(TransactionSubsystem provider) {
         this.transactionProvider = provider;
     }
 
@@ -117,7 +117,7 @@ public class TransactionManager implements ITransactionManager {
     }
 
     @Override
-    public TransactionProvider getTransactionProvider() {
+    public TransactionSubsystem getTransactionProvider() {
         return transactionProvider;
     }
 }

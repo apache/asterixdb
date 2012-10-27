@@ -9,7 +9,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.ITransacti
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 /**
  * LockManagerUnitTest: unit test of LockManager
@@ -28,7 +28,7 @@ public class LockManagerRandomUnitTest {
 
     public static void main(String args[]) throws ACIDException {
         int i;
-        TransactionProvider txnProvider = new TransactionProvider("LockManagerRandomUnitTest");
+        TransactionSubsystem txnProvider = new TransactionSubsystem("LockManagerRandomUnitTest");
         rand = new Random(System.currentTimeMillis());
         for (i = 0; i < MAX_NUM_OF_ENTITY_LOCK_JOB; i++) {
             System.out.println("Creating " + i + "th EntityLockJob..");
@@ -46,7 +46,7 @@ public class LockManagerRandomUnitTest {
         }
     }
 
-    private static void generateEntityLockThread(TransactionProvider txnProvider) {
+    private static void generateEntityLockThread(TransactionSubsystem txnProvider) {
         Thread t;
         int childCount = rand.nextInt(MAX_NUM_OF_THREAD_IN_A_JOB);
         if (MAX_NUM_OF_THREAD_IN_A_JOB != 0 && childCount == 0) {
@@ -61,7 +61,7 @@ public class LockManagerRandomUnitTest {
         }
     }
 
-    private static void generateDatasetLockThread(TransactionProvider txnProvider) {
+    private static void generateDatasetLockThread(TransactionSubsystem txnProvider) {
         Thread t;
 //        int childCount = rand.nextInt(MAX_NUM_OF_THREAD_IN_A_JOB);
 //        if (MAX_NUM_OF_THREAD_IN_A_JOB != 0 && childCount == 0) {
@@ -78,7 +78,7 @@ public class LockManagerRandomUnitTest {
         }
     }
 
-    private static void generateEntityLockUpgradeThread(TransactionProvider txnProvider) {
+    private static void generateEntityLockUpgradeThread(TransactionSubsystem txnProvider) {
         int i;
         Thread t;
         int childCount = MAX_NUM_OF_THREAD_IN_A_JOB;
@@ -97,7 +97,7 @@ public class LockManagerRandomUnitTest {
         t.start();
     }
 
-    private static TransactionContext generateTxnContext(TransactionProvider txnProvider) {
+    private static TransactionContext generateTxnContext(TransactionSubsystem txnProvider) {
         try {
             return new TransactionContext(new JobId(jobId++), txnProvider);
         } catch (ACIDException e) {

@@ -31,7 +31,7 @@ public class JobEventListenerFactory implements IJobletEventListenerFactory {
             public void jobletFinish(JobStatus jobStatus) {
                 try {
                     ITransactionManager txnManager = ((AsterixAppRuntimeContext) jobletContext.getApplicationContext()
-                            .getApplicationObject()).getTransactionProvider().getTransactionManager();
+                            .getApplicationObject()).getTransactionSubsystem().getTransactionManager();
                     TransactionContext txnContext = txnManager.getTransactionContext(jobId);
                     txnContext.setTransactionType(transactionalWrite ? TransactionType.READ_WRITE
                             : TransactionType.READ);
@@ -45,7 +45,7 @@ public class JobEventListenerFactory implements IJobletEventListenerFactory {
             public void jobletStart() {
                 try {
                     ((AsterixAppRuntimeContext) jobletContext.getApplicationContext().getApplicationObject())
-                            .getTransactionProvider().getTransactionManager().getTransactionContext(jobId);
+                            .getTransactionSubsystem().getTransactionManager().getTransactionContext(jobId);
                 } catch (ACIDException e) {
                     throw new Error(e);
                 }

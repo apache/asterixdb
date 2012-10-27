@@ -18,7 +18,7 @@ import java.io.IOException;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public class RecoverySimulator {
 
@@ -31,7 +31,7 @@ public class RecoverySimulator {
     public static void main(String args[]) throws IOException, ACIDException {
         String id = "nc1";
         try {
-            TransactionProvider factory = new TransactionProvider(id);
+            TransactionSubsystem factory = new TransactionSubsystem(id);
             IRecoveryManager recoveryManager = factory.getRecoveryManager();
             recoveryManager.startRecovery(true);
         } catch (ACIDException acide) {

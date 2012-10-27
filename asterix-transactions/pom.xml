@@ -34,7 +34,7 @@
   	</dependency>
 	    <dependency>
 	    	<groupId>edu.uci.ics.hyracks</groupId>
-	    	<artifactId>hyracks-storage-am-lsm-common</artifactId>
+	    	<artifactId>hyracks-storage-am-lsm-btree</artifactId>
 	    	<version>0.2.2-SNAPSHOT</version>
 	    </dependency>
 	</dependencies>

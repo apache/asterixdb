@@ -28,7 +28,7 @@ import edu.uci.ics.asterix.transaction.management.service.recovery.RecoveryManag
  * Provider for all the sub-systems (transaction/lock/log/recovery) managers.
  * Users of transaction sub-systems must obtain them from the provider.
  */
-public class TransactionProvider {
+public class TransactionSubsystem {
     private final String id;
     private final ILogManager logManager;
     private final ILockManager lockManager;
@@ -37,7 +37,7 @@ public class TransactionProvider {
     private final TransactionalResourceRepository resourceRepository;
     private final IndexLoggerRepository loggerRepository;
 
-    public TransactionProvider(String id) throws ACIDException {
+    public TransactionSubsystem(String id) throws ACIDException {
         this.id = id;
         this.transactionManager = new TransactionManager(this);
         this.logManager = new LogManager(this);

@@ -18,16 +18,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.asterix.transaction.management.service.transaction.MutableResourceId;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 
 public class IndexLoggerRepository {
 
     private final Map<MutableResourceId, IndexLogger> loggers = new HashMap<MutableResourceId, IndexLogger>();
-    private final TransactionProvider provider;
+    private final TransactionSubsystem provider;
     private MutableResourceId mutableResourceId;
 
-    public IndexLoggerRepository(TransactionProvider provider) {
+    public IndexLoggerRepository(TransactionSubsystem provider) {
         this.provider = provider;
         mutableResourceId = new MutableResourceId(0);
     }

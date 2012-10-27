@@ -126,10 +126,10 @@ public class MetadataBootstrap {
         initLocalIndexArrays();
 
         boolean isNewUniverse = true;
-        TransactionalResourceRepository resourceRepository = runtimeContext.getTransactionProvider()
+        TransactionalResourceRepository resourceRepository = runtimeContext.getTransactionSubsystem()
                 .getTransactionalResourceRepository();
         resourceRepository.registerTransactionalResourceManager(ResourceType.LSM_BTREE, new IndexResourceManager(
-                ResourceType.LSM_BTREE, runtimeContext.getTransactionProvider()));
+                ResourceType.LSM_BTREE, runtimeContext.getTransactionSubsystem()));
 
         metadataNodeName = asterixProperties.getMetadataNodeName();
         isNewUniverse = asterixProperties.isNewUniverse();

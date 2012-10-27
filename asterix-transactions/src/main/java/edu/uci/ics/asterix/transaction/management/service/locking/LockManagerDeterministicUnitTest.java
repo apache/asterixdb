@@ -13,7 +13,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.ITransacti
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public class LockManagerDeterministicUnitTest {
 
@@ -29,7 +29,7 @@ public class LockManagerDeterministicUnitTest {
 class LockRequestController implements Runnable {
 
     public static final boolean IS_DEBUG_MODE = false;
-    TransactionProvider txnProvider;
+    TransactionSubsystem txnProvider;
     WorkerReadyQueue workerReadyQueue;
     ArrayList<LockRequest> requestList;
     ArrayList<ArrayList<Integer>> expectedResultList;
@@ -39,7 +39,7 @@ class LockRequestController implements Runnable {
     long defaultWaitTime;
 
     public LockRequestController(String requestFileName) throws ACIDException {
-        this.txnProvider = new TransactionProvider("LockManagerPredefinedUnitTest");;
+        this.txnProvider = new TransactionSubsystem("LockManagerPredefinedUnitTest");;
         this.workerReadyQueue = new WorkerReadyQueue();
         this.requestList = new ArrayList<LockRequest>();
         this.expectedResultList = new ArrayList<ArrayList<Integer>>();
@@ -354,7 +354,7 @@ class LockRequestController implements Runnable {
 class LockRequestWorker implements Runnable {
 
     String threadName;
-    TransactionProvider txnProvider;
+    TransactionSubsystem txnProvider;
     ILockManager lockMgr;
     WorkerReadyQueue workerReadyQueue;
     LockRequest lockRequest;
@@ -362,7 +362,7 @@ class LockRequestWorker implements Runnable {
     boolean isAwaken;
     boolean isDone;
 
-    public LockRequestWorker(TransactionProvider txnProvider, WorkerReadyQueue workerReadyQueue, String threadName) {
+    public LockRequestWorker(TransactionSubsystem txnProvider, WorkerReadyQueue workerReadyQueue, String threadName) {
         this.txnProvider = txnProvider;
         this.lockMgr = txnProvider.getLockManager();
         this.workerReadyQueue = workerReadyQueue;

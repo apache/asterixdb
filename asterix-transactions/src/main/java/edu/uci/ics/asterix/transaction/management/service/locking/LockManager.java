@@ -15,25 +15,21 @@
 
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
-import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager.TransactionState;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 /**
  * An implementation of the ILockManager interface for the
@@ -49,7 +45,7 @@ public class LockManager implements ILockManager{
     private static final int LOCK_MANAGER_INITIAL_HASH_TABLE_SIZE = 50;// do we need this?
     public static final boolean IS_DEBUG_MODE = false;//true
 
-    private TransactionProvider transactionProvider;
+    private TransactionSubsystem txnSubsystem;
 
     //all threads accessing to LockManager's tables such as jobHT and datasetResourceHT
     //are serialized through LockTableLatch. All threads waiting the latch will be fairly served
@@ -77,8 +73,8 @@ public class LockManager implements ILockManager{
     //----------------------------------------------------------    
     private Map<JobId, TransactionContext> transactionContextRepository = new HashMap<JobId, TransactionContext>();
 
-    public LockManager(TransactionProvider txnProvider) throws ACIDException {
-        this.transactionProvider = txnProvider;
+    public LockManager(TransactionSubsystem txnSubsystem) throws ACIDException {
+        this.txnSubsystem = txnSubsystem;
         this.lockTableLatch = new ReentrantReadWriteLock(true);
         this.waiterLatch = new ReentrantReadWriteLock(true);
         this.jobHT = new HashMap<JobId, JobInfo>();

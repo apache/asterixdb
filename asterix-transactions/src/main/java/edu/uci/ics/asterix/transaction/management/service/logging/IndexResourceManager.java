@@ -16,7 +16,7 @@ package edu.uci.ics.asterix.transaction.management.service.logging;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
@@ -28,9 +28,9 @@ public class IndexResourceManager implements IResourceManager {
 
     public final byte resourceType;
 
-    private final TransactionProvider provider;
+    private final TransactionSubsystem provider;
 
-    public IndexResourceManager(byte resourceType, TransactionProvider provider) {
+    public IndexResourceManager(byte resourceType, TransactionSubsystem provider) {
         this.resourceType = resourceType;
         this.provider = provider;
     }
