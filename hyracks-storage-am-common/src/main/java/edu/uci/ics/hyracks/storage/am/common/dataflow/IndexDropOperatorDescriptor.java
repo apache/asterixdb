@@ -24,7 +24,7 @@ import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.storage.common.file.NoOpLocalResourceFactoryProvider;
 
@@ -41,8 +41,8 @@ public class IndexDropOperatorDescriptor extends AbstractTreeIndexOperatorDescri
         // This should eventually not be *hacked*, but I don't know the proper fix yet. -zheilbron
         super(spec, 0, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider, new ITypeTraits[] {
                 IntegerPointable.TYPE_TRAITS, IntegerPointable.TYPE_TRAITS }, new IBinaryComparatorFactory[] { null },
-                dataflowHelperFactory, null, false, NoOpOperationCallbackProvider.INSTANCE,
-                NoOpLocalResourceFactoryProvider.INSTANCE);
+                dataflowHelperFactory, null, false, NoOpLocalResourceFactoryProvider.INSTANCE,
+                NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE);
     }
 
     @Override

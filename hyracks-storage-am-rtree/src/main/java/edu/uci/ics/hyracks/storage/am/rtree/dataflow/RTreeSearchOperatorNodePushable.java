@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.storage.am.rtree.dataflow;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
@@ -32,8 +31,7 @@ public class RTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
     protected MultiComparator cmp;
 
     public RTreeSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            IOperationCallbackFactory opCallbackProvider, int partition, IRecordDescriptorProvider recordDescProvider,
-            int[] keyFields) {
+            int partition, IRecordDescriptorProvider recordDescProvider, int[] keyFields) {
         super(opDesc, ctx, partition, recordDescProvider);
         if (keyFields != null && keyFields.length > 0) {
             searchKey = new PermutingFrameTupleReference();

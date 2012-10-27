@@ -21,7 +21,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
@@ -47,11 +48,13 @@ public abstract class AbstractLSMInvertedIndexOperatorDescriptor extends Abstrac
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenComparatorFactories,
             ITypeTraits[] invListsTypeTraits, IBinaryComparatorFactory[] invListComparatorFactories,
             IBinaryTokenizerFactory tokenizerFactory, IIndexDataflowHelperFactory dataflowHelperFactory,
-            ITupleFilterFactory tupleFilterFactory, boolean retainInput, IOperationCallbackFactory opCallbackProvider,
-            ILocalResourceFactoryProvider localResourceFactoryProvider) {
+            ITupleFilterFactory tupleFilterFactory, boolean retainInput,
+            ILocalResourceFactoryProvider localResourceFactoryProvider,
+            ISearchOperationCallbackFactory searchOpCallbackFactory,
+            IModificationOperationCallbackFactory modificationOpCallbackFactory) {
         super(spec, inputArity, outputArity, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider,
-                dataflowHelperFactory, tupleFilterFactory, retainInput, opCallbackProvider,
-                localResourceFactoryProvider);
+                dataflowHelperFactory, tupleFilterFactory, retainInput, localResourceFactoryProvider,
+                searchOpCallbackFactory, modificationOpCallbackFactory);
         this.invListsTypeTraits = invListsTypeTraits;
         this.invListComparatorFactories = invListComparatorFactories;
         this.tokenTypeTraits = tokenTypeTraits;

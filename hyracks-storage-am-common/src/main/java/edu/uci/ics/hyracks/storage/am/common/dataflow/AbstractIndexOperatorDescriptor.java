@@ -20,7 +20,8 @@ import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactoryProvider;
@@ -36,15 +37,17 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     protected final IIndexDataflowHelperFactory dataflowHelperFactory;
     protected final ITupleFilterFactory tupleFilterFactory;
     protected final boolean retainInput;
-    protected final IOperationCallbackFactory opCallbackProvider;
+    protected final ISearchOperationCallbackFactory searchOpCallbackFactory;
+    protected final IModificationOperationCallbackFactory modificationOpCallbackFactory;
     protected final ILocalResourceFactoryProvider localResourceFactoryProvider;
 
     public AbstractIndexOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
             IIndexDataflowHelperFactory dataflowHelperFactory, ITupleFilterFactory tupleFilterFactory,
-            boolean retainInput, IOperationCallbackFactory opCallbackProvider,
-            ILocalResourceFactoryProvider localResourceFactoryProvider) {
+            boolean retainInput, ILocalResourceFactoryProvider localResourceFactoryProvider,
+            ISearchOperationCallbackFactory searchOpCallbackFactory,
+            IModificationOperationCallbackFactory modificationOpCallbackFactory) {
         super(spec, inputArity, outputArity);
         this.fileSplitProvider = fileSplitProvider;
         this.storageManager = storageManager;
@@ -52,8 +55,9 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
         this.dataflowHelperFactory = dataflowHelperFactory;
         this.retainInput = retainInput;
         this.tupleFilterFactory = tupleFilterFactory;
-        this.opCallbackProvider = opCallbackProvider;
         this.localResourceFactoryProvider = localResourceFactoryProvider;
+        this.searchOpCallbackFactory = searchOpCallbackFactory;
+        this.modificationOpCallbackFactory = modificationOpCallbackFactory;
         if (outputArity > 0) {
             recordDescriptors[0] = recDesc;
         }
@@ -90,8 +94,13 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     }
 
     @Override
-    public IOperationCallbackFactory getOpCallbackProvider() {
-        return opCallbackProvider;
+    public ISearchOperationCallbackFactory getSearchOpCallbackFactory() {
+        return searchOpCallbackFactory;
+    }
+    
+    @Override
+    public IModificationOperationCallbackFactory getModificationOpCallbackFactory() {
+        return modificationOpCallbackFactory;
     }
 
     @Override
