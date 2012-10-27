@@ -4,28 +4,33 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 
 /**
- * This interface exposes methods for tracking when operations (e.g. insert, search) 
- * enter and exit an {@link ILSMIndex}.
- * 
+ * This interface exposes methods for tracking and setting the status of operations for the purpose
+ * of coordinating flushes/merges in {@link ILSMIndex}.
  * Note that 'operation' below refers to {@link IIndexAccessor} methods.
- *  
+ * 
  * @author zheilbron
  */
 public interface ILSMOperationTracker {
 
     /**
-     * This method is guaranteed to be called whenever an operation first begins on the index, 
-     * before any traversals of the index structures (more specifically, before any 
-     * pages are pinned/latched).
-     * 
-     * @param index the index for which the operation entered
+     * An {@link ILSMIndex} will call this method before an operation enters it,
+     * i.e., before any latches are taken.
+     * After this method has been called, the operation is considered 'active'.
      */
-    public void threadEnter(ILSMIndex index) throws HyracksDataException;
+    public void beforeOperation(ILSMIndex index) throws HyracksDataException;
 
     /**
-     * This method is guaranteed to be called just before an operation is finished on the index.
-     * 
-     * @param index the index for which the operation exited
+     * An {@link ILSMIndex} will call this method after an operation has left the index,
+     * i.e., after all relevant latches have been released.
+     * After this method has been called, the operation is still considered 'active',
+     * until the issuer of the operation declares it completed by calling completeOperation().
      */
-    public void threadExit(ILSMIndex index) throws HyracksDataException;
+    public void afterOperation(ILSMIndex index) throws HyracksDataException;
+
+    /**
+     * This method must be called by whoever is requesting the index operation through an {@link IIndexAccessor}.
+     * The use of this method indicates that the operation is no longer 'active'
+     * for the purpose of coordinating flushes/merges.
+     */
+    public void completeOperation(ILSMIndex index) throws HyracksDataException;
 }

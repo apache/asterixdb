@@ -2,6 +2,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree;
 
 import org.junit.Test;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.AbstractModificationOperationCallbackTest;
@@ -31,12 +32,17 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
     protected void createIndexInstance() throws Exception {
         ILSMOperationTracker tracker = new ILSMOperationTracker() {
             @Override
-            public void threadExit(ILSMIndex index) {
+            public void afterOperation(ILSMIndex index) {
                 // Do nothing
             }
 
             @Override
-            public void threadEnter(ILSMIndex index) {
+            public void beforeOperation(ILSMIndex index) {
+                // Do nothing
+            }
+
+            @Override
+            public void completeOperation(ILSMIndex index) throws HyracksDataException {
                 // Do nothing
             }
         };

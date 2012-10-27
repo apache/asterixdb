@@ -35,12 +35,17 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
     protected void createIndexInstance() throws Exception {
         ILSMOperationTracker tracker = new ILSMOperationTracker() {
             @Override
-            public void threadExit(ILSMIndex index) {
+            public void afterOperation(ILSMIndex index) {
                 // Do nothing
             }
 
             @Override
-            public void threadEnter(ILSMIndex index) {
+            public void beforeOperation(ILSMIndex index) {
+                // Do nothing
+            }
+
+            @Override
+            public void completeOperation(ILSMIndex index) throws HyracksDataException {
                 // Do nothing
             }
         };

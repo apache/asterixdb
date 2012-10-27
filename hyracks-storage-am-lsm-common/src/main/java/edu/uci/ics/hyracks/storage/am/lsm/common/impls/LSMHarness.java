@@ -86,12 +86,12 @@ public class LSMHarness implements ILSMHarness {
         if (!lsmIndex.getFlushController().getFlushStatus(lsmIndex) && lsmIndex.getInMemoryFreePageManager().isFull()) {
             lsmIndex.getFlushController().setFlushStatus(lsmIndex, true);
         }
-        opTracker.threadExit(lsmIndex);
+        opTracker.afterOperation(lsmIndex);
     }
 
     public void insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ctx) throws HyracksDataException,
             IndexException {
-        opTracker.threadEnter(lsmIndex);
+        opTracker.beforeOperation(lsmIndex);
         // It is possible, due to concurrent execution of operations, that an operation will 
         // fail. In such a case, simply retry the operation. Refer to the specific LSMIndex code 
         // to see exactly why an operation might fail.
@@ -129,7 +129,7 @@ public class LSMHarness implements ILSMHarness {
         // If the search doesn't include the in-memory component, then we don't have
         // to synchronize with a flush.
         if (includeMemComponent) {
-            opTracker.threadEnter(lsmIndex);
+            opTracker.beforeOperation(lsmIndex);
         }
 
         // Get a snapshot of the current on-disk Trees.

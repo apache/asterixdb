@@ -12,7 +12,7 @@ public class ReferenceCountingOperationTracker implements ILSMOperationTracker {
     private int threadRefCount = 0;
 
     @Override
-    public void threadEnter(ILSMIndex index) throws HyracksDataException {
+    public void beforeOperation(final ILSMIndex index) throws HyracksDataException {
         synchronized (this) {
             // flushFlag may be set to true even though the flush has not occurred yet.
             // If flushFlag is set, then the flush is queued to occur by the last exiting thread.
@@ -32,7 +32,13 @@ public class ReferenceCountingOperationTracker implements ILSMOperationTracker {
     }
 
     @Override
-    public void threadExit(final ILSMIndex index) throws HyracksDataException {
+    public void afterOperation(final ILSMIndex index) throws HyracksDataException {
+        // The operation is considered inactive, immediately after leaving the index.
+        completeOperation(index);
+    }
+
+    @Override
+    public void completeOperation(final ILSMIndex index) throws HyracksDataException {
         synchronized (this) {
             threadRefCount--;
 
@@ -49,4 +55,5 @@ public class ReferenceCountingOperationTracker implements ILSMOperationTracker {
             }
         }
     }
+
 }
