@@ -24,34 +24,17 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 
-public class OperationCallbackFactory implements IOperationCallbackFactory {
+public class SearchOperationCallbackFactory extends AbstractOperationCallbackFactory implements
+        ISearchOperationCallbackFactory {
 
     private static final long serialVersionUID = 1L;
-    
-    private final JobId jobId;
-    private final DatasetId datasetId;
-    private final int[] entityIdFields;
-    private final IBinaryHashFunction[] entityIdFieldHashFunctions;
-    private final ITransactionSubsystemProvider txnSubsystemProvider;
-    
-    public OperationCallbackFactory(JobId jobId, DatasetId datasetId, int[] entityIdFields,
+
+    public SearchOperationCallbackFactory(JobId jobId, DatasetId datasetId, int[] entityIdFields,
             IBinaryHashFunction[] entityIdFieldHashFunctions, ITransactionSubsystemProvider txnSubsystemProvider) {
-        this.jobId = jobId;
-        this.datasetId = datasetId;
-        this.entityIdFields = entityIdFields;
-        this.entityIdFieldHashFunctions = entityIdFieldHashFunctions;
-        this.txnSubsystemProvider = txnSubsystemProvider;
-    }
-    
-    @Override
-    public IModificationOperationCallback createModificationOperationCallback(long resourceId, IHyracksTaskContext ctx) throws HyracksDataException {
-        // TODO: Implement this one.
-        TransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
-        return null;
+        super(jobId, datasetId, entityIdFields, entityIdFieldHashFunctions, txnSubsystemProvider);
     }
 
     @Override
@@ -60,7 +43,7 @@ public class OperationCallbackFactory implements IOperationCallbackFactory {
         TransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
         try {
             TransactionContext txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jobId);
-            return new SearchOperationCallback(datasetId, entityIdFields, entityIdFieldHashFunctions,
+            return new SearchOperationCallback(datasetId, primaryKeyFields, primaryKeyHashFunctions,
                     txnSubsystem.getLockManager(), txnCtx);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
