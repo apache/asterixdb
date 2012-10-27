@@ -70,12 +70,13 @@ public abstract class AbstractModificationOperationCallbackTest extends Abstract
         }
 
         @Override
-        public void found(ITupleReference tuple) {
+        public void found(ITupleReference before, ITupleReference after) {
             if (isFoundNull) {
-                Assert.assertEquals(null, tuple);
+                Assert.assertEquals(null, before);
             } else {
-                Assert.assertEquals(0, cmp.compare(AbstractModificationOperationCallbackTest.this.tuple, tuple));
+                Assert.assertEquals(0, cmp.compare(AbstractModificationOperationCallbackTest.this.tuple, before));
             }
+            Assert.assertEquals(0, cmp.compare(AbstractModificationOperationCallbackTest.this.tuple, after));
         }
 
     }

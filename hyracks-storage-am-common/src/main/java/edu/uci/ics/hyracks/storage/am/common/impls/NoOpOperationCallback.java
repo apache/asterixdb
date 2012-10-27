@@ -41,7 +41,7 @@ public enum NoOpOperationCallback implements IModificationOperationCallback, ISe
     }
 
     @Override
-    public void found(ITupleReference tuple) {
+    public void found(ITupleReference before, ITupleReference after) {
         // Do nothing.        
     }
 

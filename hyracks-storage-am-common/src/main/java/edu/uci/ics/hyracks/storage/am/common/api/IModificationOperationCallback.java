@@ -32,5 +32,5 @@ public interface IModificationOperationCallback {
      * 
      * @param tuple a tuple with a matching key, otherwise null if none exists
      */
-    public void found(ITupleReference tuple) throws HyracksDataException;
+    public void found(ITupleReference before, ITupleReference after) throws HyracksDataException;
 }

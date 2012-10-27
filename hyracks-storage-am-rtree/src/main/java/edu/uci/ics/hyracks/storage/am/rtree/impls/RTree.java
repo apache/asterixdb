@@ -336,7 +336,7 @@ public class RTree extends AbstractTreeIndex {
                     if (!isLeaf) {
                         ctx.interiorFrame.insert(tuple, -1);
                     } else {
-                        ctx.modificationCallback.found(null);
+                        ctx.modificationCallback.found(null, tuple);
                         ctx.leafFrame.insert(tuple, -1);
                     }
                     succeeded = true;
@@ -361,7 +361,7 @@ public class RTree extends AbstractTreeIndex {
                         ctx.interiorFrame.insert(tuple, -1);
                     } else {
                         ctx.leafFrame.compact();
-                        ctx.modificationCallback.found(null);
+                        ctx.modificationCallback.found(null, tuple);
                         ctx.leafFrame.insert(tuple, -1);
                     }
                     succeeded = true;
@@ -398,7 +398,7 @@ public class RTree extends AbstractTreeIndex {
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) 0);
                         rightFrame.setRightPage(ctx.interiorFrame.getRightPage());
-                        ctx.modificationCallback.found(null);
+                        ctx.modificationCallback.found(null, tuple);
                         ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey);
                         ctx.leafFrame.setRightPage(rightPageId);
                     }
@@ -731,7 +731,7 @@ public class RTree extends AbstractTreeIndex {
 
     private void deleteTuple(int tupleIndex, RTreeOpContext ctx) throws HyracksDataException {
         ITupleReference beforeTuple = ctx.leafFrame.getBeforeTuple(ctx.getTuple(), tupleIndex, ctx.cmp);
-        ctx.modificationCallback.found(beforeTuple);
+        ctx.modificationCallback.found(beforeTuple, ctx.getTuple());
         ctx.leafFrame.delete(tupleIndex, ctx.cmp);
         ctx.leafFrame.setPageLsn(incrementGlobalNsn());
     }

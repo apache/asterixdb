@@ -2,7 +2,7 @@ package edu.uci.ics.hyracks.storage.am.common.impls;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 
 /**
@@ -11,16 +11,16 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
  *
  * Implemented as an enum to preserve singleton model while being serializable
  */
-public enum NoOpOperationCallbackProvider implements IOperationCallbackProvider {
+public enum NoOpOperationCallbackProvider implements IOperationCallbackFactory {
     INSTANCE;
 
     @Override
-    public IModificationOperationCallback getModificationOperationCallback(long resourceId, IHyracksTaskContext ctx) {
+    public IModificationOperationCallback createModificationOperationCallback(long resourceId, IHyracksTaskContext ctx) {
         return NoOpOperationCallback.INSTANCE;
     }
 
     @Override
-    public ISearchOperationCallback getSearchOperationCallback(long resourceId, IHyracksTaskContext ctx) {
+    public ISearchOperationCallback createSearchOperationCallback(long resourceId, IHyracksTaskContext ctx) {
         return NoOpOperationCallback.INSTANCE;
     }
 }

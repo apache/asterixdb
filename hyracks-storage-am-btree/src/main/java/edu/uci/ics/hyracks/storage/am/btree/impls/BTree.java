@@ -335,7 +335,7 @@ public class BTree extends AbstractTreeIndex {
         FrameOpSpaceStatus spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple);
         switch (spaceStatus) {
             case SUFFICIENT_CONTIGUOUS_SPACE: {
-                ctx.modificationCallback.found(null);
+                ctx.modificationCallback.found(null, tuple);
                 ctx.leafFrame.insert(tuple, targetTupleIndex);
                 ctx.splitKey.reset();
                 break;
@@ -345,7 +345,7 @@ public class BTree extends AbstractTreeIndex {
                 if (slotsChanged) {
                     targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple);
                 }
-                ctx.modificationCallback.found(null);
+                ctx.modificationCallback.found(null, tuple);
                 ctx.leafFrame.insert(tuple, targetTupleIndex);
                 ctx.splitKey.reset();
                 break;
@@ -359,7 +359,7 @@ public class BTree extends AbstractTreeIndex {
                     spaceStatus = ctx.leafFrame.hasSpaceInsert(tuple);
                 }
                 if (spaceStatus == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
-                    ctx.modificationCallback.found(null);
+                    ctx.modificationCallback.found(null, tuple);
                     ctx.leafFrame.insert(tuple, targetTupleIndex);
                     ctx.splitKey.reset();
                 } else {
@@ -399,10 +399,10 @@ public class BTree extends AbstractTreeIndex {
             // Perform an update (delete + insert) if the updateTupleIndex != -1
             if (updateTupleIndex != -1) {
                 ITupleReference beforeTuple = ctx.leafFrame.getMatchingKeyTuple(tuple, updateTupleIndex);
-                ctx.modificationCallback.found(beforeTuple);
+                ctx.modificationCallback.found(beforeTuple, tuple);
                 ctx.leafFrame.delete(tuple, updateTupleIndex);
             } else {
-                ctx.modificationCallback.found(null);
+                ctx.modificationCallback.found(null, tuple);
             }
             ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey);
 
@@ -435,20 +435,20 @@ public class BTree extends AbstractTreeIndex {
         boolean restartOp = false;
         switch (spaceStatus) {
             case SUFFICIENT_INPLACE_SPACE: {
-                ctx.modificationCallback.found(beforeTuple);
+                ctx.modificationCallback.found(beforeTuple, tuple);
                 ctx.leafFrame.update(tuple, oldTupleIndex, true);
                 ctx.splitKey.reset();
                 break;
             }
             case SUFFICIENT_CONTIGUOUS_SPACE: {
-                ctx.modificationCallback.found(beforeTuple);
+                ctx.modificationCallback.found(beforeTuple, tuple);
                 ctx.leafFrame.update(tuple, oldTupleIndex, false);
                 ctx.splitKey.reset();
                 break;
             }
             case SUFFICIENT_SPACE: {
                 // Delete the old tuple, compact the frame, and insert the new tuple.
-                ctx.modificationCallback.found(beforeTuple);
+                ctx.modificationCallback.found(beforeTuple, tuple);
                 ctx.leafFrame.delete(tuple, oldTupleIndex);
                 ctx.leafFrame.compact();
                 int targetTupleIndex = ctx.leafFrame.findInsertTupleIndex(tuple);
@@ -542,7 +542,7 @@ public class BTree extends AbstractTreeIndex {
         }
         int tupleIndex = ctx.leafFrame.findDeleteTupleIndex(tuple);
         ITupleReference beforeTuple = ctx.leafFrame.getMatchingKeyTuple(tuple, tupleIndex);
-        ctx.modificationCallback.found(beforeTuple);
+        ctx.modificationCallback.found(beforeTuple, tuple);
         ctx.leafFrame.delete(tuple, tupleIndex);
         return false;
     }

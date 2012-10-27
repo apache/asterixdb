@@ -20,7 +20,7 @@ import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactoryProvider;
@@ -36,14 +36,14 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     protected final IIndexDataflowHelperFactory dataflowHelperFactory;
     protected final ITupleFilterFactory tupleFilterFactory;
     protected final boolean retainInput;
-    protected final IOperationCallbackProvider opCallbackProvider;
+    protected final IOperationCallbackFactory opCallbackProvider;
     protected final ILocalResourceFactoryProvider localResourceFactoryProvider;
 
     public AbstractIndexOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
             IIndexDataflowHelperFactory dataflowHelperFactory, ITupleFilterFactory tupleFilterFactory,
-            boolean retainInput, IOperationCallbackProvider opCallbackProvider,
+            boolean retainInput, IOperationCallbackFactory opCallbackProvider,
             ILocalResourceFactoryProvider localResourceFactoryProvider) {
         super(spec, inputArity, outputArity);
         this.fileSplitProvider = fileSplitProvider;
@@ -90,7 +90,7 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     }
 
     @Override
-    public IOperationCallbackProvider getOpCallbackProvider() {
+    public IOperationCallbackFactory getOpCallbackProvider() {
         return opCallbackProvider;
     }
 
