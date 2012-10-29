@@ -2,13 +2,13 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks.examples.btree</groupId>
   <artifactId>btreeapp</artifactId>
-  <version>0.2.2</version>
+  <version>0.2.3-SNAPSHOT</version>
   <name>btreeapp</name>
 
   <parent>
     <groupId>edu.uci.ics.hyracks.examples</groupId>
     <artifactId>btree-example</artifactId>
-    <version>0.2.2</version>
+    <version>0.2.3-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -81,7 +81,7 @@
   	<dependency>
   		<groupId>edu.uci.ics.hyracks.examples.btree</groupId>
   		<artifactId>btreehelper</artifactId>
-  		<version>0.2.2</version>
+  		<version>0.2.3-SNAPSHOT</version>
   		<scope>compile</scope>
   	</dependency>
   </dependencies>
