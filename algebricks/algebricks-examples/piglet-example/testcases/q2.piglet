@@ -1,0 +1,3 @@
+R = load "nc1:data/file1.txt,nc2:data/file2.txt" as (id : int, name : chararray);
+S = filter R by id == 5;
+dump S into "nc1:output";
