@@ -1,0 +1,39 @@
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>edu.uci.ics.hyracks</groupId>
+  <artifactId>fullstack</artifactId>
+  <version>0.2.2-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>hyracks-ecosystem-full-stack</name>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.0</version>
+        <configuration>
+            <goals>package source:jar javadoc:jar deploy:deploy</goals>
+        </configuration>
+      </plugin>
+      <plugin>
+      	<groupId>org.codehaus.mojo</groupId>
+      	<artifactId>versions-maven-plugin</artifactId>
+      	<version>1.2</version>
+      </plugin>
+    </plugins>
+  </build>
+
+  <scm>
+    <connection>scm:svn:https://hyracks.googlecode.com/svn/trunk/fullstack</connection>
+    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/trunk/fullstack</developerConnection>
+    <url>http://code.google.com/p/hyracks/source/browse/#svn/trunk</url>
+  </scm>
+
+  <modules>
+    <module>hyracks</module>
+    <module>algebricks</module>
+    <module>pregelix</module>
+  </modules>
+</project>

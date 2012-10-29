@@ -1,0 +1,12 @@
+Hyracks Overview
+
+  Hyracks employs a client-server architecture. On the server side, the software module that is responsible for interacting with clients, keeping track of and dispatching work
+  to other machines in the cluster is called the Hyracks Cluster Controller (CC). There is one CC per logical Hyracks cluster. The module that executes on the worker machine
+  and interacts with the CC to receive work and act on it, is called the Hyracks Node Controller (NC). Every NC in a single Hyracks cluster has a unique logical name. When an
+  NC is started, it is provided the address of the CC whose cluster it must join. Although it is sufficient to run one instance of the NC on a physical machine, it is possible
+  to run multiple instances of NCs (ofcourse each NC has a different logical name) on the same physical machine -- often used for simulating a cluster on a single machine
+  to facilitate testing.
+
+  Hyracks clients interact solely with the CC when submitting their jobs. A Hyracks Job is the unit of work that a client can execute on the Hyracks cluster. A job is expressed
+  as a directed acyclic graph (DAG) of Operators connected to each other by means of Connectors. A more detailed description of jobs, operators, and connectors follows in
+  chapter "Hyracks Concepts".
