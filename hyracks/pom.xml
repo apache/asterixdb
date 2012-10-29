@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks</artifactId>
-  <version>0.2.2</version>
+  <version>0.2.3-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>hyracks</name>
 
@@ -53,9 +53,9 @@
   </build>
 
   <scm>
-    <connection>scm:svn:https://hyracks.googlecode.com/svn/tags/fullstack-0.2.2/fullstack/hyracks</connection>
-    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/tags/fullstack-0.2.2/fullstack/hyracks</developerConnection>
-    <url>http://code.google.com/p/hyracks/source/browse/#svn/tags/fullstack-0.2.2/trunk/hyracks</url>
+    <connection>scm:svn:https://hyracks.googlecode.com/svn/trunk/fullstack/hyracks</connection>
+    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/trunk/fullstack/hyracks</developerConnection>
+    <url>http://code.google.com/p/hyracks/source/browse/#svn/trunk/hyracks</url>
   </scm>
 
   <distributionManagement>
