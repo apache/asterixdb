@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>fullstack</artifactId>
-  <version>0.2.2-SNAPSHOT</version>
+  <version>0.2.3-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>hyracks-ecosystem-full-stack</name>
 
@@ -12,7 +12,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
-        <version>2.0</version>
+        <version>2.1</version>
         <configuration>
             <goals>package source:jar javadoc:jar deploy:deploy</goals>
         </configuration>
@@ -28,8 +28,40 @@
   <scm>
     <connection>scm:svn:https://hyracks.googlecode.com/svn/trunk/fullstack</connection>
     <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/trunk/fullstack</developerConnection>
-    <url>http://code.google.com/p/hyracks/source/browse/#svn/trunk</url>
+    <url>http://code.google.com/p/hyracks/source/browse/#svn/trunk/fullstack</url>
   </scm>
+
+  <distributionManagement>
+    <repository>
+      <id>hyracks-releases</id>
+      <url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-releases/</url>
+    </repository>
+    <snapshotRepository>
+      <id>hyracks-snapshots</id>
+      <url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <repositories>
+    <repository>
+      <id>hyracks-public</id>
+      <url>http://obelix.ics.uci.edu/nexus/content/groups/hyracks-public/</url>
+    </repository>
+    <repository>
+      <id>jboss-public</id>
+      <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>hyracks-public</id>
+      <url>http://obelix.ics.uci.edu/nexus/content/groups/hyracks-public/</url>
+      <releases>
+        <updatePolicy>always</updatePolicy>
+      </releases>
+    </pluginRepository>
+  </pluginRepositories>
 
   <modules>
     <module>hyracks</module>

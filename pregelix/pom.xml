@@ -3,12 +3,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>pregelix</artifactId>
-  <version>0.2.2-SNAPSHOT</version>
+  <version>0.2.3-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>pregelix</name>
 
   <properties>
-    <jvm.extraargs/>
+    <jvm.extraargs />
   </properties>
 
   <profiles>
@@ -52,11 +52,14 @@
     </plugins>
   </build>
 
-  <scm>
-    <connection>scm:svn:https://pregelix.googlecode.com/svn/trunk/pregelix</connection>
-    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/trunk/pregelix</developerConnection>
-    <url>http://code.google.com/p/hyracks/source/browse/#svn/trunk/pregelix</url>
-  </scm>
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-changelog-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </reporting>
 
   <distributionManagement>
     <repository>
@@ -68,15 +71,6 @@
       <url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
-
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-changelog-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </reporting>
 
   <repositories>
     <repository>

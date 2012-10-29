@@ -6,7 +6,7 @@
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks-data</artifactId>
-    <version>0.2.2-SNAPSHOT</version>
+    <version>0.2.3-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -26,7 +26,7 @@
   <dependency>
   	<groupId>edu.uci.ics.hyracks</groupId>
   	<artifactId>hyracks-api</artifactId>
-  	<version>0.2.2-SNAPSHOT</version>
+  	<version>0.2.3-SNAPSHOT</version>
   </dependency>
   </dependencies>
 </project>

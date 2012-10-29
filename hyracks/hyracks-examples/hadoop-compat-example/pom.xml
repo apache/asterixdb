@@ -2,14 +2,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks.examples</groupId>
   <artifactId>hadoop-compat-example</artifactId>
-  <version>0.2.2-SNAPSHOT</version>
+  <version>0.2.3-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>hadoop-compat-example</name>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks-examples</artifactId>
-    <version>0.2.2-SNAPSHOT</version>
+    <version>0.2.3-SNAPSHOT</version>
   </parent>
 
   <modules>
@@ -30,7 +30,7 @@
       <dependency>
          <groupId>edu.uci.ics.hyracks</groupId>
          <artifactId>hyracks-hadoop-compat</artifactId>
-         <version>0.2.2-SNAPSHOT</version>
+         <version>0.2.3-SNAPSHOT</version>
          <type>jar</type>
          <scope>compile</scope>
       </dependency>
