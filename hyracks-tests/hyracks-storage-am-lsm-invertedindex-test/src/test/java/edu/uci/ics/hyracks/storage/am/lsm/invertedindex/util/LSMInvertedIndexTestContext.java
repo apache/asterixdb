@@ -128,7 +128,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                         harness.getMemFreePageManager(), harness.getDiskFileMapProvider(), invListTypeTraits,
                         invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
                         harness.getDiskBufferCache(), harness.getIOManager(), harness.getOnDiskDir(),
-                        harness.getFlushController(), harness.getMergePolicy(), harness.getOperationTracker(),
+                        harness.getFlushController(), harness.getMergePolicy(), harness.getOperationTrackerFactory(),
                         harness.getIOScheduler());
                 break;
             }

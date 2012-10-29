@@ -21,8 +21,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpOperationTrackerFactory;
 
 public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperationCallbackTest {
     private final LSMBTreeTestHarness harness;
@@ -33,27 +32,11 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
 
     @Override
     protected void createIndexInstance() throws Exception {
-        ILSMOperationTracker tracker = new ILSMOperationTracker() {
-            @Override
-            public void afterOperation(ILSMIndex index) {
-                // Do nothing
-            }
-
-            @Override
-            public void beforeOperation(ILSMIndex index) {
-                // Do nothing
-            }
-
-            @Override
-            public void completeOperation(ILSMIndex index) throws HyracksDataException {
-                // Do nothing
-            }
-        };
         index = LSMBTreeUtils.createLSMTree(harness.getMemBufferCache(), harness.getMemFreePageManager(),
                 harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
                 harness.getDiskFileMapProvider(), SerdeUtils.serdesToTypeTraits(keySerdes),
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), harness.getFlushController(),
-                harness.getMergePolicy(), tracker, harness.getIOScheduler());
+                harness.getMergePolicy(), NoOpOperationTrackerFactory.INSTANCE, harness.getIOScheduler());
     }
 
     @Override

@@ -101,4 +101,9 @@ public class RTreeOpContext implements IIndexOperationContext {
         }
         this.op = newOp;
     }
+
+    @Override
+    public IndexOperation getOperation() {
+        return op;
+    }
 }

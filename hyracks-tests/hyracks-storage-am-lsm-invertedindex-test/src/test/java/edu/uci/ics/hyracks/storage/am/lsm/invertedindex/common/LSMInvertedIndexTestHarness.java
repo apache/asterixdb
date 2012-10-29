@@ -34,13 +34,13 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ReferenceCountingOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -67,7 +67,7 @@ public class LSMInvertedIndexTestHarness {
     protected ILSMIOOperationScheduler ioScheduler;
     protected ILSMFlushController flushController;
     protected ILSMMergePolicy mergePolicy;
-    protected ILSMOperationTracker opTracker;
+    protected ILSMOperationTrackerFactory opTrackerFactory;
 
     protected final Random rnd = new Random();
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
@@ -87,7 +87,7 @@ public class LSMInvertedIndexTestHarness {
         this.ioScheduler = ImmediateScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
         this.flushController = new FlushController();
-        this.opTracker = new ReferenceCountingOperationTracker();
+        this.opTrackerFactory = RefCountingOperationTrackerFactory.INSTANCE;
     }
 
     public LSMInvertedIndexTestHarness(int diskPageSize, int diskNumPages, int diskMaxOpenFiles, int memPageSize,
@@ -101,7 +101,7 @@ public class LSMInvertedIndexTestHarness {
         this.ioScheduler = ImmediateScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
         this.flushController = new FlushController();
-        this.opTracker = new ReferenceCountingOperationTracker();
+        this.opTrackerFactory = RefCountingOperationTrackerFactory.INSTANCE;
     }
 
     public void setUp() throws HyracksException {
@@ -203,8 +203,8 @@ public class LSMInvertedIndexTestHarness {
         return ioScheduler;
     }
 
-    public ILSMOperationTracker getOperationTracker() {
-        return opTracker;
+    public ILSMOperationTrackerFactory getOperationTrackerFactory() {
+        return opTrackerFactory;
     }
 
     public ILSMFlushController getFlushController() {

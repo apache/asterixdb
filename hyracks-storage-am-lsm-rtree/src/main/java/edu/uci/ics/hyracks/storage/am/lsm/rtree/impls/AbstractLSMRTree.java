@@ -47,6 +47,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
@@ -124,7 +125,7 @@ public abstract class AbstractLSMRTree implements ILSMIndexInternal, ITreeIndex 
             IFileMapProvider diskFileMapProvider, ILSMComponentFinalizer componentFinalizer, int fieldCount,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             ILinearizeComparatorFactory linearizer, int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
-            ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler) {
         RTree memRTree = new RTree(memBufferCache, ((InMemoryBufferCache) memBufferCache).getFileMapProvider(),
                 memFreePageManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories, fieldCount,
@@ -145,6 +146,7 @@ public abstract class AbstractLSMRTree implements ILSMIndexInternal, ITreeIndex 
         this.diskRTreeFactory = diskRTreeFactory;
         this.btreeCmpFactories = btreeCmpFactories;
         this.rtreeCmpFactories = rtreeCmpFactories;
+        ILSMOperationTracker opTracker = opTrackerFactory.createOperationTracker(this);
         this.lsmHarness = new LSMHarness(this, flushController, mergePolicy, opTracker, ioScheduler);
         this.componentFinalizer = componentFinalizer;
         this.linearizer = linearizer;
@@ -275,11 +277,11 @@ public abstract class AbstractLSMRTree implements ILSMIndexInternal, ITreeIndex 
     public void insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ictx) throws HyracksDataException,
             IndexException {
         LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;
-        if (ctx.getIndexOp() == IndexOperation.PHYSICALDELETE) {
+        if (ctx.getOperation() == IndexOperation.PHYSICALDELETE) {
             throw new UnsupportedOperationException("Physical delete not yet supported in LSM R-tree");
         }
 
-        if (ctx.getIndexOp() == IndexOperation.INSERT) {
+        if (ctx.getOperation() == IndexOperation.INSERT) {
             // Before each insert, we must check whether there exist a killer
             // tuple in the memBTree. If we find a killer tuple, we must truly
             // delete the existing tuple from the BTree, and then insert it to

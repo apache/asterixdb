@@ -83,4 +83,9 @@ public class InMemoryInvertedIndexOpContext implements IIndexOperationContext {
     public void reset() {
         op = null;
     }
+
+    @Override
+    public IndexOperation getOperation() {
+        return op;
+    }
 }

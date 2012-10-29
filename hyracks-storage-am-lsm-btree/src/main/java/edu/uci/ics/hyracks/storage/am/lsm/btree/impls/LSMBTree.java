@@ -59,6 +59,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMFlushOperation;
@@ -103,8 +104,8 @@ public class LSMBTree implements ILSMIndexInternal, ITreeIndex {
             ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMIndexFileManager fileNameManager,
             TreeIndexFactory<BTree> diskBTreeFactory, TreeIndexFactory<BTree> bulkLoadBTreeFactory,
             IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
-            ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            ILSMIOOperationScheduler ioScheduler) {
+            ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
+            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler) {
         memBTree = new BTree(memBufferCache, ((InMemoryBufferCache) memBufferCache).getFileMapProvider(),
                 memFreePageManager, interiorFrameFactory, insertLeafFrameFactory, cmpFactories, fieldCount,
                 new FileReference(new File("membtree")));
@@ -118,6 +119,7 @@ public class LSMBTree implements ILSMIndexInternal, ITreeIndex {
         this.cmpFactories = cmpFactories;
         this.diskBTrees = new LinkedList<Object>();
         this.fileManager = fileNameManager;
+        ILSMOperationTracker opTracker = opTrackerFactory.createOperationTracker(this);
         lsmHarness = new LSMHarness(this, flushController, mergePolicy, opTracker, ioScheduler);
         componentFinalizer = new TreeIndexComponentFinalizer(diskFileMapProvider);
         diskBTrees = new LinkedList<Object>();
@@ -213,8 +215,7 @@ public class LSMBTree implements ILSMIndexInternal, ITreeIndex {
     public void insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ictx) throws HyracksDataException,
             IndexException {
         LSMBTreeOpContext ctx = (LSMBTreeOpContext) ictx;
-
-        switch (ctx.getIndexOp()) {
+        switch (ctx.getOperation()) {
             case PHYSICALDELETE:
                 ctx.memBTreeAccessor.delete(tuple);
                 break;

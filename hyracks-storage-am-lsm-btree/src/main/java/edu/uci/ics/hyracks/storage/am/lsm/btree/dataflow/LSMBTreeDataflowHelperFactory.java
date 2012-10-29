@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushControllerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyProvider;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.dataflow.AbstractLSMIndexDataflowHelperFactory;
 
 public class LSMBTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelperFactory {
@@ -29,16 +29,16 @@ public class LSMBTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
     private static final long serialVersionUID = 1L;
 
     public LSMBTreeDataflowHelperFactory(ILSMFlushControllerProvider flushControllerProvider,
-            ILSMMergePolicyProvider mergePolicyProvider, ILSMOperationTrackerProvider opTrackerProvider,
+            ILSMMergePolicyProvider mergePolicyProvider, ILSMOperationTrackerFactory opTrackerFactory,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider) {
-        super(flushControllerProvider, mergePolicyProvider, opTrackerProvider, ioSchedulerProvider);
+        super(flushControllerProvider, mergePolicyProvider, opTrackerFactory, ioSchedulerProvider);
     }
 
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
         return new LSMBTreeDataflowHelper(opDesc, ctx, partition, flushControllerProvider.getFlushController(ctx),
-                mergePolicyProvider.getMergePolicy(ctx), opTrackerProvider.getOperationTracker(ctx),
+                mergePolicyProvider.getMergePolicy(ctx), opTrackerFactory,
                 ioSchedulerProvider.getIOScheduler(ctx));
     }
 }

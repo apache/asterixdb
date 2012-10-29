@@ -211,4 +211,9 @@ public class BTreeOpContext implements IIndexOperationContext {
             tuple.reset(builder.getFieldEndOffsets(), builder.getByteArray());
         }
     }
+
+    @Override
+    public IndexOperation getOperation() {
+        return op;
+    }
 }

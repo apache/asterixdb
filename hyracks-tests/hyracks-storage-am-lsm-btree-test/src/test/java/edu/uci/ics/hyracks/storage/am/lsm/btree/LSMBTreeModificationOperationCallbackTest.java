@@ -2,7 +2,6 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.AbstractModificationOperationCallbackTest;
@@ -11,10 +10,9 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallback;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpOperationTrackerFactory;
 
 public class LSMBTreeModificationOperationCallbackTest extends AbstractModificationOperationCallbackTest {
     private static final int NUM_TUPLES = 11;
@@ -30,27 +28,11 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
 
     @Override
     protected void createIndexInstance() throws Exception {
-        ILSMOperationTracker tracker = new ILSMOperationTracker() {
-            @Override
-            public void afterOperation(ILSMIndex index) {
-                // Do nothing
-            }
-
-            @Override
-            public void beforeOperation(ILSMIndex index) {
-                // Do nothing
-            }
-
-            @Override
-            public void completeOperation(ILSMIndex index) throws HyracksDataException {
-                // Do nothing
-            }
-        };
         index = LSMBTreeUtils.createLSMTree(harness.getMemBufferCache(), harness.getMemFreePageManager(),
                 harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
                 harness.getDiskFileMapProvider(), SerdeUtils.serdesToTypeTraits(keySerdes),
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), harness.getFlushController(),
-                harness.getMergePolicy(), tracker, harness.getIOScheduler());
+                harness.getMergePolicy(), NoOpOperationTrackerFactory.INSTANCE, harness.getIOScheduler());
     }
 
     @Override

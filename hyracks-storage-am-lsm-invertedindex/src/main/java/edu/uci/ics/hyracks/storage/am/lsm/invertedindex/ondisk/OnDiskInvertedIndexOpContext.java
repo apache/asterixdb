@@ -47,4 +47,9 @@ public class OnDiskInvertedIndexOpContext implements IIndexOperationContext {
     public void setOperation(IndexOperation newOp) {
         // Nothing to be done here, only search operation supported.
     }
+
+    @Override
+    public IndexOperation getOperation() {
+        return IndexOperation.SEARCH;
+    }
 }

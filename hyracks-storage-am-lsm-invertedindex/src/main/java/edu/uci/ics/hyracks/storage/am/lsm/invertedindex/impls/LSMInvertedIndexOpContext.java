@@ -82,7 +82,8 @@ public class LSMInvertedIndexOpContext implements IIndexOperationContext {
         op = newOp;
     }
     
-    public IndexOperation getIndexOp() {
+    @Override
+    public IndexOperation getOperation() {
         return op;
     }
 }

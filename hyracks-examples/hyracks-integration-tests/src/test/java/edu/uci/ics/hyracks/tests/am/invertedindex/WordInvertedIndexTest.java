@@ -60,7 +60,7 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushControllerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateSchedulerProvider;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrackerProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifierFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.BinaryTokenizerOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexBulkLoadOperatorDescriptor;
@@ -93,7 +93,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     private IIndexDataflowHelperFactory btreeDataflowHelperFactory = new BTreeDataflowHelperFactory();
     private IIndexDataflowHelperFactory invertedIndexDataflowHelperFactory = new LSMInvertedIndexDataflowHelperFactory(
             new FlushControllerProvider(), new ConstantMergePolicyProvider(ImmediateSchedulerProvider.INSTANCE,
-                    MERGE_THRESHOLD), new RefCountingOperationTrackerProvider(), ImmediateSchedulerProvider.INSTANCE);
+                    MERGE_THRESHOLD), RefCountingOperationTrackerFactory.INSTANCE, ImmediateSchedulerProvider.INSTANCE);
 
     private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     private final static String sep = System.getProperty("file.separator");

@@ -54,7 +54,7 @@ public class LSMBTreeUpdateTest extends OrderedIndexUpdateTest {
         return LSMBTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
                 harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
                 harness.getDiskFileMapProvider(), fieldSerdes, numKeys, harness.getFlushController(),
-                harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler());
+                harness.getMergePolicy(), harness.getOperationTrackerFactory(), harness.getIOScheduler());
     }
 
     @Override

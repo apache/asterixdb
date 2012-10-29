@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 
 public abstract class AbstractLSMIndexDataflowHelper extends IndexDataflowHelper {
 
@@ -32,26 +32,26 @@ public abstract class AbstractLSMIndexDataflowHelper extends IndexDataflowHelper
     protected final int memNumPages;
 
     protected final ILSMFlushController flushController;
-    protected final ILSMMergePolicy mergePolicy;
-    protected final ILSMOperationTracker opTracker;
+    protected final ILSMMergePolicy mergePolicy;    
     protected final ILSMIOOperationScheduler ioScheduler;
+    protected final ILSMOperationTrackerFactory opTrackerFactory;
 
     public AbstractLSMIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler) {
         this(opDesc, ctx, partition, DEFAULT_MEM_PAGE_SIZE, DEFAULT_MEM_NUM_PAGES, flushController, mergePolicy,
-                opTracker, ioScheduler);
+                opTrackerFactory, ioScheduler);
     }
 
     public AbstractLSMIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             int memPageSize, int memNumPages, ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
-            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler) {
+            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler) {
         super(opDesc, ctx, partition);
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
         this.flushController = flushController;
         this.mergePolicy = mergePolicy;
-        this.opTracker = opTracker;
+        this.opTrackerFactory = opTrackerFactory;
         this.ioScheduler = ioScheduler;
     }
 }

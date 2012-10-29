@@ -112,7 +112,7 @@ public final class LSMBTreeOpContext implements IIndexOperationContext {
     public void reset() {
     }
 
-    public IndexOperation getIndexOp() {
+    public IndexOperation getOperation() {
         return op;
     }
 }

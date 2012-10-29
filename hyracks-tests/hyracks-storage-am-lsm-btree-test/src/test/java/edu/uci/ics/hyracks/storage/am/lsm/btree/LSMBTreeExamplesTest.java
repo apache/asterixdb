@@ -37,7 +37,7 @@ public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
         return LSMBTreeUtils.createLSMTree(harness.getMemBufferCache(), harness.getMemFreePageManager(),
                 harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
                 harness.getDiskFileMapProvider(), typeTraits, cmpFactories, harness.getFlushController(),
-                harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler());
+                harness.getMergePolicy(), harness.getOperationTrackerFactory(), harness.getIOScheduler());
     }
 
     @Before

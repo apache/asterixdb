@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushControllerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyProvider;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 public class LSMRTreeWithAntiMatterTuplesDataflowHelperFactory implements IIndexDataflowHelperFactory {
@@ -37,14 +37,14 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelperFactory implements IIndex
     private final RTreePolicyType rtreePolicyType;
     private final ILSMFlushControllerProvider flushControllerProvider;
     private final ILSMMergePolicyProvider mergePolicyProvider;
-    private final ILSMOperationTrackerProvider opTrackerProvider;
+    private final ILSMOperationTrackerFactory opTrackerProvider;
     private final ILSMIOOperationSchedulerProvider ioSchedulerProvider;
     private final ILinearizeComparatorFactory linearizeCmpFactory;
 
     public LSMRTreeWithAntiMatterTuplesDataflowHelperFactory(IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, IBinaryComparatorFactory[] btreeComparatorFactories,
             ILSMFlushControllerProvider flushControllerProvider, ILSMMergePolicyProvider mergePolicyProvider,
-            ILSMOperationTrackerProvider opTrackerProvider, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
+            ILSMOperationTrackerFactory opTrackerProvider, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
             ILinearizeComparatorFactory linearizeCmpFactory) {
         this.btreeComparatorFactories = btreeComparatorFactories;
         this.valueProviderFactories = valueProviderFactories;
@@ -61,7 +61,7 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelperFactory implements IIndex
             int partition) {
         return new LSMRTreeWithAntiMatterTuplesDataflowHelper(opDesc, ctx, partition, btreeComparatorFactories,
                 valueProviderFactories, rtreePolicyType, flushControllerProvider.getFlushController(ctx),
-                mergePolicyProvider.getMergePolicy(ctx), opTrackerProvider.getOperationTracker(ctx),
-                ioSchedulerProvider.getIOScheduler(ctx), linearizeCmpFactory);
+                mergePolicyProvider.getMergePolicy(ctx), opTrackerProvider, ioSchedulerProvider.getIOScheduler(ctx),
+                linearizeCmpFactory);
     }
 }

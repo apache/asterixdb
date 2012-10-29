@@ -23,7 +23,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactor
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushControllerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateSchedulerProvider;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrackerProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.dataflow.LSMRTreeWithAntiMatterTuplesDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import edu.uci.ics.hyracks.tests.am.common.LSMTreeOperatorTestHelper;
@@ -42,7 +42,7 @@ public class LSMRTreeWithAntiMatterTuplesOperatorTestHelper extends LSMTreeOpera
         return new LSMRTreeWithAntiMatterTuplesDataflowHelperFactory(valueProviderFactories, rtreePolicyType,
                 btreeComparatorFactories, new FlushControllerProvider(), new ConstantMergePolicyProvider(
                         ImmediateSchedulerProvider.INSTANCE, MERGE_THRESHOLD),
-                new RefCountingOperationTrackerProvider(), ImmediateSchedulerProvider.INSTANCE, linearizerCmpFactory);
+                RefCountingOperationTrackerFactory.INSTANCE, ImmediateSchedulerProvider.INSTANCE, linearizerCmpFactory);
     }
 
 }

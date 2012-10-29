@@ -59,6 +59,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallback;
@@ -128,7 +129,7 @@ public class LSMInvertedIndex implements ILSMIndexInternal, IInvertedIndex {
             ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizerFactory tokenizerFactory,
-            ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler) throws IndexException {
         InMemoryInvertedIndex memInvIndex = InvertedIndexUtils.createInMemoryBTreeInvertedindex(memBufferCache,
                 memFreePageManager, invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
@@ -147,6 +148,7 @@ public class LSMInvertedIndex implements ILSMIndexInternal, IInvertedIndex {
         this.invListCmpFactories = invListCmpFactories;
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
+        ILSMOperationTracker opTracker = opTrackerFactory.createOperationTracker(this);
         this.lsmHarness = new LSMHarness(this, flushController, mergePolicy, opTracker, ioScheduler);
         this.componentFinalizer = new LSMInvertedIndexComponentFinalizer(diskFileMapProvider);
         diskComponents = new LinkedList<Object>();
@@ -325,7 +327,7 @@ public class LSMInvertedIndex implements ILSMIndexInternal, IInvertedIndex {
             IndexException {
         LSMInvertedIndexOpContext ctx = (LSMInvertedIndexOpContext) ictx;
         ctx.modificationCallback.before(tuple);
-        switch (ctx.getIndexOp()) {
+        switch (ctx.getOperation()) {
             case INSERT: {
                 // Insert into the in-memory inverted index.                
                 ctx.memInvIndexAccessor.insert(tuple);
@@ -345,7 +347,7 @@ public class LSMInvertedIndex implements ILSMIndexInternal, IInvertedIndex {
                 break;
             }
             default: {
-                throw new UnsupportedOperationException("Operation " + ctx.getIndexOp() + " not supported.");
+                throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
             }
         }
     }

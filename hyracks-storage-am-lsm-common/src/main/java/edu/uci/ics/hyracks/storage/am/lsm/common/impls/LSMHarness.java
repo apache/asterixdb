@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -82,23 +83,23 @@ public class LSMHarness implements ILSMHarness {
         this.ioScheduler = ioScheduler;
     }
 
-    private void threadExit() throws HyracksDataException {
+    private void threadExit(IndexOperation op) throws HyracksDataException {
         if (!lsmIndex.getFlushController().getFlushStatus(lsmIndex) && lsmIndex.getInMemoryFreePageManager().isFull()) {
             lsmIndex.getFlushController().setFlushStatus(lsmIndex, true);
         }
-        opTracker.afterOperation(lsmIndex);
+        opTracker.afterOperation(op);
     }
 
     public void insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ctx) throws HyracksDataException,
             IndexException {
-        opTracker.beforeOperation(lsmIndex);
+        opTracker.beforeOperation(ctx.getOperation());
         // It is possible, due to concurrent execution of operations, that an operation will 
         // fail. In such a case, simply retry the operation. Refer to the specific LSMIndex code 
         // to see exactly why an operation might fail.
         try {
             lsmIndex.insertUpdateOrDelete(tuple, ctx);
         } finally {
-            threadExit();
+            threadExit(ctx.getOperation());
         }
     }
 
@@ -129,7 +130,7 @@ public class LSMHarness implements ILSMHarness {
         // If the search doesn't include the in-memory component, then we don't have
         // to synchronize with a flush.
         if (includeMemComponent) {
-            opTracker.beforeOperation(lsmIndex);
+            opTracker.beforeOperation(ctx.getOperation());
         }
 
         // Get a snapshot of the current on-disk Trees.
@@ -227,7 +228,7 @@ public class LSMHarness implements ILSMHarness {
         // If the in-memory Tree was not included in the search, then we don't
         // need to synchronize with a flush.
         if (includeMemComponent) {
-            threadExit();
+            threadExit(IndexOperation.SEARCH);
         }
         // A merge may be waiting on this searcher to finish searching the on-disk components.
         // Decrement the searcherRefCount so that the merge process is able to cleanup any old

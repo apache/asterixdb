@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushControllerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyProvider;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.dataflow.AbstractLSMIndexDataflowHelperFactory;
 
 public class LSMInvertedIndexDataflowHelperFactory extends AbstractLSMIndexDataflowHelperFactory {
@@ -29,7 +29,7 @@ public class LSMInvertedIndexDataflowHelperFactory extends AbstractLSMIndexDataf
     private static final long serialVersionUID = 1L;
 
     public LSMInvertedIndexDataflowHelperFactory(ILSMFlushControllerProvider flushControllerProvider,
-            ILSMMergePolicyProvider mergePolicyProvider, ILSMOperationTrackerProvider opTrackerProvider,
+            ILSMMergePolicyProvider mergePolicyProvider, ILSMOperationTrackerFactory opTrackerProvider,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider) {
         super(flushControllerProvider, mergePolicyProvider, opTrackerProvider, ioSchedulerProvider);
     }
@@ -37,9 +37,9 @@ public class LSMInvertedIndexDataflowHelperFactory extends AbstractLSMIndexDataf
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
-        return new LSMInvertedIndexDataflowHelper(opDesc, ctx, partition, flushControllerProvider.getFlushController(ctx),
-                mergePolicyProvider.getMergePolicy(ctx), opTrackerProvider.getOperationTracker(ctx),
-                ioSchedulerProvider.getIOScheduler(ctx));
+        return new LSMInvertedIndexDataflowHelper(opDesc, ctx, partition,
+                flushControllerProvider.getFlushController(ctx), mergePolicyProvider.getMergePolicy(ctx),
+                opTrackerFactory, ioSchedulerProvider.getIOScheduler(ctx));
     }
 
 }

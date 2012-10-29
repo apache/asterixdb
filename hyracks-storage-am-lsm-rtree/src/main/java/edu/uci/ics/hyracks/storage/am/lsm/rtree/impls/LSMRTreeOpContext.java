@@ -71,7 +71,8 @@ public final class LSMRTreeOpContext implements IIndexOperationContext {
 
     }
 
-    public IndexOperation getIndexOp() {
+    @Override
+    public IndexOperation getOperation() {
         return op;
     }
 
