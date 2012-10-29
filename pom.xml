@@ -28,7 +28,7 @@
   <scm>
     <connection>scm:svn:https://hyracks.googlecode.com/svn/trunk/fullstack</connection>
     <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/trunk/fullstack</developerConnection>
-    <url>http://code.google.com/p/hyracks/source/browse/#svn/trunk</url>
+    <url>http://code.google.com/p/hyracks/source/browse/#svn/trunk/fullstack</url>
   </scm>
 
   <distributionManagement>
