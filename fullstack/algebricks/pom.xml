@@ -6,6 +6,17 @@
   <packaging>pom</packaging>
   <name>algebricks</name>
 
+  <distributionManagement>
+    <repository>
+      <id>hyracks-releases</id>
+      <url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-releases/</url>
+    </repository>
+    <snapshotRepository>
+      <id>hyracks-snapshots</id>
+      <url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
   <modules>
     <module>algebricks-compiler</module>
     <module>algebricks-common</module>
