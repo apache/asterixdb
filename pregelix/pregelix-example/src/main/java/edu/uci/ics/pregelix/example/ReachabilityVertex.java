@@ -46,7 +46,7 @@ import edu.uci.ics.pregelix.example.io.VLongWritable;
 /**
  * Demonstrates the basic Pregel reachibility query implementation, for undirected graph (e.g., Facebook, LinkedIn graph).
  */
-public class ReachibilityVertex extends Vertex<VLongWritable, ByteWritable, FloatWritable, ByteWritable> {
+public class ReachabilityVertex extends Vertex<VLongWritable, ByteWritable, FloatWritable, ByteWritable> {
 
     public static class SimpleReachibilityCombiner extends MessageCombiner<VLongWritable, ByteWritable, ByteWritable> {
         private ByteWritable agg = new ByteWritable();
@@ -209,11 +209,11 @@ public class ReachibilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
     }
 
     public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(ReachibilityVertex.class.getSimpleName());
-        job.setVertexClass(ReachibilityVertex.class);
+        PregelixJob job = new PregelixJob(ReachabilityVertex.class.getSimpleName());
+        job.setVertexClass(ReachabilityVertex.class);
         job.setVertexInputFormatClass(TextReachibilityVertexInputFormat.class);
         job.setVertexOutputFormatClass(SimpleReachibilityVertexOutputFormat.class);
-        job.setMessageCombinerClass(ReachibilityVertex.SimpleReachibilityCombiner.class);
+        job.setMessageCombinerClass(ReachabilityVertex.SimpleReachibilityCombiner.class);
         Client.run(args, job);
         System.out.println("reachable? " + readReachibilityResult(job.getConfiguration()));
     }

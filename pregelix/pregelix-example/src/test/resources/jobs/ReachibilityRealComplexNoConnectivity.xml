@@ -65,7 +65,7 @@
 <property><name>hadoop.rpc.socket.factory.class.default</name><value>org.apache.hadoop.net.StandardSocketFactory</value></property>
 <property><name>mapred.reduce.tasks</name><value>1</value></property>
 <property><name>topology.node.switch.mapping.impl</name><value>org.apache.hadoop.net.ScriptBasedMapping</value></property>
-<property><name>pregelix.vertexClass</name><value>edu.uci.ics.pregelix.example.ReachibilityVertex</value></property>
+<property><name>pregelix.vertexClass</name><value>edu.uci.ics.pregelix.example.ReachabilityVertex</value></property>
 <property><name>mapred.skip.reduce.max.skip.groups</name><value>0</value></property>
 <property><name>io.file.buffer.size</name><value>4096</value></property>
 <property><name>mapred.jobtracker.maxtasks.per.job</name><value>-1</value></property>
@@ -105,7 +105,7 @@
 <property><name>mapred.task.profile.reduces</name><value>0-2</value></property>
 <property><name>webinterface.private.actions</name><value>false</value></property>
 <property><name>hadoop.tmp.dir</name><value>/tmp/hadoop-${user.name}</value></property>
-<property><name>pregelix.combinerClass</name><value>edu.uci.ics.pregelix.example.ReachibilityVertex$SimpleReachibilityCombiner</value></property>
+<property><name>pregelix.combinerClass</name><value>edu.uci.ics.pregelix.example.ReachabilityVertex$SimpleReachibilityCombiner</value></property>
 <property><name>mapred.output.compression.codec</name><value>org.apache.hadoop.io.compress.DefaultCodec</value></property>
 <property><name>mapred.skip.attempts.to.start.skipping</name><value>2</value></property>
 <property><name>mapred.temp.dir</name><value>${hadoop.tmp.dir}/mapred/temp</value></property>
@@ -119,7 +119,7 @@
 <property><name>mapred.line.input.format.linespermap</name><value>1</value></property>
 <property><name>job.end.retry.attempts</name><value>0</value></property>
 <property><name>ipc.client.idlethreshold</name><value>4000</value></property>
-<property><name>pregelix.vertexOutputFormatClass</name><value>edu.uci.ics.pregelix.example.ReachibilityVertex$SimpleReachibilityVertexOutputFormat</value></property>
+<property><name>pregelix.vertexOutputFormatClass</name><value>edu.uci.ics.pregelix.example.ReachabilityVertex$SimpleReachibilityVertexOutputFormat</value></property>
 <property><name>mapred.reduce.copy.backoff</name><value>300</value></property>
 <property><name>mapred.map.tasks.speculative.execution</name><value>true</value></property>
 <property><name>mapred.inmem.merge.threshold</name><value>1000</value></property>

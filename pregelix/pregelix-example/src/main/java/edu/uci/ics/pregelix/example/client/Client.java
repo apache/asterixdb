@@ -28,7 +28,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
 import edu.uci.ics.pregelix.example.PageRankVertex;
-import edu.uci.ics.pregelix.example.ReachibilityVertex;
+import edu.uci.ics.pregelix.example.ReachabilityVertex;
 import edu.uci.ics.pregelix.example.ShortestPathsVertex;
 
 public class Client {
@@ -87,8 +87,8 @@ public class Client {
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, options.numVertices);
         job.getConfiguration().setLong(PregelixJob.NUM_EDGES, options.numEdges);
         job.getConfiguration().setLong(ShortestPathsVertex.SOURCE_ID, options.sourceId);
-        job.getConfiguration().setLong(ReachibilityVertex.SOURCE_ID, options.sourceId);
-        job.getConfiguration().setLong(ReachibilityVertex.DEST_ID, options.destId);
+        job.getConfiguration().setLong(ReachabilityVertex.SOURCE_ID, options.sourceId);
+        job.getConfiguration().setLong(ReachabilityVertex.DEST_ID, options.destId);
         if (options.numIteration > 0)
             job.getConfiguration().setLong(PageRankVertex.ITERATIONS, options.numIteration);
         return options;

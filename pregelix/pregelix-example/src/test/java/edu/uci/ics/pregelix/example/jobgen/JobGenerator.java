@@ -28,8 +28,8 @@ import edu.uci.ics.pregelix.example.ConnectedComponentsVertex.SimpleConnectedCom
 import edu.uci.ics.pregelix.example.PageRankVertex;
 import edu.uci.ics.pregelix.example.PageRankVertex.SimplePageRankVertexInputFormat;
 import edu.uci.ics.pregelix.example.PageRankVertex.SimplePageRankVertexOutputFormat;
-import edu.uci.ics.pregelix.example.ReachibilityVertex;
-import edu.uci.ics.pregelix.example.ReachibilityVertex.SimpleReachibilityVertexOutputFormat;
+import edu.uci.ics.pregelix.example.ReachabilityVertex;
+import edu.uci.ics.pregelix.example.ReachabilityVertex.SimpleReachibilityVertexOutputFormat;
 import edu.uci.ics.pregelix.example.ShortestPathsVertex;
 import edu.uci.ics.pregelix.example.inputformat.TextConnectedComponentsInputFormat;
 import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
@@ -118,30 +118,30 @@ public class JobGenerator {
 
     private static void generateReachibilityRealComplex(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
-        job.setVertexClass(ReachibilityVertex.class);
+        job.setVertexClass(ReachabilityVertex.class);
         job.setVertexInputFormatClass(TextReachibilityVertexInputFormat.class);
         job.setVertexOutputFormatClass(SimpleReachibilityVertexOutputFormat.class);
-        job.setMessageCombinerClass(ReachibilityVertex.SimpleReachibilityCombiner.class);
+        job.setMessageCombinerClass(ReachabilityVertex.SimpleReachibilityCombiner.class);
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH2);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH2));
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 23);
-        job.getConfiguration().setLong(ReachibilityVertex.SOURCE_ID, 1);
-        job.getConfiguration().setLong(ReachibilityVertex.DEST_ID, 10);
+        job.getConfiguration().setLong(ReachabilityVertex.SOURCE_ID, 1);
+        job.getConfiguration().setLong(ReachabilityVertex.DEST_ID, 10);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
     private static void generateReachibilityRealComplexNoConnectivity(String jobName, String outputPath)
             throws IOException {
         PregelixJob job = new PregelixJob(jobName);
-        job.setVertexClass(ReachibilityVertex.class);
+        job.setVertexClass(ReachabilityVertex.class);
         job.setVertexInputFormatClass(TextReachibilityVertexInputFormat.class);
         job.setVertexOutputFormatClass(SimpleReachibilityVertexOutputFormat.class);
-        job.setMessageCombinerClass(ReachibilityVertex.SimpleReachibilityCombiner.class);
+        job.setMessageCombinerClass(ReachabilityVertex.SimpleReachibilityCombiner.class);
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH2);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH2));
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 23);
-        job.getConfiguration().setLong(ReachibilityVertex.SOURCE_ID, 1);
-        job.getConfiguration().setLong(ReachibilityVertex.DEST_ID, 25);
+        job.getConfiguration().setLong(ReachabilityVertex.SOURCE_ID, 1);
+        job.getConfiguration().setLong(ReachabilityVertex.DEST_ID, 25);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
