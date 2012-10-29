@@ -52,23 +52,6 @@
     </plugins>
   </build>
 
-  <scm>
-    <connection>scm:svn:https://hyracks.googlecode.com/svn/trunk/fullstack/hyracks</connection>
-    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/trunk/fullstack/hyracks</developerConnection>
-    <url>http://code.google.com/p/hyracks/source/browse/#svn/trunk/hyracks</url>
-  </scm>
-
-  <distributionManagement>
-    <repository>
-      <id>hyracks-releases</id>
-      <url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-releases/</url>
-    </repository>
-    <snapshotRepository>
-      <id>hyracks-snapshots</id>
-      <url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-snapshots/</url>
-    </snapshotRepository>
-  </distributionManagement>
-
   <reporting>
     <plugins>
       <plugin>
