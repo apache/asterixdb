@@ -3,12 +3,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>pregelix</artifactId>
-  <version>0.2.2-SNAPSHOT</version>
+  <version>0.2.2</version>
   <packaging>pom</packaging>
   <name>pregelix</name>
 
   <properties>
-    <jvm.extraargs/>
+    <jvm.extraargs />
   </properties>
 
   <profiles>
@@ -53,9 +53,9 @@
   </build>
 
   <scm>
-    <connection>scm:svn:https://pregelix.googlecode.com/svn/trunk/pregelix</connection>
-    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/trunk/pregelix</developerConnection>
-    <url>http://code.google.com/p/hyracks/source/browse/#svn/trunk/pregelix</url>
+    <connection>scm:svn:https://pregelix.googlecode.com/svn/tags/fullstack-0.2.2/trunk/pregelix</connection>
+    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/tags/fullstack-0.2.2/trunk/pregelix</developerConnection>
+    <url>http://code.google.com/p/hyracks/source/browse/#svn/tags/fullstack-0.2.2/trunk/pregelix</url>
   </scm>
 
   <distributionManagement>
