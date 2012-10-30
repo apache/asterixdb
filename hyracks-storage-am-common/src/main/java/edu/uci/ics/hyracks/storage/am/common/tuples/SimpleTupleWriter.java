@@ -114,6 +114,7 @@ public class SimpleTupleWriter implements ITreeIndexTupleWriter {
         return numFields * 2;
     }
 
+    @Override
     public int getCopySpaceRequired(ITupleReference tuple) {
         return bytesRequired(tuple);
     }

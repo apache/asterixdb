@@ -148,6 +148,7 @@ public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
         this.typeTraits = typeTraits;
     }
 
+    @Override
     public int getCopySpaceRequired(ITupleReference tuple) {
         return bytesRequired(tuple);
     }

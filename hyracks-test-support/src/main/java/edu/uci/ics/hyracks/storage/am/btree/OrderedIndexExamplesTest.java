@@ -136,8 +136,11 @@ public abstract class OrderedIndexExamplesTest {
 
     /**
      * This test the btree page split. Originally this test didn't pass since
-     * the btree was spliting by cardinality and not size. Now, it split page by
-     * size.
+     * the btree was spliting by cardinality and not size. Thus, we might end
+     * up with a situation where there is not enough space to insert the new
+     * tuple after the split which will throw an error and the split won't be
+     * propagated to upper level; thus, the tree is corrupted. Now, it split
+     * page by size. The correct behavior on abnormally large keys/values.
      */
     @Test
     public void pageSplitTestExample() throws Exception {

@@ -94,12 +94,9 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
             System.arraycopy(tuple.getFieldData(tuple.getFieldCount() - 1), getLeftChildPageOff(tuple) + childPtrSize,
                     buf.array(), rightLeafOff, childPtrSize);
         } else {
-            // If slotOff has a right (slot-)neighbor then update its child
-            // pointer.
-            // The only time when this is NOT the case, is when this is the very
-            // first tuple
-            // (or when the splitkey goes into the rightmost slot but that case
-            // is handled in the if above).
+            // If slotOff has a right (slot-)neighbor then update its child pointer.
+            // The only time when this is NOT the case, is when this is the very first tuple
+            // (or when the splitkey goes into the rightmost slot but that case is handled in the if above).
             if (buf.getInt(tupleCountOff) > 1) {
                 int rightNeighborOff = slotOff - slotManager.getSlotSize();
                 frameTuple.resetByTupleOffset(buf, slotManager.getTupleOff(rightNeighborOff));
@@ -183,8 +180,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         ByteBuffer right = rightFrame.getBuffer();
         int tupleCount = getTupleCount();
 
-        // Find split point, and determine into which frame the new tuple should
-        // be inserted into.
+        // Find split point, and determine into which frame the new tuple should be inserted into.
         int tuplesToLeft;
         ITreeIndexFrame targetFrame = null;
 
@@ -193,7 +189,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         int i;
         for (i = 0; i < tupleCount; ++i) {
             frameTuple.resetByTupleIndex(this, i);
-            totalSize += tupleWriter.bytesRequired(frameTuple) + slotManager.getSlotSize();
+            totalSize += tupleWriter.bytesRequired(frameTuple) + childPtrSize + slotManager.getSlotSize();
             if (totalSize >= halfPageSize) {
                 break;
             }
@@ -225,8 +221,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
 
         // Copy the split key to be inserted.
         // We must do so because setting the new split key will overwrite the
-        // old split key, and we cannot insert the existing split key at this
-        // point.
+        // old split key, and we cannot insert the existing split key at this point.
         ISplitKey savedSplitKey = splitKey.duplicate(tupleWriter.createTupleReference());
 
         // Set split key to be highest value in left page.
@@ -248,8 +243,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
 
         // Insert the saved split key.
         int targetTupleIndex;
-        // it's safe to catch this exception since it will have been caught
-        // before reaching here
+        // it's safe to catch this exception since it will have been caught before reaching here
         try {
             targetTupleIndex = ((BTreeNSMInteriorFrame) targetFrame).findInsertTupleIndex(savedSplitKey.getTuple());
         } catch (TreeIndexException e) {
@@ -302,7 +296,6 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         FindTupleMode fsm = null;
         // The target comparator may be on a prefix of the BTree key fields.
         MultiComparator targetCmp = pred.getLowKeyComparator();
-        ;
         tuple = pred.getLowKey();
         if (tuple == null) {
             return getLeftmostChildPageId();
