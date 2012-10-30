@@ -36,7 +36,8 @@ public class TransactionManager implements ITransactionManager {
     }
 
     @Override
-    public void abortTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal) throws ACIDException {
+    public void abortTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal)
+            throws ACIDException {
         synchronized (txnContext) {
             if (txnContext.getTxnState().equals(TransactionState.ABORTED)) {
                 return;
@@ -82,14 +83,25 @@ public class TransactionManager implements ITransactionManager {
     }
 
     @Override
-    public void commitTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal) throws ACIDException {
+    public void commitTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal)
+            throws ACIDException {
         synchronized (txnContext) {
             if ((txnContext.getTxnState().equals(TransactionState.COMMITTED))) {
                 return;
             }
 
+            //There is either job-level commit or entity-level commit.
+            //The job-level commit will have -1 value both for datasetId and PKHashVal.
+
+            //for entity-level commit
+            if (PKHashVal != -1) {
+                transactionProvider.getLockManager().unlock(datasetId, PKHashVal, txnContext);
+                return;
+            }
+
+            //for job-level commit
             try {
-                if (txnContext.getTransactionType().equals(TransactionContext.TransactionType.READ_WRITE)) { 
+                if (txnContext.getTransactionType().equals(TransactionContext.TransactionType.READ_WRITE)) {
                     transactionProvider.getLogManager().log(LogType.COMMIT, txnContext, -1, -1, -1, (byte) 0, 0, null,
                             null, txnContext.getLastLogLocator());
                 }
@@ -108,7 +120,8 @@ public class TransactionManager implements ITransactionManager {
     }
 
     @Override
-    public void completedTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal, boolean success) throws ACIDException {
+    public void completedTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal, boolean success)
+            throws ACIDException {
         if (!success) {
             abortTransaction(txnContext, datasetId, PKHashVal);
         } else {

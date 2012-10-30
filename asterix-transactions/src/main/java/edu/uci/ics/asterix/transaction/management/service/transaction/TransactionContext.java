@@ -22,6 +22,7 @@ import java.util.Set;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.opcallbacks.AbstractOperationCallback;
+import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTracker;
 import edu.uci.ics.asterix.transaction.management.resource.ICloseable;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
@@ -77,12 +78,19 @@ public class TransactionContext implements Serializable {
         status = ACTIVE_STATUS;
     }
 
-    public void registerIndex(ILSMIndex index) {
-        indexes.add(index);
+    public void registerIndexAndCallback(ILSMIndex index, AbstractOperationCallback callback) {
+        synchronized (indexes) {
+            indexes.add(index);
+            callbacks.add(callback);
+        }
     }
 
-    public void registerCallback(AbstractOperationCallback callback) {
-        callbacks.add(callback);
+    public void setLastLSNToIndexes(long lastLSN) {
+        synchronized (indexes) {
+            for (ILSMIndex index : indexes) {
+                ((IndexOperationTracker) index.getOperationTracker()).setLastLSN(lastLSN);
+            }
+        }
     }
 
     public void setTransactionType(TransactionType transactionType) {
