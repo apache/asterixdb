@@ -28,6 +28,7 @@ public class IndexOperationTracker implements ILSMOperationTracker {
 
     // Number of active operations on a ILSMIndex instance.
     private int numActiveOperations = 0;
+    private long lastLsn;
     private final ILSMIndex index;
     private final ILSMIndexAccessor accessor;    
     private final FlushOperationCallback FLUSHCALLBACK_INSTANCE = new FlushOperationCallback();
@@ -90,7 +91,15 @@ public class IndexOperationTracker implements ILSMOperationTracker {
         }
     }
     
-    private class FlushOperationCallback implements ILSMIOOperationCallback {        
+    public long getLastLSN() {
+        return lastLsn;
+    }
+    
+    public void setLastLSN(long lastLsn) {
+        this.lastLsn = lastLsn;
+    }
+    
+    private class FlushOperationCallback implements ILSMIOOperationCallback {
         @Override
         public void callback() {
             IndexOperationTracker.this.notifyAll();

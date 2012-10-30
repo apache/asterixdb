@@ -15,14 +15,18 @@
 package edu.uci.ics.asterix.transaction.management.service.transaction;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.transaction.management.opcallbacks.AbstractOperationCallback;
 import edu.uci.ics.asterix.transaction.management.resource.ICloseable;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager.TransactionState;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
 /**
  * Represents a holder object that contains all information related to a
@@ -53,6 +57,34 @@ public class TransactionContext implements Serializable {
     private TransactionType transactionType = TransactionType.READ;
     private JobId jobId;
 
+    // List of indexes on which operations were performed on behalf of this transaction.
+    private final List<ILSMIndex> indexes = new ArrayList<ILSMIndex>();
+
+    // List of operation callbacks corresponding to the operand indexes. In particular, needed to track
+    // the number of active operations contributed by this transaction.
+    private final List<AbstractOperationCallback> callbacks = new ArrayList<AbstractOperationCallback>();
+
+    public TransactionContext(JobId jobId, TransactionSubsystem transactionSubsystem) throws ACIDException {
+        this.jobId = jobId;
+        this.transactionSubsystem = transactionSubsystem;
+        init();
+    }
+
+    private void init() throws ACIDException {
+        lastLogLocator = LogUtil.getDummyLogicalLogLocator(transactionSubsystem.getLogManager());
+        txnState = TransactionState.ACTIVE;
+        startWaitTime = INVALID_TIME;
+        status = ACTIVE_STATUS;
+    }
+
+    public void registerIndex(ILSMIndex index) {
+        indexes.add(index);
+    }
+
+    public void registerCallback(AbstractOperationCallback callback) {
+        callbacks.add(callback);
+    }
+
     public void setTransactionType(TransactionType transactionType) {
         this.transactionType = transactionType;
     }
@@ -63,19 +95,6 @@ public class TransactionContext implements Serializable {
 
     public void addCloseableResource(ICloseable resource) {
         resources.add(resource);
-    }
-
-    public TransactionContext(JobId jobId, TransactionSubsystem transactionProvider) throws ACIDException {
-        this.jobId = jobId;
-        this.transactionSubsystem = transactionProvider;
-        init();
-    }
-
-    private void init() throws ACIDException {
-        lastLogLocator = LogUtil.getDummyLogicalLogLocator(transactionSubsystem.getLogManager());
-        txnState = TransactionState.ACTIVE;
-        startWaitTime = INVALID_TIME;
-        status = ACTIVE_STATUS;
     }
 
     public LogicalLogLocator getLastLogLocator() {
