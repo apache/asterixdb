@@ -50,6 +50,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMFlushOperation;
@@ -311,13 +312,13 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     }
 
     public class LSMRTreeWithAntiMatterTuplesAccessor extends LSMTreeIndexAccessor {
-        public LSMRTreeWithAntiMatterTuplesAccessor(ILSMHarness lsmHarness, IIndexOperationContext ctx) {
+        public LSMRTreeWithAntiMatterTuplesAccessor(ILSMHarness lsmHarness, ILSMIndexOperationContext ctx) {
             super(lsmHarness, ctx);
         }
 
         @Override
         public ITreeIndexCursor createSearchCursor() {
-            return new LSMRTreeWithAntiMatterTuplesSearchCursor();
+            return new LSMRTreeWithAntiMatterTuplesSearchCursor(ctx);
         }
 
         public MultiComparator getMultiComparator() {
@@ -375,7 +376,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     @Override
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException {
         LSMRTreeOpContext ctx = createOpContext();
-        ITreeIndexCursor cursor = new LSMRTreeWithAntiMatterTuplesSearchCursor();
+        ITreeIndexCursor cursor = new LSMRTreeWithAntiMatterTuplesSearchCursor(ctx);
         ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
         // Ordered scan, ignoring the in-memory RTree.
         // We get back a snapshot of the on-disk RTrees that are going to be

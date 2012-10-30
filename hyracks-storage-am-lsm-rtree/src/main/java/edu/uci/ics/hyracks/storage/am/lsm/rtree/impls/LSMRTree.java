@@ -49,6 +49,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
@@ -323,9 +324,9 @@ public class LSMRTree extends AbstractLSMRTree {
         // Renaming order is critical because we use assume ordering when we
         // read the file names when we open the tree.
         // The RTree should be renamed before the BTree.
-        IIndexOperationContext ctx = createOpContext();
+        ILSMIndexOperationContext ctx = createOpContext();
         ITreeIndexCursor cursor;
-        cursor = new LSMRTreeSortedCursor(linearizer);
+        cursor = new LSMRTreeSortedCursor(ctx, linearizer);
         ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
         // Scan the RTrees, ignoring the in-memory RTree.
         List<Object> mergingComponents;
@@ -354,13 +355,13 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     public class LSMRTreeAccessor extends LSMTreeIndexAccessor {
-        public LSMRTreeAccessor(ILSMHarness lsmHarness, IIndexOperationContext ctx) {
+        public LSMRTreeAccessor(ILSMHarness lsmHarness, ILSMIndexOperationContext ctx) {
             super(lsmHarness, ctx);
         }
 
         @Override
         public ITreeIndexCursor createSearchCursor() {
-            return new LSMRTreeSearchCursor();
+            return new LSMRTreeSearchCursor(ctx);
         }
 
         public MultiComparator getMultiComparator() {

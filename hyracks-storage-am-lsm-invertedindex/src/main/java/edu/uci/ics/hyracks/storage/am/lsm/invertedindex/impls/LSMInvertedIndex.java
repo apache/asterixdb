@@ -450,7 +450,7 @@ public class LSMInvertedIndex implements ILSMIndexInternal, IInvertedIndex {
             IndexException {
         LSMInvertedIndexOpContext ctx = createOpContext(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         ctx.setOperation(IndexOperation.SEARCH);
-        IIndexCursor cursor = new LSMInvertedIndexRangeSearchCursor();
+        IIndexCursor cursor = new LSMInvertedIndexRangeSearchCursor(ctx);
         RangePredicate mergePred = new RangePredicate(null, null, true, true, null, null);
 
         // Scan diskInvertedIndexes ignoring the memoryInvertedIndex.

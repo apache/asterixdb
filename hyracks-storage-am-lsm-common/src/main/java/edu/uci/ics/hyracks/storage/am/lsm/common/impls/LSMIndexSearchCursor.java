@@ -26,11 +26,12 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
-public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
+public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
     protected PriorityQueueElement outputElement;
     protected IIndexCursor[] rangeCursors;
     protected PriorityQueue<PriorityQueueElement> outputPriorityQueue;
@@ -40,8 +41,10 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
     protected boolean includeMemComponent;
     protected AtomicInteger searcherRefCount;
     protected ILSMHarness lsmHarness;
-
-    public LSMTreeSearchCursor() {
+    protected final ILSMIndexOperationContext opCtx;
+    
+    public LSMIndexSearchCursor(ILSMIndexOperationContext opCtx) {
+        this.opCtx = opCtx;
         outputElement = null;
         needPush = false;
     }
@@ -76,7 +79,7 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
         rangeCursors = null;
 
         if (searcherRefCount != null) {
-            lsmHarness.closeSearchCursor(searcherRefCount, includeMemComponent);
+            lsmHarness.closeSearchCursor(searcherRefCount, includeMemComponent, opCtx);
         }
     }
 
@@ -108,7 +111,7 @@ public abstract class LSMTreeSearchCursor implements ITreeIndexCursor {
                 }
                 rangeCursors = null;
             } finally {
-                lsmHarness.closeSearchCursor(searcherRefCount, includeMemComponent);
+                lsmHarness.closeSearchCursor(searcherRefCount, includeMemComponent, opCtx);
             }
         }
     }

@@ -18,7 +18,6 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
@@ -26,12 +25,13 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 
 public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     protected ILSMHarness lsmHarness;
-    protected IIndexOperationContext ctx;
+    protected ILSMIndexOperationContext ctx;
 
-    public LSMTreeIndexAccessor(ILSMHarness lsmHarness, IIndexOperationContext ctx) {
+    public LSMTreeIndexAccessor(ILSMHarness lsmHarness, ILSMIndexOperationContext ctx) {
         this.lsmHarness = lsmHarness;
         this.ctx = ctx;
     }

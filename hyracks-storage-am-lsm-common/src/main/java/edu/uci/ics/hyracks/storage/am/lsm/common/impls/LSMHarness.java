@@ -25,10 +25,8 @@ import java.util.logging.Logger;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -36,6 +34,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 
@@ -83,23 +82,23 @@ public class LSMHarness implements ILSMHarness {
         this.ioScheduler = ioScheduler;
     }
 
-    private void threadExit(IndexOperation op) throws HyracksDataException {
+    private void threadExit(ILSMIndexOperationContext opCtx) throws HyracksDataException {
         if (!lsmIndex.getFlushController().getFlushStatus(lsmIndex) && lsmIndex.getInMemoryFreePageManager().isFull()) {
             lsmIndex.getFlushController().setFlushStatus(lsmIndex, true);
         }
-        opTracker.afterOperation(op);
+        opTracker.afterOperation(opCtx);
     }
 
-    public void insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ctx) throws HyracksDataException,
+    public void insertUpdateOrDelete(ITupleReference tuple, ILSMIndexOperationContext ctx) throws HyracksDataException,
             IndexException {
-        opTracker.beforeOperation(ctx.getOperation());
+        opTracker.beforeOperation(ctx);
         // It is possible, due to concurrent execution of operations, that an operation will 
         // fail. In such a case, simply retry the operation. Refer to the specific LSMIndex code 
         // to see exactly why an operation might fail.
         try {
             lsmIndex.insertUpdateOrDelete(tuple, ctx);
         } finally {
-            threadExit(ctx.getOperation());
+            threadExit(ctx);
         }
     }
 
@@ -125,12 +124,12 @@ public class LSMHarness implements ILSMHarness {
         flushController.setFlushStatus(lsmIndex, false);
     }
 
-    public List<Object> search(IIndexCursor cursor, ISearchPredicate pred, IIndexOperationContext ctx,
+    public List<Object> search(IIndexCursor cursor, ISearchPredicate pred, ILSMIndexOperationContext ctx,
             boolean includeMemComponent) throws HyracksDataException, IndexException {
         // If the search doesn't include the in-memory component, then we don't have
         // to synchronize with a flush.
         if (includeMemComponent) {
-            opTracker.beforeOperation(ctx.getOperation());
+            opTracker.beforeOperation(ctx);
         }
 
         // Get a snapshot of the current on-disk Trees.
@@ -223,12 +222,12 @@ public class LSMHarness implements ILSMHarness {
     }
 
     @Override
-    public void closeSearchCursor(AtomicInteger searcherRefCount, boolean includeMemComponent)
-            throws HyracksDataException {
+    public void closeSearchCursor(AtomicInteger searcherRefCount, boolean includeMemComponent,
+            ILSMIndexOperationContext ctx) throws HyracksDataException {
         // If the in-memory Tree was not included in the search, then we don't
         // need to synchronize with a flush.
         if (includeMemComponent) {
-            threadExit(IndexOperation.SEARCH);
+            threadExit(ctx);
         }
         // A merge may be waiting on this searcher to finish searching the on-disk components.
         // Decrement the searcherRefCount so that the merge process is able to cleanup any old

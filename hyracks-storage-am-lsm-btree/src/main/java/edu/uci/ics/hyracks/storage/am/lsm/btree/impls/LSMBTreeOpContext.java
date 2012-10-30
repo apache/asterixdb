@@ -18,15 +18,15 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 
-public final class LSMBTreeOpContext implements IIndexOperationContext {
+public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
 
     public ITreeIndexFrameFactory insertLeafFrameFactory;
     public ITreeIndexFrameFactory deleteLeafFrameFactory;
@@ -114,5 +114,15 @@ public final class LSMBTreeOpContext implements IIndexOperationContext {
 
     public IndexOperation getOperation() {
         return op;
+    }
+
+    @Override
+    public ISearchOperationCallback getSearchOperationCallback() {
+        return searchCallback;
+    }
+
+    @Override
+    public IModificationOperationCallback getModificationCallback() {
+        return modificationCallback;
     }
 }

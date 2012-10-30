@@ -57,6 +57,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
@@ -230,7 +231,7 @@ public class LSMBTree implements ILSMIndexInternal, ITreeIndex {
 
     private boolean insert(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException, IndexException {
         MultiComparator comparator = MultiComparator.create(memBTree.getComparatorFactories());
-        LSMBTreeRangeSearchCursor searchCursor = new LSMBTreeRangeSearchCursor();
+        LSMBTreeRangeSearchCursor searchCursor = new LSMBTreeRangeSearchCursor(ctx);
         IIndexCursor memCursor = new BTreeRangeSearchCursor(ctx.memBTreeOpCtx.leafFrame, false);
         RangePredicate predicate = new RangePredicate(tuple, tuple, true, true, comparator, comparator);
 
@@ -504,13 +505,13 @@ public class LSMBTree implements ILSMIndexInternal, ITreeIndex {
     }
 
     public class LSMBTreeAccessor extends LSMTreeIndexAccessor {
-        public LSMBTreeAccessor(ILSMHarness lsmHarness, IIndexOperationContext ctx) {
+        public LSMBTreeAccessor(ILSMHarness lsmHarness, ILSMIndexOperationContext ctx) {
             super(lsmHarness, ctx);
         }
 
         @Override
         public IIndexCursor createSearchCursor() {
-            return new LSMBTreeRangeSearchCursor();
+            return new LSMBTreeRangeSearchCursor(ctx);
         }
 
         public MultiComparator getMultiComparator() {
@@ -528,7 +529,7 @@ public class LSMBTree implements ILSMIndexInternal, ITreeIndex {
 
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException {
         LSMBTreeOpContext ctx = createOpContext(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-        ITreeIndexCursor cursor = new LSMBTreeRangeSearchCursor();
+        ITreeIndexCursor cursor = new LSMBTreeRangeSearchCursor(ctx);
         RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
         // Ordered scan, ignoring the in-memory BTree.
         // We get back a snapshot of the on-disk BTrees that are going to be

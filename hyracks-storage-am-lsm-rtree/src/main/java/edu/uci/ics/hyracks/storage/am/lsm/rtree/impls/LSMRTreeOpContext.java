@@ -18,7 +18,6 @@ package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -26,12 +25,13 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeOpContext;
 
-public final class LSMRTreeOpContext implements IIndexOperationContext {
+public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
 
     public RTreeOpContext rtreeOpContext;
     public BTreeOpContext btreeOpContext;
@@ -78,5 +78,15 @@ public final class LSMRTreeOpContext implements IIndexOperationContext {
 
     public MultiComparator getBTreeMultiComparator() {
         return btreeOpContext.cmp;
+    }
+
+    @Override
+    public ISearchOperationCallback getSearchOperationCallback() {
+        return searchCallback;
+    }
+
+    @Override
+    public IModificationOperationCallback getModificationCallback() {
+        return modificationCallback;
     }
 }

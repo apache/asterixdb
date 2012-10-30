@@ -21,12 +21,14 @@ import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 
 public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor implements ITreeIndexCursor {
 
     private int currentCursror;
 
-    public LSMRTreeSearchCursor() {
+    public LSMRTreeSearchCursor(ILSMIndexOperationContext opCtx) {
+        super(opCtx);
         currentCursror = 0;
     }
 
@@ -46,7 +48,7 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor implements ITre
             rtreeCursors = null;
             btreeCursors = null;
         } finally {
-            lsmHarness.closeSearchCursor(searcherRefCount, includeMemRTree);
+            lsmHarness.closeSearchCursor(searcherRefCount, includeMemRTree, opCtx);
         }
     }
 

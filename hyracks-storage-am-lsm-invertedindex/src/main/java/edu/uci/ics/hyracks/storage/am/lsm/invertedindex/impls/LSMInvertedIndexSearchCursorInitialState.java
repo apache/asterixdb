@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialState {
@@ -80,7 +81,7 @@ public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialS
         return lsmHarness;
     }
 
-    public IIndexOperationContext getOpContext() {
+    public ILSMIndexOperationContext getOpContext() {
         return ctx;
     }
 

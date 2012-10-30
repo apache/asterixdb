@@ -12,6 +12,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
@@ -42,9 +43,11 @@ public abstract class LSMRTreeAbstractCursor {
     protected boolean includeMemRTree;
     protected ILSMHarness lsmHarness;
     protected boolean foundNext;
+    protected final ILSMIndexOperationContext opCtx;
 
-    public LSMRTreeAbstractCursor() {
+    public LSMRTreeAbstractCursor(ILSMIndexOperationContext opCtx) {
         super();
+        this.opCtx = opCtx;
     }
 
     public RTreeSearchCursor getCursor(int cursorIndex) {
@@ -98,7 +101,7 @@ public abstract class LSMRTreeAbstractCursor {
             rtreeCursors = null;
             btreeCursors = null;
         } finally {
-            lsmHarness.closeSearchCursor(searcherRefCount, includeMemRTree);
+            lsmHarness.closeSearchCursor(searcherRefCount, includeMemRTree, opCtx);
         }
 
         open = false;

@@ -26,16 +26,21 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMIndexSearchCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 
-public class LSMInvertedIndexRangeSearchCursor extends LSMTreeSearchCursor {
+public class LSMInvertedIndexRangeSearchCursor extends LSMIndexSearchCursor {
 
     // Assuming the cursor for all deleted-keys indexes are of the same type.
     protected IIndexCursor deletedKeysBTreeCursor;
     protected ArrayList<IIndexAccessor> deletedKeysBTreeAccessors;
     protected PermutingTupleReference keysOnlyTuple;
     protected RangePredicate keySearchPred;
+    
+    public LSMInvertedIndexRangeSearchCursor(ILSMIndexOperationContext opCtx) {
+        super(opCtx);
+    }
     
     @Override
     public void next() throws HyracksDataException {

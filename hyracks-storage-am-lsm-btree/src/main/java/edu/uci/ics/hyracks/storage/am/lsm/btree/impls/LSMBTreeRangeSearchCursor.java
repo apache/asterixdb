@@ -29,19 +29,20 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMIndexSearchCursor;
 
-public class LSMBTreeRangeSearchCursor extends LSMTreeSearchCursor {
+public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     private final ArrayTupleReference copyTuple;
     private final RangePredicate reusablePred;
 
     private ISearchOperationCallback searchCallback;
     private RangePredicate predicate;
     private IIndexAccessor memBTreeAccessor;
-    private ArrayTupleBuilder tupleBuilder;
-
-    public LSMBTreeRangeSearchCursor() {
-        super();
+    private ArrayTupleBuilder tupleBuilder;    
+    
+    public LSMBTreeRangeSearchCursor(ILSMIndexOperationContext opCtx) {
+        super(opCtx);        
         this.copyTuple = new ArrayTupleReference();
         this.reusablePred = new RangePredicate(null, null, true, true, null, null);
     }

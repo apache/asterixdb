@@ -2,10 +2,10 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 
 public class ReferenceCountingOperationTracker implements ILSMOperationTracker {
@@ -19,7 +19,7 @@ public class ReferenceCountingOperationTracker implements ILSMOperationTracker {
     }
 
     @Override
-    public synchronized void beforeOperation(IndexOperation op) throws HyracksDataException {
+    public synchronized void beforeOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
         // Wait for pending flushes to complete.
         // If flushFlag is set, then the flush is queued to occur by the last exiting thread.
         // This operation should wait for that flush to occur before proceeding.
@@ -34,13 +34,13 @@ public class ReferenceCountingOperationTracker implements ILSMOperationTracker {
     }
 
     @Override
-    public void afterOperation(IndexOperation op) throws HyracksDataException {
+    public void afterOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
         // The operation is considered inactive, immediately after leaving the index.
-        completeOperation(op);
+        completeOperation(opCtx);
     }
 
     @Override
-    public synchronized void completeOperation(IndexOperation op) throws HyracksDataException {
+    public synchronized void completeOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
         threadRefCount--;
 
         // Flush will only be handled by last exiting thread.

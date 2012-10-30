@@ -17,16 +17,16 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 
-public class LSMInvertedIndexOpContext implements IIndexOperationContext {
+public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
 
     private IndexOperation op;
     private final IInvertedIndex memInvIndex;
@@ -85,5 +85,15 @@ public class LSMInvertedIndexOpContext implements IIndexOperationContext {
     @Override
     public IndexOperation getOperation() {
         return op;
+    }
+
+    @Override
+    public ISearchOperationCallback getSearchOperationCallback() {
+        return searchCallback;
+    }
+
+    @Override
+    public IModificationOperationCallback getModificationCallback() {
+        return modificationCallback;
     }
 }

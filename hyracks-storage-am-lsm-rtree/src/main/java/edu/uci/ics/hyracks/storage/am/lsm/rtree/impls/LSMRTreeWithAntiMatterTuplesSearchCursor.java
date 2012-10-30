@@ -28,12 +28,14 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMIndexSearchCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
 
-public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMTreeSearchCursor {
+public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCursor {
+
     private RTreeSearchCursor memRTreeCursor;
     private BTreeRangeSearchCursor memBTreeCursor;
     private RangePredicate btreeRangePredicate;
@@ -43,6 +45,10 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMTreeSearchCurso
     private int[] comparatorFields;
     private MultiComparator btreeCmp;
 
+    public LSMRTreeWithAntiMatterTuplesSearchCursor(ILSMIndexOperationContext opCtx) {
+        super(opCtx);
+    }
+    
     public void initPriorityQueue() throws HyracksDataException, IndexException {
         int pqInitSize = (rangeCursors.length > 0) ? rangeCursors.length : 1;
         outputPriorityQueue = new PriorityQueue<PriorityQueueElement>(pqInitSize, pqCmp);

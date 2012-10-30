@@ -19,7 +19,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
@@ -28,6 +27,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexFileManager.LSMInvertedIndexFileNameComponent;
@@ -36,11 +36,11 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
 
     protected final ILSMHarness lsmHarness;
     protected final ILSMIndexFileManager fileManager;
-    protected final IIndexOperationContext ctx;
+    protected final ILSMIndexOperationContext ctx;
     protected final LSMInvertedIndex invIndex;
 
     public LSMInvertedIndexAccessor(LSMInvertedIndex invIndex, ILSMHarness lsmHarness,
-            ILSMIndexFileManager fileManager, IIndexOperationContext ctx) {
+            ILSMIndexFileManager fileManager, ILSMIndexOperationContext ctx) {
         this.lsmHarness = lsmHarness;
         this.fileManager = fileManager;
         this.ctx = ctx;
@@ -97,7 +97,7 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
 
     @Override
     public IIndexCursor createRangeSearchCursor() {
-        return new LSMInvertedIndexRangeSearchCursor();
+        return new LSMInvertedIndexRangeSearchCursor(ctx);
     }
 
     @Override
