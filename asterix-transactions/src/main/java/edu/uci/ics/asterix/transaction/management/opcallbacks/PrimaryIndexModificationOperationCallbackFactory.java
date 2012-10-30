@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
 /**
  * Assumes LSM-BTrees as primary indexes.
@@ -48,10 +49,16 @@ public class PrimaryIndexModificationOperationCallbackFactory extends AbstractOp
     public IModificationOperationCallback createModificationOperationCallback(long resourceId, IHyracksTaskContext ctx)
             throws HyracksDataException {
         TransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
+        ILSMIndex index = (ILSMIndex) txnSubsystem.getTransactionalResourceRepository().getTransactionalResource(
+                resourceId);
         try {
             TransactionContext txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jobId);
-            return new PrimaryIndexModificationOperationCallback(datasetId, primaryKeyFields, primaryKeyHashFunctions,
-                    txnCtx, txnSubsystem.getLockManager(), txnSubsystem, resourceId, indexOp);
+            IModificationOperationCallback modCallback = new PrimaryIndexModificationOperationCallback(datasetId,
+                    primaryKeyFields, primaryKeyHashFunctions, txnCtx, txnSubsystem.getLockManager(), txnSubsystem,
+                    resourceId, indexOp);
+            txnCtx.registerIndex(index);
+            txnCtx.registerCallback((AbstractOperationCallback) modCallback);
+            return modCallback;
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }
