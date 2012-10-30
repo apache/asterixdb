@@ -13,11 +13,11 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateScheduler;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ReferenceCountingOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -44,7 +44,7 @@ public class AsterixAppRuntimeContext {
 
     private ILSMFlushController flushController;
     private ILSMMergePolicy mergePolicy;
-    private ILSMOperationTracker opTracker;
+    private ILSMOperationTrackerFactory opTrackerFactory;
     private ILSMIOOperationScheduler lsmIOScheduler;
     private ILocalResourceRepository localResourceRepository;
     private ResourceIdFactory resourceIdFactory;
@@ -68,7 +68,7 @@ public class AsterixAppRuntimeContext {
         flushController = new FlushController();
         lsmIOScheduler = ImmediateScheduler.INSTANCE;
         mergePolicy = new ConstantMergePolicy(lsmIOScheduler, 3);
-        opTracker = new ReferenceCountingOperationTracker();
+        opTrackerFactory = RefCountingOperationTrackerFactory.INSTANCE;
 
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
                 ioMgr);
@@ -147,8 +147,8 @@ public class AsterixAppRuntimeContext {
         return mergePolicy;
     }
 
-    public ILSMOperationTracker getLSMOperationTracker() {
-        return opTracker;
+    public ILSMOperationTrackerFactory getLSMOperationTrackerFactory() {
+        return opTrackerFactory;
     }
 
     public ILSMIOOperationScheduler getLSMIOScheduler() {

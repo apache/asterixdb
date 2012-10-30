@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -25,9 +25,12 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 
-public class SearchOperationCallback extends AbstractOperationCallback implements ISearchOperationCallback {
+/**
+ * Assumes LSM-BTrees as primary indexes. Implements try/locking and unlocking on primary keys.
+ */
+public class PrimaryIndexSearchOperationCallback extends AbstractOperationCallback implements ISearchOperationCallback {
 
-    public SearchOperationCallback(DatasetId datasetId, int[] entityIdFields,
+    public PrimaryIndexSearchOperationCallback(DatasetId datasetId, int[] entityIdFields,
             IBinaryHashFunction[] entityIdFieldHashFunctions, ILockManager lockManager, TransactionContext txnCtx) {
         super(datasetId, entityIdFields, entityIdFieldHashFunctions, txnCtx, lockManager);
     }

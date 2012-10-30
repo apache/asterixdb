@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -28,13 +28,13 @@ import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 
-public class LSMBTreeModificationOperationCallbackFactory extends AbstractOperationCallbackFactory implements
+public class SecondaryIndexModificationOperationCallbackFactory extends AbstractOperationCallbackFactory implements
         IModificationOperationCallbackFactory {
 
     private static final long serialVersionUID = 1L;
     private final IndexOperation indexOp;
 
-    public LSMBTreeModificationOperationCallbackFactory(JobId jobId, DatasetId datasetId, int[] primaryKeyFields,
+    public SecondaryIndexModificationOperationCallbackFactory(JobId jobId, DatasetId datasetId, int[] primaryKeyFields,
             IBinaryHashFunction[] primaryKeyHashFunctions, ITransactionSubsystemProvider txnSubsystemProvider,
             IndexOperation indexOp) {
         super(jobId, datasetId, primaryKeyFields, primaryKeyHashFunctions, txnSubsystemProvider);
@@ -47,11 +47,10 @@ public class LSMBTreeModificationOperationCallbackFactory extends AbstractOperat
         TransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
         try {
             TransactionContext txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jobId);
-            return new LSMBTreeModificationOperationCallback(datasetId, primaryKeyFields, primaryKeyHashFunctions,
-                    txnCtx, txnSubsystem.getLockManager(), txnSubsystem, resourceId, indexOp);
+            return new SecondaryIndexModificationOperationCallback(datasetId, primaryKeyFields,
+                    primaryKeyHashFunctions, txnCtx, txnSubsystem.getLockManager(), txnSubsystem, resourceId, indexOp);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }
     }
-
 }

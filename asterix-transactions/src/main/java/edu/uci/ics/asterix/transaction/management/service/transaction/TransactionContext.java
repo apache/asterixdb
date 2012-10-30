@@ -44,7 +44,7 @@ public class TransactionContext implements Serializable {
     }
 
     private static final long serialVersionUID = -6105616785783310111L;
-    private TransactionSubsystem transactionProvider;
+    private TransactionSubsystem transactionSubsystem;
     private LogicalLogLocator lastLogLocator;
     private TransactionState txnState;
     private long startWaitTime;
@@ -67,12 +67,12 @@ public class TransactionContext implements Serializable {
 
     public TransactionContext(JobId jobId, TransactionSubsystem transactionProvider) throws ACIDException {
         this.jobId = jobId;
-        this.transactionProvider = transactionProvider;
+        this.transactionSubsystem = transactionProvider;
         init();
     }
 
     private void init() throws ACIDException {
-        lastLogLocator = LogUtil.getDummyLogicalLogLocator(transactionProvider.getLogManager());
+        lastLogLocator = LogUtil.getDummyLogicalLogLocator(transactionSubsystem.getLogManager());
         txnState = TransactionState.ACTIVE;
         startWaitTime = INVALID_TIME;
         status = ACTIVE_STATUS;

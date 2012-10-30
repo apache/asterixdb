@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -30,14 +30,18 @@ import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
 
-public class LSMBTreeModificationOperationCallback extends AbstractOperationCallback implements
+/**
+ * Assumes LSM-BTrees as primary indexes.
+ * Performs locking on primary keys, and also logs before/after images.
+ */
+public class PrimaryIndexModificationOperationCallback extends AbstractOperationCallback implements
         IModificationOperationCallback {
 
     protected final long resourceId;
     protected final IndexOperation indexOp;
     protected final TransactionSubsystem txnSubsystem;
-    
-    public LSMBTreeModificationOperationCallback(DatasetId datasetId, int[] primaryKeyFields,
+
+    public PrimaryIndexModificationOperationCallback(DatasetId datasetId, int[] primaryKeyFields,
             IBinaryHashFunction[] primaryKeyHashFunctions, TransactionContext txnCtx, ILockManager lockManager,
             TransactionSubsystem txnSubsystem, long resourceId, IndexOperation indexOp) {
         super(datasetId, primaryKeyFields, primaryKeyHashFunctions, txnCtx, lockManager);
@@ -66,7 +70,8 @@ public class LSMBTreeModificationOperationCallback extends AbstractOperationCall
             oldOp = IndexOperation.DELETE;
         }
         try {
-            logger.generateLogRecord(txnSubsystem, txnCtx, datasetId.getId(), pkHash, resourceId, indexOp, after, oldOp, before);
+            logger.generateLogRecord(txnSubsystem, txnCtx, datasetId.getId(), pkHash, resourceId, indexOp, after,
+                    oldOp, before);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }

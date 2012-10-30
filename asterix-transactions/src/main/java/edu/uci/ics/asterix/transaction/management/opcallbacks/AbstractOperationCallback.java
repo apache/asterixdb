@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -27,7 +27,8 @@ public abstract class AbstractOperationCallback {
     protected final IBinaryHashFunction[] primaryKeyHashFunctions;
     protected final ILockManager lockManager;
     protected final TransactionContext txnCtx;
-
+    protected int transactorLocalNumActiveOperations = 0;
+    
     public AbstractOperationCallback(DatasetId datasetId, int[] primaryKeyFields,
             IBinaryHashFunction[] primaryKeyHashFunctions, TransactionContext txnCtx, ILockManager lockManager) {
         this.datasetId = datasetId;
@@ -41,11 +42,27 @@ public abstract class AbstractOperationCallback {
             IBinaryHashFunction[] primaryKeyHashFunctions) {
         int h = 0;
         for (int i = 0; i < primaryKeyFields.length; i++) {
-            int entityFieldIdx = primaryKeyFields[i];
-            int fh = primaryKeyHashFunctions[i].hash(tuple.getFieldData(entityFieldIdx),
-                    tuple.getFieldStart(entityFieldIdx), tuple.getFieldLength(entityFieldIdx));
+            int primaryKeyFieldIdx = primaryKeyFields[i];
+            int fh = primaryKeyHashFunctions[i].hash(tuple.getFieldData(primaryKeyFieldIdx),
+                    tuple.getFieldStart(primaryKeyFieldIdx), tuple.getFieldLength(primaryKeyFieldIdx));
             h = h * 31 + fh;
         }
         return h;
+    }
+    
+    public TransactionContext getTransactionContext() {
+        return txnCtx;
+    }
+    
+    public int getLocalNumActiveOperations() {
+        return transactorLocalNumActiveOperations;
+    }
+    
+    public void incrementLocalNumActiveOperations() {
+        transactorLocalNumActiveOperations++;
+    }
+    
+    public void decrementLocalNumActiveOperations() {
+        transactorLocalNumActiveOperations--;
     }
 }

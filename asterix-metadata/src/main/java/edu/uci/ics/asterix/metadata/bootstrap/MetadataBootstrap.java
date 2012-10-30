@@ -301,7 +301,7 @@ public class MetadataBootstrap {
                 metaDataFrameFactory);
         LSMBTree lsmBtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file,
                 bufferCache, fileMapProvider, typeTraits, comparatorFactories, runtimeContext.getFlushController(),
-                runtimeContext.getLSMMergePolicy(), runtimeContext.getLSMOperationTracker(),
+                runtimeContext.getLSMMergePolicy(), runtimeContext.getLSMOperationTrackerFactory(),
                 runtimeContext.getLSMIOScheduler());
         long resourceID = -1;
         if (create) {

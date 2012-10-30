@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -24,30 +24,36 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 
-public class SearchOperationCallbackFactory extends AbstractOperationCallbackFactory implements
-        ISearchOperationCallbackFactory {
+/**
+ * Assumes LSM-BTrees as primary indexes.
+ */
+public class PrimaryIndexModificationOperationCallbackFactory extends AbstractOperationCallbackFactory implements
+        IModificationOperationCallbackFactory {
 
     private static final long serialVersionUID = 1L;
+    private final IndexOperation indexOp;
 
-    public SearchOperationCallbackFactory(JobId jobId, DatasetId datasetId, int[] entityIdFields,
-            IBinaryHashFunction[] entityIdFieldHashFunctions, ITransactionSubsystemProvider txnSubsystemProvider) {
-        super(jobId, datasetId, entityIdFields, entityIdFieldHashFunctions, txnSubsystemProvider);
+    public PrimaryIndexModificationOperationCallbackFactory(JobId jobId, DatasetId datasetId, int[] primaryKeyFields,
+            IBinaryHashFunction[] primaryKeyHashFunctions, ITransactionSubsystemProvider txnSubsystemProvider,
+            IndexOperation indexOp) {
+        super(jobId, datasetId, primaryKeyFields, primaryKeyHashFunctions, txnSubsystemProvider);
+        this.indexOp = indexOp;
     }
 
     @Override
-    public ISearchOperationCallback createSearchOperationCallback(long resourceId, IHyracksTaskContext ctx)
+    public IModificationOperationCallback createModificationOperationCallback(long resourceId, IHyracksTaskContext ctx)
             throws HyracksDataException {
         TransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
         try {
             TransactionContext txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jobId);
-            return new SearchOperationCallback(datasetId, primaryKeyFields, primaryKeyHashFunctions,
-                    txnSubsystem.getLockManager(), txnCtx);
+            return new PrimaryIndexModificationOperationCallback(datasetId, primaryKeyFields, primaryKeyHashFunctions,
+                    txnCtx, txnSubsystem.getLockManager(), txnSubsystem, resourceId, indexOp);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }
     }
-
 }
