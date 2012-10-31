@@ -106,14 +106,20 @@ public class LSMHarness implements ILSMHarness {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Flushing LSM-Index: " + lsmIndex);
         }
-        Object newComponent = lsmIndex.flush(operation);
-
-        // The implementation of this call must take any necessary steps to make
-        // the new component permanent, and mark it as valid (usually this means
-        // forcing all pages of the tree to disk, possibly with some extra
-        // information to mark the tree as valid).
-        lsmIndex.getComponentFinalizer().finalize(newComponent);
-
+        Object newComponent = null;
+        try {
+            operation.getCallback().beforeOperation(operation);
+            newComponent = lsmIndex.flush(operation);
+            operation.getCallback().afterOperation(operation, newComponent);
+            
+            // The implementation of this call must take any necessary steps to make
+            // the new component permanent, and mark it as valid (usually this means
+            // forcing all pages of the tree to disk, possibly with some extra
+            // information to mark the tree as valid).
+            lsmIndex.getComponentFinalizer().finalize(newComponent);
+        } finally {
+            operation.getCallback().afterFinalize(operation, newComponent);
+        }
         lsmIndex.resetInMemoryComponent();
         synchronized (diskComponentsSync) {
             lsmIndex.addFlushedComponent(newComponent);
@@ -175,21 +181,28 @@ public class LSMHarness implements ILSMHarness {
         AtomicInteger localSearcherRefCount = searcherRefCount;
 
         List<Object> mergedComponents = new ArrayList<Object>();
-        Object newComponent = lsmIndex.merge(mergedComponents, operation);
+        Object newComponent = null;
+        try {
+            operation.getCallback().beforeOperation(operation);
+            newComponent = lsmIndex.merge(mergedComponents, operation);
+            operation.getCallback().afterOperation(operation, newComponent);
+            
+            // No merge happened.
+            if (newComponent == null) {
+                isMerging.set(false);
+                return;
+            }
 
-        // No merge happened.
-        if (newComponent == null) {
-            isMerging.set(false);
-            return;
+            // TODO: Move this to just before the merge cleanup and remove latching on disk components
+            // The implementation of this call must take any necessary steps to make
+            // the new component permanent, and mark it as valid (usually this means
+            // forcing all pages of the tree to disk, possibly with some extra
+            // information to mark the tree as valid).
+            lsmIndex.getComponentFinalizer().finalize(newComponent);
+        } finally {
+            operation.getCallback().afterFinalize(operation, newComponent);
         }
-
-        // TODO: Move this to just before the merge cleanup and remove latching on disk components
-        // The implementation of this call must take any necessary steps to make
-        // the new component permanent, and mark it as valid (usually this means
-        // forcing all pages of the tree to disk, possibly with some extra
-        // information to mark the tree as valid).
-        lsmIndex.getComponentFinalizer().finalize(newComponent);
-
+        
         // Remove the old Trees from the list, and add the new merged Tree(s).
         // Also, swap the searchRefCount.
         synchronized (diskComponentsSync) {
@@ -202,6 +215,7 @@ public class LSMHarness implements ILSMHarness {
             }
             searcherRefCount.set(0);
         }
+        
 
         // Wait for all searchers that are still accessing the old on-disk
         // Trees, then perform the final cleanup of the old Trees.

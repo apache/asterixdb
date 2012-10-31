@@ -60,7 +60,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public abstract class AbstractLSMRTree implements ILSMIndexInternal, ITreeIndex {
 
-    public class LSMRTreeComponent {
+    public static class LSMRTreeComponent {
         private final RTree rtree;
         private final BTree btree;
 

@@ -16,8 +16,6 @@ public enum ImmediateScheduler implements ILSMIOOperationScheduler {
             e.printStackTrace();
         } catch (IndexException e) {
             e.printStackTrace();
-        } finally {
-            operation.getCallback().callback();
         }
     }
 
