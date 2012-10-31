@@ -113,4 +113,14 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
             IndexException {
         return lsmHarness.createMergeOperation(callback);
     }
+    
+    @Override
+    public boolean tryNoOp() throws HyracksDataException {
+        return lsmHarness.noOp(ctx, true);
+    }
+
+    @Override
+    public void noOp() throws HyracksDataException {
+        lsmHarness.noOp(ctx, false);
+    }
 }

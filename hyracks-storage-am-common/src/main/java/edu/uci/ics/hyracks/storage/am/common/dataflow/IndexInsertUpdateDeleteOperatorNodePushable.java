@@ -35,18 +35,18 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 
 public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
-    private final IIndexOperatorDescriptor opDesc;
-    private final IHyracksTaskContext ctx;
-    private final IIndexDataflowHelper indexHelper;
-    private final IRecordDescriptorProvider recordDescProvider;
-    private final IndexOperation op;
-    private final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
-    private FrameTupleAccessor accessor;
-    private FrameTupleReference frameTuple;
-    private ByteBuffer writeBuffer;
-    private IIndexAccessor indexAccessor;
-    private ITupleFilter tupleFilter;
-    private IModificationOperationCallback modCallback;
+    protected final IIndexOperatorDescriptor opDesc;
+    protected final IHyracksTaskContext ctx;
+    protected final IIndexDataflowHelper indexHelper;
+    protected final IRecordDescriptorProvider recordDescProvider;
+    protected final IndexOperation op;
+    protected final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
+    protected FrameTupleAccessor accessor;
+    protected FrameTupleReference frameTuple;
+    protected ByteBuffer writeBuffer;
+    protected IIndexAccessor indexAccessor;
+    protected ITupleFilter tupleFilter;
+    protected IModificationOperationCallback modCallback;
 
     public IndexInsertUpdateDeleteOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, IndexOperation op) {

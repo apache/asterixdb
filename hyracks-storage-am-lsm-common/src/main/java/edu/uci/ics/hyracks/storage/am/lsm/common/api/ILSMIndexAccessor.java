@@ -121,4 +121,25 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      *             If there is no matching tuple in the index.
      */
     public boolean tryUpsert(ITupleReference tuple) throws HyracksDataException, IndexException;
+    
+    /**
+     * This method can be used to increase the number of 'active' operations of an index artificially,
+     * without actually modifying the index.
+     * If the operation would have to wait for a flush then we return false.
+     * Otherwise, beforeOperation() and afterOperation() of the ILSMOperationTracker are called,
+     * and true is returned.
+     * 
+     * @throws HyracksDataException
+     */
+    public boolean tryNoOp() throws HyracksDataException;
+    
+    /**
+     * This method can be used to increase the number of 'active' operations of an index artificially,
+     * without actually modifying the index.
+     * This method may block waiting for a flush to finish, and will eventually call
+     * beforeOperation() and afterOperation() of the ILSMOperationTracker.
+     * 
+     * @throws HyracksDataException
+     */
+    public void noOp() throws HyracksDataException;
 }

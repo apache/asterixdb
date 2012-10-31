@@ -106,6 +106,15 @@ public class LSMHarness implements ILSMHarness {
         return true;
     }
 
+    @Override
+    public boolean noOp(ILSMIndexOperationContext ctx, boolean tryOperation) throws HyracksDataException {
+        if (!opTracker.beforeOperation(ctx, tryOperation)) {
+            return false;
+        }
+        threadExit(ctx);
+        return true;
+    }
+    
     public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Flushing LSM-Index: " + lsmIndex);
@@ -281,5 +290,4 @@ public class LSMHarness implements ILSMHarness {
     public ILSMIndex getIndex() {
         return lsmIndex;
     }
-
 }
