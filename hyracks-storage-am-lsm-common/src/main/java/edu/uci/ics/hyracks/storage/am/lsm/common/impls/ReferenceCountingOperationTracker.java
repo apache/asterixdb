@@ -20,11 +20,15 @@ public class ReferenceCountingOperationTracker implements ILSMOperationTracker {
     }
 
     @Override
-    public synchronized void beforeOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
+    public synchronized boolean beforeOperation(ILSMIndexOperationContext opCtx, boolean tryOperation)
+            throws HyracksDataException {
         // Wait for pending flushes to complete.
         // If flushFlag is set, then the flush is queued to occur by the last exiting thread.
         // This operation should wait for that flush to occur before proceeding.
         if (index.getFlushController().getFlushStatus(index)) {
+            if (tryOperation) {
+                return false;
+            }
             try {
                 this.wait();
             } catch (InterruptedException e) {
@@ -32,6 +36,7 @@ public class ReferenceCountingOperationTracker implements ILSMOperationTracker {
             }
         }
         threadRefCount++;
+        return true;
     }
 
     @Override

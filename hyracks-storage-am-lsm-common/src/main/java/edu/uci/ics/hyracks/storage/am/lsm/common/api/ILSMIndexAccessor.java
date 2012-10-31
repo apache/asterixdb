@@ -32,7 +32,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
     public ILSMIOOperation createFlushOperation(ILSMIOOperationCallback callback);
 
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
-           IndexException;
+            IndexException;
 
     /**
      * Force a flush of the in-memory component.
@@ -57,4 +57,68 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws IndexException
      */
     public void physicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
+
+    /**
+     * Attempts to insert the given tuple.
+     * If the insert would have to wait for a flush to complete, then this method returns false to
+     * allow the caller to avoid potential deadlock situations.
+     * Otherwise, returns true (insert was successful).
+     * 
+     * @param tuple
+     *            Tuple to be inserted.
+     * @throws HyracksDataException
+     *             If the BufferCache throws while un/pinning or un/latching.
+     * @throws IndexException
+     *             If an index-specific constraint is violated, e.g., the key
+     *             already exists.
+     */
+    public boolean tryInsert(ITupleReference tuple) throws HyracksDataException, IndexException;
+
+    /**
+     * Attempts to delete the given tuple.
+     * If the delete would have to wait for a flush to complete, then this method returns false to
+     * allow the caller to avoid potential deadlock situations.
+     * Otherwise, returns true (delete was successful).
+     * 
+     * @param tuple
+     *            Tuple to be deleted.
+     * @throws HyracksDataException
+     *             If the BufferCache throws while un/pinning or un/latching.
+     * @throws IndexException
+     *             If there is no matching tuple in the index.
+     */
+    public boolean tryDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
+
+    /**
+     * Attempts to update the given tuple.
+     * If the update would have to wait for a flush to complete, then this method returns false to
+     * allow the caller to avoid potential deadlock situations.
+     * Otherwise, returns true (update was successful).
+     * 
+     * @param tuple
+     *            Tuple whose match in the index is to be update with the given
+     *            tuples contents.
+     * @throws HyracksDataException
+     *             If the BufferCache throws while un/pinning or un/latching.
+     * @throws IndexException
+     *             If there is no matching tuple in the index.
+     */
+    public boolean tryUpdate(ITupleReference tuple) throws HyracksDataException, IndexException;
+
+    /**
+     * This operation is only supported by indexes with the notion of a unique key.
+     * If tuple's key already exists, then this operation attempts to performs an update.
+     * Otherwise, it attempts to perform an insert.
+     * If the operation would have to wait for a flush to complete, then this method returns false to
+     * allow the caller to avoid potential deadlock situations.
+     * Otherwise, returns true (insert/update was successful).
+     * 
+     * @param tuple
+     *            Tuple to be deleted.
+     * @throws HyracksDataException
+     *             If the BufferCache throws while un/pinning or un/latching.
+     * @throws IndexException
+     *             If there is no matching tuple in the index.
+     */
+    public boolean tryUpsert(ITupleReference tuple) throws HyracksDataException, IndexException;
 }

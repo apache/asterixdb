@@ -92,6 +92,5 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
 
     @Override
     public void fail() throws HyracksDataException {
-        writer.fail();
     }
 }

@@ -16,7 +16,7 @@ public class NoOpOperationTrackerFactory implements ILSMOperationTrackerFactory 
     private static final long serialVersionUID = 1L;
 
     public static NoOpOperationTrackerFactory INSTANCE = new NoOpOperationTrackerFactory();
-    
+
     @Override
     public ILSMOperationTracker createOperationTracker(ILSMIndex index) {
         return new ILSMOperationTracker() {
@@ -27,8 +27,10 @@ public class NoOpOperationTrackerFactory implements ILSMOperationTrackerFactory 
             }
 
             @Override
-            public void beforeOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
-                // Do nothing.                        
+            public boolean beforeOperation(ILSMIndexOperationContext opCtx, boolean tryOperation)
+                    throws HyracksDataException {
+                // Do nothing.
+                return true;
             }
 
             @Override
@@ -37,9 +39,9 @@ public class NoOpOperationTrackerFactory implements ILSMOperationTrackerFactory 
             }
         };
     }
-    
+
     // Enforce singleton.
     private NoOpOperationTrackerFactory() {
     }
-    
+
 };

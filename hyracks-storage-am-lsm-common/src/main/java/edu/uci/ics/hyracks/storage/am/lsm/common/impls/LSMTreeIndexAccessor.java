@@ -39,28 +39,53 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     @Override
     public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.INSERT);
-        lsmHarness.insertUpdateOrDelete(tuple, ctx);
+        lsmHarness.insertUpdateOrDelete(tuple, ctx, false);
     }
 
     @Override
     public void update(ITupleReference tuple) throws HyracksDataException, IndexException {
         // Update is the same as insert.
         ctx.setOperation(IndexOperation.UPDATE);
-        lsmHarness.insertUpdateOrDelete(tuple, ctx);
+        lsmHarness.insertUpdateOrDelete(tuple, ctx, false);
     }
 
     @Override
     public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.DELETE);
-        lsmHarness.insertUpdateOrDelete(tuple, ctx);
+        lsmHarness.insertUpdateOrDelete(tuple, ctx, false);
     }
 
     @Override
     public void upsert(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.UPSERT);
-        lsmHarness.insertUpdateOrDelete(tuple, ctx);
+        lsmHarness.insertUpdateOrDelete(tuple, ctx, false);
     }
 
+    @Override
+    public boolean tryInsert(ITupleReference tuple) throws HyracksDataException, IndexException {
+        ctx.setOperation(IndexOperation.INSERT);
+        return lsmHarness.insertUpdateOrDelete(tuple, ctx, true);
+    }
+
+    @Override
+    public boolean tryDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
+        ctx.setOperation(IndexOperation.DELETE);
+        return lsmHarness.insertUpdateOrDelete(tuple, ctx, true);
+    }
+
+    @Override
+    public boolean tryUpdate(ITupleReference tuple) throws HyracksDataException, IndexException {
+        // Update is the same as insert.
+        ctx.setOperation(IndexOperation.UPDATE);
+        return lsmHarness.insertUpdateOrDelete(tuple, ctx, true);
+    }
+
+    @Override
+    public boolean tryUpsert(ITupleReference tuple) throws HyracksDataException, IndexException {
+        ctx.setOperation(IndexOperation.UPSERT);
+        return lsmHarness.insertUpdateOrDelete(tuple, ctx, true);        
+    }
+    
     @Override
     public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.SEARCH);
@@ -80,7 +105,7 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     @Override
     public void physicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.PHYSICALDELETE);
-        lsmHarness.insertUpdateOrDelete(tuple, ctx);
+        lsmHarness.insertUpdateOrDelete(tuple, ctx, false);
     }
 
     @Override

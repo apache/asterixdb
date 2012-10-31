@@ -89,9 +89,12 @@ public class LSMHarness implements ILSMHarness {
         opTracker.afterOperation(opCtx);
     }
 
-    public void insertUpdateOrDelete(ITupleReference tuple, ILSMIndexOperationContext ctx) throws HyracksDataException,
-            IndexException {
-        opTracker.beforeOperation(ctx);
+    @Override
+    public boolean insertUpdateOrDelete(ITupleReference tuple, ILSMIndexOperationContext ctx, boolean tryOperation)
+            throws HyracksDataException, IndexException {
+        if (!opTracker.beforeOperation(ctx, tryOperation)) {
+            return false;
+        }
         // It is possible, due to concurrent execution of operations, that an operation will 
         // fail. In such a case, simply retry the operation. Refer to the specific LSMIndex code 
         // to see exactly why an operation might fail.
@@ -100,6 +103,7 @@ public class LSMHarness implements ILSMHarness {
         } finally {
             threadExit(ctx);
         }
+        return true;
     }
 
     public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
@@ -135,7 +139,7 @@ public class LSMHarness implements ILSMHarness {
         // If the search doesn't include the in-memory component, then we don't have
         // to synchronize with a flush.
         if (includeMemComponent) {
-            opTracker.beforeOperation(ctx);
+            opTracker.beforeOperation(ctx, true);
         }
 
         // Get a snapshot of the current on-disk Trees.

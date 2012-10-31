@@ -15,9 +15,11 @@ public interface ILSMOperationTracker {
     /**
      * An {@link ILSMIndex} will call this method before an operation enters it,
      * i.e., before any latches are taken.
-     * After this method has been called, the operation is considered 'active'.
+     * If tryOperation is true, and the operation would have to wait for a flush,
+     * then this method does not block and returns false.
+     * Otherwise, this method returns true, and the operation is considered 'active' in the index.
      */
-    public void beforeOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException;
+    public boolean beforeOperation(ILSMIndexOperationContext opCtx, boolean tryOperation) throws HyracksDataException;
 
     /**
      * An {@link ILSMIndex} will call this method after an operation has left the index,

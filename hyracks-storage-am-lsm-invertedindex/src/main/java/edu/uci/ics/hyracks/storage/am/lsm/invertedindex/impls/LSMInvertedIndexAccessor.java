@@ -50,13 +50,25 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     @Override
     public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.INSERT);
-        lsmHarness.insertUpdateOrDelete(tuple, ctx);
+        lsmHarness.insertUpdateOrDelete(tuple, ctx, false);
     }
 
     @Override
     public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.DELETE);
-        lsmHarness.insertUpdateOrDelete(tuple, ctx);
+        lsmHarness.insertUpdateOrDelete(tuple, ctx, false);
+    }
+
+    @Override
+    public boolean tryInsert(ITupleReference tuple) throws HyracksDataException, IndexException {
+        ctx.setOperation(IndexOperation.INSERT);
+        return lsmHarness.insertUpdateOrDelete(tuple, ctx, true);
+    }
+
+    @Override
+    public boolean tryDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
+        ctx.setOperation(IndexOperation.DELETE);
+        return lsmHarness.insertUpdateOrDelete(tuple, ctx, true);
     }
 
     public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
@@ -118,6 +130,16 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
 
     @Override
     public void upsert(ITupleReference tuple) throws HyracksDataException, IndexException {
+        throw new UnsupportedOperationException("Upsert not supported by lsm inverted index.");
+    }
+
+    @Override
+    public boolean tryUpdate(ITupleReference tuple) throws HyracksDataException, IndexException {
+        throw new UnsupportedOperationException("Update not supported by lsm inverted index.");
+    }
+
+    @Override
+    public boolean tryUpsert(ITupleReference tuple) throws HyracksDataException, IndexException {
         throw new UnsupportedOperationException("Upsert not supported by lsm inverted index.");
     }
 

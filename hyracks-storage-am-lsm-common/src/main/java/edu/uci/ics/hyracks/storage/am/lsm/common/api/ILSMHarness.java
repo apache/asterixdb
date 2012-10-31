@@ -25,8 +25,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 public interface ILSMHarness {
-    public void insertUpdateOrDelete(ITupleReference tuple, ILSMIndexOperationContext ictx) throws HyracksDataException,
-            IndexException;
+    public boolean insertUpdateOrDelete(ITupleReference tuple, ILSMIndexOperationContext ictx, boolean tryOperation)
+            throws HyracksDataException, IndexException;
 
     public List<Object> search(IIndexCursor cursor, ISearchPredicate pred, ILSMIndexOperationContext ctx,
             boolean includeMemComponent) throws HyracksDataException, IndexException;
