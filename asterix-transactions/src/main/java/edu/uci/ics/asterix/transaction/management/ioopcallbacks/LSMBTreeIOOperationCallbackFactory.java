@@ -13,26 +13,18 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.transaction.management.opcallbacks;
+package edu.uci.ics.asterix.transaction.management.ioopcallbacks;
 
+import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 
-public class IndexOperationTrackerFactory implements ILSMOperationTrackerFactory {
+public class LSMBTreeIOOperationCallbackFactory implements ILSMIOOperationCallbackFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private final ILSMIOOperationCallbackFactory ioOpCallbackFactory;
-    
-    public IndexOperationTrackerFactory(ILSMIOOperationCallbackFactory ioOpCallbackFactory) {
-        this.ioOpCallbackFactory = ioOpCallbackFactory;
-    }
-    
     @Override
-    public ILSMOperationTracker createOperationTracker(ILSMIndex index) {
-        return new IndexOperationTracker(index, ioOpCallbackFactory);
+    public ILSMIOOperationCallback createIOOperationCallback(Object syncObj) {
+        return new LSMBTreeIOOperationCallback((IndexOperationTracker) syncObj);
     }
-
 }

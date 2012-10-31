@@ -19,6 +19,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
@@ -30,13 +31,14 @@ public class IndexOperationTracker implements ILSMOperationTracker {
     private int numActiveOperations = 0;
     private long lastLsn;
     private final ILSMIndex index;
-    private final ILSMIndexAccessor accessor;    
-    private final FlushOperationCallback FLUSHCALLBACK_INSTANCE = new FlushOperationCallback();
+    private final ILSMIndexAccessor accessor;
+    private final ILSMIOOperationCallback ioOpCallback;
     
-    public IndexOperationTracker(ILSMIndex index) {
+    public IndexOperationTracker(ILSMIndex index, ILSMIOOperationCallbackFactory ioOpCallbackFactory) {
         this.index = index;
         accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
+        ioOpCallback = ioOpCallbackFactory.createIOOperationCallback(this);
     }     
 
     @Override
@@ -78,7 +80,7 @@ public class IndexOperationTracker implements ILSMOperationTracker {
         // If we need a flush, and this is the last completing operation, then schedule the flush.
         // Once the flush has completed notify all waiting operations.
         if (index.getFlushController().getFlushStatus(index) && numActiveOperations == 0) {
-            index.getIOScheduler().scheduleOperation(accessor.createFlushOperation(FLUSHCALLBACK_INSTANCE));
+            index.getIOScheduler().scheduleOperation(accessor.createFlushOperation(ioOpCallback));
         }
     }
     
@@ -97,12 +99,5 @@ public class IndexOperationTracker implements ILSMOperationTracker {
     
     public void setLastLSN(long lastLsn) {
         this.lastLsn = lastLsn;
-    }
-    
-    private class FlushOperationCallback implements ILSMIOOperationCallback {
-        @Override
-        public void callback() {
-            IndexOperationTracker.this.notifyAll();
-        }
     }
 }
