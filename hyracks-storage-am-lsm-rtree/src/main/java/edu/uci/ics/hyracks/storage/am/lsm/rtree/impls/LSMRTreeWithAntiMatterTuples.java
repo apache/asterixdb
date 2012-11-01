@@ -95,6 +95,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     @Override
     public synchronized void activate() throws HyracksDataException {
         super.activate();
+        diskComponents.clear();
         List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(componentFinalizer);
         for (Object o : validFileNames) {
             String fileName = (String) o;
@@ -111,7 +112,6 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             RTree rtree = (RTree) o;
             rtree.deactivate();
         }
-        diskComponents.clear();
     }
 
     @Override

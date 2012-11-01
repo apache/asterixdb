@@ -773,8 +773,10 @@ public class BufferCache implements IBufferCacheInternal {
                     // Mark the fInfo as deleted, 
                     // such that when its pages are reclaimed in openFile(),
                     // the pages are not flushed to disk but only invalidated.
-                    ioManager.close(fInfo.getFileHandle());
-                    fInfo.markAsDeleted();
+                    if (!fInfo.fileHasBeenDeleted()) {
+                        ioManager.close(fInfo.getFileHandle());
+                        fInfo.markAsDeleted();
+                    }
                 }
             }
         }
