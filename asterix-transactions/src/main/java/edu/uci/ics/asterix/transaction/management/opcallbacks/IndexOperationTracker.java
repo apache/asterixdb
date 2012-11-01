@@ -91,8 +91,7 @@ public class IndexOperationTracker implements ILSMOperationTracker {
     }
 
     private AbstractOperationCallback getOperationCallback(ILSMIndexOperationContext opCtx) {
-        IndexOperation op = opCtx.getOperation();
-        if (op == IndexOperation.SEARCH || op == IndexOperation.DISKORDERSCAN) {
+        if (opCtx.getSearchOperationCallback() != null) {
             return (AbstractOperationCallback) opCtx.getSearchOperationCallback();
         } else {
             return (AbstractOperationCallback) opCtx.getModificationCallback();
