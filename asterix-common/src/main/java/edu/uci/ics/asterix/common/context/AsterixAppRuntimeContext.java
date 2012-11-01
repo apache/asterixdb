@@ -35,6 +35,7 @@ import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactoryProvider;
 public class AsterixAppRuntimeContext {
     private static final int DEFAULT_BUFFER_CACHE_PAGE_SIZE = 32768;
     private static final int DEFAULT_LIFECYCLEMANAGER_MEMORY_BUDGET = 1024 * 1024 * 1024; // 1GB
+    private static final int DEFAULT_MAX_OPEN_FILES = 500;
     private final INCApplicationContext ncApplicationContext;
 
     private IIndexLifecycleManager indexLifecycleManager;
@@ -61,7 +62,7 @@ public class AsterixAppRuntimeContext {
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
         IIOManager ioMgr = ncApplicationContext.getRootContext().getIOManager();
-        bufferCache = new BufferCache(ioMgr, allocator, prs, fileMapManager, pageSize, numPages, Integer.MAX_VALUE);
+        bufferCache = new BufferCache(ioMgr, allocator, prs, fileMapManager, pageSize, numPages, DEFAULT_MAX_OPEN_FILES);
         indexLifecycleManager = new IndexLifecycleManager(DEFAULT_LIFECYCLEMANAGER_MEMORY_BUDGET);
         txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId());
 

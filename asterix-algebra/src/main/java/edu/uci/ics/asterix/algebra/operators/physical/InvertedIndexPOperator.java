@@ -155,9 +155,6 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
         IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadata
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, indexName);
-        Pair<IFileSplitProvider, IFileSplitProvider> fileSplitProviders = metadata
-                .getInvertedIndexFileSplitProviders(secondarySplitsAndConstraint.first);
-
         // TODO: Here we assume there is only one search key field.
         int queryField = keyFields[0];
         // Get tokenizer and search modifier factories.
@@ -166,7 +163,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
         IBinaryTokenizerFactory queryTokenizerFactory = InvertedIndexAccessMethod.getBinaryTokenizerFactory(
                 searchModifierType, searchKeyType, secondaryIndex);
         LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp = new LSMInvertedIndexSearchOperatorDescriptor(
-                jobSpec, queryField, appContext.getStorageManagerInterface(), fileSplitProviders.first,
+                jobSpec, queryField, appContext.getStorageManagerInterface(), secondarySplitsAndConstraint.first,
                 appContext.getIndexLifecycleManagerProvider(), tokenTypeTraits, tokenComparatorFactories,
                 invListsTypeTraits, invListsComparatorFactories, new LSMInvertedIndexDataflowHelperFactory(
                         AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,

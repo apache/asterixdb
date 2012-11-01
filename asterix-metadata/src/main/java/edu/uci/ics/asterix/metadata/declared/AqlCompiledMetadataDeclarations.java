@@ -215,21 +215,6 @@ public class AqlCompiledMetadataDeclarations {
         return new Pair<IFileSplitProvider, AlgebricksPartitionConstraint>(splitProvider, pc);
     }
 
-    public Pair<IFileSplitProvider, IFileSplitProvider> getInvertedIndexFileSplitProviders(
-            IFileSplitProvider splitProvider) {
-        int numSplits = splitProvider.getFileSplits().length;
-        FileSplit[] btreeSplits = new FileSplit[numSplits];
-        FileSplit[] invListsSplits = new FileSplit[numSplits];
-        for (int i = 0; i < numSplits; i++) {
-            String nodeName = splitProvider.getFileSplits()[i].getNodeName();
-            String path = splitProvider.getFileSplits()[i].getLocalFile().getFile().getPath();
-            btreeSplits[i] = new FileSplit(nodeName, path + "_$btree");
-            invListsSplits[i] = new FileSplit(nodeName, path + "_$invlists");
-        }
-        return new Pair<IFileSplitProvider, IFileSplitProvider>(new ConstantFileSplitProvider(btreeSplits),
-                new ConstantFileSplitProvider(invListsSplits));
-    }
-
     private FileSplit[] splitsForInternalOrFeedDataset(String datasetName, String targetIdxName)
             throws AlgebricksException {
 

@@ -24,7 +24,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
@@ -43,7 +42,6 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
     private IBinaryComparatorFactory[] tokenComparatorFactories;
     private ITypeTraits[] tokenTypeTraits;
     private IBinaryTokenizerFactory tokenizerFactory;
-    private Pair<IFileSplitProvider, IFileSplitProvider> fileSplitProviders;
     // For tokenization, sorting and loading. Represents <token, primary keys>.
     private int numTokenKeyPairFields;
     private IBinaryComparatorFactory[] tokenKeyPairComparatorFactories;
@@ -99,8 +97,6 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         for (int i = 0; i < numPrimaryKeys; i++) {
             invListsTypeTraits[i] = primaryRecDesc.getTypeTraits()[i];
         }
-        // Get file split providers for the BTree and inverted-list files.
-        fileSplitProviders = metadata.getInvertedIndexFileSplitProviders(secondaryFileSplitProvider);
         // For tokenization, sorting and loading.
         // One token + primary keys.
         numTokenKeyPairFields = 1 + numPrimaryKeys;
@@ -125,7 +121,7 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         //TODO replace the transient one to persistent one
         ILocalResourceFactoryProvider localResourceFactoryProvider = new TransientLocalResourceFactoryProvider();
         LSMInvertedIndexCreateOperatorDescriptor invIndexCreateOp = new LSMInvertedIndexCreateOperatorDescriptor(spec,
-                AsterixRuntimeComponentsProvider.INSTANCE, fileSplitProviders.first,
+                AsterixRuntimeComponentsProvider.INSTANCE, secondaryFileSplitProvider,
                 AsterixRuntimeComponentsProvider.INSTANCE, tokenTypeTraits, tokenComparatorFactories,
                 invListsTypeTraits, primaryComparatorFactories, tokenizerFactory,
                 new LSMInvertedIndexDataflowHelperFactory(AsterixRuntimeComponentsProvider.INSTANCE,
@@ -220,7 +216,7 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
             fieldPermutation[i] = i;
         }
         LSMInvertedIndexBulkLoadOperatorDescriptor invIndexBulkLoadOp = new LSMInvertedIndexBulkLoadOperatorDescriptor(
-                spec, fieldPermutation, false, AsterixRuntimeComponentsProvider.INSTANCE, fileSplitProviders.first,
+                spec, fieldPermutation, false, AsterixRuntimeComponentsProvider.INSTANCE, secondaryFileSplitProvider,
                 AsterixRuntimeComponentsProvider.INSTANCE, tokenTypeTraits, tokenComparatorFactories,
                 invListsTypeTraits, primaryComparatorFactories, tokenizerFactory,
                 new LSMInvertedIndexDataflowHelperFactory(AsterixRuntimeComponentsProvider.INSTANCE,
