@@ -15,6 +15,8 @@
 
 package edu.uci.ics.asterix.transaction.management.ioopcallbacks;
 
+import java.util.List;
+
 import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTracker;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
@@ -28,7 +30,7 @@ import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationCallback {
 
     // Object on which blocked LSMIndex operations are waiting.
-    private final IndexOperationTracker opTracker;
+    protected final IndexOperationTracker opTracker;
 
     public AbstractLSMIOOperationCallback(IndexOperationTracker opTracker) {
         this.opTracker = opTracker;
@@ -45,21 +47,38 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
         opTracker.notifyAll();
     }
 
-    protected void putLSNIntoMetadata(ITreeIndex treeIndex) throws HyracksDataException {
+    protected abstract long getComponentLSN(List<Object> oldComponents) throws HyracksDataException;
+    
+    protected void putLSNIntoMetadata(ITreeIndex treeIndex, List<Object> oldComponents) throws HyracksDataException {
+        long componentLSN = getComponentLSN(oldComponents);
         int fileId = treeIndex.getFileId();
         IBufferCache bufferCache = treeIndex.getBufferCache();
         ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory().createFrame();
-        // Mark the component as a valid component by flushing the metadata page to disk
         int metadataPageId = treeIndex.getFreePageManager().getFirstMetadataPage();
         ICachedPage metadataPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, metadataPageId), false);
         metadataPage.acquireWriteLatch();
         try {
             metadataFrame.setPage(metadataPage);
-            metadataFrame.setLSN(opTracker.getLastLSN());
+            metadataFrame.setLSN(componentLSN);
         } finally {
             metadataPage.releaseWriteLatch();
             bufferCache.unpin(metadataPage);
         }
     }
 
+    protected long getTreeIndexLSN(ITreeIndex treeIndex) throws HyracksDataException {
+        int fileId = treeIndex.getFileId();
+        IBufferCache bufferCache = treeIndex.getBufferCache();
+        ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory().createFrame();
+        int metadataPageId = treeIndex.getFreePageManager().getFirstMetadataPage();
+        ICachedPage metadataPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, metadataPageId), false);
+        metadataPage.acquireReadLatch();
+        try {
+            metadataFrame.setPage(metadataPage);
+            return metadataFrame.getLSN();
+        } finally {
+            metadataPage.releaseReadLatch();
+            bufferCache.unpin(metadataPage);
+        }
+    }
 }

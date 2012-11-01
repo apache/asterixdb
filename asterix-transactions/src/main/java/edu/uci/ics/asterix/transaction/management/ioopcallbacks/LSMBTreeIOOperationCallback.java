@@ -15,6 +15,8 @@
 
 package edu.uci.ics.asterix.transaction.management.ioopcallbacks;
 
+import java.util.List;
+
 import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTracker;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
@@ -27,9 +29,23 @@ public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
     }
 
     @Override
-    public void afterOperation(ILSMIOOperation operation, Object newComponent) throws HyracksDataException {
+    public void afterOperation(ILSMIOOperation operation, List<Object> oldComponents, Object newComponent) throws HyracksDataException {
         BTree btree = (BTree) newComponent;
-        putLSNIntoMetadata(btree);
+        putLSNIntoMetadata(btree, oldComponents);
     }
 
+    @Override
+    protected long getComponentLSN(List<Object> oldComponents) throws HyracksDataException {
+        if (oldComponents == null) {
+            // Implies a flush IO operation.
+            return opTracker.getLastLSN();
+        }
+        // Get max LSN from the oldComponents. Implies a merge IO operation.
+        long maxLSN = -1;
+        for (Object o : oldComponents) {
+            BTree btree = (BTree) o;
+            maxLSN = Math.max(getTreeIndexLSN(btree), maxLSN);
+        }
+        return maxLSN;
+    }
 }
