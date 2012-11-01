@@ -123,7 +123,6 @@ public class LSMBTree implements ILSMIndexInternal, ITreeIndex {
         ILSMOperationTracker opTracker = opTrackerFactory.createOperationTracker(this);
         lsmHarness = new LSMHarness(this, flushController, mergePolicy, opTracker, ioScheduler);
         componentFinalizer = new TreeIndexComponentFinalizer(diskFileMapProvider);
-        diskBTrees = new LinkedList<Object>();
         isActivated = false;
     }
 
@@ -147,6 +146,7 @@ public class LSMBTree implements ILSMIndexInternal, ITreeIndex {
         ((InMemoryBufferCache) memBTree.getBufferCache()).open();
         memBTree.create();
         memBTree.activate();
+        diskBTrees.clear();
         List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(componentFinalizer);
         for (Object o : validFileNames) {
             String fileName = (String) o;
@@ -175,8 +175,7 @@ public class LSMBTree implements ILSMIndexInternal, ITreeIndex {
         for (Object o : diskBTrees) {
             BTree btree = (BTree) o;
             btree.deactivate();
-        }
-        diskBTrees.clear();
+        }        
         memBTree.deactivate();
         memBTree.destroy();
         ((InMemoryBufferCache) memBTree.getBufferCache()).close();

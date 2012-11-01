@@ -202,7 +202,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         }
 
         btree.destroy();
-        invListsFile.getFile().delete();
+        invListsFile.delete();
         if (fileId == -1) {
             return;
         }

@@ -96,6 +96,7 @@ public class LSMRTree extends AbstractLSMRTree {
     public synchronized void activate() throws HyracksDataException {
         super.activate();
         List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(componentFinalizer);
+        diskComponents.clear();
         for (Object o : validFileNames) {
             LSMRTreeFileNameComponent component = (LSMRTreeFileNameComponent) o;
             FileReference rtreeFile = new FileReference(new File(component.getRTreeFileName()));
@@ -117,7 +118,6 @@ public class LSMRTree extends AbstractLSMRTree {
             rtree.deactivate();
             btree.deactivate();
         }
-        diskComponents.clear();
     }
 
     @Override

@@ -177,6 +177,7 @@ public class LSMInvertedIndex implements ILSMIndexInternal, IInvertedIndex {
             memComponent.getInvIndex().activate();
             memComponent.getDeletedKeysBTree().create();
             memComponent.getDeletedKeysBTree().activate();
+            diskComponents.clear();
             List<Object> validFileNames = fileManager.cleanupAndGetValidFiles(componentFinalizer);
             for (Object o : validFileNames) {
                 LSMInvertedIndexFileNameComponent component = (LSMInvertedIndexFileNameComponent) o;
