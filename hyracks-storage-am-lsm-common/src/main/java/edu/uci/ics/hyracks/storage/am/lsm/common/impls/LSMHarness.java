@@ -123,7 +123,7 @@ public class LSMHarness implements ILSMHarness {
         try {
             operation.getCallback().beforeOperation(operation);
             newComponent = lsmIndex.flush(operation);
-            operation.getCallback().afterOperation(operation, newComponent);
+            operation.getCallback().afterOperation(operation, null, newComponent);
             
             // The implementation of this call must take any necessary steps to make
             // the new component permanent, and mark it as valid (usually this means
@@ -198,7 +198,7 @@ public class LSMHarness implements ILSMHarness {
         try {
             operation.getCallback().beforeOperation(operation);
             newComponent = lsmIndex.merge(mergedComponents, operation);
-            operation.getCallback().afterOperation(operation, newComponent);
+            operation.getCallback().afterOperation(operation, mergedComponents, newComponent);
             
             // No merge happened.
             if (newComponent == null) {
