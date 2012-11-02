@@ -25,7 +25,7 @@ public class CommitOperator extends AbstractExtensibleLogicalOperator {
     }
 
     @Override
-    public String getOperatorName() {
+    public String toString() {
         return "commit";
     }
 }

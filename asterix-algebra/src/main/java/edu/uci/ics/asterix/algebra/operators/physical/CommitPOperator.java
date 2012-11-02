@@ -20,7 +20,12 @@ public class CommitPOperator extends AbstractPhysicalOperator {
 
     @Override
     public PhysicalOperatorTag getOperatorTag() {
-        return PhysicalOperatorTag.COMMIT;
+        return PhysicalOperatorTag.EXTENSION_OPERATOR;
+    }
+    
+    @Override
+    public String toString() {
+        return "COMMIT";
     }
 
     @Override
