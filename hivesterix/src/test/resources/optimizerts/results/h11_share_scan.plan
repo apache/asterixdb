@@ -1,0 +1,34 @@
+write [%0->$$1, %0->$$2]
+-- SINK_WRITE  |PARTITIONED|
+  select (function-call: algebricks:lt, Args:[%0->$$1, 5])
+  -- STREAM_SELECT  |PARTITIONED|
+    exchange 
+    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+      replicate 
+      -- SPLIT  |PARTITIONED|
+        exchange 
+        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          data-scan []<-[$$1, $$2] <- default.src
+          -- DATASOURCE_SCAN  |PARTITIONED|
+            exchange 
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              empty-tuple-source
+              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+write [%0->$$1]
+-- SINK_WRITE  |PARTITIONED|
+  project ([$$1])
+  -- STREAM_PROJECT  |PARTITIONED|
+    select (function-call: algebricks:gt, Args:[%0->$$1, 10])
+    -- STREAM_SELECT  |PARTITIONED|
+      exchange 
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        replicate 
+        -- SPLIT  |PARTITIONED|
+          exchange 
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            data-scan []<-[$$1, $$2] <- default.src
+            -- DATASOURCE_SCAN  |PARTITIONED|
+              exchange 
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                empty-tuple-source
+                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

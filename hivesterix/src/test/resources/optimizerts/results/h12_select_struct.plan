@@ -1,0 +1,10 @@
+write [%0->$$2]
+-- SINK_WRITE  |PARTITIONED|
+  exchange 
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    data-scan [$$2]<-[$$1, $$2] <- default.src
+    -- DATASOURCE_SCAN  |PARTITIONED|
+      exchange 
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        empty-tuple-source
+        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

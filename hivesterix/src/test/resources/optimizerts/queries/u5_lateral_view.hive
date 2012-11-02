@@ -1,0 +1,7 @@
+drop table IF EXISTS supplier;
+drop table IF EXISTS result;
+
+create table supplier (S_SUPPKEY array<int>, S_NAME STRING, S_ADDRESS STRING, S_NATIONKEY INT, S_PHONE STRING, S_ACCTBAL DOUBLE, S_COMMENT STRING);
+create table result (S_SUPPKEY int);
+
+select s_name, s_address, col1 from supplier LATERAL VIEW explode(s_suppkey) suppadd as col1;
