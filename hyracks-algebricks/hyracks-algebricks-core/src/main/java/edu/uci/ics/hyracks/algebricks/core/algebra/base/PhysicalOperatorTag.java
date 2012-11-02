@@ -45,5 +45,5 @@ public enum PhysicalOperatorTag {
     UPDATE,
     INVERTED_INDEX_SEARCH,
     PARTITIONINGSPLIT,
-    COMMIT
+    EXTENSION_OPERATOR
 }

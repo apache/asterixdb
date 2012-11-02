@@ -108,8 +108,9 @@ public class ExtensionOperator extends AbstractLogicalOperator {
         return this.createPropagatingAllInputsTypeEnvironment(ctx);
     }
 
-    public String getOperatorName() {
-        return delegate.getOperatorName();
+    @Override
+    public String toString() {
+        return delegate.toString();
     }
 
 }

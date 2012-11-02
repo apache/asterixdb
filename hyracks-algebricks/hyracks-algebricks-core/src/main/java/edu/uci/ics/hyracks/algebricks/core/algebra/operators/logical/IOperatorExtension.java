@@ -42,7 +42,4 @@ public interface IOperatorExtension {
     void setPhysicalOperator(IPhysicalOperator physicalOperator);
 
     ExecutionMode getExecutionMode();
-
-    String getOperatorName();
-
 }
