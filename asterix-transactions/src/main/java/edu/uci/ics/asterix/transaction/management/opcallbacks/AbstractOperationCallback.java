@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.transaction.management.opcallbacks;
 
 import edu.uci.ics.asterix.transaction.management.service.locking.ILockManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
+import edu.uci.ics.asterix.transaction.management.service.transaction.FieldsHashValueGenerator;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -40,14 +41,7 @@ public abstract class AbstractOperationCallback {
 
     public int computePrimaryKeyHashValue(ITupleReference tuple, int[] primaryKeyFields,
             IBinaryHashFunction[] primaryKeyHashFunctions) {
-        int h = 0;
-        for (int i = 0; i < primaryKeyFields.length; i++) {
-            int primaryKeyFieldIdx = primaryKeyFields[i];
-            int fh = primaryKeyHashFunctions[i].hash(tuple.getFieldData(primaryKeyFieldIdx),
-                    tuple.getFieldStart(primaryKeyFieldIdx), tuple.getFieldLength(primaryKeyFieldIdx));
-            h = h * 31 + fh;
-        }
-        return h;
+        return FieldsHashValueGenerator.computeFieldsHashValue(tuple, primaryKeyFields, primaryKeyHashFunctions);
     }
     
     public TransactionContext getTransactionContext() {

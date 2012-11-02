@@ -95,7 +95,7 @@ public class TransactionManager implements ITransactionManager {
 
             //for entity-level commit
             if (PKHashVal != -1) {
-                transactionProvider.getLockManager().unlock(datasetId, PKHashVal, txnContext);
+                transactionProvider.getLockManager().unlock(datasetId, PKHashVal, txnContext, true);
                 return;
             }
 

@@ -532,7 +532,19 @@ public class LockManager implements ILockManager {
                 throw new IllegalStateException("Invalid unlock request: Corresponding lock info doesn't exist.");
             }
         }
+        
+        //////////////////////////////////////////////////////////////
+        //TODO
+        //Check whether the dLockInfo or jobInfo could be null 
+        //even when the callback is called properly
+        if (dLockInfo == null || jobInfo == null) {
+            unlatchLockTable();
+            return;
+        }
+        /////////////////////////////////////////////////////////////
+        
         eLockInfo = dLockInfo.getEntityResourceHT().get(entityHashValue);
+        
         if (IS_DEBUG_MODE) {
             if (eLockInfo == -1) {
                 throw new IllegalStateException("Invalid unlock request: Corresponding lock info doesn't exist.");
