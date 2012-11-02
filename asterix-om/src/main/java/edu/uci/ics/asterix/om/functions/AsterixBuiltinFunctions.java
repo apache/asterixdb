@@ -39,6 +39,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedSumTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedSwitchCaseComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedUnaryMinusTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OpenRecordConstructorResultType;
+import edu.uci.ics.asterix.om.typecomputer.impl.OptionalABooleanTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalACircleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalADateTimeTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalADateTypeComputer;
@@ -368,6 +369,31 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "interval_start_from_time", 2);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_DATETIME = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "interval_start_from_datetime", 2);
+    public final static FunctionIdentifier INTERVAL_BEFORE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval_before", 2);
+    public final static FunctionIdentifier INTERVAL_AFTER = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval_after", 2);
+    public final static FunctionIdentifier INTERVAL_MEETS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval_meets", 2);
+    public final static FunctionIdentifier INTERVAL_MET_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval_met_by", 2);
+    public final static FunctionIdentifier INTERVAL_OVERLAPS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval_overlaps", 2);
+    public final static FunctionIdentifier INTERVAL_OVERLAPPED_BY = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "interval_overlapped_by", 2);
+    public final static FunctionIdentifier OVERLAP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "overlap", 2);
+    public final static FunctionIdentifier INTERVAL_STARTS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval_starts", 2);
+    public final static FunctionIdentifier INTERVAL_STARTED_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval_started_by", 2);
+    public final static FunctionIdentifier INTERVAL_COVERS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval_covers", 2);
+    public final static FunctionIdentifier INTERVAL_COVERED_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval_covered_by", 2);
+    public final static FunctionIdentifier INTERVAL_ENDS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval_ends", 2);
+    public final static FunctionIdentifier INTERVAL_ENDED_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval_ended_by", 2);
 
     // spatial
     public final static FunctionIdentifier CREATE_POINT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -727,6 +753,19 @@ public class AsterixBuiltinFunctions {
         add(CALENDAR_DURATION_FROM_DATE, OptionalADurationTypeComputer.INSTANCE);
         add(ADJUST_DATETIME_FOR_TIMEZONE, OptionalAStringTypeComputer.INSTANCE);
         add(ADJUST_TIME_FOR_TIMEZONE, OptionalAStringTypeComputer.INSTANCE);
+        add(INTERVAL_BEFORE, OptionalABooleanTypeComputer.INSTANCE);
+        add(INTERVAL_AFTER, OptionalABooleanTypeComputer.INSTANCE);
+        add(INTERVAL_MEETS, OptionalABooleanTypeComputer.INSTANCE);
+        add(INTERVAL_MET_BY, OptionalABooleanTypeComputer.INSTANCE);
+        add(INTERVAL_OVERLAPS, OptionalABooleanTypeComputer.INSTANCE);
+        add(INTERVAL_OVERLAPPED_BY, OptionalABooleanTypeComputer.INSTANCE);
+        add(OVERLAP, OptionalABooleanTypeComputer.INSTANCE);
+        add(INTERVAL_STARTS, OptionalABooleanTypeComputer.INSTANCE);
+        add(INTERVAL_STARTED_BY, OptionalABooleanTypeComputer.INSTANCE);
+        add(INTERVAL_COVERS, OptionalABooleanTypeComputer.INSTANCE);
+        add(INTERVAL_COVERED_BY, OptionalABooleanTypeComputer.INSTANCE);
+        add(INTERVAL_ENDS, OptionalABooleanTypeComputer.INSTANCE);
+        add(INTERVAL_ENDED_BY, OptionalABooleanTypeComputer.INSTANCE);
 
         // interval constructors
         add(INTERVAL_CONSTRUCTOR_DATE, OptionalAIntervalTypeComputer.INSTANCE);

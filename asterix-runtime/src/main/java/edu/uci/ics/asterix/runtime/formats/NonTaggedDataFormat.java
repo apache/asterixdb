@@ -179,6 +179,19 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DateFromDatetim
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DateFromUnixTimeInDaysDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DatetimeFromDateAndTimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DatetimeFromUnixTimeInMsDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalAfterDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalBeforeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalCoveredByDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalCoversDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalEndedByDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalEndsDecriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalMeetsDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalMetByDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.OverlapDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalOverlappedByDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalOverlapsDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalStartedByDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalStartsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.SubtractDateDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.SubtractDatetimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.SubtractTimeDescriptor;
@@ -426,6 +439,19 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(CalendarDuartionFromDateDescriptor.FACTORY);
         temp.add(AdjustDateTimeForTimeZoneDescriptor.FACTORY);
         temp.add(AdjustTimeForTimeZoneDescriptor.FACTORY);
+        temp.add(IntervalBeforeDescriptor.FACTORY);
+        temp.add(IntervalAfterDescriptor.FACTORY);
+        temp.add(IntervalMeetsDescriptor.FACTORY);
+        temp.add(IntervalMetByDescriptor.FACTORY);
+        temp.add(IntervalOverlapsDescriptor.FACTORY);
+        temp.add(IntervalOverlappedByDescriptor.FACTORY);
+        temp.add(OverlapDescriptor.FACTORY);
+        temp.add(IntervalStartsDescriptor.FACTORY);
+        temp.add(IntervalStartedByDescriptor.FACTORY);
+        temp.add(IntervalCoversDescriptor.FACTORY);
+        temp.add(IntervalCoveredByDescriptor.FACTORY);
+        temp.add(IntervalEndsDecriptor.FACTORY);
+        temp.add(IntervalEndedByDescriptor.FACTORY);
 
         // Interval constructor
         temp.add(AIntervalFromDateConstructorDescriptor.FACTORY);

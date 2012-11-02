@@ -66,6 +66,18 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
 
     }
 
+    public static long getIntervalStart(byte[] data, int offset) {
+        return AInt64SerializerDeserializer.getLong(data, offset);
+    }
+
+    public static long getIntervalEnd(byte[] data, int offset) {
+        return AInt64SerializerDeserializer.getLong(data, offset + 8);
+    }
+
+    public static byte getIntervalTimeType(byte[] data, int offset) {
+        return data[offset + 8 * 2];
+    }
+
     public static void parseDatetime(String interval, DataOutput out) throws HyracksDataException {
         AMutableInterval aInterval = new AMutableInterval(0l, 0l, (byte) 0);
 
