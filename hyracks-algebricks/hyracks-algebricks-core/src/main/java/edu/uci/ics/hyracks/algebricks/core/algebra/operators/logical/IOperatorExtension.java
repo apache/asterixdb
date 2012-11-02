@@ -43,4 +43,6 @@ public interface IOperatorExtension {
 
     ExecutionMode getExecutionMode();
 
+    String getOperatorName();
+
 }
