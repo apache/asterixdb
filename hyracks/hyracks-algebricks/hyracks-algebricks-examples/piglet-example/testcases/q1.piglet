@@ -1,2 +1,0 @@
-R = load "nc1:data/file1.txt,nc2:data/file2.txt" as (id : int, name : chararray);
-dump R into "nc1:output";
