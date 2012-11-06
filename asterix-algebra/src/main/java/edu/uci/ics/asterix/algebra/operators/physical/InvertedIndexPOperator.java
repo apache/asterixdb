@@ -102,8 +102,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             SearchModifierType searchModifierType, IAlgebricksConstantValue similarityThreshold)
             throws AlgebricksException {
         IAObject simThresh = ((AsterixConstantValue) similarityThreshold).getObject();
-        String itemTypeName = dataset.getItemTypeName();
-        IAType itemType = metadata.findType(itemTypeName);
+        IAType itemType = metadata.findType(dataset.getItemTypeName());
         int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
         Index secondaryIndex = metadata.getIndex(dataset.getDataverseName(), dataset.getDatasetName(), indexName);
         if (secondaryIndex == null) {

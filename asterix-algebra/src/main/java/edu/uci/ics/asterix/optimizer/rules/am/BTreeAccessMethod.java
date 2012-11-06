@@ -22,7 +22,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
@@ -90,21 +89,6 @@ public class BTreeAccessMethod implements IAccessMethod {
         return false;
     }
 
-    private ILogicalExpression createSearchKeyExpr(IOptimizableFuncExpr optFuncExpr,
-            OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree) {
-        if (probeSubTree == null) {
-            // We are optimizing a selection query. Search key is a constant.
-            return new ConstantExpression(optFuncExpr.getConstantVal(0));
-        } else {
-            // We are optimizing a join query. Determine which variable feeds the secondary index. 
-            if (optFuncExpr.getOperatorSubTree(0) == probeSubTree) {
-                return new VariableReferenceExpression(optFuncExpr.getLogicalVar(0));
-            } else {
-                return new VariableReferenceExpression(optFuncExpr.getLogicalVar(1));
-            }
-        }
-    }
-    
     @Override
     public boolean applySelectPlanTransformation(Mutable<ILogicalOperator> selectRef,
             OptimizableOperatorSubTree subTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
@@ -177,7 +161,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             return false;
         }
         
-        // TODO: If there are conditions left, add a new select operator on top!
+        // TODO: If there are conditions left, add a new select operator on top.
         joinRef.setValue(primaryIndexUnnestOp);
         return true;
     }
@@ -220,7 +204,8 @@ public class BTreeAccessMethod implements IAccessMethod {
             if (keyPos < 0) {
                 throw new InternalError();
             }
-            ILogicalExpression searchKeyExpr = createSearchKeyExpr(optFuncExpr, indexSubTree, probeSubTree);
+            ILogicalExpression searchKeyExpr = AccessMethodUtils.createSearchKeyExpr(optFuncExpr, indexSubTree,
+                    probeSubTree);
             LimitType limit = getLimitType(optFuncExpr);
             switch (limit) {
                 case EQUAL: {
