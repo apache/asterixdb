@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
-import edu.uci.ics.hyracks.api.application.INCBootstrap;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
@@ -14,9 +13,8 @@ public class NCApplicationContext extends ApplicationContext implements INCAppli
     private final IHyracksRootContext rootCtx;
     private Object appObject;
 
-    public NCApplicationContext(ServerContext serverCtx, IHyracksRootContext rootCtx, String appName, String nodeId)
-            throws IOException {
-        super(serverCtx, appName);
+    public NCApplicationContext(ServerContext serverCtx, IHyracksRootContext rootCtx, String nodeId) throws IOException {
+        super(serverCtx);
         this.nodeId = nodeId;
         this.rootCtx = rootCtx;
     }
@@ -28,19 +26,6 @@ public class NCApplicationContext extends ApplicationContext implements INCAppli
 
     public void setDistributedState(Serializable state) {
         distributedState = state;
-    }
-
-    @Override
-    protected void start() throws Exception {
-        ((INCBootstrap) bootstrap).setApplicationContext(this);
-        bootstrap.start();
-    }
-
-    @Override
-    protected void stop() throws Exception {
-        if (bootstrap != null) {
-            bootstrap.stop();
-        }
     }
 
     @Override

@@ -15,7 +15,7 @@
   <modules>
     <module>hadoopcompathelper</module>
     <module>hadoopcompatclient</module>
-    <module>hadoopcompatapp</module>
+    <module>hadoopcompatserver</module>
   </modules>
 
   <dependencies>

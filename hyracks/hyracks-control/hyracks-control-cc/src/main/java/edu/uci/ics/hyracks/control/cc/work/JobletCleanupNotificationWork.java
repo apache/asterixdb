@@ -59,7 +59,7 @@ public class JobletCleanupNotificationWork extends AbstractWork {
             ncs.getActiveJobIds().remove(jobId);
         }
         if (cleanupPendingNodes.isEmpty()) {
-            CCApplicationContext appCtx = ccs.getApplicationMap().get(run.getApplicationName());
+            CCApplicationContext appCtx = ccs.getApplicationContext();
             if (appCtx != null) {
                 try {
                     appCtx.notifyJobFinish(jobId);

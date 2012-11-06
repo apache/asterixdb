@@ -40,7 +40,6 @@ import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
-import edu.uci.ics.hyracks.control.common.application.ApplicationStatus;
 import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
@@ -68,14 +67,11 @@ public class CCNCFunctions {
         REPORT_PROFILE,
         REGISTER_PARTITION_PROVIDER,
         REGISTER_PARTITION_REQUEST,
-        APPLICATION_STATE_CHANGE_RESPONSE,
 
         NODE_REGISTRATION_RESULT,
         START_TASKS,
         ABORT_TASKS,
         CLEANUP_JOBLET,
-        CREATE_APPLICATION,
-        DESTROY_APPLICATION,
         REPORT_PARTITION_AVAILABILITY,
         SEND_APPLICATION_MESSAGE,
         GET_NODE_CONTROLLERS_INFO,
@@ -88,7 +84,6 @@ public class CCNCFunctions {
         private static final long serialVersionUID = 1L;
         private byte[] serializedMessage;
         private String nodeId;
-        private String appName;
 
         public String getNodeId() {
             return nodeId;
@@ -102,20 +97,14 @@ public class CCNCFunctions {
             return serializedMessage;
         }
 
-        public SendApplicationMessageFunction(byte[] data, String appName, String nodeId) {
-            super();
+        public SendApplicationMessageFunction(byte[] data, String nodeId) {
             this.serializedMessage = data;
             this.nodeId = nodeId;
-            this.appName = appName;
         }
 
         @Override
         public FunctionId getFunctionId() {
             return FunctionId.SEND_APPLICATION_MESSAGE;
-        }
-
-        public String getAppName() {
-            return appName;
         }
 
     }
@@ -438,37 +427,6 @@ public class CCNCFunctions {
         }
     }
 
-    public static class ApplicationStateChangeResponseFunction extends Function {
-        private static final long serialVersionUID = 1L;
-
-        private final String nodeId;
-        private final String appName;
-        private final ApplicationStatus status;
-
-        public ApplicationStateChangeResponseFunction(String nodeId, String appName, ApplicationStatus status) {
-            this.nodeId = nodeId;
-            this.appName = appName;
-            this.status = status;
-        }
-
-        @Override
-        public FunctionId getFunctionId() {
-            return FunctionId.APPLICATION_STATE_CHANGE_RESPONSE;
-        }
-
-        public String getNodeId() {
-            return nodeId;
-        }
-
-        public String getApplicationName() {
-            return appName;
-        }
-
-        public ApplicationStatus getStatus() {
-            return status;
-        }
-    }
-
     public static class NodeRegistrationResult extends Function {
         private static final long serialVersionUID = 1L;
 
@@ -498,17 +456,14 @@ public class CCNCFunctions {
     public static class StartTasksFunction extends Function {
         private static final long serialVersionUID = 1L;
 
-        private final String appName;
         private final JobId jobId;
         private final byte[] planBytes;
         private final List<TaskAttemptDescriptor> taskDescriptors;
         private final Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies;
         private final EnumSet<JobFlag> flags;
 
-        public StartTasksFunction(String appName, JobId jobId, byte[] planBytes,
-                List<TaskAttemptDescriptor> taskDescriptors,
+        public StartTasksFunction(JobId jobId, byte[] planBytes, List<TaskAttemptDescriptor> taskDescriptors,
                 Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies, EnumSet<JobFlag> flags) {
-            this.appName = appName;
             this.jobId = jobId;
             this.planBytes = planBytes;
             this.taskDescriptors = taskDescriptors;
@@ -519,10 +474,6 @@ public class CCNCFunctions {
         @Override
         public FunctionId getFunctionId() {
             return FunctionId.START_TASKS;
-        }
-
-        public String getAppName() {
-            return appName;
         }
 
         public JobId getJobId() {
@@ -593,56 +544,6 @@ public class CCNCFunctions {
 
         public JobStatus getStatus() {
             return status;
-        }
-    }
-
-    public static class CreateApplicationFunction extends Function {
-        private static final long serialVersionUID = 1L;
-
-        private final String appName;
-        private final boolean deployHar;
-        private final byte[] serializedDistributedState;
-
-        public CreateApplicationFunction(String appName, boolean deployHar, byte[] serializedDistributedState) {
-            this.appName = appName;
-            this.deployHar = deployHar;
-            this.serializedDistributedState = serializedDistributedState;
-        }
-
-        @Override
-        public FunctionId getFunctionId() {
-            return FunctionId.CREATE_APPLICATION;
-        }
-
-        public String getAppName() {
-            return appName;
-        }
-
-        public boolean isDeployHar() {
-            return deployHar;
-        }
-
-        public byte[] getSerializedDistributedState() {
-            return serializedDistributedState;
-        }
-    }
-
-    public static class DestroyApplicationFunction extends Function {
-        private static final long serialVersionUID = 1L;
-
-        private final String appName;
-
-        public DestroyApplicationFunction(String appName) {
-            this.appName = appName;
-        }
-
-        @Override
-        public FunctionId getFunctionId() {
-            return FunctionId.DESTROY_APPLICATION;
-        }
-
-        public String getAppName() {
-            return appName;
         }
     }
 

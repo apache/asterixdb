@@ -42,6 +42,7 @@ import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 import edu.uci.ics.hyracks.control.nc.Joblet;
@@ -59,8 +60,6 @@ public class StartTasksWork extends AbstractWork {
 
     private final NodeControllerService ncs;
 
-    private final String appName;
-
     private final JobId jobId;
 
     private final byte[] acgBytes;
@@ -71,11 +70,10 @@ public class StartTasksWork extends AbstractWork {
 
     private final EnumSet<JobFlag> flags;
 
-    public StartTasksWork(NodeControllerService ncs, String appName, JobId jobId, byte[] acgBytes,
+    public StartTasksWork(NodeControllerService ncs, JobId jobId, byte[] acgBytes,
             List<TaskAttemptDescriptor> taskDescriptors,
             Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap, EnumSet<JobFlag> flags) {
         this.ncs = ncs;
-        this.appName = appName;
         this.jobId = jobId;
         this.acgBytes = acgBytes;
         this.taskDescriptors = taskDescriptors;
@@ -86,10 +84,9 @@ public class StartTasksWork extends AbstractWork {
     @Override
     public void run() {
         try {
-            Map<String, NCApplicationContext> applications = ncs.getApplications();
-            NCApplicationContext appCtx = applications.get(appName);
+            NCApplicationContext appCtx = ncs.getApplicationContext();
             final Joblet joblet = getOrCreateLocalJoblet(jobId, appCtx, acgBytes == null ? null
-                    : (ActivityClusterGraph) appCtx.deserialize(acgBytes));
+                    : (ActivityClusterGraph) JavaSerializationUtils.deserialize(acgBytes));
             final ActivityClusterGraph acg = joblet.getActivityClusterGraph();
 
             IRecordDescriptorProvider rdp = new IRecordDescriptorProvider() {

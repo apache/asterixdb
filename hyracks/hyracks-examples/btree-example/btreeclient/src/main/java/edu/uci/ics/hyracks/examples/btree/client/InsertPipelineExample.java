@@ -62,9 +62,6 @@ public class InsertPipelineExample {
         @Option(name = "-port", usage = "Hyracks Cluster Controller Port (default: 1098)")
         public int port = 1098;
 
-        @Option(name = "-app", usage = "Hyracks Application name", required = true)
-        public String app;
-
         @Option(name = "-target-ncs", usage = "Comma separated list of node-controller names to use", required = true)
         public String ncs;
 
@@ -88,7 +85,7 @@ public class InsertPipelineExample {
         JobSpecification job = createJob(options);
 
         long start = System.currentTimeMillis();
-        JobId jobId = hcc.startJob(options.app, job);
+        JobId jobId = hcc.startJob(job);
         hcc.waitForCompletion(jobId);
         long end = System.currentTimeMillis();
         System.err.println(start + " " + end + " " + (end - start));

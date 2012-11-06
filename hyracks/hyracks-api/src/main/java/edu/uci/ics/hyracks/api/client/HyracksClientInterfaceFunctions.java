@@ -24,9 +24,6 @@ public class HyracksClientInterfaceFunctions {
     public enum FunctionId {
         GET_CLUSTER_CONTROLLER_INFO,
         GET_CLUSTER_TOPOLOGY,
-        CREATE_APPLICATION,
-        START_APPLICATION,
-        DESTROY_APPLICATION,
         CREATE_JOB,
         GET_JOB_STATUS,
         START_JOB,
@@ -46,63 +43,6 @@ public class HyracksClientInterfaceFunctions {
         @Override
         public FunctionId getFunctionId() {
             return FunctionId.GET_CLUSTER_CONTROLLER_INFO;
-        }
-    }
-
-    public static class CreateApplicationFunction extends Function {
-        private static final long serialVersionUID = 1L;
-
-        private final String appName;
-
-        public CreateApplicationFunction(String appName) {
-            this.appName = appName;
-        }
-
-        @Override
-        public FunctionId getFunctionId() {
-            return FunctionId.CREATE_APPLICATION;
-        }
-
-        public String getAppName() {
-            return appName;
-        }
-    }
-
-    public static class StartApplicationFunction extends Function {
-        private static final long serialVersionUID = 1L;
-
-        private final String appName;
-
-        public StartApplicationFunction(String appName) {
-            this.appName = appName;
-        }
-
-        @Override
-        public FunctionId getFunctionId() {
-            return FunctionId.START_APPLICATION;
-        }
-
-        public String getAppName() {
-            return appName;
-        }
-    }
-
-    public static class DestroyApplicationFunction extends Function {
-        private static final long serialVersionUID = 1L;
-
-        private final String appName;
-
-        public DestroyApplicationFunction(String appName) {
-            this.appName = appName;
-        }
-
-        @Override
-        public FunctionId getFunctionId() {
-            return FunctionId.DESTROY_APPLICATION;
-        }
-
-        public String getAppName() {
-            return appName;
         }
     }
 
@@ -128,12 +68,10 @@ public class HyracksClientInterfaceFunctions {
     public static class StartJobFunction extends Function {
         private static final long serialVersionUID = 1L;
 
-        private final String appName;
         private final byte[] acggfBytes;
         private final EnumSet<JobFlag> jobFlags;
 
-        public StartJobFunction(String appName, byte[] acggfBytes, EnumSet<JobFlag> jobFlags) {
-            this.appName = appName;
+        public StartJobFunction(byte[] acggfBytes, EnumSet<JobFlag> jobFlags) {
             this.acggfBytes = acggfBytes;
             this.jobFlags = jobFlags;
         }
@@ -141,10 +79,6 @@ public class HyracksClientInterfaceFunctions {
         @Override
         public FunctionId getFunctionId() {
             return FunctionId.START_JOB;
-        }
-
-        public String getAppName() {
-            return appName;
         }
 
         public byte[] getACGGFBytes() {

@@ -17,7 +17,9 @@ package edu.uci.ics.hyracks.control.common.controllers;
 import java.io.Serializable;
 import java.util.List;
 
+import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.StopOptionHandler;
 
 public class NCConfig implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -55,6 +57,13 @@ public class NCConfig implements Serializable {
     @Option(name = "-max-memory", usage = "Maximum memory usable at this Node Controller in bytes (default: -1 auto)")
     public int maxMemory = -1;
 
+    @Option(name = "-app-nc-main-class", usage = "Application NC Main Class")
+    public String appNCMainClass;
+
+    @Argument
+    @Option(name = "--", handler = StopOptionHandler.class)
+    public List<String> appArgs;
+
     public void toCommandLine(List<String> cList) {
         cList.add("-cc-host");
         cList.add(ccHost);
@@ -80,5 +89,15 @@ public class NCConfig implements Serializable {
         cList.add(String.valueOf(nNetThreads));
         cList.add("-max-memory");
         cList.add(String.valueOf(maxMemory));
+        if (appNCMainClass != null) {
+            cList.add("-app-nc-main-class");
+            cList.add(appNCMainClass);
+        }
+        if (appArgs != null && !appArgs.isEmpty()) {
+            cList.add("--");
+            for (String appArg : appArgs) {
+                cList.add(appArg);
+            }
+        }
     }
 }
