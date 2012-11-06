@@ -55,12 +55,13 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.ConsolidateAssignsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ConsolidateSelectsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.EliminateSubplanRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.EnforceStructuralPropertiesRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.ExtractCommonExpressionsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ExtractCommonOperatorsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ExtractGbyExpressionsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.FactorRedundantGroupAndDecorVarsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.InferTypesRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.InlineAssignIntoAggregateRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.InlineSingleReferenceVariables;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.InlineSingleReferenceVariablesRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.InsertOuterJoinRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.InsertProjectBeforeUnionRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroHashPartitionMergeExchange;
@@ -79,7 +80,6 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectDownRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectIntoJoinRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSubplanWithAggregateDownThroughProductRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ReinferAllTypesRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.ExtractCommonExpressions;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveRedundantGroupByDecorVars;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveRedundantVariablesRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveUnusedAssignAndAggregateRule;
@@ -104,7 +104,7 @@ public final class RuleCollections {
         normalization.add(new ExtractGbyExpressionsRule());
         normalization.add(new ExtractDistinctByExpressionsRule());
         normalization.add(new ExtractOrderExpressionsRule());        
-        normalization.add(new ExtractCommonExpressions());
+        normalization.add(new ExtractCommonExpressionsRule());
         
         // IntroduceStaticTypeCastRule should go before
         // IntroduceDynamicTypeCastRule to
@@ -189,16 +189,16 @@ public final class RuleCollections {
         List<IAlgebraicRewriteRule> accessMethod = new LinkedList<IAlgebraicRewriteRule>();
         accessMethod.add(new IntroduceSelectAccessMethodRule());
         accessMethod.add(new IntroduceJoinAccessMethodRule());
-        accessMethod.add(new IntroduceSecondaryIndexInsertDeleteRule());
-        accessMethod.add(new ExtractCommonExpressions());
+        accessMethod.add(new IntroduceSecondaryIndexInsertDeleteRule());        
         return accessMethod;
     }
 
-    public final static List<IAlgebraicRewriteRule> buildOpPushDownRuleCollection() {
-        List<IAlgebraicRewriteRule> opPushDown = new LinkedList<IAlgebraicRewriteRule>();
-        opPushDown.add(new PushProjectDownRule());
-        opPushDown.add(new PushSelectDownRule());
-        return opPushDown;
+    public final static List<IAlgebraicRewriteRule> buildPlanCleanupRuleCollection() {
+        List<IAlgebraicRewriteRule> planCleanupRules = new LinkedList<IAlgebraicRewriteRule>();
+        planCleanupRules.add(new ExtractCommonExpressionsRule());
+        planCleanupRules.add(new PushProjectDownRule());
+        planCleanupRules.add(new PushSelectDownRule());
+        return planCleanupRules;
     }
 
     public final static List<IAlgebraicRewriteRule> buildDataExchangeRuleCollection() {
@@ -219,7 +219,7 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new PushProjectDownRule());
         physicalRewritesAllLevels.add(new InsertProjectBeforeUnionRule());
                 
-        physicalRewritesAllLevels.add(new InlineSingleReferenceVariables());
+        physicalRewritesAllLevels.add(new InlineSingleReferenceVariablesRule());
         physicalRewritesAllLevels.add(new RemoveUnusedAssignAndAggregateRule());
         physicalRewritesAllLevels.add(new ConsolidateAssignsRule());
         return physicalRewritesAllLevels;
