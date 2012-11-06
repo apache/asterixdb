@@ -376,7 +376,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     public boolean applySelectPlanTransformation(Mutable<ILogicalOperator> selectRef,
             OptimizableOperatorSubTree subTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             IOptimizationContext context) throws AlgebricksException {
-        IOptimizableFuncExpr optFuncExpr = chooseOptFuncExpr(chosenIndex, analysisCtx);
+        IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
         ILogicalOperator indexPlanRootOp = createSecondaryToPrimaryPlan(subTree, null, chosenIndex, optFuncExpr, false,
                 false, context);
         // Replace the datasource scan with the new plan rooted at primaryIndexUnnestMap.
@@ -400,7 +400,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             indexSubTree = rightSubTree;
             probeSubTree = leftSubTree;
         }
-        IOptimizableFuncExpr optFuncExpr = chooseOptFuncExpr(chosenIndex, analysisCtx);
+        IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
 
         // Clone the original join condition because we may have to modify it (and we also need the original).
         InnerJoinOperator join = (InnerJoinOperator) joinRef.getValue();
@@ -454,14 +454,6 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             joinRef.setValue(unionAllOp);
         }
         return true;
-    }
-
-    private IOptimizableFuncExpr chooseOptFuncExpr(Index chosenIndex, AccessMethodAnalysisContext analysisCtx) {
-        // TODO: We can probably do something smarter here.
-        // Pick the first expr optimizable by this index.
-        List<Integer> indexExprs = analysisCtx.getIndexExprs(chosenIndex);
-        int firstExprIndex = indexExprs.get(0);
-        return analysisCtx.matchedFuncExprs.get(firstExprIndex);
     }
 
     private Mutable<ILogicalOperator> createPanicNestedLoopJoinPlan(Mutable<ILogicalOperator> joinRef,

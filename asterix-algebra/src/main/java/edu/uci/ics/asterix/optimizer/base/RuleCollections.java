@@ -218,10 +218,11 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new PullPositionalVariableFromUnnestRule());
         physicalRewritesAllLevels.add(new PushProjectDownRule());
         physicalRewritesAllLevels.add(new InsertProjectBeforeUnionRule());
-                
         physicalRewritesAllLevels.add(new InlineSingleReferenceVariablesRule());
         physicalRewritesAllLevels.add(new RemoveUnusedAssignAndAggregateRule());
         physicalRewritesAllLevels.add(new ConsolidateAssignsRule());
+        // After adding projects, we may need need to set physical operators again.
+        physicalRewritesAllLevels.add(new SetAlgebricksPhysicalOperatorsRule());
         return physicalRewritesAllLevels;
     }
 
