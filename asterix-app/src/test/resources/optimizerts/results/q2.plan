@@ -7,21 +7,21 @@
             -- ONE_TO_ONE_EXCHANGE  |LOCAL|
               -- STABLE_SORT [$$26(DESC)]  |LOCAL|
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- PRE_CLUSTERED_GROUP_BY[$$31]  |PARTITIONED|
+                  -- PRE_CLUSTERED_GROUP_BY[$$32]  |PARTITIONED|
                           {
                             -- AGGREGATE  |LOCAL|
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
                           }
                           {
                             -- AGGREGATE  |LOCAL|
-                              -- MICRO_PRE_CLUSTERED_GROUP_BY[$$32]  |LOCAL|
+                              -- MICRO_PRE_CLUSTERED_GROUP_BY[$$33]  |LOCAL|
                                       {
                                         -- AGGREGATE  |LOCAL|
                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                                       }
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                           }
-                    -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$31(ASC), $$32(ASC)] HASH:[$$31]  |PARTITIONED|
+                    -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$32(ASC), $$33(ASC)] HASH:[$$32]  |PARTITIONED|
                       -- PRE_CLUSTERED_GROUP_BY[$$23, $$24]  |LOCAL|
                               {
                                 -- AGGREGATE  |LOCAL|

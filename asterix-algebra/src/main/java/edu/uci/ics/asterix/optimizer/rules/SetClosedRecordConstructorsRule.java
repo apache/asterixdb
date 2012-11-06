@@ -142,7 +142,11 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
         @Override
         public ClosedDataInfo visitVariableReferenceExpression(VariableReferenceExpression expr, Void arg)
                 throws AlgebricksException {
-            boolean dataIsClosed = isClosedRec((IAType) env.getVarType(expr.getVariableReference()));
+            Object varType = env.getVarType(expr.getVariableReference());
+            if (varType == null) {
+                throw new AlgebricksException("Could not infer type for variable '" + expr.getVariableReference() + "'.");
+            }
+            boolean dataIsClosed = isClosedRec((IAType) varType);
             return new ClosedDataInfo(false, dataIsClosed, expr);
         }
 
