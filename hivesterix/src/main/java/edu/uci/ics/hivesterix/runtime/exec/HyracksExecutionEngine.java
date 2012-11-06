@@ -514,14 +514,13 @@ public class HyracksExecutionEngine implements IExecutionEngine {
     private void executeHyraxJob(JobSpecification job) throws Exception {
         String ipAddress = conf.get("hive.hyracks.host");
         int port = Integer.parseInt(conf.get("hive.hyracks.port"));
-        String applicationName = conf.get("hive.hyracks.app");
         System.out.println("connect to " + ipAddress + " " + port);
 
         IHyracksClientConnection hcc = new HyracksConnection(ipAddress, port);
 
         System.out.println("get connected");
         long start = System.currentTimeMillis();
-        JobId jobId = hcc.startJob(applicationName, job);
+        JobId jobId = hcc.startJob(job);
         hcc.waitForCompletion(jobId);
 
         System.out.println("job finished: " + jobId.toString());

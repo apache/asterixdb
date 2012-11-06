@@ -94,7 +94,6 @@ public abstract class AbstractTestSuiteClass extends TestSuite {
         String ipAddress = hconf.get("hive.hyracks.host");
         int clientPort = Integer.parseInt(hconf.get("hive.hyracks.port"));
         int netPort = clientPort + 1;
-        String applicationName = hconf.get("hive.hyracks.app");
 
         // start hyracks cc
         CCConfig ccConfig = new CCConfig();
@@ -122,7 +121,6 @@ public abstract class AbstractTestSuiteClass extends TestSuite {
         }
 
         IHyracksClientConnection hcc = new HyracksConnection(ccConfig.clientNetIpAddress, clientPort);
-        hcc.createApplication(applicationName, null);
     }
 
     protected void makeDir(String path) throws IOException {

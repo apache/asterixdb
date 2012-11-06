@@ -69,7 +69,6 @@ public class AlgebricksHyracksIntegrationUtil {
         nc2.start();
 
         hcc = new HyracksConnection(ccConfig.clientNetIpAddress, ccConfig.clientNetPort);
-        hcc.createApplication(AlgebricksConfig.HYRACKS_APP_NAME, null);
     }
 
     public static void deinit() throws Exception {
@@ -80,7 +79,7 @@ public class AlgebricksHyracksIntegrationUtil {
 
     public static void runJob(JobSpecification spec) throws Exception {
         AlgebricksConfig.ALGEBRICKS_LOGGER.info(spec.toJSON().toString());
-        JobId jobId = hcc.startJob(AlgebricksConfig.HYRACKS_APP_NAME, spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
+        JobId jobId = hcc.startJob(spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         AlgebricksConfig.ALGEBRICKS_LOGGER.info(jobId.toString());
         hcc.waitForCompletion(jobId);
     }
