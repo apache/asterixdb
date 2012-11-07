@@ -86,13 +86,13 @@ public class LSMHarness implements ILSMHarness {
         if (!lsmIndex.getFlushController().getFlushStatus(lsmIndex) && lsmIndex.getInMemoryFreePageManager().isFull()) {
             lsmIndex.getFlushController().setFlushStatus(lsmIndex, true);
         }
-        opTracker.afterOperation(opCtx);
+        opTracker.afterOperation(opCtx.getSearchOperationCallback(), opCtx.getModificationCallback());
     }
 
     @Override
     public boolean insertUpdateOrDelete(ITupleReference tuple, ILSMIndexOperationContext ctx, boolean tryOperation)
             throws HyracksDataException, IndexException {
-        if (!opTracker.beforeOperation(ctx, tryOperation)) {
+        if (!opTracker.beforeOperation(ctx.getSearchOperationCallback(), ctx.getModificationCallback(), tryOperation)) {
             return false;
         }
         // It is possible, due to concurrent execution of operations, that an operation will 
@@ -108,13 +108,13 @@ public class LSMHarness implements ILSMHarness {
 
     @Override
     public boolean noOp(ILSMIndexOperationContext ctx, boolean tryOperation) throws HyracksDataException {
-        if (!opTracker.beforeOperation(ctx, tryOperation)) {
+        if (!opTracker.beforeOperation(ctx.getSearchOperationCallback(), ctx.getModificationCallback(), tryOperation)) {
             return false;
         }
         threadExit(ctx);
         return true;
     }
-    
+
     public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Flushing LSM-Index: " + lsmIndex);
@@ -124,7 +124,7 @@ public class LSMHarness implements ILSMHarness {
             operation.getCallback().beforeOperation(operation);
             newComponent = lsmIndex.flush(operation);
             operation.getCallback().afterOperation(operation, null, newComponent);
-            
+
             // The implementation of this call must take any necessary steps to make
             // the new component permanent, and mark it as valid (usually this means
             // forcing all pages of the tree to disk, possibly with some extra
@@ -148,7 +148,7 @@ public class LSMHarness implements ILSMHarness {
         // If the search doesn't include the in-memory component, then we don't have
         // to synchronize with a flush.
         if (includeMemComponent) {
-            opTracker.beforeOperation(ctx, true);
+            opTracker.beforeOperation(ctx.getSearchOperationCallback(), ctx.getModificationCallback(), true);
         }
 
         // Get a snapshot of the current on-disk Trees.
@@ -199,7 +199,7 @@ public class LSMHarness implements ILSMHarness {
             operation.getCallback().beforeOperation(operation);
             newComponent = lsmIndex.merge(mergedComponents, operation);
             operation.getCallback().afterOperation(operation, mergedComponents, newComponent);
-            
+
             // No merge happened.
             if (newComponent == null) {
                 isMerging.set(false);
@@ -215,7 +215,7 @@ public class LSMHarness implements ILSMHarness {
         } finally {
             operation.getCallback().afterFinalize(operation, newComponent);
         }
-        
+
         // Remove the old Trees from the list, and add the new merged Tree(s).
         // Also, swap the searchRefCount.
         synchronized (diskComponentsSync) {
@@ -228,7 +228,6 @@ public class LSMHarness implements ILSMHarness {
             }
             searcherRefCount.set(0);
         }
-        
 
         // Wait for all searchers that are still accessing the old on-disk
         // Trees, then perform the final cleanup of the old Trees.

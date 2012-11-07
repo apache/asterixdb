@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.AlgebricksOptimizationC
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
+import edu.uci.ics.hyracks.api.job.IJobletEventListenerFactory;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuilder {
@@ -81,7 +82,7 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                     }
 
                     @Override
-                    public JobSpecification createJob(Object appContext) throws AlgebricksException {
+                    public JobSpecification createJob(Object appContext, IJobletEventListenerFactory jobEventListenerFactory) throws AlgebricksException {
                         AlgebricksConfig.ALGEBRICKS_LOGGER.fine("Starting Job Generation.\n");
                         JobGenContext context = new JobGenContext(null, metadata, appContext,
                                 serializerDeserializerProvider, hashFunctionFactoryProvider, comparatorFactoryProvider,
@@ -90,7 +91,7 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                                 expressionRuntimeProvider, expressionTypeComputer, nullableTypeComputer, oc,
                                 expressionEvalSizeComputer, partialAggregationTypeComputer, frameSize, clusterLocations);
                         PlanCompiler pc = new PlanCompiler(context);
-                        return pc.compilePlan(plan, null);
+                        return pc.compilePlan(plan, null, jobEventListenerFactory);
                     }
                 };
             }

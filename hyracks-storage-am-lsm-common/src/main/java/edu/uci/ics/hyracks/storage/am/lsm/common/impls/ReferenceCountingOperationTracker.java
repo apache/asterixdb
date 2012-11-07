@@ -3,6 +3,8 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
@@ -22,7 +24,8 @@ public class ReferenceCountingOperationTracker implements ILSMOperationTracker {
     }
 
     @Override
-    public synchronized boolean beforeOperation(ILSMIndexOperationContext opCtx, boolean tryOperation)
+    public synchronized boolean beforeOperation(ISearchOperationCallback searchCallback,
+            IModificationOperationCallback modificationCallback, boolean tryOperation)
             throws HyracksDataException {
         // Wait for pending flushes to complete.
         // If flushFlag is set, then the flush is queued to occur by the last exiting thread.
@@ -42,13 +45,15 @@ public class ReferenceCountingOperationTracker implements ILSMOperationTracker {
     }
 
     @Override
-    public void afterOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
+    public void afterOperation(ISearchOperationCallback searchCallback,
+            IModificationOperationCallback modificationCallback) throws HyracksDataException {
         // The operation is considered inactive, immediately after leaving the index.
-        completeOperation(opCtx);
+        completeOperation(searchCallback, modificationCallback);
     }
 
     @Override
-    public synchronized void completeOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
+    public synchronized void completeOperation(ISearchOperationCallback searchCallback,
+            IModificationOperationCallback modificationCallback) throws HyracksDataException {
         threadRefCount--;
 
         // Flush will only be handled by last exiting thread.

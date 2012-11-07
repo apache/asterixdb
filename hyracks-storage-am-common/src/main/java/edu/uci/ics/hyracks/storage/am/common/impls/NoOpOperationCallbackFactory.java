@@ -15,7 +15,7 @@ public enum NoOpOperationCallbackFactory implements ISearchOperationCallbackFact
     INSTANCE;
 
     @Override
-    public IModificationOperationCallback createModificationOperationCallback(long resourceId, IHyracksTaskContext ctx) {
+    public IModificationOperationCallback createModificationOperationCallback(long resourceId, Object resource, IHyracksTaskContext ctx) {
         return NoOpOperationCallback.INSTANCE;
     }
 
