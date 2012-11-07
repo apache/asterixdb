@@ -90,27 +90,23 @@ public class ExecutionTest {
 
     @Test
     public void test() throws Exception {
-        if (System.getProperty("run_new_tests") != null) {
-            List<CompilationUnit> cUnits = tcCtx.getTestCase().getCompilationUnit();
-            for (CompilationUnit cUnit : cUnits) {
-                File testFile = tcCtx.getTestFile(cUnit);
-                File expectedResultFile = tcCtx.getExpectedResultFile(cUnit);
-                File actualFile = new File(PATH_ACTUAL + File.separator
-                        + tcCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_" + cUnit.getName()
-                        + ".adm");
+        List<CompilationUnit> cUnits = tcCtx.getTestCase().getCompilationUnit();
+        for (CompilationUnit cUnit : cUnits) {
+            File testFile = tcCtx.getTestFile(cUnit);
+            File expectedResultFile = tcCtx.getExpectedResultFile(cUnit);
+            File actualFile = new File(PATH_ACTUAL + File.separator
+                    + tcCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_" + cUnit.getName() + ".adm");
 
-                File actualResultFile = tcCtx.getActualResultFile(cUnit, new File(PATH_ACTUAL));
-                actualResultFile.getParentFile().mkdirs();
-                try {
-                    TestsUtils.runScriptAndCompareWithResult(
-                            AsterixHyracksIntegrationUtil.getHyracksClientConnection(), testFile, new PrintWriter(
-                                    System.err), expectedResultFile, actualFile);
-                } catch (Exception e) {
-                    LOGGER.severe("Test \"" + testFile + "\" FAILED!");
-                    e.printStackTrace();
-                    if (cUnit.getExpectedError().isEmpty()) {
-                        throw new Exception("Test \"" + testFile + "\" FAILED!", e);
-                    }
+            File actualResultFile = tcCtx.getActualResultFile(cUnit, new File(PATH_ACTUAL));
+            actualResultFile.getParentFile().mkdirs();
+            try {
+                TestsUtils.runScriptAndCompareWithResult(AsterixHyracksIntegrationUtil.getHyracksClientConnection(),
+                        testFile, new PrintWriter(System.err), expectedResultFile, actualFile);
+            } catch (Exception e) {
+                LOGGER.severe("Test \"" + testFile + "\" FAILED!");
+                e.printStackTrace();
+                if (cUnit.getExpectedError().isEmpty()) {
+                    throw new Exception("Test \"" + testFile + "\" FAILED!", e);
                 }
             }
         }
