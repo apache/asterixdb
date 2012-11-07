@@ -22,6 +22,10 @@ public class JobEventListenerFactory implements IJobletEventListenerFactory {
         this.jobId = jobId;
         this.transactionalWrite = transactionalWrite;
     }
+    
+    public JobId getJobId() {
+        return jobId;
+    }
 
     @Override
     public IJobletEventListener createListener(final IHyracksJobletContext jobletContext) {

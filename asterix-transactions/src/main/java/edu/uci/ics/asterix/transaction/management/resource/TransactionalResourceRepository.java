@@ -45,9 +45,6 @@ public class TransactionalResourceRepository {
             if (resourceRepository.get(resourceId) == null) {
                 MutableResourceId newMutableResourceId = new MutableResourceId(resourceId);
                 resourceRepository.put(newMutableResourceId, resource);
-                
-                // wake up threads waiting for the resource
-                resourceRepository.notifyAll();
             }
         }
     }
@@ -56,9 +53,6 @@ public class TransactionalResourceRepository {
         synchronized (resourceMgrRepository) {
             if (resourceMgrRepository.get(id) == null) {
                 resourceMgrRepository.put(id, resourceMgr);
-                
-                // wake up threads waiting for the resource manager
-                resourceMgrRepository.notifyAll();
             }
         }
     }
@@ -66,15 +60,6 @@ public class TransactionalResourceRepository {
     public Object getTransactionalResource(long resourceId) {
         synchronized (resourceRepository) {
             mutableResourceId.setId(resourceId);
-            while (resourceRepository.get(mutableResourceId) == null) {
-                try {
-                    resourceRepository.wait();
-                } catch (InterruptedException ie) {
-                    ie.printStackTrace();
-                    break; // the thread might be interrupted due to other
-                    // failures occurring elsewhere, break from the loop
-                }
-            }
             return resourceRepository.get(mutableResourceId);
         }
     }
@@ -83,7 +68,5 @@ public class TransactionalResourceRepository {
         synchronized (resourceMgrRepository) {
             return resourceMgrRepository.get(id);
         }
-
     }
-
 }

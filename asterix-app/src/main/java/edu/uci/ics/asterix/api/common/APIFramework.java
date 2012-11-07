@@ -68,6 +68,7 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.api.job.IJobletEventListenerFactory;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
@@ -526,9 +527,9 @@ public class APIFramework {
         builder.setTypeTraitProvider(format.getTypeTraitProvider());
         builder.setNormalizedKeyComputerFactoryProvider(format.getNormalizedKeyComputerFactoryProvider());
 
-        JobSpecification spec = compiler.createJob(AsterixAppContextInfoImpl.INSTANCE);
-        // set the job event listener
-        spec.setJobletEventListenerFactory(new JobEventListenerFactory(asterixJobId, isWriteTransaction));
+        IJobletEventListenerFactory jobEventListenerFactory = new JobEventListenerFactory(asterixJobId, isWriteTransaction);
+        JobSpecification spec = compiler.createJob(AsterixAppContextInfoImpl.INSTANCE, jobEventListenerFactory);
+
         if (pc.isPrintJob()) {
             switch (pdf) {
                 case HTML: {

@@ -27,14 +27,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceRepository;
 import edu.uci.ics.asterix.transaction.management.service.logging.FileUtil;
 import edu.uci.ics.asterix.transaction.management.service.logging.IBuffer;
 import edu.uci.ics.asterix.transaction.management.service.logging.ILogCursor;
 import edu.uci.ics.asterix.transaction.management.service.logging.ILogFilter;
 import edu.uci.ics.asterix.transaction.management.service.logging.ILogManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.ILogRecordHelper;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogActionType;
+import edu.uci.ics.asterix.transaction.management.service.logging.IndexResourceManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogRecordHelper;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
@@ -54,7 +53,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 public class RecoveryManager implements IRecoveryManager {
 
     private static final Logger LOGGER = Logger.getLogger(RecoveryManager.class.getName());
-    private TransactionSubsystem transactionProvider;
+    private TransactionSubsystem txnSubsystem;
 
     /**
      * A file at a known location that contains the LSN of the last log record
@@ -66,7 +65,7 @@ public class RecoveryManager implements IRecoveryManager {
     private Map<Long, List<PhysicalLogLocator>> dirtyPagesTable;
 
     public RecoveryManager(TransactionSubsystem TransactionProvider) throws ACIDException {
-        this.transactionProvider = TransactionProvider;
+        this.txnSubsystem = TransactionProvider;
         try {
             FileUtil.createFileIfNotExists(checkpoint_record_file);
         } catch (IOException ioe) {
@@ -79,14 +78,14 @@ public class RecoveryManager implements IRecoveryManager {
     }
 
     private PhysicalLogLocator getBeginRecoveryLSN() throws ACIDException {
-        return new PhysicalLogLocator(0, transactionProvider.getLogManager());
+        return new PhysicalLogLocator(0, txnSubsystem.getLogManager());
     }
 
     /**
      * TODO:This method is currently not implemented completely.
      */
     public SystemState startRecovery(boolean synchronous) throws IOException, ACIDException {
-        ILogManager logManager = transactionProvider.getLogManager();
+        ILogManager logManager = txnSubsystem.getLogManager();
         state = SystemState.RECOVERING;
         transactionTable = new HashMap<Long, TransactionTableEntry>();
         dirtyPagesTable = new HashMap<Long, List<PhysicalLogLocator>>();
@@ -110,13 +109,16 @@ public class RecoveryManager implements IRecoveryManager {
                     break;
                 }
                 byte resourceMgrId = parser.getResourceMgrId(memLSN);
-                IResourceManager resourceMgr = transactionProvider.getTransactionalResourceRepository()
+                IResourceManager resourceMgr = txnSubsystem.getTransactionalResourceRepository()
                         .getTransactionalResourceMgr(resourceMgrId);
+                //register resourceMgr if it is not registered.
                 if (resourceMgr == null) {
-                    throw new ACIDException("unknown resource mgr with id " + resourceMgrId);
-                } else {
-                    resourceMgr.redo(parser, memLSN);
+                    resourceMgr = new IndexResourceManager(resourceMgrId, txnSubsystem);
+                    txnSubsystem.getTransactionalResourceRepository().registerTransactionalResourceManager(
+                            resourceMgrId, resourceMgr);
                 }
+                resourceMgr.redo(parser, memLSN);
+
                 writeCheckpointRecord(memLSN.getLsn());
             }
             state = SystemState.HEALTHY;
@@ -162,7 +164,7 @@ public class RecoveryManager implements IRecoveryManager {
      */
     @Override
     public void rollbackTransaction(TransactionContext txnContext) throws ACIDException {
-        ILogManager logManager = transactionProvider.getLogManager();
+        ILogManager logManager = txnSubsystem.getLogManager();
         ILogRecordHelper parser = logManager.getLogRecordHelper();
 
         // Obtain the last log record written by the transaction
@@ -209,16 +211,21 @@ public class RecoveryManager implements IRecoveryManager {
                     }
 
                     // look up the repository to get the resource manager
-                    IResourceManager resourceMgr = transactionProvider.getTransactionalResourceRepository()
+                    IResourceManager resourceMgr = txnSubsystem.getTransactionalResourceRepository()
                             .getTransactionalResourceMgr(resourceMgrId);
+
+                    // register resourceMgr if it is not registered. 
                     if (resourceMgr == null) {
-                        throw new ACIDException(txnContext, " unknown resource manager " + resourceMgrId);
-                    } else {
-                        resourceMgr.undo(parser, logLocator);
+                        resourceMgr = new IndexResourceManager(resourceMgrId, txnSubsystem);
+                        txnSubsystem.getTransactionalResourceRepository().registerTransactionalResourceManager(
+                                resourceMgrId, resourceMgr);
                     }
+                    resourceMgr.undo(parser, logLocator);
                     break;
+
                 case LogType.COMMIT:
                     throw new ACIDException(txnContext, " cannot rollback commmitted transaction");
+
                 default:
                     throw new ACIDException("Unsupported LogType: " + logType);
 

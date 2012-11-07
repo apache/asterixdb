@@ -23,6 +23,11 @@ public class LSMInvertedIndexIOOperationCallbackFactory implements ILSMIOOperati
 
     private static final long serialVersionUID = 1L;
 
+    public static LSMInvertedIndexIOOperationCallbackFactory INSTANCE = new LSMInvertedIndexIOOperationCallbackFactory();
+    
+    private LSMInvertedIndexIOOperationCallbackFactory() {
+    }
+    
     @Override
     public ILSMIOOperationCallback createIOOperationCallback(Object syncObj) {
         return new LSMInvertedIndexIOOperationCallback((IndexOperationTracker) syncObj);

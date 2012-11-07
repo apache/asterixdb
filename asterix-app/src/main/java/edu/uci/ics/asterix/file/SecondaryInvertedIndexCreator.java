@@ -121,12 +121,13 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         //TODO replace the transient one to persistent one
         ILocalResourceFactoryProvider localResourceFactoryProvider = new TransientLocalResourceFactoryProvider();
         LSMInvertedIndexCreateOperatorDescriptor invIndexCreateOp = new LSMInvertedIndexCreateOperatorDescriptor(spec,
-                AsterixRuntimeComponentsProvider.INSTANCE, secondaryFileSplitProvider,
-                AsterixRuntimeComponentsProvider.INSTANCE, tokenTypeTraits, tokenComparatorFactories,
+                AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, secondaryFileSplitProvider,
+                AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, tokenTypeTraits, tokenComparatorFactories,
                 invListsTypeTraits, primaryComparatorFactories, tokenizerFactory,
-                new LSMInvertedIndexDataflowHelperFactory(AsterixRuntimeComponentsProvider.INSTANCE,
-                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
-                        AsterixRuntimeComponentsProvider.INSTANCE), localResourceFactoryProvider,
+                new LSMInvertedIndexDataflowHelperFactory(AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER), localResourceFactoryProvider,
                 NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexCreateOp,
                 secondaryPartitionConstraint);
@@ -216,12 +217,14 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
             fieldPermutation[i] = i;
         }
         LSMInvertedIndexBulkLoadOperatorDescriptor invIndexBulkLoadOp = new LSMInvertedIndexBulkLoadOperatorDescriptor(
-                spec, fieldPermutation, false, AsterixRuntimeComponentsProvider.INSTANCE, secondaryFileSplitProvider,
-                AsterixRuntimeComponentsProvider.INSTANCE, tokenTypeTraits, tokenComparatorFactories,
-                invListsTypeTraits, primaryComparatorFactories, tokenizerFactory,
-                new LSMInvertedIndexDataflowHelperFactory(AsterixRuntimeComponentsProvider.INSTANCE,
-                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
-                        AsterixRuntimeComponentsProvider.INSTANCE), NoOpOperationCallbackFactory.INSTANCE);
+                spec, fieldPermutation, false, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
+                secondaryFileSplitProvider, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, tokenTypeTraits,
+                tokenComparatorFactories, invListsTypeTraits, primaryComparatorFactories, tokenizerFactory,
+                new LSMInvertedIndexDataflowHelperFactory(AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER),
+                NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexBulkLoadOp,
                 secondaryPartitionConstraint);
         return invIndexBulkLoadOp;

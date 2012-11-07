@@ -20,6 +20,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.FieldsHashValueGenerator;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public abstract class AbstractOperationCallback {
@@ -29,12 +30,20 @@ public abstract class AbstractOperationCallback {
     protected final ILockManager lockManager;
     protected final TransactionContext txnCtx;
     protected int transactorLocalNumActiveOperations = 0;
-    
-    public AbstractOperationCallback(DatasetId datasetId, int[] primaryKeyFields,
-            IBinaryHashFunction[] primaryKeyHashFunctions, TransactionContext txnCtx, ILockManager lockManager) {
-        this.datasetId = datasetId;
+
+    public AbstractOperationCallback(int datasetId, int[] primaryKeyFields,
+            IBinaryHashFunctionFactory[] primaryKeyHashFunctionFactories, TransactionContext txnCtx,
+            ILockManager lockManager) {
+        this.datasetId = new DatasetId(datasetId);
         this.primaryKeyFields = primaryKeyFields;
-        this.primaryKeyHashFunctions = primaryKeyHashFunctions;
+        if (primaryKeyHashFunctionFactories != null) {
+            this.primaryKeyHashFunctions = new IBinaryHashFunction[primaryKeyHashFunctionFactories.length];
+            for (int i = 0; i < primaryKeyHashFunctionFactories.length; ++i) {
+                this.primaryKeyHashFunctions[i] = primaryKeyHashFunctionFactories[i].createBinaryHashFunction();
+            }
+        } else {
+            this.primaryKeyHashFunctions = null;
+        }
         this.txnCtx = txnCtx;
         this.lockManager = lockManager;
     }
@@ -43,19 +52,19 @@ public abstract class AbstractOperationCallback {
             IBinaryHashFunction[] primaryKeyHashFunctions) {
         return FieldsHashValueGenerator.computeFieldsHashValue(tuple, primaryKeyFields, primaryKeyHashFunctions);
     }
-    
+
     public TransactionContext getTransactionContext() {
         return txnCtx;
     }
-    
+
     public int getLocalNumActiveOperations() {
         return transactorLocalNumActiveOperations;
     }
-    
+
     public void incrementLocalNumActiveOperations() {
         transactorLocalNumActiveOperations++;
     }
-    
+
     public void decrementLocalNumActiveOperations() {
         transactorLocalNumActiveOperations--;
     }

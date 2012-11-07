@@ -22,6 +22,11 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFact
 public class LSMBTreeIOOperationCallbackFactory implements ILSMIOOperationCallbackFactory {
 
     private static final long serialVersionUID = 1L;
+    
+    public static LSMBTreeIOOperationCallbackFactory INSTANCE = new LSMBTreeIOOperationCallbackFactory();
+    
+    private LSMBTreeIOOperationCallbackFactory() {
+    }
 
     @Override
     public ILSMIOOperationCallback createIOOperationCallback(Object syncObj) {

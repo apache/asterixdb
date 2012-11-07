@@ -130,6 +130,10 @@ public class MetadataBootstrap {
                 .getTransactionalResourceRepository();
         resourceRepository.registerTransactionalResourceManager(ResourceType.LSM_BTREE, new IndexResourceManager(
                 ResourceType.LSM_BTREE, runtimeContext.getTransactionSubsystem()));
+        resourceRepository.registerTransactionalResourceManager(ResourceType.LSM_RTREE, new IndexResourceManager(
+                ResourceType.LSM_RTREE, runtimeContext.getTransactionSubsystem()));
+        resourceRepository.registerTransactionalResourceManager(ResourceType.LSM_INVERTED_INDEX,
+                new IndexResourceManager(ResourceType.LSM_INVERTED_INDEX, runtimeContext.getTransactionSubsystem()));
 
         metadataNodeName = asterixProperties.getMetadataNodeName();
         isNewUniverse = asterixProperties.isNewUniverse();

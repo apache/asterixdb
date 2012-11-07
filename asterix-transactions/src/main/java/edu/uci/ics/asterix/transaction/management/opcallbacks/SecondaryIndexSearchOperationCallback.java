@@ -26,7 +26,7 @@ public class SecondaryIndexSearchOperationCallback extends AbstractOperationCall
         ISearchOperationCallback {
 
     public SecondaryIndexSearchOperationCallback() {
-        super(null, null, null, null, null);
+        super(-1, null, null, null, null);
     }
 
     @Override

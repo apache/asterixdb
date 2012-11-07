@@ -16,13 +16,12 @@
 package edu.uci.ics.asterix.transaction.management.opcallbacks;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionSubsystemProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
@@ -32,9 +31,10 @@ public class PrimaryIndexSearchOperationCallbackFactory extends AbstractOperatio
 
     private static final long serialVersionUID = 1L;
 
-    public PrimaryIndexSearchOperationCallbackFactory(JobId jobId, DatasetId datasetId, int[] entityIdFields,
-            IBinaryHashFunction[] entityIdFieldHashFunctions, ITransactionSubsystemProvider txnSubsystemProvider) {
-        super(jobId, datasetId, entityIdFields, entityIdFieldHashFunctions, txnSubsystemProvider);
+    public PrimaryIndexSearchOperationCallbackFactory(JobId jobId, int datasetId, int[] entityIdFields,
+            IBinaryHashFunctionFactory[] entityIdFieldHashFunctionFactories,
+            ITransactionSubsystemProvider txnSubsystemProvider, byte resourceType) {
+        super(jobId, datasetId, entityIdFields, entityIdFieldHashFunctionFactories, txnSubsystemProvider, resourceType);
     }
 
     @Override
@@ -43,8 +43,8 @@ public class PrimaryIndexSearchOperationCallbackFactory extends AbstractOperatio
         TransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
         try {
             TransactionContext txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jobId);
-            return new PrimaryIndexSearchOperationCallback(datasetId, primaryKeyFields, primaryKeyHashFunctions,
-                    txnSubsystem.getLockManager(), txnCtx);
+            return new PrimaryIndexSearchOperationCallback(datasetId, primaryKeyFields,
+                    primaryKeyHashFunctionFactories, txnSubsystem.getLockManager(), txnCtx);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }

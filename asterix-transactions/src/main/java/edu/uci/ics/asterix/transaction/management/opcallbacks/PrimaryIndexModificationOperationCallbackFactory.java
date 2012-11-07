@@ -16,13 +16,16 @@
 package edu.uci.ics.asterix.transaction.management.opcallbacks;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
+import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceRepository;
+import edu.uci.ics.asterix.transaction.management.service.logging.IndexResourceManager;
+import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
+import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionSubsystemProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
@@ -38,24 +41,31 @@ public class PrimaryIndexModificationOperationCallbackFactory extends AbstractOp
     private static final long serialVersionUID = 1L;
     private final IndexOperation indexOp;
 
-    public PrimaryIndexModificationOperationCallbackFactory(JobId jobId, DatasetId datasetId, int[] primaryKeyFields,
-            IBinaryHashFunction[] primaryKeyHashFunctions, ITransactionSubsystemProvider txnSubsystemProvider,
-            IndexOperation indexOp) {
-        super(jobId, datasetId, primaryKeyFields, primaryKeyHashFunctions, txnSubsystemProvider);
+    public PrimaryIndexModificationOperationCallbackFactory(JobId jobId, int datasetId, int[] primaryKeyFields,
+            IBinaryHashFunctionFactory[] primaryKeyHashFunctionFactories,
+            ITransactionSubsystemProvider txnSubsystemProvider, IndexOperation indexOp, byte resourceType) {
+        super(jobId, datasetId, primaryKeyFields, primaryKeyHashFunctionFactories, txnSubsystemProvider, resourceType);
         this.indexOp = indexOp;
     }
 
     @Override
-    public IModificationOperationCallback createModificationOperationCallback(long resourceId, IHyracksTaskContext ctx)
-            throws HyracksDataException {
+    public IModificationOperationCallback createModificationOperationCallback(long resourceId, Object resource,
+            IHyracksTaskContext ctx) throws HyracksDataException {
         TransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
-        ILSMIndex index = (ILSMIndex) txnSubsystem.getTransactionalResourceRepository().getTransactionalResource(
-                resourceId);
+        TransactionalResourceRepository txnResourceRepository = txnSubsystem.getTransactionalResourceRepository();
+        ILSMIndex index = (ILSMIndex) txnResourceRepository.getTransactionalResource(resourceId);
+
+        //register the resource if it is not registered
+        if (index == null) {
+            txnSubsystem.getTransactionalResourceRepository().registerTransactionalResource(resourceId, resource);
+            index = (ILSMIndex) resource;
+        }
+
         try {
             TransactionContext txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jobId);
             IModificationOperationCallback modCallback = new PrimaryIndexModificationOperationCallback(datasetId,
-                    primaryKeyFields, primaryKeyHashFunctions, txnCtx, txnSubsystem.getLockManager(), txnSubsystem,
-                    resourceId, indexOp);
+                    primaryKeyFields, primaryKeyHashFunctionFactories, txnCtx, txnSubsystem.getLockManager(),
+                    txnSubsystem, resourceId, resourceType, indexOp);
             txnCtx.registerIndexAndCallback(index, (AbstractOperationCallback) modCallback);
             return modCallback;
         } catch (ACIDException e) {

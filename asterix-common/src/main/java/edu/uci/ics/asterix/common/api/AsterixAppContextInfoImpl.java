@@ -19,7 +19,7 @@ public class AsterixAppContextInfoImpl implements IAsterixApplicationContextInfo
 
     @Override
     public IStorageManagerInterface getStorageManagerInterface() {
-        return AsterixRuntimeComponentsProvider.INSTANCE;
+        return AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER;
     }
 
     public static void setNodeControllerInfo(Map<String, Set<String>> nodeControllerInfo) {
@@ -32,7 +32,7 @@ public class AsterixAppContextInfoImpl implements IAsterixApplicationContextInfo
 
     @Override
     public IIndexLifecycleManagerProvider getIndexLifecycleManagerProvider() {
-        return AsterixRuntimeComponentsProvider.INSTANCE;
+        return AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER;
     }
 
 }

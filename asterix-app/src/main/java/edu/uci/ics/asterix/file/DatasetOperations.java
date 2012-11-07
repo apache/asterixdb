@@ -125,32 +125,32 @@ public class DatasetOperations {
                     IIndexDataflowHelperFactory dfhFactory;
                     switch (index.getIndexType()) {
                         case BTREE:
-                            dfhFactory = new LSMBTreeDataflowHelperFactory(AsterixRuntimeComponentsProvider.INSTANCE,
-                                    AsterixRuntimeComponentsProvider.INSTANCE,
-                                    AsterixRuntimeComponentsProvider.INSTANCE,
-                                    AsterixRuntimeComponentsProvider.INSTANCE);
+                            dfhFactory = new LSMBTreeDataflowHelperFactory(AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
+                                    AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
+                                    AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
+                                    AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
                             break;
                         case RTREE:
                             dfhFactory = new LSMRTreeDataflowHelperFactory(
                                     new IPrimitiveValueProviderFactory[] { null }, RTreePolicyType.RTREE,
-                                    new IBinaryComparatorFactory[] { null }, AsterixRuntimeComponentsProvider.INSTANCE,
-                                    AsterixRuntimeComponentsProvider.INSTANCE,
-                                    AsterixRuntimeComponentsProvider.INSTANCE,
-                                    AsterixRuntimeComponentsProvider.INSTANCE, null);
+                                    new IBinaryComparatorFactory[] { null }, AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
+                                    AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
+                                    AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
+                                    AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER, null);
                             break;
                         case NGRAM_INVIX:
                         case WORD_INVIX:
                             dfhFactory = new LSMInvertedIndexDataflowHelperFactory(
-                                    AsterixRuntimeComponentsProvider.INSTANCE,
-                                    AsterixRuntimeComponentsProvider.INSTANCE,
-                                    AsterixRuntimeComponentsProvider.INSTANCE,
-                                    AsterixRuntimeComponentsProvider.INSTANCE);
+                                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER);
                             break;
                         default:
                             throw new AsterixException("Unknown index type provided.");
                     }
                     IndexDropOperatorDescriptor secondaryBtreeDrop = new IndexDropOperatorDescriptor(specs[i],
-                            AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
+                            AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
                             idxSplitsAndConstraint.first, dfhFactory);
                     AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specs[i], secondaryBtreeDrop,
                             idxSplitsAndConstraint.second);
@@ -166,10 +166,10 @@ public class DatasetOperations {
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, datasetName);
         IndexDropOperatorDescriptor primaryBtreeDrop = new IndexDropOperatorDescriptor(specPrimary,
-                AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
-                splitsAndConstraint.first, new LSMBTreeDataflowHelperFactory(AsterixRuntimeComponentsProvider.INSTANCE,
-                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
-                        AsterixRuntimeComponentsProvider.INSTANCE));
+                AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
+                splitsAndConstraint.first, new LSMBTreeDataflowHelperFactory(AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER));
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specPrimary, primaryBtreeDrop,
                 splitsAndConstraint.second);
 
@@ -200,10 +200,10 @@ public class DatasetOperations {
         //TODO replace this transient one to the persistent one 
         TransientLocalResourceFactoryProvider localResourceFactoryProvider = new TransientLocalResourceFactoryProvider();
         TreeIndexCreateOperatorDescriptor indexCreateOp = new TreeIndexCreateOperatorDescriptor(spec,
-                AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
+                AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
                 splitsAndConstraint.first, typeTraits, comparatorFactories, new LSMBTreeDataflowHelperFactory(
-                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
-                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE),
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER),
                 localResourceFactoryProvider, NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp,
                 splitsAndConstraint.second);
@@ -277,11 +277,11 @@ public class DatasetOperations {
         LOGGER.info("LOAD into File Splits: " + sb.toString());
 
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
+                AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
                 splitsAndConstraint.first, typeTraits, comparatorFactories, fieldPermutation,
                 GlobalConfig.DEFAULT_BTREE_FILL_FACTOR, false, new LSMBTreeDataflowHelperFactory(
-                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
-                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE),
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER),
                 NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeBulkLoad,
                 splitsAndConstraint.second);

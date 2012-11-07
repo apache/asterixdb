@@ -15,24 +15,28 @@
 
 package edu.uci.ics.asterix.transaction.management.opcallbacks;
 
-import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
+import java.io.Serializable;
+
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionSubsystemProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 
-public abstract class AbstractOperationCallbackFactory {
+public abstract class AbstractOperationCallbackFactory implements Serializable{
     protected final JobId jobId;
-    protected final DatasetId datasetId;
+    protected final int datasetId;
     protected final int[] primaryKeyFields;
-    protected final IBinaryHashFunction[] primaryKeyHashFunctions;
+    protected final IBinaryHashFunctionFactory[] primaryKeyHashFunctionFactories;
     protected final ITransactionSubsystemProvider txnSubsystemProvider;
+    protected final byte resourceType;
 
-    public AbstractOperationCallbackFactory(JobId jobId, DatasetId datasetId, int[] primaryKeyFields,
-            IBinaryHashFunction[] primaryKeyHashFunctions, ITransactionSubsystemProvider txnSubsystemProvider) {
+    public AbstractOperationCallbackFactory(JobId jobId, int datasetId, int[] primaryKeyFields,
+            IBinaryHashFunctionFactory[] primaryKeyHashFunctionFactories,
+            ITransactionSubsystemProvider txnSubsystemProvider, byte resourceType) {
         this.jobId = jobId;
         this.datasetId = datasetId;
         this.primaryKeyFields = primaryKeyFields;
-        this.primaryKeyHashFunctions = primaryKeyHashFunctions;
+        this.primaryKeyHashFunctionFactories = primaryKeyHashFunctionFactories;
         this.txnSubsystemProvider = txnSubsystemProvider;
+        this.resourceType = resourceType;
     }
 }

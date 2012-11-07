@@ -15,8 +15,10 @@
 
 package edu.uci.ics.asterix.transaction.management.service.transaction;
 
+import java.io.Serializable;
+
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
-public interface ITransactionSubsystemProvider {
+public interface ITransactionSubsystemProvider extends Serializable{
     public TransactionSubsystem getTransactionSubsystem(IHyracksTaskContext ctx);
 }

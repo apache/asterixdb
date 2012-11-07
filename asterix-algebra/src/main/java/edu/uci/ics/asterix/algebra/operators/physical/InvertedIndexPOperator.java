@@ -166,10 +166,11 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                 jobSpec, queryField, appContext.getStorageManagerInterface(), secondarySplitsAndConstraint.first,
                 appContext.getIndexLifecycleManagerProvider(), tokenTypeTraits, tokenComparatorFactories,
                 invListsTypeTraits, invListsComparatorFactories, new LSMInvertedIndexDataflowHelperFactory(
-                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE,
-                        AsterixRuntimeComponentsProvider.INSTANCE, AsterixRuntimeComponentsProvider.INSTANCE),
-                queryTokenizerFactory, searchModifierFactory, outputRecDesc, retainInput,
-                NoOpOperationCallbackFactory.INSTANCE);
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER), queryTokenizerFactory,
+                searchModifierFactory, outputRecDesc, retainInput, NoOpOperationCallbackFactory.INSTANCE);
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(invIndexSearchOp,
                 secondarySplitsAndConstraint.second);
     }

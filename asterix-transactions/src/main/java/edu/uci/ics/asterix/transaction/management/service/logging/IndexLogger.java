@@ -28,8 +28,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.tuples.SimpleTupleWriter;
 
-
-
 public class IndexLogger implements ILogger, ICloseable {
 
     private final Map<Object, Object> jobId2ReusableLogContentObjectRepositoryMap = new ConcurrentHashMap<Object, Object>();
@@ -107,9 +105,15 @@ public class IndexLogger implements ILogger, ICloseable {
             reusableLogContentObject.setOldValue(oldValue);
         }
 
-        int logContentSize = 4/*TupleFieldCount*/+ 1/*NewOperation*/+ 4/*newValueLength*/+ tupleWriter
-                .bytesRequired(newValue);
-        logContentSize += 1/*OldOperation*/+ 4/*oldValueLength*/+ tupleWriter.bytesRequired(oldValue);
+        int logContentSize = 4/*TupleFieldCount*/+ 1/*NewOperation*/+ 4/*newValueLength*/;
+        if (newValue != null) {
+            logContentSize += tupleWriter.bytesRequired(newValue);
+        }
+
+        logContentSize += 1/*OldOperation*/+ 4/*oldValueLength*/;
+        if (oldValue != null) {
+            logContentSize += tupleWriter.bytesRequired(oldValue);
+        }
 
         txnSubsystem.getLogManager().log(LogType.UPDATE, context, datasetId, PKHashValue, resourceId, resourceType,
                 logContentSize, reusableLogContentObject, this, reusableLogContentObject.getLogicalLogLocator());
@@ -132,14 +136,18 @@ public class IndexLogger implements ILogger, ICloseable {
         offset += 1;
 
         //new tuple size
-        tupleSize = tupleWriter.bytesRequired(reusableLogContentObject.getNewValue());
+        if (reusableLogContentObject.getNewValue() != null) {
+            tupleSize = tupleWriter.bytesRequired(reusableLogContentObject.getNewValue());
+        }
         (logicalLogLocator.getBuffer()).writeInt(logicalLogLocator.getMemoryOffset() + offset, tupleSize);
         offset += 4;
 
         //new tuple
-        tupleWriter.writeTuple(reusableLogContentObject.getNewValue(), logicalLogLocator.getBuffer().getArray(),
-                logicalLogLocator.getMemoryOffset() + offset);
-        offset += tupleSize;
+        if (tupleSize != 0) {
+            tupleWriter.writeTuple(reusableLogContentObject.getNewValue(), logicalLogLocator.getBuffer().getArray(),
+                    logicalLogLocator.getMemoryOffset() + offset);
+            offset += tupleSize;
+        }
 
         if (resourceType == ResourceType.LSM_BTREE) {
             //old operation
@@ -149,13 +157,19 @@ public class IndexLogger implements ILogger, ICloseable {
 
             if (reusableLogContentObject.getOldOperation() != IndexOperation.NOOP) {
                 //old tuple size
-                tupleSize = tupleWriter.bytesRequired(reusableLogContentObject.getOldValue());
+                if (reusableLogContentObject.getOldValue() != null) {
+                    tupleSize = tupleWriter.bytesRequired(reusableLogContentObject.getOldValue());
+                } else {
+                    tupleSize = 0;
+                }
                 (logicalLogLocator.getBuffer()).writeInt(logicalLogLocator.getMemoryOffset() + offset, tupleSize);
                 offset += 4;
 
-                //old tuple
-                tupleWriter.writeTuple(reusableLogContentObject.getNewValue(),
-                        logicalLogLocator.getBuffer().getArray(), logicalLogLocator.getMemoryOffset() + offset);
+                if (tupleSize != 0) {
+                    //old tuple
+                    tupleWriter.writeTuple(reusableLogContentObject.getNewValue(), logicalLogLocator.getBuffer()
+                            .getArray(), logicalLogLocator.getMemoryOffset() + offset);
+                }
             }
         }
     }
@@ -169,7 +183,7 @@ public class IndexLogger implements ILogger, ICloseable {
     public void preLog(TransactionContext context, ReusableLogContentObject reusableLogContentObject)
             throws ACIDException {
     }
-    
+
     /**
      * Represents a utility class for generating log records corresponding to
      * operations on a ITreeIndex implementation. A TreeLogger instance is thread

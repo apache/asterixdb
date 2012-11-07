@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * An implementation of the @see ITransactionManager interface that provides
@@ -96,6 +97,12 @@ public class TransactionManager implements ITransactionManager {
             //for entity-level commit
             if (PKHashVal != -1) {
                 transactionProvider.getLockManager().unlock(datasetId, PKHashVal, txnContext, true);
+                try {
+                    //decrease the transaction reference count on index
+                    txnContext.decreaseActiveTransactionCountOnIndexes();
+                } catch (HyracksDataException e) {
+                    throw new ACIDException("failed to complete index operation", e);
+                }
                 return;
             }
 

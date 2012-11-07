@@ -27,6 +27,8 @@ import edu.uci.ics.asterix.transaction.management.resource.ICloseable;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager.TransactionState;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
 /**
@@ -89,6 +91,16 @@ public class TransactionContext implements Serializable {
         synchronized (indexes) {
             for (ILSMIndex index : indexes) {
                 ((IndexOperationTracker) index.getOperationTracker()).setLastLSN(lastLSN);
+            }
+        }
+    }
+
+    public void decreaseActiveTransactionCountOnIndexes() throws HyracksDataException {
+        synchronized (indexes) {
+            for (int i = 0; i < indexes.size(); i++) {
+                ILSMIndex index = indexes.get(i);
+                IModificationOperationCallback modificationCallback = (IModificationOperationCallback) callbacks.get(i);
+                ((IndexOperationTracker) index.getOperationTracker()).completeOperation(null, modificationCallback);
             }
         }
     }
