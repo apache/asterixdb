@@ -66,17 +66,13 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
 
     protected void fillSubTreeIndexExprs(OptimizableOperatorSubTree subTree,
             Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) throws AlgebricksException {
-        // The assign may be null if there is only a filter on the primary index key.
-        // Match variables from lowest assign which comes directly after the dataset scan.
-        List<LogicalVariable> varList = (!subTree.assigns.isEmpty()) ? subTree.assigns.get(subTree.assigns.size() - 1)
-                .getVariables() : subTree.dataSourceScan.getVariables();
         Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
         // Check applicability of indexes by access method type.
         while (amIt.hasNext()) {
             Map.Entry<IAccessMethod, AccessMethodAnalysisContext> entry = amIt.next();
             AccessMethodAnalysisContext amCtx = entry.getValue();
-            // For the current access method type, map variables from the assign op to applicable indexes.
-            fillAllIndexExprs(varList, subTree, amCtx);
+            // For the current access method type, map variables to applicable indexes.
+            fillAllIndexExprs(subTree, amCtx);
         }
     }
 
@@ -124,13 +120,13 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         Iterator<Map.Entry<Index, List<Integer>>> it = analysisCtx.indexExprs.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<Index, List<Integer>> entry = it.next();
-            Index index = entry.getKey();
-            Iterator<Integer> exprsIter = entry.getValue().iterator();
+            Index index = entry.getKey();            
             boolean allUsed = true;
             int lastFieldMatched = -1;
             for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
                 String keyField = index.getKeyFieldNames().get(i);
                 boolean foundKeyField = false;
+                Iterator<Integer> exprsIter = entry.getValue().iterator();
                 while (exprsIter.hasNext()) {
                     Integer ix = exprsIter.next();
                     IOptimizableFuncExpr optFuncExpr = analysisCtx.matchedFuncExprs.get(ix);
@@ -156,12 +152,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             // If the access method requires all exprs to be matched but they are not, remove this candidate.
             if (!allUsed && accessMethod.matchAllIndexExprs()) {
                 it.remove();
-                return;
             }
             // A prefix of the index exprs may have been matched.
             if (lastFieldMatched < 0 && accessMethod.matchPrefixIndexExprs()) {
                 it.remove();
-                return;
             }
         }
     }
@@ -259,37 +253,43 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         return true;
     }
 
-    protected void fillAllIndexExprs(List<LogicalVariable> varList, OptimizableOperatorSubTree subTree,
+    protected void fillAllIndexExprs(OptimizableOperatorSubTree subTree,
             AccessMethodAnalysisContext analysisCtx) throws AlgebricksException {
         for (int optFuncExprIndex = 0; optFuncExprIndex < analysisCtx.matchedFuncExprs.size(); optFuncExprIndex++) {
-            for (int varIndex = 0; varIndex < varList.size(); varIndex++) {
-                LogicalVariable var = varList.get(varIndex);
-                IOptimizableFuncExpr optFuncExpr = analysisCtx.matchedFuncExprs.get(optFuncExprIndex);
+            IOptimizableFuncExpr optFuncExpr = analysisCtx.matchedFuncExprs.get(optFuncExprIndex);
+            // Try to match variables from optFuncExpr to assigns.
+            for (int assignIndex = 0; assignIndex < subTree.assigns.size(); assignIndex++) {
+                AssignOperator assignOp = subTree.assigns.get(assignIndex);
+                List<LogicalVariable> varList = assignOp.getVariables();
+                for (int varIndex = 0; varIndex < varList.size(); varIndex++) {
+                    LogicalVariable var = varList.get(varIndex);
+                    int funcVarIndex = optFuncExpr.findLogicalVar(var);
+                    // No matching var in optFuncExpr.
+                    if (funcVarIndex == -1) {
+                        continue;
+                    }
+                    // At this point we have matched the optimizable func expr at optFuncExprIndex to an assigned variable.
+                    String fieldName = getFieldNameOfFieldAccess(assignOp, subTree.recordType, varIndex);
+                    if (fieldName == null) {
+                        continue;
+                    }
+                    // Set the fieldName in the corresponding matched function expression, and remember matching subtree.
+                    optFuncExpr.setFieldName(funcVarIndex, fieldName);
+                    optFuncExpr.setOptimizableSubTree(funcVarIndex, subTree);
+                    fillIndexExprs(fieldName, optFuncExprIndex, subTree.dataset, analysisCtx);
+                }
+            }
+            // Try to match variables from optFuncExpr to datasourcescan if not already matched in assigns.
+            List<LogicalVariable> dsVarList = subTree.dataSourceScan.getVariables();
+            for (int varIndex = 0; varIndex < dsVarList.size(); varIndex++) {
+                LogicalVariable var = dsVarList.get(varIndex);
                 int funcVarIndex = optFuncExpr.findLogicalVar(var);
                 // No matching var in optFuncExpr.
                 if (funcVarIndex == -1) {
                     continue;
                 }
-                // At this point we have matched the optimizable func expr at optFuncExprIndex to an assigned variable.
-                String fieldName = null;
-                if (!subTree.assigns.isEmpty()) {
-                    // Get the fieldName corresponding to the assigned variable at varIndex
-                    // from the assign operator right above the datasource scan.
-                    // If the expr at varIndex is not a fieldAccess we get back null.
-                    fieldName = getFieldNameOfFieldAccess(subTree.assigns.get(subTree.assigns.size() - 1),
-                            subTree.recordType, varIndex);
-                    if (fieldName == null) {
-                        continue;
-                    }
-                } else {
-                    // We don't have an assign, only a datasource scan.
-                    // The last var. is the record itself, so skip it.
-                    if (varIndex >= varList.size() - 1) {
-                        break;
-                    }
-                    // The variable value is one of the partitioning fields.
-                    fieldName = DatasetUtils.getPartitioningKeys(subTree.dataset).get(varIndex);
-                }
+                // The variable value is one of the partitioning fields.
+                String fieldName = DatasetUtils.getPartitioningKeys(subTree.dataset).get(varIndex);
                 // Set the fieldName in the corresponding matched function expression, and remember matching subtree.
                 optFuncExpr.setFieldName(funcVarIndex, fieldName);
                 optFuncExpr.setOptimizableSubTree(funcVarIndex, subTree);

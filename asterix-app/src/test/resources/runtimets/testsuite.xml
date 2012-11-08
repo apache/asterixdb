@@ -90,11 +90,13 @@
         <output-file compare="Text">count_null.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="aggregate">
       <compilation-unit name="droptype">
         <output-file compare="Text">droptype.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="aggregate">
       <compilation-unit name="global-avg_01">
         <output-file compare="Text">global-avg_01.adm</output-file>
@@ -474,11 +476,13 @@
         <output-file compare="Text">neq_01.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="comparison">
       <compilation-unit name="numeric-comparison_01">
         <output-file compare="Text">numeric-comparison_01.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="comparison">
       <compilation-unit name="string">
         <output-file compare="Text">string.adm</output-file>
@@ -583,11 +587,13 @@
     </test-case>
   </test-group>
   <test-group name="custord">
+    <!--
     <test-case FilePath="custord">
       <compilation-unit name="co">
         <output-file compare="Text">co.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="custord">
       <compilation-unit name="customer_q_01">
         <output-file compare="Text">customer_q_01.adm</output-file>
@@ -628,26 +634,32 @@
         <output-file compare="Text">customer_q_08.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="custord">
       <compilation-unit name="denorm-cust-order_01">
         <output-file compare="Text">denorm-cust-order_01.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="custord">
       <compilation-unit name="denorm-cust-order_02">
         <output-file compare="Text">denorm-cust-order_02.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="custord">
       <compilation-unit name="denorm-cust-order_03">
         <output-file compare="Text">denorm-cust-order_03.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
+    <!--
     <test-case FilePath="custord">
       <compilation-unit name="freq-clerk">
         <output-file compare="Text">freq-clerk.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="custord">
       <compilation-unit name="join_q_01">
         <output-file compare="Text">join_q_01.adm</output-file>
@@ -663,11 +675,13 @@
         <output-file compare="Text">join_q_03.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="custord">
       <compilation-unit name="join_q_04">
         <output-file compare="Text">join_q_04.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="custord">
       <compilation-unit name="load-test">
         <output-file compare="Text">load-test.adm</output-file>
@@ -715,11 +729,13 @@
         <output-file compare="Text">q2.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="dapd">
       <compilation-unit name="q3">
         <output-file compare="Text">q3.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
   </test-group>
   <test-group name="dml">
     <test-case FilePath="dml">
@@ -792,11 +808,13 @@
         <output-file compare="Text">insert_less_nc.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="dml">
       <compilation-unit name="load-from-hdfs">
         <output-file compare="Text">load-from-hdfs.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="dml">
       <compilation-unit name="load-with-index">
         <output-file compare="Text">load-with-index.adm</output-file>
@@ -911,12 +929,15 @@
         <output-file compare="Text">insert.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="failure">
       <compilation-unit name="q1_pricing_summary_report_failure">
         <output-file compare="Text">q1_pricing_summary_report_failure.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
   </test-group>
+  <!--
   <test-group name="flwor">
     <test-case FilePath="flwor">
       <compilation-unit name="for01">
@@ -1339,6 +1360,7 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  -->
   <test-group name="fuzzyjoin">
     <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-1_1">
@@ -1360,16 +1382,13 @@
         <output-file compare="Text">dblp-1_2.adm</output-file>
       </compilation-unit>
     </test-case>
+   <!--
     <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-2">
         <output-file compare="Text">dblp-2.adm</output-file>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-2">
-        <output-file compare="Text">dblp-2.adm</output-file>
-      </compilation-unit>
-    </test-case>
+    -->
     <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-2_1">
         <output-file compare="Text">dblp-2_1.adm</output-file>
@@ -1560,16 +1579,20 @@
         <output-file compare="Text">dblp-lookup_1.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-splits-3_1">
         <output-file compare="Text">dblp-splits-3_1.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
+    <!--
     <test-case FilePath="fuzzyjoin">
       <compilation-unit name="events-users-aqlplus_1">
         <output-file compare="Text">events-users-aqlplus_1.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="fuzzyjoin">
       <compilation-unit name="user-int-aqlplus_1">
         <output-file compare="Text">user-int-aqlplus_1.adm</output-file>
@@ -1673,6 +1696,16 @@
   </test-group>
   <test-group name="index-join">
     <test-case FilePath="index-join">
+      <compilation-unit name="btree-primary-equi-join">
+        <output-file compare="Text">btree-primary-equi-join.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="btree-secondary-equi-join">
+        <output-file compare="Text">btree-secondary-equi-join.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
       <compilation-unit name="inverted-index-ngram-edit-distance">
         <output-file compare="Text">inverted-index-ngram-edit-distance.adm</output-file>
       </compilation-unit>
@@ -1700,6 +1733,11 @@
     <test-case FilePath="index-join">
       <compilation-unit name="inverted-index-word-jaccard">
         <output-file compare="Text">inverted-index-word-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="rtree-spatial-intersect-point">
+        <output-file compare="Text">rtree-spatial-intersect-point.adm</output-file>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -2249,21 +2287,27 @@
     </test-case>
   </test-group>
   <test-group name="open-closed">
+    <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="c2c-w-optional">
         <output-file compare="Text">c2c-w-optional.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
+    <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="c2c-wo-optional">
         <output-file compare="Text">c2c-wo-optional.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
+    <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="c2c">
         <output-file compare="Text">c2c.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="open-closed">
       <compilation-unit name="heterog-list-ordered01">
         <output-file compare="Text">heterog-list-ordered01.adm</output-file>
@@ -2274,16 +2318,20 @@
         <output-file compare="Text">heterog-list01.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="heterog-list02">
         <output-file compare="Text">heterog-list02.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
+    <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="heterog-list03">
         <output-file compare="Text">heterog-list03.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="open-closed">
       <compilation-unit name="open-closed-01">
         <output-file compare="Text">open-closed-01.adm</output-file>
@@ -2299,41 +2347,55 @@
         <output-file compare="Text">open-closed-14.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="open-closed-15">
         <output-file compare="Text">open-closed-15.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
+    <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="open-closed-16">
         <output-file compare="Text">open-closed-16.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
+    <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="open-closed-17">
         <output-file compare="Text">open-closed-17.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
+    <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="open-closed-19">
         <output-file compare="Text">open-closed-19.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
+    <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="open-closed-20">
         <output-file compare="Text">open-closed-20.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
+    <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="open-closed-21">
         <output-file compare="Text">open-closed-21.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
+    <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="open-closed-22">
         <output-file compare="Text">open-closed-22.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="open-closed">
       <compilation-unit name="open-closed-24">
         <output-file compare="Text">open-closed-24.adm</output-file>
@@ -2349,21 +2411,25 @@
         <output-file compare="Text">open-closed-26.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="open-closed-28">
         <output-file compare="Text">open-closed-28.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="open-closed">
       <compilation-unit name="open-closed-29">
         <output-file compare="Text">open-closed-29.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="open-closed-30">
         <output-file compare="Text">open-closed-30.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="open-closed">
       <compilation-unit name="open-closed-31">
         <output-file compare="Text">open-closed-31.adm</output-file>
@@ -2386,16 +2452,20 @@
         <output-file compare="Text">everysat_01.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="quantifiers">
       <compilation-unit name="everysat_02">
         <output-file compare="Text">everysat_02.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
+    <!--
     <test-case FilePath="quantifiers">
       <compilation-unit name="everysat_03">
         <output-file compare="Text">everysat_03.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="quantifiers">
       <compilation-unit name="everysat_04">
         <output-file compare="Text">everysat_04.adm</output-file>
@@ -2411,21 +2481,27 @@
         <output-file compare="Text">somesat_02.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="quantifiers">
       <compilation-unit name="somesat_03">
         <output-file compare="Text">somesat_03.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
+    <!--
     <test-case FilePath="quantifiers">
       <compilation-unit name="somesat_04">
         <output-file compare="Text">somesat_04.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
+    <!--
     <test-case FilePath="quantifiers">
       <compilation-unit name="somesat_05">
         <output-file compare="Text">somesat_05.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="quantifiers">
       <compilation-unit name="somesat_06">
         <output-file compare="Text">somesat_06.adm</output-file>
@@ -2500,21 +2576,25 @@
         <output-file compare="Text">spatial_types_01.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="scan">
       <compilation-unit name="spatial_types_02">
         <output-file compare="Text">spatial_types_02.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="scan">
       <compilation-unit name="temp_types_01">
         <output-file compare="Text">temp_types_01.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="scan">
       <compilation-unit name="temp_types_02">
         <output-file compare="Text">temp_types_02.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
   </test-group>
   <test-group name="semistructured">
     <test-case FilePath="semistructured">
@@ -2978,11 +3058,13 @@
         <output-file compare="Text">startwith02.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="string">
       <compilation-unit name="startwith03">
         <output-file compare="Text">startwith03.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="string">
       <compilation-unit name="strconcat01">
         <output-file compare="Text">strconcat01.adm</output-file>
@@ -3170,11 +3252,13 @@
         <output-file compare="Text">03.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="subset-collection">
       <compilation-unit name="04">
         <output-file compare="Text">04.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="subset-collection">
       <compilation-unit name="05">
         <output-file compare="Text">05.adm</output-file>

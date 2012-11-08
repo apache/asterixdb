@@ -23,7 +23,8 @@ public class AccessMethodJobGenParams {
     protected String datasetName;
     protected boolean retainInput;
     protected boolean requiresBroadcast;
-
+    protected boolean isPrimaryIndex;
+    
     private final int NUM_PARAMS = 5;
 
     public AccessMethodJobGenParams() {
@@ -36,6 +37,7 @@ public class AccessMethodJobGenParams {
         this.datasetName = datasetName;
         this.retainInput = retainInput;
         this.requiresBroadcast = requiresBroadcast;
+        this.isPrimaryIndex = datasetName.equals(indexName);
     }
 
     public void writeToFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {
@@ -52,6 +54,7 @@ public class AccessMethodJobGenParams {
         datasetName = AccessMethodUtils.getStringConstant(funcArgs.get(2));
         retainInput = AccessMethodUtils.getBooleanConstant(funcArgs.get(3));
         requiresBroadcast = AccessMethodUtils.getBooleanConstant(funcArgs.get(4));
+        isPrimaryIndex = datasetName.equals(indexName);
     }
 
     public String getIndexName() {
@@ -99,5 +102,9 @@ public class AccessMethodJobGenParams {
 
     protected int getNumParams() {
         return NUM_PARAMS;
+    }
+    
+    public boolean isPrimaryIndex() {
+        return isPrimaryIndex;
     }
 }

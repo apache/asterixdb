@@ -4,8 +4,8 @@
       -- ASSIGN  |PARTITIONED|
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
           -- UNION_ALL  |PARTITIONED|
-            -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-              -- STREAM_PROJECT  |LOCAL|
+            -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+              -- STREAM_PROJECT  |UNPARTITIONED|
                 -- STREAM_SELECT  |LOCAL|
                   -- ASSIGN  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

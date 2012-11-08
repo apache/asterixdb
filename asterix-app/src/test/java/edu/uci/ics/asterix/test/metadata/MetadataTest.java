@@ -23,12 +23,11 @@ import edu.uci.ics.asterix.api.java.AsterixJavaClient;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.test.aql.TestsUtils;
-import edu.uci.ics.asterix.test.runtime.RuntimeTest;
 
 @RunWith(Parameterized.class)
 public class MetadataTest {
 
-    private static final Logger LOGGER = Logger.getLogger(RuntimeTest.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MetadataTest.class.getName());
 
     private static final PrintWriter ERR = new PrintWriter(System.err);
     private static final String EXTENSION_QUERY = "aql";
