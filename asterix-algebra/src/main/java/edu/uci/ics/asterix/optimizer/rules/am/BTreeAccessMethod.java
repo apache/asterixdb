@@ -100,7 +100,6 @@ public class BTreeAccessMethod implements IAccessMethod {
         if (primaryIndexUnnestOp == null) {
             return false;
         }
-
         Mutable<ILogicalOperator> assignRef = (subTree.assignRefs.isEmpty()) ? null : subTree.assignRefs.get(0);
         AssignOperator assign = null;
         if (assignRef != null) {
@@ -131,16 +130,8 @@ public class BTreeAccessMethod implements IAccessMethod {
     public boolean applyJoinPlanTransformation(Mutable<ILogicalOperator> joinRef,
             OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree, Index chosenIndex,
             AccessMethodAnalysisContext analysisCtx, IOptimizationContext context) throws AlgebricksException {
-        
         AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) joinRef.getValue();
         Mutable<ILogicalExpression> conditionRef = joinOp.getCondition();
-        
-        // Skip this rule if there is no index NL hint.
-        AbstractFunctionCallExpression conditionFunc = (AbstractFunctionCallExpression) conditionRef.getValue();
-        if (!conditionFunc.getAnnotations().containsKey(IndexedNLJoinExpressionAnnotation.INSTANCE)) {
-            return false;
-        }
-        
         // Determine if the index is applicable on the left or right side (if both, we arbitrarily prefer the left side).
         Dataset dataset = analysisCtx.indexDatasetMap.get(chosenIndex);
         // Determine probe and index subtrees based on chosen index.
@@ -154,15 +145,23 @@ public class BTreeAccessMethod implements IAccessMethod {
             indexSubTree = rightSubTree;
             probeSubTree = leftSubTree;
         }
-        
         ILogicalOperator primaryIndexUnnestOp = createSecondaryToPrimaryPlan(joinRef, conditionRef, indexSubTree, probeSubTree,
                 chosenIndex, analysisCtx, true, true, context);
         if (primaryIndexUnnestOp == null) {
             return false;
         }
-        
-        // TODO: If there are conditions left, add a new select operator on top.
-        joinRef.setValue(primaryIndexUnnestOp);
+        // If there are conditions left, add a new select operator on top.
+        indexSubTree.dataSourceScanRef.setValue(primaryIndexUnnestOp);
+        if (conditionRef.getValue() != null) {            
+            SelectOperator topSelect = new SelectOperator(conditionRef);
+            topSelect.getInputs().add(indexSubTree.rootRef);
+            topSelect.setExecutionMode(ExecutionMode.LOCAL);
+            context.computeAndSetTypeEnvironmentForOperator(topSelect);
+            // Replace the original join with the new subtree rooted at the select op.
+            joinRef.setValue(topSelect);
+        } else {
+            joinRef.setValue(indexSubTree.rootRef.getValue());
+        }
         return true;
     }
     
@@ -485,6 +484,12 @@ public class BTreeAccessMethod implements IAccessMethod {
 
     @Override
     public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
+        // If we are optimizing a join, check for the indexed nested-loop join hint.
+        if (optFuncExpr.getNumLogicalVars() == 2) {
+            if (!optFuncExpr.getFuncExpr().getAnnotations().containsKey(IndexedNLJoinExpressionAnnotation.INSTANCE)) {
+                return false;
+            }
+        }
         // No additional analysis required for BTrees.
         return true;
     }

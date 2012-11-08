@@ -1696,6 +1696,16 @@
   </test-group>
   <test-group name="index-join">
     <test-case FilePath="index-join">
+      <compilation-unit name="btree-primary-equi-join">
+        <output-file compare="Text">btree-primary-equi-join.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="btree-secondary-equi-join">
+        <output-file compare="Text">btree-secondary-equi-join.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
       <compilation-unit name="inverted-index-ngram-edit-distance">
         <output-file compare="Text">inverted-index-ngram-edit-distance.adm</output-file>
       </compilation-unit>
@@ -1723,6 +1733,11 @@
     <test-case FilePath="index-join">
       <compilation-unit name="inverted-index-word-jaccard">
         <output-file compare="Text">inverted-index-word-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="rtree-spatial-intersect-point">
+        <output-file compare="Text">rtree-spatial-intersect-point.adm</output-file>
       </compilation-unit>
     </test-case>
   </test-group>

@@ -70,6 +70,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
+        clear();
         setMetadataDeclarations(context);
 
         // Match operator pattern and initialize operator members.
@@ -133,5 +134,11 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
     @Override
     public Map<FunctionIdentifier, List<IAccessMethod>> getAccessMethods() {
         return accessMethods;
+    }
+    
+    private void clear() {
+        selectRef = null;
+        select = null;
+        selectCond = null;
     }
 }
