@@ -100,6 +100,7 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexInsertUpdateDeleteOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.dataflow.LSMRTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
@@ -614,7 +615,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 jobId, datasetId, primaryKeyFields, entityIdFieldHashFunctionFactories, txnSubsystemProvider, indexOp,
                 ResourceType.LSM_BTREE);
 
-        TreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
+        LSMTreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new LSMTreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, recordDesc, appContext.getStorageManagerInterface(),
                 appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
                 comparatorFactories, fieldPermutation, indexOp, new LSMBTreeDataflowHelperFactory(
@@ -622,6 +623,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER), null, modificationCallbackFactory);
+        
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad, splitsAndConstraint.second);
     }
 
@@ -779,7 +781,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 jobId, datasetId, primaryKeyFields, entityIdFieldHashFunctionFactories, txnSubsystemProvider, indexOp,
                 ResourceType.LSM_BTREE);
 
-        TreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
+        LSMTreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new LSMTreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, recordDesc, appContext.getStorageManagerInterface(),
                 appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
                 comparatorFactories, fieldPermutation, indexOp, new LSMBTreeDataflowHelperFactory(
@@ -864,7 +866,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 jobId, datasetId, primaryKeyFields, entityIdFieldHashFunctionFactories, txnSubsystemProvider, indexOp,
                 ResourceType.LSM_RTREE);
 
-        TreeIndexInsertUpdateDeleteOperatorDescriptor rtreeUpdate = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
+        LSMTreeIndexInsertUpdateDeleteOperatorDescriptor rtreeUpdate = new LSMTreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, recordDesc, appContext.getStorageManagerInterface(),
                 appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
                 comparatorFactories, fieldPermutation, indexOp, new LSMRTreeDataflowHelperFactory(
