@@ -89,4 +89,9 @@ public interface ILogicalOperator {
     public IPhysicalPropertiesVector getDeliveredPhysicalProperties();
 
     public void computeDeliveredPhysicalProperties(IOptimizationContext context) throws AlgebricksException;
+    
+    /**
+     * Indicates whether the expressions used by this operator must be variable reference expressions.
+     */
+    public boolean requiresVariableReferenceExpressions();
 }

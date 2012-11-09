@@ -149,9 +149,15 @@ public class ComplexUnnestToProductRule implements IAlgebraicRewriteRule {
             // Trivially joinable.
             return true;
         }
-        if (!belowSecondUnnest && op.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
-            // Bail on subplan.
-            return false;
+        if (!belowSecondUnnest) {
+            // Bail on the following operators.
+            switch (op.getOperatorTag()) {
+                case AGGREGATE:
+                case SUBPLAN:
+                case GROUP:
+                case UNNEST_MAP:
+                    return false;
+            }
         }
         switch (op.getOperatorTag()) {
             case UNNEST:

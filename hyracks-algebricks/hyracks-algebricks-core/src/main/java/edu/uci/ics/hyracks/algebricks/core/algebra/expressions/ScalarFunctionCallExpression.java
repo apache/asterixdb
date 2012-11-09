@@ -39,9 +39,10 @@ public class ScalarFunctionCallExpression extends AbstractFunctionCallExpression
 
     @Override
     public ScalarFunctionCallExpression cloneExpression() {
-        cloneAnnotations();
         List<Mutable<ILogicalExpression>> clonedArgs = cloneArguments();
-        return new ScalarFunctionCallExpression(finfo, clonedArgs);
+        ScalarFunctionCallExpression funcExpr = new ScalarFunctionCallExpression(finfo, clonedArgs);
+        funcExpr.getAnnotations().putAll(cloneAnnotations());
+        return funcExpr;
     }
 
     @Override

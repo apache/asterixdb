@@ -46,6 +46,7 @@ public class RTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
         super(spec, 1, 1, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, dataflowHelperFactory, null, false, NoOpLocalResourceFactoryProvider.INSTANCE,
                 searchOpCallbackFactory, NoOpOperationCallbackFactory.INSTANCE);
+
         this.keyFields = keyFields;
     }
 
