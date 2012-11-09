@@ -912,20 +912,36 @@
     <test-case FilePath="failure">
       <compilation-unit name="delete-rtree">
         <output-file compare="Text">delete-rtree.adm</output-file>
+        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+      </compilation-unit>
+      <compilation-unit name="verify_delete-rtree">
+        <output-file compare="Text">delete-rtree.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="failure">
       <compilation-unit name="delete">
+        <output-file compare="Text">delete.adm</output-file>
+        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+      </compilation-unit>
+      <compilation-unit name="verify_delete">
         <output-file compare="Text">delete.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="failure">
       <compilation-unit name="insert-rtree">
         <output-file compare="Text">insert-rtree.adm</output-file>
+        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+      </compilation-unit>
+      <compilation-unit name="verify_insert-rtree">
+        <output-file compare="Text">insert-rtree.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="failure">
       <compilation-unit name="insert">
+        <output-file compare="Text">insert.adm</output-file>
+        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+      </compilation-unit>
+      <compilation-unit name="verify_insert">
         <output-file compare="Text">insert.adm</output-file>
       </compilation-unit>
     </test-case>
@@ -3458,6 +3474,96 @@
     <test-case FilePath="writers">
       <compilation-unit name="serialized_01">
         <output-file compare="Text">serialized_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="cross-dataverse">
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv01">
+        <output-file compare="Text">cross-dv01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv02">
+        <output-file compare="Text">cross-dv02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv03">
+        <output-file compare="Text">cross-dv03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv04">
+        <output-file compare="Text">cross-dv04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv07">
+        <output-file compare="Text">cross-dv07.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <!--NotImplementedException: No binary comparator factory implemented for type RECORD. 
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv08">
+        <output-file compare="Text">cross-dv08.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    -->
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv09">
+        <output-file compare="Text">cross-dv09.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv11">
+        <output-file compare="Text">cross-dv11.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv12">
+        <output-file compare="Text">cross-dv12.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv13">
+        <output-file compare="Text">cross-dv13.adm</output-file>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv14">
+        <output-file compare="Text">cross-dv14.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv15">
+        <output-file compare="Text">cross-dv15.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv16">
+        <output-file compare="Text">cross-dv16.adm</output-file>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <!--NotImplementedException: No binary comparator factory implemented for type RECORD. 
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv17">
+        <output-file compare="Text">cross-dv17.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    -->
+    <!--NotImplementedException: No binary comparator factory implemented for type RECORD.
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv18">
+        <output-file compare="Text">cross-dv18.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    -->
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv19">
+        <output-file compare="Text">cross-dv19.adm</output-file>
       </compilation-unit>
     </test-case>
   </test-group>

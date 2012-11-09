@@ -16,6 +16,7 @@ import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AMutableDouble;
 import edu.uci.ics.asterix.om.base.AMutableInt32;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -42,8 +43,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class GlobalAvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-avg",
-            1);
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new GlobalAvgAggregateDescriptor();
@@ -52,7 +52,7 @@ public class GlobalAvgAggregateDescriptor extends AbstractAggregateFunctionDynam
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.GLOBAL_AVG;
     }
 
     @Override
@@ -133,19 +133,21 @@ public class GlobalAvgAggregateDescriptor extends AbstractAggregateFunctionDynam
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serBytes[0]));
                             }
                         }
-                                               
+
                         // The record length helps us determine whether the input record fields are nullable.
                         int recordLength = ARecordSerializerDeserializer.getRecordLength(serBytes, 1);
                         int nullBitmapSize = 1;
                         if (recordLength == 29) {
                             nullBitmapSize = 0;
                         }
-                        int offset1 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, 0, nullBitmapSize, false);
+                        int offset1 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, 0, nullBitmapSize,
+                                false);
                         if (offset1 == 0) // the sum is null
                             metNull = true;
                         else
                             globalSum += ADoubleSerializerDeserializer.getDouble(serBytes, offset1);
-                        int offset2 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, 1, nullBitmapSize, false);
+                        int offset2 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, 1, nullBitmapSize,
+                                false);
                         if (offset2 != 0) // the count is not null
                             globalCount += AInt32SerializerDeserializer.getInt(serBytes, offset2);
 

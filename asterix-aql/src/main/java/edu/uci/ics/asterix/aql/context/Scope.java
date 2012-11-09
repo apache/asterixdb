@@ -5,7 +5,7 @@ import java.util.HashMap;
 import edu.uci.ics.asterix.aql.expression.Identifier;
 import edu.uci.ics.asterix.aql.expression.VarIdentifier;
 import edu.uci.ics.asterix.aql.parser.ScopeChecker;
-import edu.uci.ics.asterix.om.functions.AsterixFunction;
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
 
 public final class Scope {
     private Scope parent;
@@ -78,11 +78,11 @@ public final class Scope {
      * @param varargs
      *            whether this function has varargs
      */
-    public void addFunctionDescriptor(AsterixFunction fd, boolean varargs) {
+    public void addFunctionDescriptor(FunctionSignature signature, boolean varargs) {
         if (functionSignatures == null) {
             functionSignatures = new FunctionSignatures();
         }
-        functionSignatures.put(fd, varargs);
+        functionSignatures.put(signature, varargs);
     }
 
     /**
@@ -94,13 +94,13 @@ public final class Scope {
      *            # of arguments
      * @return FunctionDescriptor of the function found; otherwise null
      */
-    public AsterixFunction findFunctionSignature(String name, int arity) {
-        AsterixFunction fd = null;
+    public FunctionSignature findFunctionSignature(String dataverse, String name, int arity) {
+        FunctionSignature fd = null;
         if (functionSignatures != null) {
-            fd = functionSignatures.get(name, arity);
+            fd = functionSignatures.get(dataverse, name, arity);
         }
         if (fd == null && parent != null) {
-            fd = parent.findFunctionSignature(name, arity);
+            fd = parent.findFunctionSignature(dataverse, name, arity);
         }
         return fd;
     }

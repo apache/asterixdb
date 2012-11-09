@@ -1,0 +1,50 @@
+/*
+ * Description  : Test cross dataverse functionality
+ *              : use dataverse statement is now optional.
+ *              : Use fully qualified names to access datasets.
+ * Expected Res : Success
+ * Date         : 29th Aug 2012
+ */
+
+drop dataverse student if exists;
+drop dataverse teacher if exists;
+
+create dataverse student;
+create dataverse teacher;
+
+write output to nc1:"rttest/cross-dataverse_cross-dv01.adm";
+
+create type student.stdType as open {
+id : int32,
+name : string,
+age : int32,
+sex : string,
+dept : string
+}
+
+create type teacher.tchrType as open {
+id : int32,
+name : string,
+age : int32,
+sex : string,
+dept : string
+}
+
+create dataset student.ugdstd(stdType) partitioned by key id;
+create dataset student.gdstd(stdType) partitioned by key id;
+create dataset teacher.prof(tchrType) partitioned by key id;
+create dataset teacher.pstdoc(tchrType) partitioned by key id;
+
+insert into dataset student.ugdstd({"id":457,"name":"John Doe","age":22,"sex":"M","dept":"Dance"});
+
+insert into dataset student.gdstd({"id":418,"name":"John Smith","age":26,"sex":"M","dept":"Economics"});
+
+insert into dataset teacher.prof({"id":152,"name":"John Meyer","age":42,"sex":"M","dept":"History"});
+
+insert into dataset teacher.pstdoc({"id":259,"name":"Sophia Reece","age":36,"sex":"F","dept":"Anthropology"});
+
+for $s in dataset('student.ugdstd')
+for $p in dataset('teacher.prof')
+for $a in dataset('student.gdstd')
+for $b in dataset('teacher.pstdoc')
+return {"ug-student":$s,"prof":$p,"grd-student":$a,"postdoc":$b}

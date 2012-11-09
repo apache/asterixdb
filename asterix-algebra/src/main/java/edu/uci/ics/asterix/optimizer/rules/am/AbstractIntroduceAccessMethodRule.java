@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Index;
@@ -37,7 +36,7 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  */
 public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRewriteRule {
 
-    private AqlCompiledMetadataDeclarations metadata;
+    private AqlMetadataProvider metadataProvider;
 
     public abstract Map<FunctionIdentifier, List<IAccessMethod>> getAccessMethods();
 
@@ -60,8 +59,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
     }
 
     protected void setMetadataDeclarations(IOptimizationContext context) {
-        AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
-        metadata = metadataProvider.getMetadataDeclarations();
+        metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
     }
 
     protected void fillSubTreeIndexExprs(OptimizableOperatorSubTree subTree,
@@ -234,7 +232,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      */
     protected boolean fillIndexExprs(String fieldName, int matchedFuncExprIndex, Dataset dataset,
             AccessMethodAnalysisContext analysisCtx) throws AlgebricksException {
-        List<Index> datasetIndexes = metadata.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
+        List<Index> datasetIndexes = metadataProvider.getDatasetIndexes(dataset.getDataverseName(),
+                dataset.getDatasetName());
         List<Index> indexCandidates = new ArrayList<Index>();
         // Add an index to the candidates if one of the indexed fields is fieldName.
         for (Index index : datasetIndexes) {

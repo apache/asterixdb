@@ -1,0 +1,48 @@
+/*
+ * Decription   : Create UDF to query two different datasets that are in tow different dataverses.
+ * Expected Res : Success
+ * Date         : Sep 7 2012
+ */
+
+// this test currently gives ParseException
+
+drop dataverse test if exists;
+drop dataverse fest if exists;
+
+create dataverse test;
+create dataverse fest;
+
+create type test.testtype as open {
+id : int32
+}
+
+create type fest.testtype as open {
+id : int32
+}
+
+create dataset test.t1(testtype) partitioned by key id;
+create dataset fest.t1(testtype) partitioned by key id;
+
+insert into dataset test.t1({"id":24});
+insert into dataset test.t1({"id":23});
+insert into dataset test.t1({"id":21});
+insert into dataset test.t1({"id":44});
+insert into dataset test.t1({"id":64});
+
+insert into dataset fest.t1({"id":24});
+insert into dataset fest.t1({"id":23});
+insert into dataset fest.t1({"id":21});
+insert into dataset fest.t1({"id":44});
+insert into dataset fest.t1({"id":64});
+
+create function fest.f1(){
+for $m in dataset('test.t1')
+for $l in dataset('fest.t1')
+order by $m,$l
+return { "l":$l,"m":$m }
+}
+
+write output to nc1:"rttest/cross-dataverse_cross-dv17.adm";
+
+fest.f1();
+

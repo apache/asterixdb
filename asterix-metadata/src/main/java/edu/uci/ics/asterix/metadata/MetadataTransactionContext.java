@@ -17,11 +17,15 @@ package edu.uci.ics.asterix.metadata;
 
 import java.util.ArrayList;
 
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
+import edu.uci.ics.asterix.external.dataset.adapter.AdapterIdentifier;
+import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
+import edu.uci.ics.asterix.om.functions.AsterixFunction;
 
 /**
  * Used to implement serializable transactions against the MetadataCache.
@@ -46,123 +50,130 @@ import edu.uci.ics.asterix.metadata.entities.NodeGroup;
  */
 public class MetadataTransactionContext extends MetadataCache {
 
-	// Keeps track of deleted metadata entities.
-	// An entity can either be in the droppedCache or in the inherited members
-	// of MetadataCache (the "added" entities).
-	// The APIs in this class make sure that these two caches are kept in sync.
-	protected MetadataCache droppedCache = new MetadataCache();
+    // Keeps track of deleted metadata entities.
+    // An entity can either be in the droppedCache or in the inherited members
+    // of MetadataCache (the "added" entities).
+    // The APIs in this class make sure that these two caches are kept in sync.
+    protected MetadataCache droppedCache = new MetadataCache();
 
-	protected ArrayList<MetadataLogicalOperation> opLog = new ArrayList<MetadataLogicalOperation>();
-	private final long txnId;
+    protected ArrayList<MetadataLogicalOperation> opLog = new ArrayList<MetadataLogicalOperation>();
+    private final long txnId;
 
-	public MetadataTransactionContext(long txnId) {
-		this.txnId = txnId;
-	}
+    public MetadataTransactionContext(long txnId) {
+        this.txnId = txnId;
+    }
 
-	public long getTxnId() {
-		return txnId;
-	}
+    public long getTxnId() {
+        return txnId;
+    }
 
-	public void addDataverse(Dataverse dataverse) {
-		droppedCache.dropDataverse(dataverse);
-		logAndApply(new MetadataLogicalOperation(dataverse, true));
-	}
+    public void addDataverse(Dataverse dataverse) {
+        droppedCache.dropDataverse(dataverse);
+        logAndApply(new MetadataLogicalOperation(dataverse, true));
+    }
 
-	public void addDataset(Dataset dataset) {
-		droppedCache.dropDataset(dataset);
-		logAndApply(new MetadataLogicalOperation(dataset, true));
-	}
+    public void addDataset(Dataset dataset) {
+        droppedCache.dropDataset(dataset);
+        logAndApply(new MetadataLogicalOperation(dataset, true));
+    }
 
-	public void addDatatype(Datatype datatype) {
-		droppedCache.dropDatatype(datatype);
-		logAndApply(new MetadataLogicalOperation(datatype, true));
-	}
+    public void addDatatype(Datatype datatype) {
+        droppedCache.dropDatatype(datatype);
+        logAndApply(new MetadataLogicalOperation(datatype, true));
+    }
 
-	public void addNogeGroup(NodeGroup nodeGroup) {
-		droppedCache.dropNodeGroup(nodeGroup);
-		logAndApply(new MetadataLogicalOperation(nodeGroup, true));
-	}
+    public void addNogeGroup(NodeGroup nodeGroup) {
+        droppedCache.dropNodeGroup(nodeGroup);
+        logAndApply(new MetadataLogicalOperation(nodeGroup, true));
+    }
 
-	public void addFunction(Function function) {
-		droppedCache.dropFunction(function);
-		logAndApply(new MetadataLogicalOperation(function, true));
-	}
+    public void addFunction(Function function) {
+        droppedCache.dropFunction(function);
+        logAndApply(new MetadataLogicalOperation(function, true));
+    }
 
-	public void dropDataverse(String dataverseName) {
-		Dataverse dataverse = new Dataverse(dataverseName, null);
-		droppedCache.addDataverseIfNotExists(dataverse);
-		logAndApply(new MetadataLogicalOperation(dataverse, false));
-	}
+    public void addAdapter(DatasourceAdapter adapter) {
+        droppedCache.dropAdapter(adapter);
+        logAndApply(new MetadataLogicalOperation(adapter, true));
+    }
 
-	public void dropDataset(String dataverseName, String datasetName) {
-		Dataset dataset = new Dataset(dataverseName, datasetName, null, null,
-				null);
-		droppedCache.addDatasetIfNotExists(dataset);
-		logAndApply(new MetadataLogicalOperation(dataset, false));
-	}
+    public void dropDataverse(String dataverseName) {
+        Dataverse dataverse = new Dataverse(dataverseName, null);
+        droppedCache.addDataverseIfNotExists(dataverse);
+        logAndApply(new MetadataLogicalOperation(dataverse, false));
+    }
 
-	public void dropDataDatatype(String dataverseName, String datatypeName) {
-		Datatype datatype = new Datatype(dataverseName, datatypeName, null,
-				false);
-		droppedCache.addDatatypeIfNotExists(datatype);
-		logAndApply(new MetadataLogicalOperation(datatype, false));
-	}
+    public void dropDataset(String dataverseName, String datasetName) {
+        Dataset dataset = new Dataset(dataverseName, datasetName, null, null, null);
+        droppedCache.addDatasetIfNotExists(dataset);
+        logAndApply(new MetadataLogicalOperation(dataset, false));
+    }
 
-	public void dropNodeGroup(String nodeGroupName) {
-		NodeGroup nodeGroup = new NodeGroup(nodeGroupName, null);
-		droppedCache.addNodeGroupIfNotExists(nodeGroup);
-		logAndApply(new MetadataLogicalOperation(nodeGroup, false));
-	}
+    public void dropDataDatatype(String dataverseName, String datatypeName) {
+        Datatype datatype = new Datatype(dataverseName, datatypeName, null, false);
+        droppedCache.addDatatypeIfNotExists(datatype);
+        logAndApply(new MetadataLogicalOperation(datatype, false));
+    }
 
-	public void dropFunction(String dataverseName, String functionName,
-			int arity) {
-		Function function = new Function(dataverseName, functionName, arity,
-				null, null);
-		droppedCache.addFunctionIfNotExists(function);
-		logAndApply(new MetadataLogicalOperation(function, false));
-	}
+    public void dropNodeGroup(String nodeGroupName) {
+        NodeGroup nodeGroup = new NodeGroup(nodeGroupName, null);
+        droppedCache.addNodeGroupIfNotExists(nodeGroup);
+        logAndApply(new MetadataLogicalOperation(nodeGroup, false));
+    }
 
-	public void logAndApply(MetadataLogicalOperation op) {
-		opLog.add(op);
-		doOperation(op);
-	}
+    public void dropFunction(FunctionSignature signature) {
+        Function function = new Function(signature.getNamespace(), signature.getName(), signature.getArity(), null,
+                null, null, null, null);
+        droppedCache.addFunctionIfNotExists(function);
+        logAndApply(new MetadataLogicalOperation(function, false));
+    }
 
-	public boolean dataverseIsDropped(String dataverseName) {
-		return droppedCache.getDataverse(dataverseName) != null;
-	}
+    public void dropAdapter(String dataverseName, String adapterName) {
+        AdapterIdentifier adapterIdentifier = new AdapterIdentifier(dataverseName, adapterName);
+        DatasourceAdapter adapter = new DatasourceAdapter(adapterIdentifier, null, null);
+        droppedCache.addAdapterIfNotExists(adapter);
+        logAndApply(new MetadataLogicalOperation(adapter, false));
+    }
 
-	public boolean datasetIsDropped(String dataverseName, String datasetName) {
-		if (droppedCache.getDataverse(dataverseName) != null) {
-			return true;
-		}
-		return droppedCache.getDataset(dataverseName, datasetName) != null;
-	}
+    public void logAndApply(MetadataLogicalOperation op) {
+        opLog.add(op);
+        doOperation(op);
+    }
 
-	public boolean datatypeIsDropped(String dataverseName, String datatypeName) {
-		if (droppedCache.getDataverse(dataverseName) != null) {
-			return true;
-		}
-		return droppedCache.getDatatype(dataverseName, datatypeName) != null;
-	}
+    public boolean dataverseIsDropped(String dataverseName) {
+        return droppedCache.getDataverse(dataverseName) != null;
+    }
 
-	public boolean nodeGroupIsDropped(String nodeGroup) {
-		return droppedCache.getNodeGroup(nodeGroup) != null;
-	}
+    public boolean datasetIsDropped(String dataverseName, String datasetName) {
+        if (droppedCache.getDataverse(dataverseName) != null) {
+            return true;
+        }
+        return droppedCache.getDataset(dataverseName, datasetName) != null;
+    }
 
+    public boolean datatypeIsDropped(String dataverseName, String datatypeName) {
+        if (droppedCache.getDataverse(dataverseName) != null) {
+            return true;
+        }
+        return droppedCache.getDatatype(dataverseName, datatypeName) != null;
+    }
 
-	public boolean functionIsDropped(String dataverseName, String functionName,
-			int arity) {
-		return droppedCache.getFunction(dataverseName, functionName, arity) != null;
-	}
-	
-	public ArrayList<MetadataLogicalOperation> getOpLog() {
-		return opLog;
-	}
+    public boolean nodeGroupIsDropped(String nodeGroup) {
+        return droppedCache.getNodeGroup(nodeGroup) != null;
+    }
 
-	@Override
-	public void clear() {
-		super.clear();
-		droppedCache.clear();
-		opLog.clear();
-	}
+    public boolean functionIsDropped(FunctionSignature functionSignature) {
+        return droppedCache.getFunction(functionSignature) != null;
+    }
+
+    public ArrayList<MetadataLogicalOperation> getOpLog() {
+        return opLog;
+    }
+
+    @Override
+    public void clear() {
+        super.clear();
+        droppedCache.clear();
+        opLog.clear();
+    }
 }

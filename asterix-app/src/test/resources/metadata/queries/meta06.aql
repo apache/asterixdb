@@ -1,0 +1,18 @@
+/*
+ * Description  : Create AQL bodied UDFs and verify that there are related entries in metadata Function dataset
+ * Expected Res : Success
+ * Date         : Sep 17 2012
+ */
+
+drop dataverse testdv if exists;
+create dataverse testdv;
+
+write output to nc1:"rttest/meta06.adm";
+
+create function testdv.fun01(){
+"This is an AQL Bodied UDF"
+}
+
+for $l in dataset('Metadata.Function')
+return $l
+

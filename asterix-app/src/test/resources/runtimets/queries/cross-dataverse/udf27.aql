@@ -1,0 +1,20 @@
+/*
+ * Description  : Create UDF and invoke UDF from a quantified expression
+ * Expected Res : Success
+ * Date         : Sep 6th 2012
+ */
+
+// this test is not giving expected results.
+// issue 194 reported to track this
+
+drop dataverse test if exists;
+create dataverse test;
+
+write output to nc1:"rttest/cross-dataverse_udf27.adm";
+
+create function test.f1(){
+100
+}
+
+let $a := true
+return some $i in [100,200] satisfies test.f1()

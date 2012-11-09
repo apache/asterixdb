@@ -15,7 +15,6 @@ import edu.uci.ics.asterix.aql.expression.Identifier;
 import edu.uci.ics.asterix.aqlplus.parser.AQLPlusParser;
 import edu.uci.ics.asterix.aqlplus.parser.ParseException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -47,11 +46,11 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class FuzzyJoinRule implements IAlgebraicRewriteRule {
 
-	private static HashSet<FunctionIdentifier> simFuncs = new HashSet<FunctionIdentifier>();
+    private static HashSet<FunctionIdentifier> simFuncs = new HashSet<FunctionIdentifier>();
     static {
         simFuncs.add(AsterixBuiltinFunctions.SIMILARITY_JACCARD_CHECK);
     }
-	
+
     private static final String AQLPLUS = ""
             //
             // -- - Stage 3 - --
@@ -131,7 +130,8 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
     private Collection<LogicalVariable> liveVars = new HashSet<LogicalVariable>();
 
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         // current opperator is join
         if (op.getOperatorTag() != LogicalOperatorTag.INNERJOIN
@@ -149,15 +149,15 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         // Check if the GET_ITEM function is on one of the supported similarity-check functions.
         AbstractFunctionCallExpression getItemFuncExpr = (AbstractFunctionCallExpression) getItemExprRef.getValue();
         Mutable<ILogicalExpression> argRef = getItemFuncExpr.getArguments().get(0);
-    	AbstractFunctionCallExpression simFuncExpr = (AbstractFunctionCallExpression) argRef.getValue();
+        AbstractFunctionCallExpression simFuncExpr = (AbstractFunctionCallExpression) argRef.getValue();
         if (!simFuncs.contains(simFuncExpr.getFunctionIdentifier())) {
-        	return false;
+            return false;
         }
         // Skip this rule based on annotations.
         if (simFuncExpr.getAnnotations().containsKey(IndexedNLJoinExpressionAnnotation.INSTANCE)) {
-        	return false;
+            return false;
         }
-        
+
         List<Mutable<ILogicalOperator>> inputOps = joinOp.getInputs();
         ILogicalOperator leftInputOp = inputOps.get(0).getValue();
         ILogicalOperator rightInputOp = inputOps.get(1).getValue();
@@ -206,8 +206,7 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         //
         // -- - FIRE - --
         //
-        AqlCompiledMetadataDeclarations metadata = ((AqlMetadataProvider) context.getMetadataProvider())
-                .getMetadataDeclarations();
+        AqlMetadataProvider metadataProvider = ((AqlMetadataProvider) context.getMetadataProvider());
         FunctionIdentifier funcId = FuzzyUtils.getTokenizer(leftType.getTypeTag());
         String tokenizer;
         if (funcId == null) {
@@ -216,8 +215,8 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
             tokenizer = funcId.getName();
         }
 
-        float simThreshold = FuzzyUtils.getSimThreshold(metadata);
-        String simFunction = FuzzyUtils.getSimFunction(metadata);
+        float simThreshold = FuzzyUtils.getSimThreshold(metadataProvider);
+        String simFunction = FuzzyUtils.getSimFunction(metadataProvider);
 
         // finalize AQL+ query
         String prepareJoin;
@@ -263,9 +262,8 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         }
         // The translator will compile metadata internally. Run this compilation
         // under the same transaction id as the "outer" compilation.
-        AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-        AqlPlusExpressionToPlanTranslator translator = new AqlPlusExpressionToPlanTranslator(mp.getTxnId(),
-                metadata.getMetadataTransactionContext(), counter, null);
+        AqlPlusExpressionToPlanTranslator translator = new AqlPlusExpressionToPlanTranslator(
+                metadataProvider.getTxnId(), metadataProvider, counter, null, null);
 
         LogicalOperatorDeepCopyVisitor deepCopyVisitor = new LogicalOperatorDeepCopyVisitor(counter);
 
@@ -367,7 +365,7 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         if (exp.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
             AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) exp;
             if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.GET_ITEM)) {
-            	return expRef;
+                return expRef;
             }
             if (funcExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.AND)) {
                 for (int i = 0; i < 2; i++) {

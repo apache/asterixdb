@@ -20,40 +20,36 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.json.JSONException;
-
 import edu.uci.ics.asterix.api.aqlj.common.AQLJException;
 import edu.uci.ics.asterix.api.aqlj.common.AQLJProtocol;
 import edu.uci.ics.asterix.api.aqlj.common.AQLJStream;
-import edu.uci.ics.asterix.api.common.APIFramework;
 import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
 import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
-import edu.uci.ics.asterix.api.common.Job;
 import edu.uci.ics.asterix.api.common.SessionConfig;
-import edu.uci.ics.asterix.aql.expression.Query;
+import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
+import edu.uci.ics.asterix.aql.translator.AqlTranslator;
+import edu.uci.ics.asterix.aql.translator.QueryResult;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.hyracks.bootstrap.AsterixNodeState;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 /**
  * This class is the client handler for the APIServer. The AQLJ protocol is used
  * for communicating with the client. The client, for example, may send a
- * message to execute an AQL statement. It is up to this class to process that
- * AQL statement and pass back the results, if any, to the client.
+ * message to execute a set containing one or more AQL statements. It is up to this class to process each
+ * AQL statement (in the original order) and pass back the results, if any, to the client.
  * 
  * @author zheilbron
  */
@@ -111,10 +107,7 @@ public class APIClientThread extends Thread {
         }
 
         // the "write output..." clause is inserted into incoming AQL statements
-        binaryOutputClause = "write output to "
-                + outputNodeName
-                + ":\""
-                + outputFilePath
+        binaryOutputClause = "write output to " + outputNodeName + ":\"" + outputFilePath
                 + "\" using \"edu.uci.ics.hyracks.algebricks.runtime.writers.SerializedDataWriterFactory\";";
 
     }
@@ -221,27 +214,20 @@ public class APIClientThread extends Thread {
     }
 
     private String executeStatement(String stmt) throws IOException, AQLJException {
+        List<QueryResult> executionResults = null;
         PrintWriter out = new PrintWriter(System.out);
-        AqlCompiledMetadataDeclarations metadata = null;
         try {
             AQLParser parser = new AQLParser(new StringReader(stmt));
-            Query q = (Query) parser.Statement();
+            List<Statement> statements = parser.Statement();
             SessionConfig pc = new SessionConfig(AsterixHyracksIntegrationUtil.DEFAULT_HYRACKS_CC_CLIENT_PORT, true,
                     false, false, false, false, false, false);
             pc.setGenerateJobSpec(true);
 
             MetadataManager.INSTANCE.init();
-            if (q != null) {
-                String dataverse = APIFramework.compileDdlStatements(hcc, q, out, pc, DisplayFormat.TEXT);
-                Job[] dmlJobs = APIFramework.compileDmlStatements(dataverse, q, out, pc, DisplayFormat.TEXT);
-                APIFramework.executeJobArray(hcc, dmlJobs, out, DisplayFormat.TEXT);
+            if (statements != null && statements.size() > 0) {
+                AqlTranslator translator = new AqlTranslator(statements, out, pc, DisplayFormat.TEXT);
+                executionResults = translator.compileAndExecute(hcc);
             }
-
-            Pair<AqlCompiledMetadataDeclarations, JobSpecification> metadataAndSpec = APIFramework.compileQuery(
-                    dataverse, q, parser.getVarCounter(), null, metadata, pc, out, DisplayFormat.TEXT, null);
-            JobSpecification spec = metadataAndSpec.second;
-            metadata = metadataAndSpec.first;
-            APIFramework.executeJobArray(hcc, new JobSpecification[] { spec }, out, DisplayFormat.TEXT);
         } catch (ParseException e) {
             e.printStackTrace();
             throw new AQLJException(e);
@@ -251,19 +237,12 @@ public class APIClientThread extends Thread {
         } catch (AlgebricksException e) {
             e.printStackTrace();
             throw new AQLJException(e);
-        } catch (JSONException e) {
-            e.printStackTrace();
-            throw new AQLJException(e);
         } catch (Exception e) {
             e.printStackTrace();
             sendError(e.getMessage());
         }
+        return executionResults.get(0).getResultPath();
 
-        if (metadata == null) {
-            return null;
-        }
-
-        return metadata.getOutputFile().getLocalFile().getFile().getAbsolutePath();
     }
 
     private boolean sendResults(String path) throws IOException {

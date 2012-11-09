@@ -14,26 +14,21 @@
  */
 package edu.uci.ics.asterix.om.functions;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import java.io.Serializable;
 
-public class AsterixFunction {
+public class AsterixFunction implements Serializable {
 
-    private final String functionName;
+    private final String name;
     private final int arity;
     public final static int VARARGS = -1;
 
-    public AsterixFunction(String functionName, int arity) {
-        this.functionName = functionName;
+    public AsterixFunction(String name, int arity) throws IllegalArgumentException {
+        this.name = name;
         this.arity = arity;
     }
-    
-    public AsterixFunction(FunctionIdentifier fid) {
-        this.functionName = fid.getName();
-        this.arity = fid.getArity();
-    }
 
-    public String getFunctionName() {
-        return functionName;
+    public String getName() {
+        return name;
     }
 
     public int getArity() {
@@ -41,7 +36,7 @@ public class AsterixFunction {
     }
 
     public String toString() {
-        return functionName + "@" + arity;
+        return name;
     }
 
     @Override
@@ -54,8 +49,7 @@ public class AsterixFunction {
         if (!(o instanceof AsterixFunction)) {
             return false;
         }
-        if (functionName.equals(((AsterixFunction) o).getFunctionName())
-                && (arity == ((AsterixFunction) o).getArity() || arity == VARARGS)) {
+        if (name.equals(((AsterixFunction) o).getName()) || arity == VARARGS) {
             return true;
         }
         return false;

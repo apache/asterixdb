@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.Query;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
@@ -35,15 +36,16 @@ import edu.uci.ics.asterix.common.annotations.ListValFileDataGen;
 import edu.uci.ics.asterix.common.annotations.RecordDataGenAnnotation;
 import edu.uci.ics.asterix.common.annotations.TypeDataGen;
 import edu.uci.ics.asterix.common.annotations.UndeclaredFieldsDataGen;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.types.TypeSignature;
 import edu.uci.ics.asterix.tools.translator.ADGenDmlTranslator;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -913,8 +915,8 @@ public class AdmDataGen {
 
     private final File schemaFile;
     private final File outputDir;
-    private Map<String, IAType> typeMap;
-    private Map<String, TypeDataGen> typeAnnotMap;
+    private Map<TypeSignature, IAType> typeMap;
+    private Map<TypeSignature, TypeDataGen> typeAnnotMap;
     private DataGeneratorContext dgCtx;
 
     public AdmDataGen(File schemaFile, File outputDir) {
@@ -922,24 +924,24 @@ public class AdmDataGen {
         this.outputDir = outputDir;
     }
 
-    public void init() throws IOException, ParseException, AlgebricksException, ACIDException, MetadataException {
+    public void init() throws IOException, ParseException, AsterixException, ACIDException, MetadataException,
+            AlgebricksException {
         FileReader aql = new FileReader(schemaFile);
         AQLParser parser = new AQLParser(aql);
-        Query q = (Query) parser.Statement();
+        List<Statement> statements = parser.Statement();
         aql.close();
         // TODO: Need to fix how to use transactions here.
         MetadataTransactionContext mdTxnCtx = new MetadataTransactionContext(-1);
-        ADGenDmlTranslator dmlt = new ADGenDmlTranslator(mdTxnCtx, q.getPrologDeclList());
+        ADGenDmlTranslator dmlt = new ADGenDmlTranslator(mdTxnCtx, statements);
         dmlt.translate();
-        AqlCompiledMetadataDeclarations acmd = dmlt.getCompiledDeclarations();
-        typeMap = acmd.getTypeDeclarations();
-        typeAnnotMap = acmd.getTypeDataGenMap();
+        typeMap = dmlt.getTypeMap();
+        typeAnnotMap = dmlt.getTypeDataGenMap();
         dgCtx = new DataGeneratorContext();
     }
 
     public void dataGen() throws Exception {
-        for (Map.Entry<String, IAType> me : typeMap.entrySet()) {
-            String tn = me.getKey();
+        for (Map.Entry<TypeSignature, IAType> me : typeMap.entrySet()) {
+            TypeSignature tn = me.getKey();
             TypeDataGen tdg = typeAnnotMap.get(tn);
             if (tdg.isDataGen()) {
                 IAType t = me.getValue();

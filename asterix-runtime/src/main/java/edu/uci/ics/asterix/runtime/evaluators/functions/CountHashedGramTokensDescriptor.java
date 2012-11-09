@@ -1,6 +1,6 @@
 package edu.uci.ics.asterix.runtime.evaluators.functions;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -19,8 +19,6 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.NGramUTF8StringBi
 public class CountHashedGramTokensDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "counthashed-gram-tokens", 3);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new CountHashedGramTokensDescriptor();
@@ -29,7 +27,7 @@ public class CountHashedGramTokensDescriptor extends AbstractScalarFunctionDynam
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.COUNTHASHED_GRAM_TOKENS;
     }
 
     @Override

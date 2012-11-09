@@ -145,14 +145,14 @@ public class BTreeAccessMethod implements IAccessMethod {
             indexSubTree = rightSubTree;
             probeSubTree = leftSubTree;
         }
-        ILogicalOperator primaryIndexUnnestOp = createSecondaryToPrimaryPlan(joinRef, conditionRef, indexSubTree, probeSubTree,
-                chosenIndex, analysisCtx, true, true, context);
+        ILogicalOperator primaryIndexUnnestOp = createSecondaryToPrimaryPlan(joinRef, conditionRef, indexSubTree,
+                probeSubTree, chosenIndex, analysisCtx, true, true, context);
         if (primaryIndexUnnestOp == null) {
             return false;
         }
         // If there are conditions left, add a new select operator on top.
         indexSubTree.dataSourceScanRef.setValue(primaryIndexUnnestOp);
-        if (conditionRef.getValue() != null) {            
+        if (conditionRef.getValue() != null) {
             SelectOperator topSelect = new SelectOperator(conditionRef);
             topSelect.getInputs().add(indexSubTree.rootRef);
             topSelect.setExecutionMode(ExecutionMode.LOCAL);
@@ -164,9 +164,9 @@ public class BTreeAccessMethod implements IAccessMethod {
         }
         return true;
     }
-    
-    private ILogicalOperator createSecondaryToPrimaryPlan(Mutable<ILogicalOperator> topOpRef, Mutable<ILogicalExpression> conditionRef,
-            OptimizableOperatorSubTree indexSubTree,
+
+    private ILogicalOperator createSecondaryToPrimaryPlan(Mutable<ILogicalOperator> topOpRef,
+            Mutable<ILogicalExpression> conditionRef, OptimizableOperatorSubTree indexSubTree,
             OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             boolean retainInput, boolean requiresBroadcast, IOptimizationContext context) throws AlgebricksException {
         Dataset dataset = indexSubTree.dataset;
@@ -219,10 +219,9 @@ public class BTreeAccessMethod implements IAccessMethod {
                     }
                     // TODO: For now don't consider prefix searches.
                     // If high and low keys are set, we exit for now.
-                    if (setLowKeys.cardinality() == numSecondaryKeys
-                            && setHighKeys.cardinality() == numSecondaryKeys) {
+                    if (setLowKeys.cardinality() == numSecondaryKeys && setHighKeys.cardinality() == numSecondaryKeys) {
                         doneWithExprs = true;
-                    }             
+                    }
                     break;
                 }
                 case HIGH_EXCLUSIVE: {
@@ -312,12 +311,14 @@ public class BTreeAccessMethod implements IAccessMethod {
         ArrayList<LogicalVariable> keyVarList = new ArrayList<LogicalVariable>();
         // List of variables and expressions for the assign.
         ArrayList<LogicalVariable> assignKeyVarList = new ArrayList<LogicalVariable>();
-        ArrayList<Mutable<ILogicalExpression>> assignKeyExprList = new ArrayList<Mutable<ILogicalExpression>>();        
-        int numLowKeys = createKeyVarsAndExprs(lowKeyLimits, lowKeyExprs, assignKeyVarList, assignKeyExprList, keyVarList, context);
-        int numHighKeys = createKeyVarsAndExprs(highKeyLimits, highKeyExprs, assignKeyVarList, assignKeyExprList, keyVarList, context);
+        ArrayList<Mutable<ILogicalExpression>> assignKeyExprList = new ArrayList<Mutable<ILogicalExpression>>();
+        int numLowKeys = createKeyVarsAndExprs(lowKeyLimits, lowKeyExprs, assignKeyVarList, assignKeyExprList,
+                keyVarList, context);
+        int numHighKeys = createKeyVarsAndExprs(highKeyLimits, highKeyExprs, assignKeyVarList, assignKeyExprList,
+                keyVarList, context);
 
         BTreeJobGenParams jobGenParams = new BTreeJobGenParams(chosenIndex.getIndexName(), IndexType.BTREE,
-                dataset.getDatasetName(), retainInput, requiresBroadcast);
+                dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
         jobGenParams.setLowKeyInclusive(lowKeyInclusive[0]);
         jobGenParams.setHighKeyInclusive(highKeyInclusive[0]);
         jobGenParams.setLowKeyVarList(keyVarList, 0, numLowKeys);
@@ -364,7 +365,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         }
         return primaryIndexUnnestOp;
     }
-    
+
     private int createKeyVarsAndExprs(LimitType[] keyLimits, ILogicalExpression[] searchKeyExprs,
             ArrayList<LogicalVariable> assignKeyVarList, ArrayList<Mutable<ILogicalExpression>> assignKeyExprList,
             ArrayList<LogicalVariable> keyVarList, IOptimizationContext context) {

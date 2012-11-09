@@ -225,6 +225,9 @@ public class NonTaggedDataFormat implements IDataFormat {
     private static LogicalVariable METADATA_DUMMY_VAR = new LogicalVariable(-1);
 
     private static final HashMap<ATypeTag, IValueParserFactory> typeToValueParserFactMap = new HashMap<ATypeTag, IValueParserFactory>();
+
+    public static final String NON_TAGGED_DATA_FORMAT = "edu.uci.ics.asterix.runtime.formats.NonTaggedDataFormat";
+
     static {
         typeToValueParserFactMap.put(ATypeTag.INT32, IntegerParserFactory.INSTANCE);
         typeToValueParserFactMap.put(ATypeTag.FLOAT, FloatParserFactory.INSTANCE);

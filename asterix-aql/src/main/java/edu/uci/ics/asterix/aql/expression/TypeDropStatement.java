@@ -7,10 +7,12 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public class TypeDropStatement implements Statement {
 
+    private final Identifier dataverseName;
     private Identifier typeName;
     private boolean ifExists;
 
-    public TypeDropStatement(Identifier typeName, boolean ifExists) {
+    public TypeDropStatement(Identifier dataverseName, Identifier typeName, boolean ifExists) {
+        this.dataverseName = dataverseName;
         this.typeName = typeName;
         this.ifExists = ifExists;
     }
@@ -18,6 +20,10 @@ public class TypeDropStatement implements Statement {
     @Override
     public Kind getKind() {
         return Kind.TYPE_DROP;
+    }
+
+    public Identifier getDataverseName() {
+        return dataverseName;
     }
 
     public Identifier getTypeName() {

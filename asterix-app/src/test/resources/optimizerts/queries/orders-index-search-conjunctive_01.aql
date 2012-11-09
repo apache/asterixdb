@@ -23,7 +23,7 @@ create dataset Orders(OrderType)
 
 load dataset Orders 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1:///data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+(("path"="nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 create index idx_Orders_Custkey on Orders(o_custkey);
 

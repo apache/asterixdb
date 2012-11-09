@@ -6,7 +6,7 @@ create type Tweet as open {
   id: int32,
   tweetid: int64,
   loc: point,
-  time: string,
+  time: datetime,
   text: string
 }
 

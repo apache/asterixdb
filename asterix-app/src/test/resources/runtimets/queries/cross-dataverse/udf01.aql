@@ -1,0 +1,18 @@
+/*
+ * Description  : Pass an ordered list as input to UDF
+ *              : and return that ordered list.
+ * Expected Res : Success
+ * Date         : 4th September 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+write output to nc1:"rttest/cross-dataverse_udf01.adm";
+
+create function test.echo($list){
+$list
+}
+
+for $a in [1,2,3,4,5,6,7,8,9,10]
+return test.echo($a)

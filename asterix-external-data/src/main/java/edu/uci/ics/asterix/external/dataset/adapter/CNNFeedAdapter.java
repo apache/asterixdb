@@ -5,18 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.asterix.external.data.adapter.api.IDatasourceAdapter;
-import edu.uci.ics.asterix.external.data.parser.IDataParser;
-import edu.uci.ics.asterix.external.data.parser.IDataStreamParser;
-import edu.uci.ics.asterix.external.data.parser.ManagedDelimitedDataStreamParser;
-import edu.uci.ics.asterix.feed.intake.FeedStream;
-import edu.uci.ics.asterix.feed.intake.RSSFeedClient;
 import edu.uci.ics.asterix.feed.managed.adapter.IMutableFeedAdapter;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.IAType;
 
 public class CNNFeedAdapter extends RSSFeedAdapter implements IDatasourceAdapter, IMutableFeedAdapter {
 
+    private static final long serialVersionUID = 2523303758114582251L;
     private List<String> feedURLs = new ArrayList<String>();
     private String id_prefix = "";
 
@@ -62,20 +55,8 @@ public class CNNFeedAdapter extends RSSFeedAdapter implements IDatasourceAdapter
     }
 
     @Override
-    public IDataParser getDataParser(int partition) throws Exception {
-        IDataParser dataParser = new ManagedDelimitedDataStreamParser();
-        dataParser.configure(configuration);
-        dataParser.initialize((ARecordType) atype, ctx);
-        RSSFeedClient feedClient = new RSSFeedClient(this, feedURLs.get(partition), id_prefix);
-        FeedStream feedStream = new FeedStream(feedClient, ctx);
-        ((IDataStreamParser) dataParser).setInputStream(feedStream);
-        return dataParser;
-    }
-
-    @Override
-    public void configure(Map<String, String> arguments, IAType atype) throws Exception {
+    public void configure(Map<String, String> arguments) throws Exception {
         configuration = arguments;
-        this.atype = atype;
         String rssURLProperty = configuration.get(KEY_RSS_URL);
         if (rssURLProperty == null) {
             throw new IllegalArgumentException("no rss url provided");

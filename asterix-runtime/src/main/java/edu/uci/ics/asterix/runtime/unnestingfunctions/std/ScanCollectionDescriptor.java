@@ -19,7 +19,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.runtime.evaluators.common.AsterixListAccessor;
@@ -37,8 +37,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "scan-collection", 1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new ScanCollectionDescriptor();
@@ -47,7 +45,7 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.SCAN_COLLECTION;
     }
 
     @Override
@@ -71,7 +69,7 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
 
             return new ICopyUnnestingFunction() {
 
-            	private final AsterixListAccessor listAccessor = new AsterixListAccessor();
+                private final AsterixListAccessor listAccessor = new AsterixListAccessor();
                 private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
                 private ICopyEvaluator argEval = listEvalFactory.createEvaluator(inputVal);
                 private int itemIndex;
@@ -84,7 +82,7 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                         listAccessor.reset(inputVal.getByteArray(), 0);
                         itemIndex = 0;
                     } catch (AsterixException e) {
-                    	throw new AlgebricksException(e);
+                        throw new AlgebricksException(e);
                     }
                 }
 
@@ -92,14 +90,14 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                 public boolean step() throws AlgebricksException {
                     try {
                         if (itemIndex < listAccessor.size()) {
-                        	listAccessor.writeItem(itemIndex, out);
-                        	++itemIndex;
+                            listAccessor.writeItem(itemIndex, out);
+                            ++itemIndex;
                             return true;
-                        }                        
+                        }
                     } catch (IOException e) {
                         throw new AlgebricksException(e);
                     } catch (AsterixException e) {
-                    	throw new AlgebricksException(e);
+                        throw new AlgebricksException(e);
                     }
                     return false;
                 }
