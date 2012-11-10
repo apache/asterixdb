@@ -18,9 +18,12 @@ package edu.uci.ics.asterix.metadata;
 import java.rmi.RemoteException;
 import java.util.List;
 
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.api.IMetadataManager;
 import edu.uci.ics.asterix.metadata.api.IMetadataNode;
+import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
+import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
@@ -237,11 +240,13 @@ public class MetadataManager implements IMetadataManager {
             // in the cache.
             return null;
         }
-        if (ctx.getDataverse(dataverseName) != null) {
+
+        if (!MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName) && ctx.getDataverse(dataverseName) != null) {
             // This transaction has dropped and subsequently created the same
             // dataverse.
             return null;
         }
+
         dataset = cache.getDataset(dataverseName, datasetName);
         if (dataset != null) {
             // Dataset is already in the cache, don't add it again.
@@ -309,11 +314,13 @@ public class MetadataManager implements IMetadataManager {
             // in the cache.
             return null;
         }
-        if (ctx.getDataverse(dataverseName) != null) {
+
+        if (!MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName) && ctx.getDataverse(dataverseName) != null) {
             // This transaction has dropped and subsequently created the same
             // dataverse.
             return null;
         }
+
         datatype = cache.getDatatype(dataverseName, datatypeName);
         if (datatype != null) {
             // Datatype is already in the cache, don't add it again.
@@ -339,6 +346,17 @@ public class MetadataManager implements IMetadataManager {
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
+    }
+
+    @Override
+    public void addAdapter(MetadataTransactionContext mdTxnCtx, DatasourceAdapter adapter) throws MetadataException {
+        try {
+            metadataNode.addAdapter(mdTxnCtx.getTxnId(), adapter);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        mdTxnCtx.addAdapter(adapter);
+
     }
 
     @Override
@@ -434,44 +452,44 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void dropFunction(MetadataTransactionContext ctx, String dataverseName, String functionName, int arity)
+    public void dropFunction(MetadataTransactionContext ctx, FunctionSignature functionSignature)
             throws MetadataException {
         try {
-            metadataNode.dropFunction(ctx.getTxnId(), dataverseName, functionName, arity);
+            metadataNode.dropFunction(ctx.getTxnId(), functionSignature);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
-        ctx.dropFunction(dataverseName, functionName, arity);
+        ctx.dropFunction(functionSignature);
     }
 
     @Override
-    public Function getFunction(MetadataTransactionContext ctx, String dataverseName, String functionName, int arity)
+    public Function getFunction(MetadataTransactionContext ctx, FunctionSignature functionSignature)
             throws MetadataException {
         // First look in the context to see if this transaction created the
         // requested dataset itself (but the dataset is still uncommitted).
-        Function function = ctx.getFunction(dataverseName, functionName, arity);
+        Function function = ctx.getFunction(functionSignature);
         if (function != null) {
             // Don't add this dataverse to the cache, since it is still
             // uncommitted.
             return function;
         }
-        if (ctx.functionIsDropped(dataverseName, functionName, arity)) {
-            // Dataset has been dropped by this transaction but could still be
+        if (ctx.functionIsDropped(functionSignature)) {
+            // Function has been dropped by this transaction but could still be
             // in the cache.
             return null;
         }
-        if (ctx.getDataverse(dataverseName) != null) {
+        if (ctx.getDataverse(functionSignature.getNamespace()) != null) {
             // This transaction has dropped and subsequently created the same
             // dataverse.
             return null;
         }
-        function = cache.getFunction(dataverseName, functionName, arity);
+        function = cache.getFunction(functionSignature);
         if (function != null) {
             // Function is already in the cache, don't add it again.
             return function;
         }
         try {
-            function = metadataNode.getFunction(ctx.getTxnId(), dataverseName, functionName, arity);
+            function = metadataNode.getFunction(ctx.getTxnId(), functionSignature);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -483,4 +501,42 @@ public class MetadataManager implements IMetadataManager {
         return function;
 
     }
+
+    @Override
+    public List<Function> getDataverseFunctions(MetadataTransactionContext ctx, String dataverseName)
+            throws MetadataException {
+        List<Function> dataverseFunctions;
+        try {
+            // Assuming that the transaction can read its own writes on the
+            // metadata node.
+            dataverseFunctions = metadataNode.getDataverseFunctions(ctx.getTxnId(), dataverseName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        // Don't update the cache to avoid checking against the transaction's
+        // uncommitted functions.
+        return dataverseFunctions;
+    }
+
+    @Override
+    public void dropAdapter(MetadataTransactionContext ctx, String dataverseName, String name) throws MetadataException {
+        try {
+            metadataNode.dropAdapter(ctx.getTxnId(), dataverseName, name);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public DatasourceAdapter getAdapter(MetadataTransactionContext ctx, String dataverseName, String name)
+            throws MetadataException {
+        DatasourceAdapter adapter = null;
+        try {
+            adapter = metadataNode.getAdapter(ctx.getTxnId(), dataverseName, name);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return adapter;
+    }
+
 }

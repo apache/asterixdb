@@ -148,7 +148,7 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
             @Override
             public IAObject deserialize(DataInput in) throws HyracksDataException {
                 try {
-                    SerializerDeserializerUtil.deserializeTag(in);
+                    ATypeTag typeTag = SerializerDeserializerUtil.deserializeTag(in);
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }

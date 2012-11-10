@@ -24,6 +24,7 @@ import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataRecordTypes;
 import edu.uci.ics.asterix.om.base.AMutableString;
@@ -37,9 +38,9 @@ import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 public class FeedDatasetDetails extends InternalDatasetDetails {
 
     private static final long serialVersionUID = 1L;
-    private final String adapter;
+    private final String adapterFactory;
     private final Map<String, String> properties;
-    private String functionIdentifier;
+    private final FunctionSignature signature;
     private FeedState feedState;
 
     public enum FeedState {
@@ -53,12 +54,12 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
     }
 
     public FeedDatasetDetails(FileStructure fileStructure, PartitioningStrategy partitioningStrategy,
-            List<String> partitioningKey, List<String> primaryKey, String groupName, String adapter,
-            Map<String, String> properties, String functionIdentifier, String feedState) {
+            List<String> partitioningKey, List<String> primaryKey, String groupName, String adapterFactory,
+            Map<String, String> properties, FunctionSignature signature, String feedState) {
         super(fileStructure, partitioningStrategy, partitioningKey, primaryKey, groupName);
         this.properties = properties;
-        this.adapter = adapter;
-        this.functionIdentifier = functionIdentifier;
+        this.adapterFactory = adapterFactory;
+        this.signature = signature;
         this.feedState = feedState.equals(FeedState.ACTIVE.toString()) ? FeedState.ACTIVE : FeedState.INACTIVE;
     }
 
@@ -100,7 +101,7 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
         }
         fieldValue.reset();
         listBuilder.write(fieldValue.getDataOutput(), true);
-        feedRecordBuilder.addField(MetadataRecordTypes.FEEDL_DETAILS_ARECORD_PARTITIONKEY_FIELD_INDEX, fieldValue);
+        feedRecordBuilder.addField(MetadataRecordTypes.FEED_DETAILS_ARECORD_PARTITIONKEY_FIELD_INDEX, fieldValue);
 
         // write field 3
         listBuilder.reset((AOrderedListType) MetadataRecordTypes.FEED_DETAILS_RECORDTYPE.getFieldTypes()[3]);
@@ -122,9 +123,9 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
 
         // write field 5
         fieldValue.reset();
-        aString.setValue(getAdapter());
+        aString.setValue(getAdapterFactory());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        feedRecordBuilder.addField(MetadataRecordTypes.FEED_DETAILS_ARECORD_ADAPTER_FIELD_INDEX, fieldValue);
+        feedRecordBuilder.addField(MetadataRecordTypes.FEED_DETAILS_ARECORD_DATASOURCE_ADAPTER_FIELD_INDEX, fieldValue);
 
         // write field 6
         listBuilder.reset((AOrderedListType) MetadataRecordTypes.FEED_DETAILS_RECORDTYPE.getFieldTypes()[6]);
@@ -141,8 +142,8 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
 
         // write field 7
         fieldValue.reset();
-        if (getFunctionIdentifier() != null) {
-            aString.setValue(getFunctionIdentifier());
+        if (getFunction() != null) {
+            aString.setValue(getFunction().toString());
             stringSerde.serialize(aString, fieldValue.getDataOutput());
             feedRecordBuilder.addField(MetadataRecordTypes.FEED_DETAILS_ARECORD_FUNCTION_FIELD_INDEX, fieldValue);
         }
@@ -164,7 +165,7 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
     public void writePropertyTypeRecord(String name, String value, DataOutput out) throws HyracksDataException {
         IARecordBuilder propertyRecordBuilder = new RecordBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
-        propertyRecordBuilder.reset(MetadataRecordTypes.ADAPTER_PROPERTIES_RECORDTYPE);
+        propertyRecordBuilder.reset(MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE);
         AMutableString aString = new AMutableString("");
         ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.ASTRING);
@@ -196,20 +197,16 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
         this.feedState = feedState;
     }
 
-    public String getAdapter() {
-        return adapter;
+    public String getAdapterFactory() {
+        return adapterFactory;
     }
 
     public Map<String, String> getProperties() {
         return properties;
     }
 
-    public String getFunctionIdentifier() {
-        return functionIdentifier;
-    }
-
-    public void setFunctionIdentifier(String functionIdentifier) {
-        this.functionIdentifier = functionIdentifier;
+    public FunctionSignature getFunction() {
+        return signature;
     }
 
 }

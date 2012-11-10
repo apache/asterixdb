@@ -7,12 +7,14 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public class WriteFromQueryResultStatement implements Statement {
 
+    private Identifier dataverseName;
     private Identifier datasetName;
 
     private Query query;
     private int varCounter;
 
-    public WriteFromQueryResultStatement(Identifier datasetName, Query query, int varCounter) {
+    public WriteFromQueryResultStatement(Identifier dataverseName, Identifier datasetName, Query query, int varCounter) {
+        this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.query = query;
         this.varCounter = varCounter;
@@ -21,6 +23,10 @@ public class WriteFromQueryResultStatement implements Statement {
     @Override
     public Kind getKind() {
         return Kind.WRITE_FROM_QUERY_RESULT;
+    }
+
+    public Identifier getDataverseName() {
+        return dataverseName;
     }
 
     public Identifier getDatasetName() {

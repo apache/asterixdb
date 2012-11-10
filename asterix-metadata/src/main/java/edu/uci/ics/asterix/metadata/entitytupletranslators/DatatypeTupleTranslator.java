@@ -415,30 +415,22 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
     private String handleNestedDerivedType(String typeName, String suggestedTypeName, IAType nestedType,
             Datatype topLevelType) throws Exception {
         MetadataNode mn = MetadataNode.INSTANCE;
-        if (typeName == null) {
-            typeName = suggestedTypeName;
-            metadataNode.addDatatype(txnId, new Datatype(topLevelType.getDataverseName(), typeName, nestedType, true));
-            try {
-                mn.insertIntoDatatypeSecondaryIndex(txnId, topLevelType.getDataverseName(), typeName,
-                        topLevelType.getDatatypeName());
-            } catch (BTreeDuplicateKeyException e) {
-                // The key may have been inserted by a previous DDL statement or
-                // by a previous nested type.
-            }
-            return typeName;
-        }
-        Datatype dt = mn.getDatatype(txnId, topLevelType.getDataverseName(), typeName);
-        if (dt == null) {
-            throw new AlgebricksException("There is no datatype with this name " + typeName + ".");
-        }
         try {
+            if (typeName == null) {
+                typeName = suggestedTypeName;
+                metadataNode.addDatatype(txnId, new Datatype(topLevelType.getDataverseName(), typeName, nestedType,
+                        true));
+
+            }
             mn.insertIntoDatatypeSecondaryIndex(txnId, topLevelType.getDataverseName(), typeName,
                     topLevelType.getDatatypeName());
+
         } catch (BTreeDuplicateKeyException e) {
             // The key may have been inserted by a previous DDL statement or by
             // a previous nested type.
         }
         return typeName;
+
     }
 
     private boolean isDerivedType(ATypeTag tag) {

@@ -18,8 +18,10 @@ package edu.uci.ics.asterix.metadata.api;
 import java.rmi.RemoteException;
 import java.util.List;
 
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
@@ -352,49 +354,80 @@ public interface IMetadataManager {
      *             For example, if the node already exists.
      */
     public void addNode(MetadataTransactionContext ctx, Node node) throws MetadataException;
-    
+
     /**
-	 * 
-	 * @param mdTxnCtx
-	 *            MetadataTransactionContext of an active metadata transaction.
-	 * @param function
-	 *            An instance of type Function that represents the function
-	 *            being added
-	 * @throws MetadataException
-	 */
-	public void addFunction(MetadataTransactionContext mdTxnCtx,
-			Function function) throws MetadataException;
+     * @param mdTxnCtx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param function
+     *            An instance of type Function that represents the function
+     *            being added
+     * @throws MetadataException
+     */
+    public void addFunction(MetadataTransactionContext mdTxnCtx, Function function) throws MetadataException;
 
-	/**
-	 * 
-	 * @param ctx
-	 *            MetadataTransactionContext of an active metadata transaction.
-	 * @param dataverseName
-	 *            the dataverse associated with the function being searched
-	 * @param functionName
-	 *            name of the function
-	 * @param arity
-	 *            arity of the function
-	 * @return
-	 * @throws MetadataException
-	 */
-	public Function getFunction(MetadataTransactionContext ctx,
-			String dataverseName, String functionName, int arity)
-			throws MetadataException;
+    /**
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param functionSignature
+     *            the functions signature (unique to the function)
+     * @return
+     * @throws MetadataException
+     */
 
-	/**
-	 * 
-	 * @param ctx
-	 *            MetadataTransactionContext of an active metadata transaction.
-	 * @param dataverseName
-	 *            the dataverse associated with the function being dropped
-	 * @param functionName
-	 *            name of the function
-	 * @param arity
-	 *            arity of the function
-	 * @throws MetadataException
-	 */
-	public void dropFunction(MetadataTransactionContext ctx,
-			String dataverseName, String functionName, int arity)
-			throws MetadataException;
+    public Function getFunction(MetadataTransactionContext ctx, FunctionSignature functionSignature)
+            throws MetadataException;
+
+    /**
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param functionSignature
+     *            the functions signature (unique to the function)
+     * @throws MetadataException
+     */
+    public void dropFunction(MetadataTransactionContext ctx, FunctionSignature functionSignature)
+            throws MetadataException;
+
+    /**
+     * @param mdTxnCtx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param function
+     *            An instance of type Adapter that represents the adapter being
+     *            added
+     * @throws MetadataException
+     */
+    public void addAdapter(MetadataTransactionContext mdTxnCtx, DatasourceAdapter adapter) throws MetadataException;
+
+    /**
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataverseName
+     *            the dataverse associated with the adapter being searched
+     * @param Name
+     *            name of the adapter
+     * @return
+     * @throws MetadataException
+     */
+    public DatasourceAdapter getAdapter(MetadataTransactionContext ctx, String dataverseName, String name)
+            throws MetadataException;
+
+    /**
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataverseName
+     *            the dataverse associated with the adapter being dropped
+     * @param name
+     *            name of the adapter
+     * @throws MetadataException
+     */
+    public void dropAdapter(MetadataTransactionContext ctx, String dataverseName, String name) throws MetadataException;
+
+    /**
+     * @param ctx
+     * @param dataverseName
+     * @return
+     * @throws MetadataException
+     */
+    public List<Function> getDataverseFunctions(MetadataTransactionContext ctx, String dataverseName)
+            throws MetadataException;
+
 }

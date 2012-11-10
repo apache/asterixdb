@@ -3,4 +3,5 @@ use dataverse Metadata;
 write output to nc1:"rttest/metadata_index.adm";
 
 for $c in dataset('Index')
+where $c.DataverseName='Metadata'
 return $c

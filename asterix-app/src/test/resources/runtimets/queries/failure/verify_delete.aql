@@ -1,0 +1,8 @@
+use dataverse test;
+
+write output to nc1:"rttest/failure_verify_delete.adm";
+
+for $c in dataset('LineItem')
+where $c.l_orderkey>=10
+order by $c.l_orderkey, $c.l_linenumber
+return $c

@@ -3,29 +3,27 @@ package edu.uci.ics.asterix.feed.operator;
 import java.nio.ByteBuffer;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import edu.uci.ics.asterix.external.data.adapter.api.IDatasourceReadAdapter;
-import edu.uci.ics.asterix.external.data.parser.IManagedDataParser;
+import edu.uci.ics.asterix.external.dataset.adapter.IDatasourceAdapter;
+import edu.uci.ics.asterix.feed.comm.AlterFeedMessage;
+import edu.uci.ics.asterix.feed.comm.IFeedMessage;
 import edu.uci.ics.asterix.feed.managed.adapter.IManagedFeedAdapter;
 import edu.uci.ics.asterix.feed.managed.adapter.IMutableFeedAdapter;
 import edu.uci.ics.asterix.feed.mgmt.FeedId;
 import edu.uci.ics.asterix.feed.mgmt.FeedSystemProvider;
 import edu.uci.ics.asterix.feed.mgmt.IFeedManager;
-import edu.uci.ics.asterix.feed.comm.AlterFeedMessage;
-import edu.uci.ics.asterix.feed.comm.IFeedMessage;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 public class FeedIntakeOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
-    private final IDatasourceReadAdapter adapter;
+    private final IDatasourceAdapter adapter;
     private final int partition;
     private final IFeedManager feedManager;
     private final FeedId feedId;
     private final LinkedBlockingQueue<IFeedMessage> inbox;
     private FeedInboxMonitor feedInboxMonitor;
 
-    public FeedIntakeOperatorNodePushable(FeedId feedId, IDatasourceReadAdapter adapter, int partition) {
+    public FeedIntakeOperatorNodePushable(FeedId feedId, IDatasourceAdapter adapter, int partition) {
         this.adapter = adapter;
         this.partition = partition;
         this.feedManager = (IFeedManager) FeedSystemProvider.getFeedManager();
@@ -35,14 +33,22 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
 
     @Override
     public void open() throws HyracksDataException {
-        feedInboxMonitor = new FeedInboxMonitor((IManagedFeedAdapter) adapter, inbox, partition);
-        feedInboxMonitor.start();
-        feedManager.registerFeedOperatorMsgQueue(feedId, inbox);
+        if (adapter instanceof IManagedFeedAdapter) {
+            feedInboxMonitor = new FeedInboxMonitor((IManagedFeedAdapter) adapter, inbox, partition);
+            feedInboxMonitor.start();
+            feedManager.registerFeedOperatorMsgQueue(feedId, inbox);
+        }
         writer.open();
         try {
-            adapter.getDataParser(partition).parse(writer);
+            adapter.start(partition, writer);
         } catch (Exception e) {
-            throw new HyracksDataException("exception during reading from external data source", e);
+            e.printStackTrace();
+            // we do not throw an exception, but allow the operator to close
+            // gracefully
+            // Throwing an exception here would result in a job abort and a
+            // transaction roll back
+            // that undoes all the work done so far.
+
         } finally {
             writer.close();
         }
@@ -61,7 +67,6 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         // TODO Auto-generated method stub
-
     }
 }
 
@@ -69,12 +74,10 @@ class FeedInboxMonitor extends Thread {
 
     private LinkedBlockingQueue<IFeedMessage> inbox;
     private final IManagedFeedAdapter adapter;
-    private final int partition;
 
     public FeedInboxMonitor(IManagedFeedAdapter adapter, LinkedBlockingQueue<IFeedMessage> inbox, int partition) {
         this.inbox = inbox;
         this.adapter = adapter;
-        this.partition = partition;
     }
 
     @Override
@@ -84,13 +87,13 @@ class FeedInboxMonitor extends Thread {
                 IFeedMessage feedMessage = inbox.take();
                 switch (feedMessage.getMessageType()) {
                     case SUSPEND:
-                        ((IManagedDataParser) adapter.getDataParser(partition)).getManagedTupleParser().suspend();
+                        adapter.suspend();
                         break;
                     case RESUME:
-                        ((IManagedDataParser) adapter.getDataParser(partition)).getManagedTupleParser().resume();
+                        adapter.resume();
                         break;
                     case STOP:
-                        ((IManagedDataParser) adapter.getDataParser(partition)).getManagedTupleParser().stop();
+                        adapter.stop();
                         break;
                     case ALTER:
                         ((IMutableFeedAdapter) adapter).alter(((AlterFeedMessage) feedMessage).getAlteredConfParams());

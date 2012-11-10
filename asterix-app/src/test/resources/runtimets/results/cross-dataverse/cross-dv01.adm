@@ -1,0 +1,1 @@
+{ "ug-student": { "id": 457, "name": "John Doe", "age": 22, "sex": "M", "dept": "Dance" }, "prof": { "id": 152, "name": "John Meyer", "age": 42, "sex": "M", "dept": "History" }, "grd-student": { "id": 418, "name": "John Smith", "age": 26, "sex": "M", "dept": "Economics" }, "postdoc": { "id": 259, "name": "Sophia Reece", "age": 36, "sex": "F", "dept": "Anthropology" } }

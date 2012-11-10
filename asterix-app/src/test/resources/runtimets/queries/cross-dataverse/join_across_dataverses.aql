@@ -1,0 +1,60 @@
+//***** Test to conduct a join between datasets belonging to different dataverses*****//
+
+drop dataverse test1 if exists;
+drop dataverse test2 if exists;
+
+create dataverse test1;
+create dataverse test2;
+
+create type test1.AddressType as open {
+  number: int32,
+  street: string,
+  city: string
+};
+
+create type test1.CustomerType as closed {
+  cid: int32,
+  name: string,
+  cashBack: int32,
+  age: int32?,
+  address: AddressType?,
+  lastorder: {
+    oid: int32,
+    total: float
+  }
+};
+
+create dataset test1.Customers(CustomerType)
+partitioned by key cid;
+
+
+create type test2.OrderType as open {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float,
+  items: [int32]
+}
+
+create dataset test2.Orders(OrderType)
+partitioned by key oid;
+
+
+load dataset test1.Customers
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/customerData.json"),
+("format"="adm"));
+
+load dataset test2.Orders
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/orderData.json"),("format"="adm"));
+
+write output to nc1:"rttest/cross-dataverse_join_across_dataverses.adm";
+
+for $c in dataset('test1.Customers')
+for $o in dataset('test2.Orders')
+where $c.cid = $o.cid
+order by $c.name, $o.total
+return {"cust_name":$c.name, "cust_age": $c.age, "order_total":$o.total, "orderList":[$o.oid, $o.cid], "orderList":{{$o.oid, $o.cid}}}

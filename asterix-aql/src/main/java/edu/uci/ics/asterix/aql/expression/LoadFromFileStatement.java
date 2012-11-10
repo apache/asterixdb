@@ -10,12 +10,14 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 public class LoadFromFileStatement implements Statement {
 
     private Identifier datasetName;
+    private Identifier dataverseName;
     private String adapter;
     private Map<String, String> properties;
     private boolean dataIsLocallySorted;
 
-    public LoadFromFileStatement(Identifier datasetName, String adapter, Map<String, String> propertiees,
-            boolean dataIsLocallySorted) {
+    public LoadFromFileStatement(Identifier dataverseName, Identifier datasetName, String adapter,
+            Map<String, String> propertiees, boolean dataIsLocallySorted) {
+        this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.adapter = adapter;
         this.properties = propertiees;
@@ -36,6 +38,14 @@ public class LoadFromFileStatement implements Statement {
 
     public void setProperties(Map<String, String> properties) {
         this.properties = properties;
+    }
+
+    public Identifier getDataverseName() {
+        return dataverseName;
+    }
+
+    public void setDataverseName(Identifier dataverseName) {
+        this.dataverseName = dataverseName;
     }
 
     @Override

@@ -14,12 +14,12 @@
  */
 package edu.uci.ics.asterix.file;
 
+import java.io.File;
 import java.rmi.RemoteException;
 import java.util.List;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.api.common.Job;
-import edu.uci.ics.asterix.aql.translator.DdlTranslator.CompiledDatasetDropStatement;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.config.OptimizationConfUtil;
@@ -27,16 +27,19 @@ import edu.uci.ics.asterix.common.context.AsterixIndexRegistryProvider;
 import edu.uci.ics.asterix.common.context.AsterixStorageManagerInterface;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
+import edu.uci.ics.asterix.metadata.MetadataManager;
+import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.translator.DmlTranslator.CompiledLoadFromFileStatement;
+import edu.uci.ics.asterix.translator.CompiledStatements.CompiledDatasetDropStatement;
+import edu.uci.ics.asterix.translator.CompiledStatements.CompiledLoadFromFileStatement;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -83,19 +86,26 @@ public class DatasetOperations {
 
     private static Logger LOGGER = Logger.getLogger(DatasetOperations.class.getName());
 
-    public static JobSpecification[] createDropDatasetJobSpec(CompiledDatasetDropStatement deleteStmt,
-            AqlCompiledMetadataDeclarations metadata) throws AlgebricksException, HyracksDataException,
-            RemoteException, ACIDException, AsterixException {
+    public static JobSpecification[] createDropDatasetJobSpec(CompiledDatasetDropStatement datasetDropStmt,
+            AqlMetadataProvider metadataProvider) throws AlgebricksException, HyracksDataException, RemoteException,
+            ACIDException, AsterixException {
 
-        String datasetName = deleteStmt.getDatasetName();
-        String datasetPath = metadata.getRelativePath(datasetName);
+        String dataverseName = null;
+        if (datasetDropStmt.getDataverseName() != null) {
+            dataverseName = datasetDropStmt.getDataverseName();
+        } else if (metadataProvider.getDefaultDataverse() != null) {
+            dataverseName = metadataProvider.getDefaultDataverse().getDataverseName();
+        }
+
+        String datasetName = datasetDropStmt.getDatasetName();
+        String datasetPath = dataverseName + File.separator + datasetName;
 
         LOGGER.info("DROP DATASETPATH: " + datasetPath);
 
         IIndexRegistryProvider<IIndex> indexRegistryProvider = AsterixIndexRegistryProvider.INSTANCE;
         IStorageManagerInterface storageManager = AsterixStorageManagerInterface.INSTANCE;
 
-        Dataset dataset = metadata.findDataset(datasetName);
+        Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
             throw new AlgebricksException("DROP DATASET: No metadata for dataset " + datasetName);
         }
@@ -103,7 +113,8 @@ public class DatasetOperations {
             return new JobSpecification[0];
         }
 
-        List<Index> datasetIndexes = metadata.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
+        List<Index> datasetIndexes = metadataProvider.getDatasetIndexes(dataset.getDataverseName(),
+                dataset.getDatasetName());
         int numSecondaryIndexes = 0;
         for (Index index : datasetIndexes) {
             if (index.isSecondaryIndex()) {
@@ -118,9 +129,9 @@ public class DatasetOperations {
             for (Index index : datasetIndexes) {
                 if (index.isSecondaryIndex()) {
                     specs[i] = new JobSpecification();
-                    Pair<IFileSplitProvider, AlgebricksPartitionConstraint> idxSplitsAndConstraint = metadata
-                            .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName,
-                                    index.getIndexName());
+                    Pair<IFileSplitProvider, AlgebricksPartitionConstraint> idxSplitsAndConstraint = metadataProvider
+                            .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataset.getDataverseName(),
+                                    datasetName, index.getIndexName());
                     TreeIndexDropOperatorDescriptor secondaryBtreeDrop = new TreeIndexDropOperatorDescriptor(specs[i],
                             storageManager, indexRegistryProvider, idxSplitsAndConstraint.first);
                     AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specs[i], secondaryBtreeDrop,
@@ -134,8 +145,9 @@ public class DatasetOperations {
         JobSpecification specPrimary = new JobSpecification();
         specs[specs.length - 1] = specPrimary;
 
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, datasetName);
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadataProvider
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataset.getDataverseName(), datasetName,
+                        datasetName);
         TreeIndexDropOperatorDescriptor primaryBtreeDrop = new TreeIndexDropOperatorDescriptor(specPrimary,
                 storageManager, indexRegistryProvider, splitsAndConstraint.first);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specPrimary, primaryBtreeDrop,
@@ -146,19 +158,26 @@ public class DatasetOperations {
         return specs;
     }
 
-    public static JobSpecification createDatasetJobSpec(String datasetName, AqlCompiledMetadataDeclarations metadata)
-            throws AsterixException, AlgebricksException {
-        Dataset dataset = metadata.findDataset(datasetName);
-        if (dataset == null) {
-            throw new AsterixException("Could not find dataset " + datasetName);
+    public static JobSpecification createDatasetJobSpec(Dataverse dataverse, String datasetName,
+            AqlMetadataProvider metadata) throws AsterixException, AlgebricksException {
+        String dataverseName = dataverse.getDataverseName();
+        IDataFormat format;
+        try {
+            format = (IDataFormat) Class.forName(dataverse.getDataFormat()).newInstance();
+        } catch (Exception e) {
+            throw new AsterixException(e);
         }
-        ARecordType itemType = (ARecordType) metadata.findType(dataset.getItemTypeName());
+        Dataset dataset = metadata.findDataset(dataverseName, datasetName);
+        if (dataset == null) {
+            throw new AsterixException("Could not find dataset " + datasetName + " in datavetse " + dataverseName);
+        }
+        ARecordType itemType = (ARecordType) metadata.findType(dataverseName, dataset.getItemTypeName());
         JobSpecification spec = new JobSpecification();
         IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
-                itemType, metadata.getFormat().getBinaryComparatorFactoryProvider());
+                itemType, format.getBinaryComparatorFactoryProvider());
         ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, datasetName);
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataverseName, datasetName, datasetName);
         FileSplit[] fs = splitsAndConstraint.first.getFileSplits();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < fs.length; i++) {
@@ -177,12 +196,14 @@ public class DatasetOperations {
     }
 
     @SuppressWarnings("rawtypes")
-    public static Job createLoadDatasetJobSpec(CompiledLoadFromFileStatement loadStmt,
-            AqlCompiledMetadataDeclarations metadata) throws AsterixException, AlgebricksException {
+    public static Job createLoadDatasetJobSpec(AqlMetadataProvider metadataProvider,
+            CompiledLoadFromFileStatement loadStmt, IDataFormat format) throws AsterixException, AlgebricksException {
+        MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
+        String dataverseName = loadStmt.getDataverseName();
         String datasetName = loadStmt.getDatasetName();
-        Dataset dataset = metadata.findDataset(datasetName);
+        Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
         if (dataset == null) {
-            throw new AsterixException("Could not find dataset " + datasetName);
+            throw new AsterixException("Could not find dataset " + datasetName + " in dataverse " + dataverseName);
         }
         if (dataset.getDatasetType() != DatasetType.INTERNAL && dataset.getDatasetType() != DatasetType.FEED) {
             throw new AsterixException("Cannot load data into dataset  (" + datasetName + ")" + "of type "
@@ -190,27 +211,27 @@ public class DatasetOperations {
         }
         JobSpecification spec = new JobSpecification();
 
-        ARecordType itemType = (ARecordType) metadata.findType(dataset.getItemTypeName());
-        IDataFormat format = metadata.getFormat();
+        ARecordType itemType = (ARecordType) MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName,
+                dataset.getItemTypeName()).getDatatype();
         ISerializerDeserializer payloadSerde = format.getSerdeProvider().getSerializerDeserializer(itemType);
 
         IBinaryHashFunctionFactory[] hashFactories = DatasetUtils.computeKeysBinaryHashFunFactories(dataset, itemType,
-                metadata.getFormat().getBinaryHashFunctionFactoryProvider());
+                format.getBinaryHashFunctionFactoryProvider());
         IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
-                itemType, metadata.getFormat().getBinaryComparatorFactoryProvider());
+                itemType, format.getBinaryComparatorFactoryProvider());
         ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);
 
         ExternalDatasetDetails externalDatasetDetails = new ExternalDatasetDetails(loadStmt.getAdapter(),
                 loadStmt.getProperties());
-        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = AqlMetadataProvider
-                .buildExternalDataScannerRuntime(spec, itemType, externalDatasetDetails, format);
+
+        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = metadataProvider.buildExternalDataScannerRuntime(
+                spec, itemType, externalDatasetDetails, format);
         IOperatorDescriptor scanner = p.first;
         AlgebricksPartitionConstraint scannerPc = p.second;
-        RecordDescriptor recDesc = computePayloadKeyRecordDescriptor(dataset, itemType, payloadSerde,
-                metadata.getFormat());
+        RecordDescriptor recDesc = computePayloadKeyRecordDescriptor(dataset, itemType, payloadSerde, format);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, scanner, scannerPc);
 
-        AssignRuntimeFactory assign = makeAssignRuntimeFactory(dataset, itemType, metadata.getFormat());
+        AssignRuntimeFactory assign = makeAssignRuntimeFactory(dataset, itemType, format);
         AlgebricksMetaOperatorDescriptor asterixOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 1,
                 new IPushRuntimeFactory[] { assign }, new RecordDescriptor[] { recDesc });
 
@@ -228,8 +249,8 @@ public class DatasetOperations {
         }
         fieldPermutation[numKeys] = 0;
 
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(datasetName, datasetName);
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadataProvider
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataverseName, datasetName, datasetName);
 
         FileSplit[] fs = splitsAndConstraint.first.getFileSplits();
         StringBuilder sb = new StringBuilder();

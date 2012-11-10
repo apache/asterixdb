@@ -16,7 +16,11 @@ package edu.uci.ics.asterix.feed.operator;
 
 import java.util.Map;
 
-import edu.uci.ics.asterix.external.data.adapter.api.IDatasourceReadAdapter;
+import edu.uci.ics.asterix.external.adapter.factory.IFeedDatasetAdapterFactory;
+import edu.uci.ics.asterix.external.adapter.factory.IFeedDatasetAdapterFactory.FeedAdapterType;
+import edu.uci.ics.asterix.external.adapter.factory.IGenericFeedDatasetAdapterFactory;
+import edu.uci.ics.asterix.external.adapter.factory.ITypedFeedDatasetAdapterFactory;
+import edu.uci.ics.asterix.external.dataset.adapter.IFeedDatasourceAdapter;
 import edu.uci.ics.asterix.feed.mgmt.FeedId;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -31,18 +35,18 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescr
 public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 
-    private final String adapter;
+    private final String adapterFactoryClassName;
     private final Map<String, String> adapterConfiguration;
     private final IAType atype;
     private final FeedId feedId;
 
-    private transient IDatasourceReadAdapter datasourceReadAdapter;
+    private transient IFeedDatasetAdapterFactory datasourceAdapterFactory;
 
     public FeedIntakeOperatorDescriptor(JobSpecification spec, FeedId feedId, String adapter,
             Map<String, String> arguments, ARecordType atype, RecordDescriptor rDesc) {
         super(spec, 1, 1);
         recordDescriptors[0] = rDesc;
-        this.adapter = adapter;
+        this.adapterFactoryClassName = adapter;
         this.adapterConfiguration = arguments;
         this.atype = atype;
         this.feedId = feedId;
@@ -51,15 +55,21 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
             throws HyracksDataException {
-
+        IFeedDatasourceAdapter adapter;
         try {
-            datasourceReadAdapter = (IDatasourceReadAdapter) Class.forName(adapter).newInstance();
-            datasourceReadAdapter.configure(adapterConfiguration, atype);
-            datasourceReadAdapter.initialize(ctx);
-
+            datasourceAdapterFactory = (IFeedDatasetAdapterFactory) Class.forName(adapterFactoryClassName)
+                    .newInstance();
+            if (datasourceAdapterFactory.getFeedAdapterType().equals(FeedAdapterType.GENERIC)) {
+                adapter = (IFeedDatasourceAdapter) ((IGenericFeedDatasetAdapterFactory) datasourceAdapterFactory)
+                        .createAdapter(adapterConfiguration, atype);
+            } else {
+                adapter = (IFeedDatasourceAdapter) ((ITypedFeedDatasetAdapterFactory) datasourceAdapterFactory)
+                        .createAdapter(adapterConfiguration);
+            }
+            adapter.initialize(ctx);
         } catch (Exception e) {
             throw new HyracksDataException("initialization of adapter failed", e);
         }
-        return new FeedIntakeOperatorNodePushable(feedId, datasourceReadAdapter, partition);
+        return new FeedIntakeOperatorNodePushable(feedId, adapter, partition);
     }
 }
