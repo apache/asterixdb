@@ -48,7 +48,7 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
         try {
             AMutableDuration aDuration = new AMutableDuration(0, 0);
             StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
-            charAccessor.reset(duration, 0);
+            charAccessor.reset(duration, 0, duration.length());
             ADurationParser.parse(charAccessor, aDuration);
 
             durationSerde.serialize(aDuration, out);

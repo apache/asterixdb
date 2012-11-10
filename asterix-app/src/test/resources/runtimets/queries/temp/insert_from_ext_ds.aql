@@ -13,7 +13,8 @@ create type testtype as open {
   dateField: date?,
   timeField: time?,
   datetimeField: datetime?,
-  durationField: duration?
+  durationField: duration?,
+  intervalField: interval?
 }
 
 write output to nc1:"rttest/temp_insert_from_ext_ds.adm";
@@ -23,4 +24,4 @@ using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/temporal/temporalData.json"),("format"="adm"));
 
 for $r in dataset("testds") 
-return {"date": $r.dateField, "time": $r.timeField, "datetime": $r.datetimeField, "duration": $r.durationField}
+return {"date": $r.dateField, "time": $r.timeField, "datetime": $r.datetimeField, "duration": $r.durationField, "interval": $r.intervalField }

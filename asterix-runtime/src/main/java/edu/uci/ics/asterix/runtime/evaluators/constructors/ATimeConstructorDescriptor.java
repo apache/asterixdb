@@ -84,7 +84,10 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
-                                charAccessor.reset(serString, 3, 0);
+
+                                int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
+
+                                charAccessor.reset(serString, 3, stringLength);
                                 int chrononTimeInMs = ADateAndTimeParser.parseTimePart(charAccessor);
 
                                 if (chrononTimeInMs < 0) {

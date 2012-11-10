@@ -82,7 +82,10 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
-                                charAccessor.reset(serString, 3, 0);
+
+                                int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
+
+                                charAccessor.reset(serString, 3, stringLength);
 
                                 // +1 if it is negative (-)
                                 short timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
@@ -98,7 +101,7 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
 
                                 long chrononTimeInMs = ADateAndTimeParser.parseDatePart(charAccessor, false);
 
-                                charAccessor.reset(serString, 3, timeOffset);
+                                charAccessor.reset(serString, 3 + timeOffset, stringLength - timeOffset);
 
                                 chrononTimeInMs += ADateAndTimeParser.parseTimePart(charAccessor);
 

@@ -52,7 +52,7 @@ public class ATimeSerializerDeserializer implements ISerializerDeserializer<ATim
 
         try {
             StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
-            charAccessor.reset(time, 0);
+            charAccessor.reset(time, 0, time.length());
             chrononTimeInMs = ADateAndTimeParser.parseTimePart(charAccessor);
         } catch (Exception e) {
             throw new HyracksDataException(e);

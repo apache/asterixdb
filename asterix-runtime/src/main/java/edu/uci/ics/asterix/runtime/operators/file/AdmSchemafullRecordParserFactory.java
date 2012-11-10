@@ -24,6 +24,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeseri
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ALineSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APoint3DSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
@@ -320,6 +321,22 @@ public class AdmSchemafullRecordParserFactory implements ITupleParserFactory {
                     }
                     case AdmLexerConstants.DURATION_LITERAL: {
                         parseDuration(token.image, out);
+                        break;
+                    }
+                    case AdmLexerConstants.INTERVAL_CONS: {
+                        parseConstructor(ATypeTag.INTERVAL, objectType, out);
+                        break;
+                    }
+                    case AdmLexerConstants.TIME_INTERVAL_LITERAL: {
+                        parseTimeInterval(token.image.substring(2, token.image.length() - 1), out);
+                        break;
+                    }
+                    case AdmLexerConstants.DATE_INTERVAL_LITERAL: {
+                        parseDateInterval(token.image.substring(2, token.image.length() - 1), out);
+                        break;
+                    }
+                    case AdmLexerConstants.DATETIME_INTERVAL_LITERAL: {
+                        parseDatetimeInterval(token.image.substring(2, token.image.length() - 1), out);
                         break;
                     }
                     case AdmLexerConstants.POINT_CONS: {
@@ -689,7 +706,30 @@ public class AdmSchemafullRecordParserFactory implements ITupleParserFactory {
                 } catch (HyracksDataException e) {
                     throw new AsterixException(e);
                 }
+            }
 
+            private void parseTimeInterval(String timeInterval, DataOutput out) throws AsterixException {
+                try {
+                    AIntervalSerializerDeserializer.parseTime(timeInterval, out);
+                } catch (HyracksDataException e) {
+                    throw new AsterixException(e);
+                }
+            }
+
+            private void parseDateInterval(String dateInterval, DataOutput out) throws AsterixException {
+                try {
+                    AIntervalSerializerDeserializer.parseDate(dateInterval, out);
+                } catch (HyracksDataException e) {
+                    throw new AsterixException(e);
+                }
+            }
+
+            private void parseDatetimeInterval(String datetimeInterval, DataOutput out) throws AsterixException {
+                try {
+                    AIntervalSerializerDeserializer.parseDatetime(datetimeInterval, out);
+                } catch (HyracksDataException e) {
+                    throw new AsterixException(e);
+                }
             }
 
             private IAType getComplexType(IAType aObjectType, ATypeTag tag) {

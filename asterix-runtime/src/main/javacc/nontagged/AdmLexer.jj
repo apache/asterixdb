@@ -197,6 +197,28 @@ TOKEN :
 
 <DEFAULT>
 TOKEN :
+{	<INTERVAL_CONS : ("interval")>
+}
+
+<DEFAULT>
+TOKEN :
+{	<DATE_INTERVAL_LITERAL : ("I") "(" <DATE_LITERAL> "," <DATE_LITERAL> ")" >
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<TIME_INTERVAL_LITERAL : ("I") "(" <TIME_LITERAL> "," <TIME_LITERAL> ")" >
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<DATETIME_INTERVAL_LITERAL : ("I") "(" <DATETIME_LITERAL> "," <DATETIME_LITERAL> ")" >
+}
+
+<DEFAULT>
+TOKEN :
 {
 	<#DIGIT : ["0" - "9"]>
 }

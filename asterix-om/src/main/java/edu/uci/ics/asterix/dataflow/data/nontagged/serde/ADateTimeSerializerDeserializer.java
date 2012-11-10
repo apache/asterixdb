@@ -66,7 +66,7 @@ public class ADateTimeSerializerDeserializer implements ISerializerDeserializer<
         long chrononTimeInMs = 0;
         try {
             StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
-            charAccessor.reset(datetime, 0);
+            charAccessor.reset(datetime, 0, datetime.length());
 
             // +1 if it is negative (-)
             short timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
@@ -80,7 +80,7 @@ public class ADateTimeSerializerDeserializer implements ISerializerDeserializer<
 
             chrononTimeInMs = ADateAndTimeParser.parseDatePart(charAccessor, false);
 
-            charAccessor.reset(datetime, timeOffset);
+            charAccessor.reset(datetime, timeOffset, datetime.length() - timeOffset);
 
             chrononTimeInMs += ADateAndTimeParser.parseTimePart(charAccessor);
         } catch (Exception e) {

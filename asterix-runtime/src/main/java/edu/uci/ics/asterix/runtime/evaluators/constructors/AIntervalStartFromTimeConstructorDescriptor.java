@@ -100,7 +100,11 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                             } else if (argOut0.getByteArray()[0] == SER_STRING_TYPE_TAG
                                     && argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
                                 // start time
-                                charAccessor.reset(argOut0.getByteArray(), 3, 0);
+
+                                int stringLength = (argOut0.getByteArray()[1] & 0xff << 8)
+                                        + (argOut0.getByteArray()[2] & 0xff << 0);
+
+                                charAccessor.reset(argOut0.getByteArray(), 3, stringLength);
                                 int intervalStart = ADateAndTimeParser.parseTimePart(charAccessor);
 
                                 if (intervalStart < 0) {
@@ -108,7 +112,11 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                                 }
 
                                 // duration
-                                charAccessor.reset(argOut1.getByteArray(), 3, 0);
+
+                                stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
+                                        + (argOut1.getByteArray()[2] & 0xff << 0);
+
+                                charAccessor.reset(argOut1.getByteArray(), 3, stringLength);
                                 ADurationParser.parse(charAccessor, aDuration);
 
                                 if (aDuration.getMonths() != 0) {

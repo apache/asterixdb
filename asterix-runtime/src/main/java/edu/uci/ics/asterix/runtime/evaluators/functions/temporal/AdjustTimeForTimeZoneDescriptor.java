@@ -112,7 +112,10 @@ public class AdjustTimeForTimeZoneDescriptor extends AbstractScalarFunctionDynam
                                                 + argOut1.getByteArray()[0]);
                             }
 
-                            charAccessor.reset(argOut1.getByteArray(), 3, 0);
+                            int stringLength = (argOut0.getByteArray()[1] & 0xff << 8)
+                                    + (argOut0.getByteArray()[2] & 0xff << 0);
+
+                            charAccessor.reset(argOut1.getByteArray(), 3, stringLength);
 
                             int timezone = ADateAndTimeParser.parseTimezonePart(charAccessor, 0);
 

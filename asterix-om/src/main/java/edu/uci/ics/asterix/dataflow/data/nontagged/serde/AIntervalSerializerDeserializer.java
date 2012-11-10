@@ -78,6 +78,13 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
         return data[offset + 8 * 2];
     }
 
+    /**
+     * create an interval value from two given datetime instance.
+     * 
+     * @param interval
+     * @param out
+     * @throws HyracksDataException
+     */
     public static void parseDatetime(String interval, DataOutput out) throws HyracksDataException {
         AMutableInterval aInterval = new AMutableInterval(0l, 0l, (byte) 0);
 
@@ -87,8 +94,19 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
 
             StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
 
-            //Interval Start
-            charAccessor.reset(interval, 0);
+            // Get the index for the comma
+            int commaIndex = interval.indexOf(',');
+            if (commaIndex < 0) {
+                throw new AlgebricksException("comma is missing for a string of interval");
+            }
+
+            int nonSpaceIndex = commaIndex - 1;
+            while (interval.charAt(nonSpaceIndex) == ' ') {
+                nonSpaceIndex--;
+            }
+
+            // Interval Start
+            charAccessor.reset(interval, 0, nonSpaceIndex + 1);
 
             // +1 if it is negative (-)
             short timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
@@ -102,33 +120,17 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
 
             chrononTimeInMsStart = ADateAndTimeParser.parseDatePart(charAccessor, false);
 
-            charAccessor.reset(interval, timeOffset);
+            charAccessor.reset(interval, timeOffset, nonSpaceIndex - timeOffset + 1);
 
             chrononTimeInMsStart += ADateAndTimeParser.parseTimePart(charAccessor);
 
-            //Interval End
-            charAccessor.reset(interval, 0);
-
-            // Find the comma in the expression
-            int commaSkipIndex = 0;
-            int length = charAccessor.getLength();
-            for (; length > commaSkipIndex && charAccessor.getCharAt(commaSkipIndex) != ','; commaSkipIndex++) {
+            // Interval End
+            nonSpaceIndex = commaIndex + 1;
+            while (interval.charAt(nonSpaceIndex) == ' ') {
+                nonSpaceIndex++;
             }
 
-            if (length <= commaSkipIndex) {
-                throw new AlgebricksException(errorMessage + ": comma is missing");
-            }
-            commaSkipIndex++;
-
-            // Skip any possible spaces (' ')
-            for (; length > commaSkipIndex && charAccessor.getCharAt(commaSkipIndex) != ' '; commaSkipIndex++) {
-            }
-
-            if (length <= commaSkipIndex) {
-                // TODO: Maybe remove this error and combine with the previous one
-                throw new AlgebricksException(errorMessage + ": error while skipping spaces");
-            }
-            charAccessor.reset(interval, commaSkipIndex);
+            charAccessor.reset(interval, nonSpaceIndex, interval.length() - nonSpaceIndex);
 
             // +1 if it is negative (-)
             timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
@@ -142,7 +144,7 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
 
             chrononTimeInMsEnd = ADateAndTimeParser.parseDatePart(charAccessor, false);
 
-            charAccessor.reset(interval, commaSkipIndex + timeOffset);
+            charAccessor.reset(interval, nonSpaceIndex + timeOffset, interval.length() - nonSpaceIndex - timeOffset);
 
             chrononTimeInMsEnd += ADateAndTimeParser.parseTimePart(charAccessor);
 
@@ -164,34 +166,32 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
 
             StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
 
-            //Interval Start
-            charAccessor.reset(interval, 0);
+            // Get the index for the comma
+            int commaIndex = interval.indexOf(',');
+            if (commaIndex < 0) {
+                throw new AlgebricksException("comma is missing for a string of interval");
+            }
+
+            int nonSpaceIndex = commaIndex - 1;
+            while (interval.charAt(nonSpaceIndex) == ' ') {
+                nonSpaceIndex--;
+            }
+
+            // Interval Start
+            charAccessor.reset(interval, 0, nonSpaceIndex + 1);
             chrononTimeInMsStart = ADateAndTimeParser.parseTimePart(charAccessor);
 
             if (chrononTimeInMsStart < 0) {
                 chrononTimeInMsStart += GregorianCalendarSystem.CHRONON_OF_DAY;
             }
 
-            //Interval End
-            int commaSkipIndex = 0;
-            int length = charAccessor.getLength();
-            for (; length > commaSkipIndex && charAccessor.getCharAt(commaSkipIndex) != ','; commaSkipIndex++) {
+            // Interval End
+            nonSpaceIndex = commaIndex + 1;
+            while (interval.charAt(nonSpaceIndex) == ' ') {
+                nonSpaceIndex++;
             }
 
-            if (length <= commaSkipIndex) {
-                throw new AlgebricksException(errorMessage + ": comma is missing");
-            }
-            commaSkipIndex++;
-
-            // Skip any possible spaces (' ')
-            for (; length > commaSkipIndex && charAccessor.getCharAt(commaSkipIndex) != ' '; commaSkipIndex++) {
-            }
-
-            if (length <= commaSkipIndex) {
-                // TODO: Maybe remove this error and combine with the previous one
-                throw new AlgebricksException(errorMessage + ": error while skipping spaces");
-            }
-            charAccessor.reset(interval, commaSkipIndex);
+            charAccessor.reset(interval, nonSpaceIndex, interval.length() - nonSpaceIndex);
             chrononTimeInMsEnd = ADateAndTimeParser.parseTimePart(charAccessor);
 
             if (chrononTimeInMsEnd < 0) {
@@ -216,8 +216,19 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
         try {
             StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
 
-            //Interval Start
-            charAccessor.reset(interval, 0);
+            // Get the index for the comma
+            int commaIndex = interval.indexOf(',');
+            if (commaIndex < 0) {
+                throw new AlgebricksException("comma is missing for a string of interval");
+            }
+
+            int nonSpaceIndex = commaIndex - 1;
+            while (interval.charAt(nonSpaceIndex) == ' ') {
+                nonSpaceIndex--;
+            }
+
+            // Interval Start
+            charAccessor.reset(interval, 0, nonSpaceIndex + 1);
 
             chrononTimeInMsStart = ADateAndTimeParser.parseDatePart(charAccessor, true);
 
@@ -225,26 +236,13 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
                 tempStart = 1;
             }
 
-            //Interval End
-            int commaSkipIndex = 0;
-            int length = charAccessor.getLength();
-            for (; length > commaSkipIndex && charAccessor.getCharAt(commaSkipIndex) != ','; commaSkipIndex++) {
+            // Interval End
+            nonSpaceIndex = commaIndex + 1;
+            while (interval.charAt(nonSpaceIndex) == ' ') {
+                nonSpaceIndex++;
             }
 
-            if (length <= commaSkipIndex) {
-                throw new AlgebricksException(errorMessage + ": comma is missing");
-            }
-            commaSkipIndex++;
-
-            // Skip any possible spaces (' ')
-            for (; length > commaSkipIndex && charAccessor.getCharAt(commaSkipIndex) != ' '; commaSkipIndex++) {
-            }
-
-            if (length <= commaSkipIndex) {
-                // TODO: Maybe remove this error and combine with the previous one
-                throw new AlgebricksException(errorMessage + ": error while skipping spaces");
-            }
-            charAccessor.reset(interval, commaSkipIndex);
+            charAccessor.reset(interval, nonSpaceIndex, interval.length() - nonSpaceIndex);
 
             chrononTimeInMsEnd = ADateAndTimeParser.parseDatePart(charAccessor, true);
 

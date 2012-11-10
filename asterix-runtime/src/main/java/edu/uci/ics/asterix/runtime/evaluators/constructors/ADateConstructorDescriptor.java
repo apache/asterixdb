@@ -85,7 +85,9 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                             byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
 
-                                charAccessor.reset(serString, 3, 0);
+                                int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
+
+                                charAccessor.reset(serString, 3, stringLength);
                                 long chrononTimeInMs = ADateAndTimeParser.parseDatePart(charAccessor, true);
 
                                 short temp = 0;

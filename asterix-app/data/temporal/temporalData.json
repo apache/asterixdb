@@ -1,2 +1,3 @@
-{"id": "001", "dateField": -2012-12-12, "dateFieldPlus": 0990-01-01, "timeField": 23:49:12.39Z, "timeFieldPlus": 03:23:12.2, "datetimeField": 2012-12-12T00:00:00.001, "datetimeFieldPlus": -00130810T221015398, "durationField": P20Y19DT3H74M23.34S, "durationFieldPlus": -P2MT4M300.68S}
+{"id": "001", "dateField": -2012-12-12, "dateFieldPlus": 0990-01-01, "timeField": 23:49:12.39Z, "timeFieldPlus": 03:23:12.2, "datetimeField": 2012-12-12T00:00:00.001, "datetimeFieldPlus": -00130810T221015398, "durationField": P20Y19DT3H74M23.34S, "durationFieldPlus": -P2MT4M300.68S, "intervalField": I(2012-12-12T00:00:00.001,20130810T221015398) }
 {"id": "002", "datetimeField": 19201220T232918478 }
+{"id": "003", "intervalPlus": I(19:23:32.328Z,23:20:20) }

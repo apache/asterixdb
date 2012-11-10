@@ -14,24 +14,31 @@
  */
 package edu.uci.ics.asterix.om.base.temporal;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixRuntimeException;
+
 public class StringCharSequenceAccessor implements ICharSequenceAccessor<String> {
 
     private String string;
     private int offset;
+    private int length;
 
     @Override
-    public char getCharAt(int index) {
+    public char getCharAt(int index) throws AsterixRuntimeException {
+        if (index >= length) {
+            throw new AsterixRuntimeException("String accessor is out of bound.");
+        }
         return string.charAt(index + offset);
     }
 
-    public void reset(String obj, int offset) {
-        string = obj;
+    public void reset(String obj, int offset, int len) {
+        this.string = obj;
         this.offset = offset;
+        this.length = len;
     }
 
     @Override
     public int getLength() {
-        return string.length() - offset;
+        return length;
     }
 
 }

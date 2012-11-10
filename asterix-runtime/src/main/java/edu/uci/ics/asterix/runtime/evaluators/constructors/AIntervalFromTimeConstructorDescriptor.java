@@ -96,14 +96,22 @@ public class AIntervalFromTimeConstructorDescriptor extends AbstractScalarFuncti
                             } else if (argOut0.getByteArray()[0] == SER_STRING_TYPE_TAG
                                     && argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
                                 // start date
-                                charAccessor.reset(argOut0.getByteArray(), 3, 0);
+
+                                int stringLength = (argOut0.getByteArray()[1] & 0xff << 8)
+                                        + (argOut0.getByteArray()[2] & 0xff << 0);
+
+                                charAccessor.reset(argOut0.getByteArray(), 3, stringLength);
                                 long intervalStart = ADateAndTimeParser.parseTimePart(charAccessor);
                                 if (intervalStart < 0) {
                                     intervalStart += GregorianCalendarSystem.CHRONON_OF_DAY;
                                 }
 
                                 // end date
-                                charAccessor.reset(argOut1.getByteArray(), 3, 0);
+
+                                stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
+                                        + (argOut1.getByteArray()[2] & 0xff << 0);
+
+                                charAccessor.reset(argOut1.getByteArray(), 3, stringLength);
                                 long intervalEnd = ADateAndTimeParser.parseTimePart(charAccessor);
                                 if (intervalEnd < 0) {
                                     intervalEnd += GregorianCalendarSystem.CHRONON_OF_DAY;

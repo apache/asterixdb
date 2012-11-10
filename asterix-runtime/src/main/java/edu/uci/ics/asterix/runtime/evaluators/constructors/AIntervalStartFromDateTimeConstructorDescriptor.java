@@ -99,7 +99,11 @@ public class AIntervalStartFromDateTimeConstructorDescriptor extends AbstractSca
                             } else if (argOut0.getByteArray()[0] == SER_STRING_TYPE_TAG
                                     && argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
                                 // start date
-                                charAccessor.reset(argOut0.getByteArray(), 3, 0);
+
+                                int stringLength = (argOut0.getByteArray()[1] & 0xff << 8)
+                                        + (argOut0.getByteArray()[2] & 0xff << 0);
+
+                                charAccessor.reset(argOut0.getByteArray(), 3, stringLength);
                                 // get offset for time part: +1 if it is negative (-)
                                 short timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
 
@@ -112,11 +116,15 @@ public class AIntervalStartFromDateTimeConstructorDescriptor extends AbstractSca
                                 timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11)
                                         : (short) (9);
                                 long intervalStart = ADateAndTimeParser.parseDatePart(charAccessor, false);
-                                charAccessor.reset(argOut0.getByteArray(), 3, timeOffset);
+                                charAccessor.reset(argOut0.getByteArray(), 3 + timeOffset, stringLength - timeOffset);
                                 intervalStart += ADateAndTimeParser.parseTimePart(charAccessor);
 
                                 // duration
-                                charAccessor.reset(argOut1.getByteArray(), 3, 0);
+
+                                stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
+                                        + (argOut1.getByteArray()[2] & 0xff << 0);
+
+                                charAccessor.reset(argOut1.getByteArray(), 3, stringLength);
                                 ADurationParser.parse(charAccessor, aDuration);
 
                                 long intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
