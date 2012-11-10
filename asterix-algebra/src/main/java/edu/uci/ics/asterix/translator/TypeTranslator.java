@@ -136,7 +136,6 @@ public class TypeTranslator {
 
         for (TypeSignature typeSignature : incompleteTopLevelTypeReferences.keySet()) {
             IAType t;// = typeMap.get(trefName);
-            System.out.println("METADATA MGR : " + MetadataManager.INSTANCE);
             Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, typeSignature.getNamespace(),
                     typeSignature.getName());
             if (dt == null) {
@@ -150,7 +149,6 @@ public class TypeTranslator {
         // solve remaining field type references
         for (String trefName : incompleteFieldTypes.keySet()) {
             IAType t;// = typeMap.get(trefName);
-            System.out.println("METADATA MGR : " + MetadataManager.INSTANCE);
             Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, typeDataverse, trefName);
             if (dt == null) {
                 throw new AlgebricksException("Could not resolve type " + trefName);

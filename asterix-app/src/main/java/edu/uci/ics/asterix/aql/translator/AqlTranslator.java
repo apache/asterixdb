@@ -796,12 +796,10 @@ public class AqlTranslator extends AbstractAqlTranslator {
     }
 
     private void runJob(IHyracksClientConnection hcc, Job job) throws Exception {
-        System.out.println(job.getJobSpec().toString());
         executeJobArray(hcc, new Job[] { job }, out, pdf);
     }
 
     private void runJob(IHyracksClientConnection hcc, JobSpecification spec) throws Exception {
-        System.out.println(spec.toString());
         executeJobArray(hcc, new Job[] { new Job(spec) }, out, pdf);
     }
 
