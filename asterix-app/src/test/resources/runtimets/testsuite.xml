@@ -1384,8 +1384,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-1_2">
-        <output-file compare="Text">dblp-1_2.adm</output-file>
+      <compilation-unit name="dblp-1_2.1.1">
+        <output-file compare="Text">dblp-1_2.1.1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-1_2.1">
+        <output-file compare="Text">dblp-1_2.1.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
@@ -1394,17 +1399,10 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-1_2">
-        <output-file compare="Text">dblp-1_2.adm</output-file>
+      <compilation-unit name="dblp-2.1_5.3.1">
+        <output-file compare="Text">dblp-2.1_5.3.1.adm</output-file>
       </compilation-unit>
     </test-case>
-   <!--
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-2">
-        <output-file compare="Text">dblp-2.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    -->
     <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-2_1">
         <output-file compare="Text">dblp-2_1.adm</output-file>
@@ -1413,6 +1411,11 @@
     <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-2_2">
         <output-file compare="Text">dblp-2_2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-2.2">
+        <output-file compare="Text">dblp-2.2.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
@@ -1426,8 +1429,23 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-2_5">
-        <output-file compare="Text">dblp-2_5.adm</output-file>
+      <compilation-unit name="dblp-2_5.1">
+        <output-file compare="Text">dblp-2_5.1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-2_5.2">
+        <output-file compare="Text">dblp-2_5.2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-2_5.3.1">
+        <output-file compare="Text">dblp-2_5.3.1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-2_5.3">
+        <output-file compare="Text">dblp-2_5.3.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
@@ -1436,28 +1454,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-2_5">
-        <output-file compare="Text">dblp-2_5.adm</output-file>
+      <compilation-unit name="dblp-3_1.1">
+        <output-file compare="Text">dblp-3_1.1.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-2_5">
-        <output-file compare="Text">dblp-2_5.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-2_5">
-        <output-file compare="Text">dblp-2_5.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-3_1">
-        <output-file compare="Text">dblp-3_1.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-3_1">
-        <output-file compare="Text">dblp-3_1.adm</output-file>
+      <compilation-unit name="dblp-3_1.2">
+        <output-file compare="Text">dblp-3_1.2.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
@@ -1491,23 +1494,23 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-csx-2_5">
-        <output-file compare="Text">dblp-csx-2_5.adm</output-file>
+      <compilation-unit name="dblp-csx-2_5.1">
+        <output-file compare="Text">dblp-csx-2_5.1.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-csx-2_5">
-        <output-file compare="Text">dblp-csx-2_5.adm</output-file>
+      <compilation-unit name="dblp-csx-2_5.2">
+        <output-file compare="Text">dblp-csx-2_5.2.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-csx-2_5">
-        <output-file compare="Text">dblp-csx-2_5.adm</output-file>
+      <compilation-unit name="dblp-csx-2_5.3.1">
+        <output-file compare="Text">dblp-csx-2_5.3.1.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-csx-2_5">
-        <output-file compare="Text">dblp-csx-2_5.adm</output-file>
+      <compilation-unit name="dblp-csx-2_5.3">
+        <output-file compare="Text">dblp-csx-2_5.3.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
@@ -1536,33 +1539,33 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-csx-3_5">
-        <output-file compare="Text">dblp-csx-3_5.adm</output-file>
+      <compilation-unit name="dblp-csx-3_5.1">
+        <output-file compare="Text">dblp-csx-3_5.1.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-csx-3_5">
-        <output-file compare="Text">dblp-csx-3_5.adm</output-file>
+      <compilation-unit name="dblp-csx-3_5.2">
+        <output-file compare="Text">dblp-csx-3_5.2.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-csx-3_5">
-        <output-file compare="Text">dblp-csx-3_5.adm</output-file>
+      <compilation-unit name="dblp-csx-3_5.3.1">
+        <output-file compare="Text">dblp-csx-3_5.3.1.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-csx-3_5">
-        <output-file compare="Text">dblp-csx-3_5.adm</output-file>
+      <compilation-unit name="dblp-csx-3_5.3">
+        <output-file compare="Text">dblp-csx-3_5.3.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-csx-3_5">
-        <output-file compare="Text">dblp-csx-3_5.adm</output-file>
+      <compilation-unit name="dblp-csx-3_5.4.1">
+        <output-file compare="Text">dblp-csx-3_5.4.1.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-csx-3_5">
-        <output-file compare="Text">dblp-csx-3_5.adm</output-file>
+      <compilation-unit name="dblp-csx-3_5.4">
+        <output-file compare="Text">dblp-csx-3_5.4.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
@@ -1602,113 +1605,6 @@
       </compilation-unit>
     </test-case>
     -->
-    <!--
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="events-users-aqlplus_1">
-        <output-file compare="Text">events-users-aqlplus_1.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    -->
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-int-aqlplus_1">
-        <output-file compare="Text">user-int-aqlplus_1.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-int-aqlplus_2">
-        <output-file compare="Text">user-int-aqlplus_2.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-int-aqlplus_3">
-        <output-file compare="Text">user-int-aqlplus_3.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-lot-aqlplus_1">
-        <output-file compare="Text">user-lot-aqlplus_1.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-lot-aqlplus_1">
-        <output-file compare="Text">user-lot-aqlplus_1.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-lot-aqlplus_2">
-        <output-file compare="Text">user-lot-aqlplus_2.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-lot-aqlplus_3">
-        <output-file compare="Text">user-lot-aqlplus_3.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-vis-int-3_1">
-        <output-file compare="Text">user-vis-int-3_1.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-vis-int-aqlplus_1">
-        <output-file compare="Text">user-vis-int-aqlplus_1.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-vis-int-aqlplus_2">
-        <output-file compare="Text">user-vis-int-aqlplus_2.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-vis-int-aqlplus_3">
-        <output-file compare="Text">user-vis-int-aqlplus_3.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-vis-int-vis-user-lot-aqlplus_1">
-        <output-file compare="Text">user-vis-int-vis-user-lot-aqlplus_1.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-vis-lot-3_1">
-        <output-file compare="Text">user-vis-lot-3_1.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-vis-lot-aqlplus_1">
-        <output-file compare="Text">user-vis-lot-aqlplus_1.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-vis-lot-aqlplus_2">
-        <output-file compare="Text">user-vis-lot-aqlplus_2.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-vis-lot-aqlplus_3">
-        <output-file compare="Text">user-vis-lot-aqlplus_3.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-vis-lot-aqlplus_4">
-        <output-file compare="Text">user-vis-lot-aqlplus_4.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-vis-lot-aqlplus_5">
-        <output-file compare="Text">user-vis-lot-aqlplus_5.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-vis-lot-int-aqlplus_1">
-        <output-file compare="Text">user-vis-lot-int-aqlplus_1.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="user-vis-lot-int-aqlplus_2">
-        <output-file compare="Text">user-vis-lot-int-aqlplus_2.adm</output-file>
-      </compilation-unit>
-    </test-case>
   </test-group>
   <test-group name="index-join">
     <test-case FilePath="index-join">
@@ -1727,8 +1623,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
+      <compilation-unit name="inverted-index-ngram-edit-distance-inline">
+        <output-file compare="Text">inverted-index-ngram-edit-distance-inline.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
       <compilation-unit name="inverted-index-ngram-jaccard">
         <output-file compare="Text">inverted-index-ngram-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="inverted-index-ngram-jaccard-inline">
+        <output-file compare="Text">inverted-index-ngram-jaccard-inline.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
@@ -1737,8 +1643,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
+      <compilation-unit name="inverted-index-olist-edit-distance-inline">
+        <output-file compare="Text">inverted-index-olist-edit-distance-inline.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
       <compilation-unit name="inverted-index-olist-jaccard">
         <output-file compare="Text">inverted-index-olist-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="inverted-index-olist-jaccard-inline">
+        <output-file compare="Text">inverted-index-olist-jaccard-inline.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
@@ -1747,8 +1663,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
+      <compilation-unit name="inverted-index-ulist-jaccard-inline">
+        <output-file compare="Text">inverted-index-ulist-jaccard-inline.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
       <compilation-unit name="inverted-index-word-jaccard">
         <output-file compare="Text">inverted-index-word-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="inverted-index-word-jaccard-inline">
+        <output-file compare="Text">inverted-index-word-jaccard-inline.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
@@ -1761,6 +1687,11 @@
     <test-case FilePath="index-selection">
       <compilation-unit name="btree-index-composite-key">
         <output-file compare="Text">btree-index-composite-key.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="btree-index-rewrite-multiple">
+        <output-file compare="Text">btree-index-rewrite-multiple.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
@@ -1893,6 +1824,11 @@
     <test-case FilePath="list">
       <compilation-unit name="listify_02">
         <output-file compare="Text">listify_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="listify_03">
+        <output-file compare="Text">listify_03.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="list">
@@ -2461,6 +2397,16 @@
         <output-file compare="Text">open-closed-33.adm</output-file>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-proposal02">
+        <output-file compare="Text">query-proposal02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-proposal">
+        <output-file compare="Text">query-proposal.adm</output-file>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="quantifiers">
     <test-case FilePath="quantifiers">
@@ -2758,6 +2704,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="spatial">
+      <compilation-unit name="circle_accessor">
+        <output-file compare="Text">circle_accessor.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
       <compilation-unit name="circle-intersect-circle">
         <output-file compare="Text">circle-intersect-circle.adm</output-file>
       </compilation-unit>
@@ -2765,6 +2716,11 @@
     <test-case FilePath="spatial">
       <compilation-unit name="distance-between-points">
         <output-file compare="Text">distance-between-points.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="line_accessor">
+        <output-file compare="Text">line_accessor.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="spatial">
@@ -2785,6 +2741,11 @@
     <test-case FilePath="spatial">
       <compilation-unit name="line-intersect-rectangle">
         <output-file compare="Text">line-intersect-rectangle.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="point_accessor">
+        <output-file compare="Text">point_accessor.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="spatial">
@@ -2813,6 +2774,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="spatial">
+      <compilation-unit name="polygon_accessor">
+        <output-file compare="Text">polygon_accessor.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
       <compilation-unit name="polygon-intersect-circle">
         <output-file compare="Text">polygon-intersect-circle.adm</output-file>
       </compilation-unit>
@@ -2825,6 +2791,11 @@
     <test-case FilePath="spatial">
       <compilation-unit name="polygon-intersect-rectangle">
         <output-file compare="Text">polygon-intersect-rectangle.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="rectangle_accessor">
+        <output-file compare="Text">rectangle_accessor.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="spatial">
