@@ -8,7 +8,7 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/cross-dataverse_udf20.adm";
+write output to nc1:"rttest/user-defined-functions_udf20.adm";
 
 create function test.pie(){
 3.14

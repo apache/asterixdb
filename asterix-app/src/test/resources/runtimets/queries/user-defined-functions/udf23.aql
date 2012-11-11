@@ -7,7 +7,7 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/cross-dataverse_udf23.adm";
+write output to nc1:"rttest/user-defined-functions_udf23.adm";
 
 create function test.numRows(){
 6

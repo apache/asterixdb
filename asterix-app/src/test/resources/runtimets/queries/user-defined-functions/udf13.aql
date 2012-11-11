@@ -1,5 +1,5 @@
 /*
- * Description  : Create UDF to multiply two integers
+ * Description  : Create UDF to subtract two integers
  * Expected Res : Success
  * Date         : 4th September 2012
  */
@@ -7,10 +7,10 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/cross-dataverse_udf14.adm";
+write output to nc1:"rttest/user-defined-functions_udf13.adm";
 
 create function test.foo($a,$b) {
-$a*$b
+$a - $b
 }
 
 test.foo(400,200)
