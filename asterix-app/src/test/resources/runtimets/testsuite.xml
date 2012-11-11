@@ -2714,6 +2714,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="spatial">
+      <compilation-unit name="create-rtree-index">
+        <output-file compare="Text">create-rtree-index.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
       <compilation-unit name="distance-between-points">
         <output-file compare="Text">distance-between-points.adm</output-file>
       </compilation-unit>
