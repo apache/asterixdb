@@ -29,7 +29,6 @@ import edu.uci.ics.asterix.optimizer.rules.FuzzyEqRule;
 import edu.uci.ics.asterix.optimizer.rules.FuzzyJoinRule;
 import edu.uci.ics.asterix.optimizer.rules.IfElseToSwitchCaseFunctionRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceDynamicTypeCastRule;
-import edu.uci.ics.asterix.optimizer.rules.IntroduceProjectRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceStaticTypeCastRule;
 import edu.uci.ics.asterix.optimizer.rules.LoadRecordFieldsRule;
@@ -70,6 +69,7 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroJoinInsideSubplanRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceAggregateCombinerRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceGroupByCombinerRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceGroupByForSubplanRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceProjectsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IsolateHyracksOperatorsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PullSelectOutOfEqJoin;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushAssignDownThroughProductRule;
@@ -80,7 +80,6 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushProjectDownRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectDownRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectIntoJoinRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSubplanWithAggregateDownThroughProductRule;
-import edu.uci.ics.asterix.optimizer.rules.PushAggFuncIntoStandaloneAggregateRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ReinferAllTypesRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveRedundantGroupByDecorVars;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveRedundantVariablesRule;
@@ -192,6 +191,7 @@ public final class RuleCollections {
         accessMethod.add(new IntroduceSelectAccessMethodRule());
         accessMethod.add(new IntroduceJoinAccessMethodRule());
         accessMethod.add(new IntroduceSecondaryIndexInsertDeleteRule());        
+        accessMethod.add(new RemoveUnusedAssignAndAggregateRule());
         return accessMethod;
     }
 
@@ -219,7 +219,7 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new SetClosedRecordConstructorsRule());
         physicalRewritesAllLevels.add(new PullPositionalVariableFromUnnestRule());
         //physicalRewritesAllLevels.add(new IntroduceProjectRule());
-        physicalRewritesAllLevels.add(new PushProjectDownRule());        
+        physicalRewritesAllLevels.add(new PushProjectDownRule());
         physicalRewritesAllLevels.add(new InsertProjectBeforeUnionRule());
         physicalRewritesAllLevels.add(new InlineSingleReferenceVariablesRule());
         physicalRewritesAllLevels.add(new RemoveUnusedAssignAndAggregateRule());
@@ -233,6 +233,8 @@ public final class RuleCollections {
         List<IAlgebraicRewriteRule> physicalRewritesTopLevel = new LinkedList<IAlgebraicRewriteRule>();
         physicalRewritesTopLevel.add(new PushNestedOrderByUnderPreSortedGroupByRule());
         physicalRewritesTopLevel.add(new PushLimitDownRule());
+        //physicalRewritesTopLevel.add(new IntroduceProjectsRule());
+        //physicalRewritesTopLevel.add(new SetAlgebricksPhysicalOperatorsRule());
         return physicalRewritesTopLevel;
     }
 

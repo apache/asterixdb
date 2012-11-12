@@ -383,4 +383,8 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
             throws AlgebricksException {
         throw new UnsupportedOperationException();
     }
+    
+    public Map<LogicalVariable, LogicalVariable> getVariableMapping() {
+        return variableMapping;
+    }
 }
