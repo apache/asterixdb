@@ -452,7 +452,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         // Hook up the indexed-nested loop join path with the "panic" (non indexed) nested-loop join path by putting a union all on top.
         if (panicJoinRef != null) {
+            LogicalVariable inputSearchVar = getInputSearchVar(optFuncExpr, indexSubTree);
             indexSubTreeLiveVars.addAll(surrogateSubTreePKs);
+            indexSubTreeLiveVars.add(inputSearchVar);
             List<LogicalVariable> panicPlanLiveVars = new ArrayList<LogicalVariable>();
             VariableUtilities.getLiveVariables(panicJoinRef.getValue(), panicPlanLiveVars);
             // Create variable mapping for union all operator.
@@ -516,12 +518,30 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         probeSubTree.dataset = origDataset;
         probeSubTree.recordType = origRecordType;
 
-        // Replace the variables in the join condition and the optimizable function expression
-        // based on the mapping of variables in the copied probe subtree.
+        // Copying the subtree caused all variables to be changed. However, we want to retain the original
+        // secondary search key variable through the secondary-to-primary index search plan.
+        // Here, we substitute the replacement variable for the original variable in the copied subtree (and vice versa for the original subtree).
         Map<LogicalVariable, LogicalVariable> varMapping = deepCopyVisitor.getVariableMapping();
+        LogicalVariable secondarySearchKeyVar = null;
+        for (int i = 0; i < optFuncExpr.getNumLogicalVars(); i++) {
+            LogicalVariable optFuncVar = optFuncExpr.getLogicalVar(i);
+            LogicalVariable remappedVar = varMapping.get(optFuncVar);
+            if (remappedVar != null) {
+                VariableUtilities.substituteVariablesInDescendantsAndSelf(originalProbeSubTreeRootRef.getValue(),
+                        optFuncVar, remappedVar, context);
+                VariableUtilities.substituteVariablesInDescendantsAndSelf(probeSubTree.root, remappedVar, optFuncVar,
+                        context);
+                secondarySearchKeyVar = optFuncVar;
+            }
+        }
+
+        // Replace the variables in the join condition based on the mapping of variables in the copied probe subtree.
         for (Map.Entry<LogicalVariable, LogicalVariable> varMapEntry : varMapping.entrySet()) {
+            // Ignore secondary search key var, since it should remain unchanged.
+            if (varMapEntry.getKey() == secondarySearchKeyVar) {
+                continue;
+            }
             joinCond.substituteVar(varMapEntry.getKey(), varMapEntry.getValue());
-            optFuncExpr.substituteVar(varMapEntry.getKey(), varMapEntry.getValue());
         }
         return originalProbeSubTreeRootRef;
     }
@@ -584,22 +604,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Replace the inputs of the given join op, and replace variables in its
         // condition since we deep-copied one of the scanner subtrees which
         // changed variables. 
-        // TODO: Use the variable mapping from the deepcopy visitor to do this.
         InnerJoinOperator joinOp = (InnerJoinOperator) joinRef.getValue();
-        /*
         for (Map.Entry<LogicalVariable, LogicalVariable> entry : copyVarMap.entrySet()) {
             joinOp.getCondition().getValue().substituteVar(entry.getKey(), entry.getValue());
-        }
-        */
-        
-        // Substitute vars in the join condition due to copying of the scanSubTree.
-        List<LogicalVariable> joinCondUsedVars = new ArrayList<LogicalVariable>();
-        VariableUtilities.getUsedVariables(joinOp, joinCondUsedVars);
-        for (int i = 0; i < joinCondUsedVars.size(); i++) {
-            int ix = originalLiveVars.indexOf(joinCondUsedVars.get(i));
-            if (ix >= 0) {
-                joinOp.getCondition().getValue().substituteVar(originalLiveVars.get(ix), copyLiveVars.get(ix));
-            }
         }
         joinOp.getInputs().clear();
         joinOp.getInputs().add(new MutableObject<ILogicalOperator>(scanSubTree));
