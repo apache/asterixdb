@@ -3137,6 +3137,7 @@
         <output-file compare="Text">substr01.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!-- Issue no 219
     <test-case FilePath="string">
       <compilation-unit name="substr04">
         <output-file compare="Text">substr04.adm</output-file>
@@ -3147,6 +3148,7 @@
         <output-file compare="Text">substr05.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="string">
       <compilation-unit name="substr06">
         <output-file compare="Text">substr06.adm</output-file>
@@ -3690,12 +3692,18 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf26">
         <output-file compare="Text">udf26.adm</output-file>
-        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException: unknown function test.f1@0</expected-error>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf27">
         <output-file compare="Text">udf27.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="f01">
+        <output-file compare="Text">f01.adm</output-file>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
       </compilation-unit>
     </test-case>
   </test-group>

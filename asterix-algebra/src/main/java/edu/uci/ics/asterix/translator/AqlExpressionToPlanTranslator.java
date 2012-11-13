@@ -473,7 +473,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         }
 
         if (f == null) {
-            throw new AsterixException(" Unknown function " + signature);
+            throw new AsterixException(" Unknown function " + signature.getName() + "@" + signature.getArity());
         }
 
         // Put hints into function call expr.
@@ -522,9 +522,9 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             fi = builtinAquafi;
         } else {
             fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, functionName, arity);
-            FunctionIdentifier builtinAsterixFi = AsterixBuiltinFunctions.getBuiltinFunctionIdentifier(fi);
-            if (builtinAsterixFi != null) {
-                fi = builtinAsterixFi;
+            afi = AsterixBuiltinFunctions.lookupFunction(fi);
+            if (afi == null) {
+                return null;
             }
         }
         if (AsterixBuiltinFunctions.isBuiltinAggregateFunction(fi)) {
