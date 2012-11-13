@@ -1,11 +1,11 @@
 -- SINK_WRITE  |PARTITIONED|
   -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
-      -- ASSIGN  |PARTITIONED|
-        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- UNION_ALL  |PARTITIONED|
-            -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-              -- STREAM_PROJECT  |UNPARTITIONED|
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        -- UNION_ALL  |PARTITIONED|
+          -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+            -- STREAM_PROJECT  |UNPARTITIONED|
+              -- ASSIGN  |PARTITIONED|
                 -- STREAM_SELECT  |LOCAL|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- BTREE_SEARCH  |PARTITIONED|
@@ -23,8 +23,9 @@
                                             -- DATASOURCE_SCAN  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-            -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-              -- STREAM_PROJECT  |UNPARTITIONED|
+          -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+            -- STREAM_PROJECT  |UNPARTITIONED|
+              -- ASSIGN  |PARTITIONED|
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   -- NESTED_LOOP  |PARTITIONED|
                     -- BROADCAST_EXCHANGE  |PARTITIONED|
