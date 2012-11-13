@@ -72,6 +72,7 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceGroupByForSubplanR
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceProjectsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IsolateHyracksOperatorsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PullSelectOutOfEqJoin;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushAssignBelowUnionAllRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushAssignDownThroughProductRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushDieUpRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushLimitDownRule;
@@ -196,10 +197,12 @@ public final class RuleCollections {
     }
 
     public final static List<IAlgebraicRewriteRule> buildPlanCleanupRuleCollection() {
-        List<IAlgebraicRewriteRule> planCleanupRules = new LinkedList<IAlgebraicRewriteRule>();
+        List<IAlgebraicRewriteRule> planCleanupRules = new LinkedList<IAlgebraicRewriteRule>();        
+        planCleanupRules.add(new PushAssignBelowUnionAllRule());
         planCleanupRules.add(new ExtractCommonExpressionsRule());
         planCleanupRules.add(new PushProjectDownRule());
         planCleanupRules.add(new PushSelectDownRule());
+        planCleanupRules.add(new RemoveUnusedAssignAndAggregateRule());
         return planCleanupRules;
     }
 
