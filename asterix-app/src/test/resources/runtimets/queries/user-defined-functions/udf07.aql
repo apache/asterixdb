@@ -1,5 +1,5 @@
 /*
- * Description  : Create UDF and bind its return value to a variable and return that variable
+ * Description  : Pass value of type float to UDF
  * Expected Res : Success
  * Date         : Sep 4th 2012
  */
@@ -7,11 +7,11 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/cross-dataverse_udf05.adm";
+write output to nc1:"rttest/user-defined-functions_udf07.adm";
 
 create function test.echo($a){
 $a
 }
 
-let $b:=1234
+let $b:=1234.1f
 return test.echo($b)

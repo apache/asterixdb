@@ -2714,6 +2714,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="spatial">
+      <compilation-unit name="create-rtree-index">
+        <output-file compare="Text">create-rtree-index.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
       <compilation-unit name="distance-between-points">
         <output-file compare="Text">distance-between-points.adm</output-file>
       </compilation-unit>
@@ -3132,6 +3137,7 @@
         <output-file compare="Text">substr01.adm</output-file>
       </compilation-unit>
     </test-case>
+    <!-- Issue no 219
     <test-case FilePath="string">
       <compilation-unit name="substr04">
         <output-file compare="Text">substr04.adm</output-file>
@@ -3142,6 +3148,7 @@
         <output-file compare="Text">substr05.adm</output-file>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="string">
       <compilation-unit name="substr06">
         <output-file compare="Text">substr06.adm</output-file>
@@ -3535,6 +3542,168 @@
     <test-case FilePath="cross-dataverse">
       <compilation-unit name="cross-dv19">
         <output-file compare="Text">cross-dv19.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="insert_across_dataverses">
+        <output-file compare="Text">insert_across_dataverses.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="join_across_dataverses">
+        <output-file compare="Text">join_across_dataverses.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="user-defined-functions">
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf01">
+        <output-file compare="Text">udf01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf02">
+        <output-file compare="Text">udf02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <!-- causes NPE: Issue 200
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf03">
+        <output-file compare="Text">udf03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    -->
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf04">
+        <output-file compare="Text">udf04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf05">
+        <output-file compare="Text">udf05.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf06">
+        <output-file compare="Text">udf06.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf07">
+        <output-file compare="Text">udf07.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf08">
+        <output-file compare="Text">udf08.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf09">
+        <output-file compare="Text">udf09.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf10">
+        <output-file compare="Text">udf10.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf11">
+        <output-file compare="Text">udf11.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf12">
+        <output-file compare="Text">udf12.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf13">
+        <output-file compare="Text">udf13.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf14">
+        <output-file compare="Text">udf14.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <!-- Issue 166
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf15">
+        <output-file compare="Text">udf15.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    -->
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf16">
+        <output-file compare="Text">udf16.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf17">
+        <output-file compare="Text">udf17.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf18">
+        <output-file compare="Text">udf18.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf19">
+        <output-file compare="Text">udf19.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf20">
+        <output-file compare="Text">udf20.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf21">
+        <output-file compare="Text">udf21.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf22">
+        <output-file compare="Text">udf22.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf23">
+        <output-file compare="Text">udf23.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <!-- Issue 195
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf24">
+        <output-file compare="Text">udf24.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    -->
+    <!-- Issue 218
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf25">
+        <output-file compare="Text">udf25.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    -->
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf26">
+        <output-file compare="Text">udf26.adm</output-file>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf27">
+        <output-file compare="Text">udf27.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="f01">
+        <output-file compare="Text">f01.adm</output-file>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
       </compilation-unit>
     </test-case>
   </test-group>

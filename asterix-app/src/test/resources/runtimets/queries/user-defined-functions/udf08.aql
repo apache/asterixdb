@@ -1,5 +1,5 @@
 /*
- * Description  : Pass input of type double to UDF
+ * Description  : Pass a sting as input to UDF
  * Expected Res : Success
  * Date         : 4th September 2012
  */
@@ -7,11 +7,11 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/cross-dataverse_udf06.adm";
+write output to nc1:"rttest/user-defined-functions_udf08.adm";
 
 create function test.echo($a){
 $a
 }
 
-let $b:=1234.1
-return test.echo($b)
+let $a:="This is a test string"
+return test.echo($a)

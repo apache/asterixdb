@@ -7,7 +7,7 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/cross-dataverse_udf18.adm";
+write output to nc1:"rttest/user-defined-functions_udf18.adm";
 
 create function test.fn06(){
 false
