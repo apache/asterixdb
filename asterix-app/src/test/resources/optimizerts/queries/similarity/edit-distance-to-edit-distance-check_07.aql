@@ -19,10 +19,6 @@ create type DBLPType as closed {
 
 create dataset DBLP(DBLPType) partitioned by key id;
 
-load dataset DBLP 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
-
 write output to nc1:"rttest/similarity_edit-distance-to-edit-distance-check_07.adm";
 
 // We cannot introduce edit-distance-check because the condition is >
