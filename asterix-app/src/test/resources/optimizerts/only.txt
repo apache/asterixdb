@@ -1,1 +1,0 @@
-inverted-index-join/ngram-edit-distance_04.aql
