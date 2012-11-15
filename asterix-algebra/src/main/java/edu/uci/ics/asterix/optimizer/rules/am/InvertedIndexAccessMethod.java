@@ -410,17 +410,14 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Remember the original probe subtree, and its primary-key variables,
         // so we can later retrieve the missing attributes via an equi join.
         List<LogicalVariable> originalSubTreePKs = new ArrayList<LogicalVariable>();
-        probeSubTree.getPrimaryKeyVars(originalSubTreePKs);
-        
+        // Remember the primary-keys of the new probe subtree for the top-level equi join.
+        List<LogicalVariable> surrogateSubTreePKs = new ArrayList<LogicalVariable>();
+
         // Copy probe subtree, replacing their variables with new ones. We will use the original variables
         // to stitch together a top-level equi join.
         Mutable<ILogicalOperator> originalProbeSubTreeRootRef = copyAndReinitProbeSubTree(probeSubTree, join
-                .getCondition().getValue(), optFuncExpr, context);
+                .getCondition().getValue(), optFuncExpr, originalSubTreePKs, surrogateSubTreePKs, context);
 
-        // Remember the primary-keys of the new probe subtree for the top-level equi join.
-        List<LogicalVariable> surrogateSubTreePKs = new ArrayList<LogicalVariable>();
-        probeSubTree.getPrimaryKeyVars(surrogateSubTreePKs);
-        
         // Remember original live variables from the index sub tree.
         List<LogicalVariable> indexSubTreeLiveVars = new ArrayList<LogicalVariable>();
         VariableUtilities.getLiveVariables(indexSubTree.root, indexSubTreeLiveVars);
@@ -453,7 +450,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Hook up the indexed-nested loop join path with the "panic" (non indexed) nested-loop join path by putting a union all on top.
         if (panicJoinRef != null) {
             LogicalVariable inputSearchVar = getInputSearchVar(optFuncExpr, indexSubTree);
-            indexSubTreeLiveVars.addAll(surrogateSubTreePKs);
+            indexSubTreeLiveVars.addAll(originalSubTreePKs);
             indexSubTreeLiveVars.add(inputSearchVar);
             List<LogicalVariable> panicPlanLiveVars = new ArrayList<LogicalVariable>();
             VariableUtilities.getLiveVariables(panicJoinRef.getValue(), panicPlanLiveVars);
@@ -489,15 +486,18 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         return true;
     }
-    
+
     /**
      * Copies the probeSubTree (using new variables), and reinitializes the probeSubTree to it.
      * Accordingly replaces the variables in the given joinCond, and the optFuncExpr.
      * Returns a reference to the original plan root.
      */
     private Mutable<ILogicalOperator> copyAndReinitProbeSubTree(OptimizableOperatorSubTree probeSubTree,
-            ILogicalExpression joinCond, IOptimizableFuncExpr optFuncExpr, IOptimizationContext context)
-            throws AlgebricksException {
+            ILogicalExpression joinCond, IOptimizableFuncExpr optFuncExpr, List<LogicalVariable> originalSubTreePKs,
+            List<LogicalVariable> surrogateSubTreePKs, IOptimizationContext context) throws AlgebricksException {
+
+        probeSubTree.getPrimaryKeyVars(originalSubTreePKs);
+
         // Copy probe subtree, replacing their variables with new ones. We will use the original variables
         // to stitch together a top-level equi join.
         Counter counter = new Counter(context.getVarCounter());
@@ -518,9 +518,13 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         probeSubTree.dataset = origDataset;
         probeSubTree.recordType = origRecordType;
 
+        probeSubTree.getPrimaryKeyVars(surrogateSubTreePKs);
+
         // Copying the subtree caused all variables to be changed. However, we want to retain the original
-        // secondary search key variable through the secondary-to-primary index search plan.
-        // Here, we substitute the replacement variable for the original variable in the copied subtree (and vice versa for the original subtree).
+        // secondary search key variable and the primary key variables through 
+        // the secondary-to-primary index search plan. 
+        // Here, we substitute the replacement variable for the original variable in the 
+        // copied subtree (and vice versa for the original subtree).
         Map<LogicalVariable, LogicalVariable> varMapping = deepCopyVisitor.getVariableMapping();
         LogicalVariable secondarySearchKeyVar = null;
         for (int i = 0; i < optFuncExpr.getNumLogicalVars(); i++) {
@@ -534,18 +538,28 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 secondarySearchKeyVar = optFuncVar;
             }
         }
+        // Substitute new primary key vars for the original ones, and vice versa. 
+        for (int i = 0; i < originalSubTreePKs.size(); i++) {
+            LogicalVariable originalVar = originalSubTreePKs.get(i);
+            LogicalVariable remappedVar = surrogateSubTreePKs.get(i);
+            VariableUtilities.substituteVariablesInDescendantsAndSelf(originalProbeSubTreeRootRef.getValue(),
+                    originalVar, remappedVar, context);
+            VariableUtilities.substituteVariablesInDescendantsAndSelf(probeSubTree.root, remappedVar, originalVar,
+                    context);
+        }        
 
         // Replace the variables in the join condition based on the mapping of variables in the copied probe subtree.
         for (Map.Entry<LogicalVariable, LogicalVariable> varMapEntry : varMapping.entrySet()) {
-            // Ignore secondary search key var, since it should remain unchanged.
-            if (varMapEntry.getKey() == secondarySearchKeyVar) {
+            // Ignore secondary search key var and the primary key vars, since they should remain unchanged.
+            if (varMapEntry.getKey() == secondarySearchKeyVar || originalSubTreePKs.contains(varMapEntry.getKey())) {
                 continue;
             }
             joinCond.substituteVar(varMapEntry.getKey(), varMapEntry.getValue());
         }
+        inferTypes(probeSubTreeRootRef.getValue(), context);
         return originalProbeSubTreeRootRef;
     }
-    
+
     private Mutable<ILogicalExpression> createPrimaryKeysEqJoinCondition(List<LogicalVariable> originalSubTreePKs,
             List<LogicalVariable> surrogateSubTreePKs) {
         List<Mutable<ILogicalExpression>> eqExprs = new ArrayList<Mutable<ILogicalExpression>>();
@@ -553,7 +567,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         for (int i = 0; i < numPKVars; i++) {
             List<Mutable<ILogicalExpression>> args = new ArrayList<Mutable<ILogicalExpression>>();
             args.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(surrogateSubTreePKs.get(i))));
-            args.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(originalSubTreePKs.get(i))));
+            args.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(originalSubTreePKs.get(i))));                   
             ILogicalExpression eqFunc = new ScalarFunctionCallExpression(
                     FunctionUtils.getFunctionInfo(AlgebricksBuiltinFunctions.EQ), args);
             eqExprs.add(new MutableObject<ILogicalExpression>(eqFunc));
@@ -922,9 +936,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             }
         }
     }
-    
+
     private void inferTypes(ILogicalOperator op, IOptimizationContext context) throws AlgebricksException {
-        for(Mutable<ILogicalOperator> childOpRef : op.getInputs()) {
+        for (Mutable<ILogicalOperator> childOpRef : op.getInputs()) {
             inferTypes(childOpRef.getValue(), context);
         }
         context.computeAndSetTypeEnvironmentForOperator(op);
