@@ -38,6 +38,16 @@ public class JaccardSearchModifier implements IInvertedIndexSearchModifier {
         return numQueryTokens - getOccurrenceThreshold(numQueryTokens) + 1;
     }
 
+    @Override
+    public int getNumTokensLowerBound(int numQueryTokens) {
+        return (int) Math.floor(numQueryTokens * jaccThresh);
+    }
+
+    @Override
+    public int getNumTokensUpperBound(int numQueryTokens) {
+        return (int) Math.ceil(numQueryTokens / jaccThresh);
+    }
+    
     public float getJaccThresh() {
         return jaccThresh;
     }

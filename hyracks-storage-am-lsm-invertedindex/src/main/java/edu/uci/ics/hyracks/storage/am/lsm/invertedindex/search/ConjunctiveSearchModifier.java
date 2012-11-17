@@ -33,4 +33,14 @@ public class ConjunctiveSearchModifier implements IInvertedIndexSearchModifier {
     public String toString() {
         return "Conjunctive Search Modifier";
     }
+
+    @Override
+    public int getNumTokensLowerBound(int numQueryTokens) {
+        return -1;
+    }
+
+    @Override
+    public int getNumTokensUpperBound(int numQueryTokens) {
+        return -1;
+    }
 }

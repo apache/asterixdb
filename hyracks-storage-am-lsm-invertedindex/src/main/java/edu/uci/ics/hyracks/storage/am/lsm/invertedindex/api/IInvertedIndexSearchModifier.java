@@ -20,4 +20,8 @@ public interface IInvertedIndexSearchModifier {
     public int getOccurrenceThreshold(int numQueryTokens);
 
     public int getNumPrefixLists(int numQueryTokens);
+    
+    public int getNumTokensLowerBound(int numQueryTokens);
+    
+    public int getNumTokensUpperBound(int numQueryTokens);
 }

@@ -37,6 +37,16 @@ public class EditDistanceSearchModifier implements IInvertedIndexSearchModifier 
         return numQueryTokens - getOccurrenceThreshold(numQueryTokens) + 1;
     }
 
+    @Override
+    public int getNumTokensLowerBound(int numQueryTokens) {
+        return numQueryTokens - edThresh;
+    }
+
+    @Override
+    public int getNumTokensUpperBound(int numQueryTokens) {
+        return numQueryTokens + edThresh;
+    }
+    
     public int getGramLength() {
         return gramLength;
     }
