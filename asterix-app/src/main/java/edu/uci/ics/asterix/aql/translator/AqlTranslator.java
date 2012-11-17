@@ -241,7 +241,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
                     case QUERY: {
                         executionResult.add(handleQuery(metadataProvider, (Query) stmt, hcc));
-                        metadataProvider.setWriteTransaction(false);
                         break;
                     }
 
@@ -694,14 +693,15 @@ public class AqlTranslator extends AbstractAqlTranslator {
         metadataProviderQueryCompilation.setWriterFactory(metadataProvider.getWriterFactory());
         metadataProviderQueryCompilation.setOutputFile(metadataProvider.getOutputFile());
         metadataProviderQueryCompilation.setConfig(metadataProvider.getConfig());
+        metadataProviderQueryCompilation.setWriteTransaction(metadataProvider.isWriteTransaction());
 
         sessionConfig.setGenerateJobSpec(true);
-        JobSpecification spec = APIFramework.compileQuery(declaredFunctions, metadataProvider, query,
+        JobSpecification spec = APIFramework.compileQuery(declaredFunctions, metadataProviderQueryCompilation, query,
                 reWrittenQuery.second, stmt == null ? null : stmt.getDatasetName(), sessionConfig, out, pdf, stmt);
         sessionConfig.setGenerateJobSpec(false);
 
         Pair<JobSpecification, FileSplit> compiled = new Pair<JobSpecification, FileSplit>(spec,
-                metadataProvider.getOutputFile());
+                metadataProviderQueryCompilation.getOutputFile());
         return compiled;
 
     }
@@ -746,6 +746,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
     private QueryResult handleQuery(AqlMetadataProvider metadataProvider, Query query, IHyracksClientConnection hcc)
             throws Exception {
         Pair<JobSpecification, FileSplit> compiled = rewriteCompileQuery(metadataProvider, query, null);
+        MetadataManager.INSTANCE.commitTransaction(metadataProvider.getMetadataTxnContext());
         runJob(hcc, compiled.first);
         GlobalConfig.ASTERIX_LOGGER.info(compiled.first.toJSON().toString(1));
         return new QueryResult(query, compiled.second.getLocalFile().getFile().getAbsolutePath());
