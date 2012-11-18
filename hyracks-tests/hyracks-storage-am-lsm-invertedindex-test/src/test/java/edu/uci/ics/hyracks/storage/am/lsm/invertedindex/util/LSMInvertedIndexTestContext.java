@@ -124,9 +124,14 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                         tokenCmpFactories, tokenizerFactory);
                 break;
             }
-            case ONDISK:
-            case PARTITIONED_ONDISK: {
+            case ONDISK: {
                 invIndex = InvertedIndexUtils.createOnDiskInvertedIndex(harness.getDiskBufferCache(),
+                        harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
+                        tokenCmpFactories, harness.getInvListsFileRef());
+                break;
+            }
+            case PARTITIONED_ONDISK: {
+                invIndex = InvertedIndexUtils.createPartitionedOnDiskInvertedIndex(harness.getDiskBufferCache(),
                         harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
                         tokenCmpFactories, harness.getInvListsFileRef());
                 break;

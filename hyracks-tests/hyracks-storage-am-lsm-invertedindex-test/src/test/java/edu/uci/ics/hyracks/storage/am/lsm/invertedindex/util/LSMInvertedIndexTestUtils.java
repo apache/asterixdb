@@ -414,18 +414,22 @@ public class LSMInvertedIndexTestUtils {
             Comparable tokenObj = (Comparable) tokenSerde.deserialize(dataIn);
             CheckTuple lowKey;
             if (numTokensLowerBound < 0) {
+                // Index is not partitioned, or no length filtering is possible for this search modifier.
                 lowKey = new CheckTuple(1, 1);
                 lowKey.appendField(tokenObj);
             } else {
+                // Index is length partitioned, and search modifier supports length filtering.
                 lowKey = new CheckTuple(2, 2);
                 lowKey.appendField(tokenObj);
                 lowKey.appendField(Integer.valueOf(numTokensLowerBound));
             }
             CheckTuple highKey;
             if (numTokensUpperBound < 0) {
+                // Index is not partitioned, or no length filtering is possible for this search modifier.
                 highKey = new CheckTuple(1, 1);
                 highKey.appendField(tokenObj);
             } else {
+                // Index is length partitioned, and search modifier supports length filtering.
                 highKey = new CheckTuple(2, 2);
                 highKey.appendField(tokenObj);
                 highKey.appendField(Integer.valueOf(numTokensUpperBound));
@@ -440,7 +444,6 @@ public class LSMInvertedIndexTestUtils {
                 Integer element = (Integer) checkTuple.getField(invListElementField);
                 scanCountArray[element]++;
             }
-           
         }
         
         // Run through scan count array, and see whether elements satisfy the given occurrence threshold.
