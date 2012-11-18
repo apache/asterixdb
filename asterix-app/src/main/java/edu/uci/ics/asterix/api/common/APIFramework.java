@@ -261,6 +261,7 @@ public class APIFramework {
 
         OptimizationConfUtil.getPhysicalOptimizationConfig().setFrameSize(frameSize);
         builder.setPhysicalOptimizationConfig(OptimizationConfUtil.getPhysicalOptimizationConfig());
+        
         ICompiler compiler = compilerFactory.createCompiler(plan, queryMetadataProvider, t.getVarCounter());
         if (pc.isOptimize()) {
             compiler.optimize();
@@ -297,13 +298,6 @@ public class APIFramework {
             }
         }
 
-        if (!pc.isGenerateJobSpec()) {
-            // Job spec not requested. Consider transaction against metadata
-            // committed.
-            MetadataManager.INSTANCE.commitTransaction(queryMetadataProvider.getMetadataTxnContext());
-            return null;
-        }
-
         AlgebricksPartitionConstraint clusterLocs = queryMetadataProvider.getClusterLocations();
         builder.setBinaryBooleanInspectorFactory(format.getBinaryBooleanInspectorFactory());
         builder.setBinaryIntegerInspectorFactory(format.getBinaryIntegerInspectorFactory());
@@ -320,7 +314,7 @@ public class APIFramework {
 
         JobSpecification spec = compiler.createJob(AsterixAppContextInfoImpl.INSTANCE);
         // set the job event listener
-        spec.setJobletEventListenerFactory(new JobEventListenerFactory(queryMetadataProvider.getTxnId(),
+        spec.setJobletEventListenerFactory(new JobEventListenerFactory(queryMetadataProvider.getJobTxnId(),
                 isWriteTransaction));
         if (pc.isPrintJob()) {
             switch (pdf) {

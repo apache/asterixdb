@@ -121,6 +121,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private Map<String, String> config;
     private IAWriterFactory writerFactory;
     private FileSplit outputFile;
+    private long jobTxnId;
 
     private final Dataverse defaultDataverse;
 
@@ -146,6 +147,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         this.mdTxnCtx = mdTxnCtx;
         this.defaultDataverse = defaultDataverse;
         this.stores = AsterixProperties.INSTANCE.getStores();
+    }
+    
+    public void setJobTxnId(long txnId){
+    	this.jobTxnId = txnId;
     }
 
     public Dataverse getDefaultDataverse() {
@@ -654,7 +659,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             TreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                     spec, recordDesc, appContext.getStorageManagerInterface(), appContext.getIndexRegistryProvider(),
                     splitsAndConstraint.first, typeTraits, comparatorFactories, fieldPermutation, indexOp,
-                    new BTreeDataflowHelperFactory(), null, NoOpOperationCallbackProvider.INSTANCE, mdTxnCtx.getTxnId());
+                    new BTreeDataflowHelperFactory(), null, NoOpOperationCallbackProvider.INSTANCE, jobTxnId);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad,
                     splitsAndConstraint.second);
         } catch (MetadataException me) {
@@ -812,12 +817,12 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
                     dataverseName, datasetName, indexName);
-            TreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
+            TreeIndexInsertUpdateDeleteOperatorDescriptor btreeInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                     spec, recordDesc, appContext.getStorageManagerInterface(), appContext.getIndexRegistryProvider(),
                     splitsAndConstraint.first, typeTraits, comparatorFactories, fieldPermutation, indexOp,
                     new BTreeDataflowHelperFactory(), filterFactory, NoOpOperationCallbackProvider.INSTANCE,
-                    mdTxnCtx.getTxnId());
-            return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad,
+                    jobTxnId);
+            return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeInsert,
                     splitsAndConstraint.second);
         } catch (MetadataException e) {
             throw new AlgebricksException(e);
@@ -884,15 +889,15 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     spec, recordDesc, appContext.getStorageManagerInterface(), appContext.getIndexRegistryProvider(),
                     splitsAndConstraint.first, typeTraits, comparatorFactories, fieldPermutation, indexOp,
                     new RTreeDataflowHelperFactory(valueProviderFactories), filterFactory,
-                    NoOpOperationCallbackProvider.INSTANCE, mdTxnCtx.getTxnId());
+                    NoOpOperationCallbackProvider.INSTANCE, jobTxnId);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(rtreeUpdate, splitsAndConstraint.second);
         } catch (MetadataException me) {
             throw new AlgebricksException(me);
         }
     }
 
-    public long getTxnId() {
-        return mdTxnCtx.getTxnId();
+    public long getJobTxnId() {
+        return jobTxnId;
     }
 
     public static ITreeIndexFrameFactory createBTreeNSMInteriorFrameFactory(ITypeTraits[] typeTraits) {
