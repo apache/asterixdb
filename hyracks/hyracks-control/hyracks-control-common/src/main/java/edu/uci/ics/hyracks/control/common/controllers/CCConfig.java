@@ -55,11 +55,11 @@ public class CCConfig {
     @Option(name = "-cc-root", usage = "Sets the root folder used for file operations. (default: ClusterControllerService)")
     public String ccRoot = "ClusterControllerService";
 
-    @Option(name = "-cluster-topology", usage = "Sets the XML file that defines the cluster topology. (default: null)")
+    @Option(name = "-cluster-topology", required = false, usage = "Sets the XML file that defines the cluster topology. (default: null)")
     public File clusterTopologyDefinition = null;
 
-    @Option(name = "-app-cc-main-class", usage = "Application CC Main Class")
-    public String appCCMainClass;
+    @Option(name = "-app-cc-main-class", required = false, usage = "Application CC Main Class")
+    public String appCCMainClass = null;
 
     @Argument
     @Option(name = "--", handler = StopOptionHandler.class)
