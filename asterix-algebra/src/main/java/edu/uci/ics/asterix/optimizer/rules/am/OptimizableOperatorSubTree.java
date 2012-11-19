@@ -6,7 +6,6 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -14,6 +13,7 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.optimizer.base.AnalysisUtil;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -27,8 +27,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceS
  * (select)? <-- (datasource scan)
  */
 public class OptimizableOperatorSubTree {
-    public ILogicalOperator root;
-    public Mutable<ILogicalOperator> rootRef;
+    public ILogicalOperator root = null;
+    public Mutable<ILogicalOperator> rootRef = null;
     public final List<Mutable<ILogicalOperator>> assignRefs = new ArrayList<Mutable<ILogicalOperator>>();
     public final List<AssignOperator> assigns = new ArrayList<AssignOperator>();
     public Mutable<ILogicalOperator> dataSourceScanRef = null;
@@ -38,6 +38,7 @@ public class OptimizableOperatorSubTree {
     public ARecordType recordType = null;
 
     public boolean initFromSubTree(Mutable<ILogicalOperator> subTreeOpRef) {
+        reset();
         rootRef = subTreeOpRef;
         root = subTreeOpRef.getValue();
         // Examine the op's children to match the expected patterns.
@@ -87,12 +88,13 @@ public class OptimizableOperatorSubTree {
             return false;
         }
         // Find the dataset corresponding to the datasource scan in the metadata.
-        String datasetName = AnalysisUtil.getDatasetName(dataSourceScan);
-        if (datasetName == null) {
+        Pair<String, String> datasetInfo = AnalysisUtil.getDatasetInfo(dataSourceScan);
+        String dataverseName = datasetInfo.first;
+        String datasetName = datasetInfo.second;
+        if (dataverseName == null || datasetName == null) {
             return false;
         }
-        AqlCompiledMetadataDeclarations metadata = metadataProvider.getMetadataDeclarations();
-        dataset = metadata.findDataset(datasetName);
+        dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
             throw new AlgebricksException("No metadata for dataset " + datasetName);
         }
@@ -100,7 +102,7 @@ public class OptimizableOperatorSubTree {
             return false;
         }
         // Get the record type for that dataset.
-        IAType itemType = metadata.findType(dataset.getItemTypeName());
+        IAType itemType = metadataProvider.findType(dataverseName, dataset.getItemTypeName());
         if (itemType.getTypeTag() != ATypeTag.RECORD) {
             return false;
         }
@@ -110,5 +112,16 @@ public class OptimizableOperatorSubTree {
 
     public boolean hasDataSourceScan() {
         return dataSourceScan != null;
+    }
+    
+    public void reset() {
+        root = null;
+        rootRef = null;
+        assignRefs.clear();
+        assigns.clear();
+        dataSourceScanRef = null;
+        dataSourceScan = null;
+        dataset = null;
+        recordType = null;
     }
 }

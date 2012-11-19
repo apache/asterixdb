@@ -1,6 +1,6 @@
 package edu.uci.ics.asterix.runtime.aggregates.std;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
@@ -14,7 +14,6 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 public class MaxAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-max", 1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new MaxAggregateDescriptor();
@@ -23,7 +22,7 @@ public class MaxAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.MAX;
     }
 
     @Override

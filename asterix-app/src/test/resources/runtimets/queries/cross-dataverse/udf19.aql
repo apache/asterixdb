@@ -1,0 +1,23 @@
+/*
+ * Description  : Create UDF and invoke in the WHERE clause of FLWOR expression
+ * Expected Res : Success
+ * Date         : Sep 5th 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+write output to nc1:"rttest/cross-dataverse_udf19.adm";
+
+create function test.pie(){
+3.14
+}
+
+create function test.area($radius){
+test.pie() * $radius * $radius
+}
+
+for $a in [2,4,6,8,10,12]
+where test.area($a) > 100
+return test.area($a)
+

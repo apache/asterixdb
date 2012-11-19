@@ -1,0 +1,18 @@
+/*
+ * Description  : Create UDF that returns string
+ *              : compute the string lenght of the string
+ * Expected Res : Success
+ * Date         : Sep 5th 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+write output to nc1:"rttest/cross-dataverse_udf16.adm";
+
+create function test.fn02(){
+"Welcome to the world of Asterix"
+}
+
+let $str := test.fn02()
+return string-length($str)

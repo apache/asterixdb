@@ -32,7 +32,7 @@ public class MetadataPrimaryIndexes {
     public static IMetadataIndex NODE_DATASET;
     public static IMetadataIndex NODEGROUP_DATASET;
     public static IMetadataIndex FUNCTION_DATASET;
-    
+
     public static final int METADATA_DATASET_ID = 0;
     public static final int DATAVERSE_DATASET_ID = 1;
     public static final int DATASET_DATASET_ID = 2;
@@ -41,8 +41,10 @@ public class MetadataPrimaryIndexes {
     public static final int NODE_DATASET_ID = 5;
     public static final int NODEGROUP_DATASET_ID = 6;
     public static final int FUNCTION_DATASET_ID = 7;
-    public static final int FIRST_AVAILABLE_USER_DATASET_ID = 8;
+    public static final int DATASOURCE_ADAPTER_DATASET_ID = 8;
+    public static final int FIRST_AVAILABLE_USER_DATASET_ID = 100;
 
+    public static IMetadataIndex DATASOURCE_ADAPTER_DATASET;
 
     /**
      * Create all metadata primary index descriptors. MetadataRecordTypes must
@@ -78,11 +80,13 @@ public class MetadataPrimaryIndexes {
 
         NODEGROUP_DATASET = new MetadataIndex("Nodegroup", null, 2, new IAType[] { BuiltinType.ASTRING },
                 new String[] { "GroupName" }, MetadataRecordTypes.NODEGROUP_RECORDTYPE, NODEGROUP_DATASET_ID);
-        
-        FUNCTION_DATASET = new MetadataIndex("Function", null, 4,
-				new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING,
-						BuiltinType.ASTRING }, new String[] { "DataverseName",
-                        "FunctionName", "FunctionArity" }, MetadataRecordTypes.FUNCTION_RECORDTYPE, FUNCTION_DATASET_ID);
 
+        FUNCTION_DATASET = new MetadataIndex("Function", null, 4, new IAType[] { BuiltinType.ASTRING,
+                BuiltinType.ASTRING, BuiltinType.ASTRING }, new String[] { "DataverseName", "Name", "Arity" },
+                MetadataRecordTypes.FUNCTION_RECORDTYPE, FUNCTION_DATASET_ID);
+
+        DATASOURCE_ADAPTER_DATASET = new MetadataIndex("DatasourceAdapter", null, 3, new IAType[] {
+                BuiltinType.ASTRING, BuiltinType.ASTRING }, new String[] { "DataverseName", "Name" },
+                MetadataRecordTypes.DATASOURCE_ADAPTER_RECORDTYPE, DATASOURCE_ADAPTER_DATASET_ID);
     }
 }

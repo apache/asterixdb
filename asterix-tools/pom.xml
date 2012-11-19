@@ -101,6 +101,12 @@
 	<dependencies>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
+			<artifactId>asterix-aql</artifactId>
+			<version>0.0.4-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-algebra</artifactId>
 			<version>0.0.4-SNAPSHOT</version>
 			<scope>compile</scope>

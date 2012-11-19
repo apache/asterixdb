@@ -42,7 +42,7 @@ public class ExternalDatasetDetails implements IDatasetDetails {
     private final Map<String, String> properties;
 
     private final static ARecordType externalRecordType = MetadataRecordTypes.EXTERNAL_DETAILS_RECORDTYPE;
-    private final static ARecordType propertyRecordType = MetadataRecordTypes.ADAPTER_PROPERTIES_RECORDTYPE;
+    private final static ARecordType propertyRecordType = MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE;
 
     public ExternalDatasetDetails(String adapter, Map<String, String> properties) {
         this.properties = properties;
@@ -77,7 +77,7 @@ public class ExternalDatasetDetails implements IDatasetDetails {
         fieldValue.reset();
         aString.setValue(this.getAdapter());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_ADAPTER_FIELD_INDEX, fieldValue);
+        externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_DATASOURCE_ADAPTER_FIELD_INDEX, fieldValue);
 
         // write field 1
         listBuilder.reset((AOrderedListType) externalRecordType.getFieldTypes()[1]);

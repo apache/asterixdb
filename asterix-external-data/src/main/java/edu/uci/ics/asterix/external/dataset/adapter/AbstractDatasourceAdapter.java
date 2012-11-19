@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.uci.ics.asterix.external.data.adapter.api.IDatasourceAdapter;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -35,70 +34,66 @@ import edu.uci.ics.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
  */
 public abstract class AbstractDatasourceAdapter implements IDatasourceAdapter {
 
-    private static final long serialVersionUID = -3510610289692452466L;
+	private static final long serialVersionUID = -3510610289692452466L;
 
-    protected Map<String, String> configuration;
+	protected Map<String, String> configuration;
+	protected transient AlgebricksPartitionConstraint partitionConstraint;
+	protected IAType atype;
+	protected IHyracksTaskContext ctx;
+	protected AdapterType adapterType;
+	protected boolean typeInfoRequired = false;
+	
+	
+	protected static final HashMap<ATypeTag, IValueParserFactory> typeToValueParserFactMap = new HashMap<ATypeTag, IValueParserFactory>();
+	static {
+		typeToValueParserFactMap.put(ATypeTag.INT32,
+				IntegerParserFactory.INSTANCE);
+		typeToValueParserFactMap.put(ATypeTag.FLOAT,
+				FloatParserFactory.INSTANCE);
+		typeToValueParserFactMap.put(ATypeTag.DOUBLE,
+				DoubleParserFactory.INSTANCE);
+		typeToValueParserFactMap
+				.put(ATypeTag.INT64, LongParserFactory.INSTANCE);
+		typeToValueParserFactMap.put(ATypeTag.STRING,
+				UTF8StringParserFactory.INSTANCE);
+	}
 
-    protected transient AlgebricksPartitionConstraint partitionConstraint;
+	protected static final HashMap<String, String> formatToParserFactoryMap = new HashMap<String, String>();
 
-    protected IAType atype;
+	public static final String KEY_FORMAT = "format";
+	public static final String KEY_PARSER_FACTORY = "parser";
 
-    protected IHyracksTaskContext ctx;
+	public static final String FORMAT_DELIMITED_TEXT = "delimited-text";
+	public static final String FORMAT_ADM = "adm";
 
-    protected static final HashMap<ATypeTag, IValueParserFactory> typeToValueParserFactMap = new HashMap<ATypeTag, IValueParserFactory>();
+	static {
+		formatToParserFactoryMap
+				.put(FORMAT_DELIMITED_TEXT,
+						"edu.uci.ics.asterix.runtime.operators.file.NtDelimitedDataTupleParserFactory");
+		formatToParserFactoryMap
+				.put(FORMAT_ADM,
+						"edu.uci.ics.asterix.runtime.operators.file.AdmSchemafullRecordParserFactory");
 
-    protected static final HashMap<String, String> formatToParserMap = new HashMap<String, String>();
+	}
 
-    protected static final HashMap<String, String> formatToManagedParserMap = new HashMap<String, String>();
+	public AlgebricksPartitionConstraint getPartitionConstraint() {
+		return partitionConstraint;
+	}
 
-    protected AdapterDataFlowType dataFlowType;
+	public String getAdapterProperty(String attribute) {
+		return configuration.get(attribute);
+	}
 
-    protected AdapterType adapterType;
+	public Map<String, String> getConfiguration() {
+		return configuration;
+	}
 
-    static {
-        typeToValueParserFactMap.put(ATypeTag.INT32, IntegerParserFactory.INSTANCE);
-        typeToValueParserFactMap.put(ATypeTag.FLOAT, FloatParserFactory.INSTANCE);
-        typeToValueParserFactMap.put(ATypeTag.DOUBLE, DoubleParserFactory.INSTANCE);
-        typeToValueParserFactMap.put(ATypeTag.INT64, LongParserFactory.INSTANCE);
-        typeToValueParserFactMap.put(ATypeTag.STRING, UTF8StringParserFactory.INSTANCE);
+	public void setAdapterProperty(String property, String value) {
+		configuration.put(property, value);
+	}
 
-        formatToParserMap.put("delimited-text", "edu.uci.ics.asterix.external.data.parser.DelimitedDataStreamParser");
-        formatToParserMap.put("adm", "edu.uci.ics.asterix.external.data.parser.ADMStreamParser");
-
-        formatToManagedParserMap.put("delimited-text",
-                "edu.uci.ics.asterix.external.data.parser.ManagedDelimitedDataStreamParser");
-        formatToManagedParserMap.put("adm", "edu.uci.ics.asterix.external.data.parser.ManagedAdmStreamParser");
-
-    }
-
-    public static final String KEY_FORMAT = "format";
-    public static final String KEY_PARSER = "parser";
-
-    public static final String FORMAT_DELIMITED_TEXT = "delimited-text";
-    public static final String FORMAT_ADM = "adm";
-
-    abstract public void initialize(IHyracksTaskContext ctx) throws Exception;
-
-    abstract public void configure(Map<String, String> arguments, IAType atype) throws Exception;
-
-    abstract public AdapterDataFlowType getAdapterDataFlowType();
-
-    abstract public AdapterType getAdapterType();
-
-    public AlgebricksPartitionConstraint getPartitionConstraint() {
-        return partitionConstraint;
-    }
-
-    public void setAdapterProperty(String property, String value) {
-        configuration.put(property, value);
-    }
-
-    public String getAdapterProperty(String attribute) {
-        return configuration.get(attribute);
-    }
-
-    public Map<String, String> getConfiguration() {
-        return configuration;
+	public boolean isTypeInfoRequired() {
+        return typeInfoRequired;
     }
 
 }

@@ -515,7 +515,7 @@ public class LockManager implements ILockManager {
                         "Unsupported unlock request: dataset-granule unlock is not supported");
             }
         }
-
+        
         latchLockTable();
         validateJob(txnContext);
 
@@ -660,7 +660,7 @@ public class LockManager implements ILockManager {
             trackLockRequest("Requested", RequestType.RELEASE_LOCKS, new DatasetId(0), 0, (byte) 0, txnContext,
                     dLockInfo, eLockInfo);
         }
-
+        
         JobInfo jobInfo = jobHT.get(jobId);
         if (jobInfo == null) {
             unlatchLockTable();
@@ -971,6 +971,7 @@ public class LockManager implements ILockManager {
         StringBuilder s = new StringBuilder();
         LockRequest request = new LockRequest(Thread.currentThread().getName(), requestType, datasetIdObj,
                 entityHashValue, lockMode, txnContext);
+        s.append(Thread.currentThread().getId()+":");
         s.append(msg);
         if (msg.equals("Granted")) {
             if (dLockInfo != null) {

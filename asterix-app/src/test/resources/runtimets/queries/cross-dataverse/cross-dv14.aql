@@ -1,0 +1,17 @@
+/*
+ * Description  : Create UDF and invoke UDF in return clause of FLWOR expression
+ * Expected Res : Success
+ * Date         : 31st Aug 2012
+ */
+
+drop dataverse testdv1 if exists;
+create dataverse testdv1;
+
+write output to nc1:"rttest/cross-dataverse_cross-dv14.adm";
+
+create function testdv1.fun01(){
+100
+}
+
+let $a := true
+return testdv1.fun01();

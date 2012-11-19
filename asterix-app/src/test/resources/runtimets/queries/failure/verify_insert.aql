@@ -1,0 +1,7 @@
+use dataverse test;
+
+write output to nc1:"rttest/failure_verify_insert.adm";
+
+for $c in dataset('LineID')
+order by $c.l_orderkey, $c.l_linenumber
+return $c

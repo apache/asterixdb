@@ -1,89 +1,77 @@
 package edu.uci.ics.asterix.translator;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.asterix.aql.base.Statement;
-import edu.uci.ics.asterix.aql.expression.DataverseDecl;
-import edu.uci.ics.asterix.aql.expression.SetStatement;
-import edu.uci.ics.asterix.aql.expression.TypeDecl;
-import edu.uci.ics.asterix.aql.expression.WriteStatement;
-import edu.uci.ics.asterix.metadata.MetadataException;
-import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.aql.expression.DataverseDropStatement;
+import edu.uci.ics.asterix.aql.expression.DropStatement;
+import edu.uci.ics.asterix.aql.expression.FunctionDropStatement;
+import edu.uci.ics.asterix.aql.expression.NodeGroupDropStatement;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.data.IAWriterFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
-import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
+import edu.uci.ics.asterix.metadata.entities.AsterixBuiltinArtifactMap;
+import edu.uci.ics.asterix.metadata.entities.AsterixBuiltinArtifactMap.ARTIFACT_KIND;
+import edu.uci.ics.asterix.metadata.entities.AsterixBuiltinTypeMap;
+import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public abstract class AbstractAqlTranslator {
 
-    public AqlCompiledMetadataDeclarations compileMetadata(MetadataTransactionContext mdTxnCtx,
-            List<Statement> statements, boolean online) throws AlgebricksException, MetadataException {
-        List<TypeDecl> typeDeclarations = new ArrayList<TypeDecl>();
-        Map<String, String> config = new HashMap<String, String>();
+    protected static final Map<String, BuiltinType> builtinTypeMap = AsterixBuiltinTypeMap.getBuiltinTypes();
 
-        FileSplit outputFile = null;
-        IAWriterFactory writerFactory = null;
-        String dataverseName = MetadataConstants.METADATA_DATAVERSE_NAME;
-        for (Statement stmt : statements) {
+    public void validateOperation(Dataverse dataverse, Statement stmt) throws AsterixException {
+        String dataverseName = dataverse != null ? dataverse.getDataverseName() : null;
+        if (dataverseName != null && dataverseName.equals(MetadataConstants.METADATA_DATAVERSE_NAME)) {
+
+            boolean invalidOperation = false;
+            String message = null;
             switch (stmt.getKind()) {
-                case TYPE_DECL: {
-                    typeDeclarations.add((TypeDecl) stmt);
+                case INSERT:
+                case UPDATE:
+                case DELETE:
+                    invalidOperation = true;
+                    message = " Operation  " + stmt.getKind() + " not permitted in system dataverse " + "'"
+                            + MetadataConstants.METADATA_DATAVERSE_NAME + "'";
                     break;
-                }
-                case DATAVERSE_DECL: {
-                    DataverseDecl dstmt = (DataverseDecl) stmt;
-                    dataverseName = dstmt.getDataverseName().toString();
-                    break;
-                }
-                case WRITE: {
-                    if (outputFile != null) {
-                        throw new AlgebricksException("Multiple 'write' statements.");
-                    }
-                    WriteStatement ws = (WriteStatement) stmt;
-                    File f = new File(ws.getFileName());
-                    outputFile = new FileSplit(ws.getNcName().getValue(), new FileReference(f));
-                    if (ws.getWriterClassName() != null) {
-                        try {
-                            writerFactory = (IAWriterFactory) Class.forName(ws.getWriterClassName()).newInstance();
-                        } catch (Exception e) {
-                            throw new AlgebricksException(e);
-                        }
+                case FUNCTION_DROP:
+                    FunctionSignature signature = ((FunctionDropStatement) stmt).getFunctionSignature();
+                    FunctionIdentifier fId = new FunctionIdentifier(signature.getNamespace(), signature.getName(),
+                            signature.getArity());
+                    if (dataverseName.equals(MetadataConstants.METADATA_DATAVERSE_NAME)
+                            && AsterixBuiltinArtifactMap.isSystemProtectedArtifact(ARTIFACT_KIND.FUNCTION, fId)) {
+                        invalidOperation = true;
+                        message = "Cannot drop function " + signature + " (protected by system)";
                     }
                     break;
-                }
-                case SET: {
-                    SetStatement ss = (SetStatement) stmt;
-                    String pname = ss.getPropName();
-                    String pvalue = ss.getPropValue();
-                    config.put(pname, pvalue);
+                case NODEGROUP_DROP:
+                    NodeGroupDropStatement nodeGroupDropStmt = (NodeGroupDropStatement) stmt;
+                    String nodegroupName = nodeGroupDropStmt.getNodeGroupName().getValue();
+                    if (AsterixBuiltinArtifactMap.isSystemProtectedArtifact(ARTIFACT_KIND.NODEGROUP, nodegroupName)) {
+                        message = "Cannot drop nodegroup " + nodegroupName + " (protected by system)";
+                        invalidOperation = true;
+                    }
                     break;
-                }
+                case DATAVERSE_DROP:
+                    DataverseDropStatement dvDropStmt = (DataverseDropStatement) stmt;
+                    String dvName = dvDropStmt.getDataverseName().getValue();
+                    if (dvName.equals(MetadataConstants.METADATA_DATAVERSE_NAME)) {
+                        message = "Cannot drop dataverse " + dvName + " (protected by system)";
+                        invalidOperation = true;
+                    }
+                    break;
+                case DATASET_DROP:
+                    DropStatement dropStmt = (DropStatement) stmt;
+                    String datasetName = dropStmt.getDatasetName().getValue();
+                    if (AsterixBuiltinArtifactMap.isSystemProtectedArtifact(ARTIFACT_KIND.DATASET, datasetName)) {
+                        invalidOperation = true;
+                        message = "Cannot drop dataset " + datasetName + " (protected by system)";
+                    }
+                    break;
             }
-        }
-        if (writerFactory == null) {
-            writerFactory = PrinterBasedWriterFactory.INSTANCE;
-        }
-
-        MetadataDeclTranslator metadataTranslator = new MetadataDeclTranslator(mdTxnCtx, dataverseName, outputFile,
-                writerFactory, config, typeDeclarations);
-        return metadataTranslator.computeMetadataDeclarations(online);
-    }
-
-    public void validateOperation(AqlCompiledMetadataDeclarations compiledDeclarations, Statement stmt)
-            throws AlgebricksException {
-        if (compiledDeclarations.getDataverseName() != null
-                && compiledDeclarations.getDataverseName().equals(MetadataConstants.METADATA_DATAVERSE_NAME)) {
-            if (stmt.getKind() == Statement.Kind.INSERT || stmt.getKind() == Statement.Kind.UPDATE
-                    || stmt.getKind() == Statement.Kind.DELETE) {
-                throw new AlgebricksException(" Operation  " + stmt.getKind() + " not permitted in system dataverse-"
-                        + MetadataConstants.METADATA_DATAVERSE_NAME);
+            if (invalidOperation) {
+                throw new AsterixException(message);
             }
         }
     }

@@ -8,24 +8,31 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public class TypeDecl implements Statement {
 
+    private final Identifier dataverseName;
     private final Identifier ident;
     private final TypeExpression typeDef;
     private final TypeDataGen datagenAnnotation;
     private final boolean ifNotExists;
 
-    public TypeDecl(Identifier ident, TypeExpression typeDef, TypeDataGen datagen, boolean ifNotExists) {
+    public TypeDecl(Identifier dataverseName, Identifier ident, TypeExpression typeDef, TypeDataGen datagen,
+            boolean ifNotExists) {
+        this.dataverseName = dataverseName;
         this.ident = ident;
         this.typeDef = typeDef;
         this.datagenAnnotation = datagen;
         this.ifNotExists = ifNotExists;
     }
 
-    public TypeDecl(Identifier ident, TypeExpression typeDef) {
-        this(ident, typeDef, null, false);
+    public TypeDecl(Identifier dataverse, Identifier ident, TypeExpression typeDef) {
+        this(dataverse, ident, typeDef, null, false);
     }
 
     public Identifier getIdent() {
         return ident;
+    }
+
+    public Identifier getDataverseName() {
+        return dataverseName;
     }
 
     public TypeExpression getTypeDef() {

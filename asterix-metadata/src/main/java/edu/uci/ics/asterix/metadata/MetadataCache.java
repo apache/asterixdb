@@ -20,13 +20,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
+import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 /**
  * Caches metadata entities such that the MetadataManager does not have to
@@ -44,7 +45,9 @@ public class MetadataCache {
     // Key is dataverse name.
     protected final Map<String, NodeGroup> nodeGroups = new HashMap<String, NodeGroup>();
     // Key is function Identifier . Key of value map is function name.
-    protected final Map<FunctionIdentifier, Function> functions = new HashMap<FunctionIdentifier, Function>();
+    protected final Map<FunctionSignature, Function> functions = new HashMap<FunctionSignature, Function>();
+    // Key is adapter dataverse. Key of value map is the adapter name  
+    protected final Map<String, Map<String, DatasourceAdapter>> adapters = new HashMap<String, Map<String, DatasourceAdapter>>();
 
     // Atomically executes all metadata operations in ctx's log.
     public void commit(MetadataTransactionContext ctx) {
@@ -78,10 +81,14 @@ public class MetadataCache {
                 synchronized (datasets) {
                     synchronized (datatypes) {
                         synchronized (functions) {
-                            dataverses.clear();
-                            nodeGroups.clear();
-                            datasets.clear();
-                            datatypes.clear();
+                            synchronized (adapters) {
+                                dataverses.clear();
+                                nodeGroups.clear();
+                                datasets.clear();
+                                datatypes.clear();
+                                functions.clear();
+                                adapters.clear();
+                            }
                         }
                     }
                 }
@@ -93,12 +100,11 @@ public class MetadataCache {
         synchronized (dataverses) {
             synchronized (datasets) {
                 synchronized (datatypes) {
-                    synchronized (functions) {
-                        if (!dataverses.containsKey(dataverse)) {
-                            datasets.put(dataverse.getDataverseName(), new HashMap<String, Dataset>());
-                            datatypes.put(dataverse.getDataverseName(), new HashMap<String, Datatype>());
-                            return dataverses.put(dataverse.getDataverseName(), dataverse);
-                        }
+                    if (!dataverses.containsKey(dataverse)) {
+                        datasets.put(dataverse.getDataverseName(), new HashMap<String, Dataset>());
+                        datatypes.put(dataverse.getDataverseName(), new HashMap<String, Datatype>());
+                        adapters.put(dataverse.getDataverseName(), new HashMap<String, DatasourceAdapter>());
+                        return dataverses.put(dataverse.getDataverseName(), dataverse);
                     }
                     return null;
                 }
@@ -150,6 +156,16 @@ public class MetadataCache {
                     synchronized (functions) {
                         datasets.remove(dataverse.getDataverseName());
                         datatypes.remove(dataverse.getDataverseName());
+                        adapters.remove(dataverse.getDataverseName());
+                        List<FunctionSignature> markedFunctionsForRemoval = new ArrayList<FunctionSignature>();
+                        for (FunctionSignature signature : functions.keySet()) {
+                            if (signature.getNamespace().equals(dataverse.getDataverseName())) {
+                                markedFunctionsForRemoval.add(signature);
+                            }
+                        }
+                        for (FunctionSignature signature : markedFunctionsForRemoval) {
+                            functions.remove(signature);
+                        }
                         return dataverses.remove(dataverse.getDataverseName());
                     }
                 }
@@ -215,9 +231,9 @@ public class MetadataCache {
         }
     }
 
-    public Function getFunction(String dataverse, String functionName, int arity) {
+    public Function getFunction(FunctionSignature functionSignature) {
         synchronized (functions) {
-            return functions.get(new FunctionIdentifier(dataverse, functionName, arity));
+            return functions.get(functionSignature);
         }
     }
 
@@ -268,12 +284,11 @@ public class MetadataCache {
 
     public Object addFunctionIfNotExists(Function function) {
         synchronized (functions) {
-            FunctionIdentifier fId = new FunctionIdentifier(function.getDataverseName(), function.getFunctionName(),
-                    function.getFunctionArity());
-
-            Function fun = functions.get(fId);
+            FunctionSignature signature = new FunctionSignature(function.getDataverseName(), function.getName(),
+                    function.getArity());
+            Function fun = functions.get(signature);
             if (fun == null) {
-                return functions.put(fId, function);
+                return functions.put(signature, function);
             }
             return null;
         }
@@ -281,13 +296,39 @@ public class MetadataCache {
 
     public Object dropFunction(Function function) {
         synchronized (functions) {
-            FunctionIdentifier fId = new FunctionIdentifier(function.getDataverseName(), function.getFunctionName(),
-                    function.getFunctionArity());
-            Function fun = functions.get(fId);
+            FunctionSignature signature = new FunctionSignature(function.getDataverseName(), function.getName(),
+                    function.getArity());
+            Function fun = functions.get(signature);
             if (fun == null) {
                 return null;
             }
-            return functions.remove(fId);
+            return functions.remove(signature);
+        }
+    }
+
+    public Object addAdapterIfNotExists(DatasourceAdapter adapter) {
+        synchronized (adapters) {
+            DatasourceAdapter adapterObject = adapters.get(adapter.getAdapterIdentifier().getNamespace()).get(
+                    adapter.getAdapterIdentifier().getAdapterName());
+            if (adapterObject != null) {
+                Map<String, DatasourceAdapter> adaptersInDataverse = adapters.get(adapter.getAdapterIdentifier().getNamespace());
+                if (adaptersInDataverse == null) {
+                    adaptersInDataverse = new HashMap<String, DatasourceAdapter>();
+                    adapters.put(adapter.getAdapterIdentifier().getNamespace(), adaptersInDataverse);
+                }
+                return adaptersInDataverse.put(adapter.getAdapterIdentifier().getAdapterName(), adapter);
+            }
+            return null;
+        }
+    }
+
+    public Object dropAdapter(DatasourceAdapter adapter) {
+        synchronized (adapters) {
+            Map<String, DatasourceAdapter> adaptersInDataverse = adapters.get(adapter.getAdapterIdentifier().getNamespace());
+            if (adaptersInDataverse != null) {
+                return adaptersInDataverse.remove(adapter.getAdapterIdentifier().getAdapterName());
+            }
+            return null;
         }
     }
 }

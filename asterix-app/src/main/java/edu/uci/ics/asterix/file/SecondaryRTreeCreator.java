@@ -13,7 +13,7 @@ import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
-import edu.uci.ics.asterix.translator.DmlTranslator.CompiledCreateIndexStatement;
+import edu.uci.ics.asterix.translator.CompiledStatements.CompiledCreateIndexStatement;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
@@ -71,7 +71,7 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
     }
 
     @Override
-    protected void setSecondaryRecDescAndComparators(CompiledCreateIndexStatement createIndexStmt)
+    protected void setSecondaryRecDescAndComparators(CompiledCreateIndexStatement createIndexStmt, AqlMetadataProvider metadata)
             throws AlgebricksException, AsterixException {
         List<String> secondaryKeyFields = createIndexStmt.getKeyFields();
         int numSecondaryKeys = secondaryKeyFields.size();

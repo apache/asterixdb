@@ -17,12 +17,12 @@ package edu.uci.ics.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AMutablePoint;
 import edu.uci.ics.asterix.om.base.AMutableRectangle;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.ARectangle;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -40,7 +40,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class ARectangleConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "rectangle", 1);
     private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
@@ -88,11 +87,14 @@ public class ARectangleConstructorDescriptor extends AbstractScalarFunctionDynam
                                 commaIndex = s.indexOf(',', spaceIndex + 1);
                                 aPoint[1].setValue(Double.parseDouble(s.substring(spaceIndex + 1, commaIndex)),
                                         Double.parseDouble(s.substring(commaIndex + 1, s.length())));
-                                if (aPoint[0].getX() > aPoint[1].getX() || aPoint[0].getY() > aPoint[1].getY()) {
+                                if (aPoint[0].getX() > aPoint[1].getX() && aPoint[0].getY() > aPoint[1].getY()) {
+                                    aRectangle.setValue(aPoint[1], aPoint[0]);
+                                } else if (aPoint[0].getX() < aPoint[1].getX() && aPoint[0].getY() < aPoint[1].getY()) {
+                                    aRectangle.setValue(aPoint[0], aPoint[1]);
+                                } else {
                                     throw new IllegalArgumentException(
-                                            "The low point in the rectangle cannot be larger than the high point");
+                                            "Rectangle arugment must be either (bottom left point, top right point) or (top right point, bottom left point)");
                                 }
-                                aRectangle.setValue(aPoint[0], aPoint[1]);
                                 rectangle2DSerde.serialize(aRectangle, out);
                             } else if (serString[0] == SER_NULL_TYPE_TAG)
                                 nullSerde.serialize(ANull.NULL, out);
@@ -109,7 +111,7 @@ public class ARectangleConstructorDescriptor extends AbstractScalarFunctionDynam
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.RECTANGLE_CONSTRUCTOR;
     }
 
 }

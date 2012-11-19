@@ -4,7 +4,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
@@ -21,8 +21,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "ordered-list-constructor", FunctionIdentifier.VARARGS);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new OrderedListConstructorDescriptor();
@@ -37,7 +35,7 @@ public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDyna
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR;
     }
 
     @Override

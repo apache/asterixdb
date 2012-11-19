@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
@@ -16,6 +15,7 @@ import edu.uci.ics.asterix.om.base.AInt64;
 import edu.uci.ics.asterix.om.base.AMutableDouble;
 import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -41,8 +41,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class SerializableGlobalAvgAggregateDescriptor extends AbstractSerializableAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "global-avg-serial", 1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SerializableGlobalAvgAggregateDescriptor();
@@ -51,12 +49,12 @@ public class SerializableGlobalAvgAggregateDescriptor extends AbstractSerializab
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.SERIAL_GLOBAL_AVG;
     }
 
     @Override
-    public ICopySerializableAggregateFunctionFactory createSerializableAggregateFunctionFactory(ICopyEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public ICopySerializableAggregateFunctionFactory createSerializableAggregateFunctionFactory(
+            ICopyEvaluatorFactory[] args) throws AlgebricksException {
         final ICopyEvaluatorFactory[] evals = args;
         List<IAType> unionList = new ArrayList<IAType>();
         unionList.add(BuiltinType.ANULL);
@@ -116,7 +114,7 @@ public class SerializableGlobalAvgAggregateDescriptor extends AbstractSerializab
                         inputVal.reset();
                         eval.evaluate(tuple);
                         byte[] serBytes = inputVal.getByteArray();
-                        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serBytes[0]);                        
+                        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serBytes[0]);
                         switch (typeTag) {
                             case NULL: {
                                 metNull = true;
@@ -134,7 +132,7 @@ public class SerializableGlobalAvgAggregateDescriptor extends AbstractSerializab
                                 throw new AlgebricksException("Global-Avg is not defined for values of type "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serBytes[0]));
                             }
-                        }                        
+                        }
                         int offset1 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, 0, 1, true);
                         if (offset1 == 0) // the sum is null
                             metNull = true;
@@ -176,8 +174,8 @@ public class SerializableGlobalAvgAggregateDescriptor extends AbstractSerializab
                         boolean metNull = BufferSerDeUtil.getBoolean(state, start + 16);
 
                         if (recordEval == null)
-                            recordEval = new ClosedRecordConstructorEval(recType,
-                                    new ICopyEvaluator[] { evalSum, evalCount }, avgBytes, result);
+                            recordEval = new ClosedRecordConstructorEval(recType, new ICopyEvaluator[] { evalSum,
+                                    evalCount }, avgBytes, result);
 
                         try {
                             if (globalCount == 0 || metNull) {

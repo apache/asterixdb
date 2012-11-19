@@ -27,18 +27,15 @@ public class FeedManager implements IFeedManager {
     private Map<FeedId, Set<LinkedBlockingQueue<IFeedMessage>>> outGoingMsgQueueMap = new HashMap<FeedId, Set<LinkedBlockingQueue<IFeedMessage>>>();
     private LinkedBlockingQueue<IFeedMessage> incomingMsgQueue = new LinkedBlockingQueue<IFeedMessage>();
 
-    
     @Override
     public boolean deliverMessage(FeedId feedId, IFeedMessage feedMessage) throws Exception {
         Set<LinkedBlockingQueue<IFeedMessage>> operatorQueues = outGoingMsgQueueMap.get(feedId);
-        if (operatorQueues == null) {
-            throw new IllegalArgumentException(" unknown feed id " + feedId.getDataverse() + ":" + feedId.getDataset());
+        if (operatorQueues != null) {
+            for (LinkedBlockingQueue<IFeedMessage> queue : operatorQueues) {
+                queue.put(feedMessage);
+            }
         }
-
-        for (LinkedBlockingQueue<IFeedMessage> queue : operatorQueues) {
-            queue.put(feedMessage);
-        }
-        return false;
+        return true;
     }
 
     @Override
@@ -49,7 +46,7 @@ public class FeedManager implements IFeedManager {
         }
         feedQueues.add(queue);
         outGoingMsgQueueMap.put(feedId, feedQueues);
-        
+
     }
 
     @Override

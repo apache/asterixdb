@@ -7,11 +7,13 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public class InsertStatement implements Statement {
 
-    private Identifier datasetName;
-    private Query query;
-    private int varCounter;
+    private final Identifier dataverseName;
+    private final Identifier datasetName;
+    private final Query query;
+    private final int varCounter;
 
-    public InsertStatement(Identifier datasetName, Query query, int varCounter) {
+    public InsertStatement(Identifier dataverseName, Identifier datasetName, Query query, int varCounter) {
+        this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.query = query;
         this.varCounter = varCounter;
@@ -20,6 +22,10 @@ public class InsertStatement implements Statement {
     @Override
     public Kind getKind() {
         return Kind.INSERT;
+    }
+
+    public Identifier getDataverseName() {
+        return dataverseName;
     }
 
     public Identifier getDatasetName() {

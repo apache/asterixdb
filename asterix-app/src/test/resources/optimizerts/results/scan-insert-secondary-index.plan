@@ -2,14 +2,14 @@
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     -- INDEX_INSERT_DELETE  |UNPARTITIONED|
       -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-        -- STABLE_SORT [$$12(ASC)]  |LOCAL|
+        -- STABLE_SORT [$$11(ASC)]  |LOCAL|
           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
             -- ASSIGN  |UNPARTITIONED|
               -- STREAM_PROJECT  |UNPARTITIONED|
                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
                   -- INDEX_INSERT_DELETE  |UNPARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                      -- STABLE_SORT [$$11(ASC)]  |LOCAL|
+                      -- STABLE_SORT [$$10(ASC)]  |LOCAL|
                         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
                           -- ASSIGN  |UNPARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

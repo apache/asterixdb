@@ -13,6 +13,7 @@ public class CreateIndexStatement implements Statement {
 
     private Identifier indexName;
     private boolean needToCreate = true;
+    private Identifier dataverseName;
     private Identifier datasetName;
     private List<String> fieldExprs = new ArrayList<String>();
     private IndexType indexType = IndexType.BTREE;
@@ -46,6 +47,14 @@ public class CreateIndexStatement implements Statement {
 
     public void setIndexName(Identifier indexName) {
         this.indexName = indexName;
+    }
+
+    public Identifier getDataverseName() {
+        return dataverseName;
+    }
+
+    public void setDataverseName(Identifier dataverseName) {
+        this.dataverseName = dataverseName;
     }
 
     public Identifier getDatasetName() {

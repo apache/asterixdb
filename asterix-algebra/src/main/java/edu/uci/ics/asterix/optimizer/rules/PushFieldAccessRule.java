@@ -11,7 +11,6 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import edu.uci.ics.asterix.algebra.base.AsterixOperatorAnnotations;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixRuntimeException;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
@@ -115,9 +114,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             return false;
         }
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-        AqlCompiledMetadataDeclarations metadata = mp.getMetadataDeclarations();
         AqlSourceId asid = ((IDataSource<AqlSourceId>) scan.getDataSource()).getId();
-        Dataset dataset = metadata.findDataset(asid.getDatasetName());
+        Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasetName());
         if (dataset == null) {
             throw new AlgebricksException("Dataset " + asid.getDatasetName() + " not found.");
         }
@@ -136,7 +134,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         } else {
             int pos = ((AInt32) obj).getIntegerValue();
             String tName = dataset.getItemTypeName();
-            IAType t = metadata.findType(tName);
+            IAType t = mp.findType(dataset.getDataverseName(), tName);
             if (t.getTypeTag() != ATypeTag.RECORD) {
                 return false;
             }
@@ -147,7 +145,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             fldName = rt.getFieldNames()[pos];
         }
 
-        List<Index> datasetIndexes = metadata.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
+        List<Index> datasetIndexes = mp.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
         boolean hasSecondaryIndex = false;
         for (Index index : datasetIndexes) {
             if (index.isSecondaryIndex()) {
@@ -292,8 +290,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                             IDataSource<AqlSourceId> dataSource = (IDataSource<AqlSourceId>) scan.getDataSource();
                             AqlSourceId asid = dataSource.getId();
                             AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-                            AqlCompiledMetadataDeclarations metadata = mp.getMetadataDeclarations();
-                            Dataset dataset = metadata.findDataset(asid.getDatasetName());
+                            Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasetName());
                             if (dataset == null) {
                                 throw new AlgebricksException("Dataset " + asid.getDatasetName() + " not found.");
                             }
@@ -310,7 +307,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                             } else {
                                 int pos = ((AInt32) obj).getIntegerValue();
                                 String tName = dataset.getItemTypeName();
-                                IAType t = metadata.findType(tName);
+                                IAType t = mp.findType(dataset.getDataverseName(), tName);
                                 if (t.getTypeTag() != ATypeTag.RECORD) {
                                     return false;
                                 }

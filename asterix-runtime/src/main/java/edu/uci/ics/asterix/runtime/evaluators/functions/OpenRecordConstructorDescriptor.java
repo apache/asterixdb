@@ -4,7 +4,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.builders.RecordBuilder;
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -20,8 +20,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
-    protected static final FunctionIdentifier FID_OPEN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "open-record-constructor", FunctionIdentifier.VARARGS);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new OpenRecordConstructorDescriptor();
@@ -39,7 +37,7 @@ public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynam
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID_OPEN;
+        return AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR;
     }
 
     @Override

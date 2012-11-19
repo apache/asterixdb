@@ -12,7 +12,6 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import edu.uci.ics.asterix.aql.base.Clause;
 import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.Expression.Kind;
-import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
 import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
@@ -76,28 +75,28 @@ import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.metadata.MetadataException;
-import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
-import edu.uci.ics.asterix.metadata.declared.AqlLogicalPlanAndMetadataImpl;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
 import edu.uci.ics.asterix.metadata.declared.FileSplitDataSink;
 import edu.uci.ics.asterix.metadata.declared.FileSplitSinkId;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
-import edu.uci.ics.asterix.om.functions.AsterixFunction;
 import edu.uci.ics.asterix.om.functions.AsterixFunctionInfo;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
+import edu.uci.ics.asterix.runtime.formats.FormatUtils;
+import edu.uci.ics.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
@@ -106,7 +105,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.Counter;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlanAndMetadata;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
@@ -159,59 +157,44 @@ import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator implements
         IAqlExpressionVisitor<Pair<ILogicalOperator, LogicalVariable>, Mutable<ILogicalOperator>> {
 
-    private final MetadataTransactionContext mdTxnCtx;
-    private final JobId jobId;
-    private TranslationContext context;
-    private String outputDatasetName;
-    private Statement.Kind dmlKind;
+    private final AqlMetadataProvider metadataProvider;
+    private final TranslationContext context;
+    private final String outputDatasetName;
+    private final ICompiledDmlStatement stmt;
     private static AtomicLong outputFileID = new AtomicLong(0);
     private static final String OUTPUT_FILE_PREFIX = "OUTPUT_";
-
     private static LogicalVariable METADATA_DUMMY_VAR = new LogicalVariable(-1);
 
-    public AqlExpressionToPlanTranslator(JobId jobId, MetadataTransactionContext mdTxnCtx, int currentVarCounter,
-            String outputDatasetName, Statement.Kind dmlKind) {
-        this.mdTxnCtx = mdTxnCtx;
-        this.jobId = jobId;
+    public AqlExpressionToPlanTranslator(AqlMetadataProvider metadataProvider, int currentVarCounter,
+            String outputDatasetName, ICompiledDmlStatement stmt) {
         this.context = new TranslationContext(new Counter(currentVarCounter));
         this.outputDatasetName = outputDatasetName;
-        this.dmlKind = dmlKind;
+        this.stmt = stmt;
+        this.metadataProvider = metadataProvider;
     }
 
     public int getVarCounter() {
         return context.getVarCounter();
     }
 
-    public ILogicalPlanAndMetadata translate(Query expr, AqlCompiledMetadataDeclarations compiledDeclarations)
-            throws AlgebricksException, AsterixException {
-        if (expr == null) {
-            return null;
-        }
-        if (compiledDeclarations == null) {
-            compiledDeclarations = compileMetadata(mdTxnCtx, expr.getPrologDeclList(), true);
-        }
-        if (!compiledDeclarations.isConnectedToDataverse())
-            compiledDeclarations.connectToDataverse(compiledDeclarations.getDataverseName());
-        IDataFormat format = compiledDeclarations.getFormat();
-        if (format == null) {
-            throw new AlgebricksException("Data format has not been set.");
-        }
+    public ILogicalPlan translate(Query expr) throws AlgebricksException, AsterixException {
+        IDataFormat format = FormatUtils.getDefaultFormat();
         format.registerRuntimeFunctions();
+
         Pair<ILogicalOperator, LogicalVariable> p = expr.accept(this, new MutableObject<ILogicalOperator>(
                 new EmptyTupleSourceOperator()));
 
         ArrayList<Mutable<ILogicalOperator>> globalPlanRoots = new ArrayList<Mutable<ILogicalOperator>>();
-
         boolean isTransactionalWrite = false;
         ILogicalOperator topOp = p.first;
         ProjectOperator project = (ProjectOperator) topOp;
         LogicalVariable resVar = project.getVariables().get(0);
         if (outputDatasetName == null) {
-            FileSplit outputFileSplit = compiledDeclarations.getOutputFile();
+            FileSplit outputFileSplit = metadataProvider.getOutputFile();
             if (outputFileSplit == null) {
                 outputFileSplit = getDefaultOutputFileLocation();
             }
-            compiledDeclarations.setOutputFile(outputFileSplit);
+            metadataProvider.setOutputFile(outputFileSplit);
             List<Mutable<ILogicalExpression>> writeExprList = new ArrayList<Mutable<ILogicalExpression>>(1);
             writeExprList.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(resVar)));
             FileSplitSinkId fssi = new FileSplitSinkId(outputFileSplit);
@@ -219,24 +202,13 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             topOp = new WriteOperator(writeExprList, sink);
             topOp.getInputs().add(new MutableObject<ILogicalOperator>(project));
         } else {
-            String dataVerseName = compiledDeclarations.getDataverseName();
-            Dataset dataset = compiledDeclarations.findDataset(outputDatasetName);
-            if (dataset == null) {
-                throw new AlgebricksException("Cannot find dataset " + outputDatasetName);
-            }
 
-            AqlSourceId sourceId = new AqlSourceId(dataVerseName, outputDatasetName);
-            String itemTypeName = dataset.getItemTypeName();
-            IAType itemType = compiledDeclarations.findType(itemTypeName);
-            AqlDataSource dataSource = new AqlDataSource(sourceId, dataset, itemType);
-            if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-                throw new AlgebricksException("Cannot write output to an external dataset.");
-            }
+            AqlDataSource targetDatasource = validateDatasetInfo(metadataProvider, stmt.getDataverseName(),
+                    stmt.getDatasetName());
             ArrayList<LogicalVariable> vars = new ArrayList<LogicalVariable>();
             ArrayList<Mutable<ILogicalExpression>> exprs = new ArrayList<Mutable<ILogicalExpression>>();
             List<Mutable<ILogicalExpression>> varRefsForLoading = new ArrayList<Mutable<ILogicalExpression>>();
-
-            List<String> partitionKeys = DatasetUtils.getPartitioningKeys(dataset);
+            List<String> partitionKeys = DatasetUtils.getPartitioningKeys(targetDatasource.getDataset());
             for (String keyFieldName : partitionKeys) {
                 IFunctionInfo finfoAccess = AsterixBuiltinFunctions
                         .getAsterixFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME);
@@ -256,51 +228,64 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
 
             Mutable<ILogicalExpression> varRef = new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
                     resVar));
-            ILogicalOperator load = null;
+            ILogicalOperator leafOperator = null;
 
-            switch (dmlKind) {
+            switch (stmt.getKind()) {
                 case WRITE_FROM_QUERY_RESULT: {
-                    load = new WriteResultOperator(dataSource, varRef, varRefsForLoading);
-                    load.getInputs().add(new MutableObject<ILogicalOperator>(assign));
+                    leafOperator = new WriteResultOperator(targetDatasource, varRef, varRefsForLoading);
+                    leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(assign));
                     break;
                 }
                 case INSERT: {
-                    ILogicalOperator insertOp = new InsertDeleteOperator(dataSource, varRef, varRefsForLoading,
+                    ILogicalOperator insertOp = new InsertDeleteOperator(targetDatasource, varRef, varRefsForLoading,
                             InsertDeleteOperator.Kind.INSERT);
                     insertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
-                    load = new SinkOperator();
-                    load.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
+                    leafOperator = new SinkOperator();
+                    leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
                     isTransactionalWrite = true;
                     break;
                 }
                 case DELETE: {
-                    ILogicalOperator deleteOp = new InsertDeleteOperator(dataSource, varRef, varRefsForLoading,
+                    ILogicalOperator deleteOp = new InsertDeleteOperator(targetDatasource, varRef, varRefsForLoading,
                             InsertDeleteOperator.Kind.DELETE);
                     deleteOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
-                    load = new SinkOperator();
-                    load.getInputs().add(new MutableObject<ILogicalOperator>(deleteOp));
+                    leafOperator = new SinkOperator();
+                    leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(deleteOp));
                     isTransactionalWrite = true;
                     break;
                 }
                 case BEGIN_FEED: {
-                    ILogicalOperator insertOp = new InsertDeleteOperator(dataSource, varRef, varRefsForLoading,
+                    ILogicalOperator insertOp = new InsertDeleteOperator(targetDatasource, varRef, varRefsForLoading,
                             InsertDeleteOperator.Kind.INSERT);
                     insertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
-                    load = new SinkOperator();
-                    load.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
+                    leafOperator = new SinkOperator();
+                    leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
                     isTransactionalWrite = false;
                     break;
                 }
             }
-            topOp = load;
+            topOp = leafOperator;
         }
-
         globalPlanRoots.add(new MutableObject<ILogicalOperator>(topOp));
         ILogicalPlan plan = new ALogicalPlanImpl(globalPlanRoots);
-        AqlMetadataProvider metadataProvider = new AqlMetadataProvider(jobId, isTransactionalWrite,
-                compiledDeclarations);
-        ILogicalPlanAndMetadata planAndMetadata = new AqlLogicalPlanAndMetadataImpl(plan, metadataProvider);
-        return planAndMetadata;
+        return plan;
+    }
+
+    private AqlDataSource validateDatasetInfo(AqlMetadataProvider metadataProvider, String dataverseName,
+            String datasetName) throws AlgebricksException {
+        Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
+        if (dataset == null) {
+            throw new AlgebricksException("Cannot find dataset " + datasetName + " in dataverse " + dataverseName);
+        }
+
+        AqlSourceId sourceId = new AqlSourceId(dataverseName, datasetName);
+        String itemTypeName = dataset.getItemTypeName();
+        IAType itemType = metadataProvider.findType(dataverseName, itemTypeName);
+        AqlDataSource dataSource = new AqlDataSource(sourceId, dataset, itemType);
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            throw new AlgebricksException("Cannot write output to an external dataset.");
+        }
+        return dataSource;
     }
 
     private FileSplit getDefaultOutputFileLocation() throws MetadataException {
@@ -317,7 +302,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
     public Pair<ILogicalOperator, LogicalVariable> visitForClause(ForClause fc, Mutable<ILogicalOperator> tupSource)
             throws AsterixException {
         LogicalVariable v = context.newVar(fc.getVarExpr());
-
         Expression inExpr = fc.getInExpr();
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = aqlExprToAlgExpression(inExpr, tupSource);
         ILogicalOperator returnedOp;
@@ -416,7 +400,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         AssignOperator a = new AssignOperator(v, new MutableObject<ILogicalExpression>(fldAccess));
         a.getInputs().add(p.second);
         return new Pair<ILogicalOperator, LogicalVariable>(a, v);
-
     }
 
     @Override
@@ -446,7 +429,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
     public Pair<ILogicalOperator, LogicalVariable> visitCallExpr(CallExpr fcall, Mutable<ILogicalOperator> tupSource)
             throws AsterixException {
         LogicalVariable v = context.newVar();
-        AsterixFunction fid = fcall.getIdent();
+        FunctionSignature signature = fcall.getFunctionSignature();
         List<Mutable<ILogicalExpression>> args = new ArrayList<Mutable<ILogicalExpression>>();
         Mutable<ILogicalOperator> topOp = tupSource;
 
@@ -475,20 +458,65 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             }
         }
 
-        FunctionIdentifier fi = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, fid.getFunctionName());
+        AbstractFunctionCallExpression f;
+        if ((f = lookupUserDefinedFunction(signature, args)) == null) {
+            f = lookupBuiltinFunction(signature.getName(), signature.getArity(), args);
+        }
+
+        if (f == null) {
+            throw new AsterixException(" Unknown function " + signature);
+        }
+
+        // Put hints into function call expr.
+        if (fcall.hasHints()) {
+            for (IExpressionAnnotation hint : fcall.getHints()) {
+                f.getAnnotations().put(hint, hint);
+            }
+        }
+
+        AssignOperator op = new AssignOperator(v, new MutableObject<ILogicalExpression>(f));
+        if (topOp != null) {
+            op.getInputs().add(topOp);
+        }
+
+        return new Pair<ILogicalOperator, LogicalVariable>(op, v);
+    }
+
+    private AbstractFunctionCallExpression lookupUserDefinedFunction(FunctionSignature signature,
+            List<Mutable<ILogicalExpression>> args) throws MetadataException {
+        if (signature.getNamespace() == null) {
+            return null;
+        }
+        Function function = MetadataManager.INSTANCE.getFunction(metadataProvider.getMetadataTxnContext(), signature);
+        if (function == null) {
+            return null;
+        }
+        AbstractFunctionCallExpression f = null;
+        if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
+            IFunctionInfo finfo = new AsterixFunctionInfo(signature);
+            return new ScalarFunctionCallExpression(finfo, args);
+        } else {
+            throw new MetadataException(" User defined functions written in " + function.getLanguage()
+                    + " are not supported");
+        }
+    }
+
+    private AbstractFunctionCallExpression lookupBuiltinFunction(String functionName, int arity,
+            List<Mutable<ILogicalExpression>> args) {
+        AbstractFunctionCallExpression f = null;
+        FunctionIdentifier fi = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, functionName, arity);
         AsterixFunctionInfo afi = AsterixBuiltinFunctions.lookupFunction(fi);
         FunctionIdentifier builtinAquafi = afi == null ? null : afi.getFunctionIdentifier();
 
         if (builtinAquafi != null) {
             fi = builtinAquafi;
         } else {
-            fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, fid.getFunctionName());
+            fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, functionName, arity);
             FunctionIdentifier builtinAsterixFi = AsterixBuiltinFunctions.getBuiltinFunctionIdentifier(fi);
             if (builtinAsterixFi != null) {
                 fi = builtinAsterixFi;
             }
         }
-        AbstractFunctionCallExpression f;
         if (AsterixBuiltinFunctions.isBuiltinAggregateFunction(fi)) {
             f = AsterixBuiltinFunctions.makeAggregateFunctionExpression(fi, args);
         } else if (AsterixBuiltinFunctions.isBuiltinUnnestingFunction(fi)) {
@@ -499,18 +527,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         } else {
             f = new ScalarFunctionCallExpression(FunctionUtils.getFunctionInfo(fi), args);
         }
-        // Put hints into function call expr.
-        if (fcall.hasHints()) {
-            for (IExpressionAnnotation hint : fcall.getHints()) {
-                f.getAnnotations().put(hint, hint);
-            }
-        }
-        AssignOperator op = new AssignOperator(v, new MutableObject<ILogicalExpression>(f));
-        if (topOp != null) {
-            op.getInputs().add(topOp);
-        }
-
-        return new Pair<ILogicalOperator, LogicalVariable>(op, v);
+        return f;
     }
 
     @Override

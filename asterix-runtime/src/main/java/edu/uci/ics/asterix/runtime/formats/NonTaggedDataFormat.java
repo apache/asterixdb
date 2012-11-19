@@ -39,6 +39,7 @@ import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
+import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.scalar.ScalarAvgAggregateDescriptor;
@@ -64,6 +65,11 @@ import edu.uci.ics.asterix.runtime.aggregates.std.MinAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.SumAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.stream.EmptyStreamAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.stream.NonEmptyStreamAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.CircleCenterAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.CircleRadiusAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.LineRectanglePolygonAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.PointXCoordinateAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.PointYCoordinateAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.common.CreateMBREvalFactory;
 import edu.uci.ics.asterix.runtime.evaluators.common.FieldAccessByIndexEvalFactory;
 import edu.uci.ics.asterix.runtime.evaluators.common.FunctionManagerImpl;
@@ -219,6 +225,9 @@ public class NonTaggedDataFormat implements IDataFormat {
     private static LogicalVariable METADATA_DUMMY_VAR = new LogicalVariable(-1);
 
     private static final HashMap<ATypeTag, IValueParserFactory> typeToValueParserFactMap = new HashMap<ATypeTag, IValueParserFactory>();
+
+    public static final String NON_TAGGED_DATA_FORMAT = "edu.uci.ics.asterix.runtime.formats.NonTaggedDataFormat";
+
     static {
         typeToValueParserFactMap.put(ATypeTag.INT32, IntegerParserFactory.INSTANCE);
         typeToValueParserFactMap.put(ATypeTag.FLOAT, FloatParserFactory.INSTANCE);
@@ -279,7 +288,6 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(NonEmptyStreamAggregateDescriptor.FACTORY);
         temp.add(RangeDescriptor.FACTORY);
 
-// Xiaoyu Ma add for numeric unary functions
         temp.add(NumericAbsDescriptor.FACTORY);
         temp.add(NumericCeilingDescriptor.FACTORY);
         temp.add(NumericFloorDescriptor.FACTORY);
@@ -288,21 +296,21 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(NumericRoundHalfToEven2Descriptor.FACTORY);
         // String functions
         temp.add(StringEqualDescriptor.FACTORY);
-        temp.add(StringStartWithDescrtiptor.FACTORY);    
-        temp.add(StringEndWithDescrtiptor.FACTORY);       
-        temp.add(StringMatchesDescriptor.FACTORY);    
-        temp.add(StringLowerCaseDescriptor.FACTORY);   
+        temp.add(StringStartWithDescrtiptor.FACTORY);
+        temp.add(StringEndWithDescrtiptor.FACTORY);
+        temp.add(StringMatchesDescriptor.FACTORY);
+        temp.add(StringLowerCaseDescriptor.FACTORY);
         temp.add(StringMatchesWithFlagDescriptor.FACTORY);
-        temp.add(StringReplaceDescriptor.FACTORY);      
-        temp.add(StringReplaceWithFlagsDescriptor.FACTORY);    
-        temp.add(StringLengthDescriptor.FACTORY);        
-        temp.add(Substring2Descriptor.FACTORY);    
-        temp.add(SubstringBeforeDescriptor.FACTORY); 
-        temp.add(SubstringAfterDescriptor.FACTORY); 
-        temp.add(StringToCodePointDescriptor.FACTORY);         
-        temp.add(CodePointToStringDescriptor.FACTORY); 
-        temp.add(StringConcatDescriptor.FACTORY);         
-        temp.add(StringJoinDescriptor.FACTORY);      
+        temp.add(StringReplaceDescriptor.FACTORY);
+        temp.add(StringReplaceWithFlagsDescriptor.FACTORY);
+        temp.add(StringLengthDescriptor.FACTORY);
+        temp.add(Substring2Descriptor.FACTORY);
+        temp.add(SubstringBeforeDescriptor.FACTORY);
+        temp.add(SubstringAfterDescriptor.FACTORY);
+        temp.add(StringToCodePointDescriptor.FACTORY);
+        temp.add(CodePointToStringDescriptor.FACTORY);
+        temp.add(StringConcatDescriptor.FACTORY);
+        temp.add(StringJoinDescriptor.FACTORY);
 
         // aggregates
         temp.add(ListifyAggregateDescriptor.FACTORY);
@@ -331,7 +339,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(ScalarSumAggregateDescriptor.FACTORY);
         temp.add(ScalarMaxAggregateDescriptor.FACTORY);
         temp.add(ScalarMinAggregateDescriptor.FACTORY);
-        
+
         // new functions - constructors
         temp.add(ABooleanConstructorDescriptor.FACTORY);
         temp.add(ANullConstructorDescriptor.FACTORY);
@@ -364,6 +372,11 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(SpatialIntersectDescriptor.FACTORY);
         temp.add(CreateMBRDescriptor.FACTORY);
         temp.add(SpatialCellDescriptor.FACTORY);
+        temp.add(PointXCoordinateAccessor.FACTORY);
+        temp.add(PointYCoordinateAccessor.FACTORY);
+        temp.add(CircleRadiusAccessor.FACTORY);
+        temp.add(CircleCenterAccessor.FACTORY);
+        temp.add(LineRectanglePolygonAccessor.FACTORY);
 
         // fuzzyjoin function
         temp.add(FuzzyEqDescriptor.FACTORY);
@@ -540,7 +553,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         typeInference(expr, fd, context);
         return fd;
     }
-    
+
     private void typeInference(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
             throws AlgebricksException {
         if (fd.getIdentifier().equals(AsterixBuiltinFunctions.LISTIFY)) {
@@ -549,6 +562,10 @@ public class NonTaggedDataFormat implements IDataFormat {
                 ((ListifyAggregateDescriptor) fd).reset(new AOrderedListType(null, null));
             } else {
                 IAType itemType = (IAType) context.getType(f.getArguments().get(0).getValue());
+                // Convert UNION types into ANY.
+                if (itemType instanceof AUnionType) {
+                    itemType = BuiltinType.ANY;
+                }
                 ((ListifyAggregateDescriptor) fd).reset(new AOrderedListType(itemType, null));
             }
         }

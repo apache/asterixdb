@@ -7,36 +7,25 @@ import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.functions.AsterixFunction;
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
 
 public class FunctionDecl implements Statement {
-    private AsterixFunction ident;
+    private FunctionSignature signature;
     private List<VarIdentifier> paramList;
     private Expression funcBody;
 
-    public FunctionDecl() {
-    }
-
-    public FunctionDecl(AsterixFunction ident, List<VarIdentifier> paramList, Expression funcBody) {
-        this.ident = ident;
+    public FunctionDecl(FunctionSignature signature, List<VarIdentifier> paramList, Expression funcBody) {
+        this.signature = signature;
         this.paramList = paramList;
         this.funcBody = funcBody;
     }
 
-    public AsterixFunction getIdent() {
-        return ident;
-    }
-
-    public void setIdent(AsterixFunction ident) {
-        this.ident = ident;
+    public FunctionSignature getSignature() {
+        return signature;
     }
 
     public List<VarIdentifier> getParamList() {
         return paramList;
-    }
-
-    public void setParamList(List<VarIdentifier> paramList) {
-        this.paramList = paramList;
     }
 
     public Expression getFuncBody() {
@@ -45,6 +34,24 @@ public class FunctionDecl implements Statement {
 
     public void setFuncBody(Expression funcBody) {
         this.funcBody = funcBody;
+    }
+
+    public void setSignature(FunctionSignature signature) {
+        this.signature = signature;
+    }
+
+    public void setParamList(List<VarIdentifier> paramList) {
+        this.paramList = paramList;
+    }
+
+    @Override
+    public int hashCode() {
+        return signature.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return (o instanceof FunctionDecl && ((FunctionDecl) o).getSignature().equals(signature));
     }
 
     @Override

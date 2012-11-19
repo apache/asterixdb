@@ -16,6 +16,9 @@ package edu.uci.ics.asterix.runtime.util;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -41,4 +44,13 @@ public class AsterixRuntimeUtil {
         return nodeControllersAtLocation;
     }
 
+    public static List<String> getAllNodeControllers() {
+
+        Collection<Set<String>> nodeControllersCollection = AsterixAppContextInfoImpl.getNodeControllerMap().values();
+        List<String> nodeControllers = new ArrayList<String>();
+        for (Set<String> ncCollection : nodeControllersCollection) {
+            nodeControllers.addAll(ncCollection);
+        }
+        return nodeControllers;
+    }
 }

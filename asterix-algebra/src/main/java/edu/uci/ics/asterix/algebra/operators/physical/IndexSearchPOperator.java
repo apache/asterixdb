@@ -23,8 +23,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralProperti
  */
 public abstract class IndexSearchPOperator extends AbstractScanPOperator {
 
-    private final IDataSourceIndex<String, AqlSourceId> idx;
-    private final boolean requiresBroadcast;
+    protected final IDataSourceIndex<String, AqlSourceId> idx;
+    protected final boolean requiresBroadcast;
 
     public IndexSearchPOperator(IDataSourceIndex<String, AqlSourceId> idx, boolean requiresBroadcast) {
         this.idx = idx;

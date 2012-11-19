@@ -54,8 +54,12 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
         // Gather assigns below this select.
         List<AssignOperator> assigns = new ArrayList<AssignOperator>();
         AbstractLogicalOperator childOp = (AbstractLogicalOperator) select.getInputs().get(0).getValue();
+        // Skip selects.
+        while (childOp.getOperatorTag() == LogicalOperatorTag.SELECT) {
+            childOp = (AbstractLogicalOperator) childOp.getInputs().get(0).getValue();
+        }
         while (childOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-        	assigns.add((AssignOperator) childOp);
+            assigns.add((AssignOperator) childOp);
         	childOp = (AbstractLogicalOperator) childOp.getInputs().get(0).getValue();
         }
         return replaceSelectConditionExprs(condExpr, assigns, context);

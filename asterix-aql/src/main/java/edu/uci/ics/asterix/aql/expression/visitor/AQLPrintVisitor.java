@@ -33,6 +33,7 @@ import edu.uci.ics.asterix.aql.expression.IfExpr;
 import edu.uci.ics.asterix.aql.expression.IndexAccessor;
 import edu.uci.ics.asterix.aql.expression.IndexDropStatement;
 import edu.uci.ics.asterix.aql.expression.InsertStatement;
+import edu.uci.ics.asterix.aql.expression.InternalDetailsDecl;
 import edu.uci.ics.asterix.aql.expression.LetClause;
 import edu.uci.ics.asterix.aql.expression.LimitClause;
 import edu.uci.ics.asterix.aql.expression.ListConstructor;
@@ -67,7 +68,6 @@ import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.aql.expression.InternalDetailsDecl;
 
 public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
     // private int level =0;
@@ -90,9 +90,6 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
 
     @Override
     public void visit(Query q, Integer step) throws AsterixException {
-        for (Statement d : q.getPrologDeclList()) {
-            d.accept(this, step);
-        }
         if (q.getBody() != null) {
             out.println("Query:");
             q.getBody().accept(this, step);
@@ -103,7 +100,7 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
 
     @Override
     public void visit(LiteralExpr l, Integer step) {
-    	Literal lc = l.getValue();
+        Literal lc = l.getValue();
         if (lc.getLiteralType().equals(Literal.Type.TRUE) || lc.getLiteralType().equals(Literal.Type.FALSE)
                 || lc.getLiteralType().equals(Literal.Type.NULL)) {
             out.println(skip(step) + "LiteralExpr [" + l.getValue().getLiteralType() + "]");
@@ -148,7 +145,7 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
 
     @Override
     public void visit(CallExpr pf, Integer step) throws AsterixException {
-        out.println(skip(step) + "FunctionCall " + pf.getIdent().toString() + "[");
+        out.println(skip(step) + "FunctionCall " + pf.getFunctionSignature().toString() + "[");
         for (Expression expr : pf.getExprList()) {
             expr.accept(this, step + 1);
         }
@@ -294,7 +291,7 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
 
     @Override
     public void visit(FunctionDecl fd, Integer step) throws AsterixException {
-        out.println(skip(step) + "FunctionDecl " + fd.getIdent().getFunctionName() + "(" + fd.getParamList().toString()
+        out.println(skip(step) + "FunctionDecl " + fd.getSignature().getName() + "(" + fd.getParamList().toString()
                 + ") {");
         fd.getFuncBody().accept(this, step + 1);
         out.println(skip(step) + "}");
@@ -522,19 +519,19 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
     @Override
     public void visit(CreateFunctionStatement cfs, Integer arg) throws AsterixException {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void visit(FunctionDropStatement fds, Integer arg) throws AsterixException {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void visit(BeginFeedStatement stmtDel, Integer arg) throws AsterixException {
         // TODO Auto-generated method stub
-        
+
     }
 
 }

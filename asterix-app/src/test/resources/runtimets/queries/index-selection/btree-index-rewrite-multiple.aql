@@ -1,0 +1,48 @@
+/*
+ * Description     : Test that multiple subtrees in the same query
+ *                   can be rewritten with secondary BTree indexes.
+ *                   Guards against regression to issue 204.
+ * Expected Result : Success
+ * Issue           : Issue 204
+ */
+ 
+drop dataverse tpch if exists;
+create dataverse tpch;
+use dataverse tpch;
+
+create type OrderType as open {
+  o_orderkey: int32, 
+  o_custkey: int32, 
+  o_orderstatus: string, 
+  o_totalprice: double, 
+  o_orderdate: string, 
+  o_orderpriority: string,
+  o_clerk: string, 
+  o_shippriority: int32, 
+  o_comment: string
+}
+
+create dataset Orders(OrderType) partitioned by key o_orderkey;
+
+load dataset Orders 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+create index idx_Orders_Custkey on Orders(o_custkey);
+
+write output to nc1:"rttest/index-selection_btree-index-rewrite-multiple.adm";
+
+for $o in dataset('Orders')
+for $o2 in dataset('Orders')
+where $o.o_custkey = 20 and $o2.o_custkey = 10
+and $o.o_orderstatus < $o2.o_orderstatus
+order by $o.o_orderkey, $o2.o_orderkey
+return {
+  "o_orderkey": $o.o_orderkey,
+  "o_custkey": $o.o_custkey,
+  "o_orderstatus": $o.o_orderstatus,
+  "o_orderkey2": $o2.o_orderkey,
+  "o_custkey2": $o2.o_custkey,
+  "o_orderstatus2": $o2.o_orderstatus
+}
+ 

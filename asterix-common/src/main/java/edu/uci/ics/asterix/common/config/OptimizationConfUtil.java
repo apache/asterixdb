@@ -1,6 +1,6 @@
 package edu.uci.ics.asterix.common.config;
 
-import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig; 
+import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 
 public class OptimizationConfUtil {
 

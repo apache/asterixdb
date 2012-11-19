@@ -36,6 +36,9 @@ public class IndexOperationTracker implements ILSMOperationTracker {
 
     public IndexOperationTracker(ILSMIndex index, ILSMIOOperationCallbackFactory ioOpCallbackFactory) {
         this.index = index;
+        //TODO 
+        //This code is added to avoid NullPointException when the index's comparatorFactory is null.
+        //The null comparator factory is set in the constructor of the IndexDropOperatorDescriptor.
         accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
         if (ioOpCallbackFactory != null) {

@@ -58,6 +58,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAStringTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalATimeTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListConstructorResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAInt32TypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAPointTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAStringTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAnyTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.QuadStringStringOrNullTypeComputer;
@@ -93,7 +94,7 @@ public class AsterixBuiltinFunctions {
         SI
     }
 
-    private final static Map<FunctionIdentifier, IFunctionInfo> asterixFunctionIdToInfo = new HashMap<FunctionIdentifier, IFunctionInfo>();
+    private static final FunctionInfoRepository finfoRepo = new FunctionInfoRepository();
 
     // it is supposed to be an identity mapping
     private final static Map<IFunctionInfo, IFunctionInfo> builtinFunctionsSet = new HashMap<IFunctionInfo, IFunctionInfo>();
@@ -226,9 +227,9 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier LIKE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "like", 2);
     public final static FunctionIdentifier CONTAINS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "contains",
             2);
-    private final static FunctionIdentifier STARTS_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+    public final static FunctionIdentifier STARTS_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "starts-with", 2);
-    private final static FunctionIdentifier ENDS_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+    public final static FunctionIdentifier ENDS_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "ends-with", 2);
 
     public final static FunctionIdentifier AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-avg", 1);
@@ -393,6 +394,12 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier CAST_RECORD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "cast-record", 1);
 
+    public final static FunctionIdentifier GET_POINT_X_COORDINATE_ACCESSOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-x", 1);
+    public final static FunctionIdentifier GET_POINT_Y_COORDINATE_ACCESSOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-y", 1);
+    public final static FunctionIdentifier GET_CIRCLE_RADIUS_ACCESSOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-radius", 1);
+    public final static FunctionIdentifier GET_CIRCLE_CENTER_ACCESSOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-center", 1);
+    public final static FunctionIdentifier GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-points", 1);
+    
     public static final FunctionIdentifier EQ = AlgebricksBuiltinFunctions.EQ;
     public static final FunctionIdentifier LE = AlgebricksBuiltinFunctions.LE;
     public static final FunctionIdentifier GE = AlgebricksBuiltinFunctions.GE;
@@ -406,7 +413,7 @@ public class AsterixBuiltinFunctions {
     public static final FunctionIdentifier IS_NULL = AlgebricksBuiltinFunctions.IS_NULL;
 
     public static IFunctionInfo getAsterixFunctionInfo(FunctionIdentifier fid) {
-        IFunctionInfo finfo = asterixFunctionIdToInfo.get(fid);
+        IFunctionInfo finfo = finfoRepo.get(fid);;
         if (finfo == null) {
             finfo = new AsterixFunctionInfo(fid);
         }
@@ -414,7 +421,7 @@ public class AsterixBuiltinFunctions {
     }
 
     public static AsterixFunctionInfo lookupFunction(FunctionIdentifier fid) {
-        return (AsterixFunctionInfo) asterixFunctionIdToInfo.get(fid);
+        return (AsterixFunctionInfo) finfoRepo.get(fid);
     }
 
     static {
@@ -537,7 +544,7 @@ public class AsterixBuiltinFunctions {
 
         add(STRING_TO_CODEPOINT, OrderedListOfAInt32TypeComputer.INSTANCE);
         add(CODEPOINT_TO_STRING, AStringTypeComputer.INSTANCE);
-        add(STRING_CONCAT, OptionalAStringTypeComputer.INSTANCE);        
+        add(STRING_CONCAT, OptionalAStringTypeComputer.INSTANCE);
         add(SUBSTRING2, Substring2TypeComputer.INSTANCE);
         add(STRING_LENGTH, UnaryStringInt32OrNullTypeComputer.INSTANCE);
         add(STRING_LOWERCASE, UnaryStringOrNullTypeComputer.INSTANCE);
@@ -585,6 +592,11 @@ public class AsterixBuiltinFunctions {
         add(SPATIAL_CELL, ARectangleTypeComputer.INSTANCE);
         add(SPATIAL_DISTANCE, ADoubleTypeComputer.INSTANCE);
         add(SPATIAL_INTERSECT, ABooleanTypeComputer.INSTANCE);
+        add(GET_POINT_X_COORDINATE_ACCESSOR, ADoubleTypeComputer.INSTANCE);
+        add(GET_POINT_Y_COORDINATE_ACCESSOR, ADoubleTypeComputer.INSTANCE);
+        add(GET_CIRCLE_RADIUS_ACCESSOR, ADoubleTypeComputer.INSTANCE);
+        add(GET_CIRCLE_CENTER_ACCESSOR, APointTypeComputer.INSTANCE);
+        add(GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR, OrderedListOfAPointTypeComputer.INSTANCE);
         add(STARTS_WITH, ABooleanTypeComputer.INSTANCE);
         add(STRING_CONSTRUCTOR, OptionalAStringTypeComputer.INSTANCE);
         add(SUBSET_COLLECTION, new IResultTypeComputer() {
@@ -826,7 +838,7 @@ public class AsterixBuiltinFunctions {
         IFunctionInfo functionInfo = getAsterixFunctionInfo(fi);
         builtinFunctionsSet.put(functionInfo, functionInfo);
         funTypeComputer.put(functionInfo, typeComputer);
-        asterixFunctionIdToInfo.put(fi, functionInfo);
+        finfoRepo.put(fi);
     }
 
     private static IFunctionInfo addPrivateFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer) {

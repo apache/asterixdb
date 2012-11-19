@@ -2,7 +2,7 @@
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     -- INDEX_INSERT_DELETE  |UNPARTITIONED|
       -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-        -- STABLE_SORT [$$25(ASC), $$26(ASC), $$27(ASC), $$28(ASC)]  |LOCAL|
+        -- STABLE_SORT [$$27(ASC), $$28(ASC), $$29(ASC), $$30(ASC)]  |LOCAL|
           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
             -- ASSIGN  |UNPARTITIONED|
               -- ASSIGN  |UNPARTITIONED|
@@ -14,9 +14,8 @@
                           -- ASSIGN  |PARTITIONED|
                             -- STREAM_PROJECT  |PARTITIONED|
                               -- ASSIGN  |PARTITIONED|
-                                -- ASSIGN  |PARTITIONED|
-                                  -- STREAM_SELECT  |PARTITIONED|
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  -- BTREE_SEARCH  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- DATASOURCE_SCAN  |PARTITIONED|
-                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                      -- ASSIGN  |PARTITIONED|
+                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

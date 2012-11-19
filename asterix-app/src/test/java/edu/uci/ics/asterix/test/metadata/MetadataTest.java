@@ -23,12 +23,11 @@ import edu.uci.ics.asterix.api.java.AsterixJavaClient;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.test.aql.TestsUtils;
-import edu.uci.ics.asterix.test.runtime.RuntimeTest;
 
 @RunWith(Parameterized.class)
 public class MetadataTest {
 
-    private static final Logger LOGGER = Logger.getLogger(RuntimeTest.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MetadataTest.class.getName());
 
     private static final PrintWriter ERR = new PrintWriter(System.err);
     private static final String EXTENSION_QUERY = "aql";
@@ -41,7 +40,8 @@ public class MetadataTest {
     private static final String SEPARATOR = System.getProperty("file.separator");
 
     private static String _oldConfigFileName;
-    private static final String TEST_CONFIG_FILE_NAME = "asterix-metadata.properties";
+    //private static final String TEST_CONFIG_FILE_NAME = "asterix-metadata.properties";
+    private static final String TEST_CONFIG_FILE_NAME = "test.properties";
     private static final String[] ASTERIX_DATA_DIRS = new String[] { "nc1data", "nc2data" };
 
     private static String aqlExtToResExt(String fname) {

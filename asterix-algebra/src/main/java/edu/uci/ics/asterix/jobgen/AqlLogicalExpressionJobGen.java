@@ -6,7 +6,6 @@ import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.asterix.common.functions.FunctionDescriptorTag;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
@@ -126,7 +125,7 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
 
         IFunctionDescriptor fd = null;
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-        IDataFormat format = mp == null ? FormatUtils.getDefaultFormat() : mp.getMetadataDeclarations().getFormat();
+        IDataFormat format = FormatUtils.getDefaultFormat();
         fd = format.resolveFunction(expr, env);
         return fd.createEvaluatorFactory(args);
     }
@@ -134,7 +133,7 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
     private ICopyEvaluatorFactory createConstantEvaluatorFactory(ConstantExpression expr,
             IOperatorSchema[] inputSchemas, JobGenContext context) throws AlgebricksException {
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-        IDataFormat format = mp == null ? FormatUtils.getDefaultFormat() : mp.getMetadataDeclarations().getFormat();
+        IDataFormat format = FormatUtils.getDefaultFormat();
         return format.getConstantEvalFactory(expr.getValue());
     }
 
@@ -185,8 +184,7 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
             IVariableTypeEnvironment env, JobGenContext context) throws AlgebricksException {
         IFunctionDescriptor fd;
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-        AqlCompiledMetadataDeclarations compiledDecls = mp.getMetadataDeclarations();
-        fd = compiledDecls.getFormat().resolveFunction(expr, env);
+        fd = FormatUtils.getDefaultFormat().resolveFunction(expr, env);
         return fd;
     }
 

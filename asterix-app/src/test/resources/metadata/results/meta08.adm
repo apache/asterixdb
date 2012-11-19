@@ -1,0 +1,2 @@
+{ "GroupName": "DEFAULT_NG_ALL_NODES", "NodeNames": {{ "nc1", "nc2" }}, "Timestamp": "Mon Sep 17 12:31:45 PDT 2012" }
+{ "GroupName": "MetadataGroup", "NodeNames": {{ "nc1" }}, "Timestamp": "Mon Sep 17 12:31:45 PDT 2012" }

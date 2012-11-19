@@ -3,7 +3,6 @@ package edu.uci.ics.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.Coordinate;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
@@ -11,6 +10,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AMutablePoint;
 import edu.uci.ics.asterix.om.base.AMutableRectangle;
 import edu.uci.ics.asterix.om.base.ARectangle;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.BuiltinType;
@@ -27,8 +27,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class CreateRectangleDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "create-rectangle", 2);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new CreateRectangleDescriptor();
@@ -71,11 +69,14 @@ public class CreateRectangleDescriptor extends AbstractScalarFunctionDynamicDesc
                                     APointSerializerDeserializer.getCoordinateOffset(Coordinate.X)),
                                     ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(),
                                             APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y)));
-                            if (aPoint[0].getX() > aPoint[1].getX() || aPoint[0].getY() > aPoint[1].getY()) {
+                            if (aPoint[0].getX() > aPoint[1].getX() && aPoint[0].getY() > aPoint[1].getY()) {
+                                aRectangle.setValue(aPoint[1], aPoint[0]);
+                            } else if (aPoint[0].getX() < aPoint[1].getX() && aPoint[0].getY() < aPoint[1].getY()) {
+                                aRectangle.setValue(aPoint[0], aPoint[1]);
+                            } else {
                                 throw new IllegalArgumentException(
-                                        "The low point in the rectangle cannot be larger than the high point");
+                                        "Rectangle arugment must be either (bottom left point, top right point) or (top right point, bottom left point)");
                             }
-                            aRectangle.setValue(aPoint[0], aPoint[1]);
                             rectangle2DSerde.serialize(aRectangle, out);
                         } catch (IOException e1) {
                             throw new AlgebricksException(e1);
@@ -88,7 +89,7 @@ public class CreateRectangleDescriptor extends AbstractScalarFunctionDynamicDesc
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.CREATE_RECTANGLE;
     }
 
 }
