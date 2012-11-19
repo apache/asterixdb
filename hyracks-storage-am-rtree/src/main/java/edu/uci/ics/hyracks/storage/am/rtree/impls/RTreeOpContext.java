@@ -53,7 +53,13 @@ public class RTreeOpContext implements IIndexOperationContext {
     public RTreeOpContext(IRTreeLeafFrame leafFrame, IRTreeInteriorFrame interiorFrame,
             ITreeIndexMetaDataFrame metaFrame, IBinaryComparatorFactory[] cmpFactories, int treeHeightHint,
             IModificationOperationCallback modificationCallback) {
-        this.cmp = MultiComparator.create(cmpFactories);
+        
+        if (cmpFactories[0] != null) { 
+            this.cmp = MultiComparator.create(cmpFactories);
+        } else {
+            this.cmp = null;
+        }
+        
         this.interiorFrame = interiorFrame;
         this.leafFrame = leafFrame;
         this.metaFrame = metaFrame;

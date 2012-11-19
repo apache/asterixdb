@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
@@ -43,16 +44,21 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
     public LSMBTreeOpContext(BTree memBTree, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
-        this.cmp = MultiComparator.create(memBTree.getComparatorFactories());
+        IBinaryComparatorFactory cmpFactories[] = memBTree.getComparatorFactories();
+        if (cmpFactories[0] != null) {
+            this.cmp = MultiComparator.create(memBTree.getComparatorFactories());
+        } else {
+            this.cmp = null;
+        }
         this.memBTree = memBTree;
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
         this.insertLeafFrame = (IBTreeLeafFrame) insertLeafFrameFactory.createFrame();
         this.deleteLeafFrame = (IBTreeLeafFrame) deleteLeafFrameFactory.createFrame();
-        if (insertLeafFrame != null) {
+        if (insertLeafFrame != null && this.cmp != null) {
             insertLeafFrame.setMultiComparator(cmp);
         }
-        if (deleteLeafFrame != null) {
+        if (deleteLeafFrame != null && this.cmp != null) {
             deleteLeafFrame.setMultiComparator(cmp);
         }
         this.modificationCallback = modificationCallback;
