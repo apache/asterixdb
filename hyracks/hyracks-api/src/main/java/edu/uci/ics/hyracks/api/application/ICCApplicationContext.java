@@ -27,8 +27,10 @@ import edu.uci.ics.hyracks.api.job.IJobLifecycleListener;
 public interface ICCApplicationContext extends IApplicationContext {
     /**
      * Sets the state that must be distributed by the infrastructure to all the
-     * NC application contects. Any state set by calling thsi method in the {@link ICCBootstrap#start()} call is made available to all the {@link INCApplicationContext} objects at each Node Controller. The state
-     * is then available to be inspected by the application at the NC during or
+     * NC application contexts. Any state set by calling this method in
+     * the {@link ICCApplicationEntryPoint#appMain(ICCApplicationContext, String[])} call
+     * is made available to all the {@link INCApplicationContext} objects at each Node Controller.
+     * The state is then available to be inspected by the application at the NC during or
      * after the {@link INCBootstrap#start()} call.
      * 
      * @param state
