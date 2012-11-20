@@ -103,7 +103,6 @@ public class JoinTest {
         ClusterConfig.setClusterPropertiesPath(PATH_TO_CLUSTER_PROPERTIES);
         cleanupStores();
         PregelixHyracksIntegrationUtil.init();
-        PregelixHyracksIntegrationUtil.createApp(HYRACKS_APP_NAME);
 
         FileUtils.forceMkdir(new File(EXPECT_RESULT_DIR));
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
@@ -121,7 +120,6 @@ public class JoinTest {
         runIndexRightOuterJoin();
         TestUtils.compareWithResult(new File(EXPECTED_RESULT_FILE), new File(ACTUAL_RESULT_FILE));
 
-        PregelixHyracksIntegrationUtil.destroyApp(HYRACKS_APP_NAME);
         PregelixHyracksIntegrationUtil.deinit();
     }
 

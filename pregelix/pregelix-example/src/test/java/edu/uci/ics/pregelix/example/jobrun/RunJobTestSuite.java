@@ -59,7 +59,6 @@ public class RunJobTestSuite extends TestSuite {
     private static final String DATA_PATH2 = "data/webmapcomplex/webmap_link.txt";
     private static final String HDFS_PATH2 = "/webmapcomplex/";
 
-    private static final String HYRACKS_APP_NAME = "giraph";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private MiniDFSCluster dfsCluster;
 
@@ -71,7 +70,6 @@ public class RunJobTestSuite extends TestSuite {
         ClusterConfig.setClusterPropertiesPath(PATH_TO_CLUSTER_PROPERTIES);
         cleanupStores();
         PregelixHyracksIntegrationUtil.init();
-        PregelixHyracksIntegrationUtil.createApp(HYRACKS_APP_NAME);
         LOGGER.info("Hyracks mini-cluster started");
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
@@ -118,7 +116,6 @@ public class RunJobTestSuite extends TestSuite {
     }
 
     public void tearDown() throws Exception {
-        PregelixHyracksIntegrationUtil.destroyApp(HYRACKS_APP_NAME);
         PregelixHyracksIntegrationUtil.deinit();
         LOGGER.info("Hyracks mini-cluster shut down");
         cleanupHDFS();

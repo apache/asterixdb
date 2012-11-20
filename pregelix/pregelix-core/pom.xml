@@ -18,7 +18,9 @@
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.3.2</version>
 				<executions>
 					<execution>
 						<id>balancer</id>
@@ -38,11 +40,6 @@
 							</includes>
 						</configuration>
 					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<artifactId>maven-jar-plugin</artifactId>
-				<executions>
 					<execution>
 						<id>generator</id>
 						<goals>
@@ -61,11 +58,6 @@
 							</includes>
 						</configuration>
 					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<artifactId>maven-jar-plugin</artifactId>
-				<executions>
 					<execution>
 						<id>patch</id>
 						<goals>
@@ -94,6 +86,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>appassembler-maven-plugin</artifactId>
+                <version>1.3</version>
 				<executions>
 					<execution>
 						<configuration>
@@ -203,6 +196,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-clean-plugin</artifactId>
+                <version>2.4.1</version>
 				<configuration>
 					<filesets>
 						<fileset>

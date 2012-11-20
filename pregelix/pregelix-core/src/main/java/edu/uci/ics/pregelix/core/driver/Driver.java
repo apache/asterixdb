@@ -140,7 +140,6 @@ public class Driver implements IDriver {
             start = System.currentTimeMillis();
             runHDFSWRite(jobGen);
             runCleanup(jobGen);
-            destroyApplication(applicationName);
             end = System.currentTimeMillis();
             time = end - start;
             LOG.info("result writing finished " + time + "ms");
@@ -203,8 +202,8 @@ public class Driver implements IDriver {
 
     private void execute(JobSpecification job) throws Exception {
         job.setUseConnectorPolicyForScheduling(false);
-        JobId jobId = hcc.startJob(applicationName, job,
-                profiling ? EnumSet.of(JobFlag.PROFILE_RUNTIME) : EnumSet.noneOf(JobFlag.class));
+        JobId jobId = hcc
+                .startJob(job, profiling ? EnumSet.of(JobFlag.PROFILE_RUNTIME) : EnumSet.noneOf(JobFlag.class));
         hcc.waitForCompletion(jobId);
     }
 
@@ -219,15 +218,11 @@ public class Driver implements IDriver {
         LOG.info("jar packing finished " + (end - start) + "ms");
 
         start = System.currentTimeMillis();
-        hcc.createApplication(applicationName, appZip);
+        // TODO: Fix this step to use Yarn
+        //hcc.createApplication(applicationName, appZip);
         end = System.currentTimeMillis();
         LOG.info("jar deployment finished " + (end - start) + "ms");
     }
-
-    public void destroyApplication(String jarFile) throws Exception {
-        hcc.destroyApplication(applicationName);
-    }
-
 }
 
 class FileFilter implements FilenameFilter {
