@@ -24,6 +24,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
+import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -39,6 +40,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractOpe
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -136,6 +138,11 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
             if (replaceProjectVars((ProjectOperator) op)) {
                 modified = true;
             }
+        } else if(op.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
+            // Replace redundant variables manually in the UnionAll operator.
+            if (replaceUnionAllVars((UnionAllOperator) op)) {
+                modified = true;
+            }
         } else {
             if (op.acceptExpressionTransform(substVisitor)) {
                 modified = true;
@@ -227,6 +234,24 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
         return modified;
     }
 
+    private boolean replaceUnionAllVars(UnionAllOperator op) throws AlgebricksException {
+        boolean modified = false;
+        for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> varMapping : op.getVariableMappings()) {
+            List<LogicalVariable> firstEquivalentVars = equivalentVarsMap.get(varMapping.first);
+            List<LogicalVariable> secondEquivalentVars = equivalentVarsMap.get(varMapping.second);
+            // Replace variables with their representative.
+            if (firstEquivalentVars != null) {
+                varMapping.first = firstEquivalentVars.get(0);
+                modified = true;
+            }
+            if (secondEquivalentVars != null) {
+                varMapping.second = secondEquivalentVars.get(0);
+                modified = true;
+            }
+        }
+        return modified;
+    }
+    
     private class VariableSubstitutionVisitor implements ILogicalExpressionReferenceTransform {
         @Override
         public boolean transform(Mutable<ILogicalExpression> exprRef) {

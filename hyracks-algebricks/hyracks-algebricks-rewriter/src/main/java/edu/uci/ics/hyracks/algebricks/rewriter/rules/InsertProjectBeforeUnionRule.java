@@ -87,6 +87,7 @@ public class InsertProjectBeforeUnionRule implements IAlgebraicRewriteRule {
         projectOp.getInputs().add(new MutableObject<ILogicalOperator>(parentOp));
         opUnion.getInputs().get(branch).setValue(projectOp);
         projectOp.setPhysicalOperator(new StreamProjectPOperator());
+        context.computeAndSetTypeEnvironmentForOperator(projectOp);
         context.computeAndSetTypeEnvironmentForOperator(parentOp);
     }
 
