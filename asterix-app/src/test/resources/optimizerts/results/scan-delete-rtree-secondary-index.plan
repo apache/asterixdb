@@ -2,15 +2,15 @@
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     -- INDEX_INSERT_DELETE  |UNPARTITIONED|
       -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-        -- STABLE_SORT [$$27(ASC), $$28(ASC), $$29(ASC), $$30(ASC)]  |LOCAL|
+        -- STABLE_SORT [$$29(ASC), $$30(ASC), $$31(ASC), $$32(ASC)]  |LOCAL|
           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
             -- ASSIGN  |UNPARTITIONED|
               -- ASSIGN  |UNPARTITIONED|
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   -- INSERT_DELETE  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                      -- STABLE_SORT [$$13(ASC)]  |LOCAL|
-                        -- HASH_PARTITION_EXCHANGE [$$13]  |PARTITIONED|
+                      -- STABLE_SORT [$$14(ASC)]  |LOCAL|
+                        -- HASH_PARTITION_EXCHANGE [$$14]  |PARTITIONED|
                           -- ASSIGN  |PARTITIONED|
                             -- STREAM_PROJECT  |PARTITIONED|
                               -- ASSIGN  |PARTITIONED|

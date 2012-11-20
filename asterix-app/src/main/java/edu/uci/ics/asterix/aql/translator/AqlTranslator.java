@@ -828,5 +828,4 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
         return format;
     }
-
 }

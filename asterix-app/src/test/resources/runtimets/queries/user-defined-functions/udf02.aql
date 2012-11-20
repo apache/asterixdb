@@ -7,7 +7,7 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/cross-dataverse_udf02.adm";
+write output to nc1:"rttest/user-defined-functions_udf02.adm";
 
 create function test.getFirst($list){
 $list[0]

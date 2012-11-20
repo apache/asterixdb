@@ -161,7 +161,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         this.defaultDataverse = defaultDataverse;
         this.stores = AsterixProperties.INSTANCE.getStores();
     }
-    
+
     public void setJobId(JobId jobId) {
         this.jobId = jobId;
     }
@@ -1196,6 +1196,5 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     public IDataFormat getFormat() {
         return FormatUtils.getDefaultFormat();
     }
-
 
 }

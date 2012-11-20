@@ -269,6 +269,7 @@ public class APIFramework {
 
         OptimizationConfUtil.getPhysicalOptimizationConfig().setFrameSize(frameSize);
         builder.setPhysicalOptimizationConfig(OptimizationConfUtil.getPhysicalOptimizationConfig());
+        
         ICompiler compiler = compilerFactory.createCompiler(plan, queryMetadataProvider, t.getVarCounter());
         if (pc.isOptimize()) {
             compiler.optimize();
@@ -303,13 +304,6 @@ public class APIFramework {
                     }
                 }
             }
-        }
-
-        if (!pc.isGenerateJobSpec()) {
-            // Job spec not requested. Consider transaction against metadata
-            // committed.
-            MetadataManager.INSTANCE.commitTransaction(queryMetadataProvider.getMetadataTxnContext());
-            return null;
         }
 
         AlgebricksPartitionConstraint clusterLocs = queryMetadataProvider.getClusterLocations();
