@@ -44,7 +44,7 @@ public class RTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
             IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput,
             ISearchOperationCallbackFactory searchOpCallbackFactory) {
         super(spec, 1, 1, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, dataflowHelperFactory, null, false, NoOpLocalResourceFactoryProvider.INSTANCE,
+                comparatorFactories, dataflowHelperFactory, null, retainInput, NoOpLocalResourceFactoryProvider.INSTANCE,
                 searchOpCallbackFactory, NoOpOperationCallbackFactory.INSTANCE);
 
         this.keyFields = keyFields;

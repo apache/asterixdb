@@ -75,15 +75,21 @@ public class BTreeOpContext implements IIndexOperationContext {
             IBinaryComparatorFactory[] cmpFactories, IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
         this.accessor = accessor;
-        this.cmp = MultiComparator.create(cmpFactories);
+        
+        if (cmpFactories[0] != null) {
+            this.cmp = MultiComparator.create(cmpFactories);
+        } else {
+            this.cmp = null;
+        }
+        
         this.leafFrameFactory = leafFrameFactory;
         this.leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
-        if (leafFrame != null) {
+        if (leafFrame != null && this.cmp != null) {
             leafFrame.setMultiComparator(cmp);
         }
         this.interiorFrameFactory = interiorFrameFactory;
         this.interiorFrame = (IBTreeInteriorFrame) interiorFrameFactory.createFrame();
-        if (interiorFrame != null) {
+        if (interiorFrame != null && this.cmp != null) {
             interiorFrame.setMultiComparator(cmp);
         }
         this.metaFrame = metaFrame;
