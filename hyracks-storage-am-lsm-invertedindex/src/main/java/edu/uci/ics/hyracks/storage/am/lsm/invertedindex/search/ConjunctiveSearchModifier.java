@@ -25,7 +25,7 @@ public class ConjunctiveSearchModifier implements IInvertedIndexSearchModifier {
     }
 
     @Override
-    public int getNumPrefixLists(int numQueryTokens) {
+    public int getNumPrefixLists(int occurrenceThreshold, int numInvLists) {
         return 1;
     }
     

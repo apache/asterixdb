@@ -33,12 +33,12 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeTupleRef
 public class SearchResult {
     protected final ArrayList<ByteBuffer> buffers = new ArrayList<ByteBuffer>();
     protected final IHyracksCommonContext ctx;
-    protected final FixedSizeFrameTupleAppender resultFrameTupleApp;
-    protected final FixedSizeFrameTupleAccessor resultFrameTupleAcc;
-    protected final FixedSizeTupleReference resultTuple;
+    protected final FixedSizeFrameTupleAppender appender;
+    protected final FixedSizeFrameTupleAccessor accessor;
+    protected final FixedSizeTupleReference tuple;
     protected final ITypeTraits[] typeTraits;
     protected final int invListElementSize;
-    
+
     protected int currBufIdx;
     protected int numResults;
 
@@ -53,9 +53,9 @@ public class SearchResult {
         // Integer for counting occurrences.
         typeTraits[invListFields.length] = IntegerPointable.TYPE_TRAITS;
         this.ctx = ctx;
-        resultFrameTupleApp = new FixedSizeFrameTupleAppender(ctx.getFrameSize(), typeTraits);
-        resultFrameTupleAcc = new FixedSizeFrameTupleAccessor(ctx.getFrameSize(), typeTraits);
-        resultTuple = new FixedSizeTupleReference(typeTraits);
+        appender = new FixedSizeFrameTupleAppender(ctx.getFrameSize(), typeTraits);
+        accessor = new FixedSizeFrameTupleAccessor(ctx.getFrameSize(), typeTraits);
+        tuple = new FixedSizeTupleReference(typeTraits);
         buffers.add(ctx.allocateFrame());
     }
 
@@ -64,64 +64,63 @@ public class SearchResult {
      */
     public SearchResult(SearchResult other) {
         this.ctx = other.ctx;
-        this.resultFrameTupleApp = other.resultFrameTupleApp;
-        this.resultFrameTupleAcc = other.resultFrameTupleAcc;
-        this.resultTuple = other.resultTuple;
+        this.appender = other.appender;
+        this.accessor = other.accessor;
+        this.tuple = other.tuple;
         this.typeTraits = other.typeTraits;
         this.invListElementSize = other.invListElementSize;
         buffers.add(ctx.allocateFrame());
     }
 
     public FixedSizeFrameTupleAccessor getAccessor() {
-        return resultFrameTupleAcc;
+        return accessor;
     }
-    
+
     public FixedSizeFrameTupleAppender getAppender() {
-        return resultFrameTupleApp;
+        return appender;
     }
-    
+
     public FixedSizeTupleReference getTuple() {
-        return resultTuple;
+        return tuple;
     }
-    
+
     public ArrayList<ByteBuffer> getBuffers() {
         return buffers;
     }
-    
+
     public void reset() {
         currBufIdx = 0;
         numResults = 0;
-        resultFrameTupleApp.reset(buffers.get(0), true);
+        appender.reset(buffers.get(0), true);
     }
-    
+
     public void clear() {
         currBufIdx = 0;
         numResults = 0;
         for (ByteBuffer buffer : buffers) {
-            resultFrameTupleApp.reset(buffer, true);
+            appender.reset(buffer, true);
         }
     }
 
     public void append(ITupleReference invListElement, int count) {
         ByteBuffer currentBuffer = buffers.get(currBufIdx);
-        if (!resultFrameTupleApp.hasSpace()) {
+        if (!appender.hasSpace()) {
             currBufIdx++;
             if (currBufIdx >= buffers.size()) {
                 buffers.add(ctx.allocateFrame());
             }
             currentBuffer = buffers.get(currBufIdx);
-            resultFrameTupleApp.reset(currentBuffer, true);
+            appender.reset(currentBuffer, true);
         }
         // Append inverted-list element.
-        if (!resultFrameTupleApp.append(invListElement.getFieldData(0), invListElement.getFieldStart(0),
-                invListElementSize)) {
+        if (!appender.append(invListElement.getFieldData(0), invListElement.getFieldStart(0), invListElementSize)) {
             throw new IllegalStateException();
         }
         // Append count.
-        if (!resultFrameTupleApp.append(count)) {
+        if (!appender.append(count)) {
             throw new IllegalStateException();
         }
-        resultFrameTupleApp.incrementTupleCount(1);
+        appender.incrementTupleCount(1);
         numResults++;
     }
 
@@ -132,8 +131,52 @@ public class SearchResult {
     public ITypeTraits[] getTypeTraits() {
         return typeTraits;
     }
-    
+
     public int getNumResults() {
         return numResults;
     }
+
+    // TODO: This code may help to clean up the core list-merging algorithms.
+    /*
+    public SearchResultCursor getCursor() {
+        cursor.reset();
+        return cursor;
+    }
+    
+    public class SearchResultCursor {
+        private int bufferIndex;
+        private int resultIndex;
+        private int frameResultIndex;
+        private ByteBuffer currentBuffer;
+
+        public void reset() {
+            bufferIndex = 0;
+            resultIndex = 0;
+            frameResultIndex = 0;
+            currentBuffer = buffers.get(0);
+            resultFrameTupleAcc.reset(currentBuffer);
+        }
+
+        public boolean hasNext() {
+            return resultIndex < numResults;
+        }
+
+        public void next() {
+            resultTuple.reset(currentBuffer.array(), resultFrameTupleAcc.getTupleStartOffset(frameResultIndex));            
+            if (frameResultIndex < resultFrameTupleAcc.getTupleCount()) {
+                frameResultIndex++;
+            } else {
+                bufferIndex++;
+                currentBuffer = buffers.get(bufferIndex);
+                resultFrameTupleAcc.reset(currentBuffer);
+                frameResultIndex = 0;
+            }            
+            resultIndex++;
+        }
+
+        public ITupleReference getTuple() {
+            return resultTuple;
+        }
+    }
+    */
 }

@@ -67,6 +67,8 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex {
         private final ObjectCache<IInvertedListCursor> invListCursorCache;
         private final ObjectCache<ArrayList<IInvertedListCursor>> arrayListCache;
         private ArrayList<IInvertedListCursor>[] partitions;
+        private int minValidPartitionIndex;
+        private int maxValidPartitionIndex;
 
         public InvertedListPartitions(ObjectCache<IInvertedListCursor> invListCursorCache,
                 ObjectCache<ArrayList<IInvertedListCursor>> arrayListCache) {
@@ -77,19 +79,23 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex {
         @SuppressWarnings("unchecked")
         public void reset(int numTokensLowerBound, int numTokensUpperBound) {
             if (partitions == null) {
-                int initialSize = numTokensUpperBound;
+                int initialSize;
                 if (numTokensUpperBound < 0) {
                     initialSize = DEFAULT_NUM_PARTITIONS;
+                } else {
+                    initialSize = numTokensUpperBound + 1;
                 }
                 partitions = (ArrayList<IInvertedListCursor>[]) new ArrayList[initialSize];
             } else {
-                if (numTokensUpperBound >= partitions.length) {
-                    Arrays.copyOf(partitions, numTokensUpperBound);
+                if (numTokensUpperBound + 1 >= partitions.length) {
+                    partitions = Arrays.copyOf(partitions, numTokensUpperBound + 1);
                 }
                 Arrays.fill(partitions, null);
             }
             invListCursorCache.reset();
             arrayListCache.reset();
+            minValidPartitionIndex = Integer.MAX_VALUE;
+            maxValidPartitionIndex = Integer.MIN_VALUE;
         }
 
         public void addInvertedListCursor(ITupleReference btreeTuple) {
@@ -98,19 +104,35 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex {
             int numTokens = IntegerSerializerDeserializer.getInt(
                     btreeTuple.getFieldData(PARTITIONING_NUM_TOKENS_FIELD),
                     btreeTuple.getFieldStart(PARTITIONING_NUM_TOKENS_FIELD));
-            if (numTokens >= partitions.length) {
+            if (numTokens + 1 >= partitions.length) {
                 partitions = Arrays.copyOf(partitions, numTokens + PARTITIONS_SLACK_SIZE);
             }
             ArrayList<IInvertedListCursor> partitionCursors = partitions[numTokens];
             if (partitionCursors == null) {
                 partitionCursors = arrayListCache.getNext();
+                partitionCursors.clear();
                 partitions[numTokens] = partitionCursors;
+                // Update range of valid partitions.
+                if (numTokens < minValidPartitionIndex) {
+                    minValidPartitionIndex = numTokens;
+                }
+                if (numTokens > maxValidPartitionIndex) {
+                    maxValidPartitionIndex = numTokens;
+                }
             }
             partitionCursors.add(listCursor);
         }
 
         public ArrayList<IInvertedListCursor>[] getPartitions() {
             return partitions;
+        }
+        
+        public int getMinValidPartitionIndex() {
+            return minValidPartitionIndex;
+        }
+
+        public int getMaxValidPartitionIndex() {
+            return maxValidPartitionIndex;
         }
     }
     
