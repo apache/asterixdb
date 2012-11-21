@@ -12,7 +12,6 @@ import edu.uci.ics.hyracks.algebricks.data.utils.WriteValueTools;
 
 public class ADurationPrinter implements IPrinter {
 
-    private static final long serialVersionUID = 1L;
     public static final ADurationPrinter INSTANCE = new ADurationPrinter();
     private static final GregorianCalendarSystem gCalInstance = GregorianCalendarSystem.getInstance();
 

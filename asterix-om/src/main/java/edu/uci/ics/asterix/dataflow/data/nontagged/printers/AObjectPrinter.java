@@ -10,7 +10,6 @@ import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 
 public class AObjectPrinter implements IPrinter {
 
-    private static final long serialVersionUID = 1L;
     public static final AObjectPrinter INSTANCE = new AObjectPrinter();
 
     private IPrinter recordPrinter = new ARecordPrinterFactory(null).createPrinter();

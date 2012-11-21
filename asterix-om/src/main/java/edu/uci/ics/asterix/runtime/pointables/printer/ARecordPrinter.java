@@ -27,8 +27,8 @@ import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 
 /**
- * This class is to do the runtime type cast for a record. It is ONLY visible to
- * ACastVisitor.
+ * This class is to print the content of a record. It is ONLY visible to
+ * APrintVisitor.
  */
 class ARecordPrinter {
     private static String LEFT_PAREN = "{ ";
