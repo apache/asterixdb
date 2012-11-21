@@ -57,7 +57,7 @@ class AListPrinter {
         //print the beginning part
         ps.print(leftParen);
 
-        // print record 0 to n-2
+        // print item 0 to n-2
         for (int i = 0; i < items.size() - 1; i++) {
             IVisitablePointable itemTypeTag = itemTags.get(i);
             IVisitablePointable item = items.get(i);
@@ -69,7 +69,7 @@ class AListPrinter {
             ps.print(COMMA);
         }
 
-        // print record n-1
+        // print item n-1
         if (items.size() > 0) {
             IVisitablePointable itemTypeTag = itemTags.get(itemTags.size() - 1);
             IVisitablePointable item = items.get(items.size() - 1);

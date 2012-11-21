@@ -55,7 +55,7 @@ class ARecordPrinter {
         // print the beginning part
         ps.print(LEFT_PAREN);
 
-        // print record 0 to n-2
+        // print field 0 to n-2
         for (int i = 0; i < fieldNames.size() - 1; i++) {
             IVisitablePointable itemTypeTag = fieldTags.get(i);
             IVisitablePointable item = fieldValues.get(i);
@@ -73,7 +73,7 @@ class ARecordPrinter {
             ps.print(COMMA);
         }
 
-        // print record n-1
+        // print field n-1
         if (fieldValues.size() > 0) {
             IVisitablePointable itemTypeTag = fieldTags.get(fieldTags.size() - 1);
             IVisitablePointable item = fieldValues.get(fieldValues.size() - 1);

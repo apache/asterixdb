@@ -92,43 +92,59 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
             return false;
         context.addToDontApplySet(this, opRef.getValue());
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
-        if (op1.getOperatorTag() != LogicalOperatorTag.SINK)
-            return false;
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
-        if (op2.getOperatorTag() != LogicalOperatorTag.INSERT_DELETE)
-            return false;
-        AbstractLogicalOperator op3 = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
-        if (op3.getOperatorTag() != LogicalOperatorTag.ASSIGN)
-            return false;
-
-        /**
-         * get required record type
-         */
-        InsertDeleteOperator insertDeleteOperator = (InsertDeleteOperator) op2;
-        AssignOperator topAssignOperator = (AssignOperator) op3;
-        AqlDataSource dataSource = (AqlDataSource) insertDeleteOperator.getDataSource();
-        IAType[] schemaTypes = (IAType[]) dataSource.getSchemaTypes();
-        ARecordType requiredRecordType = (ARecordType) schemaTypes[schemaTypes.length - 1];
-
-        /**
-         * get input record type to the insert operator
-         */
-        List<LogicalVariable> usedVariables = new ArrayList<LogicalVariable>();
-        VariableUtilities.getUsedVariables(topAssignOperator, usedVariables);
-
-        // the used variable should contain the record that will be inserted
-        // but it will not fail in many cases even if the used variable set is
-        // empty
-        if (usedVariables.size() == 0)
-            return false;
-        LogicalVariable oldRecordVariable = usedVariables.get(0);
-        LogicalVariable inputRecordVar = usedVariables.get(0);
-        IVariableTypeEnvironment env = topAssignOperator.computeOutputTypeEnvironment(context);
-        ARecordType inputRecordType = (ARecordType) env.getVarType(inputRecordVar);
-
-        AbstractLogicalOperator currentOperator = topAssignOperator;
+        AbstractLogicalOperator assignOp = null;
+        IAType requiredRecordType = null;
+        IAType inputRecordType = null;
+        boolean isTopWrite = false;
         List<LogicalVariable> producedVariables = new ArrayList<LogicalVariable>();
+        LogicalVariable oldRecordVariable;
 
+        if (op1.getOperatorTag() == LogicalOperatorTag.SINK) {
+            AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
+            if (op2.getOperatorTag() != LogicalOperatorTag.INSERT_DELETE)
+                return false;
+            assignOp = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
+            if (assignOp.getOperatorTag() != LogicalOperatorTag.ASSIGN)
+                return false;
+            /**
+             * get required record type
+             */
+            InsertDeleteOperator insertDeleteOperator = (InsertDeleteOperator) op2;
+            AqlDataSource dataSource = (AqlDataSource) insertDeleteOperator.getDataSource();
+            IAType[] schemaTypes = (IAType[]) dataSource.getSchemaTypes();
+            requiredRecordType = schemaTypes[schemaTypes.length - 1];
+
+            AssignOperator topAssignOperator = (AssignOperator) assignOp;
+            List<LogicalVariable> usedVariables = new ArrayList<LogicalVariable>();
+            VariableUtilities.getUsedVariables(topAssignOperator, usedVariables);
+
+            // the used variable should contain the record that will be inserted
+            // but it will not fail in many cases even if the used variable set is
+            // empty
+            if (usedVariables.size() == 0)
+                return false;
+            oldRecordVariable = usedVariables.get(0);
+            LogicalVariable inputRecordVar = usedVariables.get(0);
+            IVariableTypeEnvironment env = topAssignOperator.computeOutputTypeEnvironment(context);
+            inputRecordType = (IAType) env.getVarType(inputRecordVar);
+        } else if (op1.getOperatorTag() == LogicalOperatorTag.WRITE) {
+            AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
+            if (op2.getOperatorTag() != LogicalOperatorTag.PROJECT)
+                return false;
+            assignOp = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
+            if (assignOp.getOperatorTag() != LogicalOperatorTag.ASSIGN)
+                return false;
+            isTopWrite = true;
+            VariableUtilities.getProducedVariables(assignOp, producedVariables);
+            oldRecordVariable = producedVariables.get(0);
+            LogicalVariable inputVar = producedVariables.get(0);
+            IVariableTypeEnvironment env = assignOp.computeOutputTypeEnvironment(context);
+            inputRecordType = (IAType) env.getVarType(inputVar);
+        } else {
+            return false;
+        }
+
+        AbstractLogicalOperator currentOperator = assignOp;
         /**
          * find the assign operator for the "input record" to the insert_delete
          * operator
@@ -151,9 +167,17 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
                         ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) expr;
                         // that expression has been rewritten, and it will not
                         // fail but just return false
-                        if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
+                        if (TypeComputerUtilities.getRequiredType(funcExpr) != null) {
                             return false;
-                        IVariableTypeEnvironment assignEnv = topAssignOperator.computeOutputTypeEnvironment(context);
+                        }
+                        if (isTopWrite) {
+                            if (funcExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR
+                                    && funcExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR) {
+                                return false;
+                            }
+                            requiredRecordType = inputRecordType;
+                        }
+                        IVariableTypeEnvironment assignEnv = assignOp.computeOutputTypeEnvironment(context);
                         rewriteFuncExpr(funcExpr, requiredRecordType, inputRecordType, assignEnv);
                     }
                     context.computeAndSetTypeEnvironmentForOperator(originalAssign);
