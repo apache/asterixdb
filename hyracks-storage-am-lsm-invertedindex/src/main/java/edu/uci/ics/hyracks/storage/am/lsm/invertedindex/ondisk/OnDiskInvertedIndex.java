@@ -272,7 +272,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         }
     }
 
-    protected void resetInvertedListCursor(ITupleReference btreeTuple, IInvertedListCursor listCursor) {
+    public void resetInvertedListCursor(ITupleReference btreeTuple, IInvertedListCursor listCursor) {
         int startPageId = IntegerSerializerDeserializer.getInt(btreeTuple.getFieldData(invListStartPageIdField),
                 btreeTuple.getFieldStart(invListStartPageIdField));
         int endPageId = IntegerSerializerDeserializer.getInt(btreeTuple.getFieldData(invListEndPageIdField),
