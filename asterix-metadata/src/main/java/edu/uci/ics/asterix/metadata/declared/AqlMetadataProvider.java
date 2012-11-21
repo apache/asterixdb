@@ -409,7 +409,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                         dataset.getDatasetName(), indexName);
                 int numSecondaryKeys = secondaryIndex.getKeyFieldNames().size();
                 numKeys += numSecondaryKeys;
-                keysStartIndex = outputRecDesc.getFieldCount() - numKeys;
+                keysStartIndex = outputVars.size() - numKeys;
             }
             IBinaryComparatorFactory[] comparatorFactories = JobGenHelper.variablesToAscBinaryComparatorFactories(
                     outputVars, keysStartIndex, numKeys, typeEnv, context);
