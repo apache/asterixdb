@@ -4,6 +4,7 @@ import java.io.PrintStream;
 
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.runtime.pointables.PointableAllocator;
 import edu.uci.ics.asterix.runtime.pointables.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
@@ -14,9 +15,8 @@ import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
 
 public class ARecordPrinterFactory implements IPrinterFactory {
-
+    
     private static final long serialVersionUID = 1L;
-
     private final ARecordType recType;
 
     public ARecordPrinterFactory(ARecordType recType) {
@@ -27,8 +27,8 @@ public class ARecordPrinterFactory implements IPrinterFactory {
     public IPrinter createPrinter() {
 
         PointableAllocator allocator = new PointableAllocator();
-        final ARecordType inputType = recType == null ? (ARecordType) DefaultOpenFieldType
-                .getDefaultOpenFieldType(ATypeTag.RECORD) : recType;
+        final IAType inputType = recType == null ? DefaultOpenFieldType.getDefaultOpenFieldType(ATypeTag.RECORD)
+                : recType;
         final IVisitablePointable recAccessor = allocator.allocateRecordValue(inputType);
         final APrintVisitor printVisitor = new APrintVisitor();
         final Pair<PrintStream, ATypeTag> arg = new Pair<PrintStream, ATypeTag>(null, null);
