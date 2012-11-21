@@ -21,13 +21,12 @@ import edu.uci.ics.hyracks.data.std.api.IValueReference;
 /**
  * This class implements several "routine" methods in IVisitablePointable
  * interface, so that subclasses do not need to repeat the same code.
- * 
  */
 public abstract class AbstractVisitablePointable implements IVisitablePointable {
 
     private byte[] data;
-    private int start;
-    private int len;
+    private int start = -1;
+    private int len = -1;
 
     @Override
     public byte[] getByteArray() {

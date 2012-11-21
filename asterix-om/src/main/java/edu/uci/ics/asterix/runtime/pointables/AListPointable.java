@@ -21,6 +21,7 @@ import java.util.List;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
+import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
@@ -35,7 +36,6 @@ import edu.uci.ics.asterix.runtime.util.container.IObjectFactory;
  * This class interprets the binary data representation of a list, one can
  * call getItems and getItemTags to get pointable objects for items and item
  * type tags.
- * 
  */
 public class AListPointable extends AbstractVisitablePointable {
 
@@ -59,6 +59,7 @@ public class AListPointable extends AbstractVisitablePointable {
     private IAType itemType;
     private ATypeTag itemTag;
     private boolean typedItemList = false;
+    private boolean ordered = false;
 
     /**
      * private constructor, to prevent constructing it arbitrarily
@@ -66,6 +67,9 @@ public class AListPointable extends AbstractVisitablePointable {
      * @param inputType
      */
     private AListPointable(AbstractCollectionType inputType) {
+        if (inputType instanceof AOrderedListType) {
+            ordered = true;
+        }
         if (inputType != null && inputType.getItemType() != null) {
             itemType = inputType.getItemType();
             if (itemType.getTypeTag() == ATypeTag.ANY) {
@@ -136,7 +140,7 @@ public class AListPointable extends AbstractVisitablePointable {
                     itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[itemOffset]);
                     itemLength = NonTaggedFormatUtil.getFieldValueLength(b, itemOffset, itemTag, true) + 1;
                     IVisitablePointable tag = allocator.allocateEmpty();
-                    IVisitablePointable item = allocator.allocateFieldValue(itemType);
+                    IVisitablePointable item = allocator.allocateFieldValue(itemTag);
 
                     // set item type tag
                     int start = dataBos.size();
@@ -167,5 +171,9 @@ public class AListPointable extends AbstractVisitablePointable {
 
     public List<IVisitablePointable> getItemTags() {
         return itemTags;
+    }
+
+    public boolean ordered() {
+        return ordered;
     }
 }

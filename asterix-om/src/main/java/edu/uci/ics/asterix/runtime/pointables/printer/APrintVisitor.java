@@ -36,6 +36,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ANullPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.APoint3DPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.APointPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.APolygonPrinter;
+import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ARectanglePrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AStringPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ATimePrinter;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -67,7 +68,7 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
     public Void visit(AListPointable accessor, Pair<PrintStream, ATypeTag> arg) throws AsterixException {
         AListPrinter printer = laccessorToPrinter.get(accessor);
         if (printer == null) {
-            printer = new AListPrinter();
+            printer = new AListPrinter(accessor.ordered());
             laccessorToPrinter.put(accessor, printer);
         }
         try {
@@ -170,6 +171,10 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
                     ACirclePrinter.INSTANCE.print(b, s, l, ps);
                     break;
                 }
+                case RECTANGLE: {
+                    ARectanglePrinter.INSTANCE.print(b, s, l, ps);
+                    break;
+                }
                 case STRING: {
                     AStringPrinter.INSTANCE.print(b, s, l, ps);
                     break;
@@ -183,5 +188,4 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
             throw new IllegalStateException(e);
         }
     }
-
 }

@@ -64,9 +64,11 @@ class AListCaster {
             AbstractCollectionType reqType, ACastVisitor visitor) throws IOException, AsterixException {
         if (reqType.getTypeTag().equals(ATypeTag.UNORDEREDLIST)) {
             unOrderedListBuilder.reset((AUnorderedListType) reqType);
+            reqItemType = reqType.getItemType();
         }
         if (reqType.getTypeTag().equals(ATypeTag.ORDEREDLIST)) {
             orderedListBuilder.reset((AOrderedListType) reqType);
+            reqItemType = reqType.getItemType();
         }
         dataBos.reset();
 

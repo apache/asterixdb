@@ -31,14 +31,21 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
  * ACastVisitor.
  */
 class AListPrinter {
-    private static String LEFT_PAREN = "{";
-    private static String RIGHT_PAREN = "}";
-    private static String COMMA = ",";
+    private static String LEFT_PAREN = "{{ ";
+    private static String RIGHT_PAREN = " }}";
+    private static String LEFT_PAREN_ORDERED = "[ ";
+    private static String RIGHT_PAREN_ORDERED = " ]";
+    private static String COMMA = ", ";
 
     private final Pair<PrintStream, ATypeTag> itemVisitorArg = new Pair<PrintStream, ATypeTag>(null, null);
+    private String leftParen = LEFT_PAREN;
+    private String rightParen = RIGHT_PAREN;
 
-    public AListPrinter() {
-
+    public AListPrinter(boolean ordered) {
+        if (ordered) {
+            leftParen = LEFT_PAREN_ORDERED;
+            rightParen = RIGHT_PAREN_ORDERED;
+        }
     }
 
     public void printList(AListPointable listAccessor, PrintStream ps, APrintVisitor visitor) throws IOException,
@@ -46,31 +53,33 @@ class AListPrinter {
         List<IVisitablePointable> itemTags = listAccessor.getItemTags();
         List<IVisitablePointable> items = listAccessor.getItems();
         itemVisitorArg.first = ps;
-        
+
         //print the beginning part
-        ps.print(LEFT_PAREN);
-        
+        ps.print(leftParen);
+
         // print record 0 to n-2
         for (int i = 0; i < items.size() - 1; i++) {
             IVisitablePointable itemTypeTag = itemTags.get(i);
             IVisitablePointable item = items.get(i);
             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
                     .getStartOffset()]);
-            itemVisitorArg.second = typeTag;
+            itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
             item.accept(visitor, itemVisitorArg);
             //print the comma
             ps.print(COMMA);
         }
-        
+
         // print record n-1
-        IVisitablePointable itemTypeTag = itemTags.get(itemTags.size()-1);
-        IVisitablePointable item = items.get(items.size()-1);
-        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
-                .getStartOffset()]);
-        itemVisitorArg.second = typeTag;
-        item.accept(visitor, itemVisitorArg);
+        if (items.size() > 0) {
+            IVisitablePointable itemTypeTag = itemTags.get(itemTags.size() - 1);
+            IVisitablePointable item = items.get(items.size() - 1);
+            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
+                    .getStartOffset()]);
+            itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
+            item.accept(visitor, itemVisitorArg);
+        }
 
         //print the end part
-        ps.print(RIGHT_PAREN);
+        ps.print(rightParen);
     }
 }

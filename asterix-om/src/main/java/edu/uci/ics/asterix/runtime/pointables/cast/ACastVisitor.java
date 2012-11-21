@@ -20,11 +20,13 @@ import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.runtime.pointables.AFlatValuePointable;
 import edu.uci.ics.asterix.runtime.pointables.AListPointable;
 import edu.uci.ics.asterix.runtime.pointables.ARecordPointable;
+import edu.uci.ics.asterix.runtime.pointables.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
@@ -33,11 +35,9 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
  * This class is a IVisitablePointableVisitor implementation which recursively
  * visit a given record, list or flat value of a given type, and cast it to a
  * specified type. For example:
- * 
  * A record { "hobby": {{"music", "coding"}}, "id": "001", "name":
  * "Person Three"} which confirms to closed type ( id: string, name: string,
  * hobby: {{string}}? ) can be casted to a open type (id: string )
- * 
  * Since the open/closed part of a record has a completely different underlying
  * memory/storage layout, the visitor will change the layout as specified at
  * runtime.
@@ -56,6 +56,9 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
             laccessorToCaster.put(accessor, caster);
         }
         try {
+            if (arg.second.getTypeTag().equals(ATypeTag.ANY)) {
+                arg.second = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
+            }
             caster.castList(accessor, arg.first, (AbstractCollectionType) arg.second, this);
         } catch (Exception e) {
             throw new AsterixException(e);
@@ -72,6 +75,9 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
             raccessorToCaster.put(accessor, caster);
         }
         try {
+            if (arg.second.getTypeTag().equals(ATypeTag.ANY)) {
+                arg.second = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
+            }
             caster.castRecord(accessor, arg.first, (ARecordType) arg.second, this);
         } catch (Exception e) {
             throw new AsterixException(e);

@@ -31,11 +31,12 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
  * ACastVisitor.
  */
 class ARecordPrinter {
-    private static String LEFT_PAREN = "{";
-    private static String RIGHT_PAREN = "}";
-    private static String COMMA = ",";
-    private static String COLON = ":";
+    private static String LEFT_PAREN = "{ ";
+    private static String RIGHT_PAREN = " }";
+    private static String COMMA = ", ";
+    private static String COLON = ": ";
 
+    private final Pair<PrintStream, ATypeTag> nameVisitorArg = new Pair<PrintStream, ATypeTag>(null, ATypeTag.STRING);
     private final Pair<PrintStream, ATypeTag> itemVisitorArg = new Pair<PrintStream, ATypeTag>(null, null);
 
     public ARecordPrinter() {
@@ -47,9 +48,11 @@ class ARecordPrinter {
         List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
         List<IVisitablePointable> fieldTags = recordAccessor.getFieldTypeTags();
         List<IVisitablePointable> fieldValues = recordAccessor.getFieldValues();
+
+        nameVisitorArg.first = ps;
         itemVisitorArg.first = ps;
 
-        //print the beginning part
+        // print the beginning part
         ps.print(LEFT_PAREN);
 
         // print record 0 to n-2
@@ -58,32 +61,34 @@ class ARecordPrinter {
             IVisitablePointable item = fieldValues.get(i);
             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
                     .getStartOffset()]);
-            itemVisitorArg.second = typeTag;
+            itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
 
-            //print field name
-            ps.print(fieldNames.get(i));
+            // print field name
+            fieldNames.get(i).accept(visitor, nameVisitorArg);
             ps.print(COLON);
-            //print field value
+            // print field value
             item.accept(visitor, itemVisitorArg);
 
-            //print the comma
+            // print the comma
             ps.print(COMMA);
         }
 
         // print record n-1
-        IVisitablePointable itemTypeTag = fieldTags.get(fieldTags.size() - 1);
-        IVisitablePointable item = fieldValues.get(fieldValues.size() - 1);
-        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
-                .getStartOffset()]);
-        itemVisitorArg.second = typeTag;
+        if (fieldValues.size() > 0) {
+            IVisitablePointable itemTypeTag = fieldTags.get(fieldTags.size() - 1);
+            IVisitablePointable item = fieldValues.get(fieldValues.size() - 1);
+            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
+                    .getStartOffset()]);
+            itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
 
-        //print field name
-        ps.print(fieldNames.get(fieldNames.size() - 1));
-        ps.print(COLON);
-        //print field value
-        item.accept(visitor, itemVisitorArg);
+            // print field name
+            fieldNames.get(fieldNames.size() - 1).accept(visitor, nameVisitorArg);
+            ps.print(COLON);
+            // print field value
+            item.accept(visitor, itemVisitorArg);
+        }
 
-        //print the end part
+        // print the end part
         ps.print(RIGHT_PAREN);
     }
 }
