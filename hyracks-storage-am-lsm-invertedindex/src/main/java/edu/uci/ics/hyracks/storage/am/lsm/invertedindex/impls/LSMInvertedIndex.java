@@ -312,7 +312,7 @@ public class LSMInvertedIndex implements ILSMIndexInternal, IInvertedIndex {
     /**
      * The keys in the in-memory deleted-keys BTree only refer to on-disk components.
      * We delete documents from the in-memory inverted index by deleting its entries directly,
-     * and do NOT add the deleted key to the deleted-keys BTree.
+     * while still adding the deleted key to the deleted-keys BTree.
      * Otherwise, inserts would have to remove keys from the in-memory deleted-keys BTree which 
      * may cause incorrect behavior (lost deletes) in the following pathological case:
      * Insert doc 1, flush, delete doc 1, insert doc 1

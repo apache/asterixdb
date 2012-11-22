@@ -18,28 +18,25 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IObjectFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.ObjectCache;
 
 public class InvertedListPartitions {
-    private final int PARTITIONING_NUM_TOKENS_FIELD = 1;
     private final int DEFAULT_NUM_PARTITIONS = 10;
-    private final int PARTITIONS_SLACK_SIZE = 10;    
-    private final OnDiskInvertedIndex invIndex;    
-    private final ObjectCache<IInvertedListCursor> invListCursorCache;
+    private final int PARTITIONS_SLACK_SIZE = 10;
+    private final int OBJECT_CACHE_INIT_SIZE = 10;
+    private final int OBJECT_CACHE_EXPAND_SIZE = 10;
+    private final IObjectFactory<ArrayList<IInvertedListCursor>> arrayListFactory;
     private final ObjectCache<ArrayList<IInvertedListCursor>> arrayListCache;
     private ArrayList<IInvertedListCursor>[] partitions;
     private int minValidPartitionIndex;
     private int maxValidPartitionIndex;
 
-    public InvertedListPartitions(OnDiskInvertedIndex invIndex, ObjectCache<IInvertedListCursor> invListCursorCache,
-            ObjectCache<ArrayList<IInvertedListCursor>> arrayListCache) {
-        this.invIndex = invIndex;
-        this.invListCursorCache = invListCursorCache;
-        this.arrayListCache = arrayListCache;
+    public InvertedListPartitions() {
+        this.arrayListFactory = new ArrayListFactory<IInvertedListCursor>();
+        this.arrayListCache = new ObjectCache<ArrayList<IInvertedListCursor>>(arrayListFactory, OBJECT_CACHE_INIT_SIZE,
+                OBJECT_CACHE_EXPAND_SIZE);
     }
 
     @SuppressWarnings("unchecked")
@@ -58,17 +55,12 @@ public class InvertedListPartitions {
             }
             Arrays.fill(partitions, null);
         }
-        invListCursorCache.reset();
         arrayListCache.reset();
         minValidPartitionIndex = Integer.MAX_VALUE;
         maxValidPartitionIndex = Integer.MIN_VALUE;
     }
 
-    public void addInvertedListCursor(ITupleReference btreeTuple) {
-        IInvertedListCursor listCursor = invListCursorCache.getNext();
-        invIndex.resetInvertedListCursor(btreeTuple, listCursor);
-        int numTokens = IntegerSerializerDeserializer.getInt(btreeTuple.getFieldData(PARTITIONING_NUM_TOKENS_FIELD),
-                btreeTuple.getFieldStart(PARTITIONING_NUM_TOKENS_FIELD));
+    public void addInvertedListCursor(IInvertedListCursor listCursor, int numTokens) {
         if (numTokens + 1 >= partitions.length) {
             partitions = Arrays.copyOf(partitions, numTokens + PARTITIONS_SLACK_SIZE);
         }

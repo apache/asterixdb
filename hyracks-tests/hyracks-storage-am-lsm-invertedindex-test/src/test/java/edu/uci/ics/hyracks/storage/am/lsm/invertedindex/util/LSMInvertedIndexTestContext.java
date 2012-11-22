@@ -117,9 +117,14 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
         // Create index and test context.        
         IInvertedIndex invIndex;
         switch (invIndexType) {
-            case INMEMORY:
-            case PARTITIONED_INMEMORY: {
+            case INMEMORY: {
                 invIndex = InvertedIndexUtils.createInMemoryBTreeInvertedindex(harness.getMemBufferCache(),
+                        harness.getMemFreePageManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
+                        tokenCmpFactories, tokenizerFactory);
+                break;
+            }
+            case PARTITIONED_INMEMORY: {
+                invIndex = InvertedIndexUtils.createPartitionedInMemoryBTreeInvertedindex(harness.getMemBufferCache(),
                         harness.getMemFreePageManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
                         tokenCmpFactories, tokenizerFactory);
                 break;
@@ -162,7 +167,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
             case PARTITIONED_INMEMORY:
             case PARTITIONED_ONDISK:
             case PARTITIONED_LSM: {
-                indexTupleIter = new InvertedIndexTokenizingNumTokensTupleIterator(
+                indexTupleIter = new PartitionedInvertedIndexTokenizingTupleIterator(
                         invIndex.getTokenTypeTraits().length, invIndex.getInvListTypeTraits().length,
                         tokenizerFactory.createTokenizer());
                 break;

@@ -124,7 +124,7 @@ public class LSMInvertedIndexTestUtils {
         }
         return fieldSerdes;
     }
-    
+
     private static ISerializerDeserializer[] getHashedIndexFieldSerdes(InvertedIndexType invIndexType)
             throws IndexException {
         ISerializerDeserializer[] fieldSerdes = null;
@@ -150,7 +150,7 @@ public class LSMInvertedIndexTestUtils {
         }
         return fieldSerdes;
     }
-    
+
     public static LSMInvertedIndexTestContext createWordInvIndexTestContext(LSMInvertedIndexTestHarness harness,
             InvertedIndexType invIndexType) throws IOException, IndexException {
         ISerializerDeserializer[] fieldSerdes = getNonHashedIndexFieldSerdes(invIndexType);
@@ -161,7 +161,7 @@ public class LSMInvertedIndexTestUtils {
                 fieldSerdes.length - 1, tokenizerFactory, invIndexType);
         return testCtx;
     }
-    
+
     public static LSMInvertedIndexTestContext createHashedWordInvIndexTestContext(LSMInvertedIndexTestHarness harness,
             InvertedIndexType invIndexType) throws IOException, IndexException {
         ISerializerDeserializer[] fieldSerdes = getHashedIndexFieldSerdes(invIndexType);
@@ -302,8 +302,8 @@ public class LSMInvertedIndexTestUtils {
      * Compares actual and expected indexes by comparing their inverted-lists one by one. Exercises the openInvertedListCursor() method of the inverted-index accessor.
      */
     @SuppressWarnings("unchecked")
-    public static void compareActualAndExpectedIndexes(LSMInvertedIndexTestContext testCtx) throws HyracksDataException,
-            IndexException {
+    public static void compareActualAndExpectedIndexes(LSMInvertedIndexTestContext testCtx)
+            throws HyracksDataException, IndexException {
         IInvertedIndex invIndex = (IInvertedIndex) testCtx.getIndex();
         ISerializerDeserializer[] fieldSerdes = testCtx.getFieldSerdes();
         MultiComparator invListCmp = MultiComparator.create(invIndex.getInvListCmpFactories());
@@ -397,14 +397,15 @@ public class LSMInvertedIndexTestUtils {
                 break;
             }
         }
-        getExpectedResults(scanCountArray, checkTuples, searchDocument, tokenizer, tokenSerde,
-                searchModifier, expectedResults, isPartitioned);
+        getExpectedResults(scanCountArray, checkTuples, searchDocument, tokenizer, tokenSerde, searchModifier,
+                expectedResults, isPartitioned);
     }
-    
+
     @SuppressWarnings("unchecked")
     public static void getExpectedResults(int[] scanCountArray, TreeSet<CheckTuple> checkTuples,
             ITupleReference searchDocument, IBinaryTokenizer tokenizer, ISerializerDeserializer tokenSerde,
-            IInvertedIndexSearchModifier searchModifier, List<Integer> expectedResults, boolean isPartitioned) throws IOException {
+            IInvertedIndexSearchModifier searchModifier, List<Integer> expectedResults, boolean isPartitioned)
+            throws IOException {
         // Reset scan count array.
         Arrays.fill(scanCountArray, 0);
         expectedResults.clear();
@@ -459,7 +460,7 @@ public class LSMInvertedIndexTestUtils {
                 highKey = new CheckTuple(2, 2);
                 highKey.appendField(tokenObj);
                 highKey.appendField(Integer.valueOf(numTokensUpperBound));
-            }                        
+            }
 
             // Get view over check tuples containing inverted-list corresponding to token. 
             SortedSet<CheckTuple> invList = OrderedIndexTestUtils.getPrefixExpectedSubset(checkTuples, lowKey, highKey);
@@ -471,7 +472,7 @@ public class LSMInvertedIndexTestUtils {
                 scanCountArray[element]++;
             }
         }
-        
+
         // Run through scan count array, and see whether elements satisfy the given occurrence threshold.
         expectedResults.clear();
         for (int i = 0; i < scanCountArray.length; i++) {
@@ -507,7 +508,7 @@ public class LSMInvertedIndexTestUtils {
                 int queryIndex = Math.abs(rnd.nextInt() % documentCorpus.size());
                 searchDocument.reset(documentCorpus.get(queryIndex));
             }
-            
+
             // Set query tuple in search predicate.
             searchPred.setQueryTuple(searchDocument);
             searchPred.setQueryFieldIndex(0);

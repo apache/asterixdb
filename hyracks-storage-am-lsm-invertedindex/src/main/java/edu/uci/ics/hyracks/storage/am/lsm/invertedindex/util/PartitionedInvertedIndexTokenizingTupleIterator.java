@@ -23,11 +23,11 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokeni
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
 
 // TODO: We can possibly avoid copying the data into a new tuple here.
-public class InvertedIndexTokenizingNumTokensTupleIterator extends InvertedIndexTokenizingTupleIterator {
+public class PartitionedInvertedIndexTokenizingTupleIterator extends InvertedIndexTokenizingTupleIterator {
 
     protected int numTokens = 0;
 
-    public InvertedIndexTokenizingNumTokensTupleIterator(int tokensFieldCount, int invListFieldCount,
+    public PartitionedInvertedIndexTokenizingTupleIterator(int tokensFieldCount, int invListFieldCount,
             IBinaryTokenizer tokenizer) {
         super(tokensFieldCount, invListFieldCount, tokenizer);
     }
@@ -64,5 +64,9 @@ public class InvertedIndexTokenizingNumTokensTupleIterator extends InvertedIndex
         }
         // Reset tuple reference for insert operation.
         tupleReference.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
+    }
+    
+    public int getNumTokens() {
+        return numTokens;
     }
 }

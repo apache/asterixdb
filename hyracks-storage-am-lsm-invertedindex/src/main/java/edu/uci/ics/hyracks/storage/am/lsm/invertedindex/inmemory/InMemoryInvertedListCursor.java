@@ -63,15 +63,18 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
     }
     
     public void prepare(BTreeAccessor btreeAccessor, RangePredicate btreePred, MultiComparator tokenFieldsCmp,
-            MultiComparator btreeCmp) {
-        this.btreeAccessor = btreeAccessor;
-        this.btreeCursor = btreeAccessor.createSearchCursor();
-        this.countingCursor = btreeAccessor.createCountingSearchCursor();
-        this.btreePred = btreePred;
-        this.btreePred.setLowKeyComparator(tokenFieldsCmp);
-        this.btreePred.setHighKeyComparator(tokenFieldsCmp);
-        this.tokenFieldsCmp = tokenFieldsCmp;
-        this.btreeCmp = btreeCmp;
+            MultiComparator btreeCmp) throws HyracksDataException, IndexException {
+        // Avoid object creation if this.btreeAccessor == btreeAccessor.
+        if (this.btreeAccessor != btreeAccessor) {
+            this.btreeAccessor = btreeAccessor;
+            this.btreeCursor = btreeAccessor.createSearchCursor();
+            this.countingCursor = btreeAccessor.createCountingSearchCursor();
+            this.btreePred = btreePred;
+            this.btreePred.setLowKeyComparator(tokenFieldsCmp);
+            this.btreePred.setHighKeyComparator(tokenFieldsCmp);
+            this.tokenFieldsCmp = tokenFieldsCmp;
+            this.btreeCmp = btreeCmp;
+        }
     }
     
     @Override
@@ -97,6 +100,10 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
 
     @Override
     public void pinPages() throws HyracksDataException, IndexException {
+        if (cursorNeedsClose) {
+            // Cursor has already been positioned.
+            return;
+        }
         btreePred.setLowKeyComparator(tokenFieldsCmp);
         btreePred.setHighKeyComparator(tokenFieldsCmp);
         btreePred.setLowKey(tokenTuple, true);
