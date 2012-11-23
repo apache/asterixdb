@@ -47,9 +47,11 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionC
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -140,6 +142,23 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
             LogicalVariable inputVar = producedVariables.get(0);
             IVariableTypeEnvironment env = assignOp.computeOutputTypeEnvironment(context);
             inputRecordType = (IAType) env.getVarType(inputVar);
+        } else if (op1.getOperatorTag() == LogicalOperatorTag.WRITE) {
+            AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
+            if (op2.getOperatorTag() != LogicalOperatorTag.PROJECT)
+                return false;
+            assignOp = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
+            if (assignOp.getOperatorTag() != LogicalOperatorTag.UNNEST)
+                return false;
+            IVariableTypeEnvironment env = assignOp.computeOutputTypeEnvironment(context);
+            UnnestOperator unnestOp = (UnnestOperator) assignOp;
+            ILogicalExpression unnestExpr = unnestOp.getExpressionRef().getValue();
+            UnnestingFunctionCallExpression unnestExpression = (UnnestingFunctionCallExpression) unnestExpr;
+            AbstractFunctionCallExpression unnestArgExpr = (AbstractFunctionCallExpression) unnestExpression
+                    .getArguments().get(0).getValue();
+            inputRecordType = (IAType) env.getType(unnestArgExpr);
+            rewriteFuncExpr(unnestArgExpr, inputRecordType, inputRecordType, env);
+            context.computeAndSetTypeEnvironmentForOperator(unnestOp);
+            return true;
         } else {
             return false;
         }
@@ -191,7 +210,7 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
         return true;
     }
 
-    private void rewriteFuncExpr(ScalarFunctionCallExpression funcExpr, IAType reqType, IAType inputType,
+    private void rewriteFuncExpr(AbstractFunctionCallExpression funcExpr, IAType reqType, IAType inputType,
             IVariableTypeEnvironment env) throws AlgebricksException {
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {
             if (reqType.equals(BuiltinType.ANY)) {
@@ -223,7 +242,7 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
      *            type environment
      * @throws AlgebricksException
      */
-    private void rewriteRecordFuncExpr(ScalarFunctionCallExpression funcExpr, ARecordType requiredRecordType,
+    private void rewriteRecordFuncExpr(AbstractFunctionCallExpression funcExpr, ARecordType requiredRecordType,
             ARecordType inputRecordType, IVariableTypeEnvironment env) throws AlgebricksException {
         // if already rewritten, the required type is not null
         if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
@@ -244,7 +263,7 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
      *            type environment
      * @throws AlgebricksException
      */
-    private void rewriteListFuncExpr(ScalarFunctionCallExpression funcExpr, AbstractCollectionType requiredListType,
+    private void rewriteListFuncExpr(AbstractFunctionCallExpression funcExpr, AbstractCollectionType requiredListType,
             AbstractCollectionType inputListType, IVariableTypeEnvironment env) throws AlgebricksException {
         if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
             return;
@@ -269,7 +288,7 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
         }
     }
 
-    private void staticRecordTypeCast(ScalarFunctionCallExpression func, ARecordType reqType, ARecordType inputType,
+    private void staticRecordTypeCast(AbstractFunctionCallExpression func, ARecordType reqType, ARecordType inputType,
             IVariableTypeEnvironment env) throws AlgebricksException {
         IAType[] reqFieldTypes = reqType.getFieldTypes();
         String[] reqFieldNames = reqType.getFieldNames();
