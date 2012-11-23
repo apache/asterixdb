@@ -100,10 +100,6 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
 
     @Override
     public void pinPages() throws HyracksDataException, IndexException {
-        if (cursorNeedsClose) {
-            // Cursor has already been positioned.
-            return;
-        }
         btreePred.setLowKeyComparator(tokenFieldsCmp);
         btreePred.setHighKeyComparator(tokenFieldsCmp);
         btreePred.setLowKey(tokenTuple, true);

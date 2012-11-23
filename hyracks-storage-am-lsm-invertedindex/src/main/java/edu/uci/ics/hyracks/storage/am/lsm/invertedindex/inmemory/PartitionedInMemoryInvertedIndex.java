@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 
 import java.util.ArrayList;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
@@ -40,6 +41,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex implements IPartitionedInvertedIndex {
 
+    protected final ReentrantReadWriteLock partitionIndexLock = new ReentrantReadWriteLock(true);
     protected int minPartitionIndex = Integer.MAX_VALUE;
     protected int maxPartitionIndex = Integer.MIN_VALUE;
 
@@ -67,13 +69,15 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
         maxPartitionIndex = Integer.MIN_VALUE;
     }
 
-    public synchronized void updatePartitionIndexes(int numTokens) {
+    public void updatePartitionIndexes(int numTokens) {
+        partitionIndexLock.writeLock().lock();
         if (numTokens < minPartitionIndex) {
             minPartitionIndex = numTokens;
         }
         if (numTokens > maxPartitionIndex) {
             maxPartitionIndex = numTokens;
         }
+        partitionIndexLock.writeLock().unlock();
     }
 
     @Override
@@ -87,6 +91,13 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
     public void openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
             int numTokensLowerBound, int numTokensUpperBound, InvertedListPartitions invListPartitions)
             throws HyracksDataException, IndexException {
+        int minPartitionIndex;
+        int maxPartitionIndex;
+        partitionIndexLock.readLock().lock();
+        minPartitionIndex = this.minPartitionIndex;
+        maxPartitionIndex = this.maxPartitionIndex;
+        partitionIndexLock.readLock().unlock();
+
         if (minPartitionIndex == Integer.MAX_VALUE || maxPartitionIndex == Integer.MIN_VALUE) {
             // Index must be empty.
             return;
@@ -116,21 +127,15 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
                     .getCachedInvertedListCursor();
             inMemListCursor.prepare(ctx.btreeAccessor, ctx.btreePred, ctx.tokenFieldsCmp, ctx.btreeCmp);
             inMemListCursor.reset(searchKey);
-            inMemListCursor.pinPages();
-            if (inMemListCursor.hasNext()) {
-                invListPartitions.addInvertedListCursor(inMemListCursor, i);
-                // Leave the cursor "pinned" to avoid re-traversing the underlying BTree when merging the inverted lists.
-            } else {
-                inMemListCursor.unpinPages();
-            }
+            invListPartitions.addInvertedListCursor(inMemListCursor, i);
         }
     }
 
     @Override
     public void cleanupPartitionState(ArrayList<IInvertedListCursor> invListCursors) throws HyracksDataException {
         // Make sure to unpin/close cursors if the entire partition is pruned.
-        for (IInvertedListCursor cursor : invListCursors) {
-            cursor.unpinPages();
-        }
+        //for (IInvertedListCursor cursor : invListCursors) {
+        //    cursor.unpinPages();
+        //}
     }
 }

@@ -28,6 +28,8 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccess
 
 public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
 
+    private static final int NUM_DOCUMENT_FIELDS = 1;
+    
     private IndexOperation op;
     private final IInvertedIndex memInvIndex;
     private final IIndex memDeletedKeysBTree;
@@ -68,11 +70,10 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
                     deletedKeysBTreeAccessor = memDeletedKeysBTree.createAccessor(NoOpOperationCallback.INSTANCE,
                             NoOpOperationCallback.INSTANCE);
                     // Project away the document fields, leaving only the key fields.
-                    int numTokenFields = memInvIndex.getTokenTypeTraits().length;
                     int numKeyFields = memInvIndex.getInvListTypeTraits().length;
-                    int[] keyFieldPermutation = new int[memInvIndex.getInvListTypeTraits().length];
+                    int[] keyFieldPermutation = new int[numKeyFields];
                     for (int i = 0; i < numKeyFields; i++) {
-                        keyFieldPermutation[i] = numTokenFields + i;
+                        keyFieldPermutation[i] = NUM_DOCUMENT_FIELDS + i;
                     }
                     keysOnlyTuple = new PermutingTupleReference(keyFieldPermutation);
                 }

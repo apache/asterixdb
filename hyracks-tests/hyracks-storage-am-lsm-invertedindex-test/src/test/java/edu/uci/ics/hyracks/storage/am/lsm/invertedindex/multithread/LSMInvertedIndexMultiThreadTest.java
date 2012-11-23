@@ -39,17 +39,17 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTes
 public class LSMInvertedIndexMultiThreadTest {
 
     protected final Logger LOGGER = Logger.getLogger(LSMInvertedIndexMultiThreadTest.class.getName());
-    
+
     // Machine-specific number of threads to use for testing.
     protected final int REGULAR_NUM_THREADS = Runtime.getRuntime().availableProcessors();
     // Excessive number of threads for testing.
     protected final int EXCESSIVE_NUM_THREADS = Runtime.getRuntime().availableProcessors() * 4;
     protected final int NUM_OPERATIONS = AccessMethodTestsConfig.LSM_INVINDEX_MULTITHREAD_NUM_OPERATIONS;
-    
-    private final LSMInvertedIndexTestHarness harness = new LSMInvertedIndexTestHarness();
-    private final LSMInvertedIndexWorkerFactory workerFactory = new LSMInvertedIndexWorkerFactory();
-    private final ArrayList<TestWorkloadConf> workloadConfs = getTestWorkloadConf();
-    
+
+    protected final LSMInvertedIndexTestHarness harness = new LSMInvertedIndexTestHarness();
+    protected final LSMInvertedIndexWorkerFactory workerFactory = new LSMInvertedIndexWorkerFactory();
+    protected final ArrayList<TestWorkloadConf> workloadConfs = getTestWorkloadConf();
+
     protected void setUp() throws HyracksException {
         harness.setUp();
     }
@@ -58,8 +58,8 @@ public class LSMInvertedIndexMultiThreadTest {
         harness.tearDown();
     }
 
-    protected void runTest(LSMInvertedIndexTestContext testCtx, TupleGenerator tupleGen, int numThreads, TestWorkloadConf conf,
-            String dataMsg) throws InterruptedException, TreeIndexException, HyracksException {
+    protected void runTest(LSMInvertedIndexTestContext testCtx, TupleGenerator tupleGen, int numThreads,
+            TestWorkloadConf conf, String dataMsg) throws InterruptedException, TreeIndexException, HyracksException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("LSMInvertedIndex MultiThread Test:\nData: " + dataMsg + "; Threads: " + numThreads
                     + "; Workload: " + conf.toString() + ".");
@@ -123,23 +123,23 @@ public class LSMInvertedIndexMultiThreadTest {
 
         return workloadConfs;
     }
-    
+
     @Test
     public void wordTokensInvIndexTest() throws IOException, IndexException, InterruptedException {
         String dataMsg = "Documents";
         int[] numThreads = new int[] { REGULAR_NUM_THREADS, EXCESSIVE_NUM_THREADS };
         for (int i = 0; i < numThreads.length; i++) {
-            for (TestWorkloadConf conf : workloadConfs) {                
+            for (TestWorkloadConf conf : workloadConfs) {
                 setUp();
                 LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestUtils.createWordInvIndexTestContext(harness,
-                        InvertedIndexType.LSM);
+                        getIndexType());
                 TupleGenerator tupleGen = LSMInvertedIndexTestUtils.createStringDocumentTupleGen(harness.getRandom());
                 runTest(testCtx, tupleGen, numThreads[i], conf, dataMsg);
                 tearDown();
             }
         }
     }
-    
+
     @Test
     public void hashedNGramTokensInvIndexTest() throws IOException, IndexException, InterruptedException {
         String dataMsg = "Person Names";
@@ -148,11 +148,15 @@ public class LSMInvertedIndexMultiThreadTest {
             for (TestWorkloadConf conf : workloadConfs) {
                 setUp();
                 LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestUtils.createHashedNGramInvIndexTestContext(
-                        harness, InvertedIndexType.LSM);
+                        harness, getIndexType());
                 TupleGenerator tupleGen = LSMInvertedIndexTestUtils.createPersonNamesTupleGen(harness.getRandom());
                 runTest(testCtx, tupleGen, numThreads[i], conf, dataMsg);
                 tearDown();
             }
         }
+    }
+
+    protected InvertedIndexType getIndexType() {
+        return InvertedIndexType.LSM;
     }
 }
