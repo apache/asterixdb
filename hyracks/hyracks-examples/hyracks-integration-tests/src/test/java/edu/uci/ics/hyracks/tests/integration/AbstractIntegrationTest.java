@@ -30,6 +30,11 @@ import org.junit.rules.TemporaryFolder;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.dataset.HyracksDataset;
+import edu.uci.ics.hyracks.api.dataset.HyracksDatasetDirectoryServiceConnection;
+import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
+import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetDirectoryServiceConnection;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -115,6 +120,15 @@ public abstract class AbstractIntegrationTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(jobId.toString());
         }
+
+        // My code
+        NetworkAddress ddsAddress = hcc.getDatasetDirectoryServiceInfo(jobId);
+        IHyracksDatasetDirectoryServiceConnection ddsc = new HyracksDatasetDirectoryServiceConnection(new String(
+                ddsAddress.getIpAddress()), ddsAddress.getPort());
+        IHyracksDataset dataset = new HyracksDataset(jobId, ddsc);
+        dataset.getResults();
+        // End of my code
+
         hcc.waitForCompletion(jobId);
         dumpOutputFiles();
     }
