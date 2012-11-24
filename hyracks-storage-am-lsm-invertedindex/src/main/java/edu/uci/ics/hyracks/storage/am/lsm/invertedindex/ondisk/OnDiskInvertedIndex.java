@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk;
 
+import java.io.DataOutput;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
@@ -67,17 +69,16 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
  * cannot exceed the size of a Hyracks frame.
  */
 public class OnDiskInvertedIndex implements IInvertedIndex {
-    private final IHyracksCommonContext ctx = new DefaultHyracksCommonContext();
+    protected final IHyracksCommonContext ctx = new DefaultHyracksCommonContext();
 
-    // Schema of BTree tuples.
-    public final int TOKEN_FIELD = 0;
-    public final int INVLIST_START_PAGE_ID_FIELD = 1;
-    public final int INVLIST_END_PAGE_ID_FIELD = 2;
-    public final int INVLIST_START_OFF_FIELD = 3;
-    public final int INVLIST_NUM_ELEMENTS_FIELD = 4;
-
+    // Schema of BTree tuples, set in constructor.    
+    protected final int invListStartPageIdField;
+    protected final int invListEndPageIdField;
+    protected final int invListStartOffField;
+    protected final int invListNumElementsField;
+    
     // Type traits to be appended to the token type trait which finally form the BTree field type traits.
-    private static final ITypeTraits[] btreeValueTypeTraits = new ITypeTraits[4];
+    protected static final ITypeTraits[] btreeValueTypeTraits = new ITypeTraits[4];
     static {
         // startPageId
         btreeValueTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
@@ -89,23 +90,22 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         btreeValueTypeTraits[3] = IntegerPointable.TYPE_TRAITS;
     }
 
-    private BTree btree;
-    private int rootPageId = 0;
-    private IBufferCache bufferCache;
-    private IFileMapProvider fileMapProvider;
-    private int fileId = -1;
-    private final ITypeTraits[] invListTypeTraits;
-    private final IBinaryComparatorFactory[] invListCmpFactories;
-    private final ITypeTraits[] tokenTypeTraits;
-    private final IBinaryComparatorFactory[] tokenCmpFactories;
-    private final IInvertedListBuilder invListBuilder;
-    private final int numTokenFields;
-    private final int numInvListKeys;
-    private final FileReference invListsFile;
+    protected BTree btree;
+    protected int rootPageId = 0;
+    protected IBufferCache bufferCache;
+    protected IFileMapProvider fileMapProvider;
+    protected int fileId = -1;
+    protected final ITypeTraits[] invListTypeTraits;
+    protected final IBinaryComparatorFactory[] invListCmpFactories;
+    protected final ITypeTraits[] tokenTypeTraits;
+    protected final IBinaryComparatorFactory[] tokenCmpFactories;
+    protected final IInvertedListBuilder invListBuilder;
+    protected final int numTokenFields;
+    protected final int numInvListKeys;
+    protected final FileReference invListsFile;
     // Last page id of inverted-lists file (inclusive). Set during bulk load.
-    private int invListsMaxPageId = -1;
-
-    private boolean isOpen = false;
+    protected int invListsMaxPageId = -1;
+    protected boolean isOpen = false;
 
     public OnDiskInvertedIndex(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             IInvertedListBuilder invListBuilder, ITypeTraits[] invListTypeTraits,
@@ -124,6 +124,10 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         this.numTokenFields = btree.getComparatorFactories().length;
         this.numInvListKeys = invListCmpFactories.length;
         this.invListsFile = invListsFile;
+        this.invListStartPageIdField = numTokenFields;
+        this.invListEndPageIdField = numTokenFields + 1;
+        this.invListStartOffField = numTokenFields + 2;
+        this.invListNumElementsField = numTokenFields + 3;
     }
 
     @Override
@@ -258,19 +262,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         try {
             if (ctx.btreeCursor.hasNext()) {
                 ctx.btreeCursor.next();
-                ITupleReference frameTuple = ctx.btreeCursor.getTuple();
-                int startPageId = IntegerSerializerDeserializer.getInt(
-                        frameTuple.getFieldData(INVLIST_START_PAGE_ID_FIELD),
-                        frameTuple.getFieldStart(INVLIST_START_PAGE_ID_FIELD));
-                int endPageId = IntegerSerializerDeserializer.getInt(
-                        frameTuple.getFieldData(INVLIST_END_PAGE_ID_FIELD),
-                        frameTuple.getFieldStart(INVLIST_END_PAGE_ID_FIELD));
-                int startOff = IntegerSerializerDeserializer.getInt(frameTuple.getFieldData(INVLIST_START_OFF_FIELD),
-                        frameTuple.getFieldStart(INVLIST_START_OFF_FIELD));
-                int numElements = IntegerSerializerDeserializer.getInt(
-                        frameTuple.getFieldData(INVLIST_NUM_ELEMENTS_FIELD),
-                        frameTuple.getFieldStart(INVLIST_NUM_ELEMENTS_FIELD));
-                listCursor.reset(startPageId, endPageId, startOff, numElements);
+                resetInvertedListCursor(ctx.btreeCursor.getTuple(), listCursor);
             } else {
                 listCursor.reset(0, 0, 0, 0);
             }
@@ -280,6 +272,18 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         }
     }
 
+    public void resetInvertedListCursor(ITupleReference btreeTuple, IInvertedListCursor listCursor) {
+        int startPageId = IntegerSerializerDeserializer.getInt(btreeTuple.getFieldData(invListStartPageIdField),
+                btreeTuple.getFieldStart(invListStartPageIdField));
+        int endPageId = IntegerSerializerDeserializer.getInt(btreeTuple.getFieldData(invListEndPageIdField),
+                btreeTuple.getFieldStart(invListEndPageIdField));
+        int startOff = IntegerSerializerDeserializer.getInt(btreeTuple.getFieldData(invListStartOffField),
+                btreeTuple.getFieldStart(invListStartOffField));
+        int numElements = IntegerSerializerDeserializer.getInt(btreeTuple.getFieldData(invListNumElementsField),
+                btreeTuple.getFieldStart(invListNumElementsField));
+        listCursor.reset(startPageId, endPageId, startOff, numElements);
+    }
+    
     public final class OnDiskInvertedIndexBulkLoader implements IIndexBulkLoader {
         private final ArrayTupleBuilder btreeTupleBuilder;
         private final ArrayTupleReference btreeTupleReference;
@@ -330,14 +334,26 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         private void createAndInsertBTreeTuple() throws IndexException, HyracksDataException {
             // Build tuple.        
             btreeTupleBuilder.reset();
-            btreeTupleBuilder.addField(lastTuple.getFieldData(0), lastTuple.getFieldStart(0),
-                    lastTuple.getFieldLength(0));
-            // TODO: Boxing integers here. Fix it.
-            btreeTupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, currentInvListStartPageId);
-            btreeTupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, currentPageId);
-            btreeTupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, currentInvListStartOffset);
-            btreeTupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, invListBuilder.getListSize());
-            // Reset tuple reference and add it.
+            DataOutput output = btreeTupleBuilder.getDataOutput();
+            // Add key fields.
+            for (int i = 0; i < numTokenFields; i++) {
+                btreeTupleBuilder.addField(lastTuple.getFieldData(i), lastTuple.getFieldStart(i),
+                        lastTuple.getFieldLength(i));
+            }
+            // Add inverted-list 'pointer' value fields.
+            try {
+                output.writeInt(currentInvListStartPageId);
+                btreeTupleBuilder.addFieldEndOffset();
+                output.writeInt(currentPageId);
+                btreeTupleBuilder.addFieldEndOffset();
+                output.writeInt(currentInvListStartOffset);
+                btreeTupleBuilder.addFieldEndOffset();
+                output.writeInt(invListBuilder.getListSize());
+                btreeTupleBuilder.addFieldEndOffset();
+            } catch (IOException e) {
+                throw new HyracksDataException(e);
+            }
+            // Reset tuple reference and add it into the BTree load.
             btreeTupleReference.reset(btreeTupleBuilder.getFieldEndOffsets(), btreeTupleBuilder.getByteArray());
             btreeBulkloader.add(btreeTupleReference);
         }
@@ -456,6 +472,12 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
             this.searcher = new TOccurrenceSearcher(ctx, index);
         }
 
+        // Let subclasses initialize.
+        protected OnDiskInvertedIndexAccessor(OnDiskInvertedIndex index, IInvertedIndexSearcher searcher) {
+            this.index = index;
+            this.searcher = searcher;
+        }
+        
         @Override
         public IIndexCursor createSearchCursor() {
             return new OnDiskInvertedIndexSearchCursor(searcher, index.getInvListTypeTraits().length);
@@ -615,7 +637,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         return 0;
     }
 
-    private static ITypeTraits[] getBTreeTypeTraits(ITypeTraits[] tokenTypeTraits) {
+    protected static ITypeTraits[] getBTreeTypeTraits(ITypeTraits[] tokenTypeTraits) {
         ITypeTraits[] btreeTypeTraits = new ITypeTraits[tokenTypeTraits.length + btreeValueTypeTraits.length];
         // Set key type traits.
         for (int i = 0; i < tokenTypeTraits.length; i++) {

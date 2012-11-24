@@ -46,7 +46,7 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
     public InMemoryInvertedIndexAccessor(InMemoryInvertedIndex index, IIndexOperationContext opCtx) {
         this.opCtx = opCtx;
         this.index = index;
-        this.searcher = new TOccurrenceSearcher(hyracksCtx, index);
+        this.searcher = createSearcher();
         this.btreeAccessor = (BTreeAccessor) index.getBTree().createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
     }
@@ -62,7 +62,7 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
         opCtx.setOperation(IndexOperation.DELETE);
         index.delete(tuple, btreeAccessor, opCtx);
     }
-    
+
     @Override
     public IIndexCursor createSearchCursor() {
         return new OnDiskInvertedIndexSearchCursor(searcher, index.getInvListTypeTraits().length);
@@ -89,13 +89,13 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
         IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) index.getBTree().getLeafFrameFactory().createFrame();
         return new BTreeRangeSearchCursor(leafFrame, false);
     }
-    
+
     @Override
     public void rangeSearch(IIndexCursor cursor, ISearchPredicate searchPred) throws IndexException,
             HyracksDataException {
         btreeAccessor.search(cursor, searchPred);
     }
-    
+
     public BTreeAccessor getBTreeAccessor() {
         return btreeAccessor;
     }
@@ -108,5 +108,9 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
     @Override
     public void upsert(ITupleReference tuple) throws HyracksDataException, IndexException {
         throw new UnsupportedOperationException("Upsert not supported by in-memory inverted index.");
+    }
+
+    protected IInvertedIndexSearcher createSearcher() {
+        return new TOccurrenceSearcher(hyracksCtx, index);
     }
 }

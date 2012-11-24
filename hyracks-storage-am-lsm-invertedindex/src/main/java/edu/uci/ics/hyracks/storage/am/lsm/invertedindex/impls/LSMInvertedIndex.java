@@ -96,33 +96,33 @@ public class LSMInvertedIndex implements ILSMIndexInternal, IInvertedIndex {
         }
     }
 
-    private final ILSMHarness lsmHarness;
+    protected final ILSMHarness lsmHarness;
 
     // In-memory components.
-    private final LSMInvertedIndexComponent memComponent;
-    private final IInMemoryFreePageManager memFreePageManager;
-    private final IBinaryTokenizerFactory tokenizerFactory;
+    protected final LSMInvertedIndexComponent memComponent;
+    protected final IInMemoryFreePageManager memFreePageManager;
+    protected final IBinaryTokenizerFactory tokenizerFactory;
 
     // On-disk components.
-    private final ILSMIndexFileManager fileManager;
+    protected final ILSMIndexFileManager fileManager;
     // For creating inverted indexes in flush and merge.
-    private final OnDiskInvertedIndexFactory diskInvIndexFactory;
+    protected final OnDiskInvertedIndexFactory diskInvIndexFactory;
     // For creating deleted-keys BTrees in flush and merge.
-    private final BTreeFactory deletedKeysBTreeFactory;
-    private final IBufferCache diskBufferCache;
+    protected final BTreeFactory deletedKeysBTreeFactory;
+    protected final IBufferCache diskBufferCache;
     // List of LSMInvertedIndexComponent instances. Using Object for better sharing via
     // ILSMIndex + LSMHarness.
-    private final LinkedList<Object> diskComponents;
+    protected final LinkedList<Object> diskComponents;
     // Helps to guarantees physical consistency of LSM components.
-    private final ILSMComponentFinalizer componentFinalizer;
+    protected final ILSMComponentFinalizer componentFinalizer;
 
     // Type traits and comparators for tokens and inverted-list elements.
-    private final ITypeTraits[] invListTypeTraits;
-    private final IBinaryComparatorFactory[] invListCmpFactories;
-    private final ITypeTraits[] tokenTypeTraits;
-    private final IBinaryComparatorFactory[] tokenCmpFactories;
+    protected final ITypeTraits[] invListTypeTraits;
+    protected final IBinaryComparatorFactory[] invListCmpFactories;
+    protected final ITypeTraits[] tokenTypeTraits;
+    protected final IBinaryComparatorFactory[] tokenCmpFactories;
 
-    private boolean isActivated;
+    protected boolean isActivated;
 
     public LSMInvertedIndex(IInMemoryBufferCache memBufferCache, IInMemoryFreePageManager memFreePageManager,
             OnDiskInvertedIndexFactory diskInvIndexFactory, BTreeFactory deletedKeysBTreeFactory,
@@ -131,13 +131,6 @@ public class LSMInvertedIndex implements ILSMIndexInternal, IInvertedIndex {
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizerFactory tokenizerFactory,
             ILSMFlushController flushController, ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler) throws IndexException {
-        InMemoryInvertedIndex memInvIndex = InvertedIndexUtils.createInMemoryBTreeInvertedindex(memBufferCache,
-                memFreePageManager, invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
-                tokenizerFactory);
-        BTree deleteKeysBTree = BTreeUtils.createBTree(memBufferCache, memFreePageManager,
-                ((InMemoryBufferCache) memBufferCache).getFileMapProvider(), invListTypeTraits, invListCmpFactories,
-                BTreeLeafFrameType.REGULAR_NSM, new FileReference(new File("membtree")));
-        memComponent = new LSMInvertedIndexComponent(memInvIndex, deleteKeysBTree);
         this.memFreePageManager = memFreePageManager;
         this.tokenizerFactory = tokenizerFactory;
         this.fileManager = fileManager;
@@ -148,11 +141,24 @@ public class LSMInvertedIndex implements ILSMIndexInternal, IInvertedIndex {
         this.invListCmpFactories = invListCmpFactories;
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
+        diskComponents = new LinkedList<Object>();
+        isActivated = false;
+        // Create in-memory component.
+        InMemoryInvertedIndex memInvIndex = createInMemoryInvertedIndex(memBufferCache);
+        BTree deleteKeysBTree = BTreeUtils.createBTree(memBufferCache, memFreePageManager,
+                ((InMemoryBufferCache) memBufferCache).getFileMapProvider(), invListTypeTraits, invListCmpFactories,
+                BTreeLeafFrameType.REGULAR_NSM, new FileReference(new File("membtree")));
+        memComponent = new LSMInvertedIndexComponent(memInvIndex, deleteKeysBTree);
+        // The operation tracker may need to have the in-memory component created.
         ILSMOperationTracker opTracker = opTrackerFactory.createOperationTracker(this);
         this.lsmHarness = new LSMHarness(this, flushController, mergePolicy, opTracker, ioScheduler);
         this.componentFinalizer = new LSMInvertedIndexComponentFinalizer(diskFileMapProvider);
-        diskComponents = new LinkedList<Object>();
-        isActivated = false;
+    }
+    
+    protected InMemoryInvertedIndex createInMemoryInvertedIndex(IInMemoryBufferCache memBufferCache)
+            throws IndexException {
+        return InvertedIndexUtils.createInMemoryBTreeInvertedindex(memBufferCache, memFreePageManager,
+                invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory);
     }
 
     @Override
@@ -312,7 +318,7 @@ public class LSMInvertedIndex implements ILSMIndexInternal, IInvertedIndex {
     /**
      * The keys in the in-memory deleted-keys BTree only refer to on-disk components.
      * We delete documents from the in-memory inverted index by deleting its entries directly,
-     * and do NOT add the deleted key to the deleted-keys BTree.
+     * while still adding the deleted key to the deleted-keys BTree.
      * Otherwise, inserts would have to remove keys from the in-memory deleted-keys BTree which 
      * may cause incorrect behavior (lost deletes) in the following pathological case:
      * Insert doc 1, flush, delete doc 1, insert doc 1

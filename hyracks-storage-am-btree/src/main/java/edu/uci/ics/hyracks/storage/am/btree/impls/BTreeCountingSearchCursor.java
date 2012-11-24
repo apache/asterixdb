@@ -204,6 +204,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
             }
             bufferCache.unpin(page);
         }
+        tupleBuilder.reset();
         tupleIndex = 0;
         page = null;
         pred = null;
@@ -216,7 +217,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
             close();
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }        
     }
 
     @Override

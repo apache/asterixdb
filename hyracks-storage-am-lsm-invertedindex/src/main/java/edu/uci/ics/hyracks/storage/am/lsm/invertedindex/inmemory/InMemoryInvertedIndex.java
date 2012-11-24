@@ -44,16 +44,16 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public class InMemoryInvertedIndex implements IInvertedIndex {
 
-    private final BTree btree;
-    private final FileReference memBTreeFile = new FileReference(new File("memBTree"));
-    private final ITypeTraits[] tokenTypeTraits;
-    private final IBinaryComparatorFactory[] tokenCmpFactories;
-    private final ITypeTraits[] invListTypeTraits;
-    private final IBinaryComparatorFactory[] invListCmpFactories;
-    private final IBinaryTokenizerFactory tokenizerFactory;
+    protected final BTree btree;
+    protected final FileReference memBTreeFile = new FileReference(new File("memBTree"));
+    protected final ITypeTraits[] tokenTypeTraits;
+    protected final IBinaryComparatorFactory[] tokenCmpFactories;
+    protected final ITypeTraits[] invListTypeTraits;
+    protected final IBinaryComparatorFactory[] invListCmpFactories;
+    protected final IBinaryTokenizerFactory tokenizerFactory;
 
-    private final ITypeTraits[] btreeTypeTraits;
-    private final IBinaryComparatorFactory[] btreeCmpFactories;
+    protected final ITypeTraits[] btreeTypeTraits;
+    protected final IBinaryComparatorFactory[] btreeCmpFactories;
 
     public InMemoryInvertedIndex(IBufferCache memBufferCache, IFreePageManager memFreePageManager,
             ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,

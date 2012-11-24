@@ -31,11 +31,21 @@ public class JaccardSearchModifier implements IInvertedIndexSearchModifier {
     }
 
     @Override
-    public int getNumPrefixLists(int numQueryTokens) {
-        if (numQueryTokens == 0) {
+    public int getNumPrefixLists(int occurrenceThreshold, int numInvLists) {
+        if (numInvLists == 0) {
             return 0;
         }
-        return numQueryTokens - getOccurrenceThreshold(numQueryTokens) + 1;
+        return numInvLists - occurrenceThreshold + 1;
+    }
+
+    @Override
+    public short getNumTokensLowerBound(short numQueryTokens) {
+        return (short) Math.floor(numQueryTokens * jaccThresh);
+    }
+
+    @Override
+    public short getNumTokensUpperBound(short numQueryTokens) {
+        return (short) Math.ceil(numQueryTokens / jaccThresh);
     }
 
     public float getJaccThresh() {

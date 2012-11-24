@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -15,12 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api;
 
-public interface IInvertedIndexSearchModifier {
-    public int getOccurrenceThreshold(int numQueryTokens);
-
-    public int getNumPrefixLists(int occurrenceThreshold, int numInvLists);
-
-    public short getNumTokensLowerBound(short numQueryTokens);
-
-    public short getNumTokensUpperBound(short numQueryTokens);
+public interface IObjectFactory<T> {
+    public T create();
 }

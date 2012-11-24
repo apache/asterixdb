@@ -33,8 +33,18 @@ public class EditDistanceSearchModifier implements IInvertedIndexSearchModifier 
     }
 
     @Override
-    public int getNumPrefixLists(int numQueryTokens) {
-        return numQueryTokens - getOccurrenceThreshold(numQueryTokens) + 1;
+    public int getNumPrefixLists(int occurrenceThreshold, int numInvLists) {
+        return numInvLists - occurrenceThreshold + 1;
+    }
+
+    @Override
+    public short getNumTokensLowerBound(short numQueryTokens) {
+        return (short) (numQueryTokens - edThresh);
+    }
+
+    @Override
+    public short getNumTokensUpperBound(short numQueryTokens) {
+        return (short) (numQueryTokens + edThresh);
     }
 
     public int getGramLength() {
@@ -52,7 +62,7 @@ public class EditDistanceSearchModifier implements IInvertedIndexSearchModifier 
     public void setEdThresh(int edThresh) {
         this.edThresh = edThresh;
     }
-    
+
     @Override
     public String toString() {
         return "Edit Distance Search Modifier, GramLen: " + gramLength + ", Threshold: " + edThresh;

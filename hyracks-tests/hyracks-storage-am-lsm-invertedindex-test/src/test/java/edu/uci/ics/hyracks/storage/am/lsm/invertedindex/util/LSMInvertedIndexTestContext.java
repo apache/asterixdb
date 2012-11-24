@@ -45,23 +45,28 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
     public static enum InvertedIndexType {
         INMEMORY,
         ONDISK,
-        LSM
+        LSM,
+        PARTITIONED_INMEMORY,
+        PARTITIONED_ONDISK,
+        PARTITIONED_LSM
     };
 
     protected IInvertedIndex invIndex;
     protected IBinaryComparatorFactory[] allCmpFactories;
     protected IBinaryTokenizerFactory tokenizerFactory;
+    protected InvertedIndexType invIndexType;
     protected InvertedIndexTokenizingTupleIterator indexTupleIter;
     protected HashSet<Comparable> allTokens = new HashSet<Comparable>();
     protected List<ITupleReference> documentCorpus = new ArrayList<ITupleReference>();
     
     public LSMInvertedIndexTestContext(ISerializerDeserializer[] fieldSerdes, IIndex index,
-            IBinaryTokenizerFactory tokenizerFactory) {
+            IBinaryTokenizerFactory tokenizerFactory, InvertedIndexType invIndexType,
+            InvertedIndexTokenizingTupleIterator indexTupleIter) {
         super(fieldSerdes, index);
-        this.tokenizerFactory = tokenizerFactory;
         invIndex = (IInvertedIndex) index;
-        indexTupleIter = new InvertedIndexTokenizingTupleIterator(invIndex.getTokenTypeTraits().length,
-                invIndex.getInvListTypeTraits().length, tokenizerFactory.createTokenizer());
+        this.tokenizerFactory = tokenizerFactory;
+        this.invIndexType = invIndexType;
+        this.indexTupleIter = indexTupleIter;
     }
 
     @Override
@@ -88,8 +93,9 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
         return allCmpFactories;
     }
 
-    public static LSMInvertedIndexTestContext create(LSMInvertedIndexTestHarness harness, ISerializerDeserializer[] fieldSerdes,
-            int tokenFieldCount, IBinaryTokenizerFactory tokenizerFactory, InvertedIndexType invIndexType) throws IndexException {
+    public static LSMInvertedIndexTestContext create(LSMInvertedIndexTestHarness harness,
+            ISerializerDeserializer[] fieldSerdes, int tokenFieldCount, IBinaryTokenizerFactory tokenizerFactory,
+            InvertedIndexType invIndexType) throws IndexException {
         ITypeTraits[] allTypeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] allCmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes,
                 fieldSerdes.length);
@@ -108,7 +114,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
             invListTypeTraits[i] = allTypeTraits[i + tokenFieldCount];
             invListCmpFactories[i] = allCmpFactories[i + tokenFieldCount];
         }
-        // Create index and test context.
+        // Create index and test context.        
         IInvertedIndex invIndex;
         switch (invIndexType) {
             case INMEMORY: {
@@ -117,8 +123,20 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                         tokenCmpFactories, tokenizerFactory);
                 break;
             }
+            case PARTITIONED_INMEMORY: {
+                invIndex = InvertedIndexUtils.createPartitionedInMemoryBTreeInvertedindex(harness.getMemBufferCache(),
+                        harness.getMemFreePageManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
+                        tokenCmpFactories, tokenizerFactory);
+                break;
+            }
             case ONDISK: {
                 invIndex = InvertedIndexUtils.createOnDiskInvertedIndex(harness.getDiskBufferCache(),
+                        harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
+                        tokenCmpFactories, harness.getInvListsFileRef());
+                break;
+            }
+            case PARTITIONED_ONDISK: {
+                invIndex = InvertedIndexUtils.createPartitionedOnDiskInvertedIndex(harness.getDiskBufferCache(),
                         harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
                         tokenCmpFactories, harness.getInvListsFileRef());
                 break;
@@ -132,11 +150,42 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                         harness.getIOScheduler());
                 break;
             }
+            case PARTITIONED_LSM: {
+                invIndex = InvertedIndexUtils.createPartitionedLSMInvertedIndex(harness.getMemBufferCache(),
+                        harness.getMemFreePageManager(), harness.getDiskFileMapProvider(), invListTypeTraits,
+                        invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
+                        harness.getDiskBufferCache(), harness.getIOManager(), harness.getOnDiskDir(),
+                        harness.getFlushController(), harness.getMergePolicy(), harness.getOperationTrackerFactory(),
+                        harness.getIOScheduler());
+                break;
+            }
             default: {
                 throw new InvertedIndexException("Unknow inverted-index type '" + invIndexType + "'.");
             }
         }
-        LSMInvertedIndexTestContext testCtx = new LSMInvertedIndexTestContext(fieldSerdes, invIndex, tokenizerFactory);
+        InvertedIndexTokenizingTupleIterator indexTupleIter = null;
+        switch (invIndexType) {
+            case INMEMORY:
+            case ONDISK:
+            case LSM: {
+                indexTupleIter = new InvertedIndexTokenizingTupleIterator(invIndex.getTokenTypeTraits().length,
+                        invIndex.getInvListTypeTraits().length, tokenizerFactory.createTokenizer());
+                break;
+            }
+            case PARTITIONED_INMEMORY:
+            case PARTITIONED_ONDISK:
+            case PARTITIONED_LSM: {
+                indexTupleIter = new PartitionedInvertedIndexTokenizingTupleIterator(
+                        invIndex.getTokenTypeTraits().length, invIndex.getInvListTypeTraits().length,
+                        tokenizerFactory.createTokenizer());
+                break;
+            }
+            default: {
+                throw new InvertedIndexException("Unknow inverted-index type '" + invIndexType + "'.");
+            }
+        }
+        LSMInvertedIndexTestContext testCtx = new LSMInvertedIndexTestContext(fieldSerdes, invIndex, tokenizerFactory,
+                invIndexType, indexTupleIter);
         return testCtx;
     }
 
@@ -191,5 +240,9 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
     
     public List<ITupleReference> getDocumentCorpus() {
         return documentCorpus;
+    }
+    
+    public InvertedIndexType getInvertedIndexType() {
+        return invIndexType;
     }
 }

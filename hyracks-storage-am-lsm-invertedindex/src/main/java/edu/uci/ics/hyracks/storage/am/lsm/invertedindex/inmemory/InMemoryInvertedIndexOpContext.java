@@ -39,7 +39,7 @@ public class InMemoryInvertedIndexOpContext implements IIndexOperationContext {
     public MultiComparator tokenFieldsCmp;
 
     // To generate in-memory BTree tuples for insertions.
-    private final IBinaryTokenizerFactory tokenizerFactory;
+    protected final IBinaryTokenizerFactory tokenizerFactory;
     public InvertedIndexTokenizingTupleIterator tupleIter;
 
     public InMemoryInvertedIndexOpContext(BTree btree, IBinaryComparatorFactory[] tokenCmpFactories,
@@ -52,19 +52,16 @@ public class InMemoryInvertedIndexOpContext implements IIndexOperationContext {
     @Override
     public void setOperation(IndexOperation newOp) {
         switch (newOp) {
-            case INSERT: 
+            case INSERT:
             case DELETE: {
                 if (tupleIter == null) {
-                    IBinaryTokenizer tokenizer = tokenizerFactory.createTokenizer();
-                    tupleIter = new InvertedIndexTokenizingTupleIterator(tokenCmpFactories.length,
-                            btree.getFieldCount() - tokenCmpFactories.length, tokenizer);
+                    setTokenizingTupleIterator();
                 }
                 break;
             }
             case SEARCH: {
                 if (btreePred == null) {
                     btreePred = new RangePredicate(null, null, true, true, null, null);
-                    // TODO: Ignore opcallbacks for now.
                     btreeAccessor = (BTreeAccessor) btree.createAccessor(NoOpOperationCallback.INSTANCE,
                             NoOpOperationCallback.INSTANCE);
                     btreeCmp = MultiComparator.create(btree.getComparatorFactories());
@@ -87,5 +84,11 @@ public class InMemoryInvertedIndexOpContext implements IIndexOperationContext {
     @Override
     public IndexOperation getOperation() {
         return op;
+    }
+
+    protected void setTokenizingTupleIterator() {
+        IBinaryTokenizer tokenizer = tokenizerFactory.createTokenizer();
+        tupleIter = new InvertedIndexTokenizingTupleIterator(tokenCmpFactories.length, btree.getFieldCount()
+                - tokenCmpFactories.length, tokenizer);
     }
 }

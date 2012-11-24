@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api;
+package edu.uci.ics.hyracks.storage.am.lsm.invertedindex;
 
-public interface IInvertedIndexSearchModifier {
-    public int getOccurrenceThreshold(int numQueryTokens);
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common.AbstractInvertedIndexDeleteTest;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
 
-    public int getNumPrefixLists(int occurrenceThreshold, int numInvLists);
+public class PartitionedLSMInvertedIndexDeleteTest extends AbstractInvertedIndexDeleteTest {
 
-    public short getNumTokensLowerBound(short numQueryTokens);
-
-    public short getNumTokensUpperBound(short numQueryTokens);
+    public PartitionedLSMInvertedIndexDeleteTest() {
+        super(InvertedIndexType.PARTITIONED_LSM, false);
+    }
 }

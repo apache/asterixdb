@@ -40,6 +40,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
@@ -99,57 +100,105 @@ public class LSMInvertedIndexTestUtils {
         return tupleGen;
     }
 
+    private static ISerializerDeserializer[] getNonHashedIndexFieldSerdes(InvertedIndexType invIndexType)
+            throws IndexException {
+        ISerializerDeserializer[] fieldSerdes = null;
+        switch (invIndexType) {
+            case INMEMORY:
+            case ONDISK:
+            case LSM: {
+                fieldSerdes = new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE,
+                        IntegerSerializerDeserializer.INSTANCE };
+                break;
+            }
+            case PARTITIONED_INMEMORY:
+            case PARTITIONED_ONDISK:
+            case PARTITIONED_LSM: {
+                // Such indexes also include the set-size for partitioning.
+                fieldSerdes = new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE,
+                        ShortSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+                break;
+            }
+            default: {
+                throw new IndexException("Unhandled inverted index type '" + invIndexType + "'.");
+            }
+        }
+        return fieldSerdes;
+    }
+
+    private static ISerializerDeserializer[] getHashedIndexFieldSerdes(InvertedIndexType invIndexType)
+            throws IndexException {
+        ISerializerDeserializer[] fieldSerdes = null;
+        switch (invIndexType) {
+            case INMEMORY:
+            case ONDISK:
+            case LSM: {
+                fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
+                        IntegerSerializerDeserializer.INSTANCE };
+                break;
+            }
+            case PARTITIONED_INMEMORY:
+            case PARTITIONED_ONDISK:
+            case PARTITIONED_LSM: {
+                // Such indexes also include the set-size for partitioning.
+                fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
+                        ShortSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+                break;
+            }
+            default: {
+                throw new IndexException("Unhandled inverted index type '" + invIndexType + "'.");
+            }
+        }
+        return fieldSerdes;
+    }
+
     public static LSMInvertedIndexTestContext createWordInvIndexTestContext(LSMInvertedIndexTestHarness harness,
             InvertedIndexType invIndexType) throws IOException, IndexException {
-        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes = getNonHashedIndexFieldSerdes(invIndexType);
         ITokenFactory tokenFactory = new UTF8WordTokenFactory();
         IBinaryTokenizerFactory tokenizerFactory = new DelimitedUTF8StringBinaryTokenizerFactory(true, false,
                 tokenFactory);
-        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes, 1, tokenizerFactory,
-                invIndexType);
+        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes,
+                fieldSerdes.length - 1, tokenizerFactory, invIndexType);
         return testCtx;
     }
 
     public static LSMInvertedIndexTestContext createHashedWordInvIndexTestContext(LSMInvertedIndexTestHarness harness,
             InvertedIndexType invIndexType) throws IOException, IndexException {
-        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes = getHashedIndexFieldSerdes(invIndexType);
         ITokenFactory tokenFactory = new HashedUTF8WordTokenFactory();
         IBinaryTokenizerFactory tokenizerFactory = new DelimitedUTF8StringBinaryTokenizerFactory(true, false,
                 tokenFactory);
-        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes, 1, tokenizerFactory,
-                invIndexType);
+        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes,
+                fieldSerdes.length - 1, tokenizerFactory, invIndexType);
         return testCtx;
     }
 
     public static LSMInvertedIndexTestContext createNGramInvIndexTestContext(LSMInvertedIndexTestHarness harness,
             InvertedIndexType invIndexType) throws IOException, IndexException {
-        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes = getNonHashedIndexFieldSerdes(invIndexType);
         ITokenFactory tokenFactory = new UTF8NGramTokenFactory();
         IBinaryTokenizerFactory tokenizerFactory = new NGramUTF8StringBinaryTokenizerFactory(TEST_GRAM_LENGTH, true,
                 true, false, tokenFactory);
-        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes, 1, tokenizerFactory,
-                invIndexType);
+        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes,
+                fieldSerdes.length - 1, tokenizerFactory, invIndexType);
         return testCtx;
     }
 
     public static LSMInvertedIndexTestContext createHashedNGramInvIndexTestContext(LSMInvertedIndexTestHarness harness,
             InvertedIndexType invIndexType) throws IOException, IndexException {
-        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes = getHashedIndexFieldSerdes(invIndexType);
         ITokenFactory tokenFactory = new HashedUTF8NGramTokenFactory();
         IBinaryTokenizerFactory tokenizerFactory = new NGramUTF8StringBinaryTokenizerFactory(TEST_GRAM_LENGTH, true,
                 true, false, tokenFactory);
-        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes, 1, tokenizerFactory,
-                invIndexType);
+        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes,
+                fieldSerdes.length - 1, tokenizerFactory, invIndexType);
         return testCtx;
     }
 
     public static void bulkLoadInvIndex(LSMInvertedIndexTestContext testCtx, TupleGenerator tupleGen, int numDocs)
             throws IndexException, IOException {
-        SortedSet<CheckTuple> tmpMemIndex = new TreeSet<CheckTuple>();;
+        SortedSet<CheckTuple> tmpMemIndex = new TreeSet<CheckTuple>();
         // First generate the expected index by inserting the documents one-by-one.
         for (int i = 0; i < numDocs; i++) {
             ITupleReference tuple = tupleGen.next();
@@ -254,8 +303,8 @@ public class LSMInvertedIndexTestUtils {
      * Compares actual and expected indexes by comparing their inverted-lists one by one. Exercises the openInvertedListCursor() method of the inverted-index accessor.
      */
     @SuppressWarnings("unchecked")
-    public static void compareActualAndExpectedIndexes(LSMInvertedIndexTestContext testCtx) throws HyracksDataException,
-            IndexException {
+    public static void compareActualAndExpectedIndexes(LSMInvertedIndexTestContext testCtx)
+            throws HyracksDataException, IndexException {
         IInvertedIndex invIndex = (IInvertedIndex) testCtx.getIndex();
         ISerializerDeserializer[] fieldSerdes = testCtx.getFieldSerdes();
         MultiComparator invListCmp = MultiComparator.create(invIndex.getInvListCmpFactories());
@@ -330,10 +379,34 @@ public class LSMInvertedIndexTestUtils {
     /**
      * Determine the expected results with the simple ScanCount algorithm.
      */
+    public static void getExpectedResults(int[] scanCountArray, TreeSet<CheckTuple> checkTuples,
+            ITupleReference searchDocument, IBinaryTokenizer tokenizer, ISerializerDeserializer tokenSerde,
+            IInvertedIndexSearchModifier searchModifier, List<Integer> expectedResults, InvertedIndexType invIndexType)
+            throws IOException {
+        boolean isPartitioned = false;
+        switch (invIndexType) {
+            case INMEMORY:
+            case ONDISK:
+            case LSM: {
+                isPartitioned = false;
+                break;
+            }
+            case PARTITIONED_INMEMORY:
+            case PARTITIONED_ONDISK:
+            case PARTITIONED_LSM: {
+                isPartitioned = true;
+                break;
+            }
+        }
+        getExpectedResults(scanCountArray, checkTuples, searchDocument, tokenizer, tokenSerde, searchModifier,
+                expectedResults, isPartitioned);
+    }
+
     @SuppressWarnings("unchecked")
     public static void getExpectedResults(int[] scanCountArray, TreeSet<CheckTuple> checkTuples,
             ITupleReference searchDocument, IBinaryTokenizer tokenizer, ISerializerDeserializer tokenSerde,
-            IInvertedIndexSearchModifier searchModifier, List<Integer> expectedResults) throws IOException {
+            IInvertedIndexSearchModifier searchModifier, List<Integer> expectedResults, boolean isPartitioned)
+            throws IOException {
         // Reset scan count array.
         Arrays.fill(scanCountArray, 0);
         expectedResults.clear();
@@ -341,7 +414,23 @@ public class LSMInvertedIndexTestUtils {
         ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
         tokenizer.reset(searchDocument.getFieldData(0), searchDocument.getFieldStart(0),
                 searchDocument.getFieldLength(0));
+        // Run though tokenizer to get number of tokens.
         int numQueryTokens = 0;
+        while (tokenizer.hasNext()) {
+            tokenizer.next();
+            numQueryTokens++;
+        }
+        short numTokensLowerBound = -1;
+        short numTokensUpperBound = -1;
+        int invListElementField = 1;
+        if (isPartitioned) {
+            numTokensLowerBound = searchModifier.getNumTokensLowerBound((short) numQueryTokens);
+            numTokensUpperBound = searchModifier.getNumTokensUpperBound((short) numQueryTokens);
+            invListElementField = 2;
+        }
+        int occurrenceThreshold = searchModifier.getOccurrenceThreshold(numQueryTokens);
+        tokenizer.reset(searchDocument.getFieldData(0), searchDocument.getFieldStart(0),
+                searchDocument.getFieldLength(0));
         while (tokenizer.hasNext()) {
             tokenizer.next();
             IToken token = tokenizer.getToken();
@@ -351,10 +440,28 @@ public class LSMInvertedIndexTestUtils {
             ByteArrayInputStream inStream = new ByteArrayInputStream(baaos.getByteArray(), 0, baaos.size());
             DataInput dataIn = new DataInputStream(inStream);
             Comparable tokenObj = (Comparable) tokenSerde.deserialize(dataIn);
-            CheckTuple lowKey = new CheckTuple(1, 1);
-            lowKey.appendField(tokenObj);
-            CheckTuple highKey = new CheckTuple(1, 1);
-            highKey.appendField(tokenObj);
+            CheckTuple lowKey;
+            if (numTokensLowerBound < 0) {
+                // Index is not partitioned, or no length filtering is possible for this search modifier.
+                lowKey = new CheckTuple(1, 1);
+                lowKey.appendField(tokenObj);
+            } else {
+                // Index is length partitioned, and search modifier supports length filtering.
+                lowKey = new CheckTuple(2, 2);
+                lowKey.appendField(tokenObj);
+                lowKey.appendField(Short.valueOf(numTokensLowerBound));
+            }
+            CheckTuple highKey;
+            if (numTokensUpperBound < 0) {
+                // Index is not partitioned, or no length filtering is possible for this search modifier.
+                highKey = new CheckTuple(1, 1);
+                highKey.appendField(tokenObj);
+            } else {
+                // Index is length partitioned, and search modifier supports length filtering.
+                highKey = new CheckTuple(2, 2);
+                highKey.appendField(tokenObj);
+                highKey.appendField(Short.valueOf(numTokensUpperBound));
+            }
 
             // Get view over check tuples containing inverted-list corresponding to token. 
             SortedSet<CheckTuple> invList = OrderedIndexTestUtils.getPrefixExpectedSubset(checkTuples, lowKey, highKey);
@@ -362,13 +469,11 @@ public class LSMInvertedIndexTestUtils {
             // Iterate over inverted list and update scan count array.
             while (invListIter.hasNext()) {
                 CheckTuple checkTuple = invListIter.next();
-                Integer element = (Integer) checkTuple.getField(1);
+                Integer element = (Integer) checkTuple.getField(invListElementField);
                 scanCountArray[element]++;
             }
-            numQueryTokens++;
         }
 
-        int occurrenceThreshold = searchModifier.getOccurrenceThreshold(numQueryTokens);
         // Run through scan count array, and see whether elements satisfy the given occurrence threshold.
         expectedResults.clear();
         for (int i = 0; i < scanCountArray.length; i++) {
@@ -394,7 +499,7 @@ public class LSMInvertedIndexTestUtils {
         IIndexCursor resultCursor = accessor.createSearchCursor();
         int numQueries = numDocQueries + numRandomQueries;
         for (int i = 0; i < numQueries; i++) {
-            // If number of documents in the corpus io less than numDocQueries, then replace the remaining ones with random queries.
+            // If number of documents in the corpus is less than numDocQueries, then replace the remaining ones with random queries.
             if (i >= numDocQueries || i >= documentCorpus.size()) {
                 // Generate a random query.
                 ITupleReference randomQuery = tupleGen.next();
@@ -438,8 +543,9 @@ public class LSMInvertedIndexTestUtils {
 
                     // Get expected results.
                     List<Integer> expectedResults = new ArrayList<Integer>();
-                    LSMInvertedIndexTestUtils.getExpectedResults(scanCountArray, testCtx.getCheckTuples(), searchDocument,
-                            tokenizer, testCtx.getFieldSerdes()[0], searchModifier, expectedResults);
+                    LSMInvertedIndexTestUtils.getExpectedResults(scanCountArray, testCtx.getCheckTuples(),
+                            searchDocument, tokenizer, testCtx.getFieldSerdes()[0], searchModifier, expectedResults,
+                            testCtx.getInvertedIndexType());
 
                     Iterator<Integer> expectedIter = expectedResults.iterator();
                     Iterator<Integer> actualIter = actualResults.iterator();

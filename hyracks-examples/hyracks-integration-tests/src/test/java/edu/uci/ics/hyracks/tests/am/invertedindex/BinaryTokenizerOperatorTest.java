@@ -11,6 +11,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
@@ -33,6 +34,15 @@ public class BinaryTokenizerOperatorTest extends AbstractIntegrationTest {
 
     @Test
     public void tokenizerTest() throws Exception {
+        test(false);
+    }
+
+    @Test
+    public void tokenizerWithNumTokensTest() throws Exception {
+        test(true);
+    }
+
+    private void test(boolean addNumTokensKey) throws Exception {
         JobSpecification spec = new JobSpecification();
 
         FileSplit[] dblpTitleFileSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
@@ -46,16 +56,22 @@ public class BinaryTokenizerOperatorTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE }, '|'), dblpTitleRecDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, dblpTitleScanner, NC1_ID);
 
-        RecordDescriptor tokenizerRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
+        RecordDescriptor tokenizerRecDesc;
+        if (!addNumTokensKey) {
+            tokenizerRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+                    UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
+        } else {
+            tokenizerRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+                    UTF8StringSerializerDeserializer.INSTANCE, ShortSerializerDeserializer.INSTANCE,
+                    IntegerSerializerDeserializer.INSTANCE });
+        }
 
         ITokenFactory tokenFactory = new UTF8WordTokenFactory();
         IBinaryTokenizerFactory tokenizerFactory = new DelimitedUTF8StringBinaryTokenizerFactory(true, false,
                 tokenFactory);
-        int[] tokenFields = { 1 };
         int[] keyFields = { 0 };
         BinaryTokenizerOperatorDescriptor binaryTokenizer = new BinaryTokenizerOperatorDescriptor(spec,
-                tokenizerRecDesc, tokenizerFactory, tokenFields, keyFields);
+                tokenizerRecDesc, tokenizerFactory, 1, keyFields, addNumTokensKey);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, binaryTokenizer, NC1_ID);
 
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
