@@ -23,6 +23,12 @@ import edu.uci.ics.hyracks.api.dataset.IDatasetDirectoryService;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobId;
 
+/**
+ * TODO: The potential perils of this global dataset directory service implementation is that, the jobs location information
+ * is never evicted from the memory and the memory useage grows as the number of jobs in the system grows. What we should
+ * possibly do is, add an API call for the client to say that it received everything it has to for the job (after it receives
+ * all the results) completely. Then we can just get rid of the location information for that job.
+ */
 public class DatasetDirectoryService implements IDatasetDirectoryService {
     private final Map<JobId, NetworkAddress[]> jobPartitionLocationsMap;
 
