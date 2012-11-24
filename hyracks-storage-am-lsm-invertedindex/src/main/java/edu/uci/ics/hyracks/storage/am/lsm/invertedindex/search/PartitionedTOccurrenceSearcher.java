@@ -112,7 +112,6 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
             }
             // Prune partition because no element in it can satisfy the occurrence threshold.
             if (partitionCursors[i].size() < occurrenceThreshold) {
-                partInvIndex.cleanupPartitionState(partitionCursors[i]);
                 continue;
             }
             // Merge inverted lists of current partition.

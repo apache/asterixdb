@@ -15,16 +15,11 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.multithread;
 
-import java.util.logging.Logger;
-
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
 
 public class PartitionedLSMInvertedIndexMultiThreadTest extends LSMInvertedIndexMultiThreadTest {
 
-    protected final Logger LOGGER = Logger.getLogger(PartitionedLSMInvertedIndexMultiThreadTest.class.getName());
-    
     protected InvertedIndexType getIndexType() {
         return InvertedIndexType.PARTITIONED_LSM;
     }
-    
 }

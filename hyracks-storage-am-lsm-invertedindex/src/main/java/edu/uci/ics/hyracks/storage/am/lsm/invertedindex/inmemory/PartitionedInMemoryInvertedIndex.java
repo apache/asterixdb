@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 
-import java.util.ArrayList;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -31,7 +30,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IPartitionedInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.InvertedListPartitions;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.PartitionedTOccurrenceSearcher;
@@ -129,13 +127,5 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
             inMemListCursor.reset(searchKey);
             invListPartitions.addInvertedListCursor(inMemListCursor, i);
         }
-    }
-
-    @Override
-    public void cleanupPartitionState(ArrayList<IInvertedListCursor> invListCursors) throws HyracksDataException {
-        // Make sure to unpin/close cursors if the entire partition is pruned.
-        //for (IInvertedListCursor cursor : invListCursors) {
-        //    cursor.unpinPages();
-        //}
     }
 }

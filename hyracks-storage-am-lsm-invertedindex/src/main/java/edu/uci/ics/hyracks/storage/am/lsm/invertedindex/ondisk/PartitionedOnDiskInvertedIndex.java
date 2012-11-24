@@ -15,8 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk;
 
-import java.util.ArrayList;
-
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -103,10 +101,5 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
             ctx.btreeCursor.close();
             ctx.btreeCursor.reset();
         }
-    }
-
-    @Override
-    public void cleanupPartitionState(ArrayList<IInvertedListCursor> invListCursors) throws HyracksDataException {
-        // Do nothing.
     }
 }

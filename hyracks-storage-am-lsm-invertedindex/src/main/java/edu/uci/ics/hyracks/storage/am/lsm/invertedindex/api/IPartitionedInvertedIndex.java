@@ -15,8 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api;
 
-import java.util.ArrayList;
-
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
@@ -26,6 +24,4 @@ public interface IPartitionedInvertedIndex {
     public void openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
             int numTokensLowerBound, int numTokensUpperBound, InvertedListPartitions invListPartitions)
             throws HyracksDataException, IndexException;
-
-    public void cleanupPartitionState(ArrayList<IInvertedListCursor> invListCursors) throws HyracksDataException;
 }
