@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.control.cc.work;
 
 import java.util.EnumSet;
 
+import edu.uci.ics.hyracks.api.dataset.IDatasetDirectoryService;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGenerator;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
@@ -56,7 +57,8 @@ public class JobStartWork extends SynchronizableWork {
             IActivityClusterGraphGeneratorFactory acggf = appCtx.createActivityClusterGraphGeneratorFactory(acggfBytes);
             IActivityClusterGraphGenerator acgg = acggf.createActivityClusterGraphGenerator(appName, jobId, appCtx,
                     jobFlags);
-            JobRun run = new JobRun(ccs, jobId, appName, acgg, jobFlags);
+            IDatasetDirectoryService dds = appCtx.getDatasetDirectoryService();
+            JobRun run = new JobRun(ccs, jobId, appName, acgg, jobFlags, dds);
             run.setStatus(JobStatus.INITIALIZED, null);
             ccs.getActiveRunMap().put(jobId, run);
             appCtx.notifyJobCreation(jobId, acggf);
