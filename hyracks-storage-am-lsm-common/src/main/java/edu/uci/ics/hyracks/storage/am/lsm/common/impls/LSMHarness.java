@@ -148,7 +148,7 @@ public class LSMHarness implements ILSMHarness {
         // If the search doesn't include the in-memory component, then we don't have
         // to synchronize with a flush.
         if (includeMemComponent) {
-            opTracker.beforeOperation(ctx.getSearchOperationCallback(), ctx.getModificationCallback(), true);
+            opTracker.beforeOperation(ctx.getSearchOperationCallback(), ctx.getModificationCallback(), false);
         }
 
         // Get a snapshot of the current on-disk Trees.
