@@ -141,9 +141,6 @@ public class LSMInvertedIndex implements ILSMIndexInternal, IInvertedIndex {
         this.invListCmpFactories = invListCmpFactories;
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
-        ILSMOperationTracker opTracker = opTrackerFactory.createOperationTracker(this);
-        this.lsmHarness = new LSMHarness(this, flushController, mergePolicy, opTracker, ioScheduler);
-        this.componentFinalizer = new LSMInvertedIndexComponentFinalizer(diskFileMapProvider);
         diskComponents = new LinkedList<Object>();
         isActivated = false;
         // Create in-memory component.
@@ -152,6 +149,10 @@ public class LSMInvertedIndex implements ILSMIndexInternal, IInvertedIndex {
                 ((InMemoryBufferCache) memBufferCache).getFileMapProvider(), invListTypeTraits, invListCmpFactories,
                 BTreeLeafFrameType.REGULAR_NSM, new FileReference(new File("membtree")));
         memComponent = new LSMInvertedIndexComponent(memInvIndex, deleteKeysBTree);
+        // The operation tracker may need to have the in-memory component created.
+        ILSMOperationTracker opTracker = opTrackerFactory.createOperationTracker(this);
+        this.lsmHarness = new LSMHarness(this, flushController, mergePolicy, opTracker, ioScheduler);
+        this.componentFinalizer = new LSMInvertedIndexComponentFinalizer(diskFileMapProvider);
     }
     
     protected InMemoryInvertedIndex createInMemoryInvertedIndex(IInMemoryBufferCache memBufferCache)
