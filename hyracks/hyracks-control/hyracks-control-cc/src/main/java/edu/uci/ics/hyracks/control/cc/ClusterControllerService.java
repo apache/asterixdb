@@ -268,6 +268,10 @@ public class ClusterControllerService extends AbstractRemoteService {
         return clusterIPC;
     }
 
+    public NetworkAddress getDatasetDirectoryServiceInfo(JobId jobId) {
+        return new NetworkAddress(ccConfig.clientNetIpAddress.getBytes(), ccConfig.clientNetPort);
+    }
+
     private class DeadNodeSweeper extends TimerTask {
         @Override
         public void run() {
@@ -322,6 +326,21 @@ public class ClusterControllerService extends AbstractRemoteService {
                     JobId jobId = createJobId();
                     workQueue.schedule(new JobStartWork(ClusterControllerService.this, sjf.getAppName(), sjf
                             .getACGGFBytes(), sjf.getJobFlags(), jobId, new IPCResponder<JobId>(handle, mid)));
+                    return;
+                }
+
+                case GET_DATASET_DIRECTORY_SERIVICE_INFO: {
+                    HyracksClientInterfaceFunctions.GetDatasetDirectoryServiceInfoFunction gddsf = (HyracksClientInterfaceFunctions.GetDatasetDirectoryServiceInfoFunction) fn;
+                    workQueue.schedule(new GetDatasetDirectoryServiceInfoWork(ClusterControllerService.this, gddsf
+                            .getJobId(), new IPCResponder<NetworkAddress>(handle, mid)));
+                    return;
+                }
+
+                case GET_DATASET_RESULT_LOCATIONS: {
+                    HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction gdrlf =
+                            (HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction) fn;
+                    workQueue.schedule(new GetResultPartitionLocationsWork(ClusterControllerService.this, gdrlf
+                            .getJobId(), gdrlf.getKnownLocations(), new IPCResponder<NetworkAddress[]>(handle, mid)));
                     return;
                 }
 

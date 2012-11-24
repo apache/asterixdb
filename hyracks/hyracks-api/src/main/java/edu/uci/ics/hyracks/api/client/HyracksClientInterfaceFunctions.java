@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.api.client;
 import java.io.Serializable;
 import java.util.EnumSet;
 
+import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 
@@ -30,6 +31,8 @@ public class HyracksClientInterfaceFunctions {
         CREATE_JOB,
         GET_JOB_STATUS,
         START_JOB,
+        GET_DATASET_DIRECTORY_SERIVICE_INFO,
+        GET_DATASET_RESULT_LOCATIONS,
         WAIT_FOR_COMPLETION,
         GET_NODE_CONTROLLERS_INFO
     }
@@ -153,6 +156,50 @@ public class HyracksClientInterfaceFunctions {
 
         public EnumSet<JobFlag> getJobFlags() {
             return jobFlags;
+        }
+    }
+
+    public static class GetDatasetDirectoryServiceInfoFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final JobId jobId;
+
+        public GetDatasetDirectoryServiceInfoFunction(JobId jobId) {
+            this.jobId = jobId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.GET_DATASET_DIRECTORY_SERIVICE_INFO;
+        }
+
+        public JobId getJobId() {
+            return jobId;
+        }
+    }
+
+    public static class GetDatasetResultLocationsFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final JobId jobId;
+        private final NetworkAddress[] knownLocations;
+
+        public GetDatasetResultLocationsFunction(JobId jobId, NetworkAddress[] knownLocations) {
+            this.jobId = jobId;
+            this.knownLocations = knownLocations;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.GET_DATASET_RESULT_LOCATIONS;
+        }
+
+        public JobId getJobId() {
+            return jobId;
+        }
+
+        public NetworkAddress[] getKnownLocations() {
+            return knownLocations;
         }
     }
 
