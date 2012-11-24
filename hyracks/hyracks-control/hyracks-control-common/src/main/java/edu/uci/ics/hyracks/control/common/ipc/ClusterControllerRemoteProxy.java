@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.control.common.ipc;
 
 import java.util.List;
 
+import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.common.application.ApplicationStatus;
@@ -91,6 +92,14 @@ public class ClusterControllerRemoteProxy implements IClusterController {
     public void registerPartitionRequest(PartitionRequest partitionRequest) throws Exception {
         CCNCFunctions.RegisterPartitionRequestFunction fn = new CCNCFunctions.RegisterPartitionRequestFunction(
                 partitionRequest);
+        ipcHandle.send(-1, fn, null);
+    }
+
+    @Override
+    public void registerResultPartitionLocation(JobId jobId, int partition, int nPartitions,
+            NetworkAddress networkAddress) throws Exception {
+        CCNCFunctions.RegisterResultPartitionLocationFunction fn = new CCNCFunctions.RegisterResultPartitionLocationFunction(
+                jobId, partition, nPartitions, networkAddress);
         ipcHandle.send(-1, fn, null);
     }
 

@@ -68,6 +68,7 @@ public class CCNCFunctions {
         REPORT_PROFILE,
         REGISTER_PARTITION_PROVIDER,
         REGISTER_PARTITION_REQUEST,
+        REGISTER_RESULT_PARTITION_LOCATION,
         APPLICATION_STATE_CHANGE_RESPONSE,
 
         NODE_REGISTRATION_RESULT,
@@ -435,6 +436,46 @@ public class CCNCFunctions {
 
             // Write Partition State
             writePartitionState(dos, pr.getMinimumState());
+        }
+    }
+
+    public static class RegisterResultPartitionLocationFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final JobId jobId;
+
+        private final int partition;
+
+        private final int nPartitions;
+
+        private NetworkAddress networkAddress;
+
+        public RegisterResultPartitionLocationFunction(JobId jobId, int partition, int nPartitions, NetworkAddress networkAddress) {
+            this.jobId = jobId;
+            this.partition = partition;
+            this.nPartitions = nPartitions;
+            this.networkAddress = networkAddress;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.REGISTER_RESULT_PARTITION_LOCATION;
+        }
+
+        public JobId getJobId() {
+            return jobId;
+        }
+
+        public int getPartition() {
+            return partition;
+        }
+
+        public int getNPartitions() {
+            return nPartitions;
+        }
+
+        public NetworkAddress getNetworkAddress() {
+            return networkAddress;
         }
     }
 

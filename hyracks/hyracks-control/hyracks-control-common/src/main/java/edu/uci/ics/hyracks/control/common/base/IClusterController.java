@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.control.common.base;
 
 import java.util.List;
 
+import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.common.application.ApplicationStatus;
@@ -45,6 +46,9 @@ public interface IClusterController {
     public void registerPartitionProvider(PartitionDescriptor partitionDescriptor) throws Exception;
 
     public void registerPartitionRequest(PartitionRequest partitionRequest) throws Exception;
+
+    public void registerResultPartitionLocation(JobId jobId, int partition, int nPartitions, NetworkAddress addr)
+            throws Exception;
 
     public void notifyApplicationStateChange(String nodeId, String appName, ApplicationStatus status) throws Exception;
 
