@@ -47,10 +47,12 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.primitive.ShortPointable;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifierFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexSearchOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.PartitionedLSMInvertedIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 
 /**
@@ -192,14 +194,24 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                     .getSearchModifierFactory(searchModifierType, simThresh, secondaryIndex);
             IBinaryTokenizerFactory queryTokenizerFactory = InvertedIndexAccessMethod.getBinaryTokenizerFactory(
                     searchModifierType, searchKeyType, secondaryIndex);
+            IIndexDataflowHelperFactory dataflowHelperFactory;
+            if (!isPartitioned) {
+                dataflowHelperFactory = new LSMInvertedIndexDataflowHelperFactory(
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER);
+            } else {
+                dataflowHelperFactory = new PartitionedLSMInvertedIndexDataflowHelperFactory(
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER);
+            }
             LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp = new LSMInvertedIndexSearchOperatorDescriptor(
                     jobSpec, queryField, appContext.getStorageManagerInterface(), secondarySplitsAndConstraint.first,
                     appContext.getIndexLifecycleManagerProvider(), tokenTypeTraits, tokenComparatorFactories,
-                    invListsTypeTraits, invListsComparatorFactories, new LSMInvertedIndexDataflowHelperFactory(
-                            AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                            AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                            AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                            AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER), queryTokenizerFactory,
+                    invListsTypeTraits, invListsComparatorFactories, dataflowHelperFactory, queryTokenizerFactory,
                     searchModifierFactory, outputRecDesc, retainInput, NoOpOperationCallbackFactory.INSTANCE);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(invIndexSearchOp,
                     secondarySplitsAndConstraint.second);
