@@ -2,6 +2,7 @@ package edu.uci.ics.asterix.file;
 
 import java.util.List;
 
+import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
@@ -24,15 +25,20 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.ShortPointable;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.BinaryTokenizerOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexCreateOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.PartitionedLSMInvertedIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 import edu.uci.ics.hyracks.storage.common.file.TransientLocalResourceFactoryProvider;
@@ -48,7 +54,8 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
     private int numTokenKeyPairFields;
     private IBinaryComparatorFactory[] tokenKeyPairComparatorFactories;
     private RecordDescriptor tokenKeyPairRecDesc;
-
+    private boolean isPartitioned;
+    
     protected SecondaryInvertedIndexCreator(PhysicalOptimizationConfig physOptConf) {
         super(physOptConf);
     }
@@ -63,6 +70,11 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         }
         if (numSecondaryKeys > 1) {
             throw new AsterixException("Cannot create composite inverted index on multiple fields.");
+        }
+        if (createIndexStmt.getIndexType() == IndexType.FUZZY_WORD_INVIX || createIndexStmt.getIndexType() == IndexType.FUZZY_NGRAM_INVIX) {
+            isPartitioned = true;
+        } else {
+            isPartitioned = false;
         }
         // Prepare record descriptor used in the assign op, and the optional
         // select op.
@@ -84,10 +96,16 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         }
         secondaryRecDesc = new RecordDescriptor(secondaryRecFields, secondaryTypeTraits);
         // Comparators and type traits for tokens.
-        tokenComparatorFactories = new IBinaryComparatorFactory[numSecondaryKeys];
-        tokenTypeTraits = new ITypeTraits[numSecondaryKeys];
+        int numTokenFields = (!isPartitioned) ? numSecondaryKeys : numSecondaryKeys + 1;
+        tokenComparatorFactories = new IBinaryComparatorFactory[numTokenFields];
+        tokenTypeTraits = new ITypeTraits[numTokenFields];
         tokenComparatorFactories[0] = InvertedIndexAccessMethod.getTokenBinaryComparatorFactory(secondaryKeyType);
         tokenTypeTraits[0] = InvertedIndexAccessMethod.getTokenTypeTrait(secondaryKeyType);
+        if (isPartitioned) {
+            // The partitioning field is hardcoded to be a short *without* an Asterix type tag.
+            tokenComparatorFactories[1] = PointableBinaryComparatorFactory.of(ShortPointable.FACTORY);
+            tokenTypeTraits[1] = ShortPointable.TYPE_TRAITS;
+        }
         // Set tokenizer factory.
         // TODO: We might want to expose the hashing option at the AQL level,
         // and add the choice to the index metadata.
@@ -100,8 +118,8 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
             invListsTypeTraits[i] = primaryRecDesc.getTypeTraits()[i];
         }
         // For tokenization, sorting and loading.
-        // One token + primary keys.
-        numTokenKeyPairFields = 1 + numPrimaryKeys;
+        // One token (+ optional partitioning field) + primary keys.
+        numTokenKeyPairFields = (!isPartitioned) ? 1 + numPrimaryKeys : 2 + numPrimaryKeys;
         ISerializerDeserializer[] tokenKeyPairFields = new ISerializerDeserializer[numTokenKeyPairFields];
         ITypeTraits[] tokenKeyPairTypeTraits = new ITypeTraits[numTokenKeyPairFields];
         tokenKeyPairComparatorFactories = new IBinaryComparatorFactory[numTokenKeyPairFields];
@@ -109,10 +127,17 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         tokenKeyPairTypeTraits[0] = tokenTypeTraits[0];
         tokenKeyPairComparatorFactories[0] = InvertedIndexAccessMethod
                 .getTokenBinaryComparatorFactory(secondaryKeyType);
+        int pkOff = 1;
+        if (isPartitioned) {
+            tokenKeyPairFields[1] = ShortSerializerDeserializer.INSTANCE;
+            tokenKeyPairTypeTraits[1] = tokenTypeTraits[1];
+            tokenKeyPairComparatorFactories[1] = PointableBinaryComparatorFactory.of(ShortPointable.FACTORY);
+            pkOff = 2;
+        }
         for (int i = 0; i < numPrimaryKeys; i++) {
-            tokenKeyPairFields[i + 1] = primaryRecDesc.getFields()[i];
-            tokenKeyPairTypeTraits[i + 1] = primaryRecDesc.getTypeTraits()[i];
-            tokenKeyPairComparatorFactories[i + 1] = primaryComparatorFactories[i];
+            tokenKeyPairFields[i + pkOff] = primaryRecDesc.getFields()[i];
+            tokenKeyPairTypeTraits[i + pkOff] = primaryRecDesc.getTypeTraits()[i];
+            tokenKeyPairComparatorFactories[i + pkOff] = primaryComparatorFactories[i];
         }
         tokenKeyPairRecDesc = new RecordDescriptor(tokenKeyPairFields, tokenKeyPairTypeTraits);
     }
@@ -120,17 +145,14 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
     @Override
     public JobSpecification buildCreationJobSpec() throws AsterixException, AlgebricksException {
         JobSpecification spec = new JobSpecification();
-        //TODO replace the transient one to persistent one
+        // TODO: replace the transient one to persistent one.
         ILocalResourceFactoryProvider localResourceFactoryProvider = new TransientLocalResourceFactoryProvider();
+        IIndexDataflowHelperFactory dataflowHelperFactory = createDataflowHelperFactory();
         LSMInvertedIndexCreateOperatorDescriptor invIndexCreateOp = new LSMInvertedIndexCreateOperatorDescriptor(spec,
                 AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, secondaryFileSplitProvider,
                 AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, tokenTypeTraits, tokenComparatorFactories,
-                invListsTypeTraits, primaryComparatorFactories, tokenizerFactory,
-                new LSMInvertedIndexDataflowHelperFactory(AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER), localResourceFactoryProvider,
-                NoOpOperationCallbackFactory.INSTANCE);
+                invListsTypeTraits, primaryComparatorFactories, tokenizerFactory, dataflowHelperFactory,
+                localResourceFactoryProvider, NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexCreateOp,
                 secondaryPartitionConstraint);
         spec.addRoot(invIndexCreateOp);
@@ -184,16 +206,13 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
     }
 
     private AbstractOperatorDescriptor createTokenizerOp(JobSpecification spec) throws AlgebricksException {
-        int[] fieldsToTokenize = new int[numSecondaryKeys];
-        for (int i = 0; i < numSecondaryKeys; i++) {
-            fieldsToTokenize[i] = i;
-        }
+        int docField = 0;
         int[] primaryKeyFields = new int[numPrimaryKeys];
         for (int i = 0; i < numPrimaryKeys; i++) {
             primaryKeyFields[i] = numSecondaryKeys + i;
         }
         BinaryTokenizerOperatorDescriptor tokenizerOp = new BinaryTokenizerOperatorDescriptor(spec,
-                tokenKeyPairRecDesc, tokenizerFactory, fieldsToTokenize, primaryKeyFields);
+                tokenKeyPairRecDesc, tokenizerFactory, docField, primaryKeyFields, isPartitioned);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, tokenizerOp,
                 primaryPartitionConstraint);
         return tokenizerOp;
@@ -214,21 +233,34 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
     }
 
     private LSMInvertedIndexBulkLoadOperatorDescriptor createInvertedIndexBulkLoadOp(JobSpecification spec) {
-        int[] fieldPermutation = new int[numSecondaryKeys + numPrimaryKeys];
+        int[] fieldPermutation = new int[numTokenKeyPairFields];
         for (int i = 0; i < numTokenKeyPairFields; i++) {
             fieldPermutation[i] = i;
         }
+        IIndexDataflowHelperFactory dataflowHelperFactory = createDataflowHelperFactory();
         LSMInvertedIndexBulkLoadOperatorDescriptor invIndexBulkLoadOp = new LSMInvertedIndexBulkLoadOperatorDescriptor(
                 spec, fieldPermutation, false, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
                 secondaryFileSplitProvider, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, primaryComparatorFactories, tokenizerFactory,
-                new LSMInvertedIndexDataflowHelperFactory(AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER),
-                NoOpOperationCallbackFactory.INSTANCE);
+                dataflowHelperFactory, NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexBulkLoadOp,
                 secondaryPartitionConstraint);
         return invIndexBulkLoadOp;
+    }
+    
+    private IIndexDataflowHelperFactory createDataflowHelperFactory() {
+        if (!isPartitioned) {
+            return new LSMInvertedIndexDataflowHelperFactory(
+                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER);
+        } else {
+            return new PartitionedLSMInvertedIndexDataflowHelperFactory(
+                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER);
+        }
     }
 }

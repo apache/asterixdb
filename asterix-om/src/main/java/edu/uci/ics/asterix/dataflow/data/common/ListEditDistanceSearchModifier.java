@@ -25,7 +25,17 @@ public class ListEditDistanceSearchModifier implements IInvertedIndexSearchModif
     }
 
     @Override
-    public int getNumPrefixLists(int numQueryTokens) {
-        return numQueryTokens - getOccurrenceThreshold(numQueryTokens) + 1;
+    public int getNumPrefixLists(int occurrenceThreshold, int numInvLists) {
+        return numInvLists - occurrenceThreshold + 1;
+    }
+
+    @Override
+    public short getNumTokensLowerBound(short numQueryTokens) {
+        return (short) (numQueryTokens - edThresh);
+    }
+
+    @Override
+    public short getNumTokensUpperBound(short numQueryTokens) {
+        return (short) (numQueryTokens + edThresh);
     }
 }

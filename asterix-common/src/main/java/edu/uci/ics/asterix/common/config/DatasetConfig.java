@@ -41,7 +41,9 @@ public class DatasetConfig {
         BTREE,        
         RTREE,
         WORD_INVIX,
-        NGRAM_INVIX
+        NGRAM_INVIX,
+        FUZZY_WORD_INVIX,
+        FUZZY_NGRAM_INVIX
     }
 
 }

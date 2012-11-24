@@ -101,7 +101,9 @@ public abstract class SecondaryIndexCreator {
                 break;
             }
             case WORD_INVIX:
-            case NGRAM_INVIX: {
+            case NGRAM_INVIX:
+            case FUZZY_WORD_INVIX:
+            case FUZZY_NGRAM_INVIX: {
                 indexCreator = new SecondaryInvertedIndexCreator(physOptConf);
                 break;
             }

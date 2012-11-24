@@ -657,7 +657,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             }
             // We can only optimize edit distance on lists using a word index.
             if ((listOrStrObj.getType().getTypeTag() == ATypeTag.ORDEREDLIST || listOrStrObj.getType().getTypeTag() == ATypeTag.UNORDEREDLIST)
-                    && index.getIndexType() == IndexType.WORD_INVIX) {
+                    && (index.getIndexType() == IndexType.WORD_INVIX || index.getIndexType() == IndexType.FUZZY_WORD_INVIX)) {
                 IACollection alist = (IACollection) listOrStrObj;
                 // Compute merge threshold.
                 mergeThreshold = alist.size() - edThresh.getIntegerValue();
@@ -683,11 +683,11 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 AbstractFunctionCallExpression nonConstfuncExpr = (AbstractFunctionCallExpression) nonConstArg;
                 // We can use this index if the tokenization function matches the index type.
                 if (nonConstfuncExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.WORD_TOKENS
-                        && index.getIndexType() == IndexType.WORD_INVIX) {
+                        && (index.getIndexType() == IndexType.WORD_INVIX || index.getIndexType() == IndexType.FUZZY_WORD_INVIX)) {
                     return true;
                 }
                 if (nonConstfuncExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.GRAM_TOKENS
-                        && index.getIndexType() == IndexType.NGRAM_INVIX) {
+                        && (index.getIndexType() == IndexType.NGRAM_INVIX || index.getIndexType() == IndexType.FUZZY_NGRAM_INVIX)) {
                     return true;
                 }
             }
@@ -700,7 +700,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         }
         // We can only optimize contains with ngram indexes.
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.CONTAINS
-                && index.getIndexType() == IndexType.NGRAM_INVIX) {
+                && (index.getIndexType() == IndexType.NGRAM_INVIX || index.getIndexType() == IndexType.FUZZY_NGRAM_INVIX)) {
             // Check that the constant search string has at least gramLength characters.
             AsterixConstantValue strConstVal = (AsterixConstantValue) optFuncExpr.getConstantVal(0);
             IAObject strObj = strConstVal.getObject();
@@ -753,10 +753,12 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     public static IBinaryTokenizerFactory getBinaryTokenizerFactory(SearchModifierType searchModifierType,
             ATypeTag searchKeyType, Index index) throws AlgebricksException {
         switch (index.getIndexType()) {
-            case WORD_INVIX: {
+            case WORD_INVIX:
+            case FUZZY_WORD_INVIX: {
                 return AqlBinaryTokenizerFactoryProvider.INSTANCE.getWordTokenizerFactory(searchKeyType, false);
             }
-            case NGRAM_INVIX: {
+            case NGRAM_INVIX:
+            case FUZZY_NGRAM_INVIX: {
                 // Make sure not to use pre- and postfixing for conjunctive searches.
                 boolean prePost = (searchModifierType == SearchModifierType.CONJUNCTIVE) ? false : true;
                 return AqlBinaryTokenizerFactoryProvider.INSTANCE.getNGramTokenizerFactory(searchKeyType,
@@ -771,10 +773,12 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     public static IBinaryTokenizerFactory getBinaryTokenizerFactory(ATypeTag keyType, IndexType indexType,
             int gramLength) throws AlgebricksException {
         switch (indexType) {
-            case WORD_INVIX: {
+            case WORD_INVIX:
+            case FUZZY_WORD_INVIX: {
                 return AqlBinaryTokenizerFactoryProvider.INSTANCE.getWordTokenizerFactory(keyType, false);
             }
-            case NGRAM_INVIX: {
+            case NGRAM_INVIX:
+            case FUZZY_NGRAM_INVIX: {
                 return AqlBinaryTokenizerFactoryProvider.INSTANCE.getNGramTokenizerFactory(keyType, gramLength, true,
                         false);
             }
@@ -797,11 +801,13 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             case EDIT_DISTANCE: {
                 int edThresh = ((AInt32) simThresh).getIntegerValue();
                 switch (index.getIndexType()) {
-                    case NGRAM_INVIX: {
+                    case NGRAM_INVIX:
+                    case FUZZY_NGRAM_INVIX: {
                         // Edit distance on strings, filtered with overlapping grams.
                         return new EditDistanceSearchModifierFactory(index.getGramLength(), edThresh);
                     }
-                    case WORD_INVIX: {
+                    case WORD_INVIX:
+                    case FUZZY_WORD_INVIX: {
                         // Edit distance on two lists. The list-elements are non-overlapping.
                         return new ListEditDistanceSearchModifierFactory(edThresh);
                     }
