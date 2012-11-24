@@ -45,6 +45,7 @@ import org.apache.commons.lang3.mutable.MutableObject;
 
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
@@ -61,6 +62,7 @@ import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.work.FutureValue;
 import edu.uci.ics.hyracks.control.common.work.WorkQueue;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
+import edu.uci.ics.hyracks.control.nc.dataset.DatasetPartitionManager;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.net.NetworkManager;
 import edu.uci.ics.hyracks.control.nc.partitions.PartitionManager;
@@ -93,6 +95,8 @@ public class NodeControllerService extends AbstractRemoteService {
     private final PartitionManager partitionManager;
 
     private final NetworkManager netManager;
+
+    private final IDatasetPartitionManager datasetPartitionManager;
 
     private final WorkQueue queue;
 
@@ -141,6 +145,7 @@ public class NodeControllerService extends AbstractRemoteService {
         }
         partitionManager = new PartitionManager(this);
         netManager = new NetworkManager(getIpAddress(ncConfig), partitionManager, ncConfig.nNetThreads);
+        datasetPartitionManager = new DatasetPartitionManager(this);
 
         queue = new WorkQueue();
         jobletMap = new Hashtable<JobId, Joblet>();
@@ -457,6 +462,10 @@ public class NodeControllerService extends AbstractRemoteService {
             throw new IllegalArgumentException("Unknown function: " + fn.getFunctionId());
 
         }
+    }
+
+    public IDatasetPartitionManager getDatasetPartitionManager() {
+        return datasetPartitionManager;
     }
 
     public void sendApplicationMessageToCC(byte[] data, String appName, String nodeId) throws Exception {
