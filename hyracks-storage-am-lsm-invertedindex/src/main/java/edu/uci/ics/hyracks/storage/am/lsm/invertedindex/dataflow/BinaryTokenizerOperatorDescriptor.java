@@ -29,19 +29,23 @@ public class BinaryTokenizerOperatorDescriptor extends AbstractSingleActivityOpe
     private static final long serialVersionUID = 1L;
 
     private final IBinaryTokenizerFactory tokenizerFactory;
-    // Fields that will be tokenized
-    private final int[] tokenFields;
+    // Field that will be tokenized.
+    private final int docField;
     // operator will append these key fields to each token, e.g., as
     // payload for an inverted list
     // WARNING: too many key fields can cause significant data blowup.
     private final int[] keyFields;
+    // Indicates whether the first key field should be the number of tokens in the tokenized set of the document.
+    // This value is used in partitioned inverted indexes, for example.
+    private final boolean addNumTokensKey;
 
     public BinaryTokenizerOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
-            IBinaryTokenizerFactory tokenizerFactory, int[] tokenFields, int[] keyFields) {
+            IBinaryTokenizerFactory tokenizerFactory, int docField, int[] keyFields, boolean addNumTokensKey) {
         super(spec, 1, 1);
         this.tokenizerFactory = tokenizerFactory;
-        this.tokenFields = tokenFields;
+        this.docField = docField;
         this.keyFields = keyFields;
+        this.addNumTokensKey = addNumTokensKey;
         recordDescriptors[0] = recDesc;
     }
 
@@ -49,6 +53,7 @@ public class BinaryTokenizerOperatorDescriptor extends AbstractSingleActivityOpe
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new BinaryTokenizerOperatorNodePushable(ctx, recordDescProvider.getInputRecordDescriptor(
-                getActivityId(), 0), recordDescriptors[0], tokenizerFactory.createTokenizer(), tokenFields, keyFields);
+                getActivityId(), 0), recordDescriptors[0], tokenizerFactory.createTokenizer(), docField, keyFields,
+                addNumTokensKey);
     }
 }

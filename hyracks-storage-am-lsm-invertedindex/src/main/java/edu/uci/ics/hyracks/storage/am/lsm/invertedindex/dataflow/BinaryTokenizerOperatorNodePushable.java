@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -34,8 +34,9 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
 
     private final IHyracksTaskContext ctx;
     private final IBinaryTokenizer tokenizer;
-    private final int[] tokenFields;
-    private final int[] projFields;
+    private final int docField;
+    private final int[] keyFields;
+    private final boolean addNumTokensKey;
     private final RecordDescriptor inputRecDesc;
     private final RecordDescriptor outputRecDesc;
 
@@ -46,11 +47,13 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
     private ByteBuffer writeBuffer;
 
     public BinaryTokenizerOperatorNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecDesc,
-            RecordDescriptor outputRecDesc, IBinaryTokenizer tokenizer, int[] tokenFields, int[] projFields) {
+            RecordDescriptor outputRecDesc, IBinaryTokenizer tokenizer, int docField, int[] keyFields,
+            boolean addNumTokensKey) {
         this.ctx = ctx;
         this.tokenizer = tokenizer;
-        this.tokenFields = tokenFields;
-        this.projFields = projFields;
+        this.docField = docField;
+        this.keyFields = keyFields;
+        this.addNumTokensKey = addNumTokensKey;
         this.inputRecDesc = inputRecDesc;
         this.outputRecDesc = outputRecDesc;
     }
@@ -69,41 +72,51 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         accessor.reset(buffer);
-
         int tupleCount = accessor.getTupleCount();
         for (int i = 0; i < tupleCount; i++) {
-
-            for (int j = 0; j < tokenFields.length; j++) {
-
+            short numTokens = 0;
+            if (addNumTokensKey) {
+                // Run through the tokens to get the total number of tokens.
                 tokenizer.reset(
                         accessor.getBuffer().array(),
                         accessor.getTupleStartOffset(i) + accessor.getFieldSlotsLength()
-                                + accessor.getFieldStartOffset(i, tokenFields[j]),
-                        accessor.getFieldLength(i, tokenFields[j]));
-
+                                + accessor.getFieldStartOffset(i, docField), accessor.getFieldLength(i, docField));
                 while (tokenizer.hasNext()) {
                     tokenizer.next();
+                    numTokens++;
+                }
+            }
 
-                    builder.reset();
-                    try {
-                        IToken token = tokenizer.getToken();
-                        token.serializeToken(builderDos);
+            tokenizer.reset(
+                    accessor.getBuffer().array(),
+                    accessor.getTupleStartOffset(i) + accessor.getFieldSlotsLength()
+                            + accessor.getFieldStartOffset(i, docField), accessor.getFieldLength(i, docField));
+            while (tokenizer.hasNext()) {
+                tokenizer.next();
+
+                builder.reset();
+                try {
+                    IToken token = tokenizer.getToken();
+                    token.serializeToken(builderDos);
+                    builder.addFieldEndOffset();
+                    // Add number of tokens if requested.
+                    if (addNumTokensKey) {
+                        builder.getDataOutput().writeShort(numTokens);
                         builder.addFieldEndOffset();
-                    } catch (IOException e) {
-                        throw new HyracksDataException(e.getMessage());
                     }
+                } catch (IOException e) {
+                    throw new HyracksDataException(e.getMessage());
+                }
 
-                    for (int k = 0; k < projFields.length; k++) {
-                        builder.addField(accessor, i, projFields[k]);
-                    }
+                for (int k = 0; k < keyFields.length; k++) {
+                    builder.addField(accessor, i, keyFields[k]);
+                }
 
+                if (!appender.append(builder.getFieldEndOffsets(), builder.getByteArray(), 0, builder.getSize())) {
+                    FrameUtils.flushFrame(writeBuffer, writer);
+                    appender.reset(writeBuffer, true);
                     if (!appender.append(builder.getFieldEndOffsets(), builder.getByteArray(), 0, builder.getSize())) {
-                        FrameUtils.flushFrame(writeBuffer, writer);
-                        appender.reset(writeBuffer, true);
-                        if (!appender
-                                .append(builder.getFieldEndOffsets(), builder.getByteArray(), 0, builder.getSize())) {
-                            throw new IllegalStateException();
-                        }
+                        throw new IllegalStateException();
                     }
                 }
             }
