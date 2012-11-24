@@ -649,7 +649,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             AInt32 edThresh = (AInt32) intObj;
             int mergeThreshold = 0;
             // We can only optimize edit distance on strings using an ngram index.
-            if (listOrStrObj.getType().getTypeTag() == ATypeTag.STRING && index.getIndexType() == IndexType.NGRAM_INVIX) {
+            if (listOrStrObj.getType().getTypeTag() == ATypeTag.STRING
+                    && (index.getIndexType() == IndexType.NGRAM_INVIX || index.getIndexType() == IndexType.FUZZY_NGRAM_INVIX)) {
                 AString astr = (AString) listOrStrObj;
                 // Compute merge threshold.
                 mergeThreshold = (astr.getStringValue().length() + index.getGramLength() - 1)

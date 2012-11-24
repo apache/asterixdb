@@ -68,7 +68,11 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
 
     @Override
     public PhysicalOperatorTag getOperatorTag() {
-        return PhysicalOperatorTag.INVERTED_INDEX_SEARCH;
+        if (isPartitioned) {
+            return PhysicalOperatorTag.FUZZY_INVERTED_INDEX_SEARCH;
+        } else {
+            return PhysicalOperatorTag.INVERTED_INDEX_SEARCH;
+        }
     }
 
     @Override
