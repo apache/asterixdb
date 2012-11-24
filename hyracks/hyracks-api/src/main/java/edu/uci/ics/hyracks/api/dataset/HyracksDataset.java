@@ -49,10 +49,6 @@ public class HyracksDataset implements IHyracksDataset {
                 knownLocations = datasetDirectoryServiceConnection.getDatasetResultLocationsFunction(jobId,
                         knownLocations);
                 if (knownLocations != null) {
-                    System.out.println("knownLocations Length: " + knownLocations.length);
-                    for (int i = 0; i < knownLocations.length; i++) {
-                        System.out.println("knownLocations: " + knownLocations[i]);
-                    }
                 }
             } catch (Exception e) {
                 // TODO(madhusudancs) Do something here
