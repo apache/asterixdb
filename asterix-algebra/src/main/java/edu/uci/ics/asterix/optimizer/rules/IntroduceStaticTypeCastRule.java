@@ -134,31 +134,45 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
             if (op2.getOperatorTag() != LogicalOperatorTag.PROJECT)
                 return false;
             assignOp = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
-            if (assignOp.getOperatorTag() != LogicalOperatorTag.ASSIGN)
+            if (assignOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                isTopWrite = true;
+                VariableUtilities.getProducedVariables(assignOp, producedVariables);
+                oldRecordVariable = producedVariables.get(0);
+                LogicalVariable inputVar = producedVariables.get(0);
+                IVariableTypeEnvironment env = assignOp.computeOutputTypeEnvironment(context);
+                inputRecordType = (IAType) env.getVarType(inputVar);
+            } else if (assignOp.getOperatorTag() == LogicalOperatorTag.UNNEST) {
+                IVariableTypeEnvironment env = assignOp.computeOutputTypeEnvironment(context);
+                UnnestOperator unnestOp = (UnnestOperator) assignOp;
+                ILogicalExpression unnestExpr = unnestOp.getExpressionRef().getValue();
+                UnnestingFunctionCallExpression unnestExpression = (UnnestingFunctionCallExpression) unnestExpr;
+                ILogicalExpression unnestArg = unnestExpression.getArguments().get(0).getValue();
+                if (unnestArg.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                    AbstractFunctionCallExpression unnestArgExpr = (AbstractFunctionCallExpression) unnestArg;
+                    inputRecordType = (IAType) env.getType(unnestArgExpr);
+                    rewriteFuncExpr(unnestArgExpr, inputRecordType, inputRecordType, env);
+                    context.computeAndSetTypeEnvironmentForOperator(unnestOp);
+                }
+                return true;
+            } else {
                 return false;
-            isTopWrite = true;
-            VariableUtilities.getProducedVariables(assignOp, producedVariables);
-            oldRecordVariable = producedVariables.get(0);
-            LogicalVariable inputVar = producedVariables.get(0);
-            IVariableTypeEnvironment env = assignOp.computeOutputTypeEnvironment(context);
-            inputRecordType = (IAType) env.getVarType(inputVar);
-        } else if (op1.getOperatorTag() == LogicalOperatorTag.WRITE) {
-            AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
-            if (op2.getOperatorTag() != LogicalOperatorTag.PROJECT)
+            }
+        } else if (op1.getOperatorTag() == LogicalOperatorTag.UNNEST) {
+            assignOp = (AbstractLogicalOperator) op1;
+            UnnestOperator topAssignOperator = (UnnestOperator) op1;
+            List<LogicalVariable> usedVariables = new ArrayList<LogicalVariable>();
+            VariableUtilities.getUsedVariables(topAssignOperator, usedVariables);
+
+            // the used variable should contain the record that will be inserted
+            // but it will not fail in many cases even if the used variable set is
+            // empty
+            if (usedVariables.size() == 0)
                 return false;
-            assignOp = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
-            if (assignOp.getOperatorTag() != LogicalOperatorTag.UNNEST)
-                return false;
-            IVariableTypeEnvironment env = assignOp.computeOutputTypeEnvironment(context);
-            UnnestOperator unnestOp = (UnnestOperator) assignOp;
-            ILogicalExpression unnestExpr = unnestOp.getExpressionRef().getValue();
-            UnnestingFunctionCallExpression unnestExpression = (UnnestingFunctionCallExpression) unnestExpr;
-            AbstractFunctionCallExpression unnestArgExpr = (AbstractFunctionCallExpression) unnestExpression
-                    .getArguments().get(0).getValue();
-            inputRecordType = (IAType) env.getType(unnestArgExpr);
-            rewriteFuncExpr(unnestArgExpr, inputRecordType, inputRecordType, env);
-            context.computeAndSetTypeEnvironmentForOperator(unnestOp);
-            return true;
+            oldRecordVariable = usedVariables.get(0);
+            LogicalVariable inputRecordVar = usedVariables.get(0);
+            IVariableTypeEnvironment env = topAssignOperator.computeOutputTypeEnvironment(context);
+            inputRecordType = (IAType) env.getVarType(inputRecordVar);
+            requiredRecordType = inputRecordType;
         } else {
             return false;
         }
@@ -187,6 +201,7 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
                         // that expression has been rewritten, and it will not
                         // fail but just return false
                         if (TypeComputerUtilities.getRequiredType(funcExpr) != null) {
+                            context.computeAndSetTypeEnvironmentForOperator(assignOp);
                             return false;
                         }
                         if (isTopWrite) {
