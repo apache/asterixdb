@@ -22,6 +22,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.InvertedListParti
 
 public interface IPartitionedInvertedIndex {
     public void openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
-            int numTokensLowerBound, int numTokensUpperBound, InvertedListPartitions invListPartitions)
+            short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions)
             throws HyracksDataException, IndexException;
 }

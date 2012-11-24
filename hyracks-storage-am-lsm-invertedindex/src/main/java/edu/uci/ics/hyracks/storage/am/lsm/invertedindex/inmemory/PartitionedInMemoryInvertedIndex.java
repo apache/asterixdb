@@ -40,8 +40,8 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex implements IPartitionedInvertedIndex {
 
     protected final ReentrantReadWriteLock partitionIndexLock = new ReentrantReadWriteLock(true);
-    protected int minPartitionIndex = Integer.MAX_VALUE;
-    protected int maxPartitionIndex = Integer.MIN_VALUE;
+    protected short minPartitionIndex = Short.MAX_VALUE;
+    protected short maxPartitionIndex = Short.MIN_VALUE;
 
     public PartitionedInMemoryInvertedIndex(IBufferCache memBufferCache, IFreePageManager memFreePageManager,
             ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
@@ -63,11 +63,11 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
     @Override
     public void clear() throws HyracksDataException {
         super.clear();
-        minPartitionIndex = Integer.MAX_VALUE;
-        maxPartitionIndex = Integer.MIN_VALUE;
+        minPartitionIndex = Short.MAX_VALUE;
+        maxPartitionIndex = Short.MIN_VALUE;
     }
 
-    public void updatePartitionIndexes(int numTokens) {
+    public void updatePartitionIndexes(short numTokens) {
         partitionIndexLock.writeLock().lock();
         if (numTokens < minPartitionIndex) {
             minPartitionIndex = numTokens;
@@ -87,26 +87,26 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
 
     @Override
     public void openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
-            int numTokensLowerBound, int numTokensUpperBound, InvertedListPartitions invListPartitions)
+            short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions)
             throws HyracksDataException, IndexException {
-        int minPartitionIndex;
-        int maxPartitionIndex;
+        short minPartitionIndex;
+        short maxPartitionIndex;
         partitionIndexLock.readLock().lock();
         minPartitionIndex = this.minPartitionIndex;
         maxPartitionIndex = this.maxPartitionIndex;
         partitionIndexLock.readLock().unlock();
 
-        if (minPartitionIndex == Integer.MAX_VALUE || maxPartitionIndex == Integer.MIN_VALUE) {
+        if (minPartitionIndex == Short.MAX_VALUE || maxPartitionIndex == Short.MIN_VALUE) {
             // Index must be empty.
             return;
         }
-        int partitionStartIndex = minPartitionIndex;
-        int partitionEndIndex = maxPartitionIndex;
+        short partitionStartIndex = minPartitionIndex;
+        short partitionEndIndex = maxPartitionIndex;
         if (numTokensLowerBound >= 0) {
-            partitionStartIndex = Math.max(minPartitionIndex, numTokensLowerBound);
+            partitionStartIndex = (short) Math.max(minPartitionIndex, numTokensLowerBound);
         }
         if (numTokensUpperBound >= 0) {
-            partitionEndIndex = Math.min(maxPartitionIndex, numTokensUpperBound);
+            partitionEndIndex = (short) Math.min(maxPartitionIndex, numTokensUpperBound);
         }
 
         PartitionedTOccurrenceSearcher partSearcher = (PartitionedTOccurrenceSearcher) searcher;
@@ -119,7 +119,7 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
         // Go through all possibly partitions and see if the token matches.
         // TODO: This procedure could be made more efficient by determining the next partition to search
         // using the last existing partition and re-searching the BTree with an open interval as low key.
-        for (int i = partitionStartIndex; i <= partitionEndIndex; i++) {
+        for (short i = partitionStartIndex; i <= partitionEndIndex; i++) {
             partSearcher.setNumTokensBoundsInSearchKeys(i, i);
             InMemoryInvertedListCursor inMemListCursor = (InMemoryInvertedListCursor) partSearcher
                     .getCachedInvertedListCursor();

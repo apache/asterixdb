@@ -40,6 +40,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
@@ -115,7 +116,7 @@ public class LSMInvertedIndexTestUtils {
             case PARTITIONED_LSM: {
                 // Such indexes also include the set-size for partitioning.
                 fieldSerdes = new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE,
-                        IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+                        ShortSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
                 break;
             }
             default: {
@@ -141,7 +142,7 @@ public class LSMInvertedIndexTestUtils {
             case PARTITIONED_LSM: {
                 // Such indexes also include the set-size for partitioning.
                 fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
-                        IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+                        ShortSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
                 break;
             }
             default: {
@@ -419,12 +420,12 @@ public class LSMInvertedIndexTestUtils {
             tokenizer.next();
             numQueryTokens++;
         }
-        int numTokensLowerBound = -1;
-        int numTokensUpperBound = -1;
+        short numTokensLowerBound = -1;
+        short numTokensUpperBound = -1;
         int invListElementField = 1;
         if (isPartitioned) {
-            numTokensLowerBound = searchModifier.getNumTokensLowerBound(numQueryTokens);
-            numTokensUpperBound = searchModifier.getNumTokensUpperBound(numQueryTokens);
+            numTokensLowerBound = searchModifier.getNumTokensLowerBound((short) numQueryTokens);
+            numTokensUpperBound = searchModifier.getNumTokensUpperBound((short) numQueryTokens);
             invListElementField = 2;
         }
         int occurrenceThreshold = searchModifier.getOccurrenceThreshold(numQueryTokens);
@@ -448,7 +449,7 @@ public class LSMInvertedIndexTestUtils {
                 // Index is length partitioned, and search modifier supports length filtering.
                 lowKey = new CheckTuple(2, 2);
                 lowKey.appendField(tokenObj);
-                lowKey.appendField(Integer.valueOf(numTokensLowerBound));
+                lowKey.appendField(Short.valueOf(numTokensLowerBound));
             }
             CheckTuple highKey;
             if (numTokensUpperBound < 0) {
@@ -459,7 +460,7 @@ public class LSMInvertedIndexTestUtils {
                 // Index is length partitioned, and search modifier supports length filtering.
                 highKey = new CheckTuple(2, 2);
                 highKey.appendField(tokenObj);
-                highKey.appendField(Integer.valueOf(numTokensUpperBound));
+                highKey.appendField(Short.valueOf(numTokensUpperBound));
             }
 
             // Get view over check tuples containing inverted-list corresponding to token. 

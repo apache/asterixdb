@@ -39,15 +39,15 @@ public class JaccardSearchModifier implements IInvertedIndexSearchModifier {
     }
 
     @Override
-    public int getNumTokensLowerBound(int numQueryTokens) {
-        return (int) Math.floor(numQueryTokens * jaccThresh);
+    public short getNumTokensLowerBound(short numQueryTokens) {
+        return (short) Math.floor(numQueryTokens * jaccThresh);
     }
 
     @Override
-    public int getNumTokensUpperBound(int numQueryTokens) {
-        return (int) Math.ceil(numQueryTokens / jaccThresh);
+    public short getNumTokensUpperBound(short numQueryTokens) {
+        return (short) Math.ceil(numQueryTokens / jaccThresh);
     }
-    
+
     public float getJaccThresh() {
         return jaccThresh;
     }

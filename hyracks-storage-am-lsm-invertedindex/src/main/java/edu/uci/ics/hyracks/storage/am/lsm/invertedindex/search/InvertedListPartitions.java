@@ -40,7 +40,7 @@ public class InvertedListPartitions {
     }
 
     @SuppressWarnings("unchecked")
-    public void reset(int numTokensLowerBound, int numTokensUpperBound) {
+    public void reset(short numTokensLowerBound, short numTokensUpperBound) {
         if (partitions == null) {
             int initialSize;
             if (numTokensUpperBound < 0) {

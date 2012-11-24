@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
 // TODO: We can possibly avoid copying the data into a new tuple here.
 public class PartitionedInvertedIndexTokenizingTupleIterator extends InvertedIndexTokenizingTupleIterator {
 
-    protected int numTokens = 0;
+    protected short numTokens = 0;
 
     public PartitionedInvertedIndexTokenizingTupleIterator(int tokensFieldCount, int invListFieldCount,
             IBinaryTokenizer tokenizer) {
@@ -52,7 +52,7 @@ public class PartitionedInvertedIndexTokenizingTupleIterator extends InvertedInd
             token.serializeToken(tupleBuilder.getDataOutput());
             tupleBuilder.addFieldEndOffset();
             // Add field with number of tokens.
-            tupleBuilder.getDataOutput().writeInt(numTokens);
+            tupleBuilder.getDataOutput().writeShort(numTokens);
             tupleBuilder.addFieldEndOffset();
         } catch (IOException e) {
             throw new HyracksDataException(e);
@@ -65,8 +65,8 @@ public class PartitionedInvertedIndexTokenizingTupleIterator extends InvertedInd
         // Reset tuple reference for insert operation.
         tupleReference.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
     }
-    
-    public int getNumTokens() {
+
+    public short getNumTokens() {
         return numTokens;
     }
 }

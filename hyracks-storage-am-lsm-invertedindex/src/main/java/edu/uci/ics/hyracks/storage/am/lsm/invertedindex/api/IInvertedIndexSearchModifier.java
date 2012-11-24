@@ -15,13 +15,12 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api;
 
-
 public interface IInvertedIndexSearchModifier {
     public int getOccurrenceThreshold(int numQueryTokens);
 
     public int getNumPrefixLists(int occurrenceThreshold, int numInvLists);
-    
-    public int getNumTokensLowerBound(int numQueryTokens);
-    
-    public int getNumTokensUpperBound(int numQueryTokens);
+
+    public short getNumTokensLowerBound(short numQueryTokens);
+
+    public short getNumTokensUpperBound(short numQueryTokens);
 }

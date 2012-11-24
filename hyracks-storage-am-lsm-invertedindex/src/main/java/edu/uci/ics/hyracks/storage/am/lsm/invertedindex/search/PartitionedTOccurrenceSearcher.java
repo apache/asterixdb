@@ -23,7 +23,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.tuples.ConcatenatingTupleReference;
@@ -54,7 +54,7 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
         try {
             lowerBoundTupleBuilder.reset();
             // Write dummy value.
-            lowerBoundTupleBuilder.getDataOutput().writeInt(Integer.MIN_VALUE);
+            lowerBoundTupleBuilder.getDataOutput().writeShort(Short.MIN_VALUE);
             lowerBoundTupleBuilder.addFieldEndOffset();
             lowerBoundTuple.reset(lowerBoundTupleBuilder.getFieldEndOffsets(), lowerBoundTupleBuilder.getByteArray());
             // Only needed for setting the number of fields in searchKey.
@@ -65,7 +65,7 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
 
             upperBoundTupleBuilder.reset();
             // Write dummy value.
-            upperBoundTupleBuilder.getDataOutput().writeInt(Integer.MAX_VALUE);
+            upperBoundTupleBuilder.getDataOutput().writeShort(Short.MAX_VALUE);
             upperBoundTupleBuilder.addFieldEndOffset();
             upperBoundTuple.reset(upperBoundTupleBuilder.getFieldEndOffsets(), upperBoundTupleBuilder.getByteArray());
             // Only needed for setting the number of fields in searchKey.
@@ -81,11 +81,11 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
     public void search(OnDiskInvertedIndexSearchCursor resultCursor, InvertedIndexSearchPredicate searchPred,
             IIndexOperationContext ictx) throws HyracksDataException, IndexException {
         tokenizeQuery(searchPred);
-        int numQueryTokens = queryTokenAccessor.getTupleCount();
+        short numQueryTokens = (short) queryTokenAccessor.getTupleCount();
 
         IInvertedIndexSearchModifier searchModifier = searchPred.getSearchModifier();
-        int numTokensLowerBound = searchModifier.getNumTokensLowerBound(numQueryTokens);
-        int numTokensUpperBound = searchModifier.getNumTokensUpperBound(numQueryTokens);
+        short numTokensLowerBound = searchModifier.getNumTokensLowerBound(numQueryTokens);
+        short numTokensUpperBound = searchModifier.getNumTokensUpperBound(numQueryTokens);
 
         IPartitionedInvertedIndex partInvIndex = (IPartitionedInvertedIndex) invIndex;
         invListCursorCache.reset();
@@ -123,10 +123,10 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
         resultCursor.open(null, searchPred);
     }
 
-    public void setNumTokensBoundsInSearchKeys(int numTokensLowerBound, int numTokensUpperBound) {
-        IntegerSerializerDeserializer.putInt(numTokensLowerBound, lowerBoundTuple.getFieldData(0),
+    public void setNumTokensBoundsInSearchKeys(short numTokensLowerBound, short numTokensUpperBound) {
+        ShortSerializerDeserializer.putShort(numTokensLowerBound, lowerBoundTuple.getFieldData(0),
                 lowerBoundTuple.getFieldStart(0));
-        IntegerSerializerDeserializer.putInt(numTokensUpperBound, upperBoundTuple.getFieldData(0),
+        ShortSerializerDeserializer.putShort(numTokensUpperBound, upperBoundTuple.getFieldData(0),
                 upperBoundTuple.getFieldStart(0));
     }
 

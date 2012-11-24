@@ -35,12 +35,12 @@ public class ConjunctiveSearchModifier implements IInvertedIndexSearchModifier {
     }
 
     @Override
-    public int getNumTokensLowerBound(int numQueryTokens) {
+    public short getNumTokensLowerBound(short numQueryTokens) {
         return -1;
     }
 
     @Override
-    public int getNumTokensUpperBound(int numQueryTokens) {
+    public short getNumTokensUpperBound(short numQueryTokens) {
         return -1;
     }
 }
