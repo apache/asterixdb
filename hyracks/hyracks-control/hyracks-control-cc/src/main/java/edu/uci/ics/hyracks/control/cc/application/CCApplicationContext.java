@@ -24,11 +24,13 @@ import java.util.Set;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.application.ICCBootstrap;
 import edu.uci.ics.hyracks.api.context.ICCContext;
+import edu.uci.ics.hyracks.api.dataset.IDatasetDirectoryService;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.job.IJobLifecycleListener;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
+import edu.uci.ics.hyracks.control.cc.dataset.DatasetDirectoryService;
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
 import edu.uci.ics.hyracks.control.common.work.IResultCallback;
@@ -44,12 +46,15 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
 
     private List<IJobLifecycleListener> jobLifecycleListeners;
 
+    private final IDatasetDirectoryService datasetDirectoryService;
+
     public CCApplicationContext(ServerContext serverCtx, ICCContext ccContext, String appName) throws IOException {
         super(serverCtx, appName);
         this.ccContext = ccContext;
         initPendingNodeIds = new HashSet<String>();
         deinitPendingNodeIds = new HashSet<String>();
         jobLifecycleListeners = new ArrayList<IJobLifecycleListener>();
+        datasetDirectoryService = new DatasetDirectoryService();
     }
 
     @Override
@@ -131,5 +136,9 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
 
     public void setDeinitializationCallback(IResultCallback<Object> deinitializationCallback) {
         this.deinitializationCallback = deinitializationCallback;
+    }
+
+    public IDatasetDirectoryService getDatasetDirectoryService() {
+        return datasetDirectoryService;
     }
 }
