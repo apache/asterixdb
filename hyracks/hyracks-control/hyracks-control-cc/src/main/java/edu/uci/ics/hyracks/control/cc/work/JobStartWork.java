@@ -57,8 +57,7 @@ public class JobStartWork extends SynchronizableWork {
             IActivityClusterGraphGeneratorFactory acggf = appCtx.createActivityClusterGraphGeneratorFactory(acggfBytes);
             IActivityClusterGraphGenerator acgg = acggf.createActivityClusterGraphGenerator(appName, jobId, appCtx,
                     jobFlags);
-            IDatasetDirectoryService dds = appCtx.getDatasetDirectoryService();
-            JobRun run = new JobRun(ccs, jobId, appName, acgg, jobFlags, dds);
+            JobRun run = new JobRun(ccs, jobId, appName, acgg, jobFlags);
             run.setStatus(JobStatus.INITIALIZED, null);
             ccs.getActiveRunMap().put(jobId, run);
             appCtx.notifyJobCreation(jobId, acggf);

@@ -15,23 +15,28 @@
 package edu.uci.ics.hyracks.control.cc.dataset;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataset.IDatasetDirectoryService;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.job.JobId;
 
 public class DatasetDirectoryService implements IDatasetDirectoryService {
-    private NetworkAddress[] partitionLocations;
+    private final Map<JobId, NetworkAddress[]> jobPartitionLocationsMap;
 
     public DatasetDirectoryService() {
-        partitionLocations = null;
+        jobPartitionLocationsMap = new HashMap<JobId, NetworkAddress[]>();
     }
 
     @Override
-    public synchronized void registerResultPartitionLocation(int partition, int nPartitions,
+    public synchronized void registerResultPartitionLocation(JobId jobId, int partition, int nPartitions,
             NetworkAddress networkAddress) {
+        NetworkAddress[] partitionLocations = jobPartitionLocationsMap.get(jobId);
         if (partitionLocations == null) {
             partitionLocations = new NetworkAddress[nPartitions];
+            jobPartitionLocationsMap.put(jobId, partitionLocations);
         }
 
         partitionLocations[partition] = networkAddress;
@@ -39,15 +44,15 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     }
 
     @Override
-    public synchronized NetworkAddress[] getResultPartitionLocations(NetworkAddress[] knownLocations)
+    public synchronized NetworkAddress[] getResultPartitionLocations(JobId jobId, NetworkAddress[] knownLocations)
             throws HyracksDataException {
-        while (Arrays.equals(partitionLocations, knownLocations)) {
+        while (Arrays.equals(jobPartitionLocationsMap.get(jobId), knownLocations)) {
             try {
                 wait();
             } catch (InterruptedException e) {
                 throw new HyracksDataException(e);
             }
         }
-        return partitionLocations;
+        return jobPartitionLocationsMap.get(jobId);
     }
 }

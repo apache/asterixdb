@@ -37,11 +37,13 @@ import edu.uci.ics.hyracks.api.client.HyracksClientInterfaceFunctions;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.context.ICCContext;
+import edu.uci.ics.hyracks.api.dataset.IDatasetDirectoryService;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.topology.ClusterTopology;
 import edu.uci.ics.hyracks.api.topology.TopologyDefinitionParser;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
+import edu.uci.ics.hyracks.control.cc.dataset.DatasetDirectoryService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.web.WebServer;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationCreateWork;
@@ -119,6 +121,8 @@ public class ClusterControllerService extends AbstractRemoteService {
 
     private final DeadNodeSweeper sweeper;
 
+    private final IDatasetDirectoryService datasetDirectoryService;
+
     private long jobCounter;
 
     public ClusterControllerService(final CCConfig ccConfig) throws Exception {
@@ -166,6 +170,7 @@ public class ClusterControllerService extends AbstractRemoteService {
             }
         };
         sweeper = new DeadNodeSweeper();
+        datasetDirectoryService = new DatasetDirectoryService();
         jobCounter = 0;
     }
 
@@ -277,6 +282,10 @@ public class ClusterControllerService extends AbstractRemoteService {
         public void run() {
             workQueue.schedule(new RemoveDeadNodesWork(ClusterControllerService.this));
         }
+    }
+
+    public IDatasetDirectoryService getDatasetDirectoryService() {
+        return datasetDirectoryService;
     }
 
     private class HyracksClientInterfaceIPCI implements IIPCI {

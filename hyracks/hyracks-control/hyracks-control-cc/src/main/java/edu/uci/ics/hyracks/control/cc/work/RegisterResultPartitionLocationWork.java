@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.control.cc.work;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
 public class RegisterResultPartitionLocationWork extends AbstractWork {
@@ -38,17 +37,7 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
 
     @Override
     public void run() {
-        JobRun run = ccs.getActiveRunMap().get(jobId);
-        if (run == null) {
-            run = ccs.getRunMapArchive().get(jobId);
-        }
-        /* If run is not found even in the archives we simply return because we don't have the directory service to report
-         * to anymore.
-         */
-        if (run == null) {
-            return;
-        }
-        run.getDatasetDirectoryService().registerResultPartitionLocation(partition, nPartitions, networkAddress);
+        ccs.getDatasetDirectoryService().registerResultPartitionLocation(jobId, partition, nPartitions, networkAddress);
     }
 
     @Override

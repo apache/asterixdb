@@ -19,7 +19,6 @@ import edu.uci.ics.hyracks.api.dataset.IDatasetDirectoryService;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.common.work.IResultCallback;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
@@ -39,22 +38,12 @@ public class GetResultPartitionLocationsWork extends SynchronizableWork {
 
     @Override
     public void doRun() {
-        JobRun run = ccs.getActiveRunMap().get(jobId);
-        if (run == null) {
-            run = ccs.getRunMapArchive().get(jobId);
-        }
-        /* If run is not found even in the archives we simply return because we don't have the directory service to report
-         * to anymore.
-         */
-        if (run == null) {
-            return;
-        }
-        final IDatasetDirectoryService dds = run.getDatasetDirectoryService();
+        final IDatasetDirectoryService dds = ccs.getDatasetDirectoryService();
         ccs.getExecutor().execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    NetworkAddress[] partitionLocations = dds.getResultPartitionLocations(knownLocations);
+                    NetworkAddress[] partitionLocations = dds.getResultPartitionLocations(jobId, knownLocations);
                     callback.setValue(partitionLocations);
                 } catch (HyracksDataException e) {
                     callback.setException(e);

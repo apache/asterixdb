@@ -29,7 +29,6 @@ import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
-import edu.uci.ics.hyracks.api.dataset.IDatasetDirectoryService;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.ActivityCluster;
 import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
@@ -58,8 +57,6 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private final EnumSet<JobFlag> jobFlags;
 
-    private final IDatasetDirectoryService datasetDirectoryService;
-
     private final Map<ActivityClusterId, ActivityClusterPlan> activityClusterPlanMap;
 
     private final PartitionMatchMaker pmm;
@@ -87,14 +84,13 @@ public class JobRun implements IJobStatusConditionVariable {
     private Exception pendingException;
 
     public JobRun(ClusterControllerService ccs, JobId jobId, String applicationName,
-            IActivityClusterGraphGenerator acgg, EnumSet<JobFlag> jobFlags, IDatasetDirectoryService dds) {
+            IActivityClusterGraphGenerator acgg, EnumSet<JobFlag> jobFlags) {
         this.jobId = jobId;
         this.applicationName = applicationName;
         this.acgg = acgg;
         this.acg = acgg.initialize();
         this.scheduler = new JobScheduler(ccs, this, acgg.getConstraints());
         this.jobFlags = jobFlags;
-        this.datasetDirectoryService = dds;
         activityClusterPlanMap = new HashMap<ActivityClusterId, ActivityClusterPlan>();
         pmm = new PartitionMatchMaker();
         participatingNodeIds = new HashSet<String>();
@@ -117,10 +113,6 @@ public class JobRun implements IJobStatusConditionVariable {
 
     public EnumSet<JobFlag> getFlags() {
         return jobFlags;
-    }
-
-    public IDatasetDirectoryService getDatasetDirectoryService() {
-        return datasetDirectoryService;
     }
 
     public Map<ActivityClusterId, ActivityClusterPlan> getActivityClusterPlanMap() {

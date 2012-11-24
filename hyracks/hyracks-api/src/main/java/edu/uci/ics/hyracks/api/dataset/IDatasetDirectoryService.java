@@ -16,9 +16,12 @@ package edu.uci.ics.hyracks.api.dataset;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.job.JobId;
 
 public interface IDatasetDirectoryService {
-    public void registerResultPartitionLocation(int partition, int nPartitions, NetworkAddress networkAddress);
+    public void registerResultPartitionLocation(JobId jobId, int partition, int nPartitions,
+            NetworkAddress networkAddress);
 
-    public NetworkAddress[] getResultPartitionLocations(NetworkAddress[] knownLocations) throws HyracksDataException;
+    public NetworkAddress[] getResultPartitionLocations(JobId jobId, NetworkAddress[] knownLocations)
+            throws HyracksDataException;
 }
