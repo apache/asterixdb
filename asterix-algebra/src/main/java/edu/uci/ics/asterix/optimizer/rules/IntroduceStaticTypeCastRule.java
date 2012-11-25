@@ -197,7 +197,7 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
                     List<Mutable<ILogicalExpression>> expressionRefs = originalAssign.getExpressions();
                     ILogicalExpression expr = expressionRefs.get(position).getValue();
                     if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                        ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) expr;
+                        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
                         // that expression has been rewritten, and it will not
                         // fail but just return false
                         if (TypeComputerUtilities.getRequiredType(funcExpr) != null) {
