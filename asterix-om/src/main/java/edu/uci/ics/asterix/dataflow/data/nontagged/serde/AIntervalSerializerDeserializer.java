@@ -21,7 +21,8 @@ import java.io.IOException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AInterval;
 import edu.uci.ics.asterix.om.base.AMutableInterval;
-import edu.uci.ics.asterix.om.base.temporal.ADateAndTimeParser;
+import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
+import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.base.temporal.StringCharSequenceAccessor;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -118,11 +119,11 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
             // if extended form 11, else 9
             timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11) : (short) (9);
 
-            chrononTimeInMsStart = ADateAndTimeParser.parseDatePart(charAccessor, false);
+            chrononTimeInMsStart = ADateParserFactory.parseDatePart(charAccessor, false);
 
             charAccessor.reset(interval, timeOffset, nonSpaceIndex - timeOffset + 1);
 
-            chrononTimeInMsStart += ADateAndTimeParser.parseTimePart(charAccessor);
+            chrononTimeInMsStart += ATimeParserFactory.parseTimePart(charAccessor);
 
             // Interval End
             nonSpaceIndex = commaIndex + 1;
@@ -142,11 +143,11 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
             // if extended form 11, else 9
             timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11) : (short) (9);
 
-            chrononTimeInMsEnd = ADateAndTimeParser.parseDatePart(charAccessor, false);
+            chrononTimeInMsEnd = ADateParserFactory.parseDatePart(charAccessor, false);
 
             charAccessor.reset(interval, nonSpaceIndex + timeOffset, interval.length() - nonSpaceIndex - timeOffset);
 
-            chrononTimeInMsEnd += ADateAndTimeParser.parseTimePart(charAccessor);
+            chrononTimeInMsEnd += ATimeParserFactory.parseTimePart(charAccessor);
 
         } catch (Exception e) {
             throw new HyracksDataException(e);
@@ -179,7 +180,7 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
 
             // Interval Start
             charAccessor.reset(interval, 0, nonSpaceIndex + 1);
-            chrononTimeInMsStart = ADateAndTimeParser.parseTimePart(charAccessor);
+            chrononTimeInMsStart = ATimeParserFactory.parseTimePart(charAccessor);
 
             if (chrononTimeInMsStart < 0) {
                 chrononTimeInMsStart += GregorianCalendarSystem.CHRONON_OF_DAY;
@@ -192,7 +193,7 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
             }
 
             charAccessor.reset(interval, nonSpaceIndex, interval.length() - nonSpaceIndex);
-            chrononTimeInMsEnd = ADateAndTimeParser.parseTimePart(charAccessor);
+            chrononTimeInMsEnd = ATimeParserFactory.parseTimePart(charAccessor);
 
             if (chrononTimeInMsEnd < 0) {
                 chrononTimeInMsEnd += GregorianCalendarSystem.CHRONON_OF_DAY;
@@ -230,7 +231,7 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
             // Interval Start
             charAccessor.reset(interval, 0, nonSpaceIndex + 1);
 
-            chrononTimeInMsStart = ADateAndTimeParser.parseDatePart(charAccessor, true);
+            chrononTimeInMsStart = ADateParserFactory.parseDatePart(charAccessor, true);
 
             if (chrononTimeInMsStart < 0 && chrononTimeInMsStart % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
                 tempStart = 1;
@@ -244,7 +245,7 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
 
             charAccessor.reset(interval, nonSpaceIndex, interval.length() - nonSpaceIndex);
 
-            chrononTimeInMsEnd = ADateAndTimeParser.parseDatePart(charAccessor, true);
+            chrononTimeInMsEnd = ADateParserFactory.parseDatePart(charAccessor, true);
 
             if (chrononTimeInMsEnd < 0 && chrononTimeInMsEnd % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
                 tempEnd = 1;

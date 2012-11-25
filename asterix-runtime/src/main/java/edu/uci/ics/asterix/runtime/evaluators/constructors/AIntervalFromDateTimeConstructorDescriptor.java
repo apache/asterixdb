@@ -22,8 +22,9 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AInterval;
 import edu.uci.ics.asterix.om.base.AMutableInterval;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
+import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
-import edu.uci.ics.asterix.om.base.temporal.ADateAndTimeParser;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -111,9 +112,9 @@ public class AIntervalFromDateTimeConstructorDescriptor extends AbstractScalarFu
                                 // if extended form 11, else 9
                                 timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11)
                                         : (short) (9);
-                                long intervalStart = ADateAndTimeParser.parseDatePart(charAccessor, false);
+                                long intervalStart = ADateParserFactory.parseDatePart(charAccessor, false);
                                 charAccessor.reset(argOut0.getByteArray(), 3 + timeOffset, stringLength - timeOffset);
-                                intervalStart += ADateAndTimeParser.parseTimePart(charAccessor);
+                                intervalStart += ATimeParserFactory.parseTimePart(charAccessor);
 
                                 // end date
 
@@ -132,9 +133,9 @@ public class AIntervalFromDateTimeConstructorDescriptor extends AbstractScalarFu
                                 // if extended form 11, else 9
                                 timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11)
                                         : (short) (9);
-                                long intervalEnd = ADateAndTimeParser.parseDatePart(charAccessor, false);
+                                long intervalEnd = ADateParserFactory.parseDatePart(charAccessor, false);
                                 charAccessor.reset(argOut1.getByteArray(), 3 + timeOffset, stringLength - timeOffset);
-                                intervalEnd += ADateAndTimeParser.parseTimePart(charAccessor);
+                                intervalEnd += ATimeParserFactory.parseTimePart(charAccessor);
 
                                 if (intervalEnd < intervalStart) {
                                     throw new AlgebricksException(

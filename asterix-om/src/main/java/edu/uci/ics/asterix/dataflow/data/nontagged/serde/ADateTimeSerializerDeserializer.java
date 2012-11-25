@@ -21,7 +21,8 @@ import java.io.IOException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADateTime;
 import edu.uci.ics.asterix.om.base.AMutableDateTime;
-import edu.uci.ics.asterix.om.base.temporal.ADateAndTimeParser;
+import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
+import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.StringCharSequenceAccessor;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -78,11 +79,11 @@ public class ADateTimeSerializerDeserializer implements ISerializerDeserializer<
             // if extended form 11, else 9
             timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11) : (short) (9);
 
-            chrononTimeInMs = ADateAndTimeParser.parseDatePart(charAccessor, false);
+            chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor, false);
 
             charAccessor.reset(datetime, timeOffset, datetime.length() - timeOffset);
 
-            chrononTimeInMs += ADateAndTimeParser.parseTimePart(charAccessor);
+            chrononTimeInMs += ATimeParserFactory.parseTimePart(charAccessor);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

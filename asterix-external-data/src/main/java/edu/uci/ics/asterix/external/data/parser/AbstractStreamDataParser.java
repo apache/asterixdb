@@ -17,6 +17,10 @@ package edu.uci.ics.asterix.external.data.parser;
 import java.io.InputStream;
 import java.util.HashMap;
 
+import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
+import edu.uci.ics.asterix.om.base.temporal.ADateTimeParserFactory;
+import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory;
+import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
@@ -33,7 +37,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
 public abstract class AbstractStreamDataParser implements IDataStreamParser {
 
     public static final String KEY_DELIMITER = "delimiter";
-    
+
     protected static final HashMap<ATypeTag, IValueParserFactory> typeToValueParserFactMap = new HashMap<ATypeTag, IValueParserFactory>();
 
     static {
@@ -42,6 +46,12 @@ public abstract class AbstractStreamDataParser implements IDataStreamParser {
         typeToValueParserFactMap.put(ATypeTag.DOUBLE, DoubleParserFactory.INSTANCE);
         typeToValueParserFactMap.put(ATypeTag.INT64, LongParserFactory.INSTANCE);
         typeToValueParserFactMap.put(ATypeTag.STRING, UTF8StringParserFactory.INSTANCE);
+
+        // temporal types
+        typeToValueParserFactMap.put(ATypeTag.TIME, ATimeParserFactory.INSTANCE);
+        typeToValueParserFactMap.put(ATypeTag.DATE, ADateParserFactory.INSTANCE);
+        typeToValueParserFactMap.put(ATypeTag.DATETIME, ADateTimeParserFactory.INSTANCE);
+        typeToValueParserFactMap.put(ATypeTag.DURATION, ADurationParserFactory.INSTANCE);
     }
 
     protected ITupleParser tupleParser;
@@ -53,18 +63,16 @@ public abstract class AbstractStreamDataParser implements IDataStreamParser {
 
     @Override
     public abstract void parse(IFrameWriter frameWriter) throws HyracksDataException;
-    
+
     @Override
     public void setInputStream(InputStream in) {
         inputStream = in;
-        
+
     }
 
     @Override
     public InputStream getInputStream() {
         return inputStream;
     }
-   
-   
 
 }

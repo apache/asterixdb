@@ -21,7 +21,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADuration;
 import edu.uci.ics.asterix.om.base.AMutableDuration;
 import edu.uci.ics.asterix.om.base.ANull;
-import edu.uci.ics.asterix.om.base.temporal.ADurationParser;
+import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -88,7 +88,7 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
 
                                 charAccessor.reset(serString, 3, stringLength);
 
-                                ADurationParser.parse(charAccessor, aDuration);
+                                ADurationParserFactory.parseDuration(charAccessor, aDuration);
 
                                 durationSerde.serialize(aDuration, out);
                             } else if (serString[0] == SER_NULL_TYPE_TAG) {

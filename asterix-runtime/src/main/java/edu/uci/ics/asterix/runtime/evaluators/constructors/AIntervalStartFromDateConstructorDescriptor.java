@@ -23,9 +23,9 @@ import edu.uci.ics.asterix.om.base.AInterval;
 import edu.uci.ics.asterix.om.base.AMutableDuration;
 import edu.uci.ics.asterix.om.base.AMutableInterval;
 import edu.uci.ics.asterix.om.base.ANull;
-import edu.uci.ics.asterix.om.base.temporal.ADurationParser;
+import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
+import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
-import edu.uci.ics.asterix.om.base.temporal.ADateAndTimeParser;
 import edu.uci.ics.asterix.om.base.temporal.DurationArithmeticOperations;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
@@ -105,14 +105,14 @@ public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarF
                                         + (argOut0.getByteArray()[2] & 0xff << 0);
 
                                 charAccessor.reset(argOut0.getByteArray(), 3, stringLength);
-                                long intervalStart = ADateAndTimeParser.parseDatePart(charAccessor, true);
+                                long intervalStart = ADateParserFactory.parseDatePart(charAccessor, true);
                                 // duration
 
                                 stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
                                         + (argOut1.getByteArray()[2] & 0xff << 0);
 
                                 charAccessor.reset(argOut1.getByteArray(), 3, stringLength);
-                                ADurationParser.parse(charAccessor, aDuration);
+                                ADurationParserFactory.parseDuration(charAccessor, aDuration);
 
                                 long intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
                                         aDuration.getMonths(), aDuration.getMilliseconds());

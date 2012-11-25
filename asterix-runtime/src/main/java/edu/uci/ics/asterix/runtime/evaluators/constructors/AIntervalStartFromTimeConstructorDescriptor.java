@@ -23,9 +23,9 @@ import edu.uci.ics.asterix.om.base.AInterval;
 import edu.uci.ics.asterix.om.base.AMutableDuration;
 import edu.uci.ics.asterix.om.base.AMutableInterval;
 import edu.uci.ics.asterix.om.base.ANull;
-import edu.uci.ics.asterix.om.base.temporal.ADurationParser;
+import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory;
+import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
-import edu.uci.ics.asterix.om.base.temporal.ADateAndTimeParser;
 import edu.uci.ics.asterix.om.base.temporal.DurationArithmeticOperations;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
@@ -105,7 +105,7 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                                         + (argOut0.getByteArray()[2] & 0xff << 0);
 
                                 charAccessor.reset(argOut0.getByteArray(), 3, stringLength);
-                                int intervalStart = ADateAndTimeParser.parseTimePart(charAccessor);
+                                int intervalStart = ATimeParserFactory.parseTimePart(charAccessor);
 
                                 if (intervalStart < 0) {
                                     intervalStart += GregorianCalendarSystem.CHRONON_OF_DAY;
@@ -117,7 +117,7 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                                         + (argOut1.getByteArray()[2] & 0xff << 0);
 
                                 charAccessor.reset(argOut1.getByteArray(), 3, stringLength);
-                                ADurationParser.parse(charAccessor, aDuration);
+                                ADurationParserFactory.parseDuration(charAccessor, aDuration);
 
                                 if (aDuration.getMonths() != 0) {
                                     throw new AlgebricksException("Cannot add a year-month duration to a time value.");

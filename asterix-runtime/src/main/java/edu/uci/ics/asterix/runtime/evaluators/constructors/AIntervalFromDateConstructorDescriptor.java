@@ -22,8 +22,8 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AInterval;
 import edu.uci.ics.asterix.om.base.AMutableInterval;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
-import edu.uci.ics.asterix.om.base.temporal.ADateAndTimeParser;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -101,7 +101,7 @@ public class AIntervalFromDateConstructorDescriptor extends AbstractScalarFuncti
 
                                 // start date
                                 charAccessor.reset(argOut0.getByteArray(), 3, stringLength);
-                                long intervalStart = ADateAndTimeParser.parseDatePart(charAccessor, true)
+                                long intervalStart = ADateParserFactory.parseDatePart(charAccessor, true)
                                         / GregorianCalendarSystem.CHRONON_OF_DAY;
                                 // end date
 
@@ -109,7 +109,7 @@ public class AIntervalFromDateConstructorDescriptor extends AbstractScalarFuncti
                                         + (argOut1.getByteArray()[2] & 0xff << 0);
 
                                 charAccessor.reset(argOut1.getByteArray(), 3, stringLength);
-                                long intervalEnd = ADateAndTimeParser.parseDatePart(charAccessor, true)
+                                long intervalEnd = ADateParserFactory.parseDatePart(charAccessor, true)
                                         / GregorianCalendarSystem.CHRONON_OF_DAY;
 
                                 if (intervalEnd < intervalStart) {

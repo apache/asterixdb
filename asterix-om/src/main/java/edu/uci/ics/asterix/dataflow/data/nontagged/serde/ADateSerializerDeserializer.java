@@ -21,7 +21,7 @@ import java.io.IOException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADate;
 import edu.uci.ics.asterix.om.base.AMutableDate;
-import edu.uci.ics.asterix.om.base.temporal.ADateAndTimeParser;
+import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.base.temporal.StringCharSequenceAccessor;
 import edu.uci.ics.asterix.om.types.BuiltinType;
@@ -65,7 +65,7 @@ public class ADateSerializerDeserializer implements ISerializerDeserializer<ADat
         try {
             StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
             charAccessor.reset(date, 0, date.length());
-            chrononTimeInMs = ADateAndTimeParser.parseDatePart(charAccessor, true);
+            chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor, true);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

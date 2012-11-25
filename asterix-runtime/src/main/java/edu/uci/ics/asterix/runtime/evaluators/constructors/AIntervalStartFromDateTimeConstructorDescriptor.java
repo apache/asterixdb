@@ -23,9 +23,10 @@ import edu.uci.ics.asterix.om.base.AInterval;
 import edu.uci.ics.asterix.om.base.AMutableDuration;
 import edu.uci.ics.asterix.om.base.AMutableInterval;
 import edu.uci.ics.asterix.om.base.ANull;
-import edu.uci.ics.asterix.om.base.temporal.ADurationParser;
+import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
+import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory;
+import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
-import edu.uci.ics.asterix.om.base.temporal.ADateAndTimeParser;
 import edu.uci.ics.asterix.om.base.temporal.DurationArithmeticOperations;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -115,9 +116,9 @@ public class AIntervalStartFromDateTimeConstructorDescriptor extends AbstractSca
                                 // if extended form 11, else 9
                                 timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11)
                                         : (short) (9);
-                                long intervalStart = ADateAndTimeParser.parseDatePart(charAccessor, false);
+                                long intervalStart = ADateParserFactory.parseDatePart(charAccessor, false);
                                 charAccessor.reset(argOut0.getByteArray(), 3 + timeOffset, stringLength - timeOffset);
-                                intervalStart += ADateAndTimeParser.parseTimePart(charAccessor);
+                                intervalStart += ATimeParserFactory.parseTimePart(charAccessor);
 
                                 // duration
 
@@ -125,7 +126,7 @@ public class AIntervalStartFromDateTimeConstructorDescriptor extends AbstractSca
                                         + (argOut1.getByteArray()[2] & 0xff << 0);
 
                                 charAccessor.reset(argOut1.getByteArray(), 3, stringLength);
-                                ADurationParser.parse(charAccessor, aDuration);
+                                ADurationParserFactory.parseDuration(charAccessor, aDuration);
 
                                 long intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
                                         aDuration.getMonths(), aDuration.getMilliseconds());

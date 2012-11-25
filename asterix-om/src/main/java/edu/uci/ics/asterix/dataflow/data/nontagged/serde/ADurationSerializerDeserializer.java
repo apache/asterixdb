@@ -7,7 +7,7 @@ import java.io.IOException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADuration;
 import edu.uci.ics.asterix.om.base.AMutableDuration;
-import edu.uci.ics.asterix.om.base.temporal.ADurationParser;
+import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.StringCharSequenceAccessor;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -49,7 +49,7 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
             AMutableDuration aDuration = new AMutableDuration(0, 0);
             StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
             charAccessor.reset(duration, 0, duration.length());
-            ADurationParser.parse(charAccessor, aDuration);
+            ADurationParserFactory.parseDuration(charAccessor, aDuration);
 
             durationSerde.serialize(aDuration, out);
         } catch (Exception e) {

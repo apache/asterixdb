@@ -22,8 +22,9 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADateTime;
 import edu.uci.ics.asterix.om.base.AMutableDateTime;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
+import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
-import edu.uci.ics.asterix.om.base.temporal.ADateAndTimeParser;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -99,11 +100,11 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                                 timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11)
                                         : (short) (9);
 
-                                long chrononTimeInMs = ADateAndTimeParser.parseDatePart(charAccessor, false);
+                                long chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor, false);
 
                                 charAccessor.reset(serString, 3 + timeOffset, stringLength - timeOffset);
 
-                                chrononTimeInMs += ADateAndTimeParser.parseTimePart(charAccessor);
+                                chrononTimeInMs += ATimeParserFactory.parseTimePart(charAccessor);
 
                                 aDateTime.setValue(chrononTimeInMs);
                                 datetimeSerde.serialize(aDateTime, out);

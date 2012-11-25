@@ -20,7 +20,7 @@ import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ANull;
-import edu.uci.ics.asterix.om.base.temporal.ADateAndTimeParser;
+import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem.Fields;
@@ -117,7 +117,7 @@ public class AdjustDateTimeForTimeZoneDescriptor extends AbstractScalarFunctionD
 
                             charAccessor.reset(argOut1.getByteArray(), 3, stringLength);
 
-                            int timezone = ADateAndTimeParser.parseTimezonePart(charAccessor, 0);
+                            int timezone = ATimeParserFactory.parseTimezonePart(charAccessor, 0);
 
                             if (!calInstance.validateTimeZone(timezone)) {
                                 throw new AlgebricksException("Wrong format for a time zone string!");
