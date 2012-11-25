@@ -64,7 +64,8 @@ public class LogRecordReader {
     }
 
     public void readLogRecord(long lsnValue) throws IOException, ACIDException {
-        LogicalLogLocator memLSN = logManager.readLog(new PhysicalLogLocator(lsnValue, logManager));
+        LogicalLogLocator memLSN = null;
+        logManager.readLog(lsnValue, memLSN);
         System.out.println(logManager.getLogRecordHelper().getLogRecordForDisplay(memLSN));
     }
 

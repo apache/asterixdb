@@ -918,7 +918,7 @@
         <output-file compare="Text">delete-rtree.adm</output-file>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="failure">
+<!--     <test-case FilePath="failure">
       <compilation-unit name="delete">
         <output-file compare="Text">delete.adm</output-file>
         <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
@@ -926,7 +926,7 @@
       <compilation-unit name="verify_delete">
         <output-file compare="Text">delete.adm</output-file>
       </compilation-unit>
-    </test-case>
+    </test-case> -->
     <test-case FilePath="failure">
       <compilation-unit name="insert-rtree">
         <output-file compare="Text">insert-rtree.adm</output-file>

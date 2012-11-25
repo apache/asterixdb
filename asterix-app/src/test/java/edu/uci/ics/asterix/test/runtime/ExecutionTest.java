@@ -93,12 +93,14 @@ public class ExecutionTest {
         List<CompilationUnit> cUnits = tcCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
             File testFile = tcCtx.getTestFile(cUnit);
-            
-            /*************** to avoid run failure cases ****************/
-            if (testFile.getAbsolutePath().contains("runtimets/queries/failure/")) {
+
+            /*************** to avoid run failure cases ****************
+            if (!testFile.getAbsolutePath().contains("runtimets/queries/failure/")) {
                 continue;
             }
-            /***********************************************************/
+            System.out.println(testFile.getAbsolutePath());
+            ***********************************************************/
+
             File expectedResultFile = tcCtx.getExpectedResultFile(cUnit);
             File actualFile = new File(PATH_ACTUAL + File.separator
                     + tcCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_" + cUnit.getName() + ".adm");

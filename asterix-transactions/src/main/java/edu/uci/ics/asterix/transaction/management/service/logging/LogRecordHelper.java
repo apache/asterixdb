@@ -153,6 +153,7 @@ public class LogRecordHelper implements ILogRecordHelper {
                 logTypeDisplay = "UPDATE";
                 break;
         }
+        builder.append(" LSN : ").append(logicalLogLocator.getLsn());
         builder.append(" Log Type : ").append(logTypeDisplay);
         builder.append(" Job Id : ").append(getJobId(logicalLogLocator));
         builder.append(" Dataset Id : ").append(getDatasetId(logicalLogLocator));

@@ -687,11 +687,10 @@ public class LogManager implements ILogManager {
     /*
      * Read a log that is residing on the disk.
      */
-    private LogicalLogLocator readDiskLog(PhysicalLogLocator physicalLogLocator) throws ACIDException {
-        LogicalLogLocator logicalLogLocator;
+    private void readDiskLog(long lsnValue, LogicalLogLocator logicalLogLocator) throws ACIDException {
         String filePath = LogUtil.getLogFilePath(logManagerProperties,
-                LogUtil.getFileId(this, physicalLogLocator.getLsn()));
-        long fileOffset = LogUtil.getFileOffset(this, physicalLogLocator.getLsn());
+                LogUtil.getFileId(this, lsnValue));
+        long fileOffset = LogUtil.getFileOffset(this, lsnValue);
         ByteBuffer buffer = ByteBuffer.allocate(logManagerProperties.getLogPageSize());
         RandomAccessFile raf = null;
         try {
@@ -706,12 +705,18 @@ public class LogManager implements ILogManager {
             int logRecordSize = logHeaderSize + logBodySize + logRecordHelper.getLogChecksumSize();
             buffer.limit(logRecordSize);
             MemBasedBuffer memBuffer = new MemBasedBuffer(buffer.slice());
-            logicalLogLocator = new LogicalLogLocator(physicalLogLocator.getLsn(), memBuffer, 0, this);
+            if (logicalLogLocator == null) {
+                logicalLogLocator = new LogicalLogLocator(lsnValue, memBuffer, 0, this);
+            } else {
+                logicalLogLocator.setLsn(lsnValue);
+                logicalLogLocator.setBuffer(memBuffer);
+                logicalLogLocator.setMemoryOffset(0);
+            }
             if (!logRecordHelper.validateLogRecord(logicalLogLocator)) {
-                throw new ACIDException(" invalid log record at lsn " + physicalLogLocator.getLsn());
+                throw new ACIDException(" invalid log record at lsn " + lsnValue);
             }
         } catch (Exception fnfe) {
-            throw new ACIDException(" unable to retrieve log record with lsn " + physicalLogLocator.getLsn()
+            throw new ACIDException(" unable to retrieve log record with lsn " + lsnValue
                     + " from the file system", fnfe);
         } finally {
             try {
@@ -723,18 +728,15 @@ public class LogManager implements ILogManager {
                 throw new ACIDException(" exception in closing " + raf, ioe);
             }
         }
-        return logicalLogLocator;
     }
 
     @Override
-    public LogicalLogLocator readLog(PhysicalLogLocator physicalLogLocator) throws ACIDException {
+    public void readLog(long lsnValue, LogicalLogLocator logicalLogLocator) throws ACIDException {
         byte[] logRecord = null;
-        long lsnValue = physicalLogLocator.getLsn();
+        //long lsnValue = physicalLogLocator.getLsn();
         if (lsnValue > lsn.get()) {
-            throw new ACIDException(" invalid lsn " + physicalLogLocator);
+            throw new ACIDException(" invalid lsn " + lsnValue);
         }
-
-        LogicalLogLocator logLocator = null;
 
         /* check if the log record in the log buffer or has reached the disk. */
         if (lsnValue > getLastFlushedLsn().get()) {
@@ -742,7 +744,7 @@ public class LogManager implements ILogManager {
             int pageOffset = getLogPageOffset(lsnValue);
             
             //TODO
-            //minimize memory allocation overhead. current code allocates 10MBytes per reading a log record.
+            //minimize memory allocation overhead. current code allocates the log page size per reading a log record.
             
             byte[] pageContent = new byte[logManagerProperties.getLogPageSize()];
             // take a lock on the log page so that the page is not flushed to
@@ -768,17 +770,23 @@ public class LogManager implements ILogManager {
                      */
                     System.arraycopy(pageContent, pageOffset, logRecord, 0, logRecordSize);
                     MemBasedBuffer memBuffer = new MemBasedBuffer(logRecord);
-                    logLocator = new LogicalLogLocator(lsnValue, memBuffer, 0, this);
+                    if (logicalLogLocator == null) {
+                        logicalLogLocator = new LogicalLogLocator(lsnValue, memBuffer, 0, this);
+                    } else {
+                        logicalLogLocator.setLsn(lsnValue);
+                        logicalLogLocator.setBuffer(memBuffer);
+                        logicalLogLocator.setMemoryOffset(0);
+                    }
                     try {
                         // validate the log record by comparing checksums
-                        if (!logRecordHelper.validateLogRecord(logLocator)) {
-                            throw new ACIDException(" invalid log record at lsn " + physicalLogLocator);
+                        if (!logRecordHelper.validateLogRecord(logicalLogLocator)) {
+                            throw new ACIDException(" invalid log record at lsn " + lsnValue);
                         }
                     } catch (Exception e) {
                         throw new ACIDException("exception encoutered in validating log record at lsn "
-                                + physicalLogLocator, e);
+                                + lsnValue, e);
                     }
-                    return logLocator;
+                    return;
                 }
             }
         }
@@ -786,7 +794,7 @@ public class LogManager implements ILogManager {
         /*
          * the log record is residing on the disk, read it from there.
          */
-        return readDiskLog(physicalLogLocator);
+        readDiskLog(lsnValue, logicalLogLocator);
     }
 
     @Override

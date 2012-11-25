@@ -64,13 +64,12 @@ public interface ILogManager {
     public ILogCursor readLog(ILogFilter logFilter) throws ACIDException;
 
     /**
+     * @param logicalLogLocator TODO
      * @param PhysicalLogLocator
      *            specifies the location of the log record to be read
-     * @return LogicalLogLocator represents the in-memory location of the log
-     *         record that has been fetched
      * @throws ACIDException
      */
-    public LogicalLogLocator readLog(PhysicalLogLocator physicalLogLocator) throws ACIDException;
+    public void readLog(long lsnValue, LogicalLogLocator logicalLogLocator) throws ACIDException;
 
     /**
      * Flushes the log records up to the lsn represented by the

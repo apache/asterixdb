@@ -23,12 +23,14 @@ public class LogCursor implements ILogCursor {
 
     private final LogManager logManager;
     private final ILogFilter logFilter;
-    private IFileBasedBuffer readOnlyBuffer;
+    private IBuffer readOnlyBuffer;
     private LogicalLogLocator logicalLogLocator = null;
     private int bufferIndex = 0;
     private boolean firstNext = true;
+    private boolean readMemory = false;
     private long readLSN = 0;
-
+    private boolean needReloadBuffer = true;
+    
     /**
      * @param logFilter
      */
@@ -46,17 +48,7 @@ public class LogCursor implements ILogCursor {
     }
 
     private void initialize(final PhysicalLogLocator startingPhysicalLogLocator) throws IOException, ACIDException {
-        if (startingPhysicalLogLocator.getLsn() > logManager.getLastFlushedLsn().get()) {
-            readLSN = startingPhysicalLogLocator.getLsn();
-        } else {
-            //read from disk
-            readOnlyBuffer = getReadOnlyBuffer(startingPhysicalLogLocator.getLsn(), logManager
-                    .getLogManagerProperties().getLogBufferSize());
-            logicalLogLocator = new LogicalLogLocator(startingPhysicalLogLocator.getLsn(), readOnlyBuffer, 0,
-                    logManager);
-            readLSN = logicalLogLocator.getLsn();
-        }
-        return;
+        logicalLogLocator = new LogicalLogLocator(startingPhysicalLogLocator.getLsn(), null, 0, logManager);
     }
 
     private IFileBasedBuffer getReadOnlyBuffer(long lsn, int size) throws IOException {
@@ -75,21 +67,35 @@ public class LogCursor implements ILogCursor {
      * filter. The parameter nextLogLocator is set to the point to the next log
      * record.
      * 
-     * @param nextLogicalLogLocator
+     * @param currentLogLocator
      * @return true if the cursor was successfully moved to the next log record
      *         false if there are no more log records that satisfy the
      *         configured filter.
      */
     @Override
-    public boolean next(LogicalLogLocator nextLogicalLogLocator) throws IOException, ACIDException {
+    public boolean next(LogicalLogLocator currentLogLocator) throws IOException, ACIDException {
 
         int integerRead = -1;
         boolean logRecordBeginPosFound = false;
         long bytesSkipped = 0;
 
-        if (readLSN > logManager.getLastFlushedLsn().get()) {
-            readFromMemory(readLSN, nextLogicalLogLocator);
-            return true;
+        //if the lsn to read is greater than the most recent lsn, then return false
+        if (logicalLogLocator.getLsn() > logManager.getCurrentLsn().get()) {
+            return false;
+        }
+
+        //if the lsn to read is greater than the last flushed lsn, then read from memory
+        if (logicalLogLocator.getLsn() > logManager.getLastFlushedLsn().get()) {
+            return readFromMemory(currentLogLocator);
+        }
+
+        //if the readOnlyBuffer should be reloaded, then load the log page from the log file.
+        //needReloadBuffer is set to true if the log record is read from the memory log page.
+        if (needReloadBuffer) {
+            readOnlyBuffer = getReadOnlyBuffer(logicalLogLocator.getLsn(), logManager.getLogManagerProperties()
+                    .getLogBufferSize());
+            logicalLogLocator.setBuffer(readOnlyBuffer);
+            needReloadBuffer = false;
         }
 
         //check whether the currentOffset has enough space to have new log record by comparing
@@ -120,7 +126,7 @@ public class LogCursor implements ILogCursor {
                 logicalLogLocator.setBuffer(readOnlyBuffer);
                 logicalLogLocator.setLsn(lsnpos);
                 logicalLogLocator.setMemoryOffset(0);
-                return next(nextLogicalLogLocator);
+                return next(currentLogLocator);
             } else {
                 return false;
             }
@@ -130,18 +136,18 @@ public class LogCursor implements ILogCursor {
                 logManager.getLogRecordHelper().getLogType(logicalLogLocator),
                 logManager.getLogRecordHelper().getLogContentSize(logicalLogLocator));
         if (logManager.getLogRecordHelper().validateLogRecord(logicalLogLocator)) {
-            if (nextLogicalLogLocator == null) {
-                nextLogicalLogLocator = new LogicalLogLocator(0, readOnlyBuffer, -1, logManager);
+            if (currentLogLocator == null) {
+                currentLogLocator = new LogicalLogLocator(0, readOnlyBuffer, -1, logManager);
             }
-            nextLogicalLogLocator.setLsn(logicalLogLocator.getLsn());
-            nextLogicalLogLocator.setMemoryOffset(logicalLogLocator.getMemoryOffset());
-            nextLogicalLogLocator.setBuffer(readOnlyBuffer);
+            currentLogLocator.setLsn(logicalLogLocator.getLsn());
+            currentLogLocator.setMemoryOffset(logicalLogLocator.getMemoryOffset());
+            currentLogLocator.setBuffer(readOnlyBuffer);
             logicalLogLocator.incrementLsn(logLength);
             logicalLogLocator.setMemoryOffset(logicalLogLocator.getMemoryOffset() + logLength);
         } else {
             throw new ACIDException("Invalid Log Record found ! checksums do not match :( ");
         }
-        return logFilter.accept(readOnlyBuffer, nextLogicalLogLocator.getMemoryOffset(), logLength);
+        return logFilter.accept(readOnlyBuffer, currentLogLocator.getMemoryOffset(), logLength);
     }
 
     /**
@@ -154,57 +160,99 @@ public class LogCursor implements ILogCursor {
         return logFilter;
     }
 
-    private void readFromMemory(long lsn, LogicalLogLocator currentLogLocator) throws ACIDException {
+    private boolean readFromMemory(LogicalLogLocator currentLogLocator) throws ACIDException, IOException {
         byte[] logRecord = null;
-        if (lsn > logManager.getCurrentLsn().get()) {
-            throw new ACIDException(" invalid lsn " + lsn);
-        }
+        long lsn = logicalLogLocator.getLsn();
+        
+        //set the needReloadBuffer to true
+        needReloadBuffer = true;
 
-        /* check if the log record in the log buffer or has reached the disk. */
         int pageIndex = logManager.getLogPageIndex(lsn);
-        int pageOffset = logManager.getLogPageOffset(lsn);
+        //int pageOffset = logManager.getLogPageOffset(lsn);
+        logicalLogLocator.setMemoryOffset(logManager.getLogPageOffset(lsn));
 
-        byte[] pageContent = new byte[logManager.getLogManagerProperties().getLogPageSize()];
         // take a lock on the log page so that the page is not flushed to
         // disk interim
         IFileBasedBuffer logPage = logManager.getLogPage(pageIndex);
-        int logRecordSize = 0;
         synchronized (logPage) {
-            // need to check again
+            // need to check again if the log record in the log buffer or has reached the disk
             if (lsn > logManager.getLastFlushedLsn().get()) {
-                // get the log record length
-                logPage.getBytes(pageContent, 0, pageContent.length);
-                byte logType = pageContent[pageOffset + 4];
-                int logHeaderSize = logManager.getLogRecordHelper().getLogHeaderSize(logType);
-                int logBodySize = DataUtil.byteArrayToInt(pageContent, pageOffset + logHeaderSize - 4);
-                logRecordSize = logHeaderSize + logBodySize + logManager.getLogRecordHelper().getLogChecksumSize();
-                logRecord = new byte[logRecordSize];
 
-                //copy the log content
-                System.arraycopy(pageContent, pageOffset, logRecord, 0, logRecordSize);
-                MemBasedBuffer memBuffer = new MemBasedBuffer(logRecord);
-                if (logicalLogLocator == null) {
-                    logicalLogLocator = new LogicalLogLocator(lsn, memBuffer, 0, logManager);
-                } else {
-                    logicalLogLocator.setLsn(lsn);
-                    logicalLogLocator.setBuffer(memBuffer);
-                    logicalLogLocator.setMemoryOffset(0);
-                }
-                
-                currentLogLocator.setLsn(lsn);
-                currentLogLocator.setBuffer(memBuffer);
-                currentLogLocator.setMemoryOffset(0);
-                
-                try {
-                    // validate the log record by comparing checksums
-                    if (!logManager.getLogRecordHelper().validateLogRecord(logicalLogLocator)) {
-                        throw new ACIDException(" invalid log record at lsn " + lsn);
+                //find the magic number to identify the start of the log record
+                //----------------------------------------------------------------
+                int readNumber = -1;
+                int logPageSize = logManager.getLogManagerProperties().getLogPageSize();
+                int logMagicNumber = logManager.getLogManagerProperties().logMagicNumber;
+                int bytesSkipped = 0;
+                boolean logRecordBeginPosFound = false;
+                //check whether the currentOffset has enough space to have new log record by comparing
+                //the smallest log record type(which is commit)'s log header.
+                while (logicalLogLocator.getMemoryOffset() <= logPageSize
+                        - logManager.getLogRecordHelper().getLogHeaderSize(LogType.COMMIT)) {
+                    readNumber = logPage.readInt(logicalLogLocator.getMemoryOffset());
+                    if (readNumber == logMagicNumber) {
+                        logRecordBeginPosFound = true;
+                        break;
                     }
-                } catch (Exception e) {
-                    throw new ACIDException("exception encoutered in validating log record at lsn " + lsn, e);
+                    logicalLogLocator.increaseMemoryOffset(1);
+                    logicalLogLocator.incrementLsn();
+                    bytesSkipped++;
+                    if (bytesSkipped > logPageSize) {
+                        return false; // the maximum size of a log record is limited to
+                        // a log page size. If we have skipped as many
+                        // bytes without finding a log record, it
+                        // indicates an absence of logs any further.
+                    }
                 }
+
+                if (!logRecordBeginPosFound) {
+                    // need to read the next log page
+                    readOnlyBuffer = null;
+                    logicalLogLocator.setBuffer(null);
+                    logicalLogLocator.setLsn(lsn/logPageSize+1);
+                    logicalLogLocator.setMemoryOffset(0);
+                    return next(currentLogLocator);
+                }
+                //------------------------------------------------------
+
+                logicalLogLocator.setBuffer(logPage);
+                int logLength = logManager.getLogRecordHelper().getLogRecordSize(
+                        logManager.getLogRecordHelper().getLogType(logicalLogLocator),
+                        logManager.getLogRecordHelper().getLogContentSize(logicalLogLocator));
+                logRecord = new byte[logLength];
+
+                //copy the log record and set the buffer of logical log locator to the buffer of the copied log record.
+                System.arraycopy(logPage.getArray(), logicalLogLocator.getMemoryOffset(), logRecord, 0, logLength);
+                MemBasedBuffer memBuffer = new MemBasedBuffer(logRecord);
+                readOnlyBuffer = memBuffer;
+                logicalLogLocator.setBuffer(readOnlyBuffer);
+                logicalLogLocator.setMemoryOffset(0);
+                
+                if (logManager.getLogRecordHelper().validateLogRecord(logicalLogLocator)) {
+                    if (currentLogLocator == null) {
+                        currentLogLocator = new LogicalLogLocator(0, readOnlyBuffer, -1, logManager);
+                    }
+                    currentLogLocator.setLsn(logicalLogLocator.getLsn());
+                    currentLogLocator.setMemoryOffset(logicalLogLocator.getMemoryOffset());
+                    currentLogLocator.setBuffer(readOnlyBuffer);
+                    logicalLogLocator.incrementLsn(logLength);
+                    logicalLogLocator.setMemoryOffset(logicalLogLocator.getMemoryOffset() + logLength);
+                } else {
+                    //if the checksum doesn't match, there is two possible scenario. 
+                    //case1) the log file corrupted: there's nothing we can do for this case during abort. 
+                    //case2) the log record is partially written by another thread. So, we may ignore this log record 
+                    //       and continue to read the next log record
+                    //[NOTICE]
+                    //Only case2 is handled here. 
+                    logicalLogLocator.incrementLsn(logLength);
+                    logicalLogLocator.setMemoryOffset(logicalLogLocator.getMemoryOffset() + logLength);
+                    return next(currentLogLocator);
+                }
+                return logFilter.accept(readOnlyBuffer, currentLogLocator.getMemoryOffset(), logLength);
+                
+            } else {
+                return next(currentLogLocator);//read from disk
             }
         }
-        readLSN = readLSN + logRecordSize;
     }
 }
