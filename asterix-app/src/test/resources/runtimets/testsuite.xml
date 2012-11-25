@@ -1700,6 +1700,56 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-ngram-contains">
+        <output-file compare="Text">fuzzy-inverted-index-ngram-contains.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-ngram-edit-distance-panic">
+        <output-file compare="Text">fuzzy-inverted-index-ngram-edit-distance-panic.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-ngram-edit-distance">
+        <output-file compare="Text">fuzzy-inverted-index-ngram-edit-distance.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-ngram-jaccard">
+        <output-file compare="Text">fuzzy-inverted-index-ngram-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-olist-edit-distance-panic">
+        <output-file compare="Text">fuzzy-inverted-index-olist-edit-distance-panic.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-olist-edit-distance">
+        <output-file compare="Text">fuzzy-inverted-index-olist-edit-distance.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-olist-jaccard">
+        <output-file compare="Text">fuzzy-inverted-index-olist-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-ulist-jaccard">
+        <output-file compare="Text">fuzzy-inverted-index-ulist-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-word-contains">
+        <output-file compare="Text">fuzzy-inverted-index-word-contains.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-word-jaccard">
+        <output-file compare="Text">fuzzy-inverted-index-word-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="inverted-index-ngram-contains">
         <output-file compare="Text">inverted-index-ngram-contains.adm</output-file>
       </compilation-unit>
