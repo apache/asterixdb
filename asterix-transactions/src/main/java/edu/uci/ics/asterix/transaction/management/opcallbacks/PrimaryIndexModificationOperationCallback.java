@@ -67,6 +67,9 @@ public class PrimaryIndexModificationOperationCallback extends AbstractOperation
         int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields, primaryKeyHashFunctions);
         LSMBTreeTupleReference lsmBTreeTuple = (LSMBTreeTupleReference) before;
         IndexOperation oldOp = IndexOperation.INSERT;
+        if (before == null) {
+            oldOp = IndexOperation.NOOP;
+        }
         if (lsmBTreeTuple != null && lsmBTreeTuple.isAntimatter()) {
             oldOp = IndexOperation.DELETE;
         }

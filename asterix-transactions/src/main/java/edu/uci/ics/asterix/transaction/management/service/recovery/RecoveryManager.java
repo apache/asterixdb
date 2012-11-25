@@ -20,9 +20,14 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,6 +45,7 @@ import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.logging.PhysicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -158,23 +164,27 @@ public class RecoveryManager implements IRecoveryManager {
     }
 
     /**
-     * Rollback a transaction (non-Javadoc)
+     * Rollback a transaction
      * 
      * @see edu.uci.ics.transaction.management.service.recovery.IRecoveryManager# rollbackTransaction (edu.uci.ics.TransactionContext.management.service.transaction .TransactionContext)
      */
     @Override
     public void rollbackTransaction(TransactionContext txnContext) throws ACIDException {
         ILogManager logManager = txnSubsystem.getLogManager();
-        ILogRecordHelper parser = logManager.getLogRecordHelper();
+        ILogRecordHelper logRecordHelper = logManager.getLogRecordHelper();
+        Map<TxnId, List<Long>> loserTxnTable = new HashMap<TxnId, List<Long>>();
+        TxnId tempKeyTxnId = new TxnId(-1, -1, -1);
 
-        // Obtain the last log record written by the transaction
-        PhysicalLogLocator lsn = txnContext.getLastLogLocator();
+        // Obtain the first log record written by the Job
+        PhysicalLogLocator firstLSNLogLocator = txnContext.getFirstLogLocator();
+        PhysicalLogLocator lastLSNLogLocator = txnContext.getLastLogLocator();
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info(" rollbacking transaction log records at lsn " + lsn.getLsn());
+            LOGGER.info(" rollbacking transaction log records from " + firstLSNLogLocator.getLsn() + "to"
+                    + lastLSNLogLocator.getLsn());
         }
 
         // check if the transaction actually wrote some logs.
-        if (lsn.getLsn() == TransactionManagementConstants.LogManagerConstants.TERMINAL_LSN) {
+        if (firstLSNLogLocator.getLsn() == TransactionManagementConstants.LogManagerConstants.TERMINAL_LSN) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info(" no need to roll back as there were no operations by the transaction "
                         + txnContext.getJobId());
@@ -182,68 +192,142 @@ public class RecoveryManager implements IRecoveryManager {
             return;
         }
 
-        // a dummy logLocator instance that is re-used during rollback
-        LogicalLogLocator logLocator = LogUtil.getDummyLogicalLogLocator(logManager);
+        // While reading log records from firstLSN to lastLSN, collect uncommitted txn's LSNs 
+        ILogCursor logCursor;
+        try {
+            logCursor = logManager.readLog(firstLSNLogLocator, new ILogFilter() {
+                @Override
+                public boolean accept(IBuffer buffer, long startOffset, int length) {
+                    return true;
+                }
+            });
+        } catch (IOException e) {
+            throw new ACIDException("Failed to create LogCursor with LSN:" + firstLSNLogLocator.getLsn(), e);
+        }
 
-        while (true) {
+        LogicalLogLocator currentLogLocator = LogUtil.getDummyLogicalLogLocator(logManager);
+        boolean valid;
+        byte logType;
+        List<Long> undoLSNSet = null;
+
+        while (currentLogLocator.getLsn() != lastLSNLogLocator.getLsn()) {
             try {
-                // read the log record at the given position
-                logLocator = logManager.readLog(lsn);
-            } catch (Exception e) {
-                e.printStackTrace();
-                state = SystemState.CORRUPTED;
-                throw new ACIDException(" could not read log at lsn :" + lsn, e);
+                valid = logCursor.next(currentLogLocator);
+            } catch (IOException e) {
+                throw new ACIDException("Failed to read log at LSN:" + currentLogLocator.getLsn(), e);
+            }
+            if (!valid) {
+                if (currentLogLocator.getLsn() != lastLSNLogLocator.getLsn()) {
+                    throw new ACIDException("Log File Corruption: lastLSN mismatch");
+                } else {
+                    break;//End of Log File
+                }
             }
 
-            byte logType = parser.getLogType(logLocator);
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine(" reading LSN value inside rollback transaction method " + txnContext.getLastLogLocator()
-                        + " jodId " + parser.getJobId(logLocator) + " log type  " + logType);
-            }
+            tempKeyTxnId.setTxnId(logRecordHelper.getJobId(currentLogLocator), logRecordHelper.getDatasetId(currentLogLocator),
+                    logRecordHelper.getPKHashValue(currentLogLocator));
+            logType = logRecordHelper.getLogType(currentLogLocator);
 
             switch (logType) {
                 case LogType.UPDATE:
-
-                    // extract the resource manager id from the log record.
-                    byte resourceMgrId = parser.getResourceMgrId(logLocator);
-                    if (LOGGER.isLoggable(Level.FINE)) {
-                        LOGGER.fine(parser.getLogRecordForDisplay(logLocator));
+                    undoLSNSet = loserTxnTable.get(tempKeyTxnId);
+                    if (undoLSNSet == null) {
+                        TxnId txnId = new TxnId(logRecordHelper.getJobId(currentLogLocator),
+                                logRecordHelper.getDatasetId(currentLogLocator), logRecordHelper.getPKHashValue(currentLogLocator));
+                        undoLSNSet = new ArrayList<Long>();
+                        loserTxnTable.put(txnId, undoLSNSet);
                     }
-
-                    // look up the repository to get the resource manager
-                    IResourceManager resourceMgr = txnSubsystem.getTransactionalResourceRepository()
-                            .getTransactionalResourceMgr(resourceMgrId);
-
-                    // register resourceMgr if it is not registered. 
-                    if (resourceMgr == null) {
-                        resourceMgr = new IndexResourceManager(resourceMgrId, txnSubsystem);
-                        txnSubsystem.getTransactionalResourceRepository().registerTransactionalResourceManager(
-                                resourceMgrId, resourceMgr);
-                    }
-                    resourceMgr.undo(parser, logLocator);
+                    undoLSNSet.add(currentLogLocator.getLsn());
                     break;
 
                 case LogType.COMMIT:
-                    throw new ACIDException(txnContext, " cannot rollback commmitted transaction");
+                    undoLSNSet = loserTxnTable.get(tempKeyTxnId);
+                    if (undoLSNSet != null) {
+                        loserTxnTable.remove(tempKeyTxnId);
+                    }
+                    break;
 
                 default:
                     throw new ACIDException("Unsupported LogType: " + logType);
-
-            }
-
-            // follow the previous LSN pointer to get the previous log record
-            // written by the transaction
-            // If the return value is true, the logLocator, it indicates that
-            // the logLocator object has been
-            // appropriately set to the location of the next log record to be
-            // processed as part of the roll back
-            boolean moreLogs = parser.getPrevLSN(lsn, logLocator);
-            if (!moreLogs) {
-                // no more logs to process
-                break;
             }
         }
 
+        //undo loserTxn's effect
+        TxnId txnId;
+        Iterator<Entry<TxnId, List<Long>>> iter = loserTxnTable.entrySet().iterator();
+        byte resourceMgrId;
+        while (iter.hasNext()) {
+            Map.Entry<TxnId, List<Long>> loserTxn = (Map.Entry<TxnId, List<Long>>) iter.next();
+            txnId = loserTxn.getKey();
+
+            undoLSNSet = loserTxn.getValue();
+            Comparator<Long> comparator = Collections.reverseOrder();
+            Collections.sort(undoLSNSet, comparator);
+
+            for (long undoLSN : undoLSNSet) {
+                currentLogLocator.setLsn(undoLSN);
+                // here, all the log records are UPDATE type. So, we don't need to check the type again.
+
+                // extract the resource manager id from the log record.
+                resourceMgrId = logRecordHelper.getResourceMgrId(currentLogLocator);
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine(logRecordHelper.getLogRecordForDisplay(currentLogLocator));
+                }
+
+                // look up the repository to get the resource manager
+                IResourceManager resourceMgr = txnSubsystem.getTransactionalResourceRepository()
+                        .getTransactionalResourceMgr(resourceMgrId);
+
+                // register resourceMgr if it is not registered. 
+                if (resourceMgr == null) {
+                    resourceMgr = new IndexResourceManager(resourceMgrId, txnSubsystem);
+                    txnSubsystem.getTransactionalResourceRepository().registerTransactionalResourceManager(
+                            resourceMgrId, resourceMgr);
+                }
+                resourceMgr.undo(logRecordHelper, currentLogLocator);
+            }
+        }
+    }
+}
+
+class TxnId {
+    public int jobId;
+    public int datasetId;
+    public int pkHashVal;
+
+    public TxnId(int jobId, int datasetId, int pkHashVal) {
+        this.jobId = jobId;
+        this.datasetId = datasetId;
+        this.pkHashVal = pkHashVal;
     }
 
+    public void setTxnId(int jobId, int datasetId, int pkHashVal) {
+        this.jobId = jobId;
+        this.datasetId = datasetId;
+        this.pkHashVal = pkHashVal;
+    }
+
+    public void setTxnId(TxnId txnId) {
+        this.jobId = txnId.jobId;
+        this.datasetId = txnId.datasetId;
+        this.pkHashVal = txnId.pkHashVal;
+    }
+
+    @Override
+    public int hashCode() {
+        return pkHashVal;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof JobId)) {
+            return false;
+        }
+        TxnId txnId = (TxnId) o;
+
+        return (txnId.pkHashVal == pkHashVal && txnId.datasetId == datasetId && txnId.jobId == jobId);
+    }
 }

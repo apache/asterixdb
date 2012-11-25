@@ -36,6 +36,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
  * LogRecordSize(4)
  * --------------------------- COMMIT doesn't have Body fields.
  * [Body] The Body size is given through the parameter reusableLogContentObjectLength
+ * TupleFieldCount(4)
  * NewOp(1)
  * NewValueLength(4)
  * NewValue(NewValueLength)
@@ -116,14 +117,15 @@ public class LogRecordHelper implements ILogRecordHelper {
     }
 
     @Override
-    public int getLogRecordSize(LogicalLogLocator logicalLogLocater) {
+    public int getLogContentSize(LogicalLogLocator logicalLogLocater) {
         return logicalLogLocater.getBuffer().readInt(logicalLogLocater.getMemoryOffset() + LOG_RECORD_SIZE_POS);
     }
 
     @Override
     public long getLogChecksum(LogicalLogLocator logicalLogLocator) {
         return (logicalLogLocator.getBuffer()).readLong(logicalLogLocator.getMemoryOffset()
-                + getLogRecordSize(logicalLogLocator) - LOG_CHECKSUM_SIZE);
+                + getLogRecordSize(getLogType(logicalLogLocator), getLogContentSize(logicalLogLocator))
+                - LOG_CHECKSUM_SIZE);
     }
 
     @Override
@@ -133,7 +135,9 @@ public class LogRecordHelper implements ILogRecordHelper {
 
     @Override
     public int getLogContentEndPos(LogicalLogLocator logicalLogLocator) {
-        return logicalLogLocator.getMemoryOffset() + getLogRecordSize(logicalLogLocator) - LOG_CHECKSUM_SIZE;
+        return logicalLogLocator.getMemoryOffset()
+                + getLogRecordSize(getLogType(logicalLogLocator), getLogContentSize(logicalLogLocator))
+                - LOG_CHECKSUM_SIZE;
     }
 
     @Override
@@ -153,10 +157,13 @@ public class LogRecordHelper implements ILogRecordHelper {
         builder.append(" Job Id : ").append(getJobId(logicalLogLocator));
         builder.append(" Dataset Id : ").append(getDatasetId(logicalLogLocator));
         builder.append(" PK Hash Value : ").append(getPKHashValue(logicalLogLocator));
-        builder.append(" PrevLSN : ").append(getPrevLSN(logicalLogLocator));
-        builder.append(" Resource Id : ").append(getResourceId(logicalLogLocator));
-        builder.append(" ResourceMgr Id : ").append(getResourceMgrId(logicalLogLocator));
-        builder.append(" Log Record Size : ").append(getLogRecordSize(logicalLogLocator));
+        if (logType == LogType.UPDATE) {
+            builder.append(" PrevLSN : ").append(getPrevLSN(logicalLogLocator).getLsn());
+            builder.append(" Resource Id : ").append(getResourceId(logicalLogLocator));
+            builder.append(" ResourceMgr Id : ").append(getResourceMgrId(logicalLogLocator));
+            builder.append(" Log Record Size : ").append(
+                    getLogRecordSize(logType, getLogContentSize(logicalLogLocator)));
+        }
         return builder.toString();
     }
 
@@ -198,12 +205,13 @@ public class LogRecordHelper implements ILogRecordHelper {
             /* log record size */
             (logicalLogLocator.getBuffer()).writeInt(logicalLogLocator.getMemoryOffset() + LOG_RECORD_SIZE_POS,
                     logRecordSize);
+
         }
     }
 
     @Override
     public boolean validateLogRecord(LogicalLogLocator logicalLogLocator) {
-        int logLength = this.getLogRecordSize(logicalLogLocator);
+        int logLength = this.getLogRecordSize(getLogType(logicalLogLocator), getLogContentSize(logicalLogLocator));
         long expectedChecksum = DataUtil.getChecksum(logicalLogLocator.getBuffer(),
                 logicalLogLocator.getMemoryOffset(), logLength - LOG_CHECKSUM_SIZE);
         long actualChecksum = getLogChecksum(logicalLogLocator);

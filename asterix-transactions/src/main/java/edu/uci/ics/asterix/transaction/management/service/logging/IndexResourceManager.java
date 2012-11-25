@@ -43,16 +43,6 @@ public class IndexResourceManager implements IResourceManager {
         long resourceId = logRecordHelper.getResourceId(logLocator);
         int offset = logRecordHelper.getLogContentBeginPos(logLocator);
 
-        /*
-        byte[] logBufferContent = logLocator.getBuffer().getArray();
-        // read the length of resource id byte array
-        int resourceIdLength = DataUtil.byteArrayToInt(logBufferContent, logContentBeginPos);
-        byte[] resourceIdBytes = new byte[resourceIdLength];
-
-        // copy the resource if bytes
-        System.arraycopy(logBufferContent, logContentBeginPos + 4, resourceIdBytes, 0, resourceIdLength);
-        */
-
         // look up the repository to obtain the resource object
         IIndex index = (IIndex) provider.getTransactionalResourceRepository().getTransactionalResource(resourceId);
 
@@ -106,10 +96,10 @@ public class IndexResourceManager implements IResourceManager {
                 }
             } else {
                 //For LSMRtree and LSMInvertedIndex
-                //delete --> physical delete
-                //insert --> logical delete
+                //delete --> insert
+                //insert --> delete
                 if (newOperation == (byte) IndexOperation.DELETE.ordinal()) {
-                    indexAccessor.physicalDelete(newTuple);
+                    indexAccessor.insert(newTuple);
                 } else {
                     indexAccessor.delete(newTuple);
                 }

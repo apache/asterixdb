@@ -36,14 +36,8 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 
 public class LogManager implements ILogManager {
 
-    /*
-     * Log Record Structure HEADER
-     * <(log_magic_number,4)(log_length,8)(log_type,1
-     * )(log_action_type,1)(log_timestamp
-     * ,8)(log_transaction_id,8)(resource_manager_id
-     * ,1)(page_id,8)(previous_lsn,8) <CONTENT> TAIL <(checksum,8)>
-     */
-
+    
+    public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(LogManager.class.getName());
     private TransactionSubsystem provider;
     private LogManagerProperties logManagerProperties;
@@ -522,8 +516,8 @@ public class LogManager implements ILogManager {
         }
 
         // all constraints checked and we are good to go and acquire a lsn.
-        long previousLogLocator = -1;
-        long myLogLocator; // the will be set to the location (a long value)
+        long previousLSN = -1;
+        long currentLSN; // the will be set to the location (a long value)
         // where the log record needs to be placed.
 
         /*
@@ -534,10 +528,10 @@ public class LogManager implements ILogManager {
          * the last log record written by (any thread of) the transaction.
          */
         synchronized (context) {
-            previousLogLocator = context.getLastLogLocator().getLsn();
-            myLogLocator = getLsn(totalLogSize, logType);
-            context.getLastLogLocator().setLsn(myLogLocator);
-            logicalLogLocator.setLsn(myLogLocator);
+            previousLSN = context.getLastLogLocator().getLsn();
+            currentLSN = getLsn(totalLogSize, logType);
+            context.setLastLSN(currentLSN);
+            logicalLogLocator.setLsn(currentLSN);
         }
 
         /*
@@ -555,7 +549,7 @@ public class LogManager implements ILogManager {
         // thread has submitted a flush
         // request.
 
-        int pageIndex = (int) getLogPageIndex(myLogLocator);
+        int pageIndex = (int) getLogPageIndex(currentLSN);
 
         /*
          * the lsn has been obtained for the log record. need to set the
@@ -565,13 +559,13 @@ public class LogManager implements ILogManager {
         try {
 
             logicalLogLocator.setBuffer(logPages[pageIndex]);
-            int pageOffset = getLogPageOffset(myLogLocator);
+            int pageOffset = getLogPageOffset(currentLSN);
             logicalLogLocator.setMemoryOffset(pageOffset);
 
             /*
              * write the log header.
              */
-            logRecordHelper.writeLogHeader(logicalLogLocator, logType, context, datasetId, PKHashValue, previousLogLocator,
+            logRecordHelper.writeLogHeader(logicalLogLocator, logType, context, datasetId, PKHashValue, previousLSN,
                     resourceId, resourceMgrId, logContentSize);
             
             // increment the offset so that the transaction can fill up the
@@ -590,6 +584,11 @@ public class LogManager implements ILogManager {
                 // record content at the allocated space.
                 logger.log(context, logicalLogLocator, logContentSize, reusableLogContentObject);
                 logger.postLog(context, reusableLogContentObject);
+                if (IS_DEBUG_MODE) {
+                    logicalLogLocator.setMemoryOffset(logicalLogLocator.getMemoryOffset() - logRecordHelper.getLogHeaderSize(logType));
+                    System.out.println(logRecordHelper.getLogRecordForDisplay(logicalLogLocator));
+                    logicalLogLocator.increaseMemoryOffset(logRecordHelper.getLogHeaderSize(logType));
+                }
             }
 
             /*
@@ -628,7 +627,7 @@ public class LogManager implements ILogManager {
              * been flushed to disk because the containing log page filled up.
              */
             if (logType == LogType.COMMIT) {
-                if (getLastFlushedLsn().get() < myLogLocator) {
+                if (getLastFlushedLsn().get() < currentLSN) {
                     if (!addedFlushRequest) {
                         addFlushRequest(pageIndex);
                     }
@@ -640,7 +639,7 @@ public class LogManager implements ILogManager {
                      * waiting threads of the flush event.
                      */
                     synchronized (logPages[pageIndex]) {
-                        while (getLastFlushedLsn().get() < myLogLocator) {
+                        while (getLastFlushedLsn().get() < currentLSN) {
                             logPages[pageIndex].wait();
                         }
                     }
@@ -701,7 +700,11 @@ public class LogManager implements ILogManager {
             FileChannel fileChannel = raf.getChannel();
             fileChannel.read(buffer);
             buffer.position(0);
-            buffer.limit(buffer.getInt(4));
+            byte logType = buffer.get(4);
+            int logHeaderSize = logRecordHelper.getLogHeaderSize(logType);
+            int logBodySize = buffer.getInt(logHeaderSize-4);
+            int logRecordSize = logHeaderSize + logBodySize + logRecordHelper.getLogChecksumSize();
+            buffer.limit(logRecordSize);
             MemBasedBuffer memBuffer = new MemBasedBuffer(buffer.slice());
             logicalLogLocator = new LogicalLogLocator(physicalLogLocator.getLsn(), memBuffer, 0, this);
             if (!logRecordHelper.validateLogRecord(logicalLogLocator)) {
@@ -737,6 +740,10 @@ public class LogManager implements ILogManager {
         if (lsnValue > getLastFlushedLsn().get()) {
             int pageIndex = getLogPageIndex(lsnValue);
             int pageOffset = getLogPageOffset(lsnValue);
+            
+            //TODO
+            //minimize memory allocation overhead. current code allocates 10MBytes per reading a log record.
+            
             byte[] pageContent = new byte[logManagerProperties.getLogPageSize()];
             // take a lock on the log page so that the page is not flushed to
             // disk interim
@@ -750,13 +757,16 @@ public class LogManager implements ILogManager {
 
                     // get the log record length
                     logPages[pageIndex].getBytes(pageContent, 0, pageContent.length);
-                    int logRecordLength = DataUtil.byteArrayToInt(pageContent, pageOffset + 4);
-                    logRecord = new byte[logRecordLength];
+                    byte logType = pageContent[pageOffset+4];
+                    int logHeaderSize = logRecordHelper.getLogHeaderSize(logType);
+                    int logBodySize = DataUtil.byteArrayToInt(pageContent, pageOffset + logHeaderSize - 4);
+                    int logRecordSize = logHeaderSize + logBodySize + logRecordHelper.getLogChecksumSize();
+                    logRecord = new byte[logRecordSize];
 
                     /*
                      * copy the log record content
                      */
-                    System.arraycopy(pageContent, pageOffset, logRecord, 0, logRecordLength);
+                    System.arraycopy(pageContent, pageOffset, logRecord, 0, logRecordSize);
                     MemBasedBuffer memBuffer = new MemBasedBuffer(logRecord);
                     logLocator = new LogicalLogLocator(lsnValue, memBuffer, 0, this);
                     try {

@@ -93,6 +93,7 @@ public class ExecutionTest {
         List<CompilationUnit> cUnits = tcCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
             File testFile = tcCtx.getTestFile(cUnit);
+            
             /*************** to avoid run failure cases ****************/
             if (testFile.getAbsolutePath().contains("runtimets/queries/failure/")) {
                 continue;

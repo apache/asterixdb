@@ -41,7 +41,7 @@ public interface ILogRecordHelper {
     
     byte getResourceMgrId(LogicalLogLocator logicalLogLocater);
 
-    int getLogRecordSize(LogicalLogLocator logicalLogLocater);
+    int getLogContentSize(LogicalLogLocator logicalLogLocater);
 
     long getLogChecksum(LogicalLogLocator logicalLogLocator);
 
