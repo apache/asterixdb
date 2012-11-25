@@ -88,6 +88,7 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
                 setInsertMode();
                 break;
 
+            case PHYSICALDELETE:
             case DELETE:
                 setDeleteMode();
                 break;
