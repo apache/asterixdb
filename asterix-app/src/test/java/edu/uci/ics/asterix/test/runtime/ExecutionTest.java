@@ -99,7 +99,6 @@ public class ExecutionTest {
                 continue;
             }
             /***********************************************************/
-            System.out.println(""+testFile.getAbsolutePath());
             File expectedResultFile = tcCtx.getExpectedResultFile(cUnit);
             File actualFile = new File(PATH_ACTUAL + File.separator
                     + tcCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_" + cUnit.getName() + ".adm");

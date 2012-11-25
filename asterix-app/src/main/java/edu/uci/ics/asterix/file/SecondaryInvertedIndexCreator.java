@@ -184,16 +184,13 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
     }
 
     private AbstractOperatorDescriptor createTokenizerOp(JobSpecification spec) throws AlgebricksException {
-        int[] fieldsToTokenize = new int[numSecondaryKeys];
-        for (int i = 0; i < numSecondaryKeys; i++) {
-            fieldsToTokenize[i] = i;
-        }
+        int docField = 0;
         int[] primaryKeyFields = new int[numPrimaryKeys];
         for (int i = 0; i < numPrimaryKeys; i++) {
             primaryKeyFields[i] = numSecondaryKeys + i;
         }
         BinaryTokenizerOperatorDescriptor tokenizerOp = new BinaryTokenizerOperatorDescriptor(spec,
-                tokenKeyPairRecDesc, tokenizerFactory, fieldsToTokenize, primaryKeyFields);
+                tokenKeyPairRecDesc, tokenizerFactory, docField, primaryKeyFields, false);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, tokenizerOp,
                 primaryPartitionConstraint);
         return tokenizerOp;
