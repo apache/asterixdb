@@ -51,6 +51,7 @@ public class TransactionManager implements ITransactionManager {
                 if (LOGGER.isLoggable(Level.SEVERE)) {
                     LOGGER.severe(msg);
                 }
+                ae.printStackTrace();
                 throw new Error(msg);
             } finally {
                 txnContext.releaseResources();

@@ -52,8 +52,9 @@ public class TransactionContext implements Serializable {
 
     private static final long serialVersionUID = -6105616785783310111L;
     private TransactionSubsystem transactionSubsystem;
-    private LogicalLogLocator lastLogLocator;
-    private TransactionState txnState;
+    private LogicalLogLocator firstLogLocator;//firstLSN of the Job
+    private LogicalLogLocator lastLogLocator;//lastLSN of the Job
+    private TransactionState txnState; 
     private long startWaitTime;
     private int status;
     private Set<ICloseable> resources = new HashSet<ICloseable>();
@@ -74,6 +75,7 @@ public class TransactionContext implements Serializable {
     }
 
     private void init() throws ACIDException {
+        firstLogLocator = LogUtil.getDummyLogicalLogLocator(transactionSubsystem.getLogManager());
         lastLogLocator = LogUtil.getDummyLogicalLogLocator(transactionSubsystem.getLogManager());
         txnState = TransactionState.ACTIVE;
         startWaitTime = INVALID_TIME;
@@ -117,12 +119,19 @@ public class TransactionContext implements Serializable {
         resources.add(resource);
     }
 
+    public LogicalLogLocator getFirstLogLocator() {
+        return firstLogLocator;
+    }
+    
     public LogicalLogLocator getLastLogLocator() {
         return lastLogLocator;
     }
 
-    public void setLastLSN(LogicalLogLocator lastLogLocator) {
-        this.lastLogLocator = lastLogLocator;
+    public void setLastLSN(long lsn) {
+        if (firstLogLocator.getLsn() == -1) {
+            firstLogLocator.setLsn(lsn);
+        }
+        lastLogLocator.setLsn(lsn);
     }
 
     public JobId getJobId() {
