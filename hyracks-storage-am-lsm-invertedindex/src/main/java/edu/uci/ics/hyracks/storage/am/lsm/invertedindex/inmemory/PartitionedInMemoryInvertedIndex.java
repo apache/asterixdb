@@ -96,7 +96,7 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
         maxPartitionIndex = this.maxPartitionIndex;
         partitionIndexLock.readLock().unlock();
 
-        if (minPartitionIndex == Short.MAX_VALUE || maxPartitionIndex == Short.MIN_VALUE) {
+        if (minPartitionIndex == Short.MAX_VALUE && maxPartitionIndex == Short.MIN_VALUE) {
             // Index must be empty.
             return;
         }
@@ -108,7 +108,7 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
         if (numTokensUpperBound >= 0) {
             partitionEndIndex = (short) Math.min(maxPartitionIndex, numTokensUpperBound);
         }
-
+        
         PartitionedTOccurrenceSearcher partSearcher = (PartitionedTOccurrenceSearcher) searcher;
         PartitionedInMemoryInvertedIndexOpContext ctx = (PartitionedInMemoryInvertedIndexOpContext) ictx;
         ctx.setOperation(IndexOperation.SEARCH);

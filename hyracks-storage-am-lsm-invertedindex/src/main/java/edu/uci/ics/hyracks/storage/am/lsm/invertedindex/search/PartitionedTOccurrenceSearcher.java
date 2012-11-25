@@ -103,8 +103,8 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
 
         // Process the partitions one-by-one.
         ArrayList<IInvertedListCursor>[] partitionCursors = partitions.getPartitions();
-        int start = partitions.getMinValidPartitionIndex();
-        int end = partitions.getMaxValidPartitionIndex();
+        short start = partitions.getMinValidPartitionIndex();
+        short end = partitions.getMaxValidPartitionIndex();
         searchResult.reset();
         for (int i = start; i <= end; i++) {
             if (partitionCursors[i] == null) {

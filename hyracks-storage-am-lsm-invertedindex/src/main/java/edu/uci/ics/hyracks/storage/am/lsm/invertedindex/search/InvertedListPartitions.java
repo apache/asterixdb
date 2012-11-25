@@ -30,8 +30,8 @@ public class InvertedListPartitions {
     private final IObjectFactory<ArrayList<IInvertedListCursor>> arrayListFactory;
     private final ObjectCache<ArrayList<IInvertedListCursor>> arrayListCache;
     private ArrayList<IInvertedListCursor>[] partitions;
-    private int minValidPartitionIndex;
-    private int maxValidPartitionIndex;
+    private short minValidPartitionIndex;
+    private short maxValidPartitionIndex;
 
     public InvertedListPartitions() {
         this.arrayListFactory = new ArrayListFactory<IInvertedListCursor>();
@@ -56,11 +56,11 @@ public class InvertedListPartitions {
             Arrays.fill(partitions, null);
         }
         arrayListCache.reset();
-        minValidPartitionIndex = Integer.MAX_VALUE;
-        maxValidPartitionIndex = Integer.MIN_VALUE;
+        minValidPartitionIndex = Short.MAX_VALUE;
+        maxValidPartitionIndex = Short.MIN_VALUE;
     }
 
-    public void addInvertedListCursor(IInvertedListCursor listCursor, int numTokens) {
+    public void addInvertedListCursor(IInvertedListCursor listCursor, short numTokens) {
         if (numTokens + 1 >= partitions.length) {
             partitions = Arrays.copyOf(partitions, numTokens + PARTITIONS_SLACK_SIZE);
         }
@@ -84,11 +84,11 @@ public class InvertedListPartitions {
         return partitions;
     }
 
-    public int getMinValidPartitionIndex() {
+    public short getMinValidPartitionIndex() {
         return minValidPartitionIndex;
     }
 
-    public int getMaxValidPartitionIndex() {
+    public short getMaxValidPartitionIndex() {
         return maxValidPartitionIndex;
     }
 }
