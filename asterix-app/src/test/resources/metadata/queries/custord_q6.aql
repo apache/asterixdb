@@ -1,7 +1,0 @@
-use dataverse custord;
-
-drop index Orders.ordClerkTotal;
-
-drop dataset Orders;
-
-drop type OrderType;

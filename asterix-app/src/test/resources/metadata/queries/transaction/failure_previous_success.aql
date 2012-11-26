@@ -1,0 +1,54 @@
+/*
+ * Description  : Cause a failure by creating an existing type. Verify that rollback does not affect the pre-existing types.
+ *                Verification is done in a separate session (compilation unit).
+ * Expected Res : Success
+ * Date         : 24 Nov 2012
+ */
+drop dataverse custord if exists;
+
+create dataverse custord;
+
+use dataverse custord;
+
+create type StreetType as closed {
+  number: int32?,
+  name: string
+}
+
+create type AddressType as open {
+  street: StreetType,
+  city: string,
+  state: string,
+  zip: int16
+}
+
+create type CustomerType as closed {
+  cid: int32, 
+  name: string,
+  age: int32?,
+  address: AddressType?,
+  interests: {{string}},
+  children: [ {
+             name : string,
+             dob : string
+             } ]
+}
+
+create type OrderType as open {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float,
+  items: [ {
+       number: int64,
+       storeIds: {{int8}} 
+       } ]
+}
+
+
+create type StreetType as closed {
+  number: int32?,
+  name: string
+}
