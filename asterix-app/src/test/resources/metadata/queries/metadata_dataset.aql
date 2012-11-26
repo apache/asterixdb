@@ -1,9 +1,0 @@
-use dataverse Metadata;
-
-write output to nc1:"rttest/metadata_dataset.adm";
-
-for $c in dataset('Dataset')
-return $c
-
-
-

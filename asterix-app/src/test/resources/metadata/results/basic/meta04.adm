@@ -1,0 +1,1 @@
+{ "DataverseName": "testdv", "DatatypeName": "testtype", "Derived": { "Tag": "RECORD", "IsAnonymous": false, "EnumValues": null, "Record": { "IsOpen": true, "Fields": [ { "FieldName": "id", "FieldType": "int32" } ] }, "Union": null, "UnorderedList": null, "OrderedList": null }, "Timestamp": "Sat Nov 24 14:27:13 PST 2012" }

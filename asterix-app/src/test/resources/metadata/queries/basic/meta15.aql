@@ -1,0 +1,11 @@
+/*
+ * Description  : Query Metadata dataset Adapter to verify to contents.
+ * Expected Res : Success
+ * Date         : 25 Nov 2012
+ */
+
+write output to nc1:"mdtest/basic_meta15.adm";
+
+for $l in dataset('Metadata.DatasourceAdapter')
+return $l
+

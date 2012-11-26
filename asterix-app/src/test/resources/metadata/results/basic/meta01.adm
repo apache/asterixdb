@@ -1,0 +1,2 @@
+{ "DataverseName": "Metadata", "DataFormat": "edu.uci.ics.asterix.runtime.formats.NonTaggedDataFormat", "Timestamp": "Sat Nov 24 14:44:45 PST 2012" }
+{ "DataverseName": "testdv", "DataFormat": "edu.uci.ics.asterix.runtime.formats.NonTaggedDataFormat", "Timestamp": "Sat Nov 24 14:45:14 PST 2012" }

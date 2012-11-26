@@ -1,0 +1,173 @@
+<test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
+  <test-group name="basic">
+    <test-case FilePath="basic">
+      <compilation-unit name="meta01">
+        <output-file compare="Text">meta01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta02">
+        <output-file compare="Text">meta02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta03">
+        <output-file compare="Text">meta03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta04">
+        <output-file compare="Text">meta04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta05">
+        <output-file compare="Text">meta05.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta06">
+        <output-file compare="Text">meta06.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta07">
+        <output-file compare="Text">meta07.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta08">
+        <output-file compare="Text">meta08.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta09">
+        <output-file compare="Text">meta09.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta10">
+        <output-file compare="Text">meta10.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta11">
+        <output-file compare="Text">meta11.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta12">
+        <output-file compare="Text">meta12.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta13">
+        <output-file compare="Text">meta13.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta14">
+        <output-file compare="Text">meta14.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta15">
+        <output-file compare="Text">meta15.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta16">
+        <output-file compare="Text">meta16.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta17">
+        <output-file compare="Text">meta17.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta18">
+        <output-file compare="Text">meta18.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta19">
+        <output-file compare="Text">meta19.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta20">
+        <output-file compare="Text">meta20.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta21">
+        <output-file compare="Text">meta21.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="exception">
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_drop_dataset"> 
+        <expected-error>MetadataException</expected-error>
+        <output-file compare="Text">none.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_drop_dataverse"> 
+        <expected-error>MetadataException</expected-error>
+        <output-file compare="Text">none.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_drop_index"> 
+        <expected-error>MetadataException</expected-error>
+        <output-file compare="Text">none.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_drop_nodegroup"> 
+        <expected-error>MetadataException</expected-error>
+        <output-file compare="Text">none.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_drop_type1"> 
+        <expected-error>MetadataException</expected-error>
+        <output-file compare="Text">none.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_drop_type2"> 
+        <expected-error>MetadataException</expected-error>
+        <output-file compare="Text">none.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_drop_type3"> 
+        <output-file compare="Text">none.adm</output-file>
+        <expected-error>MetadataException</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="transaction">
+    <test-case FilePath="transaction">
+      <compilation-unit name="failure_previous_success">
+        <output-file compare="Text">failure_previous_success.adm</output-file>
+        <expected-error>MetadataException</expected-error>
+      </compilation-unit>
+      <compilation-unit name="verify_failure_previous_success">
+        <output-file compare="Text">verify_failure_previous_success.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="transaction">
+      <compilation-unit name="failure_subsequent_no_execution">
+        <output-file compare="Text">failure_subsequent_no_execution.adm</output-file>
+        <expected-error>MetadataException</expected-error>
+      </compilation-unit>
+      <compilation-unit name="verify_failure_subsequent_no_execution">
+        <output-file compare="Text">verify_failure_subsequent_no_execution.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+</test-suite>
