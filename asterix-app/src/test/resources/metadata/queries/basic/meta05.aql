@@ -1,0 +1,25 @@
+/*
+ * Description  : Create primary & secondary indexes & query Metadata dataset to verify.
+ * Expected Res : Success
+ * Date         : 15 Sep 2012
+ */
+
+drop dataverse testdv if exists;
+create dataverse testdv;
+
+write output to nc1:"mdtest/basic_meta05.adm";
+
+create type testdv.testtype as open {
+id : int32,
+name : string
+}
+
+create dataset testdv.t1(testtype) partitioned by key id;
+
+create index idx1 on testdv.t1(name);
+
+for $l in dataset('Metadata.Index')
+where $l.DataverseName='testdv' 
+return $l
+
+drop dataverse testdv;

@@ -1,0 +1,13 @@
+/*
+ * Description  : Verify the state of the metadata after the failure caused by failure_subsequent_no_execution.aql
+ * Expected Res : Success
+ * Date         : 24 Nov 2012
+ */
+
+use dataverse custord;
+
+write output to nc1:"mdtest/transaction_verify_failure_subsequent_no_execution.adm";
+
+for $x in dataset('Metadata.Index')
+where $x.DataverseName='custord'
+return $x
