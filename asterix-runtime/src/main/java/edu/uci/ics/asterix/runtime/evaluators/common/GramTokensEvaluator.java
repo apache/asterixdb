@@ -3,7 +3,6 @@ package edu.uci.ics.asterix.runtime.evaluators.common;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.builders.IAOrderedListBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
@@ -16,8 +15,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.BooleanSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizer;
-import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IToken;
-import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IntArray;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.NGramUTF8StringBinaryTokenizer;
 
 public class GramTokensEvaluator implements ICopyEvaluator {
@@ -25,20 +22,15 @@ public class GramTokensEvaluator implements ICopyEvaluator {
     // assuming type indicator in serde format
     private final int typeIndicatorSize = 1;
 
-    protected final DataOutput out;
-    protected final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-    protected final ICopyEvaluator stringEval;
-    protected final ICopyEvaluator gramLengthEval;
-    protected final ICopyEvaluator prePostEval;
+    private final DataOutput out;
+    private final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
+    private final ICopyEvaluator stringEval;
+    private final ICopyEvaluator gramLengthEval;
+    private final ICopyEvaluator prePostEval;
 
     private final NGramUTF8StringBinaryTokenizer tokenizer;
-
-    protected final IntArray itemOffsets = new IntArray();
-    protected final ArrayBackedValueStorage tokenBuffer = new ArrayBackedValueStorage();
-
-    private IAOrderedListBuilder listBuilder = new OrderedListBuilder();
-    private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-    private BuiltinType itemType;
+    private final OrderedListBuilder listBuilder = new OrderedListBuilder();
+    private final AOrderedListType listType;
 
     public GramTokensEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output, IBinaryTokenizer tokenizer,
             BuiltinType itemType) throws AlgebricksException {
@@ -47,7 +39,7 @@ public class GramTokensEvaluator implements ICopyEvaluator {
         gramLengthEval = args[1].createEvaluator(argOut);
         prePostEval = args[2].createEvaluator(argOut);
         this.tokenizer = (NGramUTF8StringBinaryTokenizer) tokenizer;
-        this.itemType = itemType;
+        this.listType = new AOrderedListType(itemType, null);
     }
 
     @Override
@@ -65,16 +57,12 @@ public class GramTokensEvaluator implements ICopyEvaluator {
         boolean prePost = BooleanSerializerDeserializer.getBoolean(bytes, prePostOff + typeIndicatorSize);
         tokenizer.setPrePost(prePost);
         tokenizer.reset(bytes, 0, gramLengthOff);
-        tokenBuffer.reset();
 
         try {
-            listBuilder.reset(new AOrderedListType(itemType, null));
+            listBuilder.reset(listType);
             while (tokenizer.hasNext()) {
-                inputVal.reset();
                 tokenizer.next();
-                IToken token = tokenizer.getToken();
-                token.serializeToken(inputVal.getDataOutput());
-                listBuilder.addItem(inputVal);
+                listBuilder.addItem(tokenizer.getToken());
             }
             listBuilder.write(out, true);
         } catch (IOException e) {

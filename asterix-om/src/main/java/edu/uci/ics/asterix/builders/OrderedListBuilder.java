@@ -1,7 +1,7 @@
 package edu.uci.ics.asterix.builders;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -11,10 +11,13 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IValueReference;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
+import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IToken;
 
 public class OrderedListBuilder implements IAOrderedListBuilder {
 
-    private ByteArrayOutputStream outputStream;
+    private ArrayBackedValueStorage outputValStorage;
+    private DataOutputStream outputStream;
     private ArrayList<Short> offsets;
     private int metadataInfoSize;
     private byte[] offsetArray;
@@ -28,7 +31,8 @@ public class OrderedListBuilder implements IAOrderedListBuilder {
     private int numberOfItems;
 
     public OrderedListBuilder() {
-        this.outputStream = new ByteArrayOutputStream();
+        this.outputValStorage = new ArrayBackedValueStorage();
+        this.outputStream = (DataOutputStream) outputValStorage.getDataOutput();
         this.offsets = new ArrayList<Short>();
         this.metadataInfoSize = 0;
         this.offsetArray = null;
@@ -37,7 +41,7 @@ public class OrderedListBuilder implements IAOrderedListBuilder {
 
     @Override
     public void reset(AOrderedListType orderedlistType) throws HyracksDataException {
-        this.outputStream.reset();
+        this.outputValStorage.reset();
         this.offsetArray = null;
         this.offsets.clear();
         this.offsetPosition = 0;
@@ -56,15 +60,28 @@ public class OrderedListBuilder implements IAOrderedListBuilder {
 
     @Override
     public void addItem(IValueReference item) throws HyracksDataException {
-        if (!fixedSize)
-            this.offsets.add((short) outputStream.size());
-        if (itemTypeTag == ATypeTag.ANY || (itemTypeTag == ATypeTag.NULL && item.getByteArray()[0] == serNullTypeTag)) {
-            this.numberOfItems++;
-            this.outputStream.write(item.getByteArray(), item.getStartOffset(), item.getLength());
-        } else if (item.getByteArray()[0] != serNullTypeTag) {
-            this.numberOfItems++;
-            this.outputStream.write(item.getByteArray(), item.getStartOffset() + 1, item.getLength() - 1);
+        try {
+            if (!fixedSize)
+                this.offsets.add((short) outputValStorage.getLength());
+            if (itemTypeTag == ATypeTag.ANY
+                    || (itemTypeTag == ATypeTag.NULL && item.getByteArray()[0] == serNullTypeTag)) {
+                this.numberOfItems++;
+                this.outputStream.write(item.getByteArray(), item.getStartOffset(), item.getLength());
+            } else if (item.getByteArray()[0] != serNullTypeTag) {
+                this.numberOfItems++;
+                this.outputStream.write(item.getByteArray(), item.getStartOffset() + 1, item.getLength() - 1);
+            }
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
         }
+    }
+
+    public void addItem(IToken token) throws IOException {
+        if (!fixedSize) {
+            offsets.add((short) outputValStorage.getLength());
+        }
+        numberOfItems++;
+        token.serializeToken(outputValStorage);
     }
 
     @Override
@@ -75,8 +92,8 @@ public class OrderedListBuilder implements IAOrderedListBuilder {
             if (offsetArray == null || offsetArray.length < metadataInfoSize)
                 offsetArray = new byte[metadataInfoSize];
 
-            SerializerDeserializerUtil.writeIntToByteArray(offsetArray,
-                    headerSize + metadataInfoSize + outputStream.size(), offsetPosition);
+            SerializerDeserializerUtil.writeIntToByteArray(offsetArray, headerSize + metadataInfoSize
+                    + outputValStorage.getLength(), offsetPosition);
             SerializerDeserializerUtil.writeIntToByteArray(offsetArray, this.numberOfItems, offsetPosition + 4);
 
             if (!fixedSize) {
@@ -92,7 +109,7 @@ public class OrderedListBuilder implements IAOrderedListBuilder {
             }
             out.writeByte(itemTypeTag.serialize());
             out.write(offsetArray, 0, metadataInfoSize);
-            out.write(outputStream.toByteArray(), 0, outputStream.size());
+            out.write(outputValStorage.getByteArray(), 0, outputValStorage.getLength());
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
