@@ -174,7 +174,8 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR)
                     || expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR)) {
                 AbstractCollectionType listType = (AbstractCollectionType) TypeComputerUtilities.getRequiredType(expr);
-                if (listType != null && listType.getItemType().getTypeTag() == ATypeTag.ANY) {
+                if (listType != null
+                        && (listType.getItemType().getTypeTag() == ATypeTag.ANY || listType.getItemType() instanceof AbstractCollectionType)) {
                     return new Pair<Boolean, ILogicalExpression>(false, null);
                 }
             }

@@ -30,23 +30,47 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCal
 
 public class StaticTypeCastUtil {
 
-    public static void rewriteFuncExpr(AbstractFunctionCallExpression funcExpr, IAType reqType, IAType inputType,
+    public static boolean rewriteFuncExpr(AbstractFunctionCallExpression funcExpr, IAType reqType, IAType inputType,
             IVariableTypeEnvironment env) throws AlgebricksException {
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {
             if (reqType.equals(BuiltinType.ANY)) {
                 reqType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
             }
-            rewriteListFuncExpr(funcExpr, (AbstractCollectionType) reqType, (AbstractCollectionType) inputType, env);
+            //else {
+            //    AbstractCollectionType listType = (AbstractCollectionType) reqType;
+            //    if (listType.getItemType() instanceof AbstractCollectionType)
+            //        reqType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
+            //}
+            return rewriteListFuncExpr(funcExpr, (AbstractCollectionType) reqType, (AbstractCollectionType) inputType,
+                    env);
         } else if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR) {
             if (reqType.equals(BuiltinType.ANY)) {
                 reqType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
             }
-            rewriteListFuncExpr(funcExpr, (AbstractCollectionType) reqType, (AbstractCollectionType) inputType, env);
+            //else {
+            //    AbstractCollectionType listType = (AbstractCollectionType) reqType;
+            //    if (listType.getItemType() instanceof AbstractCollectionType)
+            //        reqType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
+            //}
+            return rewriteListFuncExpr(funcExpr, (AbstractCollectionType) reqType, (AbstractCollectionType) inputType,
+                    env);
         } else if (inputType.getTypeTag().equals(ATypeTag.RECORD)) {
             if (reqType.equals(BuiltinType.ANY)) {
                 reqType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
             }
-            rewriteRecordFuncExpr(funcExpr, (ARecordType) reqType, (ARecordType) inputType, env);
+            return rewriteRecordFuncExpr(funcExpr, (ARecordType) reqType, (ARecordType) inputType, env);
+        } else {
+            List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
+            boolean changed = false;
+            for (Mutable<ILogicalExpression> arg : args) {
+                ILogicalExpression argExpr = arg.getValue();
+                if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                    AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) argExpr;
+                    IAType exprType = (IAType) env.getType(argFuncExpr);
+                    changed = changed || rewriteFuncExpr(argFuncExpr, exprType, exprType, env);
+                }
+            }
+            return changed;
         }
     }
 
@@ -62,13 +86,15 @@ public class StaticTypeCastUtil {
      *            type environment
      * @throws AlgebricksException
      */
-    private static void rewriteRecordFuncExpr(AbstractFunctionCallExpression funcExpr, ARecordType requiredRecordType,
-            ARecordType inputRecordType, IVariableTypeEnvironment env) throws AlgebricksException {
+    private static boolean rewriteRecordFuncExpr(AbstractFunctionCallExpression funcExpr,
+            ARecordType requiredRecordType, ARecordType inputRecordType, IVariableTypeEnvironment env)
+            throws AlgebricksException {
         // if already rewritten, the required type is not null
         if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
-            return;
+            return false;
         TypeComputerUtilities.setRequiredAndInputTypes(funcExpr, requiredRecordType, inputRecordType);
         staticRecordTypeCast(funcExpr, requiredRecordType, inputRecordType, env);
+        return true;
     }
 
     /**
@@ -83,11 +109,11 @@ public class StaticTypeCastUtil {
      *            type environment
      * @throws AlgebricksException
      */
-    private static void rewriteListFuncExpr(AbstractFunctionCallExpression funcExpr,
+    private static boolean rewriteListFuncExpr(AbstractFunctionCallExpression funcExpr,
             AbstractCollectionType requiredListType, AbstractCollectionType inputListType, IVariableTypeEnvironment env)
             throws AlgebricksException {
         if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
-            return;
+            return false;
 
         TypeComputerUtilities.setRequiredAndInputTypes(funcExpr, requiredListType, inputListType);
         List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
@@ -107,6 +133,7 @@ public class StaticTypeCastUtil {
                 }
             }
         }
+        return true;
     }
 
     private static void staticRecordTypeCast(AbstractFunctionCallExpression func, ARecordType reqType,

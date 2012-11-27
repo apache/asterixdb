@@ -1,0 +1,4 @@
+write output to nc1:"rttest/open-closed_query-issue166.adm";
+
+let $a := [[1,2,3],[4,5,6,7]]
+return $a[1]
