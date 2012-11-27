@@ -30,28 +30,47 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCal
 
 public class StaticTypeCastUtil {
 
-    public static boolean rewriteFuncExpr(AbstractFunctionCallExpression funcExpr, IAType reqType, IAType inputType,
+    public static boolean rewriteListExpr(AbstractFunctionCallExpression funcExpr, IAType reqType, IAType inputType,
             IVariableTypeEnvironment env) throws AlgebricksException {
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {
             if (reqType.equals(BuiltinType.ANY)) {
                 reqType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
             }
-            //else {
-            //    AbstractCollectionType listType = (AbstractCollectionType) reqType;
-            //    if (listType.getItemType() instanceof AbstractCollectionType)
-            //        reqType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
-            //}
             return rewriteListFuncExpr(funcExpr, (AbstractCollectionType) reqType, (AbstractCollectionType) inputType,
                     env);
         } else if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR) {
             if (reqType.equals(BuiltinType.ANY)) {
                 reqType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
             }
-            //else {
-            //    AbstractCollectionType listType = (AbstractCollectionType) reqType;
-            //    if (listType.getItemType() instanceof AbstractCollectionType)
-            //        reqType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
-            //}
+            return rewriteListFuncExpr(funcExpr, (AbstractCollectionType) reqType, (AbstractCollectionType) inputType,
+                    env);
+        } else {
+            List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
+            boolean changed = false;
+            for (Mutable<ILogicalExpression> arg : args) {
+                ILogicalExpression argExpr = arg.getValue();
+                if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                    AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) argExpr;
+                    IAType exprType = (IAType) env.getType(argFuncExpr);
+                    changed = changed || rewriteListExpr(argFuncExpr, exprType, exprType, env);
+                }
+            }
+            return changed;
+        }
+    }
+
+    public static boolean rewriteFuncExpr(AbstractFunctionCallExpression funcExpr, IAType reqType, IAType inputType,
+            IVariableTypeEnvironment env) throws AlgebricksException {
+        if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {
+            if (reqType.equals(BuiltinType.ANY)) {
+                reqType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
+            }
+            return rewriteListFuncExpr(funcExpr, (AbstractCollectionType) reqType, (AbstractCollectionType) inputType,
+                    env);
+        } else if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR) {
+            if (reqType.equals(BuiltinType.ANY)) {
+                reqType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
+            }
             return rewriteListFuncExpr(funcExpr, (AbstractCollectionType) reqType, (AbstractCollectionType) inputType,
                     env);
         } else if (inputType.getTypeTag().equals(ATypeTag.RECORD)) {

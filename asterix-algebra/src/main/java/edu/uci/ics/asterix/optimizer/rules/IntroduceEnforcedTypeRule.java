@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.optimizer.rules.typecast.StaticTypeCastUtil;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -58,11 +57,8 @@ public class IntroduceEnforcedTypeRule implements IAlgebraicRewriteRule {
             ILogicalExpression expr = exprRef.getValue();
             if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) expr;
-                if (argFuncExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR
-                        || argFuncExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {
-                    IAType exprType = (IAType) env.getType(argFuncExpr);
-                    changed = changed || StaticTypeCastUtil.rewriteFuncExpr(argFuncExpr, exprType, exprType, env);
-                }
+                IAType exprType = (IAType) env.getType(argFuncExpr);
+                changed = changed || StaticTypeCastUtil.rewriteListExpr(argFuncExpr, exprType, exprType, env);
             }
         }
         return changed;
