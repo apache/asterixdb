@@ -22,8 +22,8 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
-import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 
@@ -35,9 +35,8 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
     }
 
     @Override
-    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
+    public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions) {
-        final JobId jobId = ctx.getJobletContext().getJobId();
         final IDatasetPartitionManager dpm = ctx.getDatasetPartitionManager();
 
         return new AbstractUnaryInputSinkOperatorNodePushable() {
@@ -45,7 +44,12 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
 
             @Override
             public void open() throws HyracksDataException {
-                datasetPartitionWriter = dpm.createDatasetPartitionWriter(jobId, partition, nPartitions);
+                try {
+                    datasetPartitionWriter = dpm.createDatasetPartitionWriter(ctx, partition, nPartitions);
+                    datasetPartitionWriter.open();
+                } catch (HyracksException e) {
+                    throw new HyracksDataException(e);
+                }
             }
 
             @Override
