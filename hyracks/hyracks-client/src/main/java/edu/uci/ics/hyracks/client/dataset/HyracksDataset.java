@@ -201,9 +201,10 @@ public class HyracksDataset implements IHyracksDataset {
                         buffer = resultChannel.getNextBuffer();
 
                         if (buffer != null) {
-                            resultChannel.recycleBuffer(buffer);
                             // TODO(madhusudancs): This is a development time debugging statement and should be removed
                             printBuffer(buffer);
+
+                            resultChannel.recycleBuffer(buffer);
                         }
                     }
 
