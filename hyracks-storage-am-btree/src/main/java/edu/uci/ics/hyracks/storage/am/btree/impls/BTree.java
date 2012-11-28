@@ -992,7 +992,7 @@ public class BTree extends AbstractTreeIndex {
         protected void verifyInputTuple(ITupleReference tuple, ITupleReference prevTuple) throws IndexException,
                 HyracksDataException {
             // New tuple should be strictly greater than last tuple.
-            if (cmp.compare(tuple, prevTuple) != 1) {
+            if (cmp.compare(tuple, prevTuple) <= 0) {
                 throw new UnsortedInputException("Input stream given to BTree bulk load is not sorted.");
             }
         }
