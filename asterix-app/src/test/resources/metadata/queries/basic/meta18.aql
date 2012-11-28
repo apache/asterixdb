@@ -1,0 +1,6 @@
+use dataverse Metadata;
+
+write output to nc1:"mdtest/basic_meta18.adm";
+
+for $c in dataset('Dataverse')
+return $c

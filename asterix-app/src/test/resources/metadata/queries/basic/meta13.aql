@@ -1,0 +1,24 @@
+/*
+ * Description  : Create functions and drop that function and query metadata 
+ *              : to verify entries in Function dataset for the dropped UDF.
+ * Expected Res : Success
+ * Date         : Sep 17 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+write output to nc1:"mdtest/basic_meta13.adm";
+
+create function test.foo(){
+"drop this function"
+}
+
+drop function test.foo@0;
+
+count(
+for $l in dataset('Metadata.Function')
+where $l.DataverseName='test' and $l.Name='foo' and $l.Arity=0
+return $l);
+
+drop dataverse test;

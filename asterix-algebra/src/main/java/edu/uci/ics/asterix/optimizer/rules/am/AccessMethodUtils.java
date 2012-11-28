@@ -220,7 +220,7 @@ public class AccessMethodUtils {
             return new ConstantExpression(optFuncExpr.getConstantVal(0));
         } else {
             // We are optimizing a join query. Determine which variable feeds the secondary index. 
-            if (optFuncExpr.getOperatorSubTree(0) == probeSubTree) {
+            if (optFuncExpr.getOperatorSubTree(0) == null || optFuncExpr.getOperatorSubTree(0) == probeSubTree) {
                 return new VariableReferenceExpression(optFuncExpr.getLogicalVar(0));
             } else {
                 return new VariableReferenceExpression(optFuncExpr.getLogicalVar(1));

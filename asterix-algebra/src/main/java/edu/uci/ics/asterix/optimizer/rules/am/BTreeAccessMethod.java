@@ -201,7 +201,14 @@ public class BTreeAccessMethod implements IAccessMethod {
             IOptimizableFuncExpr optFuncExpr = matchedFuncExprs.get(exprIndex);
             int keyPos = indexOf(optFuncExpr.getFieldName(0), chosenIndex.getKeyFieldNames());
             if (keyPos < 0) {
-                throw new InternalError();
+                if (optFuncExpr.getNumLogicalVars() > 1) {
+                    // If we are optimizing a join, the matching field may be the second field name.
+                    keyPos = indexOf(optFuncExpr.getFieldName(1), chosenIndex.getKeyFieldNames());
+                }                
+            }
+            if (keyPos < 0) {
+                throw new AlgebricksException(
+                        "Could not match optimizable function expression to any index field name.");
             }
             ILogicalExpression searchKeyExpr = AccessMethodUtils.createSearchKeyExpr(optFuncExpr, indexSubTree,
                     probeSubTree);

@@ -1,6 +1,0 @@
-use dataverse Metadata;    
-
-write output to nc1:"rttest/metadata_node.adm";
-
-for $c in dataset('Node')
-return $c
