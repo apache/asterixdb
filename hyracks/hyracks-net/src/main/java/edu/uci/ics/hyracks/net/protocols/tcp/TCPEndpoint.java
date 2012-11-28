@@ -59,6 +59,17 @@ public class TCPEndpoint {
         }
     }
 
+    public void start() throws IOException {
+        this.localAddress = null;
+        ioThreads = new IOThread[nThreads];
+        for (int i = 0; i < ioThreads.length; ++i) {
+            ioThreads[i] = new IOThread();
+        }
+        for (int i = 0; i < ioThreads.length; ++i) {
+            ioThreads[i].start();
+        }
+    }
+
     private synchronized int getNextThread() {
         int result = nextThread;
         nextThread = (nextThread + 1) % nThreads;
