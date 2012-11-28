@@ -155,8 +155,7 @@ public class HyracksDataset implements IHyracksDataset {
         try {
             frameTupleAccessor.reset(buffer);
             for (int tIndex = 0; tIndex < frameTupleAccessor.getTupleCount(); tIndex++) {
-                int start = frameTupleAccessor.getTupleStartOffset(tIndex)
-                        + frameTupleAccessor.getFieldSlotsLength();
+                int start = frameTupleAccessor.getTupleStartOffset(tIndex) + frameTupleAccessor.getFieldSlotsLength();
                 bbis.setByteBuffer(buffer, start);
                 Object[] record = new Object[recordDescriptor.getFieldCount()];
                 for (int i = 0; i < record.length; ++i) {
@@ -207,7 +206,7 @@ public class HyracksDataset implements IHyracksDataset {
                             printBuffer(buffer);
                         }
                     }
-                    
+
                 } catch (UnknownHostException e) {
                     throw new HyracksDataException(e);
                 } catch (HyracksException e) {

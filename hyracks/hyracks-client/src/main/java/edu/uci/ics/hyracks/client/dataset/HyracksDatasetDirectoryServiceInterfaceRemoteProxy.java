@@ -33,10 +33,10 @@ public class HyracksDatasetDirectoryServiceInterfaceRemoteProxy implements IHyra
     }
 
     @Override
-    public NetworkAddress[] getDatasetResultLocationsFunction(JobId jobId, NetworkAddress[] knownLocations) throws Exception {
-        HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction gdrlf =
-                new HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction(
-                        jobId, knownLocations);
+    public NetworkAddress[] getDatasetResultLocationsFunction(JobId jobId, NetworkAddress[] knownLocations)
+            throws Exception {
+        HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction gdrlf = new HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction(
+                jobId, knownLocations);
         return (NetworkAddress[]) rpci.call(ipcHandle, gdrlf);
     }
 }

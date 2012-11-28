@@ -30,8 +30,7 @@ public class ClientNetworkManager implements IChannelConnectionFactory {
 
     private final MuxDemux md;
 
-    public ClientNetworkManager(int nThreads)
-            throws IOException {
+    public ClientNetworkManager(int nThreads) throws IOException {
         md = new MuxDemux(nThreads, MAX_CONNECTION_ATTEMPTS);
     }
 
