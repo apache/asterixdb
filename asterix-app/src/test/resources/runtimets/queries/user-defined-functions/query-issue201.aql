@@ -1,0 +1,5 @@
+write output to nc1:"rttest/user-defined-functions_query-issue201.adm";
+
+let $x:=range(1,100)
+for $i in $x
+return $i

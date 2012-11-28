@@ -3577,6 +3577,11 @@
   </test-group>
   <test-group name="user-defined-functions">
     <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-issue201">
+        <output-file compare="Text">query-issue201.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf01">
         <output-file compare="Text">udf01.adm</output-file>
       </compilation-unit>
