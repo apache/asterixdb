@@ -739,6 +739,11 @@
   </test-group>
   <test-group name="dml">
     <test-case FilePath="dml">
+      <compilation-unit name="query-issue205">
+        <output-file compare="Text">query-issue205.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="delete-from-loaded-dataset-with-index">
         <output-file compare="Text">delete-from-loaded-dataset-with-index.adm</output-file>
       </compilation-unit>

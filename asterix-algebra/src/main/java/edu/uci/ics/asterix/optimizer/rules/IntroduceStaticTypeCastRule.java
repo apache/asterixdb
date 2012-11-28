@@ -87,6 +87,9 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
         if (op2.getOperatorTag() != LogicalOperatorTag.INSERT_DELETE)
             return false;
+        InsertDeleteOperator insertDeleteOp = (InsertDeleteOperator) op2;
+        if (insertDeleteOp.getOperation() == InsertDeleteOperator.Kind.DELETE)
+            return false;
         AbstractLogicalOperator assignOp = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
         if (assignOp.getOperatorTag() != LogicalOperatorTag.ASSIGN)
             return false;
