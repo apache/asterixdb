@@ -39,7 +39,7 @@ public class InvertedListMerger {
     protected SearchResult newSearchResult;
 
     public InvertedListMerger(IHyracksCommonContext ctx, IInvertedIndex invIndex) {
-        this.invListCmp = MultiComparator.create(invIndex.getInvListCmpFactories());
+        this.invListCmp = MultiComparator.createIgnoreFieldLength(invIndex.getInvListCmpFactories());
         this.prevSearchResult = new SearchResult(invIndex.getInvListTypeTraits(), ctx);
         this.newSearchResult = new SearchResult(prevSearchResult);
     }
