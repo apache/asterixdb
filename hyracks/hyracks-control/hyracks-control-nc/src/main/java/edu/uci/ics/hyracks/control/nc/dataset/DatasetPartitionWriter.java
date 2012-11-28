@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.control.nc.dataset;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,6 +43,8 @@ public class DatasetPartitionWriter implements IFrameWriter, IPartition {
 
     private final Executor executor;
 
+    private final AtomicBoolean eos;
+
     private FileReference fRef;
 
     private IFileHandle handle;
@@ -56,6 +59,7 @@ public class DatasetPartitionWriter implements IFrameWriter, IPartition {
         this.manager = manager;
         this.partition = partition;
         this.executor = executor;
+        eos = new AtomicBoolean(false);
     }
 
     @Override
@@ -71,8 +75,9 @@ public class DatasetPartitionWriter implements IFrameWriter, IPartition {
     }
 
     @Override
-    public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+    public synchronized void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         size += ctx.getIOManager().syncWrite(handle, size, buffer);
+        notifyAll();
     }
 
     @Override
@@ -81,10 +86,12 @@ public class DatasetPartitionWriter implements IFrameWriter, IPartition {
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public synchronized void close() throws HyracksDataException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("close(" + partition + ")");
         }
+        eos.set(true);
+        notifyAll();
         /* TODO(madhusudancs): Do something more intelligent here than closing the file handle because read still
          * wants it :-P
          */
@@ -96,7 +103,14 @@ public class DatasetPartitionWriter implements IFrameWriter, IPartition {
         return ctx;
     }
 
-    private long read(long offset, ByteBuffer buffer) throws HyracksDataException {
+    private synchronized long read(long offset, ByteBuffer buffer) throws HyracksDataException {
+        while (offset >= size && !eos.get()) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                throw new HyracksDataException(e);
+            }
+        }
         return ctx.getIOManager().syncRead(handle, offset, buffer);
     }
 
