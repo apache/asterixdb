@@ -2324,6 +2324,11 @@
         <output-file compare="Text">query-issue166.adm</output-file>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue208">
+        <output-file compare="Text">query-issue208.adm</output-file>
+      </compilation-unit>
+    </test-case>
     <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="open-closed-15">
