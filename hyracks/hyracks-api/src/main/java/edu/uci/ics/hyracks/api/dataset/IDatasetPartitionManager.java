@@ -15,10 +15,19 @@
 package edu.uci.ics.hyracks.api.dataset;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.JobId;
 
 public interface IDatasetPartitionManager {
-    public IFrameWriter createDatasetPartitionWriter(JobId jobId, int partition, int nPartitions)
-            throws HyracksDataException;
+    public IFrameWriter createDatasetPartitionWriter(IHyracksTaskContext ctx, int partition, int nPartitions)
+            throws HyracksException;
+
+    public void initializeDatasetPartitionReader(JobId jobId, int partition, IFrameWriter noc)
+            throws HyracksException;
+
+    public IWorkspaceFileFactory getFileFactory();
+
+    public void close();
 }
