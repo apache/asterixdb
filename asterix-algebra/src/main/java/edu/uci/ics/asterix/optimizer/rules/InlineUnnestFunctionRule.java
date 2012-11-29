@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.asterix.optimizer.rules;
 
 import java.util.ArrayList;
@@ -23,6 +38,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOpera
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
+/**
+ * This rule is to inline unnest functions that are hold by variables.
+ * This rule is to fix issue 201.
+ */
 public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
 
     @Override
@@ -42,6 +61,7 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
         UnnestOperator unnestOperator = (UnnestOperator) op1;
         AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) unnestOperator.getExpressionRef()
                 .getValue();
+        //we only inline for the scan-collection function
         if (expr.getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION)
             return false;
 
@@ -58,6 +78,15 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
         return true;
     }
 
+    /**
+     * This method is to inline one variable
+     * 
+     * @param usedVar
+     *            A variable that is used by the scan-collection function in the unnest operator
+     * @param unnestOp
+     *            The unnest operator.
+     * @throws AlgebricksException
+     */
     private void inlineVariable(LogicalVariable usedVar, UnnestOperator unnestOp) throws AlgebricksException {
         AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) unnestOp.getExpressionRef().getValue();
         List<Pair<AbstractFunctionCallExpression, Integer>> parentAndIndexList = new ArrayList<Pair<AbstractFunctionCallExpression, Integer>>();
@@ -92,7 +121,7 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
         }
     }
 
-    public ILogicalExpression findUsedVarOrigin(LogicalVariable usedVar, AbstractLogicalOperator parentOp,
+    private ILogicalExpression findUsedVarOrigin(LogicalVariable usedVar, AbstractLogicalOperator parentOp,
             AbstractLogicalOperator currentOp) throws AlgebricksException {
         ILogicalExpression ret = null;
         if (currentOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
