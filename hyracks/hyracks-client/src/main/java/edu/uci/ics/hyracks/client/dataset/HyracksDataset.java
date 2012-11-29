@@ -55,6 +55,8 @@ public class HyracksDataset implements IHyracksDataset {
 
     private final ClientNetworkManager netManager;
 
+    private final DatasetClientContext datasetClientCtx;
+
     private DatasetDirectoryRecord[] knownRecords;
 
     private IDatasetInputChannelMonitor[] monitors;
@@ -72,6 +74,8 @@ public class HyracksDataset implements IHyracksDataset {
                 ddsAddress.getIpAddress()), ddsAddress.getPort());
 
         netManager = new ClientNetworkManager(nReaders);
+
+        datasetClientCtx = new DatasetClientContext(jobSpec.getFrameSize());
 
         knownRecords = null;
         monitors = null;
@@ -204,7 +208,7 @@ public class HyracksDataset implements IHyracksDataset {
                             getSocketAddress(addr), jobId, i, 100);
 
                     IDatasetInputChannelMonitor monitor = getMontior(i);
-                    resultChannel.open(FRAME_SIZE);
+                    resultChannel.open(datasetClientCtx);
                     resultChannel.registerMonitor(monitor);
 
                     while (!monitor.eosReached()) {
