@@ -61,9 +61,6 @@ public class HyracksDataset implements IHyracksDataset {
 
     private IDatasetInputChannelMonitor[] monitors;
 
-    // TODO:we should probably allow clients to specify this. 32K is the size for now.
-    private static int FRAME_SIZE = 32 * 1024;
-
     public HyracksDataset(IHyracksClientConnection hcc, JobSpecification jobSpec, JobId jobId, int nReaders)
             throws Exception {
         this.jobId = jobId;
@@ -171,7 +168,7 @@ public class HyracksDataset implements IHyracksDataset {
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
                 UTF8StringSerializerDeserializer.INSTANCE });
 
-        final FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(FRAME_SIZE, recordDescriptor);
+        final FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(32768, recordDescriptor);
 
         try {
             frameTupleAccessor.reset(buffer);
