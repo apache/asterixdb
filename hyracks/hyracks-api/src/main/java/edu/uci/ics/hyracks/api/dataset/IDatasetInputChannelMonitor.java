@@ -14,13 +14,9 @@
  */
 package edu.uci.ics.hyracks.api.dataset;
 
-public interface IDatasetInputChannelMonitor {
-    public void notifyFailure(IDatasetInputChannel channel);
+import edu.uci.ics.hyracks.api.channels.IInputChannelMonitor;
 
-    public void notifyDataAvailability(IDatasetInputChannel channel, int nFrames);
-
-    public void notifyEndOfStream(IDatasetInputChannel channel);
-
+public interface IDatasetInputChannelMonitor extends IInputChannelMonitor {
     public boolean eosReached();
 
     public boolean failed();
