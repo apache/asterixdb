@@ -21,19 +21,24 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
 import edu.uci.ics.hyracks.api.dataset.IDatasetInputChannel;
 import edu.uci.ics.hyracks.api.dataset.IDatasetInputChannelMonitor;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetDirectoryServiceConnection;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.client.net.ClientNetworkManager;
 import edu.uci.ics.hyracks.comm.channels.DatasetNetworkInputChannel;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -43,20 +48,32 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializer
 // TODO(madhusudancs): Should this implementation be moved to edu.uci.ics.hyracks.client?
 public class HyracksDataset implements IHyracksDataset {
     private final JobId jobId;
+
+    private final List<ResultSetId> rsIds;
+
     private final IHyracksDatasetDirectoryServiceConnection datasetDirectoryServiceConnection;
+
     private final ClientNetworkManager netManager;
-    private NetworkAddress[] knownLocations;
+
+    private DatasetDirectoryRecord[] knownRecords;
 
     private IDatasetInputChannelMonitor[] monitors;
 
     // TODO:we should probably allow clients to specify this. 32K is the size for now.
     private static int FRAME_SIZE = 32 * 1024;
 
-    public HyracksDataset(JobId jobId, IHyracksDatasetDirectoryServiceConnection ddsc, int nReaders) throws Exception {
+    public HyracksDataset(IHyracksClientConnection hcc, JobSpecification jobSpec, JobId jobId, int nReaders)
+            throws Exception {
         this.jobId = jobId;
-        this.datasetDirectoryServiceConnection = ddsc;
+        this.rsIds = jobSpec.getResultSetIds();
+
+        NetworkAddress ddsAddress = hcc.getDatasetDirectoryServiceInfo(jobId);
+        datasetDirectoryServiceConnection = new HyracksDatasetDirectoryServiceConnection(new String(
+                ddsAddress.getIpAddress()), ddsAddress.getPort());
+
         netManager = new ClientNetworkManager(nReaders);
-        knownLocations = null;
+
+        knownRecords = null;
         monitors = null;
     }
 
@@ -64,7 +81,7 @@ public class HyracksDataset implements IHyracksDataset {
         netManager.start();
     }
 
-    private boolean nullExists(NetworkAddress[] locations) {
+    private boolean nullExists(DatasetDirectoryRecord[] locations) {
         if (locations == null) {
             return true;
         }
@@ -77,11 +94,11 @@ public class HyracksDataset implements IHyracksDataset {
     }
 
     private IDatasetInputChannelMonitor getMontior(int partition) throws HyracksException {
-        if (knownLocations == null || knownLocations[partition] == null) {
+        if (knownRecords == null || knownRecords[partition] == null) {
             throw new HyracksException("Accessing monitors before the obtaining the corresponding addresses.");
         }
         if (monitors == null) {
-            monitors = new DatasetInputChannelMonitor[knownLocations.length];
+            monitors = new DatasetInputChannelMonitor[knownRecords.length];
         }
         if (monitors[partition] == null) {
             monitors[partition] = new DatasetInputChannelMonitor();
@@ -176,11 +193,11 @@ public class HyracksDataset implements IHyracksDataset {
     private void readResults() throws HyracksDataException {
         ByteBuffer buffer = null;
 
-        if (knownLocations == null) {
+        if (knownRecords == null) {
             return;
         }
-        for (int i = 0; i < knownLocations.length; i++) {
-            final NetworkAddress addr = knownLocations[i];
+        for (int i = 0; i < knownRecords.length; i++) {
+            final DatasetDirectoryRecord addr = knownRecords[i];
             if (addr != null) {
                 try {
                     DatasetNetworkInputChannel resultChannel = new DatasetNetworkInputChannel(netManager,
@@ -220,24 +237,26 @@ public class HyracksDataset implements IHyracksDataset {
     @Override
     public ByteBuffer getResults() {
         try {
+            ResultSetId rsId = rsIds.get(0);
             start();
-            while (nullExists(knownLocations)) {
+            while (nullExists(knownRecords)) {
                 try {
-                    knownLocations = datasetDirectoryServiceConnection.getDatasetResultLocationsFunction(jobId,
-                            knownLocations);
+                    knownRecords = datasetDirectoryServiceConnection.getDatasetResultLocationsFunction(jobId, rsId,
+                            knownRecords);
                     readResults();
                 } catch (Exception e) {
                     // TODO(madhusudancs) Do something here
                 }
             }
         } catch (IOException e) {
-            // Do something here
+            // TODO(madhusudancs): Do something here
         }
 
         return null;
     }
 
-    private SocketAddress getSocketAddress(NetworkAddress addr) throws UnknownHostException {
-        return new InetSocketAddress(InetAddress.getByAddress(addr.getIpAddress()), addr.getPort());
+    private SocketAddress getSocketAddress(DatasetDirectoryRecord addr) throws UnknownHostException {
+        NetworkAddress netAddr = addr.getNetworkAddress();
+        return new InetSocketAddress(InetAddress.getByAddress(netAddr.getIpAddress()), netAddr.getPort());
     }
 }

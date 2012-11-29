@@ -16,9 +16,10 @@ package edu.uci.ics.hyracks.client.dataset;
 
 import java.net.InetSocketAddress;
 
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetDirectoryServiceConnection;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetDirectoryServiceInterface;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
 import edu.uci.ics.hyracks.ipc.api.RPCInterface;
@@ -39,7 +40,8 @@ public class HyracksDatasetDirectoryServiceConnection implements IHyracksDataset
     }
 
     @Override
-    public NetworkAddress[] getDatasetResultLocationsFunction(JobId jobId, NetworkAddress[] knownLocations) throws Exception {
-        return ddsi.getDatasetResultLocationsFunction(jobId, knownLocations);
+    public DatasetDirectoryRecord[] getDatasetResultLocationsFunction(JobId jobId, ResultSetId rsId,
+            DatasetDirectoryRecord[] knownRecords) throws Exception {
+        return ddsi.getDatasetResultLocationsFunction(jobId, rsId, knownRecords);
     }
 }

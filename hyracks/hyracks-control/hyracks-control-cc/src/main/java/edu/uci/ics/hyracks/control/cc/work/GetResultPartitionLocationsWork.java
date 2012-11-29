@@ -14,8 +14,9 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
 import edu.uci.ics.hyracks.api.dataset.IDatasetDirectoryService;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
@@ -24,15 +25,21 @@ import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
 public class GetResultPartitionLocationsWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
-    private final JobId jobId;
-    private final NetworkAddress[] knownLocations;
-    private final IResultCallback<NetworkAddress[]> callback;
 
-    public GetResultPartitionLocationsWork(ClusterControllerService ccs, JobId jobId, NetworkAddress[] knownLocations,
-            IResultCallback<NetworkAddress[]> callback) {
+    private final JobId jobId;
+
+    private final ResultSetId rsId;
+
+    private final DatasetDirectoryRecord[] knownRecords;
+
+    private final IResultCallback<DatasetDirectoryRecord[]> callback;
+
+    public GetResultPartitionLocationsWork(ClusterControllerService ccs, JobId jobId, ResultSetId rsId,
+            DatasetDirectoryRecord[] knownRecords, IResultCallback<DatasetDirectoryRecord[]> callback) {
         this.ccs = ccs;
         this.jobId = jobId;
-        this.knownLocations = knownLocations;
+        this.rsId = rsId;
+        this.knownRecords = knownRecords;
         this.callback = callback;
     }
 
@@ -43,7 +50,8 @@ public class GetResultPartitionLocationsWork extends SynchronizableWork {
             @Override
             public void run() {
                 try {
-                    NetworkAddress[] partitionLocations = dds.getResultPartitionLocations(jobId, knownLocations);
+                    DatasetDirectoryRecord[] partitionLocations = dds.getResultPartitionLocations(jobId, rsId,
+                            knownRecords);
                     callback.setValue(partitionLocations);
                 } catch (HyracksDataException e) {
                     callback.setException(e);

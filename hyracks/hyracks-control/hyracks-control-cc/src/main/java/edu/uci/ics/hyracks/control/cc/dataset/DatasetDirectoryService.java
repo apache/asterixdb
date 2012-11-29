@@ -60,15 +60,24 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     }
 
     @Override
-    public synchronized NetworkAddress[] getResultPartitionLocations(JobId jobId, NetworkAddress[] knownLocations)
-            throws HyracksDataException {
-        while (Arrays.equals(jobPartitionLocationsMap.get(jobId), knownLocations)) {
+    public synchronized DatasetDirectoryRecord[] getResultPartitionLocations(JobId jobId, ResultSetId rsId,
+            DatasetDirectoryRecord[] knownRecords) throws HyracksDataException {
+        while (!newRecords(jobId, rsId, knownRecords)) {
             try {
                 wait();
             } catch (InterruptedException e) {
                 throw new HyracksDataException(e);
             }
         }
-        return jobPartitionLocationsMap.get(jobId);
+        return jobResultLocationsMap.get(jobId).get(rsId);
+    }
+
+    private boolean newRecords(JobId jobId, ResultSetId rsId, DatasetDirectoryRecord[] knownRecords) {
+        Map<ResultSetId, DatasetDirectoryRecord[]> rsMap = jobResultLocationsMap.get(jobId);
+        if (rsMap == null) {
+            return false;
+        }
+        DatasetDirectoryRecord[] records = rsMap.get(rsId);
+        return !Arrays.equals(records, knownRecords);
     }
 }

@@ -15,8 +15,9 @@
 package edu.uci.ics.hyracks.client.dataset;
 
 import edu.uci.ics.hyracks.api.client.HyracksClientInterfaceFunctions;
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetDirectoryServiceInterface;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
 import edu.uci.ics.hyracks.ipc.api.RPCInterface;
@@ -33,10 +34,10 @@ public class HyracksDatasetDirectoryServiceInterfaceRemoteProxy implements IHyra
     }
 
     @Override
-    public NetworkAddress[] getDatasetResultLocationsFunction(JobId jobId, NetworkAddress[] knownLocations)
-            throws Exception {
+    public DatasetDirectoryRecord[] getDatasetResultLocationsFunction(JobId jobId, ResultSetId rsId,
+            DatasetDirectoryRecord[] knownRecords) throws Exception {
         HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction gdrlf = new HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction(
-                jobId, knownLocations);
-        return (NetworkAddress[]) rpci.call(ipcHandle, gdrlf);
+                jobId, rsId, knownRecords);
+        return (DatasetDirectoryRecord[]) rpci.call(ipcHandle, gdrlf);
     }
 }

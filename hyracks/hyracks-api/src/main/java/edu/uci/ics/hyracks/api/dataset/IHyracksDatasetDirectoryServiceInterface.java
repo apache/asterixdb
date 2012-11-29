@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.api.dataset;
 
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.job.JobId;
 
 public interface IHyracksDatasetDirectoryServiceInterface {
@@ -23,11 +22,11 @@ public interface IHyracksDatasetDirectoryServiceInterface {
      * 
      * @param jobId
      *            ID of the job
-     * @param knownLocations
-     *            Locations that are already known to the client
+     * @param knownRecords
+     *            Locations from the dataset directory that are already known to the client
      * @return {@link NetworkAddress[]}
      * @throws Exception
      */
-    public NetworkAddress[] getDatasetResultLocationsFunction(JobId jobId, NetworkAddress[] knownLocations)
-            throws Exception;
+    public DatasetDirectoryRecord[] getDatasetResultLocationsFunction(JobId jobId, ResultSetId rsId,
+            DatasetDirectoryRecord[] knownRecords) throws Exception;
 }

@@ -17,7 +17,8 @@ package edu.uci.ics.hyracks.api.client;
 import java.io.Serializable;
 import java.util.EnumSet;
 
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 
@@ -182,11 +183,15 @@ public class HyracksClientInterfaceFunctions {
         private static final long serialVersionUID = 1L;
 
         private final JobId jobId;
-        private final NetworkAddress[] knownLocations;
 
-        public GetDatasetResultLocationsFunction(JobId jobId, NetworkAddress[] knownLocations) {
+        private final ResultSetId rsId;
+
+        private final DatasetDirectoryRecord[] knownRecords;
+
+        public GetDatasetResultLocationsFunction(JobId jobId, ResultSetId rsId, DatasetDirectoryRecord[] knownRecords) {
             this.jobId = jobId;
-            this.knownLocations = knownLocations;
+            this.rsId = rsId;
+            this.knownRecords = knownRecords;
         }
 
         @Override
@@ -198,8 +203,12 @@ public class HyracksClientInterfaceFunctions {
             return jobId;
         }
 
-        public NetworkAddress[] getKnownLocations() {
-            return knownLocations;
+        public ResultSetId getResultSetId() {
+            return rsId;
+        }
+
+        public DatasetDirectoryRecord[] getKnownRecords() {
+            return knownRecords;
         }
     }
 
