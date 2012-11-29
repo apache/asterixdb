@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.channels.IInputChannel;
 import edu.uci.ics.hyracks.api.channels.IInputChannelMonitor;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.net.buffers.IBufferAcceptor;
@@ -87,7 +87,7 @@ public class NetworkInputChannel implements IInputChannel {
     }
 
     @Override
-    public void open(IHyracksTaskContext ctx) throws HyracksDataException {
+    public void open(IHyracksCommonContext ctx) throws HyracksDataException {
         try {
             ccb = netManager.connect(remoteAddress);
         } catch (Exception e) {
