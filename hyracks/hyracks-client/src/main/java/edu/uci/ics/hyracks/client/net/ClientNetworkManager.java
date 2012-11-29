@@ -31,7 +31,10 @@ public class ClientNetworkManager implements IChannelConnectionFactory {
     private final MuxDemux md;
 
     public ClientNetworkManager(int nThreads) throws IOException {
-        md = new MuxDemux(nThreads, MAX_CONNECTION_ATTEMPTS);
+        /* This is a connect only socket and does not listen to any incoming connections, so pass null to
+         * localAddress and listener.
+         */
+        md = new MuxDemux(null, null, nThreads, MAX_CONNECTION_ATTEMPTS);
     }
 
     public void start() throws IOException {

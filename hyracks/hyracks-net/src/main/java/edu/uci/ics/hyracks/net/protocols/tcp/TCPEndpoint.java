@@ -45,26 +45,23 @@ public class TCPEndpoint {
     }
 
     public void start(InetSocketAddress localAddress) throws IOException {
-        serverSocketChannel = ServerSocketChannel.open();
-        ServerSocket serverSocket = serverSocketChannel.socket();
-        serverSocket.bind(localAddress);
-        this.localAddress = (InetSocketAddress) serverSocket.getLocalSocketAddress();
-        ioThreads = new IOThread[nThreads];
-        for (int i = 0; i < ioThreads.length; ++i) {
-            ioThreads[i] = new IOThread();
+        // Setup a server socket listening channel only if the TCPEndpoint is a listening endpoint.
+        if (localAddress != null) {
+            serverSocketChannel = ServerSocketChannel.open();
+            ServerSocket serverSocket = serverSocketChannel.socket();
+            serverSocket.bind(localAddress);
+            this.localAddress = (InetSocketAddress) serverSocket.getLocalSocketAddress();
         }
-        ioThreads[0].registerServerSocket(serverSocketChannel);
-        for (int i = 0; i < ioThreads.length; ++i) {
-            ioThreads[i].start();
-        }
-    }
 
-    public void start() throws IOException {
-        this.localAddress = null;
         ioThreads = new IOThread[nThreads];
         for (int i = 0; i < ioThreads.length; ++i) {
             ioThreads[i] = new IOThread();
         }
+
+        if (localAddress != null) {
+            ioThreads[0].registerServerSocket(serverSocketChannel);
+        }
+
         for (int i = 0; i < ioThreads.length; ++i) {
             ioThreads[i].start();
         }

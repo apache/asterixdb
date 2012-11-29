@@ -48,9 +48,9 @@ public class MuxDemux {
      * Constructor.
      * 
      * @param localAddress
-     *            - TCP/IP socket address to listen on
+     *            - TCP/IP socket address to listen on. Null for non-listening unidirectional sockets
      * @param listener
-     *            - Callback interface to report channel events
+     *            - Callback interface to report channel events. Null for non-listening unidirectional sockets
      * @param nThreads
      *            - Number of threads to use for data transfer
      * @param maxConnectionAttempts
@@ -103,61 +103,13 @@ public class MuxDemux {
         perfCounters = new MuxDemuxPerformanceCounters();
     }
 
-    // Unidirectional MuxDemux: If this constructor is called, this MuxDemux will not listen to any incoming connections.
-    public MuxDemux(int nThreads, int maxConnectionAttempts) {
-        this.localAddress = null;
-        this.channelOpenListener = null;
-        this.maxConnectionAttempts = maxConnectionAttempts;
-        connectionMap = new HashMap<InetSocketAddress, MultiplexedConnection>();
-        this.tcpEndpoint = new TCPEndpoint(new ITCPConnectionListener() {
-            @Override
-            public void connectionEstablished(TCPConnection connection) {
-                MultiplexedConnection mConn;
-                synchronized (MuxDemux.this) {
-                    mConn = connectionMap.get(connection.getRemoteAddress());
-                }
-                assert mConn != null;
-                mConn.setTCPConnection(connection);
-                connection.setEventListener(mConn);
-                connection.setAttachment(mConn);
-            }
-
-            @Override
-            public void acceptedConnection(TCPConnection connection) {
-                // No implementation because we don't accept any connections.
-            }
-
-            @Override
-            public void connectionFailure(InetSocketAddress remoteAddress) {
-                MultiplexedConnection mConn;
-                synchronized (MuxDemux.this) {
-                    mConn = connectionMap.get(remoteAddress);
-                    assert mConn != null;
-                    int nConnectionAttempts = mConn.getConnectionAttempts();
-                    if (nConnectionAttempts > MuxDemux.this.maxConnectionAttempts) {
-                        connectionMap.remove(remoteAddress);
-                        mConn.setConnectionFailure();
-                    } else {
-                        mConn.setConnectionAttempts(nConnectionAttempts + 1);
-                        tcpEndpoint.initiateConnection(remoteAddress);
-                    }
-                }
-            }
-        }, nThreads);
-        perfCounters = new MuxDemuxPerformanceCounters();
-    }
-
     /**
      * Starts listening for remote connections and is capable of initiating connections.
      * 
      * @throws IOException
      */
     public void start() throws IOException {
-        if (localAddress == null) {
-            tcpEndpoint.start();
-        } else {
-            tcpEndpoint.start(localAddress);
-        }
+        tcpEndpoint.start(localAddress);
     }
 
     /**
