@@ -46,7 +46,7 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
             ISearchOperationCallback searchCallback) {
         IBinaryComparatorFactory cmpFactories[] = memBTree.getComparatorFactories();
         if (cmpFactories[0] != null) {
-            this.cmp = MultiComparator.create(memBTree.getComparatorFactories());
+            this.cmp = MultiComparator.createIgnoreFieldLength(memBTree.getComparatorFactories());
         } else {
             this.cmp = null;
         }

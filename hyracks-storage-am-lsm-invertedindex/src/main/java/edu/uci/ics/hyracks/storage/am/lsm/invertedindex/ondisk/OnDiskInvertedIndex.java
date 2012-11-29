@@ -578,7 +578,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         IIndexAccessor btreeAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
         IIndexCursor btreeCursor = btreeAccessor.createSearchCursor();
-        MultiComparator btreeCmp = MultiComparator.create(btree.getComparatorFactories());
+        MultiComparator btreeCmp = MultiComparator.createIgnoreFieldLength(btree.getComparatorFactories());
         RangePredicate rangePred = new RangePredicate(null, null, true, true, btreeCmp, btreeCmp);
         int[] fieldPermutation = new int[tokenTypeTraits.length];
         for (int i = 0; i < tokenTypeTraits.length; i++) {
@@ -589,7 +589,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         IInvertedIndexAccessor invIndexAccessor = (IInvertedIndexAccessor) createAccessor(
                 NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         IInvertedListCursor invListCursor = invIndexAccessor.createInvertedListCursor();
-        MultiComparator invListCmp = MultiComparator.create(invListCmpFactories);
+        MultiComparator invListCmp = MultiComparator.createIgnoreFieldLength(invListCmpFactories);
 
         try {
             // Search key for finding an inverted-list in the actual index.

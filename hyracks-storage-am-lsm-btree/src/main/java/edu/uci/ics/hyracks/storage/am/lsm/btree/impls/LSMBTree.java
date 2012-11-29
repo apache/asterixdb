@@ -229,7 +229,7 @@ public class LSMBTree implements ILSMIndexInternal, ITreeIndex {
     }
 
     private boolean insert(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException, IndexException {
-        MultiComparator comparator = MultiComparator.create(memBTree.getComparatorFactories());
+        MultiComparator comparator = MultiComparator.createIgnoreFieldLength(memBTree.getComparatorFactories());
         LSMBTreeRangeSearchCursor searchCursor = new LSMBTreeRangeSearchCursor(ctx);
         IIndexCursor memCursor = new BTreeRangeSearchCursor(ctx.memBTreeOpCtx.leafFrame, false);
         RangePredicate predicate = new RangePredicate(tuple, tuple, true, true, comparator, comparator);

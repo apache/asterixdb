@@ -263,7 +263,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
                 throw new TreeIndexException("Cannot bulk-load a non-empty tree.");
             }
 
-            this.cmp = MultiComparator.create(cmpFactories);
+            this.cmp = MultiComparator.createIgnoreFieldLength(cmpFactories);
 
             leafFrame.setMultiComparator(cmp);
             interiorFrame.setMultiComparator(cmp);

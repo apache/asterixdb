@@ -77,7 +77,7 @@ public class BTreeOpContext implements IIndexOperationContext {
         this.accessor = accessor;
         
         if (cmpFactories[0] != null) {
-            this.cmp = MultiComparator.create(cmpFactories);
+            this.cmp = MultiComparator.createIgnoreFieldLength(cmpFactories);
         } else {
             this.cmp = null;
         }

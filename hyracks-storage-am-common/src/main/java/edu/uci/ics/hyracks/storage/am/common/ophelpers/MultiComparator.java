@@ -101,7 +101,7 @@ public class MultiComparator {
         if (cmps.length == 1) {
             return new FieldLengthIgnoringSingleComparator(cmps);
         } else {
-            return new FieldLengthIgnoringSingleComparator(cmps);
+            return new FieldLengthIgnoringMultiComparator(cmps);
         }
     }
 
