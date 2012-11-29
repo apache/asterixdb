@@ -131,8 +131,9 @@ public class APIFramework {
         HTML
     }
 
-    public static Pair<Query, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions, AqlMetadataProvider metadataProvider,
-            Query q, SessionConfig pc, PrintWriter out, DisplayFormat pdf) throws AsterixException {
+    public static Pair<Query, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions,
+            AqlMetadataProvider metadataProvider, Query q, SessionConfig pc, PrintWriter out, DisplayFormat pdf)
+            throws AsterixException {
         if (!pc.isPrintPhysicalOpsOnly() && pc.isPrintExprParam()) {
             out.println();
             switch (pdf) {
@@ -261,7 +262,7 @@ public class APIFramework {
 
         OptimizationConfUtil.getPhysicalOptimizationConfig().setFrameSize(frameSize);
         builder.setPhysicalOptimizationConfig(OptimizationConfUtil.getPhysicalOptimizationConfig());
-        
+
         ICompiler compiler = compilerFactory.createCompiler(plan, queryMetadataProvider, t.getVarCounter());
         if (pc.isOptimize()) {
             compiler.optimize();
@@ -306,6 +307,7 @@ public class APIFramework {
         builder.setExpressionRuntimeProvider(new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(
                 AqlLogicalExpressionJobGen.INSTANCE));
         builder.setHashFunctionFactoryProvider(format.getBinaryHashFunctionFactoryProvider());
+        builder.setHashFunctionFamilyProvider(format.getBinaryHashFunctionFamilyProvider());
         builder.setNullWriterFactory(format.getNullWriterFactory());
         builder.setPrinterProvider(format.getPrinterFactoryProvider());
         builder.setSerializerDeserializerProvider(format.getSerdeProvider());

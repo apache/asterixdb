@@ -14,6 +14,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCal
 import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFamilyProvider;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import edu.uci.ics.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
@@ -63,4 +64,6 @@ public interface IDataFormat {
     public IExpressionEvalSizeComputer getExpressionEvalSizeComputer();
 
     public INormalizedKeyComputerFactoryProvider getNormalizedKeyComputerFactoryProvider();
+
+    public IBinaryHashFunctionFamilyProvider getBinaryHashFunctionFamilyProvider();
 }
