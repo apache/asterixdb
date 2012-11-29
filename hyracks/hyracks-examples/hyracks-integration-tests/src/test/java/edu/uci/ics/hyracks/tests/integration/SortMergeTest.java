@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
@@ -73,7 +74,8 @@ public class SortMergeTest extends AbstractIntegrationTest {
                 ordersDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter, NC1_ID, NC2_ID);
 
-        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec);
+        ResultSetId rsId = new ResultSetId(1);
+        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), ordScanner, 0, sorter, 0);
@@ -84,6 +86,8 @@ public class SortMergeTest extends AbstractIntegrationTest {
                                 .of(UTF8StringPointable.FACTORY) }), new int[] { 1 },
                         new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
                                 .of(UTF8StringPointable.FACTORY) }), sorter, 0, printer, 0);
+
+        spec.addResultSetId(rsId);
 
         runTest(spec);
     }
@@ -116,7 +120,8 @@ public class SortMergeTest extends AbstractIntegrationTest {
                         PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) }, ordersDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter, NC1_ID, NC2_ID);
 
-        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec);
+        ResultSetId rsId = new ResultSetId(1);
+        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), ordScanner, 0, sorter, 0);
@@ -130,6 +135,8 @@ public class SortMergeTest extends AbstractIntegrationTest {
                                 PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
                                 PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) }), sorter, 0,
                 printer, 0);
+
+        spec.addResultSetId(rsId);
 
         runTest(spec);
     }

@@ -30,14 +30,11 @@ import org.junit.rules.TemporaryFolder;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
-import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetDirectoryServiceConnection;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.client.dataset.HyracksDataset;
-import edu.uci.ics.hyracks.client.dataset.HyracksDatasetDirectoryServiceConnection;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
@@ -125,10 +122,7 @@ public abstract class AbstractIntegrationTest {
 
         // My code
         int nReaders = 5;
-        NetworkAddress ddsAddress = hcc.getDatasetDirectoryServiceInfo(jobId);
-        IHyracksDatasetDirectoryServiceConnection ddsc = new HyracksDatasetDirectoryServiceConnection(new String(
-                ddsAddress.getIpAddress()), ddsAddress.getPort());
-        IHyracksDataset dataset = new HyracksDataset(jobId, ddsc, nReaders);
+        IHyracksDataset dataset = new HyracksDataset(hcc, spec, jobId, nReaders);
         dataset.getResults();
         // End of my code
 
