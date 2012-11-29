@@ -20,6 +20,7 @@ import java.util.Map;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataset.IDatasetDirectoryService;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobId;
 
@@ -30,22 +31,31 @@ import edu.uci.ics.hyracks.api.job.JobId;
  * all the results) completely. Then we can just get rid of the location information for that job.
  */
 public class DatasetDirectoryService implements IDatasetDirectoryService {
-    private final Map<JobId, NetworkAddress[]> jobPartitionLocationsMap;
+    private final Map<JobId, Map<ResultSetId, DatasetDirectoryRecord[]>> jobResultLocationsMap;
 
     public DatasetDirectoryService() {
-        jobPartitionLocationsMap = new HashMap<JobId, NetworkAddress[]>();
+        jobResultLocationsMap = new HashMap<JobId, Map<ResultSetId, DatasetDirectoryRecord[]>>();
     }
 
     @Override
-    public synchronized void registerResultPartitionLocation(JobId jobId, int partition, int nPartitions,
-            NetworkAddress networkAddress) {
-        NetworkAddress[] partitionLocations = jobPartitionLocationsMap.get(jobId);
-        if (partitionLocations == null) {
-            partitionLocations = new NetworkAddress[nPartitions];
-            jobPartitionLocationsMap.put(jobId, partitionLocations);
+    public synchronized void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, int partition,
+            int nPartitions, NetworkAddress networkAddress) {
+        Map<ResultSetId, DatasetDirectoryRecord[]> resultSetsMap = jobResultLocationsMap.get(jobId);
+        if (resultSetsMap == null) {
+            resultSetsMap = new HashMap<ResultSetId, DatasetDirectoryRecord[]>();
+            jobResultLocationsMap.put(jobId, resultSetsMap);
         }
 
-        partitionLocations[partition] = networkAddress;
+        DatasetDirectoryRecord[] records = resultSetsMap.get(rsId);
+        if (records == null) {
+            records = new DatasetDirectoryRecord[nPartitions];
+            resultSetsMap.put(rsId, records);
+        }
+
+        if (records[partition] == null) {
+            records[partition] = new DatasetDirectoryRecord();
+        }
+        records[partition].setNetworkAddress(networkAddress);
         notifyAll();
     }
 

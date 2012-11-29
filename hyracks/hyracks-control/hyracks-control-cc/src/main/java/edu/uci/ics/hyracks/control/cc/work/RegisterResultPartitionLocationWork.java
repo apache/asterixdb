@@ -15,21 +15,29 @@
 package edu.uci.ics.hyracks.control.cc.work;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
 public class RegisterResultPartitionLocationWork extends AbstractWork {
     private final ClusterControllerService ccs;
+
     private final JobId jobId;
+
+    private final ResultSetId rsId;
+
     private final int partition;
+
     private final int nPartitions;
+
     private final NetworkAddress networkAddress;
 
-    public RegisterResultPartitionLocationWork(ClusterControllerService ccs, JobId jobId, int partition,
-            int nPartitions, NetworkAddress networkAddress) {
+    public RegisterResultPartitionLocationWork(ClusterControllerService ccs, JobId jobId, ResultSetId rsId,
+            int partition, int nPartitions, NetworkAddress networkAddress) {
         this.ccs = ccs;
         this.jobId = jobId;
+        this.rsId = rsId;
         this.partition = partition;
         this.nPartitions = nPartitions;
         this.networkAddress = networkAddress;
@@ -37,12 +45,13 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
 
     @Override
     public void run() {
-        ccs.getDatasetDirectoryService().registerResultPartitionLocation(jobId, partition, nPartitions, networkAddress);
+        ccs.getDatasetDirectoryService().registerResultPartitionLocation(jobId, rsId, partition, nPartitions,
+                networkAddress);
     }
 
     @Override
     public String toString() {
-        return "JobId@" + jobId + "Partition@" + partition + "NPartitions@" + nPartitions + "ResultPartitionLocation@"
-                + networkAddress;
+        return "JobId@" + jobId + " Partition@" + partition + " ResultSetId@" + rsId + " NPartitions@" + nPartitions
+                + " ResultPartitionLocation@" + networkAddress;
     }
 }

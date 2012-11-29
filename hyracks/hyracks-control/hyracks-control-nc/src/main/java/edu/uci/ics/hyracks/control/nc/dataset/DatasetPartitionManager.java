@@ -21,6 +21,7 @@ import java.util.concurrent.Executor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.JobId;
@@ -49,12 +50,12 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
     }
 
     @Override
-    public IFrameWriter createDatasetPartitionWriter(IHyracksTaskContext ctx, int partition, int nPartitions)
-            throws HyracksException {
+    public IFrameWriter createDatasetPartitionWriter(IHyracksTaskContext ctx, ResultSetId rsId, int partition,
+            int nPartitions) throws HyracksException {
         DatasetPartitionWriter dpw = null;
         JobId jobId = ctx.getJobletContext().getJobId();
         try {
-            ncs.getClusterController().registerResultPartitionLocation(jobId, partition, nPartitions,
+            ncs.getClusterController().registerResultPartitionLocation(jobId, rsId, partition, nPartitions,
                     ncs.getDatasetNetworkManager().getNetworkAddress());
             dpw = new DatasetPartitionWriter(ctx, this, partition, executor);
 

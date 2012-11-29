@@ -36,6 +36,7 @@ import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
@@ -444,14 +445,18 @@ public class CCNCFunctions {
 
         private final JobId jobId;
 
+        private final ResultSetId rsId;
+
         private final int partition;
 
         private final int nPartitions;
 
         private NetworkAddress networkAddress;
 
-        public RegisterResultPartitionLocationFunction(JobId jobId, int partition, int nPartitions, NetworkAddress networkAddress) {
+        public RegisterResultPartitionLocationFunction(JobId jobId, ResultSetId rsId, int partition, int nPartitions,
+                NetworkAddress networkAddress) {
             this.jobId = jobId;
+            this.rsId = rsId;
             this.partition = partition;
             this.nPartitions = nPartitions;
             this.networkAddress = networkAddress;
@@ -464,6 +469,10 @@ public class CCNCFunctions {
 
         public JobId getJobId() {
             return jobId;
+        }
+
+        public ResultSetId getResultSetId() {
+            return rsId;
         }
 
         public int getPartition() {
