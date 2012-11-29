@@ -15,7 +15,7 @@
 
 package edu.uci.ics.asterix.om.pointables;
 
-import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
+import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
 import edu.uci.ics.hyracks.data.std.api.IValueReference;
 
 /**

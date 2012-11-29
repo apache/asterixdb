@@ -21,16 +21,16 @@ import java.util.List;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
+import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
+import edu.uci.ics.asterix.om.pointables.visitor.IVisitablePointableVisitor;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
-import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
-import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
-import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
-import edu.uci.ics.asterix.runtime.util.container.IObjectFactory;
+import edu.uci.ics.asterix.om.util.ResettableByteArrayOutputStream;
+import edu.uci.ics.asterix.om.util.container.IObjectFactory;
 
 /**
  * This class interprets the binary data representation of a list, one can

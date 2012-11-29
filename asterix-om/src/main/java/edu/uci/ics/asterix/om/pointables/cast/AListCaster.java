@@ -23,17 +23,17 @@ import java.util.List;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.builders.UnorderedListBuilder;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.om.pointables.AListPointable;
+import edu.uci.ics.asterix.om.pointables.PointableAllocator;
+import edu.uci.ics.asterix.om.pointables.base.DefaultOpenFieldType;
+import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.pointables.AListPointable;
-import edu.uci.ics.asterix.runtime.pointables.PointableAllocator;
-import edu.uci.ics.asterix.runtime.pointables.base.DefaultOpenFieldType;
-import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
-import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
+import edu.uci.ics.asterix.om.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 
 /**

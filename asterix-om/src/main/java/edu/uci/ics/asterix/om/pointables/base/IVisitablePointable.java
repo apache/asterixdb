@@ -16,7 +16,7 @@
 package edu.uci.ics.asterix.om.pointables.base;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
+import edu.uci.ics.asterix.om.pointables.visitor.IVisitablePointableVisitor;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 
 /**

@@ -20,10 +20,10 @@ import java.io.PrintStream;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.om.pointables.ARecordPointable;
+import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.asterix.runtime.pointables.ARecordPointable;
-import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 
 /**

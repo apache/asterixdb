@@ -16,9 +16,9 @@
 package edu.uci.ics.asterix.om.pointables.visitor;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.runtime.pointables.AFlatValuePointable;
-import edu.uci.ics.asterix.runtime.pointables.AListPointable;
-import edu.uci.ics.asterix.runtime.pointables.ARecordPointable;
+import edu.uci.ics.asterix.om.pointables.AFlatValuePointable;
+import edu.uci.ics.asterix.om.pointables.AListPointable;
+import edu.uci.ics.asterix.om.pointables.ARecordPointable;
 
 /**
  * This interface is a visitor for all the three different IVisitablePointable

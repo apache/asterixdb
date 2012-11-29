@@ -15,12 +15,12 @@
 
 package edu.uci.ics.asterix.om.pointables;
 
+import edu.uci.ics.asterix.om.pointables.base.DefaultOpenFieldType;
+import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.pointables.base.DefaultOpenFieldType;
-import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
-import edu.uci.ics.asterix.runtime.util.container.IObjectPool;
-import edu.uci.ics.asterix.runtime.util.container.ListObjectPool;
+import edu.uci.ics.asterix.om.util.container.IObjectPool;
+import edu.uci.ics.asterix.om.util.container.ListObjectPool;
 
 /**
  * This class is the ONLY place to create IVisitablePointable object instances,

@@ -39,12 +39,12 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.printers.APolygonPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ARectanglePrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AStringPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ATimePrinter;
+import edu.uci.ics.asterix.om.pointables.AFlatValuePointable;
+import edu.uci.ics.asterix.om.pointables.AListPointable;
+import edu.uci.ics.asterix.om.pointables.ARecordPointable;
+import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
+import edu.uci.ics.asterix.om.pointables.visitor.IVisitablePointableVisitor;
 import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.runtime.pointables.AFlatValuePointable;
-import edu.uci.ics.asterix.runtime.pointables.AListPointable;
-import edu.uci.ics.asterix.runtime.pointables.ARecordPointable;
-import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
-import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 

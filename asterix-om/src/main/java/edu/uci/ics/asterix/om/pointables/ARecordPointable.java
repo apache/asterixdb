@@ -23,16 +23,16 @@ import java.util.List;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
+import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
+import edu.uci.ics.asterix.om.pointables.visitor.IVisitablePointableVisitor;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
-import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
-import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
-import edu.uci.ics.asterix.runtime.util.ResettableByteArrayOutputStream;
-import edu.uci.ics.asterix.runtime.util.container.IObjectFactory;
+import edu.uci.ics.asterix.om.util.ResettableByteArrayOutputStream;
+import edu.uci.ics.asterix.om.util.container.IObjectFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 
 /**

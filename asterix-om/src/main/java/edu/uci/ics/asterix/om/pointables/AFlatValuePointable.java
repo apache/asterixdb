@@ -16,10 +16,10 @@
 package edu.uci.ics.asterix.om.pointables;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
+import edu.uci.ics.asterix.om.pointables.visitor.IVisitablePointableVisitor;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
-import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
-import edu.uci.ics.asterix.runtime.util.container.IObjectFactory;
+import edu.uci.ics.asterix.om.util.container.IObjectFactory;
 import edu.uci.ics.hyracks.data.std.api.IValueReference;
 
 /**

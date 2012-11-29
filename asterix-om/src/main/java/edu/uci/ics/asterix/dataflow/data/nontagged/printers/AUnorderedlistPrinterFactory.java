@@ -2,13 +2,13 @@ package edu.uci.ics.asterix.dataflow.data.nontagged.printers;
 
 import java.io.PrintStream;
 
+import edu.uci.ics.asterix.om.pointables.PointableAllocator;
+import edu.uci.ics.asterix.om.pointables.base.DefaultOpenFieldType;
+import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
+import edu.uci.ics.asterix.om.pointables.printer.APrintVisitor;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.pointables.PointableAllocator;
-import edu.uci.ics.asterix.runtime.pointables.base.DefaultOpenFieldType;
-import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
-import edu.uci.ics.asterix.runtime.pointables.printer.APrintVisitor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.data.IPrinter;
