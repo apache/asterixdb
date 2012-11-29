@@ -1,3 +1,10 @@
+/*
+ * Description  : This test case is to verify the fix for issue208
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=208
+ * Expected Res : Success
+ * Date         : 26th November 2012
+ */
+
 drop dataverse OpenSocialNetworkData if exists;
 create dataverse OpenSocialNetworkData;
 

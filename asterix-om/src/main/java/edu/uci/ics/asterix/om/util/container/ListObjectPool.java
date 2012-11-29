@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.util.container;
+package edu.uci.ics.asterix.om.util.container;
 
 import java.util.ArrayList;
 import java.util.BitSet;

@@ -1,3 +1,10 @@
+/*
+ * Description  : This test case is to verify the fix for issue205
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=205
+ * Expected Res : Success
+ * Date         : 26th November 2012
+ */
+
 drop dataverse test if exists;
 create dataverse test;
 use dataverse test;

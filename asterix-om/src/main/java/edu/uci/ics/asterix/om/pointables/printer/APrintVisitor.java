@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.pointables.printer;
+package edu.uci.ics.asterix.om.pointables.printer;
 
 import java.io.PrintStream;
 import java.util.HashMap;

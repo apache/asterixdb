@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.pointables;
+package edu.uci.ics.asterix.om.pointables;
 
 import java.io.DataOutputStream;
 import java.io.IOException;

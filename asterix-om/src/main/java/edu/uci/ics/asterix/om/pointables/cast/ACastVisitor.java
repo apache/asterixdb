@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.pointables.cast;
+package edu.uci.ics.asterix.om.pointables.cast;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -13,17 +13,24 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.pointables.base;
-
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
-import edu.uci.ics.hyracks.data.std.api.IPointable;
+package edu.uci.ics.asterix.om.util.container;
 
 /**
- * This interface extends IPointable with a visitor interface in order to ease
- * programming for recursive record structures.
+ * A reusable object pool interface.
  */
-public interface IVisitablePointable extends IPointable {
+public interface IObjectPool<E, T> {
 
-    public <R, T> R accept(IVisitablePointableVisitor<R, T> vistor, T tag) throws AsterixException;
+    /**
+     * Give client an E instance
+     * 
+     * @param arg
+     *            the argument to create E
+     * @return an E instance
+     */
+    public E allocate(T arg);
+
+    /**
+     * Mark all instances in the pool as unused
+     */
+    public void reset();
 }

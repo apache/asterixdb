@@ -13,18 +13,17 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.util.container;
+package edu.uci.ics.asterix.om.pointables.base;
+
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.runtime.pointables.visitor.IVisitablePointableVisitor;
+import edu.uci.ics.hyracks.data.std.api.IPointable;
 
 /**
- * A factory interface to create objects.
+ * This interface extends IPointable with a visitor interface in order to ease
+ * programming for recursive record structures.
  */
-public interface IObjectFactory<E, T> {
+public interface IVisitablePointable extends IPointable {
 
-    /**
-     * create an element of type E
-     * 
-     * @param arg
-     * @return an E element
-     */
-    public E create(T arg);
+    public <R, T> R accept(IVisitablePointableVisitor<R, T> vistor, T tag) throws AsterixException;
 }

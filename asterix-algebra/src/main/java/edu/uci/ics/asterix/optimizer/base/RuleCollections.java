@@ -30,7 +30,7 @@ import edu.uci.ics.asterix.optimizer.rules.FuzzyJoinRule;
 import edu.uci.ics.asterix.optimizer.rules.IfElseToSwitchCaseFunctionRule;
 import edu.uci.ics.asterix.optimizer.rules.InlineUnnestFunctionRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceDynamicTypeCastRule;
-import edu.uci.ics.asterix.optimizer.rules.IntroduceEnforcedTypeRule;
+import edu.uci.ics.asterix.optimizer.rules.IntroduceEnforcedListTypeRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceStaticTypeCastRule;
 import edu.uci.ics.asterix.optimizer.rules.LoadRecordFieldsRule;
@@ -115,7 +115,7 @@ public final class RuleCollections {
         // avoid unnecessary dynamic casting
         normalization.add(new IntroduceStaticTypeCastRule());
         normalization.add(new IntroduceDynamicTypeCastRule());
-        normalization.add(new IntroduceEnforcedTypeRule());
+        normalization.add(new IntroduceEnforcedListTypeRule());
         normalization.add(new ConstantFoldingRule());
         normalization.add(new UnnestToDataScanRule());
         normalization.add(new IfElseToSwitchCaseFunctionRule());

@@ -11,6 +11,7 @@ import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.pointables.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -19,7 +20,6 @@ import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
-import edu.uci.ics.asterix.runtime.pointables.base.DefaultOpenFieldType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
@@ -28,8 +28,33 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpressio
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 
+/**
+ * This class is utility to do type cast.
+ * It offers two public methods:
+ * 1. public static boolean rewriteListExpr(AbstractFunctionCallExpression funcExpr, IAType reqType, IAType inputType,
+ * IVariableTypeEnvironment env) throws AlgebricksException, which only enforces the list type recursively.
+ * 2. public static boolean rewriteFuncExpr(AbstractFunctionCallExpression funcExpr, IAType reqType, IAType inputType,
+ * IVariableTypeEnvironment env) throws AlgebricksException, which enforces the list type and the record type recursively.
+ * 
+ * @author yingyib
+ */
 public class StaticTypeCastUtil {
 
+    /**
+     * This method is only called when funcExpr contains list constructor function calls.
+     * The List constructor is very special because a nested list is of type List<ANY>.
+     * However, the bottom-up type inference (InferTypeRule in algebricks) did not infer that so we need this method to enforce the type.
+     * We do not want to break the generality of algebricks so this method is called in an ASTERIX rule: @ IntroduceEnforcedListTypeRule} .
+     * 
+     * @param funcExpr
+     *            record constructor function expression
+     * @param requiredListType
+     *            required record type
+     * @param inputRecordType
+     * @param env
+     *            type environment
+     * @throws AlgebricksException
+     */
     public static boolean rewriteListExpr(AbstractFunctionCallExpression funcExpr, IAType reqType, IAType inputType,
             IVariableTypeEnvironment env) throws AlgebricksException {
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {
@@ -59,6 +84,28 @@ public class StaticTypeCastUtil {
         }
     }
 
+    /**
+     * This method is to recursively enforce required types, for the list type and the record type.
+     * The List constructor is very special because
+     * 1. a nested list in a list is of type List<ANY>;
+     * 2. a nested record in a list is of type Open_Record{}.
+     * The open record constructor is very special because
+     * 1. a nested list in the open part is of type List<ANY>;
+     * 2. a nested record in the open part is of type Open_Record{}.
+     * However, the bottom-up type inference (InferTypeRule in algebricks) did not infer that so we need this method to enforce the type.
+     * We do not want to break the generality of algebricks so this method is called in an ASTERIX rule: @ IntroduceStaticTypeCastRule} .
+     * 
+     * @param funcExpr
+     *            the function expression whose type needs to be top-down enforced
+     * @param reqType
+     *            the required type inferred from parent operators/expressions
+     * @param inputType
+     *            the current inferred
+     * @param env
+     *            the type environment
+     * @return true if the type is casted; otherwise, false.
+     * @throws AlgebricksException
+     */
     public static boolean rewriteFuncExpr(AbstractFunctionCallExpression funcExpr, IAType reqType, IAType inputType,
             IVariableTypeEnvironment env) throws AlgebricksException {
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {

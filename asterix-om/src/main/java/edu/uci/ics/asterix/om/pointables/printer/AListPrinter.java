@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.pointables.printer;
+package edu.uci.ics.asterix.om.pointables.printer;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -22,73 +22,64 @@ import java.util.List;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.asterix.runtime.pointables.ARecordPointable;
+import edu.uci.ics.asterix.runtime.pointables.AListPointable;
 import edu.uci.ics.asterix.runtime.pointables.base.IVisitablePointable;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 
 /**
- * This class is to print the content of a record. It is ONLY visible to
+ * This class is to print the content of a list. It is ONLY visible to
  * APrintVisitor.
  */
-class ARecordPrinter {
-    private static String LEFT_PAREN = "{ ";
-    private static String RIGHT_PAREN = " }";
+class AListPrinter {
+    private static String LEFT_PAREN = "{{ ";
+    private static String RIGHT_PAREN = " }}";
+    private static String LEFT_PAREN_ORDERED = "[ ";
+    private static String RIGHT_PAREN_ORDERED = " ]";
     private static String COMMA = ", ";
-    private static String COLON = ": ";
 
-    private final Pair<PrintStream, ATypeTag> nameVisitorArg = new Pair<PrintStream, ATypeTag>(null, ATypeTag.STRING);
     private final Pair<PrintStream, ATypeTag> itemVisitorArg = new Pair<PrintStream, ATypeTag>(null, null);
+    private String leftParen = LEFT_PAREN;
+    private String rightParen = RIGHT_PAREN;
 
-    public ARecordPrinter() {
-
+    public AListPrinter(boolean ordered) {
+        if (ordered) {
+            leftParen = LEFT_PAREN_ORDERED;
+            rightParen = RIGHT_PAREN_ORDERED;
+        }
     }
 
-    public void printRecord(ARecordPointable recordAccessor, PrintStream ps, APrintVisitor visitor) throws IOException,
+    public void printList(AListPointable listAccessor, PrintStream ps, APrintVisitor visitor) throws IOException,
             AsterixException {
-        List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
-        List<IVisitablePointable> fieldTags = recordAccessor.getFieldTypeTags();
-        List<IVisitablePointable> fieldValues = recordAccessor.getFieldValues();
-
-        nameVisitorArg.first = ps;
+        List<IVisitablePointable> itemTags = listAccessor.getItemTags();
+        List<IVisitablePointable> items = listAccessor.getItems();
         itemVisitorArg.first = ps;
 
-        // print the beginning part
-        ps.print(LEFT_PAREN);
+        //print the beginning part
+        ps.print(leftParen);
 
-        // print field 0 to n-2
-        for (int i = 0; i < fieldNames.size() - 1; i++) {
-            IVisitablePointable itemTypeTag = fieldTags.get(i);
-            IVisitablePointable item = fieldValues.get(i);
+        // print item 0 to n-2
+        for (int i = 0; i < items.size() - 1; i++) {
+            IVisitablePointable itemTypeTag = itemTags.get(i);
+            IVisitablePointable item = items.get(i);
             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
                     .getStartOffset()]);
             itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
-
-            // print field name
-            fieldNames.get(i).accept(visitor, nameVisitorArg);
-            ps.print(COLON);
-            // print field value
             item.accept(visitor, itemVisitorArg);
-
-            // print the comma
+            //print the comma
             ps.print(COMMA);
         }
 
-        // print field n-1
-        if (fieldValues.size() > 0) {
-            IVisitablePointable itemTypeTag = fieldTags.get(fieldTags.size() - 1);
-            IVisitablePointable item = fieldValues.get(fieldValues.size() - 1);
+        // print item n-1
+        if (items.size() > 0) {
+            IVisitablePointable itemTypeTag = itemTags.get(itemTags.size() - 1);
+            IVisitablePointable item = items.get(items.size() - 1);
             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
                     .getStartOffset()]);
             itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
-
-            // print field name
-            fieldNames.get(fieldNames.size() - 1).accept(visitor, nameVisitorArg);
-            ps.print(COLON);
-            // print field value
             item.accept(visitor, itemVisitorArg);
         }
 
-        // print the end part
-        ps.print(RIGHT_PAREN);
+        //print the end part
+        ps.print(rightParen);
     }
 }

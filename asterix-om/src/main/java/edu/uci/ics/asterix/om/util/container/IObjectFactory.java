@@ -13,24 +13,18 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.util.container;
+package edu.uci.ics.asterix.om.util.container;
 
 /**
- * A reusable object pool interface.
+ * A factory interface to create objects.
  */
-public interface IObjectPool<E, T> {
+public interface IObjectFactory<E, T> {
 
     /**
-     * Give client an E instance
+     * create an element of type E
      * 
      * @param arg
-     *            the argument to create E
-     * @return an E instance
+     * @return an E element
      */
-    public E allocate(T arg);
-
-    /**
-     * Mark all instances in the pool as unused
-     */
-    public void reset();
+    public E create(T arg);
 }

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.runtime.util;
+package edu.uci.ics.asterix.om.util;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

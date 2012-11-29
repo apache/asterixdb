@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.asterix.optimizer.rules;
 
 import java.util.Collections;
@@ -20,7 +35,13 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLog
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
-public class IntroduceEnforcedTypeRule implements IAlgebraicRewriteRule {
+/**
+ * This class is to enforce types for function expressions which contain list constructor function calls.
+ * The List constructor is very special because a nested list is of type List<ANY>.
+ * However, the bottom-up type inference (InferTypeRule in algebricks) did not infer that so we need this method to enforce the type.
+ * We do not want to break the generality of algebricks so this method is called in an ASTERIX rule: @ IntroduceEnforcedListTypeRule} .
+ */
+public class IntroduceEnforcedListTypeRule implements IAlgebraicRewriteRule {
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
@@ -35,6 +56,10 @@ public class IntroduceEnforcedTypeRule implements IAlgebraicRewriteRule {
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         context.addToDontApplySet(this, opRef.getValue());
         boolean changed = false;
+
+        /**
+         * rewrite list constructor types for list constructor functions
+         */
         if (op1.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             AbstractAssignOperator assignOp = (AbstractAssignOperator) op1;
             List<Mutable<ILogicalExpression>> expressions = assignOp.getExpressions();

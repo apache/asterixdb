@@ -1,4 +1,4 @@
-package edu.uci.ics.asterix.runtime.util;
+package edu.uci.ics.asterix.om.util;
 
 import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 
