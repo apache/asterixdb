@@ -9,11 +9,10 @@ import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 
 public class ADatePrinter implements IPrinter {
 
-    private static final long serialVersionUID = 1L;
     private static long CHRONON_OF_DAY = 24 * 60 * 60 * 1000;
     public static final ADatePrinter INSTANCE = new ADatePrinter();
     private static final GregorianCalendarSystem gCalInstance = GregorianCalendarSystem.getInstance();
-    
+
     @Override
     public void init() {
 
