@@ -25,12 +25,12 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import edu.uci.ics.hyracks.api.channels.IInputChannel;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
-import edu.uci.ics.hyracks.api.dataset.IDatasetInputChannel;
 import edu.uci.ics.hyracks.api.dataset.IDatasetInputChannelMonitor;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetDirectoryServiceConnection;
@@ -124,19 +124,19 @@ public class HyracksDataset implements IHyracksDataset {
         }
 
         @Override
-        public synchronized void notifyFailure(IDatasetInputChannel channel) {
+        public synchronized void notifyFailure(IInputChannel channel) {
             failed.set(true);
             notifyAll();
         }
 
         @Override
-        public synchronized void notifyDataAvailability(IDatasetInputChannel channel, int nFrames) {
+        public synchronized void notifyDataAvailability(IInputChannel channel, int nFrames) {
             nAvailableFrames.addAndGet(nFrames);
             notifyAll();
         }
 
         @Override
-        public synchronized void notifyEndOfStream(IDatasetInputChannel channel) {
+        public synchronized void notifyEndOfStream(IInputChannel channel) {
             eos.set(true);
             notifyAll();
         }
