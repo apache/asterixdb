@@ -18,6 +18,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
 import edu.uci.ics.hyracks.api.dataset.IDatasetDirectoryService;
@@ -33,10 +35,10 @@ import edu.uci.ics.hyracks.api.job.JobId;
  * job.
  */
 public class DatasetDirectoryService implements IDatasetDirectoryService {
-    private final Map<JobId, Map<ResultSetId, DatasetDirectoryRecord[]>> jobResultLocationsMap;
+    private final Map<JobId, Map<ResultSetId, Pair<Boolean, DatasetDirectoryRecord[]>>> jobResultLocationsMap;
 
     public DatasetDirectoryService() {
-        jobResultLocationsMap = new HashMap<JobId, Map<ResultSetId, DatasetDirectoryRecord[]>>();
+        jobResultLocationsMap = new HashMap<JobId, Map<ResultSetId, Pair<Boolean, DatasetDirectoryRecord[]>>>();
     }
 
     @Override
@@ -48,12 +50,14 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
             jobResultLocationsMap.put(jobId, rsMap);
         }
 
-        DatasetDirectoryRecord[] records = resultSetsMap.get(rsId);
-        if (records == null) {
-            records = new DatasetDirectoryRecord[nPartitions];
-            resultSetsMap.put(rsId, records);
+        Pair<Boolean, DatasetDirectoryRecord[]> resultSetPair = rsMap.get(rsId);
+        if (resultSetPair == null) {
+            resultSetPair = Pair.<Boolean, DatasetDirectoryRecord[]> of(orderedResult,
+                    new DatasetDirectoryRecord[nPartitions]);
+            rsMap.put(rsId, resultSetPair);
         }
 
+        DatasetDirectoryRecord[] records = resultSetPair.getRight();
         if (records[partition] == null) {
             records[partition] = new DatasetDirectoryRecord();
         }
@@ -71,15 +75,19 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
                 throw new HyracksDataException(e);
             }
         }
-        return jobResultLocationsMap.get(jobId).get(rsId);
+        return jobResultLocationsMap.get(jobId).get(rsId).getRight();
     }
 
-    private boolean newRecords(JobId jobId, ResultSetId rsId, DatasetDirectoryRecord[] knownRecords) {
-        Map<ResultSetId, DatasetDirectoryRecord[]> rsMap = jobResultLocationsMap.get(jobId);
+    private boolean newRecords(JobId jobId, ResultSetId rsId, DatasetDirectoryRecord[] knownRecords)
+            throws HyracksDataException {
+        Map<ResultSetId, Pair<Boolean, DatasetDirectoryRecord[]>> rsMap = jobResultLocationsMap.get(jobId);
         if (rsMap == null) {
             return false;
         }
-        DatasetDirectoryRecord[] records = rsMap.get(rsId);
-        return !Arrays.equals(records, knownRecords);
+        Pair<Boolean, DatasetDirectoryRecord[]> resultSetPair = rsMap.get(rsId);
+        if (resultSetPair == null || resultSetPair.getRight() == null) {
+            throw new HyracksDataException("ResultSet locations uninitialized when it is expected to be initialized.");
+        }
+        return !Arrays.equals(resultSetPair.getRight(), knownRecords);
     }
 }
