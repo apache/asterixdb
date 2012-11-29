@@ -25,6 +25,8 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
 
     private final JobId jobId;
 
+    private final boolean orderedResult;
+
     private final ResultSetId rsId;
 
     private final int partition;
@@ -33,10 +35,11 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
 
     private final NetworkAddress networkAddress;
 
-    public RegisterResultPartitionLocationWork(ClusterControllerService ccs, JobId jobId, ResultSetId rsId,
-            int partition, int nPartitions, NetworkAddress networkAddress) {
+    public RegisterResultPartitionLocationWork(ClusterControllerService ccs, JobId jobId, boolean orderedResult,
+            ResultSetId rsId, int partition, int nPartitions, NetworkAddress networkAddress) {
         this.ccs = ccs;
         this.jobId = jobId;
+        this.orderedResult = orderedResult;
         this.rsId = rsId;
         this.partition = partition;
         this.nPartitions = nPartitions;
@@ -45,13 +48,13 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
 
     @Override
     public void run() {
-        ccs.getDatasetDirectoryService().registerResultPartitionLocation(jobId, rsId, partition, nPartitions,
-                networkAddress);
+        ccs.getDatasetDirectoryService().registerResultPartitionLocation(jobId, orderedResult, rsId, partition,
+                nPartitions, networkAddress);
     }
 
     @Override
     public String toString() {
         return "JobId@" + jobId + " Partition@" + partition + " ResultSetId@" + rsId + " NPartitions@" + nPartitions
-                + " ResultPartitionLocation@" + networkAddress;
+                + " ResultPartitionLocation@" + networkAddress + " OrderedResult@" + orderedResult;
     }
 }

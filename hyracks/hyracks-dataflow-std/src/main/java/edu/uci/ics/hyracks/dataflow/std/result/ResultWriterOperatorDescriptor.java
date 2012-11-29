@@ -33,9 +33,12 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
 
     private final ResultSetId rsId;
 
-    public ResultWriterOperatorDescriptor(IOperatorDescriptorRegistry spec, ResultSetId rsId) {
+    private final boolean ordered;
+
+    public ResultWriterOperatorDescriptor(IOperatorDescriptorRegistry spec, ResultSetId rsId, boolean ordered) {
         super(spec, 1, 0);
         this.rsId = rsId;
+        this.ordered = ordered;
     }
 
     @Override
@@ -49,7 +52,8 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
             @Override
             public void open() throws HyracksDataException {
                 try {
-                    datasetPartitionWriter = dpm.createDatasetPartitionWriter(ctx, rsId, partition, nPartitions);
+                    datasetPartitionWriter = dpm.createDatasetPartitionWriter(ctx, ordered, rsId, partition,
+                            nPartitions);
                     datasetPartitionWriter.open();
                 } catch (HyracksException e) {
                     throw new HyracksDataException(e);

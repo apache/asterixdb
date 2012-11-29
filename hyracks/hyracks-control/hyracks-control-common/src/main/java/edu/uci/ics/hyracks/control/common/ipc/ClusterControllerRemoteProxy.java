@@ -97,10 +97,10 @@ public class ClusterControllerRemoteProxy implements IClusterController {
     }
 
     @Override
-    public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, int partition, int nPartitions,
-            NetworkAddress networkAddress) throws Exception {
+    public void registerResultPartitionLocation(JobId jobId, boolean orderedResult, ResultSetId rsId, int partition,
+            int nPartitions, NetworkAddress networkAddress) throws Exception {
         CCNCFunctions.RegisterResultPartitionLocationFunction fn = new CCNCFunctions.RegisterResultPartitionLocationFunction(
-                jobId, rsId, partition, nPartitions, networkAddress);
+                jobId, orderedResult, rsId, partition, nPartitions, networkAddress);
         ipcHandle.send(-1, fn, null);
     }
 

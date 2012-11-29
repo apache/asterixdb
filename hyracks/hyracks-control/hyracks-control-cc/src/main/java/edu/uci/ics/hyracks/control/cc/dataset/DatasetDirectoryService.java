@@ -40,12 +40,12 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     }
 
     @Override
-    public synchronized void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, int partition,
-            int nPartitions, NetworkAddress networkAddress) {
-        Map<ResultSetId, DatasetDirectoryRecord[]> resultSetsMap = jobResultLocationsMap.get(jobId);
-        if (resultSetsMap == null) {
-            resultSetsMap = new HashMap<ResultSetId, DatasetDirectoryRecord[]>();
-            jobResultLocationsMap.put(jobId, resultSetsMap);
+    public synchronized void registerResultPartitionLocation(JobId jobId, boolean orderedResult, ResultSetId rsId,
+            int partition, int nPartitions, NetworkAddress networkAddress) {
+        Map<ResultSetId, Pair<Boolean, DatasetDirectoryRecord[]>> rsMap = jobResultLocationsMap.get(jobId);
+        if (rsMap == null) {
+            rsMap = new HashMap<ResultSetId, Pair<Boolean, DatasetDirectoryRecord[]>>();
+            jobResultLocationsMap.put(jobId, rsMap);
         }
 
         DatasetDirectoryRecord[] records = resultSetsMap.get(rsId);
