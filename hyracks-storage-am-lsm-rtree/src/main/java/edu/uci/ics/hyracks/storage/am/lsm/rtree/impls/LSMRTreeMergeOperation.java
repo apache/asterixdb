@@ -10,21 +10,21 @@ import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.AbstractLSMRTree.LSMRTreeComponent;
 
 public class LSMRTreeMergeOperation implements ILSMIOOperation {
     private final ILSMIndex index;
-    private final List<Object> mergingComponents;
+    private final List<ILSMComponent> mergingComponents;
     private final ITreeIndexCursor cursor;
     private final FileReference rtreeMergeTarget;
     private final FileReference btreeMergeTarget;
     private final ILSMIOOperationCallback callback;
 
-    public LSMRTreeMergeOperation(ILSMIndex index, List<Object> mergingComponents, ITreeIndexCursor cursor,
+    public LSMRTreeMergeOperation(ILSMIndex index, List<ILSMComponent> mergingComponents, ITreeIndexCursor cursor,
             FileReference rtreeMergeTarget, FileReference btreeMergeTarget, ILSMIOOperationCallback callback) {
         this.index = index;
         this.mergingComponents = mergingComponents;
@@ -37,7 +37,7 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
     @Override
     public List<IODeviceHandle> getReadDevices() {
         List<IODeviceHandle> devs = new ArrayList<IODeviceHandle>();
-        for (Object o : mergingComponents) {
+        for (ILSMComponent o : mergingComponents) {
             LSMRTreeComponent component = (LSMRTreeComponent) o;
             devs.add(component.getRTree().getFileReference().getDevideHandle());
         }
@@ -73,7 +73,7 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
         return cursor;
     }
 
-    public List<Object> getMergingComponents() {
+    public List<ILSMComponent> getMergingComponents() {
         return mergingComponents;
     }
 

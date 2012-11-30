@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -13,21 +13,8 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.common;
+package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
+public enum LSMComponentState {
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
-
-public class DummyLSMComponentFinalizer implements ILSMComponentFinalizer {
-
-	@Override
-	public boolean isValid(Object lsmComponent)
-			throws HyracksDataException {
-		return true;
-	}
-
-	@Override
-	public void finalize(Object lsmComponent) throws HyracksDataException {
-	}
 }

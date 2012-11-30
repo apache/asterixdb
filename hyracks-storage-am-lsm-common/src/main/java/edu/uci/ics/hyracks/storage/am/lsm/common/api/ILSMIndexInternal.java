@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2012 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
 import java.util.List;
@@ -13,32 +28,33 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 public interface ILSMIndexInternal extends ILSMIndex {
 
-    public Object merge(List<Object> mergedComponents, ILSMIOOperation operation) throws HyracksDataException,
-            IndexException;
+    public ILSMComponent merge(List<ILSMComponent> mergedComponents, ILSMIOOperation operation)
+            throws HyracksDataException, IndexException;
 
     public void insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ictx) throws HyracksDataException,
             IndexException;
 
-    public void search(IIndexCursor cursor, List<Object> diskComponents, ISearchPredicate pred,
+    public void search(IIndexCursor cursor, List<ILSMComponent> diskComponents, ISearchPredicate pred,
             IIndexOperationContext ictx, boolean includeMemComponent, AtomicInteger searcherRefCount)
             throws HyracksDataException, IndexException;
 
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
             IndexException;
 
-    public void addMergedComponent(Object newComponent, List<Object> mergedComponents);
+    public void addMergedComponent(ILSMComponent newComponent, List<ILSMComponent> mergedComponents);
 
-    public void cleanUpAfterMerge(List<Object> mergedComponents) throws HyracksDataException;
+    public void cleanUpAfterMerge(List<ILSMComponent> mergedComponents) throws HyracksDataException;
 
-    public Object flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
+    public ILSMComponent flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
 
-    public void addFlushedComponent(Object index);
+    public void addFlushedComponent(ILSMComponent index);
 
     public IInMemoryFreePageManager getInMemoryFreePageManager();
 
-    public void resetInMemoryComponent() throws HyracksDataException;
+    public void resetMutableComponent() throws HyracksDataException;
 
-    public List<Object> getDiskComponents();
+    public List<ILSMComponent> getImmutableComponents();
 
-    public ILSMComponentFinalizer getComponentFinalizer();
+    public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException;
+
 }

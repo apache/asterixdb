@@ -7,8 +7,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 public interface ILSMIOOperationCallback {
     public void beforeOperation(ILSMIOOperation operation) throws HyracksDataException;
 
-    public void afterOperation(ILSMIOOperation operation, List<Object> oldComponents, Object newComponent)
+    public void afterOperation(ILSMIOOperation operation, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
             throws HyracksDataException;
 
-    public void afterFinalize(ILSMIOOperation operation, Object newComponent) throws HyracksDataException;
+    public void afterFinalize(ILSMIOOperation operation, ILSMComponent newComponent) throws HyracksDataException;
 }

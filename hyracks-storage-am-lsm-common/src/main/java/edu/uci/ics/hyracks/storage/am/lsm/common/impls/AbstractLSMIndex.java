@@ -15,54 +15,55 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class TreeIndexComponentFinalizer implements ILSMComponentFinalizer {
+public abstract class AbstractLSMIndex implements ILSMIndexInternal {
+    protected final ILSMHarness lsmHarness;
 
-    protected final IFileMapProvider fileMapProvider;
+    // In-memory components.   
+    protected final IInMemoryFreePageManager memFreePageManager;
 
-    public TreeIndexComponentFinalizer(IFileMapProvider fileMapProvider) {
-        this.fileMapProvider = fileMapProvider;
+    // On-disk components.    
+    protected final IBufferCache diskBufferCache;
+    protected final ILSMIndexFileManager fileManager;
+    protected final IFileMapProvider diskFileMapProvider;
+    protected final LinkedList<ILSMComponent> immutableComponents;
+
+    protected boolean isActivated;
+
+    public AbstractLSMIndex(IInMemoryFreePageManager memFreePageManager, IBufferCache diskBufferCache,
+            ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider,
+            ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
+            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler) {
+        this.memFreePageManager = memFreePageManager;
+        this.diskBufferCache = diskBufferCache;
+        this.diskFileMapProvider = diskFileMapProvider;
+        this.immutableComponents = new LinkedList<ILSMComponent>();
+        this.fileManager = fileManager;
+        ILSMOperationTracker opTracker = opTrackerFactory.createOperationTracker(this);
+        lsmHarness = new LSMHarness(this, flushController, mergePolicy, opTracker, ioScheduler);
+        isActivated = false;
     }
 
-    @Override
-    public boolean isValid(Object lsmComponent) throws HyracksDataException {
-        ITreeIndex treeIndex = (ITreeIndex) lsmComponent;
-        IBufferCache bufferCache = treeIndex.getBufferCache();
-        treeIndex.activate();
-        try {
-            int metadataPage = treeIndex.getFreePageManager().getFirstMetadataPage();
-            ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory()
-                    .createFrame();
-            ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(treeIndex.getFileId(), metadataPage),
-                    false);
-            page.acquireReadLatch();
-            try {
-                metadataFrame.setPage(page);
-                return metadataFrame.isValid();
-            } finally {
-                page.releaseReadLatch();
-                bufferCache.unpin(page);
-            }
-        } finally {
-            treeIndex.deactivate();
-        }
-    }
-
-    @Override
-    public void finalize(Object lsmComponent) throws HyracksDataException {
-        ITreeIndex treeIndex = (ITreeIndex) lsmComponent;
-        forceFlushDirtyPages(treeIndex);
-        markAsValid(treeIndex);
-    }
-    
     protected void forceFlushDirtyPages(ITreeIndex treeIndex) throws HyracksDataException {
         int fileId = treeIndex.getFileId();
         IBufferCache bufferCache = treeIndex.getBufferCache();
@@ -93,7 +94,7 @@ public class TreeIndexComponentFinalizer implements ILSMComponentFinalizer {
         bufferCache.force(fileId, true);
     }
 
-    protected void markAsValid(ITreeIndex treeIndex) throws HyracksDataException {
+    protected void markAsValidInternal(ITreeIndex treeIndex) throws HyracksDataException {
         int fileId = treeIndex.getFileId();
         IBufferCache bufferCache = treeIndex.getBufferCache();
         ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory().createFrame();
@@ -114,5 +115,46 @@ public class TreeIndexComponentFinalizer implements ILSMComponentFinalizer {
             metadataPage.releaseWriteLatch();
             bufferCache.unpin(metadataPage);
         }
+    }
+
+    @Override
+    public void addFlushedComponent(ILSMComponent index) {
+        immutableComponents.addFirst(index);
+    }
+
+    @Override
+    public void addMergedComponent(ILSMComponent newComponent, List<ILSMComponent> mergedComponents) {
+        immutableComponents.removeAll(mergedComponents);
+        immutableComponents.addLast(newComponent);
+    }
+
+    @Override
+    public IInMemoryFreePageManager getInMemoryFreePageManager() {
+        return memFreePageManager;
+    }
+
+    @Override
+    public List<ILSMComponent> getImmutableComponents() {
+        return immutableComponents;
+    }
+
+    @Override
+    public ILSMFlushController getFlushController() {
+        return lsmHarness.getFlushController();
+    }
+
+    @Override
+    public ILSMOperationTracker getOperationTracker() {
+        return lsmHarness.getOperationTracker();
+    }
+
+    @Override
+    public ILSMIOOperationScheduler getIOScheduler() {
+        return lsmHarness.getIOScheduler();
+    }
+
+    @Override
+    public IBufferCache getBufferCache() {
+        return diskBufferCache;
     }
 }

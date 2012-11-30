@@ -20,6 +20,8 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 
 /**
  * Provides file names for LSM on-disk components. Also cleans up invalid files.
@@ -37,15 +39,16 @@ public interface ILSMIndexFileManager {
 
     public FileReference createMergeFile(String relMergeFileName);
 
-    public Object getRelFlushFileName();
+    public LSMComponentFileReferences getRelFlushFileReference();
 
-    public Object getRelMergeFileName(String firstFileName, String lastFileName) throws HyracksDataException;
+    public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName)
+            throws HyracksDataException;
 
     public String getBaseDir();
 
     // Deletes invalid files, and returns list of valid files from baseDir.
     // The returned valid files are correctly sorted (based on the recency of data). 
-    public List<Object> cleanupAndGetValidFiles(ILSMComponentFinalizer componentFinalizer) throws HyracksDataException;
+    public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException, IndexException;
 
     public Comparator<String> getFileNameComparator();
 }

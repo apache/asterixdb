@@ -30,7 +30,7 @@ public interface ILSMHarness {
     
     public boolean noOp(ILSMIndexOperationContext ictx, boolean tryOperation) throws HyracksDataException;            
 
-    public List<Object> search(IIndexCursor cursor, ISearchPredicate pred, ILSMIndexOperationContext ctx,
+    public List<ILSMComponent> search(IIndexCursor cursor, ISearchPredicate pred, ILSMIndexOperationContext ctx,
             boolean includeMemComponent) throws HyracksDataException, IndexException;
 
     public void closeSearchCursor(AtomicInteger searcherRefCount, boolean includeMemComponent, ILSMIndexOperationContext ctx)
@@ -43,7 +43,7 @@ public interface ILSMHarness {
 
     public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
 
-    public void addBulkLoadedComponent(Object index) throws HyracksDataException, IndexException;
+    public void addBulkLoadedComponent(ILSMComponent index) throws HyracksDataException, IndexException;
 
     public ILSMIndex getIndex();
 

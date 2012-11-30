@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.common;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -25,11 +25,13 @@ import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class LSMIndexFileManager extends AbstractLSMIndexFileManager {
+public class DummyLSMIndexFileManager extends AbstractLSMIndexFileManager {
 
-    public LSMIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
+    public DummyLSMIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
             TreeIndexFactory<? extends ITreeIndex> treeFactory) {
         super(ioManager, fileMapProvider, file, treeFactory);
     }
@@ -42,11 +44,7 @@ public class LSMIndexFileManager extends AbstractLSMIndexFileManager {
         for (String fileName : files) {
             File file = new File(dir.getPath() + File.separator + fileName);
             FileReference fileRef = new FileReference(file);
-            if (isValidTreeIndex(treeFactory.createIndexInstance(fileRef))) {
-                allFiles.add(new ComparableFileName(fileRef));
-            } else {
-                file.delete();
-            }
+            allFiles.add(new ComparableFileName(fileRef));
         }
     }
 }

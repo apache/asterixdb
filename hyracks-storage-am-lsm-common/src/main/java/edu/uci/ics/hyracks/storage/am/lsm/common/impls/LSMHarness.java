@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -119,7 +120,7 @@ public class LSMHarness implements ILSMHarness {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Flushing LSM-Index: " + lsmIndex);
         }
-        Object newComponent = null;
+        ILSMComponent newComponent = null;
         try {
             operation.getCallback().beforeOperation(operation);
             newComponent = lsmIndex.flush(operation);
@@ -129,21 +130,21 @@ public class LSMHarness implements ILSMHarness {
             // the new component permanent, and mark it as valid (usually this means
             // forcing all pages of the tree to disk, possibly with some extra
             // information to mark the tree as valid).
-            lsmIndex.getComponentFinalizer().finalize(newComponent);
+            lsmIndex.markAsValid(newComponent);
         } finally {
             operation.getCallback().afterFinalize(operation, newComponent);
         }
-        lsmIndex.resetInMemoryComponent();
+        lsmIndex.resetMutableComponent();
         synchronized (diskComponentsSync) {
             lsmIndex.addFlushedComponent(newComponent);
-            mergePolicy.diskComponentAdded(lsmIndex, lsmIndex.getDiskComponents().size());
+            mergePolicy.diskComponentAdded(lsmIndex, lsmIndex.getImmutableComponents().size());
         }
 
         // Unblock entering threads waiting for the flush
         flushController.setFlushStatus(lsmIndex, false);
     }
 
-    public List<Object> search(IIndexCursor cursor, ISearchPredicate pred, ILSMIndexOperationContext ctx,
+    public List<ILSMComponent> search(IIndexCursor cursor, ISearchPredicate pred, ILSMIndexOperationContext ctx,
             boolean includeMemComponent) throws HyracksDataException, IndexException {
         // If the search doesn't include the in-memory component, then we don't have
         // to synchronize with a flush.
@@ -158,10 +159,10 @@ public class LSMHarness implements ILSMHarness {
         // flush adds another on-disk Tree.
         // Since this mode is only used for merging trees, it doesn't really
         // matter if the merge excludes the new on-disk Tree.
-        List<Object> diskComponentSnapshot = new ArrayList<Object>();
+        List<ILSMComponent> diskComponentSnapshot = new ArrayList<ILSMComponent>();
         AtomicInteger localSearcherRefCount = null;
         synchronized (diskComponentsSync) {
-            diskComponentSnapshot.addAll(lsmIndex.getDiskComponents());
+            diskComponentSnapshot.addAll(lsmIndex.getImmutableComponents());
             localSearcherRefCount = searcherRefCount;
             localSearcherRefCount.incrementAndGet();
         }
@@ -193,8 +194,8 @@ public class LSMHarness implements ILSMHarness {
         // (after we swap the searcher ref count).
         AtomicInteger localSearcherRefCount = searcherRefCount;
 
-        List<Object> mergedComponents = new ArrayList<Object>();
-        Object newComponent = null;
+        List<ILSMComponent> mergedComponents = new ArrayList<ILSMComponent>();
+        ILSMComponent newComponent = null;
         try {
             operation.getCallback().beforeOperation(operation);
             newComponent = lsmIndex.merge(mergedComponents, operation);
@@ -211,7 +212,7 @@ public class LSMHarness implements ILSMHarness {
             // the new component permanent, and mark it as valid (usually this means
             // forcing all pages of the tree to disk, possibly with some extra
             // information to mark the tree as valid).
-            lsmIndex.getComponentFinalizer().finalize(newComponent);
+            lsmIndex.markAsValid(newComponent);
         } finally {
             operation.getCallback().afterFinalize(operation, newComponent);
         }
@@ -262,30 +263,34 @@ public class LSMHarness implements ILSMHarness {
     }
 
     @Override
-    public void addBulkLoadedComponent(Object index) throws HyracksDataException, IndexException {
+    public void addBulkLoadedComponent(ILSMComponent index) throws HyracksDataException, IndexException {
         // The implementation of this call must take any necessary steps to make
         // the new component permanent, and mark it as valid (usually this means
         // forcing all pages of the tree to disk, possibly with some extra
         // information to mark the tree as valid).
-        lsmIndex.getComponentFinalizer().finalize(index);
+        lsmIndex.markAsValid(index);
         synchronized (diskComponentsSync) {
             lsmIndex.addFlushedComponent(index);
-            mergePolicy.diskComponentAdded(lsmIndex, lsmIndex.getDiskComponents().size());
+            mergePolicy.diskComponentAdded(lsmIndex, lsmIndex.getImmutableComponents().size());
         }
     }
 
+    @Override
     public ILSMFlushController getFlushController() {
         return flushController;
     }
 
+    @Override
     public ILSMOperationTracker getOperationTracker() {
         return opTracker;
     }
 
+    @Override
     public ILSMIOOperationScheduler getIOScheduler() {
         return ioScheduler;
     }
 
+    @Override
     public ILSMIndex getIndex() {
         return lsmIndex;
     }

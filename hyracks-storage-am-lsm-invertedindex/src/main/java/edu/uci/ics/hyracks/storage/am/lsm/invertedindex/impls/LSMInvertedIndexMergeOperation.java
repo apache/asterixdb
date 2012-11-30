@@ -24,23 +24,24 @@ import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndex.LSMInvertedIndexComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 
 public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
     private final ILSMIndex index;
-    private final List<Object> mergingComponents;
+    private final List<ILSMComponent> mergingComponents;
     private final IIndexCursor cursor;
     private final FileReference dictBTreeMergeTarget;
     private final FileReference deletedKeysBTreeMergeTarget;
     private final ILSMIOOperationCallback callback;
 
-    public LSMInvertedIndexMergeOperation(ILSMIndex index, List<Object> mergingComponents, IIndexCursor cursor,
-            FileReference dictBTreeMergeTarget, FileReference deletedKeysBTreeMergeTarget, ILSMIOOperationCallback callback) {
+    public LSMInvertedIndexMergeOperation(ILSMIndex index, List<ILSMComponent> mergingComponents, IIndexCursor cursor,
+            FileReference dictBTreeMergeTarget, FileReference deletedKeysBTreeMergeTarget,
+            ILSMIOOperationCallback callback) {
         this.index = index;
         this.mergingComponents = mergingComponents;
         this.cursor = cursor;
@@ -93,7 +94,7 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
         return cursor;
     }
 
-    public List<Object> getMergingComponents() {
+    public List<ILSMComponent> getMergingComponents() {
         return mergingComponents;
     }
 

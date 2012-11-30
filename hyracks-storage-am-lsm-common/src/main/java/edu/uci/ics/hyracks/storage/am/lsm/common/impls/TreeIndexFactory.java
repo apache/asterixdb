@@ -16,7 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -38,11 +37,5 @@ public abstract class TreeIndexFactory<T extends ITreeIndex> extends IndexFactor
         this.leafFrameFactory = leafFrameFactory;
         this.cmpFactories = cmpFactories;
         this.fieldCount = fieldCount;
-    }
-
-    public abstract T createIndexInstance(FileReference file);
-
-    public IBufferCache getBufferCache() {
-        return bufferCache;
     }
 }

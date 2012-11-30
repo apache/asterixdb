@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -27,8 +28,9 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexFileNameMapper;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -61,39 +63,45 @@ public class LSMInvertedIndexFileManager extends LSMIndexFileManager implements 
     }
 
     @Override
-    public Object getRelFlushFileName() {
-        String baseName = (String) super.getRelFlushFileName();
-        return new LSMInvertedIndexFileNameComponent(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX, baseName
-                + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX);
-
+    public LSMComponentFileReferences getRelFlushFileReference() {
+        Date date = new Date();
+        String ts = formatter.format(date);
+        String baseName = baseDir + ts + SPLIT_STRING + ts;
+        // Begin timestamp and end timestamp are identical since it is a flush
+        return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX),
+                createFlushFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX));
     }
 
     @Override
-    public Object getRelMergeFileName(String firstFileName, String lastFileName) throws HyracksDataException {
-        String baseName = (String) super.getRelMergeFileName(firstFileName, lastFileName);
-        return new LSMInvertedIndexFileNameComponent(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX, baseName
-                + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX);
+    public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName)
+            throws HyracksDataException {
+        String[] firstTimestampRange = firstFileName.split(SPLIT_STRING);
+        String[] lastTimestampRange = lastFileName.split(SPLIT_STRING);
+
+        String baseName = baseDir + firstTimestampRange[0] + SPLIT_STRING + lastTimestampRange[1];
+        // Get the range of timestamps by taking the earliest and the latest timestamps
+        return new LSMComponentFileReferences(createMergeFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX),
+                createMergeFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX));
     }
 
     @Override
-    public List<Object> cleanupAndGetValidFiles(ILSMComponentFinalizer componentFinalizer) throws HyracksDataException {
-        List<Object> validFiles = new ArrayList<Object>();
+    public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException, IndexException {
+        List<LSMComponentFileReferences> validFiles = new ArrayList<LSMComponentFileReferences>();
         ArrayList<ComparableFileName> allDictBTreeFiles = new ArrayList<ComparableFileName>();
         ArrayList<ComparableFileName> allDeletedKeysBTreeFiles = new ArrayList<ComparableFileName>();
 
         // Gather files from all IODeviceHandles.
         for (IODeviceHandle dev : ioManager.getIODevices()) {
-            cleanupAndGetValidFilesInternal(dev, deletedKeysBTreeFilter, btreeFactory, componentFinalizer,
-                    allDeletedKeysBTreeFiles);
+            cleanupAndGetValidFilesInternal(dev, deletedKeysBTreeFilter, btreeFactory, allDeletedKeysBTreeFiles);
             HashSet<String> deletedKeysBTreeFilesSet = new HashSet<String>();
-            for (ComparableFileName cmpFileName : allDictBTreeFiles) {
+            for (ComparableFileName cmpFileName : allDeletedKeysBTreeFiles) {
                 int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
                 deletedKeysBTreeFilesSet.add(cmpFileName.fileName.substring(0, index));
             }
             // We use the dictionary BTree of the inverted index for validation.
             // List of valid dictionary BTree files that may or may not have a deleted-keys BTree buddy. Will check for buddies below.
             ArrayList<ComparableFileName> tmpAllBTreeFiles = new ArrayList<ComparableFileName>();
-            cleanupAndGetValidFilesInternal(dev, dictBTreeFilter, btreeFactory, componentFinalizer, tmpAllBTreeFiles);
+            cleanupAndGetValidFilesInternal(dev, dictBTreeFilter, btreeFactory, tmpAllBTreeFiles);
             // Look for buddy deleted-keys BTrees for all valid dictionary BTrees. 
             // If no buddy is found, delete the file, otherwise add the dictionary BTree to allBTreeFiles. 
             for (ComparableFileName cmpFileName : tmpAllBTreeFiles) {
@@ -123,8 +131,8 @@ public class LSMInvertedIndexFileManager extends LSMIndexFileManager implements 
         }
 
         if (allDictBTreeFiles.size() == 1 && allDeletedKeysBTreeFiles.size() == 1) {
-            validFiles.add(new LSMInvertedIndexFileNameComponent(allDictBTreeFiles.get(0).fullPath,
-                    allDeletedKeysBTreeFiles.get(0).fullPath));
+            validFiles.add(new LSMComponentFileReferences(allDictBTreeFiles.get(0).fileRef, allDeletedKeysBTreeFiles
+                    .get(0).fileRef));
             return validFiles;
         }
 
@@ -175,8 +183,7 @@ public class LSMInvertedIndexFileManager extends LSMIndexFileManager implements 
         while (dictBTreeFileIter.hasNext() && deletedKeysBTreeIter.hasNext()) {
             ComparableFileName cmpDictBTreeFile = dictBTreeFileIter.next();
             ComparableFileName cmpDeletedKeysBTreeFile = deletedKeysBTreeIter.next();
-            validFiles.add(new LSMInvertedIndexFileNameComponent(cmpDictBTreeFile.fullPath,
-                    cmpDeletedKeysBTreeFile.fullPath));
+            validFiles.add(new LSMComponentFileReferences(cmpDictBTreeFile.fileRef, cmpDeletedKeysBTreeFile.fileRef));
         }
 
         return validFiles;
@@ -187,27 +194,5 @@ public class LSMInvertedIndexFileManager extends LSMIndexFileManager implements 
         int index = dictBTreeFilePath.lastIndexOf(SPLIT_STRING);
         String file = dictBTreeFilePath.substring(0, index);
         return file + SPLIT_STRING + INVLISTS_SUFFIX;
-    }
-
-    /**
-     * No need to store the inverted-lists file name because it can be mapped from the
-     * dictionary BTree file name. 
-     */
-    public class LSMInvertedIndexFileNameComponent {
-        private final String dictBTreeFileName;
-        private final String deletedKeysBTreeFileName;
-
-        LSMInvertedIndexFileNameComponent(String dictBTreeFileName, String deletedKeysBTreeFileName) {
-            this.dictBTreeFileName = dictBTreeFileName;
-            this.deletedKeysBTreeFileName = deletedKeysBTreeFileName;
-        }
-
-        public String getDictBTreeFileName() {
-            return dictBTreeFileName;
-        }
-
-        public String getDeletedKeysBTreeFileName() {
-            return deletedKeysBTreeFileName;
-        }
     }
 }

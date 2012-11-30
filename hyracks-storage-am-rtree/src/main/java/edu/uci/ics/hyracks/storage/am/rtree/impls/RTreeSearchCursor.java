@@ -234,12 +234,8 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void reset() {
-        try {
-            close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void reset() throws HyracksDataException {
+        close();
     }
 
     @Override

@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -28,7 +29,8 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFinalizer;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -60,29 +62,36 @@ public class LSMRTreeFileManager extends LSMIndexFileManager {
     }
 
     @Override
-    public Object getRelFlushFileName() {
-        String baseName = (String) super.getRelFlushFileName();
-        return new LSMRTreeFileNameComponent(baseName + SPLIT_STRING + RTREE_STRING, baseName + SPLIT_STRING
-                + BTREE_STRING);
-
+    public LSMComponentFileReferences getRelFlushFileReference() {
+        Date date = new Date();
+        String ts = formatter.format(date);
+        String baseName = baseDir + ts + SPLIT_STRING + ts;
+        // Begin timestamp and end timestamp are identical since it is a flush
+        return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + RTREE_STRING),
+                createFlushFile(baseName + SPLIT_STRING + BTREE_STRING));
     }
 
     @Override
-    public Object getRelMergeFileName(String firstFileName, String lastFileName) throws HyracksDataException {
-        String baseName = (String) super.getRelMergeFileName(firstFileName, lastFileName);
-        return new LSMRTreeFileNameComponent(baseName + SPLIT_STRING + RTREE_STRING, baseName + SPLIT_STRING
-                + BTREE_STRING);
+    public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName)
+            throws HyracksDataException {
+        String[] firstTimestampRange = firstFileName.split(SPLIT_STRING);
+        String[] lastTimestampRange = lastFileName.split(SPLIT_STRING);
+
+        String baseName = baseDir + firstTimestampRange[0] + SPLIT_STRING + lastTimestampRange[1];
+        // Get the range of timestamps by taking the earliest and the latest timestamps
+        return new LSMComponentFileReferences(createMergeFile(baseName + SPLIT_STRING + RTREE_STRING),
+                createMergeFile(baseName + SPLIT_STRING + BTREE_STRING));
     }
 
     @Override
-    public List<Object> cleanupAndGetValidFiles(ILSMComponentFinalizer componentFinalizer) throws HyracksDataException {
-        List<Object> validFiles = new ArrayList<Object>();
+    public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException, IndexException {
+        List<LSMComponentFileReferences> validFiles = new ArrayList<LSMComponentFileReferences>();
         ArrayList<ComparableFileName> allRTreeFiles = new ArrayList<ComparableFileName>();
         ArrayList<ComparableFileName> allBTreeFiles = new ArrayList<ComparableFileName>();
 
         // Gather files from all IODeviceHandles.
         for (IODeviceHandle dev : ioManager.getIODevices()) {
-            cleanupAndGetValidFilesInternal(dev, btreeFilter, btreeFactory, componentFinalizer, allBTreeFiles);
+            cleanupAndGetValidFilesInternal(dev, btreeFilter, btreeFactory, allBTreeFiles);
             HashSet<String> btreeFilesSet = new HashSet<String>();
             for (ComparableFileName cmpFileName : allBTreeFiles) {
                 int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
@@ -90,7 +99,7 @@ public class LSMRTreeFileManager extends LSMIndexFileManager {
             }
             // List of valid RTree files that may or may not have a BTree buddy. Will check for buddies below.
             ArrayList<ComparableFileName> tmpAllRTreeFiles = new ArrayList<ComparableFileName>();
-            cleanupAndGetValidFilesInternal(dev, rtreeFilter, rtreeFactory, componentFinalizer, tmpAllRTreeFiles);
+            cleanupAndGetValidFilesInternal(dev, rtreeFilter, rtreeFactory, tmpAllRTreeFiles);
             // Look for buddy BTrees for all valid RTrees. 
             // If no buddy is found, delete the file, otherwise add the RTree to allRTreeFiles. 
             for (ComparableFileName cmpFileName : tmpAllRTreeFiles) {
@@ -117,7 +126,7 @@ public class LSMRTreeFileManager extends LSMIndexFileManager {
         }
 
         if (allRTreeFiles.size() == 1 && allBTreeFiles.size() == 1) {
-            validFiles.add(new LSMRTreeFileNameComponent(allRTreeFiles.get(0).fullPath, allBTreeFiles.get(0).fullPath));
+            validFiles.add(new LSMComponentFileReferences(allRTreeFiles.get(0).fileRef, allBTreeFiles.get(0).fileRef));
             return validFiles;
         }
 
@@ -168,27 +177,9 @@ public class LSMRTreeFileManager extends LSMIndexFileManager {
         while (rtreeFileIter.hasNext() && btreeFileIter.hasNext()) {
             ComparableFileName cmpRTreeFileName = rtreeFileIter.next();
             ComparableFileName cmpBTreeFileName = btreeFileIter.next();
-            validFiles.add(new LSMRTreeFileNameComponent(cmpRTreeFileName.fullPath, cmpBTreeFileName.fullPath));
+            validFiles.add(new LSMComponentFileReferences(cmpRTreeFileName.fileRef, cmpBTreeFileName.fileRef));
         }
 
         return validFiles;
-    }
-
-    public class LSMRTreeFileNameComponent {
-        private final String rtreeFileName;
-        private final String btreeFileName;
-
-        LSMRTreeFileNameComponent(String rtreeFileName, String btreeFileName) {
-            this.rtreeFileName = rtreeFileName;
-            this.btreeFileName = btreeFileName;
-        }
-
-        public String getRTreeFileName() {
-            return rtreeFileName;
-        }
-
-        public String getBTreeFileName() {
-            return btreeFileName;
-        }
     }
 }

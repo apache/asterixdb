@@ -6,11 +6,11 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 
 public class ReferenceCountingOperationTracker implements ILSMOperationTracker {
@@ -25,8 +25,7 @@ public class ReferenceCountingOperationTracker implements ILSMOperationTracker {
 
     @Override
     public synchronized boolean beforeOperation(ISearchOperationCallback searchCallback,
-            IModificationOperationCallback modificationCallback, boolean tryOperation)
-            throws HyracksDataException {
+            IModificationOperationCallback modificationCallback, boolean tryOperation) throws HyracksDataException {
         // Wait for pending flushes to complete.
         // If flushFlag is set, then the flush is queued to occur by the last exiting thread.
         // This operation should wait for that flush to occur before proceeding.
@@ -71,13 +70,13 @@ public class ReferenceCountingOperationTracker implements ILSMOperationTracker {
         }
 
         @Override
-        public void afterOperation(ILSMIOOperation operation, List<Object> oldComponents, Object newComponent)
-                throws HyracksDataException {
+        public void afterOperation(ILSMIOOperation operation, List<ILSMComponent> oldComponents,
+                ILSMComponent newComponent) throws HyracksDataException {
             // Do nothing.
         }
 
         @Override
-        public void afterFinalize(ILSMIOOperation operation, Object newComponent) throws HyracksDataException {
+        public void afterFinalize(ILSMIOOperation operation, ILSMComponent newComponent) throws HyracksDataException {
             ReferenceCountingOperationTracker.this.notifyAll();
         }
     }
