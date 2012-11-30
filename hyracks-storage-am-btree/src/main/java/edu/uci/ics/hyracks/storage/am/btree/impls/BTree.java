@@ -997,14 +997,6 @@ public class BTree extends AbstractTreeIndex {
             }
         }
 
-        protected void handleException() throws HyracksDataException {
-            // Unlatch and unpin pages.
-            for (NodeFrontier nodeFrontier : nodeFrontiers) {
-                nodeFrontier.page.releaseWriteLatch();
-                bufferCache.unpin(nodeFrontier.page);
-            }
-        }
-
         protected void propagateBulk(int level) throws HyracksDataException {
             if (splitKey.getBuffer() == null)
                 return;

@@ -289,6 +289,14 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
 
         public abstract void add(ITupleReference tuple) throws IndexException, HyracksDataException;
 
+        protected void handleException() throws HyracksDataException {
+            // Unlatch and unpin pages.
+            for (NodeFrontier nodeFrontier : nodeFrontiers) {
+                nodeFrontier.page.releaseWriteLatch();
+                bufferCache.unpin(nodeFrontier.page);
+            }
+        }
+
         @Override
         public void end() throws HyracksDataException {
             // copy the root generated from the bulk-load to *the* root page location

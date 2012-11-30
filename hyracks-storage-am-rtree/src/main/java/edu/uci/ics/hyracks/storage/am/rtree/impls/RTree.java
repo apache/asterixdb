@@ -870,34 +870,43 @@ public class RTree extends AbstractTreeIndex {
 
         @Override
         public void add(ITupleReference tuple) throws HyracksDataException {
-            NodeFrontier leafFrontier = nodeFrontiers.get(0);
+            try {
+                NodeFrontier leafFrontier = nodeFrontiers.get(0);
 
-            int spaceNeeded = tupleWriter.bytesRequired(tuple) + slotSize;
-            int spaceUsed = leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace();
+                int spaceNeeded = tupleWriter.bytesRequired(tuple) + slotSize;
+                int spaceUsed = leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace();
 
-            // try to free space by compression
-            if (spaceUsed + spaceNeeded > leafMaxBytes) {
-                leafFrame.compress();
-                spaceUsed = leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace();
-            }
+                // try to free space by compression
+                if (spaceUsed + spaceNeeded > leafMaxBytes) {
+                    leafFrame.compress();
+                    spaceUsed = leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace();
+                }
 
-            if (spaceUsed + spaceNeeded > leafMaxBytes) {
-                propagateBulk(1, false);
+                if (spaceUsed + spaceNeeded > leafMaxBytes) {
+                    propagateBulk(1, false);
 
-                leafFrontier.pageId = freePageManager.getFreePage(metaFrame);
+                    leafFrontier.pageId = freePageManager.getFreePage(metaFrame);
 
-                leafFrontier.page.releaseWriteLatch();
-                bufferCache.unpin(leafFrontier.page);
+                    leafFrontier.page.releaseWriteLatch();
+                    bufferCache.unpin(leafFrontier.page);
 
-                leafFrontier.page = bufferCache
-                        .pin(BufferedFileHandle.getDiskPageId(fileId, leafFrontier.pageId), true);
-                leafFrontier.page.acquireWriteLatch();
+                    leafFrontier.page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, leafFrontier.pageId),
+                            true);
+                    leafFrontier.page.acquireWriteLatch();
+                    leafFrame.setPage(leafFrontier.page);
+                    leafFrame.initBuffer((byte) 0);
+                }
+
                 leafFrame.setPage(leafFrontier.page);
-                leafFrame.initBuffer((byte) 0);
+                leafFrame.insert(tuple, -1);
+            } catch (HyracksDataException e) {
+                handleException();
+                throw e;
+            } catch (RuntimeException e) {
+                handleException();
+                throw e;
             }
 
-            leafFrame.setPage(leafFrontier.page);
-            leafFrame.insert(tuple, -1);
         }
 
         public void end() throws HyracksDataException {
