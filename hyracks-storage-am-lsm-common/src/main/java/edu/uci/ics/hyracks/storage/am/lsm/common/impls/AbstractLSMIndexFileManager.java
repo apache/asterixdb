@@ -128,14 +128,14 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         f.delete();
     }
 
-    public FileReference createFlushFile(String relFlushFileName) {
+    protected FileReference createFlushFile(String relFlushFileName) {
         // Assigns new files to I/O devices in round-robin fashion.
         IODeviceHandle dev = ioManager.getIODevices().get(ioDeviceIndex);
         ioDeviceIndex = (ioDeviceIndex + 1) % ioManager.getIODevices().size();
         return dev.createFileReference(relFlushFileName);
     }
 
-    public FileReference createMergeFile(String relMergeFileName) {
+    protected FileReference createMergeFile(String relMergeFileName) {
         return createFlushFile(relMergeFileName);
     }
 

@@ -19,7 +19,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 
@@ -34,10 +33,6 @@ public interface ILSMIndexFileManager {
     public void createDirs();
 
     public void deleteDirs();
-
-    public FileReference createFlushFile(String relFlushFileName);
-
-    public FileReference createMergeFile(String relMergeFileName);
 
     public LSMComponentFileReferences getRelFlushFileReference();
 
