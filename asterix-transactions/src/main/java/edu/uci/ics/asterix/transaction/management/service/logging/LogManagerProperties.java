@@ -40,13 +40,14 @@ public class LogManagerProperties implements Serializable {
 
     private int logPageSize = 128 * 1024; // 128 KB
     private int numLogPages = 8; // number of log pages in the log buffer.
-    private long logPartitionSize = logPageSize * 250; // maximum size of each
-                                                       // log file
+
     private long groupCommitWaitPeriod = 0; // time in milliseconds for which a
     // commit record will wait before
     // the housing page is marked for
     // flushing.
     private int logBufferSize = logPageSize * numLogPages;
+    // maximum size of each log file
+    private long logPartitionSize = logBufferSize * 1024 * 2; //2GB
 
     public int logMagicNumber = 123456789;
 

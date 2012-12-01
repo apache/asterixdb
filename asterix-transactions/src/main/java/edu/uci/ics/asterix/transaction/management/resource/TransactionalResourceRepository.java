@@ -42,6 +42,8 @@ public class TransactionalResourceRepository {
     public void registerTransactionalResource(long resourceId, Object resource) {
         synchronized (resourceRepository) {
             mutableResourceId.setId(resourceId);
+//            MutableResourceId newMutableResourceId = new MutableResourceId(resourceId);
+//            resourceRepository.put(newMutableResourceId, resource);
             if (resourceRepository.get(resourceId) == null) {
                 MutableResourceId newMutableResourceId = new MutableResourceId(resourceId);
                 resourceRepository.put(newMutableResourceId, resource);

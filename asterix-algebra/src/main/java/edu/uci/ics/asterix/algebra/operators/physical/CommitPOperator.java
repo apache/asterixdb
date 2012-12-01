@@ -42,11 +42,14 @@ public class CommitPOperator extends AbstractPhysicalOperator {
     private final List<LogicalVariable> primaryKeyLogicalVars;
     private final JobId jobId;
     private final int datasetId;
+    private final boolean isWriteTransaction;
 
-    public CommitPOperator(JobId jobId, int datasetId, List<LogicalVariable> primaryKeyLogicalVars) {
+    public CommitPOperator(JobId jobId, int datasetId, List<LogicalVariable> primaryKeyLogicalVars,
+            boolean isWriteTransaction) {
         this.jobId = jobId;
         this.datasetId = datasetId;
         this.primaryKeyLogicalVars = primaryKeyLogicalVars;
+        this.isWriteTransaction = isWriteTransaction;
     }
 
     @Override
@@ -85,7 +88,7 @@ public class CommitPOperator extends AbstractPhysicalOperator {
                 primaryKeyLogicalVars, varTypeEnv, context);
 
         CommitRuntimeFactory runtime = new CommitRuntimeFactory(jobId, datasetId, primaryKeyFields,
-                binaryHashFunctionFactories);
+                binaryHashFunctionFactories, isWriteTransaction);
         builder.contributeMicroOperator(op, runtime, recDesc);
         ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);

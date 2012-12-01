@@ -46,7 +46,6 @@ import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.logging.PhysicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
-import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -59,6 +58,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
  */
 public class RecoveryManager implements IRecoveryManager {
 
+    public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(RecoveryManager.class.getName());
     private TransactionSubsystem txnSubsystem;
 
@@ -176,6 +176,9 @@ public class RecoveryManager implements IRecoveryManager {
         Map<TxnId, List<Long>> loserTxnTable = new HashMap<TxnId, List<Long>>();
         TxnId tempKeyTxnId = new TxnId(-1, -1, -1);
 
+        int updateLogCount = 0;
+        int commitLogCount = 0;
+
         // Obtain the first log record written by the Job
         PhysicalLogLocator firstLSNLogLocator = txnContext.getFirstLogLocator();
         PhysicalLogLocator lastLSNLogLocator = txnContext.getLastLogLocator();
@@ -212,10 +215,10 @@ public class RecoveryManager implements IRecoveryManager {
         List<Long> undoLSNSet = null;
 
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info(" collecting loser transaction's LSNs from " + firstLSNLogLocator.getLsn() + " to " +
-                    + lastLSNLogLocator.getLsn());
+            LOGGER.info(" collecting loser transaction's LSNs from " + firstLSNLogLocator.getLsn() + " to "
+                    + +lastLSNLogLocator.getLsn());
         }
-        
+
         while (currentLogLocator.getLsn() != lastLSNLogLocator.getLsn()) {
             try {
                 valid = logCursor.next(currentLogLocator);
@@ -229,13 +232,13 @@ public class RecoveryManager implements IRecoveryManager {
                     break;//End of Log File
                 }
             }
-            
+
             if (LogManager.IS_DEBUG_MODE) {
                 System.out.println(logManager.getLogRecordHelper().getLogRecordForDisplay(currentLogLocator));
             }
 
-            tempKeyTxnId.setTxnId(logRecordHelper.getJobId(currentLogLocator), logRecordHelper.getDatasetId(currentLogLocator),
-                    logRecordHelper.getPKHashValue(currentLogLocator));
+            tempKeyTxnId.setTxnId(logRecordHelper.getJobId(currentLogLocator),
+                    logRecordHelper.getDatasetId(currentLogLocator), logRecordHelper.getPKHashValue(currentLogLocator));
             logType = logRecordHelper.getLogType(currentLogLocator);
 
             switch (logType) {
@@ -243,17 +246,28 @@ public class RecoveryManager implements IRecoveryManager {
                     undoLSNSet = loserTxnTable.get(tempKeyTxnId);
                     if (undoLSNSet == null) {
                         TxnId txnId = new TxnId(logRecordHelper.getJobId(currentLogLocator),
-                                logRecordHelper.getDatasetId(currentLogLocator), logRecordHelper.getPKHashValue(currentLogLocator));
+                                logRecordHelper.getDatasetId(currentLogLocator),
+                                logRecordHelper.getPKHashValue(currentLogLocator));
                         undoLSNSet = new ArrayList<Long>();
                         loserTxnTable.put(txnId, undoLSNSet);
                     }
                     undoLSNSet.add(currentLogLocator.getLsn());
+                    if (IS_DEBUG_MODE) {
+                        updateLogCount++;
+                        System.out.println("" + Thread.currentThread().getId() + "======> update["
+                                + currentLogLocator.getLsn() + "]:" + tempKeyTxnId);
+                    }
                     break;
 
                 case LogType.COMMIT:
                     undoLSNSet = loserTxnTable.get(tempKeyTxnId);
                     if (undoLSNSet != null) {
                         loserTxnTable.remove(tempKeyTxnId);
+                    }
+                    if (IS_DEBUG_MODE) {
+                        commitLogCount++;
+                        System.out.println("" + Thread.currentThread().getId() + "======> commit["
+                                + currentLogLocator.getLsn() + "]" + tempKeyTxnId);
                     }
                     break;
 
@@ -266,11 +280,13 @@ public class RecoveryManager implements IRecoveryManager {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(" undoing loser transaction's effect");
         }
-        
+
         TxnId txnId = null;
         Iterator<Entry<TxnId, List<Long>>> iter = loserTxnTable.entrySet().iterator();
         byte resourceMgrId;
+        int undoCount = 0;
         while (iter.hasNext()) {
+
             Map.Entry<TxnId, List<Long>> loserTxn = (Map.Entry<TxnId, List<Long>>) iter.next();
             txnId = loserTxn.getKey();
 
@@ -280,7 +296,7 @@ public class RecoveryManager implements IRecoveryManager {
 
             for (long undoLSN : undoLSNSet) {
                 // here, all the log records are UPDATE type. So, we don't need to check the type again.
-                
+
                 //read the corresponding log record to be undone.
                 logManager.readLog(undoLSN, currentLogLocator);
 
@@ -305,11 +321,19 @@ public class RecoveryManager implements IRecoveryManager {
                             resourceMgrId, resourceMgr);
                 }
                 resourceMgr.undo(logRecordHelper, currentLogLocator);
+
+                if (IS_DEBUG_MODE) {
+                    undoCount++;
+                }
             }
         }
-        
+
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(" undone loser transaction's effect");
+        }
+        if (IS_DEBUG_MODE) {
+            System.out.println("UpdateLogCount/CommitLogCount/UndoCount:" + updateLogCount + "/" + commitLogCount + "/"
+                    + undoCount);
         }
     }
 }
@@ -338,6 +362,11 @@ class TxnId {
     }
 
     @Override
+    public String toString() {
+        return "[" + jobId + "," + datasetId + "," + pkHashVal + "]";
+    }
+
+    @Override
     public int hashCode() {
         return pkHashVal;
     }
@@ -347,7 +376,7 @@ class TxnId {
         if (o == this) {
             return true;
         }
-        if (!(o instanceof JobId)) {
+        if (!(o instanceof TxnId)) {
             return false;
         }
         TxnId txnId = (TxnId) o;

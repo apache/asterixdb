@@ -27,6 +27,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.FieldsHash
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext.TransactionType;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntime;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
@@ -46,6 +47,7 @@ public class CommitRuntime implements IPushRuntime {
     private final DatasetId datasetId;
     private final int[] primaryKeyFields;
     private final IBinaryHashFunction[] primaryKeyHashFunctions;
+    private final boolean isWriteTransaction;
 
     private TransactionContext transactionContext;
     private RecordDescriptor inputRecordDesc;
@@ -53,7 +55,7 @@ public class CommitRuntime implements IPushRuntime {
     private FrameTupleReference frameTupleReference;
 
     public CommitRuntime(IHyracksTaskContext ctx, JobId jobId, int datasetId, int[] primaryKeyFields,
-            IBinaryHashFunctionFactory[] binaryHashFunctionFactories) {
+            IBinaryHashFunctionFactory[] binaryHashFunctionFactories, boolean isWriteTransaction) {
         this.hyracksTaskCtx = ctx;
         AsterixAppRuntimeContext runtimeCtx = (AsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
                 .getApplicationObject();
@@ -66,12 +68,15 @@ public class CommitRuntime implements IPushRuntime {
             this.primaryKeyHashFunctions[i] = binaryHashFunctionFactories[i].createBinaryHashFunction();
         }
         this.frameTupleReference = new FrameTupleReference();
+        this.isWriteTransaction = isWriteTransaction;
     }
 
     @Override
     public void open() throws HyracksDataException {
         try {
             transactionContext = transactionManager.getTransactionContext(jobId);
+            transactionContext.setTransactionType(isWriteTransaction ? TransactionType.READ_WRITE
+                    : TransactionType.READ);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }

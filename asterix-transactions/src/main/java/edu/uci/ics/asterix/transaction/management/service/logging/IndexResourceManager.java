@@ -43,6 +43,8 @@ public class IndexResourceManager implements IResourceManager {
         long resourceId = logRecordHelper.getResourceId(logLocator);
         int offset = logRecordHelper.getLogContentBeginPos(logLocator);
 
+        //TODO
+        //replace TransactionResourceRepository with IndexLifeCycleManager
         // look up the repository to obtain the resource object
         IIndex index = (IIndex) provider.getTransactionalResourceRepository().getTransactionalResource(resourceId);
 
@@ -95,9 +97,6 @@ public class IndexResourceManager implements IResourceManager {
                     indexAccessor.physicalDelete(newTuple);
                 }
             } else {
-                //For LSMRtree and LSMInvertedIndex
-                //delete --> insert
-                //insert --> delete
                 if (newOperation == (byte) IndexOperation.DELETE.ordinal()) {
                     indexAccessor.insert(newTuple);
                 } else {

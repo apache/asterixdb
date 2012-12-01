@@ -203,6 +203,7 @@ public class APIFramework {
 
         edu.uci.ics.asterix.transaction.management.service.transaction.JobId asterixJobId = JobIdFactory
                 .generateJobId();
+        queryMetadataProvider.setJobId(asterixJobId);
         AqlExpressionToPlanTranslator t = new AqlExpressionToPlanTranslator(queryMetadataProvider, varCounter,
                 outputDatasetName, statement);
 

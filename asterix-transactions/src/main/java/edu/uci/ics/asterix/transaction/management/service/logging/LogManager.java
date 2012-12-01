@@ -36,7 +36,6 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 
 public class LogManager implements ILogManager {
 
-    
     public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(LogManager.class.getName());
     private TransactionSubsystem provider;
@@ -156,7 +155,7 @@ public class LogManager implements ILogManager {
     }
 
     public void addFlushRequest(int pageIndex) {
-        pendingFlushRequests[pageIndex].add(Thread.currentThread());
+        pendingFlushRequests[pageIndex].add(pendingFlushRequests);
     }
 
     public AtomicLong getLastFlushedLsn() {
@@ -427,6 +426,9 @@ public class LogManager implements ILogManager {
             }
 
             if (forwardPage) {
+                //TODO 
+                //this is not safe since the incoming thread may reach the same page slot with this page 
+                //(differ by the log buffer size)
                 logPageStatus[prevPage].set(PageState.INACTIVE); // mark
                 // previous
                 // page
@@ -491,8 +493,8 @@ public class LogManager implements ILogManager {
 
     @Override
     public void log(byte logType, TransactionContext context, int datasetId, int PKHashValue, long resourceId,
-            byte resourceMgrId, int logContentSize, ReusableLogContentObject reusableLogContentObject,
-            ILogger logger, LogicalLogLocator logicalLogLocator) throws ACIDException {
+            byte resourceMgrId, int logContentSize, ReusableLogContentObject reusableLogContentObject, ILogger logger,
+            LogicalLogLocator logicalLogLocator) throws ACIDException {
         /*
          * logLocator is a re-usable object that is appropriately set in each
          * invocation. If the reference is null, the log manager must throw an
@@ -531,6 +533,9 @@ public class LogManager implements ILogManager {
             previousLSN = context.getLastLogLocator().getLsn();
             currentLSN = getLsn(totalLogSize, logType);
             context.setLastLSN(currentLSN);
+            if (IS_DEBUG_MODE) {
+                System.out.println("--------------> LSN(" + currentLSN + ") is allocated");
+            }
             logicalLogLocator.setLsn(currentLSN);
         }
 
@@ -567,7 +572,7 @@ public class LogManager implements ILogManager {
              */
             logRecordHelper.writeLogHeader(logicalLogLocator, logType, context, datasetId, PKHashValue, previousLSN,
                     resourceId, resourceMgrId, logContentSize);
-            
+
             // increment the offset so that the transaction can fill up the
             // content in the correct region of the allocated space.
             logicalLogLocator.increaseMemoryOffset(logRecordHelper.getLogHeaderSize(logType));
@@ -585,7 +590,8 @@ public class LogManager implements ILogManager {
                 logger.log(context, logicalLogLocator, logContentSize, reusableLogContentObject);
                 logger.postLog(context, reusableLogContentObject);
                 if (IS_DEBUG_MODE) {
-                    logicalLogLocator.setMemoryOffset(logicalLogLocator.getMemoryOffset() - logRecordHelper.getLogHeaderSize(logType));
+                    logicalLogLocator.setMemoryOffset(logicalLogLocator.getMemoryOffset()
+                            - logRecordHelper.getLogHeaderSize(logType));
                     System.out.println(logRecordHelper.getLogRecordForDisplay(logicalLogLocator));
                     logicalLogLocator.increaseMemoryOffset(logRecordHelper.getLogHeaderSize(logType));
                 }
@@ -598,8 +604,12 @@ public class LogManager implements ILogManager {
             int startPosChecksum = logicalLogLocator.getMemoryOffset() - logRecordHelper.getLogHeaderSize(logType);
             int length = totalLogSize - logRecordHelper.getLogChecksumSize();
             long checksum = DataUtil.getChecksum(logPages[pageIndex], startPosChecksum, length);
-            logPages[pageIndex].writeLong(pageOffset + logRecordHelper.getLogHeaderSize(logType)
-                    + logContentSize, checksum);
+            logPages[pageIndex].writeLong(pageOffset + logRecordHelper.getLogHeaderSize(logType) + logContentSize,
+                    checksum);
+
+            if (IS_DEBUG_MODE) {
+                System.out.println("--------------> LSN(" + currentLSN + ") is written");
+            }
 
             /*
              * release the ownership as the log record has been placed in
@@ -614,8 +624,7 @@ public class LogManager implements ILogManager {
              * If the transaction thread happens to be the last owner of the log
              * page the page must by marked as a candidate to be flushed.
              */
-            if (pageDirtyCount == 0) {
-                logPageStatus[pageIndex].set(PageState.INACTIVE);
+            if (pageDirtyCount == 0 && logPageStatus[pageIndex].get() == PageState.INACTIVE) {
                 addFlushRequest(pageIndex);
                 addedFlushRequest = true;
             }
@@ -627,24 +636,13 @@ public class LogManager implements ILogManager {
              * been flushed to disk because the containing log page filled up.
              */
             if (logType == LogType.COMMIT) {
-                if (getLastFlushedLsn().get() < currentLSN) {
-                    if (!addedFlushRequest) {
-                        addFlushRequest(pageIndex);
-                    }
-
-                    /*
-                     * the commit log record is still in log buffer. need to
-                     * wait until the containing log page is flushed. When the
-                     * log flusher thread does flush the page, it notifies all
-                     * waiting threads of the flush event.
-                     */
-                    synchronized (logPages[pageIndex]) {
-                        while (getLastFlushedLsn().get() < currentLSN) {
-                            logPages[pageIndex].wait();
-                        }
+                synchronized (logPages[pageIndex]) {
+                    while (getLastFlushedLsn().get() < currentLSN) {
+                        logPages[pageIndex].wait();
                     }
                 }
             }
+
         } catch (Exception e) {
             e.printStackTrace();
             throw new ACIDException(context, "Thread: " + Thread.currentThread().getName()
@@ -669,6 +667,9 @@ public class LogManager implements ILogManager {
 
         logPages[pageIndex].reset(filePath, LogUtil.getFileOffset(this, nextWritePosition),
                 logManagerProperties.getLogPageSize());
+
+        //TODO Check if this is necessary
+        //Arrays.fill(logPages[pageIndex].getArray(), (byte) 0);
     }
 
     @Override
@@ -688,8 +689,7 @@ public class LogManager implements ILogManager {
      * Read a log that is residing on the disk.
      */
     private void readDiskLog(long lsnValue, LogicalLogLocator logicalLogLocator) throws ACIDException {
-        String filePath = LogUtil.getLogFilePath(logManagerProperties,
-                LogUtil.getFileId(this, lsnValue));
+        String filePath = LogUtil.getLogFilePath(logManagerProperties, LogUtil.getFileId(this, lsnValue));
         long fileOffset = LogUtil.getFileOffset(this, lsnValue);
         ByteBuffer buffer = ByteBuffer.allocate(logManagerProperties.getLogPageSize());
         RandomAccessFile raf = null;
@@ -701,7 +701,7 @@ public class LogManager implements ILogManager {
             buffer.position(0);
             byte logType = buffer.get(4);
             int logHeaderSize = logRecordHelper.getLogHeaderSize(logType);
-            int logBodySize = buffer.getInt(logHeaderSize-4);
+            int logBodySize = buffer.getInt(logHeaderSize - 4);
             int logRecordSize = logHeaderSize + logBodySize + logRecordHelper.getLogChecksumSize();
             buffer.limit(logRecordSize);
             MemBasedBuffer memBuffer = new MemBasedBuffer(buffer.slice());
@@ -716,8 +716,8 @@ public class LogManager implements ILogManager {
                 throw new ACIDException(" invalid log record at lsn " + lsnValue);
             }
         } catch (Exception fnfe) {
-            throw new ACIDException(" unable to retrieve log record with lsn " + lsnValue
-                    + " from the file system", fnfe);
+            throw new ACIDException(" unable to retrieve log record with lsn " + lsnValue + " from the file system",
+                    fnfe);
         } finally {
             try {
                 if (raf != null) {
@@ -742,10 +742,10 @@ public class LogManager implements ILogManager {
         if (lsnValue > getLastFlushedLsn().get()) {
             int pageIndex = getLogPageIndex(lsnValue);
             int pageOffset = getLogPageOffset(lsnValue);
-            
+
             //TODO
             //minimize memory allocation overhead. current code allocates the log page size per reading a log record.
-            
+
             byte[] pageContent = new byte[logManagerProperties.getLogPageSize()];
             // take a lock on the log page so that the page is not flushed to
             // disk interim
@@ -759,7 +759,7 @@ public class LogManager implements ILogManager {
 
                     // get the log record length
                     logPages[pageIndex].getBytes(pageContent, 0, pageContent.length);
-                    byte logType = pageContent[pageOffset+4];
+                    byte logType = pageContent[pageOffset + 4];
                     int logHeaderSize = logRecordHelper.getLogHeaderSize(logType);
                     int logBodySize = DataUtil.byteArrayToInt(pageContent, pageOffset + logHeaderSize - 4);
                     int logRecordSize = logHeaderSize + logBodySize + logRecordHelper.getLogChecksumSize();
@@ -783,8 +783,7 @@ public class LogManager implements ILogManager {
                             throw new ACIDException(" invalid log record at lsn " + lsnValue);
                         }
                     } catch (Exception e) {
-                        throw new ACIDException("exception encoutered in validating log record at lsn "
-                                + lsnValue, e);
+                        throw new ACIDException("exception encoutered in validating log record at lsn " + lsnValue, e);
                     }
                     return;
                 }
@@ -996,6 +995,7 @@ class LogPageFlushThread extends Thread {
                     // that got flushed.
                     logManager.getLogPages()[pageToFlush].notifyAll();
                     logManager.setLastFlushedPage(pageToFlush);
+
                 }
             } catch (IOException ioe) {
                 ioe.printStackTrace();

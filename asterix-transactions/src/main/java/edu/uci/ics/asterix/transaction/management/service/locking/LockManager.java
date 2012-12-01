@@ -515,7 +515,7 @@ public class LockManager implements ILockManager {
                         "Unsupported unlock request: dataset-granule unlock is not supported");
             }
         }
-        
+
         latchLockTable();
         validateJob(txnContext);
 
@@ -527,37 +527,24 @@ public class LockManager implements ILockManager {
         //find the resource to be unlocked
         dLockInfo = datasetResourceHT.get(datasetId);
         jobInfo = jobHT.get(jobId);
-        if (IS_DEBUG_MODE) {
-            if (dLockInfo == null || jobInfo == null) {
-                throw new IllegalStateException("Invalid unlock request: Corresponding lock info doesn't exist.");
-            }
-        }
-        
-        //////////////////////////////////////////////////////////////
-        //TODO
-        //Check whether the dLockInfo or jobInfo could be null 
-        //even when the callback is called properly
         if (dLockInfo == null || jobInfo == null) {
             unlatchLockTable();
-            return;
+            throw new IllegalStateException("Invalid unlock request: Corresponding lock info doesn't exist.");
         }
-        /////////////////////////////////////////////////////////////
-        
+
         eLockInfo = dLockInfo.getEntityResourceHT().get(entityHashValue);
-        
-        if (IS_DEBUG_MODE) {
-            if (eLockInfo == -1) {
-                throw new IllegalStateException("Invalid unlock request: Corresponding lock info doesn't exist.");
-            }
+
+        if (eLockInfo == -1) {
+            unlatchLockTable();
+            throw new IllegalStateException("Invalid unlock request: Corresponding lock info doesn't exist.");
         }
 
         //find the corresponding entityInfo
         entityInfo = entityLockInfoManager.findEntityInfoFromHolderList(eLockInfo, jobId.getId(), entityHashValue);
-        if (IS_DEBUG_MODE) {
-            if (entityInfo == -1) {
-                throw new IllegalStateException("Invalid unlock request[" + jobId.getId() + "," + datasetId.getId()
-                        + "," + entityHashValue + "]: Corresponding lock info doesn't exist.");
-            }
+        if (entityInfo == -1) {
+            unlatchLockTable();
+            throw new IllegalStateException("Invalid unlock request[" + jobId.getId() + "," + datasetId.getId() + ","
+                    + entityHashValue + "]: Corresponding lock info doesn't exist.");
         }
 
         //decrease the corresponding count of dLockInfo/eLockInfo/entityInfo
@@ -579,8 +566,16 @@ public class LockManager implements ILockManager {
             //This commit log is written here in order to avoid increasing the memory space for managing transactionIds
             if (commitFlag) {
                 if (txnContext.getTransactionType().equals(TransactionContext.TransactionType.READ_WRITE)) {
-                    txnSubsystem.getLogManager().log(LogType.COMMIT, txnContext, datasetId.getId(), entityHashValue,
-                            -1, (byte) 0, 0, null, null, logicalLogLocator);
+                    try {
+                        txnSubsystem.getLogManager().log(LogType.COMMIT, txnContext, datasetId.getId(),
+                                entityHashValue, -1, (byte) 0, 0, null, null, logicalLogLocator);
+                    } catch (ACIDException e) {
+                        try {
+                            requestAbort(txnContext);
+                        } finally {
+                            unlatchLockTable();
+                        }
+                    }
                 }
 
                 txnContext.setLastLSNToIndexes(logicalLogLocator.getLsn());
@@ -660,7 +655,7 @@ public class LockManager implements ILockManager {
             trackLockRequest("Requested", RequestType.RELEASE_LOCKS, new DatasetId(0), 0, (byte) 0, txnContext,
                     dLockInfo, eLockInfo);
         }
-        
+
         JobInfo jobInfo = jobHT.get(jobId);
         if (jobInfo == null) {
             unlatchLockTable();
@@ -971,7 +966,7 @@ public class LockManager implements ILockManager {
         StringBuilder s = new StringBuilder();
         LockRequest request = new LockRequest(Thread.currentThread().getName(), requestType, datasetIdObj,
                 entityHashValue, lockMode, txnContext);
-        s.append(Thread.currentThread().getId()+":");
+        s.append(Thread.currentThread().getId() + ":");
         s.append(msg);
         if (msg.equals("Granted")) {
             if (dLockInfo != null) {

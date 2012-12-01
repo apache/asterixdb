@@ -25,12 +25,12 @@ public class LogCursor implements ILogCursor {
     private final ILogFilter logFilter;
     private IBuffer readOnlyBuffer;
     private LogicalLogLocator logicalLogLocator = null;
-    private int bufferIndex = 0;
+    private long bufferIndex = 0;
     private boolean firstNext = true;
     private boolean readMemory = false;
     private long readLSN = 0;
     private boolean needReloadBuffer = true;
-    
+
     /**
      * @param logFilter
      */
@@ -56,7 +56,8 @@ public class LogCursor implements ILogCursor {
         String filePath = LogUtil.getLogFilePath(logManager.getLogManagerProperties(), fileId);
         File file = new File(filePath);
         if (file.exists()) {
-            return FileUtil.getFileBasedBuffer(filePath, lsn, size);
+            return FileUtil.getFileBasedBuffer(filePath, lsn
+                    % logManager.getLogManagerProperties().getLogPartitionSize(), size);
         } else {
             return null;
         }
@@ -75,6 +76,8 @@ public class LogCursor implements ILogCursor {
     @Override
     public boolean next(LogicalLogLocator currentLogLocator) throws IOException, ACIDException {
 
+        //TODO
+        //Test the correctness when multiple log files are created
         int integerRead = -1;
         boolean logRecordBeginPosFound = false;
         long bytesSkipped = 0;
@@ -116,11 +119,19 @@ public class LogCursor implements ILogCursor {
                 // bytes without finding a log record, it
                 // indicates an absence of logs any further.
             }
+
+            if (logicalLogLocator.getLsn() > logManager.getLastFlushedLsn().get()) {
+                return next(currentLogLocator); //should read from memory if there is any further log
+            }
         }
 
         if (!logRecordBeginPosFound) {
             // need to reload the buffer
-            long lsnpos = (++bufferIndex * logManager.getLogManagerProperties().getLogBufferSize());
+            // TODO
+            // reduce IO by reading more pages(equal to logBufferSize) at a time.
+            long lsnpos = ((logicalLogLocator.getLsn() / logManager.getLogManagerProperties().getLogPageSize()) + 1)
+                    * logManager.getLogManagerProperties().getLogPageSize();
+
             readOnlyBuffer = getReadOnlyBuffer(lsnpos, logManager.getLogManagerProperties().getLogBufferSize());
             if (readOnlyBuffer != null) {
                 logicalLogLocator.setBuffer(readOnlyBuffer);
@@ -163,7 +174,7 @@ public class LogCursor implements ILogCursor {
     private boolean readFromMemory(LogicalLogLocator currentLogLocator) throws ACIDException, IOException {
         byte[] logRecord = null;
         long lsn = logicalLogLocator.getLsn();
-        
+
         //set the needReloadBuffer to true
         needReloadBuffer = true;
 
@@ -209,7 +220,7 @@ public class LogCursor implements ILogCursor {
                     // need to read the next log page
                     readOnlyBuffer = null;
                     logicalLogLocator.setBuffer(null);
-                    logicalLogLocator.setLsn(lsn/logPageSize+1);
+                    logicalLogLocator.setLsn(lsn / logPageSize + 1);
                     logicalLogLocator.setMemoryOffset(0);
                     return next(currentLogLocator);
                 }
@@ -227,7 +238,7 @@ public class LogCursor implements ILogCursor {
                 readOnlyBuffer = memBuffer;
                 logicalLogLocator.setBuffer(readOnlyBuffer);
                 logicalLogLocator.setMemoryOffset(0);
-                
+
                 if (logManager.getLogRecordHelper().validateLogRecord(logicalLogLocator)) {
                     if (currentLogLocator == null) {
                         currentLogLocator = new LogicalLogLocator(0, readOnlyBuffer, -1, logManager);
@@ -249,7 +260,7 @@ public class LogCursor implements ILogCursor {
                     return next(currentLogLocator);
                 }
                 return logFilter.accept(readOnlyBuffer, currentLogLocator.getMemoryOffset(), logLength);
-                
+
             } else {
                 return next(currentLogLocator);//read from disk
             }

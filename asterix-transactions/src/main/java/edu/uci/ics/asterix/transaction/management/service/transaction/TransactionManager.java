@@ -74,6 +74,7 @@ public class TransactionManager implements ITransactionManager {
     @Override
     public TransactionContext getTransactionContext(JobId jobId) throws ACIDException {
         synchronized (transactionContextRepository) {
+
             TransactionContext context = transactionContextRepository.get(jobId);
             if (context == null) {
                 context = transactionContextRepository.get(jobId);

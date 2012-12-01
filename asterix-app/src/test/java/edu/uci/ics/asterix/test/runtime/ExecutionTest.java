@@ -98,8 +98,7 @@ public class ExecutionTest {
             if (!testFile.getAbsolutePath().contains("runtimets/queries/failure/")) {
                 continue;
             }
-            System.out.println(testFile.getAbsolutePath());
-            ***********************************************************/
+            ************************************************************/
 
             File expectedResultFile = tcCtx.getExpectedResultFile(cUnit);
             File actualFile = new File(PATH_ACTUAL + File.separator

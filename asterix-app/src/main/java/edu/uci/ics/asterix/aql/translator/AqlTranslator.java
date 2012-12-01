@@ -83,7 +83,6 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.types.TypeSignature;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetIdFactory;
-import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
 import edu.uci.ics.asterix.translator.AbstractAqlTranslator;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledBeginFeedStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledControlFeedStatement;
@@ -690,9 +689,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
         // Query Compilation (happens under the same ongoing metadata
         // transaction)
         sessionConfig.setGenerateJobSpec(true);
-        if (metadataProvider.isWriteTransaction()) {
-            metadataProvider.setJobId(JobIdFactory.generateJobId());
-        }
         JobSpecification spec = APIFramework.compileQuery(declaredFunctions, metadataProvider, query,
                 reWrittenQuery.second, stmt == null ? null : stmt.getDatasetName(), sessionConfig, out, pdf, stmt);
         sessionConfig.setGenerateJobSpec(false);
