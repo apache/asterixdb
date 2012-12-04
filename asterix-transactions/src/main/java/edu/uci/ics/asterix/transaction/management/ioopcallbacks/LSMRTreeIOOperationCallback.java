@@ -19,8 +19,9 @@ import java.util.List;
 
 import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTracker;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.AbstractLSMRTree.LSMRTreeComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeComponent;
 
 public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback {
 
@@ -29,14 +30,14 @@ public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
     }
 
     @Override
-    public void afterOperation(ILSMIOOperation operation, List<Object> oldComponents, Object newComponent) throws HyracksDataException {
+    public void afterOperation(ILSMIOOperation operation, List<ILSMComponent> oldComponents, ILSMComponent newComponent) throws HyracksDataException {
         LSMRTreeComponent rtreeComponent = (LSMRTreeComponent) newComponent;
         putLSNIntoMetadata(rtreeComponent.getRTree(), oldComponents);
         putLSNIntoMetadata(rtreeComponent.getBTree(), oldComponents);
     }
 
     @Override
-    protected long getComponentLSN(List<Object> oldComponents) throws HyracksDataException {
+    protected long getComponentLSN(List<ILSMComponent> oldComponents) throws HyracksDataException {
         if (oldComponents == null) {
             // Implies a flush IO operation.
             return opTracker.getLastLSN();

@@ -30,17 +30,15 @@ public class IndexOperationTracker implements ILSMOperationTracker {
     // Number of active operations on a ILSMIndex instance.
     private int numActiveOperations = 0;
     private long lastLsn;
-    private final ILSMIndex index;
-    private final ILSMIndexAccessor accessor;
+    private final ILSMIndex index;    
     private final ILSMIOOperationCallback ioOpCallback;
+    private ILSMIndexAccessor accessor;
 
     public IndexOperationTracker(ILSMIndex index, ILSMIOOperationCallbackFactory ioOpCallbackFactory) {
         this.index = index;
         //TODO 
         //This code is added to avoid NullPointException when the index's comparatorFactory is null.
         //The null comparator factory is set in the constructor of the IndexDropOperatorDescriptor.
-        accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
         if (ioOpCallbackFactory != null) {
             ioOpCallback = ioOpCallbackFactory.createIOOperationCallback(this);
         } else {
@@ -93,10 +91,13 @@ public class IndexOperationTracker implements ILSMOperationTracker {
         if (opCallback != null) {
             opCallback.decrementLocalNumActiveOperations();
         }
-
         // If we need a flush, and this is the last completing operation, then schedule the flush.
         // Once the flush has completed notify all waiting operations.
         if (index.getFlushController().getFlushStatus(index) && numActiveOperations == 0) {
+            if (accessor == null) {
+                accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
+                        NoOpOperationCallback.INSTANCE);
+            }
             index.getIOScheduler().scheduleOperation(accessor.createFlushOperation(ioOpCallback));
         }
     }

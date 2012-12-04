@@ -19,8 +19,9 @@ import java.util.List;
 
 import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTracker;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndex.LSMInvertedIndexComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexComponent;
 
 public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationCallback {
 
@@ -29,14 +30,14 @@ public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationC
     }
 
     @Override
-    public void afterOperation(ILSMIOOperation operation, List<Object> oldComponents, Object newComponent)
+    public void afterOperation(ILSMIOOperation operation, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
             throws HyracksDataException {
         LSMInvertedIndexComponent invIndexComponent = (LSMInvertedIndexComponent) newComponent;
         putLSNIntoMetadata(invIndexComponent.getDeletedKeysBTree(), oldComponents);
     }
 
     @Override
-    protected long getComponentLSN(List<Object> oldComponents) throws HyracksDataException {
+    protected long getComponentLSN(List<ILSMComponent> oldComponents) throws HyracksDataException {
         if (oldComponents == null) {
             // Implies a flush IO operation.
             return opTracker.getLastLSN();

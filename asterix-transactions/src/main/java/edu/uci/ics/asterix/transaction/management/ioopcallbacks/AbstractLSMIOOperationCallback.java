@@ -21,6 +21,7 @@ import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTrac
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -42,14 +43,14 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     }
 
     @Override
-    public synchronized void afterFinalize(ILSMIOOperation operation, Object newComponent) {
+    public synchronized void afterFinalize(ILSMIOOperation operation, ILSMComponent newComponent) {
         // Wake up all blocked index operations that were waiting for this io operation to complete.
         opTracker.notifyAll();
     }
 
-    protected abstract long getComponentLSN(List<Object> oldComponents) throws HyracksDataException;
+    protected abstract long getComponentLSN(List<ILSMComponent> oldComponents) throws HyracksDataException;
     
-    protected void putLSNIntoMetadata(ITreeIndex treeIndex, List<Object> oldComponents) throws HyracksDataException {
+    protected void putLSNIntoMetadata(ITreeIndex treeIndex, List<ILSMComponent> oldComponents) throws HyracksDataException {
         long componentLSN = getComponentLSN(oldComponents);
         int fileId = treeIndex.getFileId();
         IBufferCache bufferCache = treeIndex.getBufferCache();
