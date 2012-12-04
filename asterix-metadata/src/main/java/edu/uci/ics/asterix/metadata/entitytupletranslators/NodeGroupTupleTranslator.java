@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import edu.uci.ics.asterix.builders.IAUnorderedListBuilder;
 import edu.uci.ics.asterix.builders.UnorderedListBuilder;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
@@ -49,7 +48,7 @@ public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup>
     // Payload field containing serialized NodeGroup.
     public static final int NODEGROUP_PAYLOAD_TUPLE_FIELD_INDEX = 1;
 
-    private IAUnorderedListBuilder listBuilder = new UnorderedListBuilder();
+    private UnorderedListBuilder listBuilder = new UnorderedListBuilder();
     private ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
     private List<String> nodeNames;
     @SuppressWarnings("unchecked")

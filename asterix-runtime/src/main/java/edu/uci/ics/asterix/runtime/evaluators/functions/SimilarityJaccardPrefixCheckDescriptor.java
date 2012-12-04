@@ -2,7 +2,6 @@ package edu.uci.ics.asterix.runtime.evaluators.functions;
 
 import java.io.IOException;
 
-import edu.uci.ics.asterix.builders.IAOrderedListBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ABoolean;
@@ -52,7 +51,7 @@ public class SimilarityJaccardPrefixCheckDescriptor extends AbstractScalarFuncti
 
     private static class SimilarityJaccardPrefixCheckEvaluator extends SimilarityJaccardPrefixEvaluator {
 
-        private final IAOrderedListBuilder listBuilder;
+        private final OrderedListBuilder listBuilder;
         private ArrayBackedValueStorage inputVal;
         @SuppressWarnings("unchecked")
         private final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
