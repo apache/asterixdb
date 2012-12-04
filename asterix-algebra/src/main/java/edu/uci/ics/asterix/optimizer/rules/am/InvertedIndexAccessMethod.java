@@ -498,65 +498,69 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         probeSubTree.getPrimaryKeyVars(originalSubTreePKs);
 
-        // Copy probe subtree, replacing their variables with new ones. We will use the original variables
-        // to stitch together a top-level equi join.
-        Counter counter = new Counter(context.getVarCounter());
-        LogicalOperatorDeepCopyVisitor deepCopyVisitor = new LogicalOperatorDeepCopyVisitor(counter);
-        ILogicalOperator probeSubTreeCopy = deepCopyVisitor.deepCopy(probeSubTree.root, null);
-        Mutable<ILogicalOperator> probeSubTreeRootRef = new MutableObject<ILogicalOperator>(probeSubTreeCopy);
-        context.setVarCounter(counter.get());
+        // Create two copies of the original probe subtree.
+        // The first copy, which becomes the new probe subtree, will retain the primary-key and secondary-search key variables,
+        // but have all other variables replaced with new ones.
+        // The second copy, which will become an input to the top-level equi-join to resolve the surrogates, 
+        // will have all primary-key and secondary-search keys replaced, but retains all other original variables.
 
-        // Remember the original probe subtree, and its primary-key variables,
-        // so we can later retrieve the missing attributes via an equi join.
+        // Variable replacement map for the first copy.
+        Map<LogicalVariable, LogicalVariable> newProbeSubTreeVarMap = new HashMap<LogicalVariable, LogicalVariable>();
+        // Variable replacement map for the second copy.
+        Map<LogicalVariable, LogicalVariable> joinInputSubTreeVarMap = new HashMap<LogicalVariable, LogicalVariable>();
+        // Init with all live vars.
+        List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
+        VariableUtilities.getLiveVariables(probeSubTree.root, liveVars);
+        for (LogicalVariable var : liveVars) {
+            joinInputSubTreeVarMap.put(var, var);
+        }
+        // Fill variable replacement maps.
+        for (int i = 0; i < optFuncExpr.getNumLogicalVars(); i++) {
+            joinInputSubTreeVarMap.put(optFuncExpr.getLogicalVar(i), context.newVar());
+            newProbeSubTreeVarMap.put(optFuncExpr.getLogicalVar(i), optFuncExpr.getLogicalVar(i));
+        }
+        for (int i = 0; i < originalSubTreePKs.size(); i++) {            
+            LogicalVariable newPKVar = context.newVar();
+            surrogateSubTreePKs.add(newPKVar);
+            joinInputSubTreeVarMap.put(originalSubTreePKs.get(i), newPKVar);
+            newProbeSubTreeVarMap.put(originalSubTreePKs.get(i), originalSubTreePKs.get(i));
+        }
+        
+        // Create first copy.
+        Counter firstCounter = new Counter(context.getVarCounter());
+        LogicalOperatorDeepCopyVisitor firstDeepCopyVisitor = new LogicalOperatorDeepCopyVisitor(firstCounter,
+                newProbeSubTreeVarMap);
+        ILogicalOperator newProbeSubTree = firstDeepCopyVisitor.deepCopy(probeSubTree.root, null);
+        inferTypes(newProbeSubTree, context);
+        Mutable<ILogicalOperator> newProbeSubTreeRootRef = new MutableObject<ILogicalOperator>(newProbeSubTree);        
+        context.setVarCounter(firstCounter.get());
+        // Create second copy.
+        Counter secondCounter = new Counter(context.getVarCounter());
+        LogicalOperatorDeepCopyVisitor secondDeepCopyVisitor = new LogicalOperatorDeepCopyVisitor(secondCounter,
+                joinInputSubTreeVarMap);        
+        ILogicalOperator joinInputSubTree = secondDeepCopyVisitor.deepCopy(probeSubTree.root, null);
+        inferTypes(joinInputSubTree, context);
+        probeSubTree.rootRef.setValue(joinInputSubTree);
+        context.setVarCounter(secondCounter.get());
+        
+        // Remember the original probe subtree reference so we can return it.
         Mutable<ILogicalOperator> originalProbeSubTreeRootRef = probeSubTree.rootRef;
 
         // Replace the original probe subtree with its copy.
         Dataset origDataset = probeSubTree.dataset;
         ARecordType origRecordType = probeSubTree.recordType;
-        probeSubTree.initFromSubTree(probeSubTreeRootRef);
-        inferTypes(probeSubTreeRootRef.getValue(), context);
+        probeSubTree.initFromSubTree(newProbeSubTreeRootRef);        
         probeSubTree.dataset = origDataset;
         probeSubTree.recordType = origRecordType;
 
-        probeSubTree.getPrimaryKeyVars(surrogateSubTreePKs);
-
-        // Copying the subtree caused all variables to be changed. However, we want to retain the original
-        // secondary search key variable and the primary key variables through 
-        // the secondary-to-primary index search plan. 
-        // Here, we substitute the replacement variable for the original variable in the 
-        // copied subtree (and vice versa for the original subtree).
-        Map<LogicalVariable, LogicalVariable> varMapping = deepCopyVisitor.getVariableMapping();
-        LogicalVariable secondarySearchKeyVar = null;
-        for (int i = 0; i < optFuncExpr.getNumLogicalVars(); i++) {
-            LogicalVariable optFuncVar = optFuncExpr.getLogicalVar(i);
-            LogicalVariable remappedVar = varMapping.get(optFuncVar);
-            if (remappedVar != null) {
-                VariableUtilities.substituteVariablesInDescendantsAndSelf(originalProbeSubTreeRootRef.getValue(),
-                        optFuncVar, remappedVar, context);
-                VariableUtilities.substituteVariablesInDescendantsAndSelf(probeSubTree.root, remappedVar, optFuncVar,
-                        context);
-                secondarySearchKeyVar = optFuncVar;
-            }
-        }
-        // Substitute new primary key vars for the original ones, and vice versa. 
-        for (int i = 0; i < originalSubTreePKs.size(); i++) {
-            LogicalVariable originalVar = originalSubTreePKs.get(i);
-            LogicalVariable remappedVar = surrogateSubTreePKs.get(i);
-            VariableUtilities.substituteVariablesInDescendantsAndSelf(originalProbeSubTreeRootRef.getValue(),
-                    originalVar, remappedVar, context);
-            VariableUtilities.substituteVariablesInDescendantsAndSelf(probeSubTree.root, remappedVar, originalVar,
-                    context);
-        }        
-
-        // Replace the variables in the join condition based on the mapping of variables in the copied probe subtree.
+        // Replace the variables in the join condition based on the mapping of variables
+        // in the new probe subtree.
+        Map<LogicalVariable, LogicalVariable> varMapping = firstDeepCopyVisitor.getVariableMapping();
         for (Map.Entry<LogicalVariable, LogicalVariable> varMapEntry : varMapping.entrySet()) {
-            // Ignore secondary search key var and the primary key vars, since they should remain unchanged.
-            if (varMapEntry.getKey() == secondarySearchKeyVar || originalSubTreePKs.contains(varMapEntry.getKey())) {
-                continue;
+            if (varMapEntry.getKey() != varMapEntry.getValue()) {
+                joinCond.substituteVar(varMapEntry.getKey(), varMapEntry.getValue());
             }
-            joinCond.substituteVar(varMapEntry.getKey(), varMapEntry.getValue());
         }
-        inferTypes(probeSubTreeRootRef.getValue(), context);
         return originalProbeSubTreeRootRef;
     }
 

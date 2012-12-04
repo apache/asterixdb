@@ -15,32 +15,12 @@
 
 package edu.uci.ics.asterix.optimizer.rules;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
-import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushFunctionsBelowJoin;
 
 /**
  * Pushes similarity function-call expressions below a join if possible.
@@ -70,7 +50,7 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  *       assign[$$11] <- [simFuncX($$3, $$4)]
  *         ...
  */
-public class PushSimilarityFunctionsBelowJoin implements IAlgebraicRewriteRule {
+public class PushSimilarityFunctionsBelowJoin extends PushFunctionsBelowJoin {
 
     private static final Set<FunctionIdentifier> simFuncIdents = new HashSet<FunctionIdentifier>();
     static {
@@ -80,135 +60,7 @@ public class PushSimilarityFunctionsBelowJoin implements IAlgebraicRewriteRule {
         simFuncIdents.add(AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK);
     }
 
-    private final List<Mutable<ILogicalExpression>> simFuncExprs = new ArrayList<Mutable<ILogicalExpression>>();
-    private final List<LogicalVariable> usedVars = new ArrayList<LogicalVariable>();
-    private final List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
-
-    @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
-        return false;
-    }
-
-    @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
-            throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
-            return false;
-        }
-        AssignOperator assignOp = (AssignOperator) op;
-
-        // Find a join operator below this assign.
-        Mutable<ILogicalOperator> joinOpRef = findJoinOp(assignOp.getInputs().get(0));
-        if (joinOpRef == null) {
-            return false;
-        }
-        AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) joinOpRef.getValue();
-
-        // Check if the assign uses a similarity function that we wish to push below the join if possible.
-        simFuncExprs.clear();
-        gatherSimilarityFunctionCalls(assignOp, simFuncExprs);
-        if (simFuncExprs.isEmpty()) {
-            return false;
-        }
-
-        // Try to push the similarity functions down the input branches of the join.
-        boolean modified = false;
-        if (pushDownSimilarityFunctions(joinOp, 0, simFuncExprs, context)) {
-            modified = true;
-        }
-        if (pushDownSimilarityFunctions(joinOp, 1, simFuncExprs, context)) {
-            modified = true;
-        }
-        if (modified) {
-            context.computeAndSetTypeEnvironmentForOperator(joinOp);
-        }
-        return modified;
-    }
-
-    private Mutable<ILogicalOperator> findJoinOp(Mutable<ILogicalOperator> opRef) {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        switch (op.getOperatorTag()) {
-            case INNERJOIN:
-            case LEFTOUTERJOIN: {
-                return opRef;
-            }
-            // Bail on these operators.
-            case GROUP:
-            case AGGREGATE:
-            case DISTINCT:
-            case UNNEST_MAP: {
-                return null;
-            }
-            // Traverse children.
-            default: {
-                for (Mutable<ILogicalOperator> childOpRef : op.getInputs()) {
-                    return findJoinOp(childOpRef);
-                }
-            }
-        }
-        return null;
-    }
-
-    private void gatherSimilarityFunctionCalls(AssignOperator assignOp, List<Mutable<ILogicalExpression>> simFuncExprs) {
-        for (Mutable<ILogicalExpression> exprRef : assignOp.getExpressions()) {
-            gatherSimilarityFunctionCalls(exprRef, simFuncExprs);
-        }
-    }
-
-    private void gatherSimilarityFunctionCalls(Mutable<ILogicalExpression> exprRef,
-            List<Mutable<ILogicalExpression>> simFuncExprs) {
-        AbstractLogicalExpression expr = (AbstractLogicalExpression) exprRef.getValue();
-        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            return;
-        }
-        // Check whether the function is a similarity function.
-        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-        if (simFuncIdents.contains(funcExpr.getFunctionIdentifier())) {
-            simFuncExprs.add(exprRef);
-        }
-        // Traverse arguments.
-        for (Mutable<ILogicalExpression> funcArg : funcExpr.getArguments()) {
-            gatherSimilarityFunctionCalls(funcArg, simFuncExprs);
-        }
-    }
-
-    private boolean pushDownSimilarityFunctions(AbstractBinaryJoinOperator joinOp, int inputIndex,
-            List<Mutable<ILogicalExpression>> simFuncExprs, IOptimizationContext context) throws AlgebricksException {
-        ILogicalOperator joinInputOp = joinOp.getInputs().get(inputIndex).getValue();
-        liveVars.clear();
-        VariableUtilities.getLiveVariables(joinInputOp, liveVars);
-        Iterator<Mutable<ILogicalExpression>> simFuncIter = simFuncExprs.iterator();
-        List<LogicalVariable> assignVars = null;
-        List<Mutable<ILogicalExpression>> assignExprs = null;
-        while (simFuncIter.hasNext()) {
-            Mutable<ILogicalExpression> simFuncExprRef = simFuncIter.next();
-            ILogicalExpression simFuncExpr = simFuncExprRef.getValue();
-            usedVars.clear();
-            simFuncExpr.getUsedVariables(usedVars);
-            // Check if we can push the similarity function down this branch.
-            if (liveVars.containsAll(usedVars)) {
-                if (assignVars == null) {
-                    assignVars = new ArrayList<LogicalVariable>();
-                    assignExprs = new ArrayList<Mutable<ILogicalExpression>>();
-                }
-                // Replace the original expression with a variable reference expression.
-                LogicalVariable replacementVar = context.newVar();
-                assignVars.add(replacementVar);
-                assignExprs.add(new MutableObject<ILogicalExpression>(simFuncExpr));
-                simFuncExprRef.setValue(new VariableReferenceExpression(replacementVar));
-                simFuncIter.remove();
-            }
-        }
-        // Create new assign operator below the join if any similarity functions can be pushed.
-        if (assignVars != null) {
-            AssignOperator newAssign = new AssignOperator(assignVars, assignExprs);
-            newAssign.getInputs().add(new MutableObject<ILogicalOperator>(joinInputOp));
-            newAssign.setExecutionMode(joinOp.getExecutionMode());
-            joinOp.getInputs().get(inputIndex).setValue(newAssign);
-            context.computeAndSetTypeEnvironmentForOperator(newAssign);
-            return true;
-        }
-        return false;
+    public PushSimilarityFunctionsBelowJoin() {
+        super(simFuncIdents);
     }
 }
