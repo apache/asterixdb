@@ -1,8 +1,8 @@
 package edu.uci.ics.asterix.dataflow.data.common;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
+import edu.uci.ics.hyracks.data.std.util.GrowableArray;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IToken;
 
 public class AListElementToken implements IToken {
@@ -44,14 +44,13 @@ public class AListElementToken implements IToken {
     }
 
     @Override
-    public void serializeToken(DataOutput dos) throws IOException {
-        dos.writeByte(typeTag);
-        dos.write(data, start, length);
+    public void serializeToken(GrowableArray out) throws IOException {
+        out.getDataOutput().writeByte(typeTag);
+        out.getDataOutput().write(data, start, length);
     }
 
     @Override
-    public void serializeTokenCount(DataOutput dos) throws IOException {
+    public void serializeTokenCount(GrowableArray out) throws IOException {
         throw new UnsupportedOperationException("Token count not implemented.");
     }
-
 }
