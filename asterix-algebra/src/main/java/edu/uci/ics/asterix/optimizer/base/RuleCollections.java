@@ -39,7 +39,9 @@ import edu.uci.ics.asterix.optimizer.rules.PushAggregateIntoGroupbyRule;
 import edu.uci.ics.asterix.optimizer.rules.PushFieldAccessRule;
 import edu.uci.ics.asterix.optimizer.rules.PushGroupByThroughProduct;
 import edu.uci.ics.asterix.optimizer.rules.PushProperJoinThroughProduct;
+import edu.uci.ics.asterix.optimizer.rules.PushSimilarityFunctionsBelowJoin;
 import edu.uci.ics.asterix.optimizer.rules.RemoveRedundantListifyRule;
+import edu.uci.ics.asterix.optimizer.rules.RemoveUnusedOneToOneEquiJoinRule;
 import edu.uci.ics.asterix.optimizer.rules.SetAsterixPhysicalOperatorsRule;
 import edu.uci.ics.asterix.optimizer.rules.SetClosedRecordConstructorsRule;
 import edu.uci.ics.asterix.optimizer.rules.SimilarityCheckRule;
@@ -190,7 +192,10 @@ public final class RuleCollections {
         List<IAlgebraicRewriteRule> accessMethod = new LinkedList<IAlgebraicRewriteRule>();
         accessMethod.add(new IntroduceSelectAccessMethodRule());
         accessMethod.add(new IntroduceJoinAccessMethodRule());
-        accessMethod.add(new IntroduceSecondaryIndexInsertDeleteRule());        
+        accessMethod.add(new IntroduceSecondaryIndexInsertDeleteRule());
+        accessMethod.add(new RemoveUnusedOneToOneEquiJoinRule());
+        accessMethod.add(new PushSimilarityFunctionsBelowJoin());
+        accessMethod.add(new RemoveUnusedAssignAndAggregateRule());
         return accessMethod;
     }
 
@@ -198,6 +203,7 @@ public final class RuleCollections {
         List<IAlgebraicRewriteRule> planCleanupRules = new LinkedList<IAlgebraicRewriteRule>();        
         planCleanupRules.add(new PushAssignBelowUnionAllRule());
         planCleanupRules.add(new ExtractCommonExpressionsRule());
+        planCleanupRules.add(new RemoveRedundantVariablesRule());
         planCleanupRules.add(new PushProjectDownRule());
         planCleanupRules.add(new PushSelectDownRule());
         planCleanupRules.add(new RemoveUnusedAssignAndAggregateRule());
@@ -219,6 +225,7 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new IntroHashPartitionMergeExchange());
         physicalRewritesAllLevels.add(new SetClosedRecordConstructorsRule());
         physicalRewritesAllLevels.add(new PullPositionalVariableFromUnnestRule());
+        //physicalRewritesAllLevels.add(new IntroduceProjectRule());
         physicalRewritesAllLevels.add(new PushProjectDownRule());
         physicalRewritesAllLevels.add(new InsertProjectBeforeUnionRule());
         physicalRewritesAllLevels.add(new InlineSingleReferenceVariablesRule());
@@ -233,6 +240,8 @@ public final class RuleCollections {
         List<IAlgebraicRewriteRule> physicalRewritesTopLevel = new LinkedList<IAlgebraicRewriteRule>();
         physicalRewritesTopLevel.add(new PushNestedOrderByUnderPreSortedGroupByRule());
         physicalRewritesTopLevel.add(new PushLimitDownRule());
+        //physicalRewritesTopLevel.add(new IntroduceProjectsRule());
+        //physicalRewritesTopLevel.add(new SetAlgebricksPhysicalOperatorsRule());
         return physicalRewritesTopLevel;
     }
 

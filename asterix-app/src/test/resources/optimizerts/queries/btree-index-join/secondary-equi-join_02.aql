@@ -29,14 +29,6 @@ create dataset DBLP(DBLPType) partitioned by key id;
 
 create dataset CSX(CSXType) partitioned by key id;
 
-load dataset DBLP 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
-
-load dataset CSX
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/pub-small/csx-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
-
 create index title_index on CSX(title);
 
 write output to nc1:"rttest/btree-index-join_title-secondary-equi-join_02.adm";
