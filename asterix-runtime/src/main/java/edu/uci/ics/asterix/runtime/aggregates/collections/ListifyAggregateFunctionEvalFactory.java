@@ -10,7 +10,6 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -38,11 +37,7 @@ public class ListifyAggregateFunctionEvalFactory implements ICopyAggregateFuncti
 
             @Override
             public void init() throws AlgebricksException {
-                try {
-                    builder.reset(orderedlistType);
-                } catch (HyracksDataException e) {
-                    throw new AlgebricksException(e);
-                }
+                builder.reset(orderedlistType);
             }
 
             @Override

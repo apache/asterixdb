@@ -19,10 +19,6 @@ create type TestType as open {
 
 create dataset testdst(TestType) partitioned by key fname;
 
-load dataset testdst
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/fn-ln.adm"),("format"="delimited-text"),("delimiter"="|"));
-
 for $emp in dataset('testdst') 
 where $emp.fname < "Chen" 
 return $emp

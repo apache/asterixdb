@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import edu.uci.ics.asterix.builders.IAOrderedListBuilder;
 import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
@@ -49,7 +48,6 @@ import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -322,7 +320,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
 
     private void writeUnionType(Datatype instance, DataOutput dataOutput) throws HyracksDataException {
         List<IAType> unionList = ((AUnionType) instance.getDatatype()).getUnionList();
-        IAOrderedListBuilder listBuilder = new OrderedListBuilder();
+        OrderedListBuilder listBuilder = new OrderedListBuilder();
         listBuilder.reset(new AOrderedListType(BuiltinType.ASTRING, null));
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
         String typeName = null;
@@ -358,7 +356,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         IARecordBuilder fieldRecordBuilder = new RecordBuilder();
 
         ARecordType recType = (ARecordType) instance.getDatatype();
-        IAOrderedListBuilder listBuilder = new OrderedListBuilder();
+        OrderedListBuilder listBuilder = new OrderedListBuilder();
         listBuilder.reset(new AOrderedListType(MetadataRecordTypes.FIELD_RECORDTYPE, null));
         String fieldTypeName = null;
         for (int i = 0; i < recType.getFieldNames().length; i++) {

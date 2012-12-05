@@ -1,8 +1,10 @@
 package edu.uci.ics.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -44,6 +46,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IAlgebricksConsta
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
@@ -402,21 +405,33 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             probeSubTree = leftSubTree;
         }
         IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
-
-        // Clone the original join condition because we may have to modify it (and we also need the original).
         InnerJoinOperator join = (InnerJoinOperator) joinRef.getValue();
+
+        // Remember the original probe subtree, and its primary-key variables,
+        // so we can later retrieve the missing attributes via an equi join.
+        List<LogicalVariable> originalSubTreePKs = new ArrayList<LogicalVariable>();
+        // Remember the primary-keys of the new probe subtree for the top-level equi join.
+        List<LogicalVariable> surrogateSubTreePKs = new ArrayList<LogicalVariable>();
+
+        // Copy probe subtree, replacing their variables with new ones. We will use the original variables
+        // to stitch together a top-level equi join.
+        Mutable<ILogicalOperator> originalProbeSubTreeRootRef = copyAndReinitProbeSubTree(probeSubTree, join
+                .getCondition().getValue(), optFuncExpr, originalSubTreePKs, surrogateSubTreePKs, context);
+
+        // Remember original live variables from the index sub tree.
+        List<LogicalVariable> indexSubTreeLiveVars = new ArrayList<LogicalVariable>();
+        VariableUtilities.getLiveVariables(indexSubTree.root, indexSubTreeLiveVars);
+
+        // Clone the original join condition because we may have to modify it (and we also need the original).        
         ILogicalExpression joinCond = join.getCondition().getValue().cloneExpression();
-
-        // Remember original live variables to make sure our new index-based plan returns exactly those vars as well.
-        List<LogicalVariable> originalLiveVars = new ArrayList<LogicalVariable>();
-        VariableUtilities.getLiveVariables(join, originalLiveVars);
-
         // Create "panic" (non indexed) nested-loop join path if necessary.
         Mutable<ILogicalOperator> panicJoinRef = null;
+        Map<LogicalVariable, LogicalVariable> panicVarMap = null;
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK) {
             panicJoinRef = new MutableObject<ILogicalOperator>(joinRef.getValue());
+            panicVarMap = new HashMap<LogicalVariable, LogicalVariable>();
             Mutable<ILogicalOperator> newProbeRootRef = createPanicNestedLoopJoinPlan(panicJoinRef, indexSubTree,
-                    probeSubTree, optFuncExpr, chosenIndex, context);
+                    probeSubTree, optFuncExpr, chosenIndex, panicVarMap, context);
             probeSubTree.rootRef.setValue(newProbeRootRef.getValue());
             probeSubTree.root = newProbeRootRef.getValue();
         }
@@ -430,37 +445,150 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         topSelect.getInputs().add(indexSubTree.rootRef);
         topSelect.setExecutionMode(ExecutionMode.LOCAL);
         context.computeAndSetTypeEnvironmentForOperator(topSelect);
-        joinRef.setValue(topSelect);
+        ILogicalOperator topOp = topSelect;
 
         // Hook up the indexed-nested loop join path with the "panic" (non indexed) nested-loop join path by putting a union all on top.
         if (panicJoinRef != null) {
-            // Gather live variables from the index plan and the panic plan.
-            List<LogicalVariable> indexPlanLiveVars = originalLiveVars;
+            LogicalVariable inputSearchVar = getInputSearchVar(optFuncExpr, indexSubTree);
+            indexSubTreeLiveVars.addAll(originalSubTreePKs);
+            indexSubTreeLiveVars.add(inputSearchVar);
             List<LogicalVariable> panicPlanLiveVars = new ArrayList<LogicalVariable>();
             VariableUtilities.getLiveVariables(panicJoinRef.getValue(), panicPlanLiveVars);
-            if (indexPlanLiveVars.size() != panicPlanLiveVars.size()) {
-                throw new AlgebricksException("Unequal number of variables returned from index plan and panic plan.");
-            }
             // Create variable mapping for union all operator.
             List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varMap = new ArrayList<Triple<LogicalVariable, LogicalVariable, LogicalVariable>>();
-            for (int i = 0; i < indexPlanLiveVars.size(); i++) {
-                varMap.add(new Triple<LogicalVariable, LogicalVariable, LogicalVariable>(indexPlanLiveVars.get(i),
-                        panicPlanLiveVars.get(i), indexPlanLiveVars.get(i)));
+            for (int i = 0; i < indexSubTreeLiveVars.size(); i++) {
+                LogicalVariable indexSubTreeVar = indexSubTreeLiveVars.get(i);
+                LogicalVariable panicPlanVar = panicVarMap.get(indexSubTreeVar);
+                if (panicPlanVar == null) {
+                    panicPlanVar = indexSubTreeVar;
+                }
+                varMap.add(new Triple<LogicalVariable, LogicalVariable, LogicalVariable>(indexSubTreeVar, panicPlanVar,
+                        indexSubTreeVar));
             }
             UnionAllOperator unionAllOp = new UnionAllOperator(varMap);
-            unionAllOp.getInputs().add(new MutableObject<ILogicalOperator>(joinRef.getValue()));
+            unionAllOp.getInputs().add(new MutableObject<ILogicalOperator>(topOp));
             unionAllOp.getInputs().add(panicJoinRef);
             unionAllOp.setExecutionMode(ExecutionMode.PARTITIONED);
             context.computeAndSetTypeEnvironmentForOperator(unionAllOp);
-            joinRef.setValue(unionAllOp);
+            topOp = unionAllOp;
         }
+
+        // Place a top-level equi-join on top to retrieve the missing variables from the original probe subtree.
+        // The inner (build) branch of the join is the subtree with the data scan, since the result of the similarity join could potentially be big.
+        // This choice may not always be the most efficient, but it seems more robust than the alternative.
+        Mutable<ILogicalExpression> eqJoinConditionRef = createPrimaryKeysEqJoinCondition(originalSubTreePKs,
+                surrogateSubTreePKs);
+        InnerJoinOperator topEqJoin = new InnerJoinOperator(eqJoinConditionRef, originalProbeSubTreeRootRef,
+                new MutableObject<ILogicalOperator>(topOp));
+        topEqJoin.setExecutionMode(ExecutionMode.PARTITIONED);
+        joinRef.setValue(topEqJoin);
+        context.computeAndSetTypeEnvironmentForOperator(topEqJoin);
+
         return true;
+    }
+
+    /**
+     * Copies the probeSubTree (using new variables), and reinitializes the probeSubTree to it.
+     * Accordingly replaces the variables in the given joinCond, and the optFuncExpr.
+     * Returns a reference to the original plan root.
+     */
+    private Mutable<ILogicalOperator> copyAndReinitProbeSubTree(OptimizableOperatorSubTree probeSubTree,
+            ILogicalExpression joinCond, IOptimizableFuncExpr optFuncExpr, List<LogicalVariable> originalSubTreePKs,
+            List<LogicalVariable> surrogateSubTreePKs, IOptimizationContext context) throws AlgebricksException {
+
+        probeSubTree.getPrimaryKeyVars(originalSubTreePKs);
+
+        // Create two copies of the original probe subtree.
+        // The first copy, which becomes the new probe subtree, will retain the primary-key and secondary-search key variables,
+        // but have all other variables replaced with new ones.
+        // The second copy, which will become an input to the top-level equi-join to resolve the surrogates, 
+        // will have all primary-key and secondary-search keys replaced, but retains all other original variables.
+
+        // Variable replacement map for the first copy.
+        Map<LogicalVariable, LogicalVariable> newProbeSubTreeVarMap = new HashMap<LogicalVariable, LogicalVariable>();
+        // Variable replacement map for the second copy.
+        Map<LogicalVariable, LogicalVariable> joinInputSubTreeVarMap = new HashMap<LogicalVariable, LogicalVariable>();
+        // Init with all live vars.
+        List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
+        VariableUtilities.getLiveVariables(probeSubTree.root, liveVars);
+        for (LogicalVariable var : liveVars) {
+            joinInputSubTreeVarMap.put(var, var);
+        }
+        // Fill variable replacement maps.
+        for (int i = 0; i < optFuncExpr.getNumLogicalVars(); i++) {
+            joinInputSubTreeVarMap.put(optFuncExpr.getLogicalVar(i), context.newVar());
+            newProbeSubTreeVarMap.put(optFuncExpr.getLogicalVar(i), optFuncExpr.getLogicalVar(i));
+        }
+        for (int i = 0; i < originalSubTreePKs.size(); i++) {            
+            LogicalVariable newPKVar = context.newVar();
+            surrogateSubTreePKs.add(newPKVar);
+            joinInputSubTreeVarMap.put(originalSubTreePKs.get(i), newPKVar);
+            newProbeSubTreeVarMap.put(originalSubTreePKs.get(i), originalSubTreePKs.get(i));
+        }
+        
+        // Create first copy.
+        Counter firstCounter = new Counter(context.getVarCounter());
+        LogicalOperatorDeepCopyVisitor firstDeepCopyVisitor = new LogicalOperatorDeepCopyVisitor(firstCounter,
+                newProbeSubTreeVarMap);
+        ILogicalOperator newProbeSubTree = firstDeepCopyVisitor.deepCopy(probeSubTree.root, null);
+        inferTypes(newProbeSubTree, context);
+        Mutable<ILogicalOperator> newProbeSubTreeRootRef = new MutableObject<ILogicalOperator>(newProbeSubTree);        
+        context.setVarCounter(firstCounter.get());
+        // Create second copy.
+        Counter secondCounter = new Counter(context.getVarCounter());
+        LogicalOperatorDeepCopyVisitor secondDeepCopyVisitor = new LogicalOperatorDeepCopyVisitor(secondCounter,
+                joinInputSubTreeVarMap);        
+        ILogicalOperator joinInputSubTree = secondDeepCopyVisitor.deepCopy(probeSubTree.root, null);
+        inferTypes(joinInputSubTree, context);
+        probeSubTree.rootRef.setValue(joinInputSubTree);
+        context.setVarCounter(secondCounter.get());
+        
+        // Remember the original probe subtree reference so we can return it.
+        Mutable<ILogicalOperator> originalProbeSubTreeRootRef = probeSubTree.rootRef;
+
+        // Replace the original probe subtree with its copy.
+        Dataset origDataset = probeSubTree.dataset;
+        ARecordType origRecordType = probeSubTree.recordType;
+        probeSubTree.initFromSubTree(newProbeSubTreeRootRef);        
+        probeSubTree.dataset = origDataset;
+        probeSubTree.recordType = origRecordType;
+
+        // Replace the variables in the join condition based on the mapping of variables
+        // in the new probe subtree.
+        Map<LogicalVariable, LogicalVariable> varMapping = firstDeepCopyVisitor.getVariableMapping();
+        for (Map.Entry<LogicalVariable, LogicalVariable> varMapEntry : varMapping.entrySet()) {
+            if (varMapEntry.getKey() != varMapEntry.getValue()) {
+                joinCond.substituteVar(varMapEntry.getKey(), varMapEntry.getValue());
+            }
+        }
+        return originalProbeSubTreeRootRef;
+    }
+
+    private Mutable<ILogicalExpression> createPrimaryKeysEqJoinCondition(List<LogicalVariable> originalSubTreePKs,
+            List<LogicalVariable> surrogateSubTreePKs) {
+        List<Mutable<ILogicalExpression>> eqExprs = new ArrayList<Mutable<ILogicalExpression>>();
+        int numPKVars = originalSubTreePKs.size();
+        for (int i = 0; i < numPKVars; i++) {
+            List<Mutable<ILogicalExpression>> args = new ArrayList<Mutable<ILogicalExpression>>();
+            args.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(surrogateSubTreePKs.get(i))));
+            args.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(originalSubTreePKs.get(i))));                   
+            ILogicalExpression eqFunc = new ScalarFunctionCallExpression(
+                    FunctionUtils.getFunctionInfo(AlgebricksBuiltinFunctions.EQ), args);
+            eqExprs.add(new MutableObject<ILogicalExpression>(eqFunc));
+        }
+        if (eqExprs.size() == 1) {
+            return eqExprs.get(0);
+        } else {
+            ILogicalExpression andFunc = new ScalarFunctionCallExpression(
+                    FunctionUtils.getFunctionInfo(AlgebricksBuiltinFunctions.AND), eqExprs);
+            return new MutableObject<ILogicalExpression>(andFunc);
+        }
     }
 
     private Mutable<ILogicalOperator> createPanicNestedLoopJoinPlan(Mutable<ILogicalOperator> joinRef,
             OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree,
-            IOptimizableFuncExpr optFuncExpr, Index chosenIndex, IOptimizationContext context)
-            throws AlgebricksException {
+            IOptimizableFuncExpr optFuncExpr, Index chosenIndex, Map<LogicalVariable, LogicalVariable> panicVarMap,
+            IOptimizationContext context) throws AlgebricksException {
         LogicalVariable inputSearchVar = getInputSearchVar(optFuncExpr, indexSubTree);
 
         // We split the plan into two "branches", and add selections on each side.
@@ -470,8 +598,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         context.computeAndSetTypeEnvironmentForOperator(replicateOp);
 
         // Create select ops for removing tuples that are filterable and not filterable, respectively.
-        IVariableTypeEnvironment topTypeEnv = context.getOutputTypeEnvironment(joinRef.getValue());
-        IAType inputSearchVarType = (IAType) topTypeEnv.getVarType(inputSearchVar);
+        IVariableTypeEnvironment probeTypeEnv = context.getOutputTypeEnvironment(probeSubTree.root);
+        IAType inputSearchVarType = (IAType) probeTypeEnv.getVarType(inputSearchVar);
         Mutable<ILogicalOperator> isFilterableSelectOpRef = new MutableObject<ILogicalOperator>();
         Mutable<ILogicalOperator> isNotFilterableSelectOpRef = new MutableObject<ILogicalOperator>();
         createIsFilterableSelectOps(replicateOp, inputSearchVar, inputSearchVarType, optFuncExpr, chosenIndex, context,
@@ -485,6 +613,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         LogicalOperatorDeepCopyVisitor deepCopyVisitor = new LogicalOperatorDeepCopyVisitor(counter);
         ILogicalOperator scanSubTree = deepCopyVisitor.deepCopy(indexSubTree.root, null);
         context.setVarCounter(counter.get());
+        Map<LogicalVariable, LogicalVariable> copyVarMap = deepCopyVisitor.getVariableMapping();
+        panicVarMap.putAll(copyVarMap);
 
         List<LogicalVariable> copyLiveVars = new ArrayList<LogicalVariable>();
         VariableUtilities.getLiveVariables(scanSubTree, copyLiveVars);
@@ -493,14 +623,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // condition since we deep-copied one of the scanner subtrees which
         // changed variables. 
         InnerJoinOperator joinOp = (InnerJoinOperator) joinRef.getValue();
-        // Substitute vars in the join condition due to copying of the scanSubTree.
-        List<LogicalVariable> joinCondUsedVars = new ArrayList<LogicalVariable>();
-        VariableUtilities.getUsedVariables(joinOp, joinCondUsedVars);
-        for (int i = 0; i < joinCondUsedVars.size(); i++) {
-            int ix = originalLiveVars.indexOf(joinCondUsedVars.get(i));
-            if (ix >= 0) {
-                joinOp.getCondition().getValue().substituteVar(originalLiveVars.get(ix), copyLiveVars.get(ix));
-            }
+        for (Map.Entry<LogicalVariable, LogicalVariable> entry : copyVarMap.entrySet()) {
+            joinOp.getCondition().getValue().substituteVar(entry.getKey(), entry.getValue());
         }
         joinOp.getInputs().clear();
         joinOp.getInputs().add(new MutableObject<ILogicalOperator>(scanSubTree));
@@ -815,5 +939,12 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 throw new AlgebricksException("Unknown search modifier type '" + searchModifierType + "'.");
             }
         }
+    }
+
+    private void inferTypes(ILogicalOperator op, IOptimizationContext context) throws AlgebricksException {
+        for (Mutable<ILogicalOperator> childOpRef : op.getInputs()) {
+            inferTypes(childOpRef.getValue(), context);
+        }
+        context.computeAndSetTypeEnvironmentForOperator(op);
     }
 }
