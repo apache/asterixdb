@@ -96,4 +96,16 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     public OptimizableOperatorSubTree getOperatorSubTree(int index) {
         return subTrees[index];
     }
+
+    @Override
+    public void substituteVar(LogicalVariable original, LogicalVariable substitution) {
+        if (logicalVars != null) {
+            for (int i = 0; i < logicalVars.length; i++) {
+                if (logicalVars[i] == original) {
+                    logicalVars[i] = substitution;
+                    break;
+                }
+            }
+        }
+    }
 }

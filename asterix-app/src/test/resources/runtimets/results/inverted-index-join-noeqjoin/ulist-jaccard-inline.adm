@@ -1,0 +1,115 @@
+{ "a": {{ "Bass", "Wine" }}, "b": {{ "Bass", "Wine" }}, "jacc": 1.0f }
+{ "a": {{ "Music", "Databases" }}, "b": {{ "Databases", "Music" }}, "jacc": 1.0f }
+{ "a": {{ "Music", "Databases" }}, "b": {{ "Databases", "Music" }}, "jacc": 1.0f }
+{ "a": {{ "Music", "Databases" }}, "b": {{ "Music", "Databases" }}, "jacc": 1.0f }
+{ "a": {{ "Music", "Databases" }}, "b": {{ "Databases", "Music" }}, "jacc": 1.0f }
+{ "a": {{ "Wine", "Walking" }}, "b": {{ "Wine", "Walking" }}, "jacc": 1.0f }
+{ "a": {{ "Wine", "Walking" }}, "b": {{ "Walking", "Wine" }}, "jacc": 1.0f }
+{ "a": {{ "Base Jumping", "Cigars", "Movies" }}, "b": {{ "Base Jumping", "Cigars", "Movies" }}, "jacc": 1.0f }
+{ "a": {{ "Skiing", "Walking" }}, "b": {{ "Skiing", "Walking" }}, "jacc": 1.0f }
+{ "a": {{ "Base Jumping", "Music" }}, "b": {{ "Music", "Base Jumping" }}, "jacc": 1.0f }
+{ "a": {{ "Base Jumping", "Music" }}, "b": {{ "Music", "Base Jumping" }}, "jacc": 1.0f }
+{ "a": {{ "Fishing", "Video Games" }}, "b": {{ "Video Games", "Fishing" }}, "jacc": 1.0f }
+{ "a": {{ "Base Jumping", "Skiing" }}, "b": {{ "Skiing", "Base Jumping" }}, "jacc": 1.0f }
+{ "a": {{ "Base Jumping", "Skiing" }}, "b": {{ "Base Jumping", "Skiing" }}, "jacc": 1.0f }
+{ "a": {{ "Skiing", "Bass" }}, "b": {{ "Skiing", "Bass" }}, "jacc": 1.0f }
+{ "a": {{ "Skiing", "Bass" }}, "b": {{ "Skiing", "Bass" }}, "jacc": 1.0f }
+{ "a": {{ "Skiing", "Bass" }}, "b": {{ "Bass", "Skiing" }}, "jacc": 1.0f }
+{ "a": {{ "Fishing", "Running", "Cigars" }}, "b": {{ "Fishing", "Cigars", "Running" }}, "jacc": 1.0f }
+{ "a": {{ "Cigars", "Skiing" }}, "b": {{ "Skiing", "Cigars" }}, "jacc": 1.0f }
+{ "a": {{ "Movies", "Walking" }}, "b": {{ "Movies", "Walking" }}, "jacc": 1.0f }
+{ "a": {{ "Music", "Coffee" }}, "b": {{ "Coffee", "Music" }}, "jacc": 1.0f }
+{ "a": {{ "Running", "Coffee", "Fishing" }}, "b": {{ "Running", "Fishing", "Coffee" }}, "jacc": 1.0f }
+{ "a": {{ "Squash", "Movies", "Coffee" }}, "b": {{ "Coffee", "Movies", "Squash" }}, "jacc": 1.0f }
+{ "a": {{ "Music", "Tennis", "Base Jumping" }}, "b": {{ "Music", "Base Jumping", "Tennis" }}, "jacc": 1.0f }
+{ "a": {{ "Music", "Base Jumping", "Books" }}, "b": {{ "Books", "Base Jumping", "Music" }}, "jacc": 1.0f }
+{ "a": {{ "Bass", "Books" }}, "b": {{ "Bass", "Books" }}, "jacc": 1.0f }
+{ "a": {{ "Bass", "Books" }}, "b": {{ "Books", "Bass" }}, "jacc": 1.0f }
+{ "a": {{ "Puzzles", "Squash" }}, "b": {{ "Squash", "Puzzles" }}, "jacc": 1.0f }
+{ "a": {{ "Computers", "Wine" }}, "b": {{ "Wine", "Computers" }}, "jacc": 1.0f }
+{ "a": {{ "Computers", "Wine" }}, "b": {{ "Computers", "Wine" }}, "jacc": 1.0f }
+{ "a": {{ "Computers", "Wine" }}, "b": {{ "Wine", "Computers" }}, "jacc": 1.0f }
+{ "a": {{ "Walking", "Cooking" }}, "b": {{ "Walking", "Cooking" }}, "jacc": 1.0f }
+{ "a": {{ "Walking", "Cooking" }}, "b": {{ "Walking", "Cooking" }}, "jacc": 1.0f }
+{ "a": {{ "Databases", "Databases" }}, "b": {{ "Databases", "Databases" }}, "jacc": 1.0f }
+{ "a": {{ "Databases", "Databases" }}, "b": {{ "Databases", "Databases" }}, "jacc": 1.0f }
+{ "a": {{ "Squash", "Databases" }}, "b": {{ "Squash", "Databases" }}, "jacc": 1.0f }
+{ "a": {{ "Wine", "Computers" }}, "b": {{ "Computers", "Wine" }}, "jacc": 1.0f }
+{ "a": {{ "Wine", "Computers" }}, "b": {{ "Wine", "Computers" }}, "jacc": 1.0f }
+{ "a": {{ "Skiing", "Bass" }}, "b": {{ "Skiing", "Bass" }}, "jacc": 1.0f }
+{ "a": {{ "Skiing", "Bass" }}, "b": {{ "Bass", "Skiing" }}, "jacc": 1.0f }
+{ "a": {{ "Movies", "Books" }}, "b": {{ "Movies", "Books" }}, "jacc": 1.0f }
+{ "a": {{ "Movies", "Books" }}, "b": {{ "Books", "Movies" }}, "jacc": 1.0f }
+{ "a": {{ "Movies", "Books" }}, "b": {{ "Movies", "Books" }}, "jacc": 1.0f }
+{ "a": {{ "Wine", "Squash" }}, "b": {{ "Wine", "Squash" }}, "jacc": 1.0f }
+{ "a": {{ "Coffee", "Tennis" }}, "b": {{ "Tennis", "Coffee" }}, "jacc": 1.0f }
+{ "a": {{ "Coffee", "Tennis" }}, "b": {{ "Tennis", "Coffee" }}, "jacc": 1.0f }
+{ "a": {{ "Skiing", "Books" }}, "b": {{ "Books", "Skiing" }}, "jacc": 1.0f }
+{ "a": {{ "Databases", "Music" }}, "b": {{ "Databases", "Music" }}, "jacc": 1.0f }
+{ "a": {{ "Databases", "Music" }}, "b": {{ "Music", "Databases" }}, "jacc": 1.0f }
+{ "a": {{ "Databases", "Music" }}, "b": {{ "Databases", "Music" }}, "jacc": 1.0f }
+{ "a": {{ "Video Games", "Cigars" }}, "b": {{ "Cigars", "Video Games" }}, "jacc": 1.0f }
+{ "a": {{ "Video Games", "Cigars" }}, "b": {{ "Video Games", "Cigars" }}, "jacc": 1.0f }
+{ "a": {{ "Databases", "Skiing" }}, "b": {{ "Databases", "Skiing" }}, "jacc": 1.0f }
+{ "a": {{ "Running", "Fishing" }}, "b": {{ "Running", "Fishing" }}, "jacc": 1.0f }
+{ "a": {{ "Databases", "Music" }}, "b": {{ "Music", "Databases" }}, "jacc": 1.0f }
+{ "a": {{ "Databases", "Music" }}, "b": {{ "Databases", "Music" }}, "jacc": 1.0f }
+{ "a": {{ "Base Jumping", "Running" }}, "b": {{ "Running", "Base Jumping" }}, "jacc": 1.0f }
+{ "a": {{ "Base Jumping", "Running" }}, "b": {{ "Base Jumping", "Running" }}, "jacc": 1.0f }
+{ "a": {{ "Books", "Base Jumping" }}, "b": {{ "Books", "Base Jumping" }}, "jacc": 1.0f }
+{ "a": {{ "Books", "Base Jumping" }}, "b": {{ "Books", "Base Jumping" }}, "jacc": 1.0f }
+{ "a": {{ "Cooking", "Running" }}, "b": {{ "Cooking", "Running" }}, "jacc": 1.0f }
+{ "a": {{ "Video Games", "Databases" }}, "b": {{ "Databases", "Video Games" }}, "jacc": 1.0f }
+{ "a": {{ "Video Games", "Databases" }}, "b": {{ "Databases", "Video Games" }}, "jacc": 1.0f }
+{ "a": {{ "Cigars", "Video Games" }}, "b": {{ "Video Games", "Cigars" }}, "jacc": 1.0f }
+{ "a": {{ "Running", "Base Jumping" }}, "b": {{ "Base Jumping", "Running" }}, "jacc": 1.0f }
+{ "a": {{ "Coffee", "Databases" }}, "b": {{ "Databases", "Coffee" }}, "jacc": 1.0f }
+{ "a": {{ "Movies", "Books" }}, "b": {{ "Books", "Movies" }}, "jacc": 1.0f }
+{ "a": {{ "Movies", "Books" }}, "b": {{ "Movies", "Books" }}, "jacc": 1.0f }
+{ "a": {{ "Databases", "Video Games" }}, "b": {{ "Databases", "Video Games" }}, "jacc": 1.0f }
+{ "a": {{ "Music", "Base Jumping" }}, "b": {{ "Music", "Base Jumping" }}, "jacc": 1.0f }
+{ "a": {{ "Bass", "Squash" }}, "b": {{ "Bass", "Squash" }}, "jacc": 1.0f }
+{ "a": {{ "Computers", "Tennis" }}, "b": {{ "Tennis", "Computers" }}, "jacc": 1.0f }
+{ "a": {{ "Tennis", "Coffee" }}, "b": {{ "Tennis", "Coffee" }}, "jacc": 1.0f }
+{ "a": {{ "Puzzles", "Books" }}, "b": {{ "Puzzles", "Books" }}, "jacc": 1.0f }
+{ "a": {{ "Puzzles", "Books" }}, "b": {{ "Puzzles", "Books" }}, "jacc": 1.0f }
+{ "a": {{ "Skiing", "Wine" }}, "b": {{ "Wine", "Skiing" }}, "jacc": 1.0f }
+{ "a": {{ "Squash", "Tennis" }}, "b": {{ "Squash", "Tennis" }}, "jacc": 1.0f }
+{ "a": {{ "Walking", "Cooking" }}, "b": {{ "Walking", "Cooking" }}, "jacc": 1.0f }
+{ "a": {{ "Coffee", "Tennis", "Bass" }}, "b": {{ "Coffee", "Bass", "Tennis" }}, "jacc": 1.0f }
+{ "a": {{ "Music", "Squash" }}, "b": {{ "Music", "Squash" }}, "jacc": 1.0f }
+{ "a": {{ "Computers", "Fishing" }}, "b": {{ "Fishing", "Computers" }}, "jacc": 1.0f }
+{ "a": {{ "Computers", "Fishing" }}, "b": {{ "Computers", "Fishing" }}, "jacc": 1.0f }
+{ "a": {{ "Wine", "Walking" }}, "b": {{ "Walking", "Wine" }}, "jacc": 1.0f }
+{ "a": {{ "Skiing", "Base Jumping" }}, "b": {{ "Base Jumping", "Skiing" }}, "jacc": 1.0f }
+{ "a": {{ "Bass", "Books" }}, "b": {{ "Books", "Bass" }}, "jacc": 1.0f }
+{ "a": {{ "Fishing", "Music" }}, "b": {{ "Fishing", "Music" }}, "jacc": 1.0f }
+{ "a": {{ "Books", "Tennis" }}, "b": {{ "Books", "Tennis" }}, "jacc": 1.0f }
+{ "a": {{ "Books", "Tennis" }}, "b": {{ "Tennis", "Books" }}, "jacc": 1.0f }
+{ "a": {{ "Books", "Tennis" }}, "b": {{ "Tennis", "Books" }}, "jacc": 1.0f }
+{ "a": {{ "Fishing", "Databases" }}, "b": {{ "Fishing", "Databases" }}, "jacc": 1.0f }
+{ "a": {{ "Walking", "Computers" }}, "b": {{ "Computers", "Walking" }}, "jacc": 1.0f }
+{ "a": {{ "Books", "Base Jumping" }}, "b": {{ "Books", "Base Jumping" }}, "jacc": 1.0f }
+{ "a": {{ "Movies", "Cooking", "Skiing" }}, "b": {{ "Movies", "Skiing", "Cooking" }}, "jacc": 1.0f }
+{ "a": {{ "Puzzles", "Books" }}, "b": {{ "Puzzles", "Books" }}, "jacc": 1.0f }
+{ "a": {{ "Wine", "Databases" }}, "b": {{ "Databases", "Wine" }}, "jacc": 1.0f }
+{ "a": {{ "Fishing", "Databases", "Wine" }}, "b": {{ "Fishing", "Wine", "Databases" }}, "jacc": 1.0f }
+{ "a": {{ "Fishing", "Databases", "Wine" }}, "b": {{ "Databases", "Fishing", "Wine" }}, "jacc": 1.0f }
+{ "a": {{ "Coffee", "Movies", "Skiing" }}, "b": {{ "Coffee", "Movies", "Skiing" }}, "jacc": 1.0f }
+{ "a": {{ "Cigars", "Cigars" }}, "b": {{ "Cigars", "Cigars" }}, "jacc": 1.0f }
+{ "a": {{ "Bass", "Walking" }}, "b": {{ "Walking", "Bass" }}, "jacc": 1.0f }
+{ "a": {{ "Wine", "Base Jumping", "Running" }}, "b": {{ "Base Jumping", "Running", "Wine" }}, "jacc": 1.0f }
+{ "a": {{ "Databases", "Databases" }}, "b": {{ "Databases", "Databases" }}, "jacc": 1.0f }
+{ "a": {{ "Movies", "Running" }}, "b": {{ "Movies", "Running" }}, "jacc": 1.0f }
+{ "a": {{ "Wine", "Puzzles" }}, "b": {{ "Puzzles", "Wine" }}, "jacc": 1.0f }
+{ "a": {{ "Squash", "Cigars" }}, "b": {{ "Squash", "Cigars" }}, "jacc": 1.0f }
+{ "a": {{ "Cooking", "Bass" }}, "b": {{ "Cooking", "Bass" }}, "jacc": 1.0f }
+{ "a": {{ "Databases", "Movies", "Tennis" }}, "b": {{ "Databases", "Movies", "Tennis" }}, "jacc": 1.0f }
+{ "a": {{ "Fishing", "Computers" }}, "b": {{ "Computers", "Fishing" }}, "jacc": 1.0f }
+{ "a": {{ "Fishing", "Movies" }}, "b": {{ "Fishing", "Movies" }}, "jacc": 1.0f }
+{ "a": {{ "Base Jumping", "Tennis", "Video Games" }}, "b": {{ "Video Games", "Base Jumping", "Tennis" }}, "jacc": 1.0f }
+{ "a": {{ "Computers", "Wine" }}, "b": {{ "Wine", "Computers" }}, "jacc": 1.0f }
+{ "a": {{ "Skiing", "Bass" }}, "b": {{ "Bass", "Skiing" }}, "jacc": 1.0f }
+{ "a": {{ "Music", "Databases" }}, "b": {{ "Databases", "Music" }}, "jacc": 1.0f }
+{ "a": {{ "Fishing", "Wine", "Databases" }}, "b": {{ "Databases", "Fishing", "Wine" }}, "jacc": 1.0f }
+{ "a": {{ "Books", "Movies" }}, "b": {{ "Movies", "Books" }}, "jacc": 1.0f }

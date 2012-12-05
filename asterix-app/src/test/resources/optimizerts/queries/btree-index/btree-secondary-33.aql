@@ -24,10 +24,6 @@ create dataset testdst(TestType) partitioned by key id;
 
 create index sec_Idx on testdst(fname,lname);
 
-load dataset testdst
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/id-fn-ln.adm"),("format"="delimited-text"),("delimiter"="|"));
-
 for $emp in dataset('testdst') 
 where $emp.fname < "Isa"
 return $emp

@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.asterix.builders.IAOrderedListBuilder;
 import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
@@ -71,7 +70,7 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
     @Override
     public void writeDatasetDetailsRecordType(DataOutput out) throws HyracksDataException {
         IARecordBuilder feedRecordBuilder = new RecordBuilder();
-        IAOrderedListBuilder listBuilder = new OrderedListBuilder();
+        OrderedListBuilder listBuilder = new OrderedListBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
         feedRecordBuilder.reset(MetadataRecordTypes.FEED_DETAILS_RECORDTYPE);

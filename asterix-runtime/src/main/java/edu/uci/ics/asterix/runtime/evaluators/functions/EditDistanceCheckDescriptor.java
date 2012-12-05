@@ -2,9 +2,7 @@ package edu.uci.ics.asterix.runtime.evaluators.functions;
 
 import java.io.IOException;
 
-import edu.uci.ics.asterix.builders.IAOrderedListBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ABoolean;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
@@ -55,7 +53,7 @@ public class EditDistanceCheckDescriptor extends AbstractScalarFunctionDynamicDe
 
         private final ICopyEvaluator edThreshEval;
         private int edThresh = -1;
-        private IAOrderedListBuilder listBuilder;
+        private final OrderedListBuilder listBuilder;
         private ArrayBackedValueStorage inputVal;
         @SuppressWarnings("unchecked")
         private final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE

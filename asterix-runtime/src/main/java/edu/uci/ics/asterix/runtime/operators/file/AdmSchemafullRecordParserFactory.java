@@ -13,9 +13,8 @@ import edu.uci.ics.asterix.adm.parser.nontagged.AdmLexer;
 import edu.uci.ics.asterix.adm.parser.nontagged.AdmLexerConstants;
 import edu.uci.ics.asterix.adm.parser.nontagged.ParseException;
 import edu.uci.ics.asterix.adm.parser.nontagged.Token;
-import edu.uci.ics.asterix.builders.IAOrderedListBuilder;
 import edu.uci.ics.asterix.builders.IARecordBuilder;
-import edu.uci.ics.asterix.builders.IAUnorderedListBuilder;
+import edu.uci.ics.asterix.builders.IAsterixListBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.builders.UnorderedListBuilder;
@@ -89,8 +88,8 @@ public class AdmSchemafullRecordParserFactory implements ITupleParserFactory {
 
             private Queue<ArrayBackedValueStorage> baaosPool = new ArrayDeque<ArrayBackedValueStorage>();
             private Queue<IARecordBuilder> recordBuilderPool = new ArrayDeque<IARecordBuilder>();
-            private Queue<IAOrderedListBuilder> orderedListBuilderPool = new ArrayDeque<IAOrderedListBuilder>();
-            private Queue<IAUnorderedListBuilder> unorderedListBuilderPool = new ArrayDeque<IAUnorderedListBuilder>();
+            private Queue<IAsterixListBuilder> orderedListBuilderPool = new ArrayDeque<IAsterixListBuilder>();
+            private Queue<IAsterixListBuilder> unorderedListBuilderPool = new ArrayDeque<IAsterixListBuilder>();
 
             private String mismatchErrorMessage = "Mismatch Type, expecting a value of type ";
 
@@ -966,7 +965,7 @@ public class AdmSchemafullRecordParserFactory implements ITupleParserFactory {
                 this.recordBuilderPool.add(recBuilder);
             }
 
-            private IAOrderedListBuilder getOrderedListBuilder() {
+            private IAsterixListBuilder getOrderedListBuilder() {
                 OrderedListBuilder orderedListBuilder = (OrderedListBuilder) orderedListBuilderPool.poll();
                 if (orderedListBuilder != null)
                     return orderedListBuilder;
@@ -974,11 +973,11 @@ public class AdmSchemafullRecordParserFactory implements ITupleParserFactory {
                     return new OrderedListBuilder();
             }
 
-            private void returnOrderedListBuilder(IAOrderedListBuilder orderedListBuilder) {
+            private void returnOrderedListBuilder(IAsterixListBuilder orderedListBuilder) {
                 this.orderedListBuilderPool.add(orderedListBuilder);
             }
 
-            private IAUnorderedListBuilder getUnorderedListBuilder() {
+            private IAsterixListBuilder getUnorderedListBuilder() {
                 UnorderedListBuilder unorderedListBuilder = (UnorderedListBuilder) unorderedListBuilderPool.poll();
                 if (unorderedListBuilder != null)
                     return unorderedListBuilder;
@@ -986,7 +985,7 @@ public class AdmSchemafullRecordParserFactory implements ITupleParserFactory {
                     return new UnorderedListBuilder();
             }
 
-            private void returnUnorderedListBuilder(IAUnorderedListBuilder unorderedListBuilder) {
+            private void returnUnorderedListBuilder(IAsterixListBuilder unorderedListBuilder) {
                 this.unorderedListBuilderPool.add(unorderedListBuilder);
             }
 

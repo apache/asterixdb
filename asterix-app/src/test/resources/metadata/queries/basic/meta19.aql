@@ -1,0 +1,7 @@
+use dataverse Metadata;
+
+write output to nc1:"mdtest/basic_meta19.adm";
+
+for $c in dataset('Index')
+where $c.DataverseName='Metadata'
+return $c

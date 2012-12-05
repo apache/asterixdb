@@ -18,7 +18,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
 
-import edu.uci.ics.asterix.builders.IAOrderedListBuilder;
 import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
@@ -90,7 +89,7 @@ public class InternalDatasetDetails implements IDatasetDetails {
     public void writeDatasetDetailsRecordType(DataOutput out) throws HyracksDataException {
 
         IARecordBuilder internalRecordBuilder = new RecordBuilder();
-        IAOrderedListBuilder listBuilder = new OrderedListBuilder();
+        OrderedListBuilder listBuilder = new OrderedListBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
         internalRecordBuilder.reset(MetadataRecordTypes.INTERNAL_DETAILS_RECORDTYPE);

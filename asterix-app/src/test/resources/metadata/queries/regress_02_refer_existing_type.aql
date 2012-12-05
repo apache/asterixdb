@@ -1,6 +1,0 @@
-use dataverse test;
-
-// Refer to existing type in test dataverse.
-create type UseTestType as closed {
-  test: TestType
-}
