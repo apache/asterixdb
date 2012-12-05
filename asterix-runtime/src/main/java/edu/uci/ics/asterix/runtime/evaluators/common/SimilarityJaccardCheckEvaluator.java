@@ -2,7 +2,6 @@ package edu.uci.ics.asterix.runtime.evaluators.common;
 
 import java.io.IOException;
 
-import edu.uci.ics.asterix.builders.IAOrderedListBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -24,7 +23,7 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
     protected final ICopyEvaluator jaccThreshEval;
     protected float jaccThresh = -1f;
 
-    protected IAOrderedListBuilder listBuilder;
+    protected OrderedListBuilder listBuilder;
     protected ArrayBackedValueStorage inputVal;
     @SuppressWarnings("unchecked")
     protected final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE

@@ -22,4 +22,5 @@ public interface IOptimizableFuncExpr {
     
     public int findLogicalVar(LogicalVariable var);
     public int findFieldName(String fieldName);
+    public void substituteVar(LogicalVariable original, LogicalVariable substitution);
 }

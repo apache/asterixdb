@@ -1,0 +1,115 @@
+{ "a": {{ "Bass", "Wine" }}, "b": {{ "Bass", "Wine" }} }
+{ "a": {{ "Music", "Databases" }}, "b": {{ "Databases", "Music" }} }
+{ "a": {{ "Music", "Databases" }}, "b": {{ "Databases", "Music" }} }
+{ "a": {{ "Music", "Databases" }}, "b": {{ "Music", "Databases" }} }
+{ "a": {{ "Music", "Databases" }}, "b": {{ "Databases", "Music" }} }
+{ "a": {{ "Wine", "Walking" }}, "b": {{ "Wine", "Walking" }} }
+{ "a": {{ "Wine", "Walking" }}, "b": {{ "Walking", "Wine" }} }
+{ "a": {{ "Base Jumping", "Cigars", "Movies" }}, "b": {{ "Base Jumping", "Cigars", "Movies" }} }
+{ "a": {{ "Skiing", "Walking" }}, "b": {{ "Skiing", "Walking" }} }
+{ "a": {{ "Base Jumping", "Music" }}, "b": {{ "Music", "Base Jumping" }} }
+{ "a": {{ "Base Jumping", "Music" }}, "b": {{ "Music", "Base Jumping" }} }
+{ "a": {{ "Fishing", "Video Games" }}, "b": {{ "Video Games", "Fishing" }} }
+{ "a": {{ "Base Jumping", "Skiing" }}, "b": {{ "Skiing", "Base Jumping" }} }
+{ "a": {{ "Base Jumping", "Skiing" }}, "b": {{ "Base Jumping", "Skiing" }} }
+{ "a": {{ "Skiing", "Bass" }}, "b": {{ "Skiing", "Bass" }} }
+{ "a": {{ "Skiing", "Bass" }}, "b": {{ "Skiing", "Bass" }} }
+{ "a": {{ "Skiing", "Bass" }}, "b": {{ "Bass", "Skiing" }} }
+{ "a": {{ "Fishing", "Running", "Cigars" }}, "b": {{ "Fishing", "Cigars", "Running" }} }
+{ "a": {{ "Cigars", "Skiing" }}, "b": {{ "Skiing", "Cigars" }} }
+{ "a": {{ "Movies", "Walking" }}, "b": {{ "Movies", "Walking" }} }
+{ "a": {{ "Music", "Coffee" }}, "b": {{ "Coffee", "Music" }} }
+{ "a": {{ "Running", "Coffee", "Fishing" }}, "b": {{ "Running", "Fishing", "Coffee" }} }
+{ "a": {{ "Squash", "Movies", "Coffee" }}, "b": {{ "Coffee", "Movies", "Squash" }} }
+{ "a": {{ "Music", "Tennis", "Base Jumping" }}, "b": {{ "Music", "Base Jumping", "Tennis" }} }
+{ "a": {{ "Music", "Base Jumping", "Books" }}, "b": {{ "Books", "Base Jumping", "Music" }} }
+{ "a": {{ "Bass", "Books" }}, "b": {{ "Bass", "Books" }} }
+{ "a": {{ "Bass", "Books" }}, "b": {{ "Books", "Bass" }} }
+{ "a": {{ "Puzzles", "Squash" }}, "b": {{ "Squash", "Puzzles" }} }
+{ "a": {{ "Computers", "Wine" }}, "b": {{ "Wine", "Computers" }} }
+{ "a": {{ "Computers", "Wine" }}, "b": {{ "Computers", "Wine" }} }
+{ "a": {{ "Computers", "Wine" }}, "b": {{ "Wine", "Computers" }} }
+{ "a": {{ "Walking", "Cooking" }}, "b": {{ "Walking", "Cooking" }} }
+{ "a": {{ "Walking", "Cooking" }}, "b": {{ "Walking", "Cooking" }} }
+{ "a": {{ "Databases", "Databases" }}, "b": {{ "Databases", "Databases" }} }
+{ "a": {{ "Databases", "Databases" }}, "b": {{ "Databases", "Databases" }} }
+{ "a": {{ "Squash", "Databases" }}, "b": {{ "Squash", "Databases" }} }
+{ "a": {{ "Wine", "Computers" }}, "b": {{ "Computers", "Wine" }} }
+{ "a": {{ "Wine", "Computers" }}, "b": {{ "Wine", "Computers" }} }
+{ "a": {{ "Skiing", "Bass" }}, "b": {{ "Skiing", "Bass" }} }
+{ "a": {{ "Skiing", "Bass" }}, "b": {{ "Bass", "Skiing" }} }
+{ "a": {{ "Movies", "Books" }}, "b": {{ "Movies", "Books" }} }
+{ "a": {{ "Movies", "Books" }}, "b": {{ "Books", "Movies" }} }
+{ "a": {{ "Movies", "Books" }}, "b": {{ "Movies", "Books" }} }
+{ "a": {{ "Wine", "Squash" }}, "b": {{ "Wine", "Squash" }} }
+{ "a": {{ "Coffee", "Tennis" }}, "b": {{ "Tennis", "Coffee" }} }
+{ "a": {{ "Coffee", "Tennis" }}, "b": {{ "Tennis", "Coffee" }} }
+{ "a": {{ "Skiing", "Books" }}, "b": {{ "Books", "Skiing" }} }
+{ "a": {{ "Databases", "Music" }}, "b": {{ "Databases", "Music" }} }
+{ "a": {{ "Databases", "Music" }}, "b": {{ "Music", "Databases" }} }
+{ "a": {{ "Databases", "Music" }}, "b": {{ "Databases", "Music" }} }
+{ "a": {{ "Video Games", "Cigars" }}, "b": {{ "Cigars", "Video Games" }} }
+{ "a": {{ "Video Games", "Cigars" }}, "b": {{ "Video Games", "Cigars" }} }
+{ "a": {{ "Databases", "Skiing" }}, "b": {{ "Databases", "Skiing" }} }
+{ "a": {{ "Running", "Fishing" }}, "b": {{ "Running", "Fishing" }} }
+{ "a": {{ "Databases", "Music" }}, "b": {{ "Music", "Databases" }} }
+{ "a": {{ "Databases", "Music" }}, "b": {{ "Databases", "Music" }} }
+{ "a": {{ "Base Jumping", "Running" }}, "b": {{ "Running", "Base Jumping" }} }
+{ "a": {{ "Base Jumping", "Running" }}, "b": {{ "Base Jumping", "Running" }} }
+{ "a": {{ "Books", "Base Jumping" }}, "b": {{ "Books", "Base Jumping" }} }
+{ "a": {{ "Books", "Base Jumping" }}, "b": {{ "Books", "Base Jumping" }} }
+{ "a": {{ "Cooking", "Running" }}, "b": {{ "Cooking", "Running" }} }
+{ "a": {{ "Video Games", "Databases" }}, "b": {{ "Databases", "Video Games" }} }
+{ "a": {{ "Video Games", "Databases" }}, "b": {{ "Databases", "Video Games" }} }
+{ "a": {{ "Cigars", "Video Games" }}, "b": {{ "Video Games", "Cigars" }} }
+{ "a": {{ "Running", "Base Jumping" }}, "b": {{ "Base Jumping", "Running" }} }
+{ "a": {{ "Coffee", "Databases" }}, "b": {{ "Databases", "Coffee" }} }
+{ "a": {{ "Movies", "Books" }}, "b": {{ "Books", "Movies" }} }
+{ "a": {{ "Movies", "Books" }}, "b": {{ "Movies", "Books" }} }
+{ "a": {{ "Databases", "Video Games" }}, "b": {{ "Databases", "Video Games" }} }
+{ "a": {{ "Music", "Base Jumping" }}, "b": {{ "Music", "Base Jumping" }} }
+{ "a": {{ "Bass", "Squash" }}, "b": {{ "Bass", "Squash" }} }
+{ "a": {{ "Computers", "Tennis" }}, "b": {{ "Tennis", "Computers" }} }
+{ "a": {{ "Tennis", "Coffee" }}, "b": {{ "Tennis", "Coffee" }} }
+{ "a": {{ "Puzzles", "Books" }}, "b": {{ "Puzzles", "Books" }} }
+{ "a": {{ "Puzzles", "Books" }}, "b": {{ "Puzzles", "Books" }} }
+{ "a": {{ "Skiing", "Wine" }}, "b": {{ "Wine", "Skiing" }} }
+{ "a": {{ "Squash", "Tennis" }}, "b": {{ "Squash", "Tennis" }} }
+{ "a": {{ "Walking", "Cooking" }}, "b": {{ "Walking", "Cooking" }} }
+{ "a": {{ "Coffee", "Tennis", "Bass" }}, "b": {{ "Coffee", "Bass", "Tennis" }} }
+{ "a": {{ "Music", "Squash" }}, "b": {{ "Music", "Squash" }} }
+{ "a": {{ "Computers", "Fishing" }}, "b": {{ "Fishing", "Computers" }} }
+{ "a": {{ "Computers", "Fishing" }}, "b": {{ "Computers", "Fishing" }} }
+{ "a": {{ "Wine", "Walking" }}, "b": {{ "Walking", "Wine" }} }
+{ "a": {{ "Skiing", "Base Jumping" }}, "b": {{ "Base Jumping", "Skiing" }} }
+{ "a": {{ "Bass", "Books" }}, "b": {{ "Books", "Bass" }} }
+{ "a": {{ "Fishing", "Music" }}, "b": {{ "Fishing", "Music" }} }
+{ "a": {{ "Books", "Tennis" }}, "b": {{ "Books", "Tennis" }} }
+{ "a": {{ "Books", "Tennis" }}, "b": {{ "Tennis", "Books" }} }
+{ "a": {{ "Books", "Tennis" }}, "b": {{ "Tennis", "Books" }} }
+{ "a": {{ "Fishing", "Databases" }}, "b": {{ "Fishing", "Databases" }} }
+{ "a": {{ "Walking", "Computers" }}, "b": {{ "Computers", "Walking" }} }
+{ "a": {{ "Books", "Base Jumping" }}, "b": {{ "Books", "Base Jumping" }} }
+{ "a": {{ "Movies", "Cooking", "Skiing" }}, "b": {{ "Movies", "Skiing", "Cooking" }} }
+{ "a": {{ "Puzzles", "Books" }}, "b": {{ "Puzzles", "Books" }} }
+{ "a": {{ "Wine", "Databases" }}, "b": {{ "Databases", "Wine" }} }
+{ "a": {{ "Fishing", "Databases", "Wine" }}, "b": {{ "Fishing", "Wine", "Databases" }} }
+{ "a": {{ "Fishing", "Databases", "Wine" }}, "b": {{ "Databases", "Fishing", "Wine" }} }
+{ "a": {{ "Coffee", "Movies", "Skiing" }}, "b": {{ "Coffee", "Movies", "Skiing" }} }
+{ "a": {{ "Cigars", "Cigars" }}, "b": {{ "Cigars", "Cigars" }} }
+{ "a": {{ "Bass", "Walking" }}, "b": {{ "Walking", "Bass" }} }
+{ "a": {{ "Wine", "Base Jumping", "Running" }}, "b": {{ "Base Jumping", "Running", "Wine" }} }
+{ "a": {{ "Databases", "Databases" }}, "b": {{ "Databases", "Databases" }} }
+{ "a": {{ "Movies", "Running" }}, "b": {{ "Movies", "Running" }} }
+{ "a": {{ "Wine", "Puzzles" }}, "b": {{ "Puzzles", "Wine" }} }
+{ "a": {{ "Squash", "Cigars" }}, "b": {{ "Squash", "Cigars" }} }
+{ "a": {{ "Cooking", "Bass" }}, "b": {{ "Cooking", "Bass" }} }
+{ "a": {{ "Databases", "Movies", "Tennis" }}, "b": {{ "Databases", "Movies", "Tennis" }} }
+{ "a": {{ "Fishing", "Computers" }}, "b": {{ "Computers", "Fishing" }} }
+{ "a": {{ "Fishing", "Movies" }}, "b": {{ "Fishing", "Movies" }} }
+{ "a": {{ "Base Jumping", "Tennis", "Video Games" }}, "b": {{ "Video Games", "Base Jumping", "Tennis" }} }
+{ "a": {{ "Computers", "Wine" }}, "b": {{ "Wine", "Computers" }} }
+{ "a": {{ "Skiing", "Bass" }}, "b": {{ "Bass", "Skiing" }} }
+{ "a": {{ "Music", "Databases" }}, "b": {{ "Databases", "Music" }} }
+{ "a": {{ "Fishing", "Wine", "Databases" }}, "b": {{ "Databases", "Fishing", "Wine" }} }
+{ "a": {{ "Books", "Movies" }}, "b": {{ "Movies", "Books" }} }

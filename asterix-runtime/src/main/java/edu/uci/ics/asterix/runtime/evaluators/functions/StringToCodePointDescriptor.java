@@ -3,7 +3,6 @@ package edu.uci.ics.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.builders.IAOrderedListBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AInt32;
@@ -59,7 +58,7 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
                     protected final ICopyEvaluator stringEval = args[0].createEvaluator(argOut);
                     protected final AOrderedListType intListType = new AOrderedListType(BuiltinType.AINT32, null);
 
-                    private IAOrderedListBuilder listBuilder = new OrderedListBuilder();
+                    private OrderedListBuilder listBuilder = new OrderedListBuilder();
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
 
                     @SuppressWarnings("unchecked")

@@ -1,6 +1,7 @@
 package edu.uci.ics.asterix.algebra.base;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,11 +55,29 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
     private final Counter counter;
     private final LogicalExpressionDeepCopyVisitor exprDeepCopyVisitor;
 
-    private final HashMap<LogicalVariable, LogicalVariable> variableMapping = new HashMap<LogicalVariable, LogicalVariable>();
+    // Key: Variable in the original plan. Value: New variable replacing the original one in the copied plan.
+    private final Map<LogicalVariable, LogicalVariable> outVarMapping = new HashMap<LogicalVariable, LogicalVariable>();
 
+    // Key: Variable in the original plan. Value: Variable with which to replace original variable in the plan copy.
+    private final Map<LogicalVariable, LogicalVariable> inVarMapping;
+    
     public LogicalOperatorDeepCopyVisitor(Counter counter) {
         this.counter = counter;
-        exprDeepCopyVisitor = new LogicalExpressionDeepCopyVisitor(counter, variableMapping);
+        this.inVarMapping = Collections.emptyMap();
+        exprDeepCopyVisitor = new LogicalExpressionDeepCopyVisitor(counter, inVarMapping, outVarMapping);
+    }
+
+    /**
+     * @param counter
+     *            Starting variable counter.
+     * @param inVarMapping
+     *            Variable mapping keyed by variables in the original plan.
+     *            Those variables are replaced by their corresponding value in the map in the copied plan.
+     */
+    public LogicalOperatorDeepCopyVisitor(Counter counter, Map<LogicalVariable, LogicalVariable> inVarMapping) {
+        this.counter = counter;
+        this.inVarMapping = inVarMapping;
+        exprDeepCopyVisitor = new LogicalExpressionDeepCopyVisitor(counter, inVarMapping, outVarMapping);
     }
 
     private void copyAnnotations(ILogicalOperator src, ILogicalOperator dest) {
@@ -132,11 +151,16 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
         if (var == null) {
             return null;
         }
-        LogicalVariable varCopy = variableMapping.get(var);
+        LogicalVariable givenVarReplacement = inVarMapping.get(var);
+        if (givenVarReplacement != null) {
+            outVarMapping.put(var, givenVarReplacement);
+            return givenVarReplacement;
+        }
+        LogicalVariable varCopy = outVarMapping.get(var);
         if (varCopy == null) {
             counter.inc();
             varCopy = new LogicalVariable(counter.get());
-            variableMapping.put(var, varCopy);
+            outVarMapping.put(var, varCopy);
         }
         return varCopy;
     }
@@ -162,16 +186,16 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
     }
 
     public void reset() {
-        variableMapping.clear();
+        outVarMapping.clear();
     }
 
     public void updatePrimaryKeys(IOptimizationContext context) {
-        for (Map.Entry<LogicalVariable, LogicalVariable> entry : variableMapping.entrySet()) {
+        for (Map.Entry<LogicalVariable, LogicalVariable> entry : outVarMapping.entrySet()) {
             List<LogicalVariable> primaryKey = context.findPrimaryKey(entry.getKey());
             if (primaryKey != null) {
                 List<LogicalVariable> head = new ArrayList<LogicalVariable>();
                 for (LogicalVariable variable : primaryKey) {
-                    head.add(variableMapping.get(variable));
+                    head.add(outVarMapping.get(variable));
                 }
                 List<LogicalVariable> tail = new ArrayList<LogicalVariable>(1);
                 tail.add(entry.getValue());
@@ -181,7 +205,7 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
     }
 
     public LogicalVariable varCopy(LogicalVariable var) throws AlgebricksException {
-        return variableMapping.get(var);
+        return outVarMapping.get(var);
     }
 
     @Override
@@ -191,6 +215,7 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
                 exprDeepCopyVisitor.deepCopyExpressionReferenceList(op.getExpressions()));
         deepCopyInputs(op, opCopy, arg);
         copyAnnotations(op, opCopy);
+        opCopy.setExecutionMode(op.getExecutionMode());
         return opCopy;
     }
 
@@ -200,6 +225,7 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
                 exprDeepCopyVisitor.deepCopyExpressionReferenceList(op.getExpressions()));
         deepCopyInputs(op, opCopy, arg);
         copyAnnotations(op, opCopy);
+        opCopy.setExecutionMode(op.getExecutionMode());
         return opCopy;
     }
 
@@ -210,6 +236,7 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
                 op.getDataSource());
         deepCopyInputs(op, opCopy, arg);
         copyAnnotations(op, opCopy);
+        opCopy.setExecutionMode(op.getExecutionMode());
         return opCopy;
     }
 
@@ -220,7 +247,9 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
 
     @Override
     public ILogicalOperator visitEmptyTupleSourceOperator(EmptyTupleSourceOperator op, ILogicalOperator arg) {
-        return new EmptyTupleSourceOperator();
+        EmptyTupleSourceOperator opCopy = new EmptyTupleSourceOperator();
+        opCopy.setExecutionMode(op.getExecutionMode());
+        return opCopy;
     }
 
     @Override
@@ -240,6 +269,7 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
         deepCopyPlanList(op.getNestedPlans(), nestedPlansCopy, opCopy);
         deepCopyInputs(op, opCopy, arg);
         copyAnnotations(op, opCopy);
+        opCopy.setExecutionMode(op.getExecutionMode());
         return opCopy;
     }
 
@@ -250,6 +280,7 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
                 .getCondition()), deepCopyOperatorReference(op.getInputs().get(0), null), deepCopyOperatorReference(op
                 .getInputs().get(1), null));
         copyAnnotations(op, opCopy);
+        opCopy.setExecutionMode(op.getExecutionMode());
         return opCopy;
     }
 
@@ -274,6 +305,7 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
         NestedTupleSourceOperator opCopy = new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(arg));
         deepCopyInputs(op, opCopy, arg);
         copyAnnotations(op, opCopy);
+        opCopy.setExecutionMode(op.getExecutionMode());
         return opCopy;
     }
 
@@ -282,6 +314,7 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
         OrderOperator opCopy = new OrderOperator(deepCopyOrderExpressionReferencePairList(op.getOrderExpressions()));
         deepCopyInputs(op, opCopy, arg);
         copyAnnotations(op, opCopy);
+        opCopy.setExecutionMode(op.getExecutionMode());
         return opCopy;
     }
 
@@ -295,6 +328,7 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
         ProjectOperator opCopy = new ProjectOperator(deepCopyVariableList(op.getVariables()));
         deepCopyInputs(op, opCopy, arg);
         copyAnnotations(op, opCopy);
+        opCopy.setExecutionMode(op.getExecutionMode());
         return opCopy;
     }
 
@@ -319,6 +353,7 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
         SelectOperator opCopy = new SelectOperator(exprDeepCopyVisitor.deepCopyExpressionReference(op.getCondition()));
         deepCopyInputs(op, opCopy, arg);
         copyAnnotations(op, opCopy);
+        opCopy.setExecutionMode(op.getExecutionMode());
         return opCopy;
     }
 
@@ -330,6 +365,7 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
         deepCopyPlanList(op.getNestedPlans(), nestedPlansCopy, opCopy);
         deepCopyInputs(op, opCopy, arg);
         copyAnnotations(op, opCopy);
+        opCopy.setExecutionMode(op.getExecutionMode());
         return opCopy;
     }
 
@@ -350,6 +386,7 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
                 deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType());
         deepCopyInputs(op, opCopy, arg);
         copyAnnotations(op, opCopy);
+        opCopy.setExecutionMode(op.getExecutionMode());
         return opCopy;
     }
 
@@ -382,5 +419,9 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
     public ILogicalOperator visitExtensionOperator(ExtensionOperator op, ILogicalOperator arg)
             throws AlgebricksException {
         throw new UnsupportedOperationException();
+    }
+
+    public Map<LogicalVariable, LogicalVariable> getVariableMapping() {
+        return outVarMapping;
     }
 }

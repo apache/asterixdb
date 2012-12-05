@@ -77,4 +77,22 @@ public class Dataset implements IMetadataEntity {
     public Object dropFromCache(MetadataCache cache) {
         return cache.dropDataset(this);
     }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof Dataset)) {
+            return false;
+        }
+        Dataset otherDataset = (Dataset) other;
+        if (!otherDataset.dataverseName.equals(dataverseName)) {
+            return false;
+        }
+        if (!otherDataset.datasetName.equals(datasetName)) {
+            return false;
+        }
+        return true;
+    }
 }

@@ -1618,66 +1618,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
-      <compilation-unit name="inverted-index-ngram-edit-distance">
-        <output-file compare="Text">inverted-index-ngram-edit-distance.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-join">
-      <compilation-unit name="inverted-index-ngram-edit-distance-inline">
-        <output-file compare="Text">inverted-index-ngram-edit-distance-inline.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-join">
-      <compilation-unit name="inverted-index-ngram-jaccard">
-        <output-file compare="Text">inverted-index-ngram-jaccard.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-join">
-      <compilation-unit name="inverted-index-ngram-jaccard-inline">
-        <output-file compare="Text">inverted-index-ngram-jaccard-inline.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-join">
-      <compilation-unit name="inverted-index-olist-edit-distance">
-        <output-file compare="Text">inverted-index-olist-edit-distance.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-join">
-      <compilation-unit name="inverted-index-olist-edit-distance-inline">
-        <output-file compare="Text">inverted-index-olist-edit-distance-inline.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-join">
-      <compilation-unit name="inverted-index-olist-jaccard">
-        <output-file compare="Text">inverted-index-olist-jaccard.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-join">
-      <compilation-unit name="inverted-index-olist-jaccard-inline">
-        <output-file compare="Text">inverted-index-olist-jaccard-inline.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-join">
-      <compilation-unit name="inverted-index-ulist-jaccard">
-        <output-file compare="Text">inverted-index-ulist-jaccard.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-join">
-      <compilation-unit name="inverted-index-ulist-jaccard-inline">
-        <output-file compare="Text">inverted-index-ulist-jaccard-inline.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-join">
-      <compilation-unit name="inverted-index-word-jaccard">
-        <output-file compare="Text">inverted-index-word-jaccard.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-join">
-      <compilation-unit name="inverted-index-word-jaccard-inline">
-        <output-file compare="Text">inverted-index-word-jaccard-inline.adm</output-file>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-join">
       <compilation-unit name="rtree-spatial-intersect-point">
         <output-file compare="Text">rtree-spatial-intersect-point.adm</output-file>
       </compilation-unit>
@@ -1792,6 +1732,130 @@
     <test-case FilePath="index-selection">
       <compilation-unit name="rtree-secondary-index">
         <output-file compare="Text">rtree-secondary-index.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="inverted-index-join">
+    <test-case FilePath="inverted-index-join">
+      <compilation-unit name="ngram-edit-distance">
+        <output-file compare="Text">ngram-edit-distance.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join">
+      <compilation-unit name="ngram-edit-distance-inline">
+        <output-file compare="Text">ngram-edit-distance-inline.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join">
+      <compilation-unit name="ngram-jaccard">
+        <output-file compare="Text">ngram-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join">
+      <compilation-unit name="ngram-jaccard-inline">
+        <output-file compare="Text">ngram-jaccard-inline.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join">
+      <compilation-unit name="olist-edit-distance">
+        <output-file compare="Text">olist-edit-distance.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join">
+      <compilation-unit name="olist-edit-distance-inline">
+        <output-file compare="Text">olist-edit-distance-inline.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join">
+      <compilation-unit name="olist-jaccard">
+        <output-file compare="Text">olist-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join">
+      <compilation-unit name="olist-jaccard-inline">
+        <output-file compare="Text">olist-jaccard-inline.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join">
+      <compilation-unit name="ulist-jaccard">
+        <output-file compare="Text">ulist-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join">
+      <compilation-unit name="ulist-jaccard-inline">
+        <output-file compare="Text">ulist-jaccard-inline.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join">
+      <compilation-unit name="word-jaccard">
+        <output-file compare="Text">word-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join">
+      <compilation-unit name="word-jaccard-inline">
+        <output-file compare="Text">word-jaccard-inline.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="inverted-index-join-noeqjoin">
+    <test-case FilePath="inverted-index-join-noeqjoin">
+      <compilation-unit name="ngram-edit-distance">
+        <output-file compare="Text">ngram-edit-distance.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join-noeqjoin">
+      <compilation-unit name="ngram-edit-distance-inline">
+        <output-file compare="Text">ngram-edit-distance-inline.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join-noeqjoin">
+      <compilation-unit name="ngram-jaccard">
+        <output-file compare="Text">ngram-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join-noeqjoin">
+      <compilation-unit name="ngram-jaccard-inline">
+        <output-file compare="Text">ngram-jaccard-inline.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join-noeqjoin">
+      <compilation-unit name="olist-edit-distance">
+        <output-file compare="Text">olist-edit-distance.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join-noeqjoin">
+      <compilation-unit name="olist-edit-distance-inline">
+        <output-file compare="Text">olist-edit-distance-inline.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join-noeqjoin">
+      <compilation-unit name="olist-jaccard">
+        <output-file compare="Text">olist-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join-noeqjoin">
+      <compilation-unit name="olist-jaccard-inline">
+        <output-file compare="Text">olist-jaccard-inline.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join-noeqjoin">
+      <compilation-unit name="ulist-jaccard">
+        <output-file compare="Text">ulist-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join-noeqjoin">
+      <compilation-unit name="ulist-jaccard-inline">
+        <output-file compare="Text">ulist-jaccard-inline.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join-noeqjoin">
+      <compilation-unit name="word-jaccard">
+        <output-file compare="Text">word-jaccard.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="inverted-index-join-noeqjoin">
+      <compilation-unit name="word-jaccard-inline">
+        <output-file compare="Text">word-jaccard-inline.adm</output-file>
       </compilation-unit>
     </test-case>
   </test-group>

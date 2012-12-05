@@ -25,10 +25,6 @@ create type CustomerType as closed {
 
 create dataset Customers(CustomerType) partitioned by key cid;
 
-load dataset Customers 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/semistructured/co1k_olist/customer.adm"),("format"="adm"));
-
 create index interests_index on Customers(interests) type keyword;
 
 write output to nc1:"rttest/inverted-index-basic_olist-jaccard.adm";

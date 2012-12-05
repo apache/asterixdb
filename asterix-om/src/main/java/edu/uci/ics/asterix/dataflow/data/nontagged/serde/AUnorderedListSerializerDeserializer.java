@@ -5,7 +5,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import edu.uci.ics.asterix.builders.IAUnorderedListBuilder;
 import edu.uci.ics.asterix.builders.UnorderedListBuilder;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -91,7 +90,7 @@ public class AUnorderedListSerializerDeserializer implements ISerializerDeserial
     @Override
     public void serialize(AUnorderedList instance, DataOutput out) throws HyracksDataException {
         // TODO: schemaless ordered list serializer
-        IAUnorderedListBuilder listBuilder = new UnorderedListBuilder();
+        UnorderedListBuilder listBuilder = new UnorderedListBuilder();
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
         listBuilder.reset(unorderedlistType);
         IACursor cursor = instance.getCursor();
