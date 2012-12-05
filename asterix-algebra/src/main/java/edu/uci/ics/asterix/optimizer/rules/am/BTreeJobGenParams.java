@@ -83,7 +83,9 @@ public class BTreeJobGenParams extends AccessMethodJobGenParams {
 
     private int readKeyInclusives(List<Mutable<ILogicalExpression>> funcArgs, int index) {
         lowKeyInclusive = ((ConstantExpression) funcArgs.get(index).getValue()).getValue().isTrue();
+        // Read the next function argument at index + 1.
         highKeyInclusive = ((ConstantExpression) funcArgs.get(index + 1).getValue()).getValue().isTrue();
+        // We have read two of the function arguments, so the next index is at index + 2.
         return index + 2;
     }
 
