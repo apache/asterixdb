@@ -49,7 +49,7 @@ public class PartitionedInvertedIndexTokenizingTupleIterator extends InvertedInd
         tupleBuilder.reset();
         try {
             // Add token field.
-            token.serializeToken(tupleBuilder.getDataOutput());
+            token.serializeToken(tupleBuilder.getFieldData());
             tupleBuilder.addFieldEndOffset();
             // Add field with number of tokens.
             tupleBuilder.getDataOutput().writeShort(numTokens);

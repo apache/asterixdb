@@ -58,7 +58,7 @@ public class InvertedIndexTokenizingTupleIterator {
         tupleBuilder.reset();
         // Add token field.
         try {
-            token.serializeToken(tupleBuilder.getDataOutput());
+            token.serializeToken(tupleBuilder.getFieldData());
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }

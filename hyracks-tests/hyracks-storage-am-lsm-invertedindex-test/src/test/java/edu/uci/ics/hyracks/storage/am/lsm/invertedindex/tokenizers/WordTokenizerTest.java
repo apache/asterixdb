@@ -30,11 +30,7 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.AbstractUTF8Token;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizer;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.HashedUTF8WordTokenFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8WordTokenFactory;
+import edu.uci.ics.hyracks.data.std.util.GrowableArray;
 
 public class WordTokenizerTest {
 
@@ -48,33 +44,33 @@ public class WordTokenizerTest {
     private boolean isSeparator(char c) {
         return !(Character.isLetterOrDigit(c) || Character.getType(c) == Character.OTHER_LETTER || Character.getType(c) == Character.OTHER_NUMBER);
     }
-    
+
     private void tokenize(String text, ArrayList<String> tokens) {
-    	String lowerCaseText = text.toLowerCase();
-    	int startIx = 0;
-    	
-    	// Skip separators at beginning of string.
-    	while(isSeparator(lowerCaseText.charAt(startIx))) {
-    		startIx++;
-    	}
-    	while(startIx < lowerCaseText.length()) {
-    		while(startIx < lowerCaseText.length() && isSeparator(lowerCaseText.charAt(startIx))) {
-        	    startIx++;
-        	}
-    		int tokenStart = startIx;
-    		
-    		while(startIx < lowerCaseText.length() && !isSeparator(lowerCaseText.charAt(startIx))) {
-        	    startIx++;
-        	}
-    		int tokenEnd = startIx;
-    		
-    		// Emit token.
-    		String token = lowerCaseText.substring(tokenStart, tokenEnd);
-    		
-    		tokens.add(token);
-    	}
+        String lowerCaseText = text.toLowerCase();
+        int startIx = 0;
+
+        // Skip separators at beginning of string.
+        while (isSeparator(lowerCaseText.charAt(startIx))) {
+            startIx++;
+        }
+        while (startIx < lowerCaseText.length()) {
+            while (startIx < lowerCaseText.length() && isSeparator(lowerCaseText.charAt(startIx))) {
+                startIx++;
+            }
+            int tokenStart = startIx;
+
+            while (startIx < lowerCaseText.length() && !isSeparator(lowerCaseText.charAt(startIx))) {
+                startIx++;
+            }
+            int tokenEnd = startIx;
+
+            // Emit token.
+            String token = lowerCaseText.substring(tokenStart, tokenEnd);
+
+            tokens.add(token);
+        }
     }
-    
+
     @Before
     public void init() throws IOException {
         // serialize text into bytes
@@ -82,10 +78,10 @@ public class WordTokenizerTest {
         DataOutput dos = new DataOutputStream(baos);
         dos.writeUTF(text);
         inputBuffer = baos.toByteArray();
-        
+
         // init expected string tokens
         tokenize(text, expectedUTF8Tokens);
-        
+
         // hashed tokens ignoring token count
         for (int i = 0; i < expectedUTF8Tokens.size(); i++) {
             int hash = tokenHash(expectedUTF8Tokens.get(i), 1);
@@ -122,15 +118,14 @@ public class WordTokenizerTest {
         while (tokenizer.hasNext()) {
             tokenizer.next();
 
-            // serialize token
-            ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
-            DataOutput tokenDos = new DataOutputStream(tokenBaos);
+            // serialize hashed token
+            GrowableArray tokenData = new GrowableArray();
 
             IToken token = tokenizer.getToken();
-            token.serializeToken(tokenDos);
+            token.serializeToken(tokenData);
 
             // deserialize token
-            ByteArrayInputStream bais = new ByteArrayInputStream(tokenBaos.toByteArray());
+            ByteArrayInputStream bais = new ByteArrayInputStream(tokenData.getByteArray());
             DataInput in = new DataInputStream(bais);
 
             Integer hashedToken = in.readInt();
@@ -154,15 +149,14 @@ public class WordTokenizerTest {
         while (tokenizer.hasNext()) {
             tokenizer.next();
 
-            // serialize token
-            ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
-            DataOutput tokenDos = new DataOutputStream(tokenBaos);
+            // serialize hashed token
+            GrowableArray tokenData = new GrowableArray();
 
             IToken token = tokenizer.getToken();
-            token.serializeToken(tokenDos);
+            token.serializeToken(tokenData);
 
             // deserialize token
-            ByteArrayInputStream bais = new ByteArrayInputStream(tokenBaos.toByteArray());
+            ByteArrayInputStream bais = new ByteArrayInputStream(tokenData.getByteArray());
             DataInput in = new DataInputStream(bais);
 
             Integer hashedToken = in.readInt();
@@ -187,14 +181,13 @@ public class WordTokenizerTest {
             tokenizer.next();
 
             // serialize hashed token
-            ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
-            DataOutput tokenDos = new DataOutputStream(tokenBaos);
+            GrowableArray tokenData = new GrowableArray();
 
             IToken token = tokenizer.getToken();
-            token.serializeToken(tokenDos);
+            token.serializeToken(tokenData);
 
             // deserialize token
-            ByteArrayInputStream bais = new ByteArrayInputStream(tokenBaos.toByteArray());
+            ByteArrayInputStream bais = new ByteArrayInputStream(tokenData.getByteArray());
             DataInput in = new DataInputStream(bais);
 
             String strToken = in.readUTF();
@@ -209,7 +202,7 @@ public class WordTokenizerTest {
     public int tokenHash(String token, int tokenCount) {
         int h = AbstractUTF8Token.GOLDEN_RATIO_32;
         for (int i = 0; i < token.length(); i++) {
-        	h ^= token.charAt(i);
+            h ^= token.charAt(i);
             h *= AbstractUTF8Token.GOLDEN_RATIO_32;
         }
         return h + tokenCount;

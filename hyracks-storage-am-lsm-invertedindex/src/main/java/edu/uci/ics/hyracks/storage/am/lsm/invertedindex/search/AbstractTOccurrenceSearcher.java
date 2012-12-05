@@ -103,7 +103,7 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
             queryTokenBuilder.reset();
             try {
                 IToken token = queryTokenizer.getToken();
-                token.serializeToken(queryTokenBuilder.getDataOutput());
+                token.serializeToken(queryTokenBuilder.getFieldData());
                 queryTokenBuilder.addFieldEndOffset();
                 // WARNING: assuming one frame is big enough to hold all tokens
                 queryTokenAppender.append(queryTokenBuilder.getFieldEndOffsets(), queryTokenBuilder.getByteArray(), 0,

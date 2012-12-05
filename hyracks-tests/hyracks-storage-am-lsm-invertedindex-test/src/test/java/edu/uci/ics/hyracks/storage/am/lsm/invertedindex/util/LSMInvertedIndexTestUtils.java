@@ -20,8 +20,6 @@ import static org.junit.Assert.fail;
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,7 +33,7 @@ import java.util.TreeSet;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
+import edu.uci.ics.hyracks.data.std.util.GrowableArray;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -411,7 +409,7 @@ public class LSMInvertedIndexTestUtils {
         Arrays.fill(scanCountArray, 0);
         expectedResults.clear();
 
-        ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
+        GrowableArray tokenData = new GrowableArray();
         tokenizer.reset(searchDocument.getFieldData(0), searchDocument.getFieldStart(0),
                 searchDocument.getFieldLength(0));
         // Run though tokenizer to get number of tokens.
@@ -434,10 +432,9 @@ public class LSMInvertedIndexTestUtils {
         while (tokenizer.hasNext()) {
             tokenizer.next();
             IToken token = tokenizer.getToken();
-            baaos.reset();
-            DataOutput out = new DataOutputStream(baaos);
-            token.serializeToken(out);
-            ByteArrayInputStream inStream = new ByteArrayInputStream(baaos.getByteArray(), 0, baaos.size());
+            tokenData.reset();
+            token.serializeToken(tokenData);
+            ByteArrayInputStream inStream = new ByteArrayInputStream(tokenData.getByteArray(), 0, tokenData.getLength());
             DataInput dataIn = new DataInputStream(inStream);
             Comparable tokenObj = (Comparable) tokenSerde.deserialize(dataIn);
             CheckTuple lowKey;

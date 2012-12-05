@@ -45,6 +45,7 @@ public class UnnestingFunctionCallExpression extends AbstractFunctionCallExpress
         List<Mutable<ILogicalExpression>> clonedArgs = cloneArguments();
         UnnestingFunctionCallExpression ufce = new UnnestingFunctionCallExpression(finfo, clonedArgs);
         ufce.setReturnsUniqueValues(returnsUniqueValues);
+        ufce.setOpaqueParameters(this.getOpaqueParameters());
         return ufce;
     }
 

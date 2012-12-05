@@ -217,7 +217,8 @@ public class ComplexUnnestToProductRule implements IAlgebraicRewriteRule {
                 for (LogicalVariable producedVar : producedVars) {
                     if (outerUsedVars.contains(producedVar)) {
                         outerMatches++;
-                    } else if (innerUsedVars.contains(producedVar)) {
+                    }
+                    if (innerUsedVars.contains(producedVar)) {
                         innerMatches++;
                     }
                 }
@@ -227,24 +228,30 @@ public class ComplexUnnestToProductRule implements IAlgebraicRewriteRule {
                     // All produced vars used by outer partition.
                     outerOps.add(op);
                     targetUsedVars = outerUsedVars;
-                } else if (innerMatches == producedVars.size() && !producedVars.isEmpty()) {
+                }
+                if (innerMatches == producedVars.size() && !producedVars.isEmpty()) {
                     // All produced vars used by inner partition.
                     innerOps.add(op);
                     targetUsedVars = innerUsedVars;
-                } else if (innerMatches == 0 && outerMatches == 0) {
+                }
+                if (innerMatches == 0 && outerMatches == 0) {
                     // Op produces variables that are not used in the part of the plan we've seen (or it doesn't produce any vars).
                     // Try to figure out where it belongs by analyzing the used variables.
                     List<LogicalVariable> usedVars = new ArrayList<LogicalVariable>();
                     VariableUtilities.getUsedVariables(op, usedVars);
                     for (LogicalVariable usedVar : usedVars) {
+                        boolean canBreak = false;
                         if (outerUsedVars.contains(usedVar)) {
                             outerOps.add(op);
                             targetUsedVars = outerUsedVars;
-                            break;
+                            canBreak = true;
                         }
                         if (innerUsedVars.contains(usedVar)) {
                             innerOps.add(op);
                             targetUsedVars = innerUsedVars;
+                            canBreak = true;
+                        }
+                        if (canBreak) {
                             break;
                         }
                     }
