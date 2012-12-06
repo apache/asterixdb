@@ -220,8 +220,7 @@ public class APIClientThread extends Thread {
             AQLParser parser = new AQLParser(new StringReader(stmt));
             List<Statement> statements = parser.Statement();
             SessionConfig pc = new SessionConfig(AsterixHyracksIntegrationUtil.DEFAULT_HYRACKS_CC_CLIENT_PORT, true,
-                    false, false, false, false, false, false);
-            pc.setGenerateJobSpec(true);
+                    false, false, false, false, false, true, false);
 
             MetadataManager.INSTANCE.init();
             if (statements != null && statements.size() > 0) {
