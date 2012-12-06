@@ -15,13 +15,8 @@
 
 package edu.uci.ics.asterix.algebra.operators.physical;
 
-import java.util.List;
-
-import org.apache.commons.lang3.mutable.Mutable;
-
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;

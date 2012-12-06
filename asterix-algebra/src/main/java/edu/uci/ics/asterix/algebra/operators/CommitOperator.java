@@ -15,12 +15,22 @@
 
 package edu.uci.ics.asterix.algebra.operators;
 
+import java.util.Collection;
+import java.util.List;
+
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractExtensibleLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorExtension;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 
 public class CommitOperator extends AbstractExtensibleLogicalOperator {
+
+    private final List<LogicalVariable> primaryKeyLogicalVars;
+
+    public CommitOperator(List<LogicalVariable> primaryKeyLogicalVars) {
+        this.primaryKeyLogicalVars = primaryKeyLogicalVars;
+    }
 
     @Override
     public boolean isMap() {
@@ -30,7 +40,7 @@ public class CommitOperator extends AbstractExtensibleLogicalOperator {
 
     @Override
     public IOperatorExtension newInstance() {
-        return new CommitOperator();
+        return new CommitOperator(primaryKeyLogicalVars);
     }
 
     @Override
@@ -42,5 +52,15 @@ public class CommitOperator extends AbstractExtensibleLogicalOperator {
     @Override
     public String toString() {
         return "commit";
+    }
+
+    @Override
+    public void getUsedVariables(Collection<LogicalVariable> usedVars) {
+        usedVars.addAll(primaryKeyLogicalVars);
+    }
+
+    @Override
+    public void getProducedVariables(Collection<LogicalVariable> producedVars) {
+        // No produced variables.
     }
 }
