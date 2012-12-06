@@ -344,6 +344,7 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitExtensionOperator(ExtensionOperator op, Void arg) throws AlgebricksException {
+        op.getDelegate().getUsedVariables(usedVariables);
         return null;
     }
 

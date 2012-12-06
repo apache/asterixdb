@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 
+import java.util.Collection;
 import java.util.List;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -42,4 +43,8 @@ public interface IOperatorExtension {
     void setPhysicalOperator(IPhysicalOperator physicalOperator);
 
     ExecutionMode getExecutionMode();
+    
+    public void getUsedVariables(Collection<LogicalVariable> usedVars);
+    
+    public void getProducedVariables(Collection<LogicalVariable> producedVars);
 }

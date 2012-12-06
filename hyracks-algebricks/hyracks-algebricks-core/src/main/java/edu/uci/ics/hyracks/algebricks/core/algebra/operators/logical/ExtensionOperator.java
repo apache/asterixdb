@@ -113,4 +113,8 @@ public class ExtensionOperator extends AbstractLogicalOperator {
         return delegate.toString();
     }
 
+    public IOperatorExtension getDelegate() {
+        return delegate;
+    }
+
 }
