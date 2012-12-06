@@ -51,7 +51,7 @@ public class AsterixListAccessor {
 	public void reset(byte[] listBytes, int start) throws AsterixException {
 		this.listBytes = listBytes;
 		this.start = start;
-		listType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(listBytes[start]);		
+		listType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(listBytes[start]);
 		if (listType != ATypeTag.UNORDEREDLIST && listType != ATypeTag.ORDEREDLIST) {
 			throw new AsterixException("Unsupported type: " + listType);
 		}
