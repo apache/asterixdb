@@ -298,6 +298,10 @@ public class APIFramework {
             }
         }
 
+        if (!pc.isGenerateJobSpec()) {
+            return null;
+        }
+        
         AlgebricksPartitionConstraint clusterLocs = queryMetadataProvider.getClusterLocations();
         builder.setBinaryBooleanInspectorFactory(format.getBinaryBooleanInspectorFactory());
         builder.setBinaryIntegerInspectorFactory(format.getBinaryIntegerInspectorFactory());

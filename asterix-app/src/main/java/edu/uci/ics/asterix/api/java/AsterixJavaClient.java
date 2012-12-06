@@ -64,8 +64,8 @@ public class AsterixJavaClient {
         MetadataManager.INSTANCE.init();
 
         SessionConfig pc = new SessionConfig(AsterixHyracksIntegrationUtil.DEFAULT_HYRACKS_CC_CLIENT_PORT, optimize,
-                false, printRewrittenExpressions, printLogicalPlan, printOptimizedPlan, printPhysicalOpsOnly, printJob);
-        pc.setGenerateJobSpec(generateBinaryRuntime);
+                false, printRewrittenExpressions, printLogicalPlan, printOptimizedPlan, printPhysicalOpsOnly,
+                generateBinaryRuntime, printJob);
 
         AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, writer, pc, DisplayFormat.TEXT);
         aqlTranslator.compileAndExecute(hcc);
