@@ -16,7 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
@@ -24,6 +23,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -31,7 +31,6 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialState {
 
     private final boolean includeMemComponent;
-    private final AtomicInteger searcherfRefCount;
     private final ILSMHarness lsmHarness;
     private final List<IIndexAccessor> indexAccessors;
     private final List<IIndexAccessor> deletedKeysBTreeAccessors;
@@ -41,16 +40,18 @@ public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialS
     private final MultiComparator keyCmp;
     private final PermutingTupleReference keysOnlyTuple;
 
+    private final List<ILSMComponent> operationalComponents;
+
     public LSMInvertedIndexSearchCursorInitialState(final MultiComparator keyCmp,
             PermutingTupleReference keysOnlyTuple, List<IIndexAccessor> indexAccessors,
             List<IIndexAccessor> deletedKeysBTreeAccessors, IIndexOperationContext ctx, boolean includeMemComponent,
-            AtomicInteger searcherfRefCount, ILSMHarness lsmHarness) {
+            ILSMHarness lsmHarness, List<ILSMComponent> operationalComponents) {
         this.keyCmp = keyCmp;
         this.keysOnlyTuple = keysOnlyTuple;
         this.indexAccessors = indexAccessors;
         this.deletedKeysBTreeAccessors = deletedKeysBTreeAccessors;
         this.includeMemComponent = includeMemComponent;
-        this.searcherfRefCount = searcherfRefCount;
+        this.operationalComponents = operationalComponents;
         this.lsmHarness = lsmHarness;
         this.ctx = (LSMInvertedIndexOpContext) ctx;
         this.searchCallback = this.ctx.searchCallback;
@@ -65,12 +66,12 @@ public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialS
     public void setPage(ICachedPage page) {
     }
 
-    public List<IIndexAccessor> getIndexAccessors() {
-        return indexAccessors;
+    public List<ILSMComponent> getOperationalComponents() {
+        return operationalComponents;
     }
 
-    public AtomicInteger getSearcherRefCount() {
-        return searcherfRefCount;
+    public List<IIndexAccessor> getIndexAccessors() {
+        return indexAccessors;
     }
 
     public boolean getIncludeMemComponent() {

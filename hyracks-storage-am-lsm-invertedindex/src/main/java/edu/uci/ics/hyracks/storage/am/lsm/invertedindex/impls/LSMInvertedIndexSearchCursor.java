@@ -15,7 +15,6 @@
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -27,6 +26,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.exceptions.OccurrenceThresholdPanicException;
@@ -43,7 +43,6 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     private boolean tupleConsumed = true;
     private ILSMHarness harness;
     private boolean includeMemComponent;
-    private AtomicInteger searcherRefCount;
     private List<IIndexAccessor> indexAccessors;
     private ISearchPredicate searchPred;
     private ISearchOperationCallback searchCallback;
@@ -54,12 +53,14 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     private RangePredicate keySearchPred;
     private ILSMIndexOperationContext opCtx;
 
+    private List<ILSMComponent> operationalComponents;
+
     @Override
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         LSMInvertedIndexSearchCursorInitialState lsmInitState = (LSMInvertedIndexSearchCursorInitialState) initialState;
         harness = lsmInitState.getLSMHarness();
         includeMemComponent = lsmInitState.getIncludeMemComponent();
-        searcherRefCount = lsmInitState.getSearcherRefCount();
+        operationalComponents = lsmInitState.getOperationalComponents();
         indexAccessors = lsmInitState.getIndexAccessors();
         opCtx = lsmInitState.getOpContext();
         accessorIndex = 0;
@@ -152,7 +153,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     public void close() throws HyracksDataException {
         reset();
         accessorIndex = -1;
-        harness.closeSearchCursor(searcherRefCount, includeMemComponent, opCtx);
+        harness.closeSearchCursor(operationalComponents, includeMemComponent, opCtx);
     }
 
     @Override

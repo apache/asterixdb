@@ -48,7 +48,7 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor implements ITre
             rtreeCursors = null;
             btreeCursors = null;
         } finally {
-            lsmHarness.closeSearchCursor(searcherRefCount, includeMemRTree, opCtx);
+            lsmHarness.closeSearchCursor(operationalComponents, includeMemRTree, opCtx);
         }
     }
 

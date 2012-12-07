@@ -16,9 +16,9 @@
 package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -44,6 +44,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
@@ -62,6 +63,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentState;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMFlushOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
@@ -199,6 +201,31 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     @Override
+    public List<ILSMComponent> getOperationalComponents(IIndexOperationContext ctx) {
+        List<ILSMComponent> operationalComponents = new ArrayList<ILSMComponent>();
+        switch (ctx.getOperation()) {
+            case SEARCH:
+            case INSERT:
+                // TODO: We should add the mutable component at some point.
+                operationalComponents.addAll(immutableComponents);
+                break;
+            case MERGE:
+                // TODO: determining the participating components in a merge should probably the task of the merge policy.
+                if (immutableComponents.size() > 1) {
+                    for (ILSMComponent c : immutableComponents) {
+                        if (c.negativeCompareAndSet(LSMComponentState.MERGING, LSMComponentState.MERGING)) {
+                            operationalComponents.add(c);
+                        }
+                    }
+                }
+                break;
+            default:
+                throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
+        }
+        return operationalComponents;
+    }
+
+    @Override
     public void insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ictx) throws HyracksDataException,
             IndexException {
         LSMBTreeOpContext ctx = (LSMBTreeOpContext) ictx;
@@ -240,6 +267,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             memCursor.close();
         }
 
+        // TODO: Can we just remove the above code that search the mutable component and do it together with the search call below? i.e. instead of passing false to the lsmHarness.search(), we pass true to include the mutable component?
         // the key was not in the inmemory component, so check the disk components
         lsmHarness.search(searchCursor, predicate, ctx, false);
         try {
@@ -303,20 +331,25 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     @Override
-    public void search(IIndexCursor cursor, List<ILSMComponent> diskComponents, ISearchPredicate pred,
-            IIndexOperationContext ictx, boolean includeMemComponent, AtomicInteger searcherRefCount)
-            throws HyracksDataException, IndexException {
+    public void search(IIndexCursor cursor, List<ILSMComponent> immutableComponents, ISearchPredicate pred,
+            IIndexOperationContext ictx, boolean includeMutableComponent) throws HyracksDataException, IndexException {
         LSMBTreeOpContext ctx = (LSMBTreeOpContext) ictx;
         LSMBTreeRangeSearchCursor lsmTreeCursor = (LSMBTreeRangeSearchCursor) cursor;
-        int numDiskComponents = diskComponents.size();
-        int numBTrees = (includeMemComponent) ? numDiskComponents + 1 : numDiskComponents;
+        int numDiskComponents = immutableComponents.size();
+        int numBTrees = (includeMutableComponent) ? numDiskComponents + 1 : numDiskComponents;
+
+        List<ILSMComponent> operationalComponents = new ArrayList<ILSMComponent>();
+        if (includeMutableComponent) {
+            operationalComponents.add(getMutableComponent());
+        }
+        operationalComponents.addAll(immutableComponents);
         LSMBTreeCursorInitialState initialState = new LSMBTreeCursorInitialState(numBTrees, insertLeafFrameFactory,
-                ctx.cmp, includeMemComponent, searcherRefCount, lsmHarness, ctx.memBTreeAccessor, pred,
-                ctx.searchCallback);
+                ctx.cmp, includeMutableComponent, lsmHarness, ctx.memBTreeAccessor, pred, ctx.searchCallback,
+                operationalComponents);
         lsmTreeCursor.open(initialState, pred);
 
         int cursorIx;
-        if (includeMemComponent) {
+        if (includeMutableComponent) {
             // Open cursor of in-memory BTree at index 0.
             ctx.memBTreeAccessor.search(lsmTreeCursor.getCursor(0), pred);
             // Skip 0 because it is the in-memory BTree.
@@ -328,7 +361,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         // Open cursors of on-disk BTrees.
         ITreeIndexAccessor[] diskBTreeAccessors = new ITreeIndexAccessor[numDiskComponents];
         int diskBTreeIx = 0;
-        ListIterator<ILSMComponent> diskBTreesIter = diskComponents.listIterator();
+        ListIterator<ILSMComponent> diskBTreesIter = immutableComponents.listIterator();
         while (diskBTreesIter.hasNext()) {
             BTree diskBTree = (BTree) ((LSMBTreeComponent) diskBTreesIter.next()).getBTree();
             diskBTreeAccessors[diskBTreeIx] = diskBTree.createAccessor(NoOpOperationCallback.INSTANCE,
@@ -368,15 +401,6 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         }
         bulkLoader.end();
         return mergedBTree;
-    }
-
-    @Override
-    public void cleanUpAfterMerge(List<ILSMComponent> mergedComponents) throws HyracksDataException {
-        for (ILSMComponent c : mergedComponents) {
-            BTree oldBTree = (BTree) ((LSMBTreeComponent) c).getBTree();
-            oldBTree.deactivate();
-            oldBTree.destroy();
-        }
     }
 
     @Override
@@ -500,6 +524,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException {
         LSMBTreeOpContext ctx = createOpContext(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        ctx.setOperation(IndexOperation.MERGE);
         ITreeIndexCursor cursor = new LSMBTreeRangeSearchCursor(ctx);
         RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
         // Ordered scan, ignoring the in-memory BTree.
@@ -558,5 +583,10 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     public long getMemoryAllocationSize() {
         InMemoryBufferCache memBufferCache = (InMemoryBufferCache) mutableComponent.getBTree().getBufferCache();
         return memBufferCache.getNumPages() * memBufferCache.getPageSize();
+    }
+
+    @Override
+    public ILSMComponent getMutableComponent() {
+        return mutableComponent;
     }
 }

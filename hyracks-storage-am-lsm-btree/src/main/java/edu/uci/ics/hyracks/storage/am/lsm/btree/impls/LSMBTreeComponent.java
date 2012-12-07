@@ -15,11 +15,12 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentState;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMComponent;
 
-public class LSMBTreeComponent implements ILSMComponent {
+public class LSMBTreeComponent extends AbstractLSMComponent {
 
     private final BTree btree;
 
@@ -28,39 +29,15 @@ public class LSMBTreeComponent implements ILSMComponent {
     }
 
     @Override
-    public void activate() {
-        // TODO Auto-generated method stub
-
+    public void destroy() throws HyracksDataException {
+        btree.deactivate();
+        btree.destroy();
     }
 
     @Override
-    public void deactivate() {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void threadEnter() {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void threadExit() {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void setState(LSMComponentState state) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public LSMComponentState getState() {
-        // TODO Auto-generated method stub
-        return null;
+    public void reset() throws HyracksDataException {
+        ((InMemoryFreePageManager) btree.getFreePageManager()).reset();
+        btree.clear();
     }
 
     public BTree getBTree() {

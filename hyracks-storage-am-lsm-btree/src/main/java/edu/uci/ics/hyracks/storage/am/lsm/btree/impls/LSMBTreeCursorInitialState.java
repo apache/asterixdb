@@ -15,7 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.List;
 
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
@@ -32,25 +33,27 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
     private final ITreeIndexFrameFactory leafFrameFactory;
     private MultiComparator cmp;
     private final boolean includeMemComponent;
-    private final AtomicInteger searcherfRefCount;
     private final ILSMHarness lsmHarness;
 
     private final IIndexAccessor memBtreeAccessor;
     private final ISearchPredicate predicate;
     private ISearchOperationCallback searchCallback;
 
+    private final List<ILSMComponent> operationalComponents;
+
     public LSMBTreeCursorInitialState(int numBTrees, ITreeIndexFrameFactory leafFrameFactory, MultiComparator cmp,
-            boolean includeMemComponent, AtomicInteger searcherfRefCount, ILSMHarness lsmHarness,
-            IIndexAccessor memBtreeAccessor, ISearchPredicate predicate, ISearchOperationCallback searchCallback) {
+            boolean includeMemComponent, ILSMHarness lsmHarness, IIndexAccessor memBtreeAccessor,
+            ISearchPredicate predicate, ISearchOperationCallback searchCallback,
+            List<ILSMComponent> operationalComponents) {
         this.numBTrees = numBTrees;
         this.leafFrameFactory = leafFrameFactory;
         this.cmp = cmp;
         this.includeMemComponent = includeMemComponent;
-        this.searcherfRefCount = searcherfRefCount;
         this.lsmHarness = lsmHarness;
         this.searchCallback = searchCallback;
         this.memBtreeAccessor = memBtreeAccessor;
         this.predicate = predicate;
+        this.operationalComponents = operationalComponents;
     }
 
     public int getNumBTrees() {
@@ -70,10 +73,6 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
     public void setPage(ICachedPage page) {
     }
 
-    public AtomicInteger getSearcherRefCount() {
-        return searcherfRefCount;
-    }
-
     public boolean getIncludeMemComponent() {
         return includeMemComponent;
     }
@@ -90,6 +89,10 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
     @Override
     public void setSearchOperationCallback(ISearchOperationCallback searchCallback) {
         this.searchCallback = searchCallback;
+    }
+
+    public List<ILSMComponent> getOperationalComponents() {
+        return operationalComponents;
     }
 
     public IIndexAccessor getMemBTreeAccessor() {

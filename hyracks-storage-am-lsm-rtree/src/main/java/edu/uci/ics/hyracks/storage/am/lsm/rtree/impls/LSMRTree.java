@@ -15,9 +15,9 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
@@ -39,6 +39,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -148,8 +149,7 @@ public class LSMRTree extends AbstractLSMRTree {
 
     @Override
     public void search(IIndexCursor cursor, List<ILSMComponent> immutableComponents, ISearchPredicate pred,
-            IIndexOperationContext ictx, boolean includeMutableComponent, AtomicInteger searcherRefCount)
-            throws HyracksDataException, IndexException {
+            IIndexOperationContext ictx, boolean includeMutableComponent) throws HyracksDataException, IndexException {
         LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;
         int numDiskComponents = immutableComponents.size();
         int numTrees = (includeMutableComponent) ? numDiskComponents + 1 : numDiskComponents;
@@ -175,10 +175,15 @@ public class LSMRTree extends AbstractLSMRTree {
             diskComponentIx++;
         }
 
+        List<ILSMComponent> operationalComponents = new ArrayList<ILSMComponent>();
+        if (includeMutableComponent) {
+            operationalComponents.add(getMutableComponent());
+        }
+        operationalComponents.addAll(immutableComponents);
         LSMRTreeCursorInitialState initialState = new LSMRTreeCursorInitialState(numTrees, rtreeLeafFrameFactory,
                 rtreeInteriorFrameFactory, btreeLeafFrameFactory, ctx.getBTreeMultiComparator(), rTreeAccessors,
-                bTreeAccessors, searcherRefCount, includeMutableComponent, lsmHarness, comparatorFields,
-                linearizerArray, ctx.searchCallback);
+                bTreeAccessors, includeMutableComponent, lsmHarness, comparatorFields, linearizerArray,
+                ctx.searchCallback, operationalComponents);
         cursor.open(initialState, pred);
     }
 
@@ -303,24 +308,12 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
-    public void cleanUpAfterMerge(List<ILSMComponent> mergedComponents) throws HyracksDataException {
-        for (ILSMComponent c : mergedComponents) {
-            LSMRTreeComponent component = (LSMRTreeComponent) c;
-            BTree oldBTree = component.getBTree();
-            oldBTree.deactivate();
-            oldBTree.destroy();
-            RTree oldRTree = component.getRTree();
-            oldRTree.deactivate();
-            oldRTree.destroy();
-        }
-    }
-
-    @Override
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException {
         // Renaming order is critical because we use assume ordering when we
         // read the file names when we open the tree.
         // The RTree should be renamed before the BTree.
         ILSMIndexOperationContext ctx = createOpContext();
+        ctx.setOperation(IndexOperation.MERGE);
         ITreeIndexCursor cursor;
         cursor = new LSMRTreeSortedCursor(ctx, linearizer);
         ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);

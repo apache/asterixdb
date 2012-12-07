@@ -16,5 +16,8 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 public enum LSMComponentState {
-
+    FLUSHING,
+    MERGING,
+    DONE_FLUSHING,
+    DONE_MERGING
 }

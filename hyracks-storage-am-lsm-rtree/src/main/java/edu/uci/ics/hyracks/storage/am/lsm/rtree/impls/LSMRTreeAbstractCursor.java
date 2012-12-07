@@ -1,5 +1,6 @@
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -11,6 +12,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
@@ -45,6 +47,8 @@ public abstract class LSMRTreeAbstractCursor {
     protected boolean foundNext;
     protected final ILSMIndexOperationContext opCtx;
 
+    protected List<ILSMComponent> operationalComponents;
+
     public LSMRTreeAbstractCursor(ILSMIndexOperationContext opCtx) {
         super();
         this.opCtx = opCtx;
@@ -57,8 +61,8 @@ public abstract class LSMRTreeAbstractCursor {
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         LSMRTreeCursorInitialState lsmInitialState = (LSMRTreeCursorInitialState) initialState;
         btreeCmp = lsmInitialState.getBTreeCmp();
-        searcherRefCount = lsmInitialState.getSearcherRefCount();
         includeMemRTree = lsmInitialState.getIncludeMemComponent();
+        operationalComponents = lsmInitialState.getOperationalComponents();
         lsmHarness = lsmInitialState.getLSMHarness();
         numberOfTrees = lsmInitialState.getNumberOfTrees();
         diskRTreeAccessors = lsmInitialState.getRTreeAccessors();
@@ -101,7 +105,7 @@ public abstract class LSMRTreeAbstractCursor {
             rtreeCursors = null;
             btreeCursors = null;
         } finally {
-            lsmHarness.closeSearchCursor(searcherRefCount, includeMemRTree, opCtx);
+            lsmHarness.closeSearchCursor(operationalComponents, includeMemRTree, opCtx);
         }
 
         open = false;

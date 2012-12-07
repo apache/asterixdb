@@ -37,16 +37,16 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMIndexSearchCursor {
     protected ArrayList<IIndexAccessor> deletedKeysBTreeAccessors;
     protected PermutingTupleReference keysOnlyTuple;
     protected RangePredicate keySearchPred;
-    
+
     public LSMInvertedIndexRangeSearchCursor(ILSMIndexOperationContext opCtx) {
         super(opCtx);
     }
-    
+
     @Override
     public void next() throws HyracksDataException {
         super.next();
     }
-    
+
     @Override
     public void open(ICursorInitialState initState, ISearchPredicate searchPred) throws IndexException,
             HyracksDataException {
@@ -59,7 +59,7 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMIndexSearchCursor {
             rangeCursors[i] = invIndexAccessor.createRangeSearchCursor();
             invIndexAccessor.rangeSearch(rangeCursors[i], lsmInitState.getSearchPredicate());
         }
-        
+
         // For searching the deleted-keys BTrees.
         this.keysOnlyTuple = lsmInitState.getKeysOnlyTuple();
         deletedKeysBTreeAccessors = lsmInitState.getDeletedKeysBTreeAccessors();
@@ -68,14 +68,14 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMIndexSearchCursor {
         }
         MultiComparator keyCmp = lsmInitState.getKeyComparator();
         keySearchPred = new RangePredicate(keysOnlyTuple, keysOnlyTuple, true, true, keyCmp, keyCmp);
-        
-        searcherRefCount = lsmInitState.getSearcherRefCount();
+
         lsmHarness = lsmInitState.getLSMHarness();
         includeMemComponent = lsmInitState.getIncludeMemComponent();
+        operationalComponents = lsmInitState.getOperationalComponents();
         setPriorityQueueComparator();
         initPriorityQueue();
     }
-    
+
     /**
      * Check deleted-keys BTrees whether they contain the key in the checkElement's tuple.
      */
@@ -84,7 +84,7 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMIndexSearchCursor {
         keysOnlyTuple.reset(checkElement.getTuple());
         int end = checkElement.getCursorIndex();
         for (int i = 0; i < end; i++) {
-            deletedKeysBTreeCursor.reset();       
+            deletedKeysBTreeCursor.reset();
             try {
                 deletedKeysBTreeAccessors.get(i).search(deletedKeysBTreeCursor, keySearchPred);
                 if (deletedKeysBTreeCursor.hasNext()) {

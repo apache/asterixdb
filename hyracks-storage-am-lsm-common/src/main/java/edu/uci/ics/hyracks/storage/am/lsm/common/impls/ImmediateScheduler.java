@@ -9,14 +9,11 @@ public enum ImmediateScheduler implements ILSMIOOperationScheduler {
     INSTANCE;
 
     @Override
-    public void scheduleOperation(ILSMIOOperation operation) {
+    public void scheduleOperation(ILSMIOOperation operation) throws HyracksDataException {
         try {
             operation.perform();
-        } catch (HyracksDataException e) {
-            e.printStackTrace();
         } catch (IndexException e) {
-            e.printStackTrace();
+            throw new HyracksDataException(e);
         }
     }
-
 }

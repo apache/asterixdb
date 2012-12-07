@@ -15,9 +15,9 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
@@ -39,6 +39,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -145,28 +146,32 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
 
     @Override
     public void search(IIndexCursor cursor, List<ILSMComponent> immutableComponents, ISearchPredicate pred,
-            IIndexOperationContext ictx, boolean includemutableComponent, AtomicInteger searcherRefCount)
-            throws HyracksDataException, IndexException {
+            IIndexOperationContext ictx, boolean includeMutableComponent) throws HyracksDataException, IndexException {
         LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;
         LSMRTreeWithAntiMatterTuplesSearchCursor lsmTreeCursor = (LSMRTreeWithAntiMatterTuplesSearchCursor) cursor;
         int numDiskRComponents = immutableComponents.size();
 
         LSMRTreeCursorInitialState initialState;
         ITreeIndexAccessor[] bTreeAccessors = null;
-        if (includemutableComponent) {
+        if (includeMutableComponent) {
             // Only in-memory BTree
             bTreeAccessors = new ITreeIndexAccessor[1];
             bTreeAccessors[0] = ctx.memBTreeAccessor;
         }
 
+        List<ILSMComponent> operationalComponents = new ArrayList<ILSMComponent>();
+        if (includeMutableComponent) {
+            operationalComponents.add(getMutableComponent());
+        }
+        operationalComponents.addAll(immutableComponents);
         initialState = new LSMRTreeCursorInitialState(numDiskRComponents, rtreeLeafFrameFactory,
                 rtreeInteriorFrameFactory, btreeLeafFrameFactory, ctx.getBTreeMultiComparator(), null, bTreeAccessors,
-                searcherRefCount, includemutableComponent, lsmHarness, comparatorFields, linearizerArray,
-                ctx.searchCallback);
+                includeMutableComponent, lsmHarness, comparatorFields, linearizerArray, ctx.searchCallback,
+                operationalComponents);
 
         lsmTreeCursor.open(initialState, pred);
 
-        if (includemutableComponent) {
+        if (includeMutableComponent) {
             // Open cursor of in-memory RTree
             ctx.memRTreeAccessor.search(lsmTreeCursor.getMemRTreeCursor(), pred);
         }
@@ -309,15 +314,6 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     }
 
     @Override
-    public void cleanUpAfterMerge(List<ILSMComponent> mergedComponents) throws HyracksDataException {
-        for (ILSMComponent c : mergedComponents) {
-            RTree oldRTree = (RTree) ((LSMRTreeComponent) c).getRTree();
-            oldRTree.deactivate();
-            oldRTree.destroy();
-        }
-    }
-
-    @Override
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
         return new LSMRTreeWithAntiMatterTuplesAccessor(lsmHarness, createOpContext());
@@ -405,6 +401,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     @Override
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException {
         LSMRTreeOpContext ctx = createOpContext();
+        ctx.setOperation(IndexOperation.MERGE);
         ITreeIndexCursor cursor = new LSMRTreeWithAntiMatterTuplesSearchCursor(ctx);
         ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
         // Ordered scan, ignoring the in-memory RTree.

@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -49,6 +50,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentState;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
@@ -183,6 +185,30 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
 
         mutableComponent.getRTree().clear();
         mutableComponent.getBTree().clear();
+    }
+
+    @Override
+    public List<ILSMComponent> getOperationalComponents(IIndexOperationContext ctx) {
+        List<ILSMComponent> operationalComponents = new ArrayList<ILSMComponent>();
+        switch (ctx.getOperation()) {
+            case SEARCH:
+                // TODO: We should add the mutable component at some point.
+                operationalComponents.addAll(immutableComponents);
+                break;
+            case MERGE:
+                // TODO: determining the participating components in a merge should probably the task of the merge policy.
+                if (immutableComponents.size() > 1) {
+                    for (ILSMComponent c : immutableComponents) {
+                        if (c.negativeCompareAndSet(LSMComponentState.MERGING, LSMComponentState.MERGING)) {
+                            operationalComponents.add(c);
+                        }
+                    }
+                }
+                break;
+            default:
+                throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
+        }
+        return operationalComponents;
     }
 
     protected LSMComponentFileReferences getMergeTargetFileName(List<ILSMComponent> mergingDiskComponents)
@@ -340,5 +366,10 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     public long getMemoryAllocationSize() {
         InMemoryBufferCache memBufferCache = (InMemoryBufferCache) mutableComponent.getRTree().getBufferCache();
         return memBufferCache.getNumPages() * memBufferCache.getPageSize();
+    }
+
+    @Override
+    public ILSMComponent getMutableComponent() {
+        return mutableComponent;
     }
 }

@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.PriorityQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -25,6 +26,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
@@ -42,7 +44,9 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
     protected AtomicInteger searcherRefCount;
     protected ILSMHarness lsmHarness;
     protected final ILSMIndexOperationContext opCtx;
-    
+
+    protected List<ILSMComponent> operationalComponents;
+
     public LSMIndexSearchCursor(ILSMIndexOperationContext opCtx) {
         this.opCtx = opCtx;
         outputElement = null;
@@ -79,7 +83,7 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
         rangeCursors = null;
 
         if (searcherRefCount != null) {
-            lsmHarness.closeSearchCursor(searcherRefCount, includeMemComponent, opCtx);
+            lsmHarness.closeSearchCursor(operationalComponents, includeMemComponent, opCtx);
         }
     }
 
@@ -111,7 +115,7 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
                 }
                 rangeCursors = null;
             } finally {
-                lsmHarness.closeSearchCursor(searcherRefCount, includeMemComponent, opCtx);
+                lsmHarness.closeSearchCursor(operationalComponents, includeMemComponent, opCtx);
             }
         }
     }

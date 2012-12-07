@@ -16,7 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -27,14 +26,15 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 public interface ILSMHarness {
     public boolean insertUpdateOrDelete(ITupleReference tuple, ILSMIndexOperationContext ictx, boolean tryOperation)
             throws HyracksDataException, IndexException;
-    
-    public boolean noOp(ILSMIndexOperationContext ictx, boolean tryOperation) throws HyracksDataException;            
+
+    public boolean noOp(ILSMIndexOperationContext ictx, boolean tryOperation) throws HyracksDataException;
 
     public List<ILSMComponent> search(IIndexCursor cursor, ISearchPredicate pred, ILSMIndexOperationContext ctx,
-            boolean includeMemComponent) throws HyracksDataException, IndexException;
+            boolean includeMutableComponent) throws HyracksDataException, IndexException;
 
-    public void closeSearchCursor(AtomicInteger searcherRefCount, boolean includeMemComponent, ILSMIndexOperationContext ctx)
-            throws HyracksDataException;
+    // Eventually includeMutableComponent and ctx should be removed.
+    public void closeSearchCursor(List<ILSMComponent> operationalComponents, boolean includeMutableComponent,
+            ILSMIndexOperationContext ctx) throws HyracksDataException;
 
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
             IndexException;

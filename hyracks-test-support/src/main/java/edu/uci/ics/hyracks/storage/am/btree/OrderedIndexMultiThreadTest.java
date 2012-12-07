@@ -81,8 +81,8 @@ public abstract class OrderedIndexMultiThreadTest {
         // 4 batches per thread.
         int batchSize = (NUM_OPERATIONS / numThreads) / 4;
 
-        IndexMultiThreadTestDriver driver = new IndexMultiThreadTestDriver(index, workerFactory, fieldSerdes,
-                conf.ops, conf.opProbs);
+        IndexMultiThreadTestDriver driver = new IndexMultiThreadTestDriver(index, workerFactory, fieldSerdes, conf.ops,
+                conf.opProbs);
         driver.init();
         long[] times = driver.run(numThreads, 1, NUM_OPERATIONS, batchSize);
         index.validate();

@@ -48,7 +48,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
     public LSMRTreeWithAntiMatterTuplesSearchCursor(ILSMIndexOperationContext opCtx) {
         super(opCtx);
     }
-    
+
     public void initPriorityQueue() throws HyracksDataException, IndexException {
         int pqInitSize = (rangeCursors.length > 0) ? rangeCursors.length : 1;
         outputPriorityQueue = new PriorityQueue<PriorityQueueElement>(pqInitSize, pqCmp);
@@ -71,6 +71,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
                     .getRTreeLeafFrameFactory().createFrame());
         }
         includeMemComponent = lsmInitialState.getIncludeMemComponent();
+        operationalComponents = lsmInitialState.getOperationalComponents();
         if (includeMemComponent) {
             memRTreeCursor = new RTreeSearchCursor((IRTreeInteriorFrame) lsmInitialState.getRTreeInteriorFrameFactory()
                     .createFrame(), (IRTreeLeafFrame) lsmInitialState.getRTreeLeafFrameFactory().createFrame());
@@ -79,7 +80,6 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
             memBTreeAccessor = lsmInitialState.getBTreeAccessors()[0];
             btreeRangePredicate = new RangePredicate(null, null, true, true, btreeCmp, btreeCmp);
         }
-        searcherRefCount = lsmInitialState.getSearcherRefCount();
         lsmHarness = lsmInitialState.getLSMHarness();
         comparatorFields = lsmInitialState.getComparatorFields();
         setPriorityQueueComparator();

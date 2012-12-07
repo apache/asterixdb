@@ -30,7 +30,8 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor implements ITre
     private boolean[] depletedRtreeCursors;
     private int foundIn = -1;
 
-    public LSMRTreeSortedCursor(ILSMIndexOperationContext opCtx, ILinearizeComparatorFactory linearizer) throws HyracksDataException {
+    public LSMRTreeSortedCursor(ILSMIndexOperationContext opCtx, ILinearizeComparatorFactory linearizer)
+            throws HyracksDataException {
         super(opCtx);
         this.linearizeCmp = linearizer.createBinaryComparator();
         reset();
@@ -56,7 +57,7 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor implements ITre
             }
         } finally {
             if (open) {
-                lsmHarness.closeSearchCursor(searcherRefCount, includeMemRTree, opCtx);
+                lsmHarness.closeSearchCursor(operationalComponents, includeMemRTree, opCtx);
             }
         }
     }

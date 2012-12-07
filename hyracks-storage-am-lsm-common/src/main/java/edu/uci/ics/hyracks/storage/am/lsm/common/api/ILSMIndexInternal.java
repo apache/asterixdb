@@ -16,7 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -28,30 +27,31 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 public interface ILSMIndexInternal extends ILSMIndex {
 
-    public ILSMComponent merge(List<ILSMComponent> mergedComponents, ILSMIOOperation operation)
-            throws HyracksDataException, IndexException;
-
     public void insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ictx) throws HyracksDataException,
             IndexException;
 
     public void search(IIndexCursor cursor, List<ILSMComponent> diskComponents, ISearchPredicate pred,
-            IIndexOperationContext ictx, boolean includeMemComponent, AtomicInteger searcherRefCount)
+            IIndexOperationContext ictx, boolean includeMemComponent) throws HyracksDataException, IndexException;
+
+    public ILSMComponent flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
+
+    public ILSMComponent merge(List<ILSMComponent> mergedComponents, ILSMIOOperation operation)
             throws HyracksDataException, IndexException;
 
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
             IndexException;
 
-    public void addMergedComponent(ILSMComponent newComponent, List<ILSMComponent> mergedComponents);
+    public void addComponent(ILSMComponent index);
 
-    public void cleanUpAfterMerge(List<ILSMComponent> mergedComponents) throws HyracksDataException;
+    public void subsumeMergedComponents(ILSMComponent newComponent, List<ILSMComponent> mergedComponents);
 
-    public ILSMComponent flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
-
-    public void addFlushedComponent(ILSMComponent index);
+    public List<ILSMComponent> getOperationalComponents(IIndexOperationContext ctx);
 
     public IInMemoryFreePageManager getInMemoryFreePageManager();
 
     public void resetMutableComponent() throws HyracksDataException;
+
+    public ILSMComponent getMutableComponent();
 
     public List<ILSMComponent> getImmutableComponents();
 

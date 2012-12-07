@@ -118,14 +118,15 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     }
 
     @Override
-    public void addFlushedComponent(ILSMComponent index) {
+    public void addComponent(ILSMComponent index) {
         immutableComponents.addFirst(index);
     }
 
     @Override
-    public void addMergedComponent(ILSMComponent newComponent, List<ILSMComponent> mergedComponents) {
+    public void subsumeMergedComponents(ILSMComponent newComponent, List<ILSMComponent> mergedComponents) {
+        int firstComponentIndex = immutableComponents.indexOf(mergedComponents.get(0));
         immutableComponents.removeAll(mergedComponents);
-        immutableComponents.addLast(newComponent);
+        immutableComponents.add(firstComponentIndex, newComponent);
     }
 
     @Override

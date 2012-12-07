@@ -17,8 +17,6 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -51,22 +49,11 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
  */
 public class LSMHarness implements ILSMHarness {
     protected final Logger LOGGER = Logger.getLogger(LSMHarness.class.getName());
-    protected static final long AFTER_MERGE_CLEANUP_SLEEP = 100;
 
     private ILSMIndexInternal lsmIndex;
 
     // All accesses to the LSM-Tree's on-disk components are synchronized on diskComponentsSync.
     private Object diskComponentsSync = new Object();
-
-    // For synchronizing searchers with a concurrent merge.
-    private AtomicBoolean isMerging = new AtomicBoolean(false);
-    private AtomicInteger searcherRefCountA = new AtomicInteger(0);
-    private AtomicInteger searcherRefCountB = new AtomicInteger(0);
-
-    // Represents the current number of searcher threads that are operating on
-    // the unmerged on-disk Trees.
-    // We alternate between searcherRefCountA and searcherRefCountB.
-    private AtomicInteger searcherRefCount = searcherRefCountA;
 
     // Flush and Merge Policies
     private final ILSMFlushController flushController;
@@ -96,14 +83,12 @@ public class LSMHarness implements ILSMHarness {
         if (!opTracker.beforeOperation(ctx.getSearchOperationCallback(), ctx.getModificationCallback(), tryOperation)) {
             return false;
         }
-        // It is possible, due to concurrent execution of operations, that an operation will 
-        // fail. In such a case, simply retry the operation. Refer to the specific LSMIndex code 
-        // to see exactly why an operation might fail.
         try {
             lsmIndex.insertUpdateOrDelete(tuple, ctx);
         } finally {
             threadExit(ctx);
         }
+
         return true;
     }
 
@@ -116,6 +101,7 @@ public class LSMHarness implements ILSMHarness {
         return true;
     }
 
+    @Override
     public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Flushing LSM-Index: " + lsmIndex);
@@ -136,7 +122,7 @@ public class LSMHarness implements ILSMHarness {
         }
         lsmIndex.resetMutableComponent();
         synchronized (diskComponentsSync) {
-            lsmIndex.addFlushedComponent(newComponent);
+            lsmIndex.addComponent(newComponent);
             mergePolicy.diskComponentAdded(lsmIndex, lsmIndex.getImmutableComponents().size());
         }
 
@@ -144,55 +130,46 @@ public class LSMHarness implements ILSMHarness {
         flushController.setFlushStatus(lsmIndex, false);
     }
 
+    @Override
     public List<ILSMComponent> search(IIndexCursor cursor, ISearchPredicate pred, ILSMIndexOperationContext ctx,
-            boolean includeMemComponent) throws HyracksDataException, IndexException {
+            boolean includeMutableComponent) throws HyracksDataException, IndexException {
         // If the search doesn't include the in-memory component, then we don't have
         // to synchronize with a flush.
-        if (includeMemComponent) {
+        if (includeMutableComponent) {
             opTracker.beforeOperation(ctx.getSearchOperationCallback(), ctx.getModificationCallback(), false);
         }
 
         // Get a snapshot of the current on-disk Trees.
-        // If includeMemComponent is true, then no concurrent
+        // If includeMutableComponent is true, then no concurrent
         // flush can add another on-disk Tree (due to threadEnter());
-        // If includeMemComponent is false, then it is possible that a concurrent
+        // If includeMutableComponent is false, then it is possible that a concurrent
         // flush adds another on-disk Tree.
         // Since this mode is only used for merging trees, it doesn't really
         // matter if the merge excludes the new on-disk Tree.
-        List<ILSMComponent> diskComponentSnapshot = new ArrayList<ILSMComponent>();
-        AtomicInteger localSearcherRefCount = null;
+        List<ILSMComponent> operationalComponents;
         synchronized (diskComponentsSync) {
-            diskComponentSnapshot.addAll(lsmIndex.getImmutableComponents());
-            localSearcherRefCount = searcherRefCount;
-            localSearcherRefCount.incrementAndGet();
+            operationalComponents = lsmIndex.getOperationalComponents(ctx);
+        }
+        for (ILSMComponent c : operationalComponents) {
+            c.threadEnter();
         }
 
-        lsmIndex.search(cursor, diskComponentSnapshot, pred, ctx, includeMemComponent, localSearcherRefCount);
-        return diskComponentSnapshot;
+        lsmIndex.search(cursor, operationalComponents, pred, ctx, includeMutableComponent);
+        return operationalComponents;
     }
 
+    @Override
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
             IndexException {
-        if (!isMerging.compareAndSet(false, true)) {
-            throw new LSMMergeInProgressException(
-                    "Merge already in progress. Only one merge process allowed at a time.");
-        }
-
         ILSMIOOperation mergeOp = lsmIndex.createMergeOperation(callback);
-        if (mergeOp == null) {
-            isMerging.set(false);
-        }
         return mergeOp;
     }
 
+    @Override
     public void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Merging LSM-Index: " + lsmIndex);
         }
-
-        // Point to the current searcher ref count, so we can wait for it later
-        // (after we swap the searcher ref count).
-        AtomicInteger localSearcherRefCount = searcherRefCount;
 
         List<ILSMComponent> mergedComponents = new ArrayList<ILSMComponent>();
         ILSMComponent newComponent = null;
@@ -203,7 +180,6 @@ public class LSMHarness implements ILSMHarness {
 
             // No merge happened.
             if (newComponent == null) {
-                isMerging.set(false);
                 return;
             }
 
@@ -217,49 +193,40 @@ public class LSMHarness implements ILSMHarness {
             operation.getCallback().afterFinalize(operation, newComponent);
         }
 
-        // Remove the old Trees from the list, and add the new merged Tree(s).
-        // Also, swap the searchRefCount.
-        synchronized (diskComponentsSync) {
-            lsmIndex.addMergedComponent(newComponent, mergedComponents);
-            // Swap the searcher ref count reference, and reset it to zero.    
-            if (searcherRefCount == searcherRefCountA) {
-                searcherRefCount = searcherRefCountB;
-            } else {
-                searcherRefCount = searcherRefCountA;
+        // Remove the old components from the list, and add the new merged component(s).
+        try {
+            synchronized (diskComponentsSync) {
+                lsmIndex.subsumeMergedComponents(newComponent, mergedComponents);
             }
-            searcherRefCount.set(0);
-        }
-
-        // Wait for all searchers that are still accessing the old on-disk
-        // Trees, then perform the final cleanup of the old Trees.
-        while (localSearcherRefCount.get() > 0) {
-            try {
-                Thread.sleep(AFTER_MERGE_CLEANUP_SLEEP);
-            } catch (InterruptedException e) {
-                // Propagate the exception to the caller, so that an appropriate
-                // cleanup action can be taken.
-                throw new HyracksDataException(e);
+        } finally {
+            // Cleanup merged components in case there are no more searchers accessing them.
+            for (ILSMComponent c : mergedComponents) {
+                c.setState(LSMComponentState.DONE_MERGING);
+                if (c.getThreadReferenceCount() == 0) {
+                    c.destroy();
+                }
             }
         }
-
-        // Cleanup. At this point we have guaranteed that no searchers are
-        // touching the old on-disk Trees (localSearcherRefCount == 0).
-        lsmIndex.cleanUpAfterMerge(mergedComponents);
-        isMerging.set(false);
     }
 
     @Override
-    public void closeSearchCursor(AtomicInteger searcherRefCount, boolean includeMemComponent,
+    public void closeSearchCursor(List<ILSMComponent> operationalComponents, boolean includeMutableComponent,
             ILSMIndexOperationContext ctx) throws HyracksDataException {
-        // If the in-memory Tree was not included in the search, then we don't
-        // need to synchronize with a flush.
-        if (includeMemComponent) {
+        // TODO: we should not worry about the mutable component.
+        if (includeMutableComponent) {
             threadExit(ctx);
         }
-        // A merge may be waiting on this searcher to finish searching the on-disk components.
-        // Decrement the searcherRefCount so that the merge process is able to cleanup any old
-        // on-disk components.
-        searcherRefCount.decrementAndGet();
+        try {
+            for (ILSMComponent c : operationalComponents) {
+                c.threadExit();
+            }
+        } finally {
+            for (ILSMComponent c : operationalComponents) {
+                if (c.getState() == LSMComponentState.DONE_MERGING && c.getThreadReferenceCount() == 0) {
+                    c.destroy();
+                }
+            }
+        }
     }
 
     @Override
@@ -270,7 +237,7 @@ public class LSMHarness implements ILSMHarness {
         // information to mark the tree as valid).
         lsmIndex.markAsValid(index);
         synchronized (diskComponentsSync) {
-            lsmIndex.addFlushedComponent(index);
+            lsmIndex.addComponent(index);
             mergePolicy.diskComponentAdded(lsmIndex, lsmIndex.getImmutableComponents().size());
         }
     }

@@ -137,7 +137,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
             rangeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
         }
         includeMemComponent = lsmInitialState.getIncludeMemComponent();
-        searcherRefCount = lsmInitialState.getSearcherRefCount();
+        operationalComponents = lsmInitialState.getOperationalComponents();
         lsmHarness = lsmInitialState.getLSMHarness();
         searchCallback = lsmInitialState.getSearchOperationCallback();
         memBTreeAccessor = lsmInitialState.getMemBTreeAccessor();

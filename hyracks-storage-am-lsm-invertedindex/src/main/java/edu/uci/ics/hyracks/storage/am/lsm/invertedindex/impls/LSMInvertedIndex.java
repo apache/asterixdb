@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
@@ -62,6 +61,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentState;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndex;
@@ -161,6 +161,30 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         } catch (IndexException e) {
             throw new HyracksDataException(e);
         }
+    }
+
+    @Override
+    public List<ILSMComponent> getOperationalComponents(IIndexOperationContext ctx) {
+        List<ILSMComponent> operationalComponents = new ArrayList<ILSMComponent>();
+        switch (ctx.getOperation()) {
+            case SEARCH:
+                // TODO: We should add the mutable component at some point.
+                operationalComponents.addAll(immutableComponents);
+                break;
+            case MERGE:
+                // TODO: determining the participating components in a merge should probably the task of the merge policy.
+                if (immutableComponents.size() > 1) {
+                    for (ILSMComponent c : immutableComponents) {
+                        if (c.negativeCompareAndSet(LSMComponentState.MERGING, LSMComponentState.MERGING)) {
+                            operationalComponents.add(c);
+                        }
+                    }
+                }
+                break;
+            default:
+                throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
+        }
+        return operationalComponents;
     }
 
     protected LSMInvertedIndexComponent createDiskInvIndexComponent(ILSMComponentFactory factory,
@@ -315,12 +339,11 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
 
     @Override
     public void search(IIndexCursor cursor, List<ILSMComponent> immutableComponents, ISearchPredicate pred,
-            IIndexOperationContext ictx, boolean includemutableComponent, AtomicInteger searcherRefCount)
-            throws HyracksDataException, IndexException {
-        int numComponents = (includemutableComponent) ? immutableComponents.size() : immutableComponents.size() + 1;
+            IIndexOperationContext ictx, boolean includeMutableComponent) throws HyracksDataException, IndexException {
+        int numComponents = (includeMutableComponent) ? immutableComponents.size() : immutableComponents.size() + 1;
         ArrayList<IIndexAccessor> indexAccessors = new ArrayList<IIndexAccessor>(numComponents);
         ArrayList<IIndexAccessor> deletedKeysBTreeAccessors = new ArrayList<IIndexAccessor>(numComponents);
-        if (includemutableComponent) {
+        if (includeMutableComponent) {
             IIndexAccessor invIndexAccessor = mutableComponent.getInvIndex().createAccessor(
                     NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             indexAccessors.add(invIndexAccessor);
@@ -337,28 +360,35 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                     NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             deletedKeysBTreeAccessors.add(deletedKeysAccessor);
         }
-        ICursorInitialState initState = createCursorInitialState(pred, ictx, includemutableComponent, searcherRefCount,
-                indexAccessors, deletedKeysBTreeAccessors);
+
+        ICursorInitialState initState = createCursorInitialState(pred, ictx, includeMutableComponent, indexAccessors,
+                deletedKeysBTreeAccessors);
         cursor.open(initState, pred);
     }
 
     private ICursorInitialState createCursorInitialState(ISearchPredicate pred, IIndexOperationContext ictx,
-            boolean includemutableComponent, AtomicInteger searcherRefCount, ArrayList<IIndexAccessor> indexAccessors,
+            boolean includeMutableComponent, ArrayList<IIndexAccessor> indexAccessors,
             ArrayList<IIndexAccessor> deletedKeysBTreeAccessors) {
         ICursorInitialState initState = null;
         PermutingTupleReference keysOnlyTuple = createKeysOnlyTupleReference();
         MultiComparator keyCmp = MultiComparator.createIgnoreFieldLength(invListCmpFactories);
+        List<ILSMComponent> operationalComponents = new ArrayList<ILSMComponent>();
+        if (includeMutableComponent) {
+            operationalComponents.add(getMutableComponent());
+        }
+        operationalComponents.addAll(immutableComponents);
+
         // TODO: This check is not pretty, but it does the job. Come up with something more OO in the future.
         // Distinguish between regular searches and range searches (mostly used in merges).
         if (pred instanceof InvertedIndexSearchPredicate) {
             initState = new LSMInvertedIndexSearchCursorInitialState(keyCmp, keysOnlyTuple, indexAccessors,
-                    deletedKeysBTreeAccessors, ictx, includemutableComponent, searcherRefCount, lsmHarness);
+                    deletedKeysBTreeAccessors, ictx, includeMutableComponent, lsmHarness, operationalComponents);
         } else {
             InMemoryInvertedIndex memInvIndex = (InMemoryInvertedIndex) mutableComponent.getInvIndex();
             MultiComparator tokensAndKeysCmp = MultiComparator.create(memInvIndex.getBTree().getComparatorFactories());
             initState = new LSMInvertedIndexRangeSearchCursorInitialState(tokensAndKeysCmp, keyCmp, keysOnlyTuple,
-                    includemutableComponent, searcherRefCount, lsmHarness, indexAccessors, deletedKeysBTreeAccessors,
-                    pred);
+                    includeMutableComponent, lsmHarness, indexAccessors, deletedKeysBTreeAccessors, pred,
+                    operationalComponents);
         }
         return initState;
     }
@@ -412,7 +442,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
             IndexException {
         LSMInvertedIndexOpContext ctx = createOpContext(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-        ctx.setOperation(IndexOperation.SEARCH);
+        ctx.setOperation(IndexOperation.MERGE);
         IIndexCursor cursor = new LSMInvertedIndexRangeSearchCursor(ctx);
         RangePredicate mergePred = new RangePredicate(null, null, true, true, null, null);
 
@@ -438,19 +468,6 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 callback);
 
         return mergeOp;
-    }
-
-    @Override
-    public void cleanUpAfterMerge(List<ILSMComponent> mergedComponents) throws HyracksDataException {
-        for (ILSMComponent c : mergedComponents) {
-            LSMInvertedIndexComponent component = (LSMInvertedIndexComponent) c;
-            BTree oldDeletedKeysBTree = component.getDeletedKeysBTree();
-            oldDeletedKeysBTree.deactivate();
-            oldDeletedKeysBTree.destroy();
-            IInvertedIndex oldInvIndex = component.getInvIndex();
-            oldInvIndex.deactivate();
-            oldInvIndex.destroy();
-        }
     }
 
     @Override
@@ -628,5 +645,10 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         int startPageId = 0;
         int maxPageId = invIndex.getInvListsMaxPageId();
         forceFlushDirtyPages(bufferCache, fileId, startPageId, maxPageId);
+    }
+
+    @Override
+    public ILSMComponent getMutableComponent() {
+        return mutableComponent;
     }
 }
