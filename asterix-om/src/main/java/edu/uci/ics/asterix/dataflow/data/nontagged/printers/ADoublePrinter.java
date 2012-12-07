@@ -8,7 +8,6 @@ import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 
 public class ADoublePrinter implements IPrinter {
 
-    private static final long serialVersionUID = 1L;
     public static final ADoublePrinter INSTANCE = new ADoublePrinter();
 
     @Override

@@ -2,6 +2,7 @@ package edu.uci.ics.asterix.om.typecomputer.impl;
 
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
+import edu.uci.ics.asterix.om.pointables.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -60,7 +61,7 @@ public class NonTaggedFieldAccessByNameResultType implements IResultTypeComputer
                 return (ARecordType) type0;
             }
             case ANY: {
-                return null;
+                return DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
             }
             case UNION: {
                 AUnionType u = (AUnionType) type0;

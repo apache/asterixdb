@@ -48,7 +48,7 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
     private AqlSerializerDeserializerProvider() {
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     @Override
     public ISerializerDeserializer getSerializerDeserializer(Object typeInfo) {
         IAType aqlType = (IAType) typeInfo;
@@ -63,7 +63,7 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     public ISerializerDeserializer getNonTaggedSerializerDeserializer(IAType aqlType) {
         switch (aqlType.getTypeTag()) {
             case CIRCLE: {
@@ -139,7 +139,7 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     private ISerializerDeserializer addTag(final ISerializerDeserializer nonTaggedSerde, final ATypeTag typeTag) {
         return new ISerializerDeserializer<IAObject>() {
 
@@ -148,13 +148,15 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
             @Override
             public IAObject deserialize(DataInput in) throws HyracksDataException {
                 try {
-                    ATypeTag typeTag = SerializerDeserializerUtil.deserializeTag(in);
+                    //deserialize the tag to move the  input cursor forward 
+                    SerializerDeserializerUtil.deserializeTag(in);
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }
                 return (IAObject) nonTaggedSerde.deserialize(in);
             }
 
+            @SuppressWarnings("unchecked")
             @Override
             public void serialize(IAObject instance, DataOutput out) throws HyracksDataException {
                 SerializerDeserializerUtil.serializeTag(instance, out);
