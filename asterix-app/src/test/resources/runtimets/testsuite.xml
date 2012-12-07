@@ -1474,6 +1474,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-aqlplus_2">
+        <output-file compare="Text">dblp-aqlplus_2.adm</output-file>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-csx-2_1">
         <output-file compare="Text">dblp-csx-2_1.adm</output-file>
       </compilation-unit>
@@ -2558,6 +2564,11 @@
     <test-case FilePath="records">
       <compilation-unit name="field-access-by-index_01">
         <output-file compare="Text">field-access-by-index_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="records">
+      <compilation-unit name="field-access-on-open-field">
+        <output-file compare="Text">field-access-on-open-field.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="records">
