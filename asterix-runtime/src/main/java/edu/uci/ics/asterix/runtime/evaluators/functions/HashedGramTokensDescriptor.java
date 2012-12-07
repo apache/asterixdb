@@ -3,7 +3,6 @@ package edu.uci.ics.asterix.runtime.evaluators.functions;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
-import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.common.GramTokensEvaluator;
@@ -37,8 +36,7 @@ public class HashedGramTokensDescriptor extends AbstractScalarFunctionDynamicDes
 
             @Override
             public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
-                ITokenFactory tokenFactory = new HashedUTF8NGramTokenFactory(ATypeTag.INT32.serialize(),
-                        ATypeTag.INT32.serialize());
+                ITokenFactory tokenFactory = new HashedUTF8NGramTokenFactory();
                 NGramUTF8StringBinaryTokenizer tokenizer = new NGramUTF8StringBinaryTokenizer(3, true, true, true,
                         tokenFactory);
                 return new GramTokensEvaluator(args, output, tokenizer, BuiltinType.AINT32);

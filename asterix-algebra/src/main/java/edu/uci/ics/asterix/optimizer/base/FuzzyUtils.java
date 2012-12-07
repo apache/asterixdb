@@ -35,6 +35,7 @@ public class FuzzyUtils {
                 return AsterixBuiltinFunctions.COUNTHASHED_WORD_TOKENS;
             case UNORDEREDLIST:
             case ORDEREDLIST:
+            case ANY:
                 return null;
             default:
                 throw new NotImplementedException("No tokenizer for type " + inputTag);

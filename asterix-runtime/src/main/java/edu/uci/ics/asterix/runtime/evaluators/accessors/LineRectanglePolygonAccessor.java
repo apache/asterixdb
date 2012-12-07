@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.runtime.evaluators.accessors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.builders.IAOrderedListBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.Coordinate;
@@ -77,7 +76,7 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                     private final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
                     private final ICopyEvaluator eval = args[0].createEvaluator(argOut);
 
-                    private final IAOrderedListBuilder listBuilder = new OrderedListBuilder();
+                    private final OrderedListBuilder listBuilder = new OrderedListBuilder();
                     private final ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
                     private final AOrderedListType pointListType = new AOrderedListType(BuiltinType.APOINT, null);
 

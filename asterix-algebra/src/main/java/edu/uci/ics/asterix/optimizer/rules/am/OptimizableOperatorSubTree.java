@@ -8,6 +8,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -16,6 +17,7 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
@@ -123,5 +125,12 @@ public class OptimizableOperatorSubTree {
         dataSourceScan = null;
         dataset = null;
         recordType = null;
+    }
+    
+    public void getPrimaryKeyVars(List<LogicalVariable> target) {
+        int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
+        for (int i = 0; i < numPrimaryKeys; i++) {
+            target.add(dataSourceScan.getVariables().get(i));
+        }
     }
 }

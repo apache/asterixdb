@@ -36,6 +36,9 @@ public class NonTaggedFieldAccessByNameResultType implements IResultTypeComputer
         }
         IAType type0 = (IAType) obj;
         ARecordType t0 = getRecordTypeFromType(type0, expression);
+        if (t0 == null) {
+            return BuiltinType.ANY;
+        }
 
         AbstractLogicalExpression arg1 = (AbstractLogicalExpression) f.getArguments().get(1).getValue();
         if (arg1.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
