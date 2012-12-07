@@ -220,10 +220,14 @@ public class StaticTypeCastUtil {
     /**
      * This method statically cast the type of records from their current type to the required type.
      * 
-     * @param func The record constructor expression.
-     * @param reqType  The required type.
-     * @param inputType The current type.
-     * @param env The type environment.
+     * @param func
+     *            The record constructor expression.
+     * @param reqType
+     *            The required type.
+     * @param inputType
+     *            The current type.
+     * @param env
+     *            The type environment.
      * @throws AlgebricksException
      */
     private static void staticRecordTypeCast(AbstractFunctionCallExpression func, ARecordType reqType,

@@ -166,17 +166,20 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             if (!checkArgs(expr)) {
                 return new Pair<Boolean, ILogicalExpression>(changed, expr);
             }
-            // TODO: currently ARecord is always a closed record
+            //Current ARecord SerDe assumes a closed record, so we do not constant fold open record constructors
             if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)
                     || expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.CAST_RECORD)) {
                 return new Pair<Boolean, ILogicalExpression>(false, null);
             }
+            //Current List SerDe assumes a strongly typed list, so we do not constant fold the list constructors if they are not strongly typed
             if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR)
                     || expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR)) {
                 AbstractCollectionType listType = (AbstractCollectionType) TypeComputerUtilities.getRequiredType(expr);
-                // do not fold open lists nor nested lists
                 if (listType != null
                         && (listType.getItemType().getTypeTag() == ATypeTag.ANY || listType.getItemType() instanceof AbstractCollectionType)) {
+                    //case1: listType == null,  could be a nested list inside a list<ANY>
+                    //case2: itemType = ANY
+                    //case3: itemType = a nested list
                     return new Pair<Boolean, ILogicalExpression>(false, null);
                 }
             }

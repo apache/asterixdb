@@ -54,32 +54,32 @@ class AListPrinter {
         List<IVisitablePointable> items = listAccessor.getItems();
         itemVisitorArg.first = ps;
 
-        //print the beginning part
+        // print the beginning part
         ps.print(leftParen);
 
         // print item 0 to n-2
         for (int i = 0; i < items.size() - 1; i++) {
-            IVisitablePointable itemTypeTag = itemTags.get(i);
-            IVisitablePointable item = items.get(i);
-            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
-                    .getStartOffset()]);
-            itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
-            item.accept(visitor, itemVisitorArg);
-            //print the comma
+            printItem(visitor, itemTags, items, i);
+            // print the comma
             ps.print(COMMA);
         }
 
         // print item n-1
         if (items.size() > 0) {
-            IVisitablePointable itemTypeTag = itemTags.get(itemTags.size() - 1);
-            IVisitablePointable item = items.get(items.size() - 1);
-            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
-                    .getStartOffset()]);
-            itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
-            item.accept(visitor, itemVisitorArg);
+            printItem(visitor, itemTags, items, items.size() - 1);
         }
 
-        //print the end part
+        // print the end part
         ps.print(rightParen);
+    }
+
+    private void printItem(APrintVisitor visitor, List<IVisitablePointable> itemTags, List<IVisitablePointable> items,
+            int i) throws AsterixException {
+        IVisitablePointable itemTypeTag = itemTags.get(i);
+        IVisitablePointable item = items.get(i);
+        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
+                .getStartOffset()]);
+        itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
+        item.accept(visitor, itemVisitorArg);
     }
 }

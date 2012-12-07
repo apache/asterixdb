@@ -57,38 +57,32 @@ class ARecordPrinter {
 
         // print field 0 to n-2
         for (int i = 0; i < fieldNames.size() - 1; i++) {
-            IVisitablePointable itemTypeTag = fieldTags.get(i);
-            IVisitablePointable item = fieldValues.get(i);
-            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
-                    .getStartOffset()]);
-            itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
-
-            // print field name
-            fieldNames.get(i).accept(visitor, nameVisitorArg);
-            ps.print(COLON);
-            // print field value
-            item.accept(visitor, itemVisitorArg);
-
+            printField(ps, visitor, fieldNames, fieldTags, fieldValues, i);
             // print the comma
             ps.print(COMMA);
         }
 
         // print field n-1
         if (fieldValues.size() > 0) {
-            IVisitablePointable itemTypeTag = fieldTags.get(fieldTags.size() - 1);
-            IVisitablePointable item = fieldValues.get(fieldValues.size() - 1);
-            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
-                    .getStartOffset()]);
-            itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
-
-            // print field name
-            fieldNames.get(fieldNames.size() - 1).accept(visitor, nameVisitorArg);
-            ps.print(COLON);
-            // print field value
-            item.accept(visitor, itemVisitorArg);
+            printField(ps, visitor, fieldNames, fieldTags, fieldValues, fieldValues.size() - 1);
         }
 
         // print the end part
         ps.print(RIGHT_PAREN);
+    }
+
+    private void printField(PrintStream ps, APrintVisitor visitor, List<IVisitablePointable> fieldNames,
+            List<IVisitablePointable> fieldTags, List<IVisitablePointable> fieldValues, int i) throws AsterixException {
+        IVisitablePointable itemTypeTag = fieldTags.get(i);
+        IVisitablePointable item = fieldValues.get(i);
+        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
+                .getStartOffset()]);
+        itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
+
+        // print field name
+        fieldNames.get(i).accept(visitor, nameVisitorArg);
+        ps.print(COLON);
+        // print field value
+        item.accept(visitor, itemVisitorArg);
     }
 }
