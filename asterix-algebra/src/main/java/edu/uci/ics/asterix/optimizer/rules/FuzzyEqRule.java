@@ -99,9 +99,16 @@ public class FuzzyEqRule implements IAlgebraicRewriteRule {
                     inputExprTypes.add(t.getTypeTag());
                 } else if (inputExp.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     // Hack to make sure that we will add the func call as is, without wrapping a tokenizer around.
-                    inputTypeTag = ATypeTag.UNORDEREDLIST;
+                    IAType type = (IAType) context.getExpressionTypeComputer().getType(inputExp, metadataProvider, env);
+                    inputTypeTag = type.getTypeTag();
+                    // Only auto-tokenize strings.
+                    if (inputTypeTag == ATypeTag.STRING) {
+                        // Strings will be auto-tokenized.
+                        inputTypeTag = ATypeTag.UNORDEREDLIST;
+                    } else {
+                        useExprAsIs = true;
+                    }
                     inputExprTypes.add(inputTypeTag);
-                    useExprAsIs = true;
                 } else if (inputExp.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                     ConstantExpression inputConst = (ConstantExpression) inputExp;
                     AsterixConstantValue constVal = (AsterixConstantValue) inputConst.getValue();

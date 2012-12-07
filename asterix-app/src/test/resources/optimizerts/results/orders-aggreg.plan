@@ -9,16 +9,16 @@
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
             -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$24(ASC)] HASH:[$$24]  |PARTITIONED|
-              -- PRE_CLUSTERED_GROUP_BY[$$16]  |LOCAL|
+              -- PRE_CLUSTERED_GROUP_BY[$$16]  |PARTITIONED|
                       {
                         -- AGGREGATE  |LOCAL|
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                       }
-                -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                  -- STABLE_SORT [$$16(ASC)]  |LOCAL|
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  -- STABLE_SORT [$$16(ASC)]  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- STREAM_PROJECT  |PARTITIONED|
-                        -- ASSIGN  |PARTITIONED|
+                      -- ASSIGN  |PARTITIONED|
+                        -- STREAM_PROJECT  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- DATASOURCE_SCAN  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

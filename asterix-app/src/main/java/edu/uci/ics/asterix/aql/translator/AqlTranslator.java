@@ -650,7 +650,9 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 .getDatasetName().getValue(), st1.getQuery(), st1.getVarCounter());
 
         Pair<JobSpecification, FileSplit> compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
-        jobsToExecute.add(compiled.first);
+        if (compiled.first != null) {
+            jobsToExecute.add(compiled.first);
+        }
     }
 
     private void handleInsertStatement(AqlMetadataProvider metadataProvider, Statement stmt,
@@ -662,7 +664,9 @@ public class AqlTranslator extends AbstractAqlTranslator {
         CompiledInsertStatement clfrqs = new CompiledInsertStatement(dataverseName, stmtInsert.getDatasetName()
                 .getValue(), stmtInsert.getQuery(), stmtInsert.getVarCounter());
         Pair<JobSpecification, FileSplit> compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
-        jobsToExecute.add(compiled.first);
+        if (compiled.first != null) {
+            jobsToExecute.add(compiled.first);
+        }
     }
 
     private void handleDeleteStatement(AqlMetadataProvider metadataProvider, Statement stmt,
@@ -675,7 +679,9 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 stmtDelete.getDatasetName().getValue(), stmtDelete.getCondition(), stmtDelete.getDieClause(),
                 stmtDelete.getVarCounter(), metadataProvider);
         Pair<JobSpecification, FileSplit> compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
-        jobsToExecute.add(compiled.first);
+        if (compiled.first != null) {
+            jobsToExecute.add(compiled.first);
+        }
     }
 
     private Pair<JobSpecification, FileSplit> rewriteCompileQuery(AqlMetadataProvider metadataProvider, Query query,
@@ -686,15 +692,12 @@ public class AqlTranslator extends AbstractAqlTranslator {
         Pair<Query, Integer> reWrittenQuery = APIFramework.reWriteQuery(declaredFunctions, metadataProvider, query,
                 sessionConfig, out, pdf);
 
-        // Query Compilation (happens under the same ongoing metadata
-        // transaction)
-        sessionConfig.setGenerateJobSpec(true);
+        // Query Compilation (happens under the same ongoing metadata transaction)
         if (metadataProvider.isWriteTransaction()) {
             metadataProvider.setJobTxnId(TransactionIDFactory.generateTransactionId());
         }
         JobSpecification spec = APIFramework.compileQuery(declaredFunctions, metadataProvider, query,
                 reWrittenQuery.second, stmt == null ? null : stmt.getDatasetName(), sessionConfig, out, pdf, stmt);
-        sessionConfig.setGenerateJobSpec(false);
 
         Pair<JobSpecification, FileSplit> compiled = new Pair<JobSpecification, FileSplit>(spec,
                 metadataProvider.getOutputFile());
@@ -721,7 +724,9 @@ public class AqlTranslator extends AbstractAqlTranslator {
         bfs.initialize(metadataProvider.getMetadataTxnContext(), dataset);
         cbfs.setQuery(bfs.getQuery());
         Pair<JobSpecification, FileSplit> compiled = rewriteCompileQuery(metadataProvider, bfs.getQuery(), cbfs);
-        jobsToExecute.add(compiled.first);
+        if (compiled.first != null) {
+            jobsToExecute.add(compiled.first);
+        }
     }
 
     private void handleControlFeedStatement(AqlMetadataProvider metadataProvider, Statement stmt,
@@ -737,8 +742,10 @@ public class AqlTranslator extends AbstractAqlTranslator {
     private QueryResult handleQuery(AqlMetadataProvider metadataProvider, Query query, IHyracksClientConnection hcc,
             List<JobSpecification> jobsToExecute) throws Exception {
         Pair<JobSpecification, FileSplit> compiled = rewriteCompileQuery(metadataProvider, query, null);
-        GlobalConfig.ASTERIX_LOGGER.info(compiled.first.toJSON().toString(1));
-        jobsToExecute.add(compiled.first);
+        if (compiled.first != null) {
+            GlobalConfig.ASTERIX_LOGGER.info(compiled.first.toJSON().toString(1));
+            jobsToExecute.add(compiled.first);
+        }
         return new QueryResult(query, compiled.second.getLocalFile().getFile().getAbsolutePath());
     }
 
