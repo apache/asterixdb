@@ -101,11 +101,11 @@ public class FuzzyEqRule implements IAlgebraicRewriteRule {
                     // Hack to make sure that we will add the func call as is, without wrapping a tokenizer around.
                     IAType type = (IAType) context.getExpressionTypeComputer().getType(inputExp, metadataProvider, env);
                     inputTypeTag = type.getTypeTag();
+                    // Only auto-tokenize strings.
                     if (inputTypeTag == ATypeTag.STRING) {
                         // Strings will be auto-tokenized.
                         inputTypeTag = ATypeTag.UNORDEREDLIST;
-                    }
-                    if (inputTypeTag == ATypeTag.ORDEREDLIST || inputTypeTag == ATypeTag.UNORDEREDLIST) {
+                    } else {
                         useExprAsIs = true;
                     }
                     inputExprTypes.add(inputTypeTag);
