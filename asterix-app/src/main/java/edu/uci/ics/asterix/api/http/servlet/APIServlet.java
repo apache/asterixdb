@@ -58,8 +58,7 @@ public class APIServlet extends HttpServlet {
             List<Statement> aqlStatements = parser.Statement();
             SessionConfig sessionConfig = new SessionConfig(port, true, isSet(printExprParam),
                     isSet(printRewrittenExprParam), isSet(printLogicalPlanParam),
-                    isSet(printOptimizedLogicalPlanParam), false, isSet(printJob));
-            sessionConfig.setGenerateJobSpec(true);
+                    isSet(printOptimizedLogicalPlanParam), false, true, isSet(printJob));
             MetadataManager.INSTANCE.init();
             AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, DisplayFormat.HTML);
             List<QueryResult> executionResults = null;

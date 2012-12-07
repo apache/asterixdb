@@ -191,6 +191,10 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
 
         List<LogicalVariable> leftInputPKs = context.findPrimaryKey(leftInputVar);
         List<LogicalVariable> rightInputPKs = context.findPrimaryKey(rightInputVar);
+        // Bail if primary keys could not be inferred.
+        if (leftInputPKs == null || rightInputPKs == null) {
+            return false;
+        }
         // primary key has only one variable
         if (leftInputPKs.size() != 1 || rightInputPKs.size() != 1) {
             return false;
