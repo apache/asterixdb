@@ -739,6 +739,11 @@
   </test-group>
   <test-group name="dml">
     <test-case FilePath="dml">
+      <compilation-unit name="query-issue205">
+        <output-file compare="Text">query-issue205.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="delete-from-loaded-dataset-with-index">
         <output-file compare="Text">delete-from-loaded-dataset-with-index.adm</output-file>
       </compilation-unit>
@@ -2369,6 +2374,31 @@
         <output-file compare="Text">open-closed-14.adm</output-file>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue134">
+        <output-file compare="Text">query-issue134.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue55">
+        <output-file compare="Text">query-issue55.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue55-1">
+        <output-file compare="Text">query-issue55-1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue166">
+        <output-file compare="Text">query-issue166.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue208">
+        <output-file compare="Text">query-issue208.adm</output-file>
+      </compilation-unit>
+    </test-case>
     <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="open-closed-15">
@@ -3631,6 +3661,11 @@
     </test-case>
   </test-group>
   <test-group name="user-defined-functions">
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-issue201">
+        <output-file compare="Text">query-issue201.adm</output-file>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf01">
         <output-file compare="Text">udf01.adm</output-file>

@@ -25,9 +25,9 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
     public static final AOrderedListSerializerDeserializer SCHEMALESS_INSTANCE = new AOrderedListSerializerDeserializer();
 
     private IAType itemType;
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     private ISerializerDeserializer serializer;
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     private ISerializerDeserializer deserializer;
     private AOrderedListType orderedlistType;
 

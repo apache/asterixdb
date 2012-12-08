@@ -9,7 +9,6 @@ import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 
 public class ADateTimePrinter implements IPrinter {
 
-    private static final long serialVersionUID = 1L;
     public static final ADateTimePrinter INSTANCE = new ADateTimePrinter();
     private static final GregorianCalendarSystem gCalInstance = GregorianCalendarSystem.getInstance();
 

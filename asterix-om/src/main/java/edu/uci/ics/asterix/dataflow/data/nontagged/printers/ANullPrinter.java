@@ -5,11 +5,8 @@ import java.io.PrintStream;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 
-
-
 public class ANullPrinter implements IPrinter {
 
-    private static final long serialVersionUID = 1L;
     public static final ANullPrinter INSTANCE = new ANullPrinter();
 
     @Override

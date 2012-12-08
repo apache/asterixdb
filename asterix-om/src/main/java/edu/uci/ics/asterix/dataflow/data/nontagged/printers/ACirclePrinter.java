@@ -8,7 +8,6 @@ import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 
 public class ACirclePrinter implements IPrinter {
 
-    private static final long serialVersionUID = 1L;
     public static final ACirclePrinter INSTANCE = new ACirclePrinter();
 
     @Override
