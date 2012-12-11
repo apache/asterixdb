@@ -69,7 +69,7 @@ public final class LSMInvertedIndexDataflowHelper extends AbstractLSMIndexDatafl
                     invIndexOpDesc.getInvListsComparatorFactories(), invIndexOpDesc.getTokenTypeTraits(),
                     invIndexOpDesc.getTokenComparatorFactories(), invIndexOpDesc.getTokenizerFactory(),
                     diskBufferCache, ctx.getIOManager(), file.getFile().getPath(), flushController, mergePolicy,
-                    opTrackerFactory, ioScheduler);
+                    opTrackerFactory, ioScheduler, partition);
             return invIndex;
         } catch (IndexException e) {
             throw new HyracksDataException(e);

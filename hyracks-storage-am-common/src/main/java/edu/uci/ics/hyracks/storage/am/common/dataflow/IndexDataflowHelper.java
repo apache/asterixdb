@@ -36,6 +36,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
     protected final ILocalResourceRepository localResourceRepository;
     protected final ResourceIdFactory resourceIdFactory;
     protected final FileReference file;
+    protected final int partition;
 
     protected IIndex index;
 
@@ -45,7 +46,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         this.lcManager = opDesc.getLifecycleManagerProvider().getLifecycleManager(ctx);
         this.localResourceRepository = opDesc.getStorageManager().getLocalResourceRepository(ctx);
         this.resourceIdFactory = opDesc.getStorageManager().getResourceIdFactory(ctx);
-
+        this.partition = partition;
         this.file = opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile();
     }
 

@@ -65,11 +65,12 @@ public class LSMRTreeDataflowHelper extends AbstractLSMRTreeDataflowHelper {
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            ILinearizeComparatorFactory linearizeCmpFactory) throws HyracksDataException {
+            ILinearizeComparatorFactory linearizeCmpFactory, int startIODeviceIndex) throws HyracksDataException {
         try {
             return LSMRTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file, diskBufferCache,
                     diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
-                    rtreePolicyType, flushController, mergePolicy, opTrackerFactory, ioScheduler, linearizeCmpFactory);
+                    rtreePolicyType, flushController, mergePolicy, opTrackerFactory, ioScheduler, linearizeCmpFactory,
+                    startIODeviceIndex);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

@@ -85,7 +85,7 @@ public abstract class AbstractLSMRTreeDataflowHelper extends AbstractLSMIndexDat
         return createLSMTree(memBufferCache, memFreePageManager, ctx.getIOManager(), file, opDesc.getStorageManager()
                 .getBufferCache(ctx), opDesc.getStorageManager().getFileMapProvider(ctx),
                 treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories(),
-                btreeComparatorFactories, valueProviderFactories, rtreePolicyType, linearizeCmpFactory);
+                btreeComparatorFactories, valueProviderFactories, rtreePolicyType, linearizeCmpFactory, partition);
 
     }
 
@@ -94,5 +94,5 @@ public abstract class AbstractLSMRTreeDataflowHelper extends AbstractLSMIndexDat
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            ILinearizeComparatorFactory linearizeCmpFactory) throws HyracksDataException;
+            ILinearizeComparatorFactory linearizeCmpFactory, int startIODeviceIndex) throws HyracksDataException;
 }

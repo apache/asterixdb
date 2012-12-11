@@ -55,8 +55,9 @@ public class LSMRTreeFileManager extends LSMIndexFileManager {
     };
 
     public LSMRTreeFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
-            TreeIndexFactory<? extends ITreeIndex> rtreeFactory, TreeIndexFactory<? extends ITreeIndex> btreeFactory) {
-        super(ioManager, fileMapProvider, file, null);
+            TreeIndexFactory<? extends ITreeIndex> rtreeFactory, TreeIndexFactory<? extends ITreeIndex> btreeFactory,
+            int startIODeviceIndex) {
+        super(ioManager, fileMapProvider, file, null, startIODeviceIndex);
         this.rtreeFactory = rtreeFactory;
         this.btreeFactory = btreeFactory;
     }

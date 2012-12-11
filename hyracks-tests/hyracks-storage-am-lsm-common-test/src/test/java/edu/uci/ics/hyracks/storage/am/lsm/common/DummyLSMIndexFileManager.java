@@ -33,7 +33,7 @@ public class DummyLSMIndexFileManager extends AbstractLSMIndexFileManager {
 
     public DummyLSMIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
             TreeIndexFactory<? extends ITreeIndex> treeFactory) {
-        super(ioManager, fileMapProvider, file, treeFactory);
+        super(ioManager, fileMapProvider, file, treeFactory, 0);
     }
 
     protected void cleanupAndGetValidFilesInternal(IODeviceHandle dev, FilenameFilter filter,

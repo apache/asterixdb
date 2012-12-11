@@ -60,7 +60,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     private int ioDeviceIndex = 0;
 
     public AbstractLSMIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
-            TreeIndexFactory<? extends ITreeIndex> treeFactory) {
+            TreeIndexFactory<? extends ITreeIndex> treeFactory, int startIODeviceIndex) {
         this.file = file;
         this.baseDir = file.getFile().getPath();
         if (!baseDir.endsWith(System.getProperty("file.separator"))) {
@@ -69,6 +69,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         this.fileMapProvider = fileMapProvider;
         this.ioManager = ioManager;
         this.treeFactory = treeFactory;
+        ioDeviceIndex = startIODeviceIndex % ioManager.getIODevices().size();
     }
 
     private static FilenameFilter fileNameFilter = new FilenameFilter() {

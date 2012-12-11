@@ -67,6 +67,19 @@ public class LSMRTreeUtils {
             ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
             ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
             ILinearizeComparatorFactory linearizeCmpFactory) throws TreeIndexException {
+        return createLSMTree(memBufferCache, memFreePageManager, ioManager, file, diskBufferCache, diskFileMapProvider,
+                typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
+                flushController, mergePolicy, opTrackerFactory, ioScheduler, linearizeCmpFactory, 0);
+    }
+    
+    public static LSMRTree createLSMTree(IInMemoryBufferCache memBufferCache,
+            IInMemoryFreePageManager memFreePageManager, IIOManager ioManager, FileReference file,
+            IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
+            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
+            ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
+            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
+            ILinearizeComparatorFactory linearizeCmpFactory, int startIODeviceIndex) throws TreeIndexException {
         LSMTypeAwareTupleWriterFactory rtreeTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits, false);
         LSMTypeAwareTupleWriterFactory btreeTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits, true);
 
@@ -93,7 +106,7 @@ public class LSMRTreeUtils {
         IBinaryComparatorFactory[] linearizerArray = { linearizeCmpFactory };
 
         ILSMIndexFileManager fileNameManager = new LSMRTreeFileManager(ioManager, diskFileMapProvider, file,
-                diskRTreeFactory, diskBTreeFactory);
+                diskRTreeFactory, diskBTreeFactory, startIODeviceIndex);
         LSMRTree lsmTree = new LSMRTree(memBufferCache, memFreePageManager, rtreeInteriorFrameFactory,
                 rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager,
                 diskRTreeFactory, diskBTreeFactory, diskFileMapProvider, typeTraits.length, rtreeCmpFactories,
@@ -109,6 +122,19 @@ public class LSMRTreeUtils {
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             ILSMFlushController flushPolicy, ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILinearizeComparatorFactory linearizerCmpFactory)
+            throws TreeIndexException {
+        return createLSMTreeWithAntiMatterTuples(memBufferCache, memFreePageManager, ioManager, file, diskBufferCache,
+                diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
+                rtreePolicyType, flushPolicy, mergePolicy, opTrackerFactory, ioScheduler, linearizerCmpFactory, 0);
+    }
+    
+    public static LSMRTreeWithAntiMatterTuples createLSMTreeWithAntiMatterTuples(IInMemoryBufferCache memBufferCache,
+            IInMemoryFreePageManager memFreePageManager, IIOManager ioManager, FileReference file,
+            IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
+            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
+            ILSMFlushController flushPolicy, ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
+            ILSMIOOperationScheduler ioScheduler, ILinearizeComparatorFactory linearizerCmpFactory, int startIODeviceIndex)
             throws TreeIndexException {
 
         LSMRTreeTupleWriterFactory rtreeTupleWriterFactory = new LSMRTreeTupleWriterFactory(typeTraits, false);
@@ -146,7 +172,7 @@ public class LSMRTreeUtils {
                 btreeCmpFactories[btreeCmpFactories.length - 1] };
 
         ILSMIndexFileManager fileNameManager = new LSMIndexFileManager(ioManager, diskFileMapProvider, file,
-                diskRTreeFactory);
+                diskRTreeFactory, startIODeviceIndex);
         LSMRTreeWithAntiMatterTuples lsmTree = new LSMRTreeWithAntiMatterTuples(memBufferCache, memFreePageManager,
                 rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory,
                 fileNameManager, diskRTreeFactory, bulkLoadRTreeFactory, diskFileMapProvider, typeTraits.length,

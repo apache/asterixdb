@@ -30,8 +30,8 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 public class LSMIndexFileManager extends AbstractLSMIndexFileManager {
 
     public LSMIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
-            TreeIndexFactory<? extends ITreeIndex> treeFactory) {
-        super(ioManager, fileMapProvider, file, treeFactory);
+            TreeIndexFactory<? extends ITreeIndex> treeFactory, int startIODeviceIndex) {
+        super(ioManager, fileMapProvider, file, treeFactory, startIODeviceIndex);
     }
 
     protected void cleanupAndGetValidFilesInternal(IODeviceHandle dev, FilenameFilter filter,

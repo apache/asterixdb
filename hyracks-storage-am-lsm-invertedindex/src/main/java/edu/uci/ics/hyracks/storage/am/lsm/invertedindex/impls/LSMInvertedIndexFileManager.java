@@ -57,8 +57,8 @@ public class LSMInvertedIndexFileManager extends LSMIndexFileManager implements 
     };
 
     public LSMInvertedIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
-            BTreeFactory btreeFactory) {
-        super(ioManager, fileMapProvider, file, null);
+            BTreeFactory btreeFactory, int startIODeviceIndex) {
+        super(ioManager, fileMapProvider, file, null, startIODeviceIndex);
         this.btreeFactory = btreeFactory;
     }
 
