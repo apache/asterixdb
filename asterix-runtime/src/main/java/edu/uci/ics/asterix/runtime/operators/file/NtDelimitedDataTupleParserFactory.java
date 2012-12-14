@@ -288,6 +288,7 @@ public class NtDelimitedDataTupleParserFactory implements ITupleParserFactory {
                             state = State.CR;
                             return true;
                         }
+                        // FIXME incorrect EOF check for temporal delimited file importing
                         ++p;
                     }
             }

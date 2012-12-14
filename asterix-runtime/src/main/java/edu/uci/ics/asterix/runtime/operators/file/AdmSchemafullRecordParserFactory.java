@@ -73,6 +73,12 @@ public class AdmSchemafullRecordParserFactory implements ITupleParserFactory {
 
     protected ARecordType recType;
 
+    private enum IntervalType {
+        DATE_INTERVAL,
+        TIME_INTERVAL,
+        DATETIME_INTERVAL
+    }
+
     public AdmSchemafullRecordParserFactory(ARecordType recType) {
         this.recType = recType;
     }
@@ -327,16 +333,16 @@ public class AdmSchemafullRecordParserFactory implements ITupleParserFactory {
                         parseConstructor(ATypeTag.INTERVAL, objectType, out);
                         break;
                     }
-                    case AdmLexerConstants.TIME_INTERVAL_LITERAL: {
-                        parseTimeInterval(token.image.substring(2, token.image.length() - 1), out);
+                    case AdmLexerConstants.TIME_INTERVAL_CONS: {
+                        parseIntervalConstructor(objectType, out, IntervalType.TIME_INTERVAL);
                         break;
                     }
-                    case AdmLexerConstants.DATE_INTERVAL_LITERAL: {
-                        parseDateInterval(token.image.substring(2, token.image.length() - 1), out);
+                    case AdmLexerConstants.DATE_INTERVAL_CONS: {
+                        parseIntervalConstructor(objectType, out, IntervalType.DATE_INTERVAL);
                         break;
                     }
-                    case AdmLexerConstants.DATETIME_INTERVAL_LITERAL: {
-                        parseDatetimeInterval(token.image.substring(2, token.image.length() - 1), out);
+                    case AdmLexerConstants.DATETIME_INTERVAL_CONS: {
+                        parseIntervalConstructor(objectType, out, IntervalType.DATETIME_INTERVAL);
                         break;
                     }
                     case AdmLexerConstants.POINT_CONS: {
@@ -396,6 +402,35 @@ public class AdmSchemafullRecordParserFactory implements ITupleParserFactory {
                                 + admLexer.tokenKindToString(token.kind) + ".");
                     }
                 }
+            }
+
+            private void parseIntervalConstructor(IAType objectType, DataOutput out, IntervalType intervalType)
+                    throws AsterixException {
+                try {
+                    Token token = admLexer.next();
+                    if (token.kind == AdmLexerConstants.CONSTRUCTOR_OPEN) {
+                        token = admLexer.next();
+                        if (token.kind == AdmLexerConstants.STRING_LITERAL) {
+                            switch (intervalType) {
+                                case DATE_INTERVAL:
+                                    parseDateInterval(token.image.substring(1, token.image.length() - 1), out);
+                                    break;
+                                case TIME_INTERVAL:
+                                    parseTimeInterval(token.image.substring(1, token.image.length() - 1), out);
+                                    break;
+                                case DATETIME_INTERVAL:
+                                    parseDatetimeInterval(token.image.substring(1, token.image.length() - 1), out);
+                                    break;
+                            }
+                            token = admLexer.next();
+                            if (token.kind == AdmLexerConstants.CONSTRUCTOR_CLOSE)
+                                return;
+                        }
+                    }
+                } catch (Exception e) {
+                    throw new AsterixException(e);
+                }
+                throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
             }
 
             private void parseConstructor(ATypeTag typeTag, IAType objectType, DataOutput out) throws AsterixException {
