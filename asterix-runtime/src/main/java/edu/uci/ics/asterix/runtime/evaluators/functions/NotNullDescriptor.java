@@ -31,6 +31,11 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+/**
+ * This runtime function checks if the input is null.
+ * If the input is not null, just return it directly;
+ * Otherwise, throw a runtime exception.
+ */
 public class NotNullDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
