@@ -125,6 +125,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.IsNullDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.LenDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.LikeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NotDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NotNullDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericAbsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericAddDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericCeilingDescriptor;
@@ -414,6 +415,7 @@ public class NonTaggedDataFormat implements IDataFormat {
 		temp.add(RegExpDescriptor.FACTORY);
 		temp.add(InjectFailureDescriptor.FACTORY);
 		temp.add(CastRecordDescriptor.FACTORY);
+		temp.add(NotNullDescriptor.FACTORY);
 
 		IFunctionManager mgr = new FunctionManagerImpl();
 		for (IFunctionDescriptorFactory fdFactory : temp) {
