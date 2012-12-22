@@ -3448,6 +3448,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
+      <compilation-unit name="q10_returned_item_int64">
+	<output-file compare="Text">q10_returned_item_int64.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
       <compilation-unit name="q11_important_stock">
         <output-file compare="Text">q11_important_stock.adm</output-file>
       </compilation-unit>
