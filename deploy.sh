@@ -1,0 +1,1 @@
+scp hyracks-server/target/hyracks-server-0.2.2-SNAPSHOT-binary-assembly.zip abehm@asterix-master.ics.uci.edu:/home/abehm/hyracks
