@@ -86,7 +86,7 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
     }
 
     @Override
-    public void openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
+    public boolean openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
             short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions)
             throws HyracksDataException, IndexException {
         short minPartitionIndex;
@@ -98,7 +98,7 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
 
         if (minPartitionIndex == Short.MAX_VALUE && maxPartitionIndex == Short.MIN_VALUE) {
             // Index must be empty.
-            return;
+            return false;
         }
         short partitionStartIndex = minPartitionIndex;
         short partitionEndIndex = maxPartitionIndex;
@@ -127,5 +127,18 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
             inMemListCursor.reset(searchKey);
             invListPartitions.addInvertedListCursor(inMemListCursor, i);
         }
+        return true;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        partitionIndexLock.readLock().lock();
+        if (minPartitionIndex == Short.MAX_VALUE && maxPartitionIndex == Short.MIN_VALUE) {
+            // Index must be empty.
+            partitionIndexLock.readLock().unlock();
+            return true;
+        }
+        partitionIndexLock.readLock().unlock();
+        return false;
     }
 }

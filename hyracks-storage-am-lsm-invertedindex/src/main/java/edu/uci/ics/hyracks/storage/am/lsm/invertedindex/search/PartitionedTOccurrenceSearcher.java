@@ -80,32 +80,43 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
 
     public void search(OnDiskInvertedIndexSearchCursor resultCursor, InvertedIndexSearchPredicate searchPred,
             IIndexOperationContext ictx) throws HyracksDataException, IndexException {
+        IPartitionedInvertedIndex partInvIndex = (IPartitionedInvertedIndex) invIndex;
+        searchResult.reset();
+        if (partInvIndex.isEmpty()) {
+            return;
+        }
+        
         tokenizeQuery(searchPred);
         short numQueryTokens = (short) queryTokenAccessor.getTupleCount();
 
         IInvertedIndexSearchModifier searchModifier = searchPred.getSearchModifier();
         short numTokensLowerBound = searchModifier.getNumTokensLowerBound(numQueryTokens);
         short numTokensUpperBound = searchModifier.getNumTokensUpperBound(numQueryTokens);
-
-        IPartitionedInvertedIndex partInvIndex = (IPartitionedInvertedIndex) invIndex;
+        
+        occurrenceThreshold = searchModifier.getOccurrenceThreshold(numQueryTokens);
+        if (occurrenceThreshold <= 0) {
+            throw new OccurrenceThresholdPanicException("Merge Threshold is <= 0. Failing Search.");
+        }
+        
+        short maxCountPossible = numQueryTokens;
         invListCursorCache.reset();
         partitions.reset(numTokensLowerBound, numTokensUpperBound);
         for (int i = 0; i < numQueryTokens; i++) {
             searchKey.reset(queryTokenAccessor, i);
-            partInvIndex.openInvertedListPartitionCursors(this, ictx, numTokensLowerBound, numTokensUpperBound,
-                    partitions);
-        }
-
-        occurrenceThreshold = searchModifier.getOccurrenceThreshold(numQueryTokens);
-        if (occurrenceThreshold <= 0) {
-            throw new OccurrenceThresholdPanicException("Merge Threshold is <= 0. Failing Search.");
+            if (!partInvIndex.openInvertedListPartitionCursors(this, ictx, numTokensLowerBound, numTokensUpperBound,
+                    partitions)) {
+                maxCountPossible--;
+                // No results possible.
+                if (maxCountPossible < occurrenceThreshold) {                    
+                    return;
+                }
+            }
         }
 
         // Process the partitions one-by-one.
         ArrayList<IInvertedListCursor>[] partitionCursors = partitions.getPartitions();
         short start = partitions.getMinValidPartitionIndex();
         short end = partitions.getMaxValidPartitionIndex();
-        searchResult.reset();
         for (int i = start; i <= end; i++) {
             if (partitionCursors[i] == null) {
                 continue;

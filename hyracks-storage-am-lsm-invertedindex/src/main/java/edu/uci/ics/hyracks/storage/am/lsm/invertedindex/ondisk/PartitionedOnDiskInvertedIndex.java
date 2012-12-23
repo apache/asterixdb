@@ -61,7 +61,7 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
     }
 
     @Override
-    public void openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
+    public boolean openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
             short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions)
             throws HyracksDataException, IndexException {
         PartitionedTOccurrenceSearcher partSearcher = (PartitionedTOccurrenceSearcher) searcher;
@@ -86,6 +86,7 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
         ctx.btreePred.setLowKey(lowSearchKey, true);
         ctx.btreePred.setHighKey(highSearchKey, true);
         ctx.btreeAccessor.search(ctx.btreeCursor, ctx.btreePred);
+        boolean tokenExists = false;
         try {
             while (ctx.btreeCursor.hasNext()) {
                 ctx.btreeCursor.next();
@@ -96,10 +97,17 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
                 IInvertedListCursor invListCursor = partSearcher.getCachedInvertedListCursor();
                 resetInvertedListCursor(btreeTuple, invListCursor);
                 invListPartitions.addInvertedListCursor(invListCursor, numTokens);
+                tokenExists = true;
             }
         } finally {
             ctx.btreeCursor.close();
             ctx.btreeCursor.reset();
         }
+        return tokenExists;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return false;
     }
 }
