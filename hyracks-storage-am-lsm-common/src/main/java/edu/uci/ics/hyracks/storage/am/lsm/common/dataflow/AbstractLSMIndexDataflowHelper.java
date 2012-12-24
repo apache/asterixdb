@@ -26,7 +26,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory
 public abstract class AbstractLSMIndexDataflowHelper extends IndexDataflowHelper {
 
     protected static int DEFAULT_MEM_PAGE_SIZE = 32768;
-    protected static int DEFAULT_MEM_NUM_PAGES = 1000;
+    protected static int DEFAULT_MEM_NUM_PAGES = 10;
 
     protected final int memPageSize;
     protected final int memNumPages;
