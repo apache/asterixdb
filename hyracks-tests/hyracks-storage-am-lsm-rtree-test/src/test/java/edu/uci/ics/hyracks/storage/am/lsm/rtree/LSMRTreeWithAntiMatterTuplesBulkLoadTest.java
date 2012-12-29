@@ -57,8 +57,8 @@ public class LSMRTreeWithAntiMatterTuplesBulkLoadTest extends AbstractRTreeBulkL
         return LSMRTreeWithAntiMatterTuplesTestContext.create(harness.getMemBufferCache(),
                 harness.getMemFreePageManager(), harness.getIOManager(), harness.getFileReference(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes, valueProviderFactories,
-                numKeys, rtreePolicyType, harness.getFlushController(), harness.getMergePolicy(),
-                harness.getOperationTrackerFactory(), harness.getIOScheduler());
+                numKeys, rtreePolicyType, harness.getMergePolicy(), harness.getOperationTrackerFactory(),
+                harness.getIOScheduler());
 
     }
 

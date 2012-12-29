@@ -32,7 +32,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeCopyTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -48,16 +47,16 @@ public class LSMBTreeUtils {
     public static LSMBTree createLSMTree(IInMemoryBufferCache memBufferCache,
             IInMemoryFreePageManager memFreePageManager, IIOManager ioManager, FileReference file,
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] cmpFactories, ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
+            IBinaryComparatorFactory[] cmpFactories, ILSMMergePolicy mergePolicy,
             ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler) {
         return createLSMTree(memBufferCache, memFreePageManager, ioManager, file, diskBufferCache, diskFileMapProvider,
-                typeTraits, cmpFactories, flushController, mergePolicy, opTrackerFactory, ioScheduler, 0);
+                typeTraits, cmpFactories, mergePolicy, opTrackerFactory, ioScheduler, 0);
     }
 
     public static LSMBTree createLSMTree(IInMemoryBufferCache memBufferCache,
             IInMemoryFreePageManager memFreePageManager, IIOManager ioManager, FileReference file,
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] cmpFactories, ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
+            IBinaryComparatorFactory[] cmpFactories, ILSMMergePolicy mergePolicy,
             ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler, int startIODeviceIndex) {
         LSMBTreeTupleWriterFactory insertTupleWriterFactory = new LSMBTreeTupleWriterFactory(typeTraits,
                 cmpFactories.length, false);
@@ -83,8 +82,8 @@ public class LSMBTreeUtils {
 
         LSMBTree lsmTree = new LSMBTree(memBufferCache, memFreePageManager, interiorFrameFactory,
                 insertLeafFrameFactory, deleteLeafFrameFactory, fileNameManager, diskBTreeFactory,
-                bulkLoadBTreeFactory, diskFileMapProvider, typeTraits.length, cmpFactories, flushController,
-                mergePolicy, opTrackerFactory, ioScheduler);
+                bulkLoadBTreeFactory, diskFileMapProvider, typeTraits.length, cmpFactories, mergePolicy,
+                opTrackerFactory, ioScheduler);
         return lsmTree;
     }
 }

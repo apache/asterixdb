@@ -25,7 +25,6 @@ import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyProvider;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushControllerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexDataflowHelperFactory;
@@ -46,9 +45,9 @@ public class WordInvertedIndexTest extends AbstractfWordInvertedIndexTest {
                 PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
                 PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) };
 
-        invertedIndexDataflowHelperFactory = new LSMInvertedIndexDataflowHelperFactory(new FlushControllerProvider(),
-                new ConstantMergePolicyProvider(ImmediateSchedulerProvider.INSTANCE, MERGE_THRESHOLD),
-                RefCountingOperationTrackerFactory.INSTANCE, ImmediateSchedulerProvider.INSTANCE);
+        invertedIndexDataflowHelperFactory = new LSMInvertedIndexDataflowHelperFactory(new ConstantMergePolicyProvider(
+                ImmediateSchedulerProvider.INSTANCE, MERGE_THRESHOLD), RefCountingOperationTrackerFactory.INSTANCE,
+                ImmediateSchedulerProvider.INSTANCE);
     }
 
     @Override

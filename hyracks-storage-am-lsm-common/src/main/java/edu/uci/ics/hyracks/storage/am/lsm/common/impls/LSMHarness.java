@@ -26,7 +26,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
@@ -55,24 +54,21 @@ public class LSMHarness implements ILSMHarness {
     // All accesses to the LSM-Tree's on-disk components are synchronized on diskComponentsSync.
     private Object diskComponentsSync = new Object();
 
-    // Flush and Merge Policies
-    private final ILSMFlushController flushController;
     private final ILSMMergePolicy mergePolicy;
     private final ILSMOperationTracker opTracker;
     private final ILSMIOOperationScheduler ioScheduler;
 
-    public LSMHarness(ILSMIndexInternal lsmIndex, ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
-            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler) {
+    public LSMHarness(ILSMIndexInternal lsmIndex, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMIOOperationScheduler ioScheduler) {
         this.lsmIndex = lsmIndex;
         this.opTracker = opTracker;
-        this.flushController = flushController;
         this.mergePolicy = mergePolicy;
         this.ioScheduler = ioScheduler;
     }
 
     private void threadExit(ILSMIndexOperationContext opCtx) throws HyracksDataException {
-        if (!lsmIndex.getFlushController().getFlushStatus(lsmIndex) && lsmIndex.getInMemoryFreePageManager().isFull()) {
-            lsmIndex.getFlushController().setFlushStatus(lsmIndex, true);
+        if (!lsmIndex.getFlushStatus(lsmIndex) && lsmIndex.getInMemoryFreePageManager().isFull()) {
+            lsmIndex.setFlushStatus(lsmIndex, true);
         }
         opTracker.afterOperation(opCtx.getSearchOperationCallback(), opCtx.getModificationCallback());
     }
@@ -127,7 +123,7 @@ public class LSMHarness implements ILSMHarness {
         }
 
         // Unblock entering threads waiting for the flush
-        flushController.setFlushStatus(lsmIndex, false);
+        lsmIndex.setFlushStatus(lsmIndex, false);
     }
 
     @Override
@@ -240,11 +236,6 @@ public class LSMHarness implements ILSMHarness {
             lsmIndex.addComponent(index);
             mergePolicy.diskComponentAdded(lsmIndex, lsmIndex.getImmutableComponents().size());
         }
-    }
-
-    @Override
-    public ILSMFlushController getFlushController() {
-        return flushController;
     }
 
     @Override

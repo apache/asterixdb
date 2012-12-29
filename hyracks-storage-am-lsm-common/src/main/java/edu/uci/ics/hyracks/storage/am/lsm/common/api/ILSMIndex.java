@@ -27,7 +27,9 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
  * concurrent searches/updates/merges may be ongoing.
  */
 public interface ILSMIndex extends IIndex {
-    public ILSMFlushController getFlushController();
+    public void setFlushStatus(ILSMIndex index, boolean needsFlush);
+
+    public boolean getFlushStatus(ILSMIndex index);
 
     public ILSMOperationTracker getOperationTracker();
 

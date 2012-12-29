@@ -47,8 +47,6 @@ public interface ILSMHarness {
 
     public ILSMIndex getIndex();
 
-    public ILSMFlushController getFlushController();
-
     public ILSMOperationTracker getOperationTracker();
 
     public ILSMIOOperationScheduler getIOScheduler();

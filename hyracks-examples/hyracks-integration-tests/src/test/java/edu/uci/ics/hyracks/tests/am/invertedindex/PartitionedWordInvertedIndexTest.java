@@ -27,7 +27,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyProvider;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushControllerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.PartitionedLSMInvertedIndexDataflowHelperFactory;
@@ -52,9 +51,8 @@ public class PartitionedWordInvertedIndexTest extends AbstractfWordInvertedIndex
                 PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) };
 
         invertedIndexDataflowHelperFactory = new PartitionedLSMInvertedIndexDataflowHelperFactory(
-                new FlushControllerProvider(), new ConstantMergePolicyProvider(ImmediateSchedulerProvider.INSTANCE,
-                        MERGE_THRESHOLD), RefCountingOperationTrackerFactory.INSTANCE,
-                ImmediateSchedulerProvider.INSTANCE);
+                new ConstantMergePolicyProvider(ImmediateSchedulerProvider.INSTANCE, MERGE_THRESHOLD),
+                RefCountingOperationTrackerFactory.INSTANCE, ImmediateSchedulerProvider.INSTANCE);
     }
 
     @Override

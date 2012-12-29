@@ -29,7 +29,7 @@ public class ReferenceCountingOperationTracker implements ILSMOperationTracker {
         // Wait for pending flushes to complete.
         // If flushFlag is set, then the flush is queued to occur by the last exiting thread.
         // This operation should wait for that flush to occur before proceeding.
-        if (index.getFlushController().getFlushStatus(index)) {
+        if (index.getFlushStatus(index)) {
             if (tryOperation) {
                 return false;
             }
@@ -56,7 +56,7 @@ public class ReferenceCountingOperationTracker implements ILSMOperationTracker {
         threadRefCount--;
 
         // Flush will only be handled by last exiting thread.
-        if (index.getFlushController().getFlushStatus(index) && threadRefCount == 0) {
+        if (index.getFlushStatus(index) && threadRefCount == 0) {
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
             index.getIOScheduler().scheduleOperation(accessor.createFlushOperation(FLUSHCALLBACK_INSTANCE));

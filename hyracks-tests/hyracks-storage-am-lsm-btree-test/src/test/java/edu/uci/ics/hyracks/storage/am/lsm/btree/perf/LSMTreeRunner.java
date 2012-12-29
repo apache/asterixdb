@@ -39,7 +39,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrackerFactory;
@@ -95,8 +94,8 @@ public class LSMTreeRunner implements IExperimentRunner {
                 new LIFOMetaDataFrameFactory());
         this.ioScheduler = ImmediateScheduler.INSTANCE;
         lsmtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file, bufferCache, fmp,
-                typeTraits, cmpFactories, new FlushController(), NoMergePolicy.INSTANCE,
-                RefCountingOperationTrackerFactory.INSTANCE, ioScheduler);
+                typeTraits, cmpFactories, NoMergePolicy.INSTANCE, RefCountingOperationTrackerFactory.INSTANCE,
+                ioScheduler);
     }
 
     @Override

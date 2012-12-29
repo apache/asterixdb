@@ -28,7 +28,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
@@ -42,21 +41,19 @@ public class LSMRTreeDataflowHelper extends AbstractLSMRTreeDataflowHelper {
     public LSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
-            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
-            ILinearizeComparatorFactory linearizeCmpFactory) {
-        super(opDesc, ctx, partition, btreeComparatorFactories, valueProviderFactories, rtreePolicyType,
-                flushController, mergePolicy, opTrackerFactory, ioScheduler, linearizeCmpFactory);
+            ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
+            ILSMIOOperationScheduler ioScheduler, ILinearizeComparatorFactory linearizeCmpFactory) {
+        super(opDesc, ctx, partition, btreeComparatorFactories, valueProviderFactories, rtreePolicyType, mergePolicy,
+                opTrackerFactory, ioScheduler, linearizeCmpFactory);
     }
 
     public LSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             int memPageSize, int memNumPages, IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
-            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
-            ILinearizeComparatorFactory linearizeCmpFactory) {
+            ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
+            ILSMIOOperationScheduler ioScheduler, ILinearizeComparatorFactory linearizeCmpFactory) {
         super(opDesc, ctx, partition, memPageSize, memNumPages, btreeComparatorFactories, valueProviderFactories,
-                rtreePolicyType, flushController, mergePolicy, opTrackerFactory, ioScheduler, linearizeCmpFactory);
+                rtreePolicyType, mergePolicy, opTrackerFactory, ioScheduler, linearizeCmpFactory);
     }
 
     @Override
@@ -69,7 +66,7 @@ public class LSMRTreeDataflowHelper extends AbstractLSMRTreeDataflowHelper {
         try {
             return LSMRTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file, diskBufferCache,
                     diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
-                    rtreePolicyType, flushController, mergePolicy, opTrackerFactory, ioScheduler, linearizeCmpFactory,
+                    rtreePolicyType, mergePolicy, opTrackerFactory, ioScheduler, linearizeCmpFactory,
                     startIODeviceIndex);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);

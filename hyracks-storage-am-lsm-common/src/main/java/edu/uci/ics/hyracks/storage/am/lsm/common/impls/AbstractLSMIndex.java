@@ -23,9 +23,9 @@ import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -50,9 +50,10 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
 
     protected boolean isActivated;
 
+    private boolean needsFlush = false;
+
     public AbstractLSMIndex(IInMemoryFreePageManager memFreePageManager, IBufferCache diskBufferCache,
-            ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider,
-            ILSMFlushController flushController, ILSMMergePolicy mergePolicy,
+            ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider, ILSMMergePolicy mergePolicy,
             ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler) {
         this.memFreePageManager = memFreePageManager;
         this.diskBufferCache = diskBufferCache;
@@ -60,7 +61,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         this.immutableComponents = new LinkedList<ILSMComponent>();
         this.fileManager = fileManager;
         ILSMOperationTracker opTracker = opTrackerFactory.createOperationTracker(this);
-        lsmHarness = new LSMHarness(this, flushController, mergePolicy, opTracker, ioScheduler);
+        lsmHarness = new LSMHarness(this, mergePolicy, opTracker, ioScheduler);
         isActivated = false;
     }
 
@@ -140,8 +141,13 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     }
 
     @Override
-    public ILSMFlushController getFlushController() {
-        return lsmHarness.getFlushController();
+    public void setFlushStatus(ILSMIndex index, boolean needsFlush) {
+        this.needsFlush = needsFlush;
+    }
+
+    @Override
+    public boolean getFlushStatus(ILSMIndex index) {
+        return needsFlush;
     }
 
     @Override

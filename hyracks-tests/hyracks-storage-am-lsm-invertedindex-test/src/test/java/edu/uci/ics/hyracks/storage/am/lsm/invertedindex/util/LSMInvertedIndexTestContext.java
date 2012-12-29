@@ -58,7 +58,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
     protected InvertedIndexTokenizingTupleIterator indexTupleIter;
     protected HashSet<Comparable> allTokens = new HashSet<Comparable>();
     protected List<ITupleReference> documentCorpus = new ArrayList<ITupleReference>();
-    
+
     public LSMInvertedIndexTestContext(ISerializerDeserializer[] fieldSerdes, IIndex index,
             IBinaryTokenizerFactory tokenizerFactory, InvertedIndexType invIndexType,
             InvertedIndexTokenizingTupleIterator indexTupleIter) {
@@ -146,8 +146,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                         harness.getMemFreePageManager(), harness.getDiskFileMapProvider(), invListTypeTraits,
                         invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
                         harness.getDiskBufferCache(), harness.getIOManager(), harness.getOnDiskDir(),
-                        harness.getFlushController(), harness.getMergePolicy(), harness.getOperationTrackerFactory(),
-                        harness.getIOScheduler());
+                        harness.getMergePolicy(), harness.getOperationTrackerFactory(), harness.getIOScheduler());
                 break;
             }
             case PARTITIONED_LSM: {
@@ -155,8 +154,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                         harness.getMemFreePageManager(), harness.getDiskFileMapProvider(), invListTypeTraits,
                         invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
                         harness.getDiskBufferCache(), harness.getIOManager(), harness.getOnDiskDir(),
-                        harness.getFlushController(), harness.getMergePolicy(), harness.getOperationTrackerFactory(),
-                        harness.getIOScheduler());
+                        harness.getMergePolicy(), harness.getOperationTrackerFactory(), harness.getIOScheduler());
                 break;
             }
             default: {
@@ -201,7 +199,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
             allTokens.add(checkTuple.getField(0));
         }
     }
-    
+
     public void deleteCheckTuples(ITupleReference tuple, Collection<CheckTuple> checkTuples)
             throws HyracksDataException {
         indexTupleIter.reset(tuple);
@@ -212,36 +210,37 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
             deleteCheckTuple(checkTuple, checkTuples);
         }
     }
-    
+
     public HashSet<Comparable> getAllTokens() {
         return allTokens;
     }
-    
+
     @SuppressWarnings("unchecked")
     public CheckTuple createCheckTuple(ITupleReference tuple) throws HyracksDataException {
         CheckTuple checkTuple = new CheckTuple(fieldSerdes.length, fieldSerdes.length);
         for (int i = 0; i < fieldSerdes.length; i++) {
-            ByteArrayInputStream bains = new ByteArrayInputStream(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
+            ByteArrayInputStream bains = new ByteArrayInputStream(tuple.getFieldData(i), tuple.getFieldStart(i),
+                    tuple.getFieldLength(i));
             DataInput in = new DataInputStream(bains);
             Comparable field = (Comparable) fieldSerdes[i].deserialize(in);
             checkTuple.appendField(field);
         }
         return checkTuple;
     }
-    
+
     @Override
     public void upsertCheckTuple(CheckTuple checkTuple, Collection<CheckTuple> checkTuples) {
         throw new UnsupportedOperationException("Upsert not supported by inverted index.");
     }
-    
+
     public IBinaryTokenizerFactory getTokenizerFactory() {
         return tokenizerFactory;
     }
-    
+
     public List<ITupleReference> getDocumentCorpus() {
         return documentCorpus;
     }
-    
+
     public InvertedIndexType getInvertedIndexType() {
         return invIndexType;
     }

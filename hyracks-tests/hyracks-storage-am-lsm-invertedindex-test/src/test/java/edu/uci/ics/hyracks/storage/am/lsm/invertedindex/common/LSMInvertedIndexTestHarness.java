@@ -31,13 +31,11 @@ import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrackerFactory;
@@ -65,7 +63,6 @@ public class LSMInvertedIndexTestHarness {
     protected IInMemoryFreePageManager memFreePageManager;
     protected IHyracksTaskContext ctx;
     protected ILSMIOOperationScheduler ioScheduler;
-    protected ILSMFlushController flushController;
     protected ILSMMergePolicy mergePolicy;
     protected ILSMOperationTrackerFactory opTrackerFactory;
 
@@ -86,7 +83,6 @@ public class LSMInvertedIndexTestHarness {
         this.hyracksFrameSize = AccessMethodTestsConfig.LSM_INVINDEX_HYRACKS_FRAME_SIZE;
         this.ioScheduler = ImmediateScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
-        this.flushController = new FlushController();
         this.opTrackerFactory = RefCountingOperationTrackerFactory.INSTANCE;
     }
 
@@ -100,7 +96,6 @@ public class LSMInvertedIndexTestHarness {
         this.hyracksFrameSize = hyracksFrameSize;
         this.ioScheduler = ImmediateScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
-        this.flushController = new FlushController();
         this.opTrackerFactory = RefCountingOperationTrackerFactory.INSTANCE;
     }
 
@@ -205,10 +200,6 @@ public class LSMInvertedIndexTestHarness {
 
     public ILSMOperationTrackerFactory getOperationTrackerFactory() {
         return opTrackerFactory;
-    }
-
-    public ILSMFlushController getFlushController() {
-        return flushController;
     }
 
     public ILSMMergePolicy getMergePolicy() {
