@@ -138,13 +138,12 @@ public abstract class SecondaryIndexCreator {
         numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
         numSecondaryKeys = createIndexStmt.getKeyFields().size();
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint = metadataProvider
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
-                        dataverseName, datasetName, datasetName);
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataverseName, datasetName, datasetName);
         primaryFileSplitProvider = primarySplitsAndConstraint.first;
         primaryPartitionConstraint = primarySplitsAndConstraint.second;
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadataProvider
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
-                        dataverseName, datasetName, secondaryIndexName);
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataverseName, datasetName,
+                        secondaryIndexName);
         secondaryFileSplitProvider = secondarySplitsAndConstraint.first;
         secondaryPartitionConstraint = secondarySplitsAndConstraint.second;
         // Must be called in this order.
@@ -236,7 +235,6 @@ public abstract class SecondaryIndexCreator {
                 highKeyFields, true, true, new LSMBTreeDataflowHelperFactory(
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER), false,
                 NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, primarySearchOp,
@@ -291,8 +289,8 @@ public abstract class SecondaryIndexCreator {
             fieldPermutation[i] = i;
         }
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadataProvider
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
-                        dataverseName, datasetName, secondaryIndexName);
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataverseName, datasetName,
+                        secondaryIndexName);
         TreeIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp = new TreeIndexBulkLoadOperatorDescriptor(spec,
                 AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                 secondarySplitsAndConstraint.first, secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories,

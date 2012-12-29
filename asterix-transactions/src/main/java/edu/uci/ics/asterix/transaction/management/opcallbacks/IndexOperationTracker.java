@@ -30,7 +30,7 @@ public class IndexOperationTracker implements ILSMOperationTracker {
     // Number of active operations on a ILSMIndex instance.
     private int numActiveOperations = 0;
     private long lastLsn;
-    private final ILSMIndex index;    
+    private final ILSMIndex index;
     private final ILSMIOOperationCallback ioOpCallback;
     private ILSMIndexAccessor accessor;
 
@@ -52,7 +52,7 @@ public class IndexOperationTracker implements ILSMOperationTracker {
         // Wait for pending flushes to complete.
         // If flushFlag is set, then the flush is queued to occur by the last completing operation.
         // This operation should wait for that flush to occur before proceeding.
-        if (index.getFlushController().getFlushStatus(index)) {
+        if (index.getFlushStatus(index)) {
             if (tryOperation) {
                 return false;
             }
@@ -93,7 +93,7 @@ public class IndexOperationTracker implements ILSMOperationTracker {
         }
         // If we need a flush, and this is the last completing operation, then schedule the flush.
         // Once the flush has completed notify all waiting operations.
-        if (index.getFlushController().getFlushStatus(index) && numActiveOperations == 0) {
+        if (index.getFlushStatus(index) && numActiveOperations == 0) {
             if (accessor == null) {
                 accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                         NoOpOperationCallback.INSTANCE);

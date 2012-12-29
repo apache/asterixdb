@@ -59,7 +59,6 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
                 new LSMRTreeDataflowHelperFactory(valueProviderFactories, RTreePolicyType.RTREE,
                         primaryComparatorFactories, AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER, AqlMetadataProvider.proposeLinearizer(
                                 keyType, secondaryComparatorFactories.length)), localResourceFactoryProvider,
                 NoOpOperationCallbackFactory.INSTANCE);
@@ -71,8 +70,8 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
     }
 
     @Override
-    protected void setSecondaryRecDescAndComparators(CompiledCreateIndexStatement createIndexStmt, AqlMetadataProvider metadata)
-            throws AlgebricksException, AsterixException {
+    protected void setSecondaryRecDescAndComparators(CompiledCreateIndexStatement createIndexStmt,
+            AqlMetadataProvider metadata) throws AlgebricksException, AsterixException {
         List<String> secondaryKeyFields = createIndexStmt.getKeyFields();
         int numSecondaryKeys = secondaryKeyFields.size();
         if (numSecondaryKeys != 1) {
@@ -141,7 +140,6 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
                 numNestedSecondaryKeyFields,
                 new LSMRTreeDataflowHelperFactory(valueProviderFactories, RTreePolicyType.RTREE,
                         primaryComparatorFactories, AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER, AqlMetadataProvider.proposeLinearizer(
                                 keyType, secondaryComparatorFactories.length)), BTree.DEFAULT_FILL_FACTOR);

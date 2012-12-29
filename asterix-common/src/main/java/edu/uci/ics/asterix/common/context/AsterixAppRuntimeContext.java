@@ -10,12 +10,10 @@ import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushController;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
@@ -43,7 +41,6 @@ public class AsterixAppRuntimeContext {
     private IBufferCache bufferCache;
     private TransactionSubsystem txnSubsystem;
 
-    private ILSMFlushController flushController;
     private ILSMMergePolicy mergePolicy;
     private ILSMOperationTrackerFactory opTrackerFactory;
     private ILSMIOOperationScheduler lsmIOScheduler;
@@ -66,7 +63,6 @@ public class AsterixAppRuntimeContext {
         indexLifecycleManager = new IndexLifecycleManager(DEFAULT_LIFECYCLEMANAGER_MEMORY_BUDGET);
         txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId());
 
-        flushController = new FlushController();
         lsmIOScheduler = ImmediateScheduler.INSTANCE;
         mergePolicy = new ConstantMergePolicy(lsmIOScheduler, 3);
         opTrackerFactory = RefCountingOperationTrackerFactory.INSTANCE;
@@ -138,10 +134,6 @@ public class AsterixAppRuntimeContext {
 
     public IIndexLifecycleManager getIndexLifecycleManager() {
         return indexLifecycleManager;
-    }
-
-    public ILSMFlushController getFlushController() {
-        return flushController;
     }
 
     public ILSMMergePolicy getLSMMergePolicy() {

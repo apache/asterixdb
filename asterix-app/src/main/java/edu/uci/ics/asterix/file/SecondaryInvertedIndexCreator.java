@@ -55,15 +55,15 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
     private IBinaryComparatorFactory[] tokenKeyPairComparatorFactories;
     private RecordDescriptor tokenKeyPairRecDesc;
     private boolean isPartitioned;
-    
+
     protected SecondaryInvertedIndexCreator(PhysicalOptimizationConfig physOptConf) {
         super(physOptConf);
     }
 
     @Override
     @SuppressWarnings("rawtypes")
-    protected void setSecondaryRecDescAndComparators(CompiledCreateIndexStatement createIndexStmt, AqlMetadataProvider metadata)
-            throws AlgebricksException, AsterixException {
+    protected void setSecondaryRecDescAndComparators(CompiledCreateIndexStatement createIndexStmt,
+            AqlMetadataProvider metadata) throws AlgebricksException, AsterixException {
         // Sanity checks.
         if (numPrimaryKeys > 1) {
             throw new AsterixException("Cannot create inverted index on dataset with composite primary key.");
@@ -71,7 +71,8 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         if (numSecondaryKeys > 1) {
             throw new AsterixException("Cannot create composite inverted index on multiple fields.");
         }
-        if (createIndexStmt.getIndexType() == IndexType.FUZZY_WORD_INVIX || createIndexStmt.getIndexType() == IndexType.FUZZY_NGRAM_INVIX) {
+        if (createIndexStmt.getIndexType() == IndexType.FUZZY_WORD_INVIX
+                || createIndexStmt.getIndexType() == IndexType.FUZZY_NGRAM_INVIX) {
             isPartitioned = true;
         } else {
             isPartitioned = false;
@@ -247,17 +248,15 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
                 secondaryPartitionConstraint);
         return invIndexBulkLoadOp;
     }
-    
+
     private IIndexDataflowHelperFactory createDataflowHelperFactory() {
         if (!isPartitioned) {
             return new LSMInvertedIndexDataflowHelperFactory(
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER);
         } else {
             return new PartitionedLSMInvertedIndexDataflowHelperFactory(
-                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER);

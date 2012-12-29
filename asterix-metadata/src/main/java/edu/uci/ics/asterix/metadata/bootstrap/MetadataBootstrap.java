@@ -331,9 +331,8 @@ public class MetadataBootstrap {
         IInMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(DEFAULT_MEM_NUM_PAGES,
                 metaDataFrameFactory);
         LSMBTree lsmBtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file,
-                bufferCache, fileMapProvider, typeTraits, comparatorFactories, runtimeContext.getFlushController(),
-                runtimeContext.getLSMMergePolicy(), runtimeContext.getLSMOperationTrackerFactory(),
-                runtimeContext.getLSMIOScheduler());
+                bufferCache, fileMapProvider, typeTraits, comparatorFactories, runtimeContext.getLSMMergePolicy(),
+                runtimeContext.getLSMOperationTrackerFactory(), runtimeContext.getLSMIOScheduler());
         long resourceID = -1;
         if (create) {
             lsmBtree.create();
