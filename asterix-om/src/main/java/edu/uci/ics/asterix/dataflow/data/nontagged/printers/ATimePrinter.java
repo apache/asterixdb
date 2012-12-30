@@ -9,10 +9,9 @@ import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 
 public class ATimePrinter implements IPrinter {
 
-    private static final long serialVersionUID = 1L;
     public static final ATimePrinter INSTANCE = new ATimePrinter();
     private static final GregorianCalendarSystem gCalInstance = GregorianCalendarSystem.getInstance();
-    
+
     @Override
     public void init() {
 
@@ -21,7 +20,7 @@ public class ATimePrinter implements IPrinter {
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
         int time = AInt32SerializerDeserializer.getInt(b, s + 1);
-        
+
         ps.print("time(\"");
         ps.append(String.format("%02d", gCalInstance.getHourOfDay(time))).append(":")
                 .append(String.format("%02d", gCalInstance.getMinOfHour(time))).append(":")

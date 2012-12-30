@@ -28,7 +28,9 @@ import edu.uci.ics.asterix.optimizer.rules.FeedScanCollectionToUnnest;
 import edu.uci.ics.asterix.optimizer.rules.FuzzyEqRule;
 import edu.uci.ics.asterix.optimizer.rules.FuzzyJoinRule;
 import edu.uci.ics.asterix.optimizer.rules.IfElseToSwitchCaseFunctionRule;
+import edu.uci.ics.asterix.optimizer.rules.InlineUnnestFunctionRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceDynamicTypeCastRule;
+import edu.uci.ics.asterix.optimizer.rules.IntroduceEnforcedListTypeRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceStaticTypeCastRule;
 import edu.uci.ics.asterix.optimizer.rules.LoadRecordFieldsRule;
@@ -97,6 +99,7 @@ public final class RuleCollections {
 
     public final static List<IAlgebraicRewriteRule> buildTypeInferenceRuleCollection() {
         List<IAlgebraicRewriteRule> typeInfer = new LinkedList<IAlgebraicRewriteRule>();
+        typeInfer.add(new InlineUnnestFunctionRule());
         typeInfer.add(new InferTypesRule());
         return typeInfer;
     }
@@ -108,14 +111,15 @@ public final class RuleCollections {
         normalization.add(new BreakSelectIntoConjunctsRule());
         normalization.add(new ExtractGbyExpressionsRule());
         normalization.add(new ExtractDistinctByExpressionsRule());
-        normalization.add(new ExtractOrderExpressionsRule());        
+        normalization.add(new ExtractOrderExpressionsRule());
         normalization.add(new ExtractCommonExpressionsRule());
-        
+
         // IntroduceStaticTypeCastRule should go before
         // IntroduceDynamicTypeCastRule to
         // avoid unnecessary dynamic casting
         normalization.add(new IntroduceStaticTypeCastRule());
         normalization.add(new IntroduceDynamicTypeCastRule());
+        normalization.add(new IntroduceEnforcedListTypeRule());
         normalization.add(new ConstantFoldingRule());
         normalization.add(new UnnestToDataScanRule());
         normalization.add(new IfElseToSwitchCaseFunctionRule());
@@ -126,7 +130,7 @@ public final class RuleCollections {
 
     public final static List<IAlgebraicRewriteRule> buildCondPushDownAndJoinInferenceRuleCollection() {
         List<IAlgebraicRewriteRule> condPushDownAndJoinInference = new LinkedList<IAlgebraicRewriteRule>();
-                
+
         condPushDownAndJoinInference.add(new PushSelectDownRule());
         condPushDownAndJoinInference.add(new PushDieUpRule());
         condPushDownAndJoinInference.add(new RemoveRedundantListifyRule());
@@ -140,17 +144,17 @@ public final class RuleCollections {
         condPushDownAndJoinInference.add(new IntroduceGroupByForSubplanRule());
         condPushDownAndJoinInference.add(new SubplanOutOfGroupRule());
         condPushDownAndJoinInference.add(new InsertOuterJoinRule());
-        
+
         condPushDownAndJoinInference.add(new RemoveRedundantVariablesRule());
         condPushDownAndJoinInference.add(new AsterixInlineVariablesRule());
         condPushDownAndJoinInference.add(new RemoveUnusedAssignAndAggregateRule());
-        
+
         condPushDownAndJoinInference.add(new FactorRedundantGroupAndDecorVarsRule());
         condPushDownAndJoinInference.add(new PushAggregateIntoGroupbyRule());
         condPushDownAndJoinInference.add(new EliminateSubplanRule());
         condPushDownAndJoinInference.add(new PushProperJoinThroughProduct());
         condPushDownAndJoinInference.add(new PushGroupByThroughProduct());
-        condPushDownAndJoinInference.add(new NestGroupByRule());                
+        condPushDownAndJoinInference.add(new NestGroupByRule());
 
         return condPushDownAndJoinInference;
     }
@@ -166,7 +170,7 @@ public final class RuleCollections {
         fieldLoads.add(new RemoveUnusedAssignAndAggregateRule());
         fieldLoads.add(new ConstantFoldingRule());
         fieldLoads.add(new FeedScanCollectionToUnnest());
-        fieldLoads.add(new ComplexJoinInferenceRule());        
+        fieldLoads.add(new ComplexJoinInferenceRule());
         return fieldLoads;
     }
 
@@ -189,7 +193,7 @@ public final class RuleCollections {
         consolidation.add(new RemoveRedundantGroupByDecorVars());
         return consolidation;
     }
-    
+
     public final static List<IAlgebraicRewriteRule> buildAccessMethodRuleCollection() {
         List<IAlgebraicRewriteRule> accessMethod = new LinkedList<IAlgebraicRewriteRule>();
         accessMethod.add(new IntroduceSelectAccessMethodRule());
@@ -202,7 +206,7 @@ public final class RuleCollections {
     }
 
     public final static List<IAlgebraicRewriteRule> buildPlanCleanupRuleCollection() {
-        List<IAlgebraicRewriteRule> planCleanupRules = new LinkedList<IAlgebraicRewriteRule>();        
+        List<IAlgebraicRewriteRule> planCleanupRules = new LinkedList<IAlgebraicRewriteRule>();
         planCleanupRules.add(new PushAssignBelowUnionAllRule());
         planCleanupRules.add(new ExtractCommonExpressionsRule());
         planCleanupRules.add(new RemoveRedundantVariablesRule());

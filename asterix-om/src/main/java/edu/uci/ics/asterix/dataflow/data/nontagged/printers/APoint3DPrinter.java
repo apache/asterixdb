@@ -8,7 +8,6 @@ import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 
 public class APoint3DPrinter implements IPrinter {
 
-    private static final long serialVersionUID = 1L;
     public static final APoint3DPrinter INSTANCE = new APoint3DPrinter();
 
     @Override
