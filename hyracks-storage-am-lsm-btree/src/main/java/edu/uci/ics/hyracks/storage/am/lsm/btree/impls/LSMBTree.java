@@ -153,7 +153,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
         BlockingIOOperationCallback cb = new BlockingIOOperationCallback();
         ILSMIndexAccessor accessor = createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-        lsmHarness.getIOScheduler().scheduleOperation(accessor.createFlushOperation(cb));
+        accessor.scheduleFlush(cb);
         try {
             cb.waitForIO();
         } catch (InterruptedException e) {
@@ -514,10 +514,11 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         }
 
         @Override
-        public ILSMIOOperation createFlushOperation(ILSMIOOperationCallback callback) {
+        public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException {
             LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
-            return new LSMFlushOperation(lsmHarness.getIndex(), componentFileRefs.getInsertIndexFileReference(),
-                    callback);
+            lsmHarness.getIOScheduler().scheduleOperation(
+                    new LSMFlushOperation(lsmHarness.getIndex(), componentFileRefs.getInsertIndexFileReference(),
+                            callback));
         }
     }
 

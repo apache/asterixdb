@@ -27,7 +27,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeInProgressException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTree;
@@ -75,10 +74,7 @@ public class LSMRTreeTestWorker extends AbstractIndexTestWorker {
 
             case MERGE:
                 try {
-                    ILSMIOOperation mergeOperation = accessor.createMergeOperation(NoOpIOOperationCallback.INSTANCE);
-                    if (mergeOperation != null) {
-                        accessor.merge(mergeOperation);
-                    }
+                    accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE);
                 } catch (LSMMergeInProgressException e) {
                     // Ignore ongoing merges. Do an insert instead.
                     rearrangeTuple(tuple, cmp);

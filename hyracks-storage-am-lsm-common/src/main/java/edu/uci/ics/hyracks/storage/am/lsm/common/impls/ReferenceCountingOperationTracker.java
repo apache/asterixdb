@@ -59,7 +59,7 @@ public class ReferenceCountingOperationTracker implements ILSMOperationTracker {
         if (index.getFlushStatus(index) && threadRefCount == 0) {
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
-            index.getIOScheduler().scheduleOperation(accessor.createFlushOperation(FLUSHCALLBACK_INSTANCE));
+            accessor.scheduleFlush(FLUSHCALLBACK_INSTANCE);
         }
     }
 

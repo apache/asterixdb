@@ -356,10 +356,11 @@ public class LSMRTree extends AbstractLSMRTree {
         }
 
         @Override
-        public ILSMIOOperation createFlushOperation(ILSMIOOperationCallback callback) {
+        public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException {
             LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
-            return new LSMRTreeFlushOperation(lsmHarness.getIndex(), componentFileRefs.getInsertIndexFileReference(),
-                    componentFileRefs.getDeleteIndexFileReference(), callback);
+            lsmHarness.getIOScheduler().scheduleOperation(
+                    new LSMRTreeFlushOperation(lsmHarness.getIndex(), componentFileRefs.getInsertIndexFileReference(),
+                            componentFileRefs.getDeleteIndexFileReference(), callback));
         }
     }
 

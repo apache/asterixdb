@@ -152,7 +152,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         BlockingIOOperationCallback cb = new BlockingIOOperationCallback();
         ILSMIndexAccessor accessor = (ILSMIndexAccessor) createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
-        lsmHarness.getIOScheduler().scheduleOperation(accessor.createFlushOperation(cb));
+        accessor.scheduleFlush(cb);
         try {
             cb.waitForIO();
         } catch (InterruptedException e) {

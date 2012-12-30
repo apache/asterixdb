@@ -80,11 +80,11 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     }
 
     @Override
-    public ILSMIOOperation createFlushOperation(ILSMIOOperationCallback callback) {
+    public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException {
         LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
-        return new LSMInvertedIndexFlushOperation(lsmHarness.getIndex(),
-                componentFileRefs.getInsertIndexFileReference(), componentFileRefs.getDeleteIndexFileReference(),
-                callback);
+        lsmHarness.getIOScheduler().scheduleOperation(
+                new LSMInvertedIndexFlushOperation(lsmHarness.getIndex(), componentFileRefs
+                        .getInsertIndexFileReference(), componentFileRefs.getDeleteIndexFileReference(), callback));
     }
 
     @Override
@@ -93,9 +93,11 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     }
 
     @Override
-    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
-            IndexException {
-        return lsmHarness.createMergeOperation(callback);
+    public void scheduleMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException {
+        ILSMIOOperation op = lsmHarness.createMergeOperation(callback);
+        if (op != null) {
+            lsmHarness.getIOScheduler().scheduleOperation(op);
+        }
     }
 
     @Override

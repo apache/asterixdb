@@ -228,7 +228,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         BlockingIOOperationCallback blockingCallBack = new BlockingIOOperationCallback();
         ILSMIndexAccessor accessor = (ILSMIndexAccessor) createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
-        lsmHarness.getIOScheduler().scheduleOperation(accessor.createFlushOperation(blockingCallBack));
+        accessor.scheduleFlush(blockingCallBack);
         try {
             blockingCallBack.waitForIO();
         } catch (InterruptedException e) {

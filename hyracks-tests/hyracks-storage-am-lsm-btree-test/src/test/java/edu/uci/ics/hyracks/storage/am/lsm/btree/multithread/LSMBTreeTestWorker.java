@@ -33,7 +33,6 @@ import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree.LSMBTreeAccessor;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeInProgressException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 
@@ -109,10 +108,7 @@ public class LSMBTreeTestWorker extends AbstractIndexTestWorker {
 
             case MERGE:
                 try {
-                    ILSMIOOperation ioop = accessor.createMergeOperation(NoOpIOOperationCallback.INSTANCE);
-                    if (ioop != null) {
-                        accessor.merge(ioop);
-                    }
+                    accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE);
                 } catch (LSMMergeInProgressException e) {
                     // Ignore ongoing merges. Do an insert instead.
                     try {

@@ -333,10 +333,11 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         }
 
         @Override
-        public ILSMIOOperation createFlushOperation(ILSMIOOperationCallback callback) {
+        public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException {
             LSMComponentFileReferences relFlushFileRefs = fileManager.getRelFlushFileReference();
-            return new LSMFlushOperation(lsmHarness.getIndex(), relFlushFileRefs.getInsertIndexFileReference(),
-                    callback);
+            lsmHarness.getIOScheduler().scheduleOperation(
+                    new LSMFlushOperation(lsmHarness.getIndex(), relFlushFileRefs.getInsertIndexFileReference(),
+                            callback));
         }
     }
 

@@ -29,10 +29,9 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
  * concurrent operations).
  */
 public interface ILSMIndexAccessor extends IIndexAccessor {
-    public ILSMIOOperation createFlushOperation(ILSMIOOperationCallback callback);
+    public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException;
 
-    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
-            IndexException;
+    public void scheduleMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException;
 
     /**
      * Force a flush of the in-memory component.
@@ -121,7 +120,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      *             If there is no matching tuple in the index.
      */
     public boolean tryUpsert(ITupleReference tuple) throws HyracksDataException, IndexException;
-    
+
     /**
      * This method can be used to increase the number of 'active' operations of an index artificially,
      * without actually modifying the index.
@@ -132,7 +131,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws HyracksDataException
      */
     public boolean tryNoOp() throws HyracksDataException;
-    
+
     /**
      * This method can be used to increase the number of 'active' operations of an index artificially,
      * without actually modifying the index.

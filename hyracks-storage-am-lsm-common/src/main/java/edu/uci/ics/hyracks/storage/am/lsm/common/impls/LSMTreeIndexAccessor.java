@@ -83,9 +83,9 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     @Override
     public boolean tryUpsert(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.UPSERT);
-        return lsmHarness.insertUpdateOrDelete(tuple, ctx, true);        
+        return lsmHarness.insertUpdateOrDelete(tuple, ctx, true);
     }
-    
+
     @Override
     public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.SEARCH);
@@ -109,11 +109,13 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     }
 
     @Override
-    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
-            IndexException {
-        return lsmHarness.createMergeOperation(callback);
+    public void scheduleMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException {
+        ILSMIOOperation op = lsmHarness.createMergeOperation(callback);
+        if (op != null) {
+            lsmHarness.getIOScheduler().scheduleOperation(op);
+        }
     }
-    
+
     @Override
     public boolean tryNoOp() throws HyracksDataException {
         return lsmHarness.noOp(ctx, true);

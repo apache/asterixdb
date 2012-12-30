@@ -5,11 +5,9 @@ import org.junit.Test;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.AbstractModificationOperationCallbackTest;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpOperationTrackerFactory;
@@ -49,8 +47,7 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
 
     @Test
     public void modificationCallbackTest() throws Exception {
-        IIndexAccessor accessor = index.createAccessor(cb, NoOpOperationCallback.INSTANCE);
-        ILSMIOOperation flushOp = ((ILSMIndexAccessor) accessor).createFlushOperation(ioOpCallback);
+        ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(cb, NoOpOperationCallback.INSTANCE);
 
         for (int j = 0; j < 2; j++) {
             isFoundNull = true;
@@ -60,7 +57,7 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
             }
 
             if (j == 1) {
-                harness.getIOScheduler().scheduleOperation(flushOp);
+                accessor.scheduleFlush(ioOpCallback);
                 ioOpCallback.waitForIO();
                 isFoundNull = true;
             } else {
@@ -73,7 +70,7 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
             }
 
             if (j == 1) {
-                harness.getIOScheduler().scheduleOperation(flushOp);
+                accessor.scheduleFlush(ioOpCallback);
                 ioOpCallback.waitForIO();
                 isFoundNull = true;
             } else {
@@ -85,7 +82,7 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
                 accessor.delete(tuple);
             }
 
-            harness.getIOScheduler().scheduleOperation(flushOp);
+            accessor.scheduleFlush(ioOpCallback);
             ioOpCallback.waitForIO();
         }
     }
