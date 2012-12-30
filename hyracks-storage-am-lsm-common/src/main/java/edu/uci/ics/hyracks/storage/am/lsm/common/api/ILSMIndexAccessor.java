@@ -19,7 +19,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 
 /**
  * Client handle for performing operations
@@ -32,22 +31,6 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
     public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException;
 
     public void scheduleMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException;
-
-    /**
-     * Force a flush of the in-memory component.
-     * 
-     * @throws HyracksDataException
-     * @throws TreeIndexException
-     */
-    public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
-
-    /**
-     * Merge all on-disk components.
-     * 
-     * @throws HyracksDataException
-     * @throws TreeIndexException
-     */
-    public void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException;
 
     /**
      * Deletes the tuple from the memory component only.

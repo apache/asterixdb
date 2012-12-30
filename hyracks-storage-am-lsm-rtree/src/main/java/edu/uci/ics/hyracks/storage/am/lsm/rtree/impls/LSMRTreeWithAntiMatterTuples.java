@@ -48,6 +48,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -336,7 +337,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException {
             LSMComponentFileReferences relFlushFileRefs = fileManager.getRelFlushFileReference();
             lsmHarness.getIOScheduler().scheduleOperation(
-                    new LSMFlushOperation(lsmHarness.getIndex(), relFlushFileRefs.getInsertIndexFileReference(),
+                    new LSMFlushOperation((ILSMIndexAccessorInternal) createAccessor(null, null), relFlushFileRefs.getInsertIndexFileReference(),
                             callback));
         }
     }
@@ -418,8 +419,8 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         }
 
         LSMComponentFileReferences relMergeFileRefs = getMergeTargetFileName(mergingComponents);
-        return new LSMRTreeMergeOperation(lsmHarness.getIndex(), mergingComponents, cursor,
-                relMergeFileRefs.getInsertIndexFileReference(), null, callback);
+        return new LSMRTreeMergeOperation((ILSMIndexAccessorInternal) createAccessor(null, null), mergingComponents,
+                cursor, relMergeFileRefs.getInsertIndexFileReference(), null, callback);
     }
 
     @Override

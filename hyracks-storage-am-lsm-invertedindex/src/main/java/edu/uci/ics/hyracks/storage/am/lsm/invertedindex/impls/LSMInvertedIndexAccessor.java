@@ -24,14 +24,14 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 
-public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedIndexAccessor {
+public class LSMInvertedIndexAccessor implements ILSMIndexAccessorInternal, IInvertedIndexAccessor {
 
     protected final ILSMHarness lsmHarness;
     protected final ILSMIndexFileManager fileManager;
@@ -83,8 +83,9 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException {
         LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
         lsmHarness.getIOScheduler().scheduleOperation(
-                new LSMInvertedIndexFlushOperation(lsmHarness.getIndex(), componentFileRefs
-                        .getInsertIndexFileReference(), componentFileRefs.getDeleteIndexFileReference(), callback));
+                new LSMInvertedIndexFlushOperation((ILSMIndexAccessorInternal) invIndex.createAccessor(null, null),
+                        componentFileRefs.getInsertIndexFileReference(), componentFileRefs
+                                .getDeleteIndexFileReference(), callback));
     }
 
     @Override

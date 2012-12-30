@@ -47,6 +47,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -329,8 +330,8 @@ public class LSMRTree extends AbstractLSMRTree {
             return null;
         }
         LSMComponentFileReferences relMergeFileRefs = getMergeTargetFileName(mergingComponents);
-        return new LSMRTreeMergeOperation(lsmHarness.getIndex(), mergingComponents, cursor,
-                relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getDeleteIndexFileReference(),
+        return new LSMRTreeMergeOperation((ILSMIndexAccessorInternal) createAccessor(null, null), mergingComponents,
+                cursor, relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getDeleteIndexFileReference(),
                 callback);
     }
 
@@ -359,8 +360,9 @@ public class LSMRTree extends AbstractLSMRTree {
         public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException {
             LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
             lsmHarness.getIOScheduler().scheduleOperation(
-                    new LSMRTreeFlushOperation(lsmHarness.getIndex(), componentFileRefs.getInsertIndexFileReference(),
-                            componentFileRefs.getDeleteIndexFileReference(), callback));
+                    new LSMRTreeFlushOperation((ILSMIndexAccessorInternal) createAccessor(null, null),
+                            componentFileRefs.getInsertIndexFileReference(), componentFileRefs
+                                    .getDeleteIndexFileReference(), callback));
         }
     }
 

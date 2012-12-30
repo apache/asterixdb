@@ -52,6 +52,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
@@ -462,7 +463,8 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         String lastFileName = lastInvIndex.getBTree().getFileReference().getFile().getName();
 
         LSMComponentFileReferences relMergeFileRefs = fileManager.getRelMergeFileReference(firstFileName, lastFileName);
-        LSMInvertedIndexMergeOperation mergeOp = new LSMInvertedIndexMergeOperation(this, mergingComponents, cursor,
+        LSMInvertedIndexMergeOperation mergeOp = new LSMInvertedIndexMergeOperation(
+                (ILSMIndexAccessorInternal) createAccessor(null, null), mergingComponents, cursor,
                 relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getDeleteIndexFileReference(),
                 callback);
 

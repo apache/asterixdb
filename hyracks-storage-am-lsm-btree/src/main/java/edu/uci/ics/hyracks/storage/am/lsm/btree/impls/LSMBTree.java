@@ -54,6 +54,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -517,8 +518,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException {
             LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
             lsmHarness.getIOScheduler().scheduleOperation(
-                    new LSMFlushOperation(lsmHarness.getIndex(), componentFileRefs.getInsertIndexFileReference(),
-                            callback));
+                    new LSMFlushOperation((ILSMIndexAccessorInternal) createAccessor(null, null), componentFileRefs
+                            .getInsertIndexFileReference(), callback));
         }
     }
 
@@ -548,8 +549,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         FileReference lastFile = diskFileMapProvider.lookupFileName(lastBTree.getFileId());
         LSMComponentFileReferences relMergeFileRefs = fileManager.getRelMergeFileReference(firstFile.getFile()
                 .getName(), lastFile.getFile().getName());
-        return new LSMBTreeMergeOperation(lsmHarness.getIndex(), mergingDiskComponents, cursor,
-                relMergeFileRefs.getInsertIndexFileReference(), callback);
+        return new LSMBTreeMergeOperation((ILSMIndexAccessorInternal) createAccessor(null, null),
+                mergingDiskComponents, cursor, relMergeFileRefs.getInsertIndexFileReference(), callback);
     }
 
     @Override
