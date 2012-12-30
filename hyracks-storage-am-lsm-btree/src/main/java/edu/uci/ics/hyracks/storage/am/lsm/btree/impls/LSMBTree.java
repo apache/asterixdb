@@ -75,7 +75,6 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     // In-memory components.   
     private final LSMBTreeComponent mutableComponent;
 
-    // On-disk components.    
     // For creating BTree's used in flush and merge.
     private final LSMBTreeComponentFactory componentFactory;
     // For creating BTree's used in bulk load. Different from diskBTreeFactory

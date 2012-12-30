@@ -37,7 +37,7 @@ public final class FileReference implements Serializable {
     	return file;
     }
 
-    public IODeviceHandle getDevideHandle() {
+    public IODeviceHandle getDeviceHandle() {
     	return dev;
     }
     

@@ -31,7 +31,7 @@ public class LSMFlushOperation implements ILSMIOOperation {
 
     @Override
     public Set<IODeviceHandle> getWriteDevices() {
-        return Collections.singleton(flushTarget.getDevideHandle());
+        return Collections.singleton(flushTarget.getDeviceHandle());
     }
 
     @Override

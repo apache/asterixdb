@@ -24,8 +24,6 @@ public abstract class AbstractLSMComponent implements ILSMComponent {
     private final AtomicInteger threadRef = new AtomicInteger();
     private LSMComponentState state;
 
-    private final Object componentSync = new Object();
-
     @Override
     public void activate() {
 
@@ -53,21 +51,21 @@ public abstract class AbstractLSMComponent implements ILSMComponent {
 
     @Override
     public void setState(LSMComponentState state) {
-        synchronized (componentSync) {
+        synchronized (this) {
             this.state = state;
         }
     }
 
     @Override
     public LSMComponentState getState() {
-        synchronized (componentSync) {
+        synchronized (this) {
             return state;
         }
     }
 
     @Override
     public boolean negativeCompareAndSet(LSMComponentState compare, LSMComponentState update) {
-        synchronized (componentSync) {
+        synchronized (this) {
             if (state != compare) {
                 state = update;
                 return true;

@@ -47,7 +47,7 @@ public class LSMInvertedIndexFlushOperation implements ILSMIOOperation {
 
     @Override
     public Set<IODeviceHandle> getWriteDevices() {
-        return Collections.singleton(dictBTreeFlushTarget.getDevideHandle());
+        return Collections.singleton(dictBTreeFlushTarget.getDeviceHandle());
     }
 
     @Override

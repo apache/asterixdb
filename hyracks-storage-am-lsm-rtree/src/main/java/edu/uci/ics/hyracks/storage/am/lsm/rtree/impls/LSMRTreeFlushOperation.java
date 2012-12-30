@@ -35,8 +35,8 @@ public class LSMRTreeFlushOperation implements ILSMIOOperation {
     @Override
     public Set<IODeviceHandle> getWriteDevices() {
         Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
-        devs.add(rtreeFlushTarget.getDevideHandle());
-        devs.add(btreeFlushTarget.getDevideHandle());
+        devs.add(rtreeFlushTarget.getDeviceHandle());
+        devs.add(btreeFlushTarget.getDeviceHandle());
         return devs;
     }
 

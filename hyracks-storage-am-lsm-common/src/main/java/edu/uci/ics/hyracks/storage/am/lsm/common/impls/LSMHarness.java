@@ -47,13 +47,9 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
  * A merge and a flush can proceed concurrently.
  */
 public class LSMHarness implements ILSMHarness {
-    protected final Logger LOGGER = Logger.getLogger(LSMHarness.class.getName());
+    private final Logger LOGGER = Logger.getLogger(LSMHarness.class.getName());
 
-    private ILSMIndexInternal lsmIndex;
-
-    // All accesses to the LSM-Tree's on-disk components are synchronized on diskComponentsSync.
-    private Object diskComponentsSync = new Object();
-
+    private final ILSMIndexInternal lsmIndex;
     private final ILSMMergePolicy mergePolicy;
     private final ILSMOperationTracker opTracker;
     private final ILSMIOOperationScheduler ioScheduler;
@@ -117,7 +113,7 @@ public class LSMHarness implements ILSMHarness {
             operation.getCallback().afterFinalize(operation, newComponent);
         }
         lsmIndex.resetMutableComponent();
-        synchronized (diskComponentsSync) {
+        synchronized (this) {
             lsmIndex.addComponent(newComponent);
             mergePolicy.diskComponentAdded(lsmIndex, lsmIndex.getImmutableComponents().size());
         }
@@ -143,7 +139,7 @@ public class LSMHarness implements ILSMHarness {
         // Since this mode is only used for merging trees, it doesn't really
         // matter if the merge excludes the new on-disk Tree.
         List<ILSMComponent> operationalComponents;
-        synchronized (diskComponentsSync) {
+        synchronized (this) {
             operationalComponents = lsmIndex.getOperationalComponents(ctx);
         }
         for (ILSMComponent c : operationalComponents) {
@@ -191,7 +187,7 @@ public class LSMHarness implements ILSMHarness {
 
         // Remove the old components from the list, and add the new merged component(s).
         try {
-            synchronized (diskComponentsSync) {
+            synchronized (this) {
                 lsmIndex.subsumeMergedComponents(newComponent, mergedComponents);
             }
         } finally {
@@ -232,7 +228,7 @@ public class LSMHarness implements ILSMHarness {
         // forcing all pages of the tree to disk, possibly with some extra
         // information to mark the tree as valid).
         lsmIndex.markAsValid(index);
-        synchronized (diskComponentsSync) {
+        synchronized (this) {
             lsmIndex.addComponent(index);
             mergePolicy.diskComponentAdded(lsmIndex, lsmIndex.getImmutableComponents().size());
         }

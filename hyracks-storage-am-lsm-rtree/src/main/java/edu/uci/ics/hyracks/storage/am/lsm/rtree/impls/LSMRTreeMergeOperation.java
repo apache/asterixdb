@@ -39,15 +39,15 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
         Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
         for (ILSMComponent o : mergingComponents) {
             LSMRTreeComponent component = (LSMRTreeComponent) o;
-            devs.add(component.getRTree().getFileReference().getDevideHandle());
-            devs.add(component.getBTree().getFileReference().getDevideHandle());
+            devs.add(component.getRTree().getFileReference().getDeviceHandle());
+            devs.add(component.getBTree().getFileReference().getDeviceHandle());
         }
         return devs;
     }
 
     @Override
     public Set<IODeviceHandle> getWriteDevices() {
-        return Collections.singleton(rtreeMergeTarget.getDevideHandle());
+        return Collections.singleton(rtreeMergeTarget.getDeviceHandle());
     }
 
     @Override
