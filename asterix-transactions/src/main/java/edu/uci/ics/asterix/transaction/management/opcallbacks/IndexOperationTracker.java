@@ -98,7 +98,7 @@ public class IndexOperationTracker implements ILSMOperationTracker {
                 accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                         NoOpOperationCallback.INSTANCE);
             }
-            index.getIOScheduler().scheduleOperation(accessor.createFlushOperation(ioOpCallback));
+            accessor.scheduleFlush(ioOpCallback);
         }
     }
 
