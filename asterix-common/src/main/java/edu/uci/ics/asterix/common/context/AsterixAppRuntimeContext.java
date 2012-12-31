@@ -14,8 +14,8 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -63,8 +63,8 @@ public class AsterixAppRuntimeContext {
         indexLifecycleManager = new IndexLifecycleManager(DEFAULT_LIFECYCLEMANAGER_MEMORY_BUDGET);
         txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId());
 
-        lsmIOScheduler = ImmediateScheduler.INSTANCE;
-        mergePolicy = new ConstantMergePolicy(lsmIOScheduler, 3);
+        lsmIOScheduler = SynchronousScheduler.INSTANCE;
+        mergePolicy = new ConstantMergePolicy(3);
         opTrackerFactory = RefCountingOperationTrackerFactory.INSTANCE;
 
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
