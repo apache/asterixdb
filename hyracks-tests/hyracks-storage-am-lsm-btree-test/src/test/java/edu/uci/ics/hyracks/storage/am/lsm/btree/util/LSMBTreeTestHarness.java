@@ -38,7 +38,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -85,7 +85,7 @@ public class LSMBTreeTestHarness {
         this.memPageSize = AccessMethodTestsConfig.LSM_BTREE_MEM_PAGE_SIZE;
         this.memNumPages = AccessMethodTestsConfig.LSM_BTREE_MEM_NUM_PAGES;
         this.hyracksFrameSize = AccessMethodTestsConfig.LSM_BTREE_HYRACKS_FRAME_SIZE;
-        this.ioScheduler = ImmediateScheduler.INSTANCE;
+        this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
         this.opTrackerFactory = RefCountingOperationTrackerFactory.INSTANCE;
     }
@@ -98,7 +98,7 @@ public class LSMBTreeTestHarness {
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
         this.hyracksFrameSize = hyracksFrameSize;
-        this.ioScheduler = ImmediateScheduler.INSTANCE;
+        this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
         this.opTrackerFactory = RefCountingOperationTrackerFactory.INSTANCE;
     }

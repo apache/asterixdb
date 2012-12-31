@@ -50,6 +50,7 @@ public class LSMHarness implements ILSMHarness {
     private final Logger LOGGER = Logger.getLogger(LSMHarness.class.getName());
 
     private final ILSMIndexInternal lsmIndex;
+
     private final ILSMMergePolicy mergePolicy;
     private final ILSMOperationTracker opTracker;
     private final ILSMIOOperationScheduler ioScheduler;

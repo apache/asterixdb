@@ -5,7 +5,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 
-public enum ImmediateScheduler implements ILSMIOOperationScheduler {
+public enum SynchronousScheduler implements ILSMIOOperationScheduler {
     INSTANCE;
 
     @Override

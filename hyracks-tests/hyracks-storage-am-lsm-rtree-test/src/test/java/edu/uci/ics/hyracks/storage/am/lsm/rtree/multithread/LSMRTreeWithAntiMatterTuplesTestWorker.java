@@ -24,7 +24,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeInProgressException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeWithAntiMatterTuples.LSMRTreeWithAntiMatterTuplesAccessor;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
@@ -62,13 +61,7 @@ public class LSMRTreeWithAntiMatterTuplesTestWorker extends AbstractLSMRTreeTest
                 break;
 
             case MERGE:
-                try {
-                    accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE);
-                } catch (LSMMergeInProgressException e) {
-                    // Ignore ongoing merges. Do an insert instead.
-                    rearrangeTuple(tuple, cmp);
-                    accessor.insert(rearrangedTuple);
-                }
+                accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE);
                 break;
 
             default:

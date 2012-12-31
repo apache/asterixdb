@@ -30,7 +30,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeInProgressException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.exceptions.OccurrenceThresholdPanicException;
@@ -110,11 +109,7 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
             }
 
             case MERGE: {
-                try {
-                    accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE);
-                } catch (LSMMergeInProgressException e) {
-                    insert(accessor, tuple);
-                }
+                accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE);
                 break;
             }
 
