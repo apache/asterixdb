@@ -24,6 +24,7 @@ import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.Function;
+import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 
@@ -56,16 +57,16 @@ public class MetadataTransactionContext extends MetadataCache {
     // The APIs in this class make sure that these two caches are kept in sync.
     protected MetadataCache droppedCache = new MetadataCache();
 
-	protected ArrayList<MetadataLogicalOperation> opLog = new ArrayList<MetadataLogicalOperation>();
-	private final JobId jobId;
+    protected ArrayList<MetadataLogicalOperation> opLog = new ArrayList<MetadataLogicalOperation>();
+    private final JobId jobId;
 
-	public MetadataTransactionContext(JobId jobId) {
-		this.jobId = jobId;
-	}
+    public MetadataTransactionContext(JobId jobId) {
+        this.jobId = jobId;
+    }
 
-	public JobId getJobId() {
-		return jobId;
-	}
+    public JobId getJobId() {
+        return jobId;
+    }
 
     public void addDataverse(Dataverse dataverse) {
         droppedCache.dropDataverse(dataverse);
@@ -75,6 +76,11 @@ public class MetadataTransactionContext extends MetadataCache {
     public void addDataset(Dataset dataset) {
         droppedCache.dropDataset(dataset);
         logAndApply(new MetadataLogicalOperation(dataset, true));
+    }
+
+    public void addIndex(Index index) {
+        droppedCache.dropIndex(index);
+        logAndApply(new MetadataLogicalOperation(index, true));
     }
 
     public void addDatatype(Datatype datatype) {
@@ -97,12 +103,18 @@ public class MetadataTransactionContext extends MetadataCache {
         logAndApply(new MetadataLogicalOperation(adapter, true));
     }
 
-	public void dropDataset(String dataverseName, String datasetName) {
-		Dataset dataset = new Dataset(dataverseName, datasetName, null, null,
-				null, -1);
-		droppedCache.addDatasetIfNotExists(dataset);
-		logAndApply(new MetadataLogicalOperation(dataset, false));
-	}
+    public void dropDataset(String dataverseName, String datasetName) {
+        Dataset dataset = new Dataset(dataverseName, datasetName, null, null, null, -1);
+        droppedCache.addDatasetIfNotExists(dataset);
+        logAndApply(new MetadataLogicalOperation(dataset, false));
+    }
+
+    public void dropIndex(String dataverseName, String datasetName, String indexName) {
+        Index index = new Index(dataverseName, datasetName, indexName, null, null, false);
+        droppedCache.addIndexIfNotExists(index);
+        logAndApply(new MetadataLogicalOperation(index, false));
+    }
+
     public void dropDataverse(String dataverseName) {
         Dataverse dataverse = new Dataverse(dataverseName, null);
         droppedCache.addDataverseIfNotExists(dataverse);
@@ -149,6 +161,16 @@ public class MetadataTransactionContext extends MetadataCache {
             return true;
         }
         return droppedCache.getDataset(dataverseName, datasetName) != null;
+    }
+    
+    public boolean indexIsDropped(String dataverseName, String datasetName, String indexName) {
+        if (droppedCache.getDataverse(dataverseName) != null) {
+            return true;
+        }
+        if (droppedCache.getDataset(dataverseName, datasetName) != null) {
+            return true;
+        }
+        return droppedCache.getIndex(dataverseName, datasetName, indexName) != null;
     }
 
     public boolean datatypeIsDropped(String dataverseName, String datatypeName) {
