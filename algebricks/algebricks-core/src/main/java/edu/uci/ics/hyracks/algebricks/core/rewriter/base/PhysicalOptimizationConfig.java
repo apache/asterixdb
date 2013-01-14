@@ -17,8 +17,8 @@ public class PhysicalOptimizationConfig {
     public PhysicalOptimizationConfig() {
         int frameSize = 32768;
         setInt(FRAMESIZE, frameSize);
-        setInt(MAX_FRAMES_EXTERNAL_SORT, (int) (((long) 512 * MB) / frameSize));
-        setInt(MAX_FRAMES_EXTERNAL_GROUP_BY, (int) (((long) 256 * MB) / frameSize));
+        setInt(MAX_FRAMES_EXTERNAL_SORT, (int) (((long) 32 * MB) / frameSize));
+        setInt(MAX_FRAMES_EXTERNAL_GROUP_BY, (int) (((long) 32 * MB) / frameSize));
 
         // use http://www.rsok.com/~jrm/printprimes.html to find prime numbers
         setInt(DEFAULT_HASH_GROUP_TABLE_SIZE, 10485767);
