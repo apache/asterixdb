@@ -68,6 +68,7 @@ import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class HyracksExecutionEngine implements IExecutionEngine {
 
 	private static final Log LOG = LogFactory
@@ -370,7 +371,6 @@ public class HyracksExecutionEngine implements IExecutionEngine {
 				ConditionalTask condition = (ConditionalTask) task;
 				List<Task<? extends Serializable>> branches = condition
 						.getListTasks();
-				boolean existMR = false;
 				for (int i = branches.size() - 1; i >= 0; i--) {
 					Task branch = branches.get(i);
 					if (branch instanceof MapRedTask) {

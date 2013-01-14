@@ -53,6 +53,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.Va
  * previous LVJ operator.
  */
 
+@SuppressWarnings("rawtypes")
 public class LateralViewJoinVisitor extends DefaultVisitor {
 
 	private UDTFDesc udtf;
@@ -70,22 +71,15 @@ public class LateralViewJoinVisitor extends DefaultVisitor {
 		}
 
 		Operator parent0 = operator.getParentOperators().get(0);
-		Operator parent1 = operator.getParentOperators().get(1);
-		List<LogicalVariable> variables;
-
 		ILogicalOperator parentOperator;
 		ILogicalExpression unnestArg;
 		if (parent0 instanceof UDTFOperator) {
-			variables = t
-					.getVariablesFromSchema(t.generateInputSchema(parent1));
 			List<LogicalVariable> unnestVars = new ArrayList<LogicalVariable>();
 			VariableUtilities.getLiveVariables(parents.get(1).getValue(),
 					unnestVars);
 			unnestArg = new VariableReferenceExpression(unnestVars.get(0));
 			parentOperator = parents.get(1).getValue();
 		} else {
-			variables = t
-					.getVariablesFromSchema(t.generateInputSchema(parent0));
 			List<LogicalVariable> unnestVars = new ArrayList<LogicalVariable>();
 			VariableUtilities.getLiveVariables(parents.get(0).getValue(),
 					unnestVars);

@@ -113,6 +113,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 import edu.uci.ics.hivesterix.runtime.exec.HyracksExecutionEngine;
 import edu.uci.ics.hivesterix.runtime.exec.IExecutionEngine;
 
+@SuppressWarnings({ "deprecation", "unused" })
 public class Driver implements CommandProcessor {
 
 	static final private Log LOG = LogFactory.getLog(Driver.class.getName());
@@ -121,7 +122,6 @@ public class Driver implements CommandProcessor {
 	// hive-sterix
 	private IExecutionEngine engine;
 	private boolean hivesterix = false;
-	private PrintWriter planPrinter;
 
 	private int maxRows = 100;
 	ByteStream.Output bos = new ByteStream.Output();
@@ -343,7 +343,6 @@ public class Driver implements CommandProcessor {
 	public Driver(HiveConf conf, PrintWriter planPrinter) {
 		this.conf = conf;
 		engine = new HyracksExecutionEngine(conf, planPrinter);
-		this.planPrinter = planPrinter;
 	}
 
 	public void clear() {

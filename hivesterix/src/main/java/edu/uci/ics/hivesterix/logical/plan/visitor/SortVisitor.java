@@ -26,6 +26,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.OrderColumn;
 
 public class SortVisitor extends DefaultVisitor {
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Mutable<ILogicalOperator> visit(ReduceSinkOperator operator,
 			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)

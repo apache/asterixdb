@@ -15,18 +15,18 @@ import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.eclipse.jetty.util.log.Log;
 
+@SuppressWarnings({ "deprecation", "rawtypes" })
 public class HiveFileSplitProvider extends AbstractHiveFileSplitProvider {
+	private static final long serialVersionUID = 1L;
 
 	private transient InputFormat format;
 	private transient JobConf conf;
 	private String confContent;
 	final private int nPartition;
 	private transient FileSplit[] splits;
-	private String inputFormatStr;
 
 	public HiveFileSplitProvider(JobConf conf, String filePath, int nPartition) {
 		format = conf.getInputFormat();
-		inputFormatStr = format.getClass().getName();
 		this.conf = conf;
 		this.nPartition = nPartition;
 		writeConfContent();

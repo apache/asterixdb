@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.serde2.ByteStream.Output;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
@@ -47,8 +45,6 @@ import edu.uci.ics.hivesterix.serde.lazy.objectinspector.primitive.PrimitiveObje
  * 
  */
 public final class LazyUtils {
-
-	private static Log LOG = LogFactory.getLog(LazyUtils.class.getName());
 
 	/**
 	 * Convert the byte array to an int starting from the given offset. Refer to
@@ -256,6 +252,8 @@ public final class LazyUtils {
 	 * A zero-compressed encoded integer.
 	 */
 	public static class VInt implements Serializable {
+		private static final long serialVersionUID = 1L;
+
 		public VInt() {
 			value = 0;
 			length = 0;

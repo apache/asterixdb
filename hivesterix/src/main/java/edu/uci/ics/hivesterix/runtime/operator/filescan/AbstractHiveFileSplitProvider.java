@@ -5,6 +5,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 
 public abstract class AbstractHiveFileSplitProvider implements
 		IFileSplitProvider {
+	private static final long serialVersionUID = 1L;
 
 	@Override
 	public FileSplit[] getFileSplits() {
@@ -12,6 +13,7 @@ public abstract class AbstractHiveFileSplitProvider implements
 		return null;
 	}
 
+	@SuppressWarnings("deprecation")
 	public abstract org.apache.hadoop.mapred.FileSplit[] getFileSplitArray();
 
 }

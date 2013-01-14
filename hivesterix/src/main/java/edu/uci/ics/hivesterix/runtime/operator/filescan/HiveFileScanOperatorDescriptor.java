@@ -39,6 +39,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
+@SuppressWarnings("deprecation")
 public class HiveFileScanOperatorDescriptor extends
 		AbstractSingleActivityOperatorDescriptor {
 	private static final long serialVersionUID = 1L;

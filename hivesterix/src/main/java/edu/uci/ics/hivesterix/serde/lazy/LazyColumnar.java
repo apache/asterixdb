@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 
@@ -36,9 +34,8 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  * LazyStruct does not deal with the case of a NULL struct. That is handled by
  * the parent LazyObject.
  */
+@SuppressWarnings("rawtypes")
 public class LazyColumnar extends LazyNonPrimitive<LazyColumnarObjectInspector> {
-
-	private static Log LOG = LogFactory.getLog(LazyColumnar.class.getName());
 
 	/**
 	 * IFrameTupleReference: the backend of the struct

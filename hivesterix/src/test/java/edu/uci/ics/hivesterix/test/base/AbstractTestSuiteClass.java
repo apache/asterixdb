@@ -30,6 +30,7 @@ import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 
+@SuppressWarnings("deprecation")
 public abstract class AbstractTestSuiteClass extends TestSuite {
 
 	private static final String PATH_TO_HADOOP_CONF = "src/test/resources/runtimefunctionts/hadoop/conf";

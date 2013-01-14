@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 
+@SuppressWarnings("deprecation")
 public class HiveFileWritePushRuntime implements IPushRuntime {
 
 	/**

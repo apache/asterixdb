@@ -11,6 +11,7 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
+@SuppressWarnings("deprecation")
 public class HiveWriteRuntimeGenerator {
 	private FileSinkOperator fileSink;
 

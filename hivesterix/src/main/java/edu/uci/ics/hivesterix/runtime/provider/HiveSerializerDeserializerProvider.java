@@ -12,10 +12,10 @@ public class HiveSerializerDeserializerProvider implements
 	private HiveSerializerDeserializerProvider() {
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public ISerializerDeserializer getSerializerDeserializer(Object type)
 			throws AlgebricksException {
-		// TODO Auto-generated method stub
 		// return ARecordSerializerDeserializer.SCHEMALESS_INSTANCE;
 		return null;
 	}

@@ -18,6 +18,7 @@ import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TextInputFormat;
 
+@SuppressWarnings("deprecation")
 public class RecordBalance {
 
 	private static String confPath = System.getenv("HADDOP_HOME");

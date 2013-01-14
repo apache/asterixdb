@@ -133,6 +133,7 @@ public class LazySerDe implements SerDe {
 	/**
 	 * Deserialize a table record to a Lazy struct.
 	 */
+	@SuppressWarnings("deprecation")
 	@Override
 	public Object deserialize(Writable field) throws SerDeException {
 		if (byteArrayRef == null) {

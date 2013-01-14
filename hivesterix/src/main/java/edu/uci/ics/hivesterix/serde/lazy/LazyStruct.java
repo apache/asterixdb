@@ -53,6 +53,7 @@ public class LazyStruct extends LazyNonPrimitive<LazyStructObjectInspector> {
 	/**
 	 * The fields of the struct.
 	 */
+	@SuppressWarnings("rawtypes")
 	LazyObject[] fields;
 
 	/**

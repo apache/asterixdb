@@ -33,6 +33,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 
+@SuppressWarnings({ "rawtypes", "deprecation", "unchecked" })
 public class HiveTupleParser extends AbstractHiveTupleParser {
 
 	private int[] outputColumnsOffset;

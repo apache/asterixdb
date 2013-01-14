@@ -8,6 +8,7 @@ import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
 
+@SuppressWarnings("deprecation")
 public abstract class AbstractHiveTupleParser implements ITupleParser {
 
 	@Override

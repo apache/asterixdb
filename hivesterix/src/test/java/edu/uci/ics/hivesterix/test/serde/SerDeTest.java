@@ -45,6 +45,7 @@ import edu.uci.ics.hivesterix.serde.lazy.LazySerDe;
  * TestLazySimpleSerDe.
  * 
  */
+@SuppressWarnings({ "deprecation", "rawtypes" })
 public class SerDeTest extends TestCase {
 
 	/**
@@ -62,8 +63,6 @@ public class SerDeTest extends TestCase {
 			outputSerde.initialize(conf, tbl);
 
 			// Data
-			Text t = new Text(
-					"123\t456\t789\t1000\t5.3\thive and hadoop\t1.\tNULL");
 			String s = "123\t456\t789\t1000\t5.3\thive and hadoop\t1\tqf";
 
 			byte[] bytes = s.getBytes();

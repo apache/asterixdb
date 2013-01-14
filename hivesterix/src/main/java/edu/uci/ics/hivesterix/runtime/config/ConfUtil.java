@@ -19,6 +19,7 @@ import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.topology.ClusterTopology;
 
+@SuppressWarnings({ "rawtypes", "deprecation" })
 public class ConfUtil {
 
 	private static JobConf job;

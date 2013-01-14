@@ -5,6 +5,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlanAndMetadata;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class HiveLogicalPlanAndMetaData implements ILogicalPlanAndMetadata {
 
 	IMetadataProvider metadata;

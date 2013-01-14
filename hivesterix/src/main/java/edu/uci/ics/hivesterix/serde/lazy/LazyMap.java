@@ -46,6 +46,7 @@ import edu.uci.ics.hivesterix.serde.lazy.objectinspector.LazyMapObjectInspector;
  * 
  */
 
+@SuppressWarnings("rawtypes")
 public class LazyMap extends LazyNonPrimitive<LazyMapObjectInspector> {
 
 	private static Log LOG = LogFactory.getLog(LazyMap.class.getName());

@@ -26,6 +26,7 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
+@SuppressWarnings({ "rawtypes", "deprecation" })
 public class HiveScanRuntimeGenerator {
 
 	private PartitionDesc fileDesc;
@@ -97,7 +98,6 @@ public class HiveScanRuntimeGenerator {
 				opDesc, opDesc.getPartitionConstraint());
 	}
 
-	@SuppressWarnings("unchecked")
 	private static RecordDescriptor mkRecordDescriptor(
 			IOperatorSchema opSchema, Object[] types, JobGenContext context)
 			throws AlgebricksException {
@@ -105,8 +105,8 @@ public class HiveScanRuntimeGenerator {
 				.getSize()];
 		ISerializerDeserializerProvider sdp = context
 				.getSerializerDeserializerProvider();
-		int i = 0;
-		for (LogicalVariable var : opSchema) {
+		int size = opSchema.getSize();
+		for (int i = 0; i < size; i++) {
 			Object t = types[i];
 			fields[i] = sdp.getSerializerDeserializer(t);
 			i++;

@@ -77,6 +77,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 
+@SuppressWarnings("rawtypes")
 public class HiveAlgebricksTranslator implements Translator {
 
 	private int currentVariable = 0;
@@ -213,7 +214,7 @@ public class HiveAlgebricksTranslator implements Translator {
 
 	/**
 	 * get the number of variables
-	 * 
+	 * s
 	 * @return
 	 */
 	public int getVariableCounter() {
@@ -391,6 +392,7 @@ public class HiveAlgebricksTranslator implements Translator {
 			if (hiveOperator.getChildOperators() != null
 					&& hiveOperator.getChildOperators().size() > 0
 					&& continueTraverse) {
+				@SuppressWarnings("unchecked")
 				List<Operator> children = hiveOperator.getChildOperators();
 				if (currentOperatorRef == null)
 					currentOperatorRef = AlgebricksParentOperator;

@@ -274,8 +274,6 @@ public class GenericUDAFCovariance extends AbstractGenericUDAFResolver {
 			myagg.covar = 0;
 		}
 
-		private boolean warned = false;
-
 		@Override
 		public void iterate(AggregationBuffer agg, Object[] parameters)
 				throws HiveException {

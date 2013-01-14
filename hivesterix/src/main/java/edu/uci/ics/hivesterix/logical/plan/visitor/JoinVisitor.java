@@ -33,6 +33,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOp
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 
+@SuppressWarnings("rawtypes")
 public class JoinVisitor extends DefaultVisitor {
 
 	/**

@@ -86,9 +86,9 @@ public final class LazyFactory {
 				return new LazyStruct((LazyStructObjectInspector) oi);
 			else
 				return new LazyColumnar((LazyColumnarObjectInspector) oi);
+		default:
+			throw new RuntimeException("Hive LazySerDe Internal error.");
 		}
-
-		throw new RuntimeException("Hive LazySerDe Internal error.");
 	}
 
 	private LazyFactory() {

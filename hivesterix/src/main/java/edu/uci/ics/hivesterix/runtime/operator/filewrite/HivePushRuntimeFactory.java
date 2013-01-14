@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
+@SuppressWarnings("deprecation")
 public class HivePushRuntimeFactory implements IPushRuntimeFactory {
 
 	private static final long serialVersionUID = 1L;

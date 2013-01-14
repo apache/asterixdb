@@ -31,6 +31,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 
+@SuppressWarnings("rawtypes")
 public class MapJoinVisitor extends DefaultVisitor {
 
 	/**
@@ -80,7 +81,6 @@ public class MapJoinVisitor extends DefaultVisitor {
 
 		// get number of equality conjunctions in the final join condition
 		Set<Entry<Byte, List<ExprNodeDesc>>> keyEntries = keyMap.entrySet();
-		List<List<ExprNodeDesc>> keyLists = new ArrayList<List<ExprNodeDesc>>();
 		Iterator<Entry<Byte, List<ExprNodeDesc>>> entry = keyEntries.iterator();
 
 		int size = 0;

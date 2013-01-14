@@ -29,12 +29,11 @@ import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 
+@SuppressWarnings("deprecation")
 public abstract class AbstractPerfTestSuiteClass extends TestSuite {
 
 	private static final String PATH_TO_HADOOP_CONF = "src/test/resources/perf/hadoop/conf";
 	private static final String PATH_TO_HIVE_CONF = "src/test/resources/perf/hive/conf/hive-default.xml";
-
-	private static final String PATH_TO_CLUSTER_CONF = "src/test/resources/perf/conf/cluster";
 	private static final String PATH_TO_DATA = "src/test/resources/perf/data/";
 
 	private MiniDFSCluster dfsCluster;

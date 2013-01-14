@@ -18,6 +18,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
+@SuppressWarnings("deprecation")
 public class HiveTupleParserFactory implements ITupleParserFactory {
 
 	private static final long serialVersionUID = 1L;

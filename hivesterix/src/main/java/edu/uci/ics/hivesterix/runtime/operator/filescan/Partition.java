@@ -6,7 +6,9 @@ import java.io.Serializable;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 
+@SuppressWarnings("deprecation")
 public class Partition implements Serializable {
+	private static final long serialVersionUID = 1L;
 
 	private String uri;
 	private long offset;

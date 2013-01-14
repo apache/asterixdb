@@ -13,7 +13,6 @@ import edu.uci.ics.hivesterix.test.base.AbstractHivesterixTestCase;
 
 public class OptimizerTestSuiteCaseGenerator extends AbstractHivesterixTestCase {
 	private File resultFile;
-	private static final String PATH_TO_HIVE_CONF = "src/test/resources/runtimefunctionts/hive/conf/hive-default.xml";
 
 	OptimizerTestSuiteCaseGenerator(File queryFile, File resultFile) {
 		super("testOptimizer", queryFile);

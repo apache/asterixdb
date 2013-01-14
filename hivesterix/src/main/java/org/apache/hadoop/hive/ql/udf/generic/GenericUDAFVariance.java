@@ -117,7 +117,6 @@ public class GenericUDAFVariance extends AbstractGenericUDAFResolver {
 		private StructField varianceField;
 		private LongObjectInspector countFieldOI;
 		private DoubleObjectInspector sumFieldOI;
-		private DoubleObjectInspector varianceFieldOI;
 
 		// For PARTIAL1 and PARTIAL2
 		private Object[] partialResult;
@@ -144,8 +143,6 @@ public class GenericUDAFVariance extends AbstractGenericUDAFResolver {
 				countFieldOI = (LongObjectInspector) countField
 						.getFieldObjectInspector();
 				sumFieldOI = (DoubleObjectInspector) sumField
-						.getFieldObjectInspector();
-				varianceFieldOI = (DoubleObjectInspector) varianceField
 						.getFieldObjectInspector();
 			}
 

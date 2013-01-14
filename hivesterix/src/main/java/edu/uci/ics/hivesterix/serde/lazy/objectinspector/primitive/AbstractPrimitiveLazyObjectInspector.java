@@ -33,6 +33,7 @@ public abstract class AbstractPrimitiveLazyObjectInspector<T extends Writable>
 		super(typeEntry);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public T getPrimitiveWritableObject(Object o) {
 		if (o == null)

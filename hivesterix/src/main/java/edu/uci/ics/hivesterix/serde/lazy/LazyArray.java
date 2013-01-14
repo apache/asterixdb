@@ -74,6 +74,7 @@ public class LazyArray extends LazyNonPrimitive<LazyListObjectInspector> {
 	 * The elements of the array. Note that we call arrayElements[i].init(bytes,
 	 * begin, length) only when that element is accessed.
 	 */
+	@SuppressWarnings("rawtypes")
 	LazyObject[] arrayElements;
 
 	/**
