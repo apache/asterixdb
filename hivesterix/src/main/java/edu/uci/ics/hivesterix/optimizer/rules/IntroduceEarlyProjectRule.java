@@ -20,53 +20,58 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class IntroduceEarlyProjectRule implements IAlgebraicRewriteRule {
 
-    @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
-        return false;
-    }
+	@Override
+	public boolean rewritePre(Mutable<ILogicalOperator> opRef,
+			IOptimizationContext context) throws AlgebricksException {
+		return false;
+	}
 
-    @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        if (op.getOperatorTag() != LogicalOperatorTag.PROJECT) {
-            return false;
-        }
-        AbstractLogicalOperator middleOp = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
-        List<LogicalVariable> deliveredVars = new ArrayList<LogicalVariable>();
-        List<LogicalVariable> usedVars = new ArrayList<LogicalVariable>();
-        List<LogicalVariable> producedVars = new ArrayList<LogicalVariable>();
+	@Override
+	public boolean rewritePost(Mutable<ILogicalOperator> opRef,
+			IOptimizationContext context) throws AlgebricksException {
+		AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+		if (op.getOperatorTag() != LogicalOperatorTag.PROJECT) {
+			return false;
+		}
+		AbstractLogicalOperator middleOp = (AbstractLogicalOperator) op
+				.getInputs().get(0).getValue();
+		List<LogicalVariable> deliveredVars = new ArrayList<LogicalVariable>();
+		List<LogicalVariable> usedVars = new ArrayList<LogicalVariable>();
+		List<LogicalVariable> producedVars = new ArrayList<LogicalVariable>();
 
-        VariableUtilities.getUsedVariables(op, deliveredVars);
-        VariableUtilities.getUsedVariables(middleOp, usedVars);
-        VariableUtilities.getProducedVariables(middleOp, producedVars);
+		VariableUtilities.getUsedVariables(op, deliveredVars);
+		VariableUtilities.getUsedVariables(middleOp, usedVars);
+		VariableUtilities.getProducedVariables(middleOp, producedVars);
 
-        Set<LogicalVariable> requiredVariables = new HashSet<LogicalVariable>();
-        requiredVariables.addAll(deliveredVars);
-        requiredVariables.addAll(usedVars);
-        requiredVariables.removeAll(producedVars);
+		Set<LogicalVariable> requiredVariables = new HashSet<LogicalVariable>();
+		requiredVariables.addAll(deliveredVars);
+		requiredVariables.addAll(usedVars);
+		requiredVariables.removeAll(producedVars);
 
-        if (middleOp.getInputs().size() <= 0 || middleOp.getInputs().size() > 1)
-            return false;
+		if (middleOp.getInputs().size() <= 0 || middleOp.getInputs().size() > 1)
+			return false;
 
-        AbstractLogicalOperator targetOp = (AbstractLogicalOperator) middleOp.getInputs().get(0).getValue();
-        if (targetOp.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN)
-            return false;
+		AbstractLogicalOperator targetOp = (AbstractLogicalOperator) middleOp
+				.getInputs().get(0).getValue();
+		if (targetOp.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN)
+			return false;
 
-        Set<LogicalVariable> deliveredEarlyVars = new HashSet<LogicalVariable>();
-        VariableUtilities.getLiveVariables(targetOp, deliveredEarlyVars);
+		Set<LogicalVariable> deliveredEarlyVars = new HashSet<LogicalVariable>();
+		VariableUtilities.getLiveVariables(targetOp, deliveredEarlyVars);
 
-        deliveredEarlyVars.removeAll(requiredVariables);
-        if (deliveredEarlyVars.size() > 0) {
-            ArrayList<LogicalVariable> requiredVars = new ArrayList<LogicalVariable>();
-            requiredVars.addAll(requiredVariables);
-            ILogicalOperator earlyProjectOp = new ProjectOperator(requiredVars);
-            Mutable<ILogicalOperator> earlyProjectOpRef = new MutableObject<ILogicalOperator>(earlyProjectOp);
-            Mutable<ILogicalOperator> targetRef = middleOp.getInputs().get(0);
-            middleOp.getInputs().set(0, earlyProjectOpRef);
-            earlyProjectOp.getInputs().add(targetRef);
-            context.computeAndSetTypeEnvironmentForOperator(earlyProjectOp);
-            return true;
-        }
-        return false;
-    }
+		deliveredEarlyVars.removeAll(requiredVariables);
+		if (deliveredEarlyVars.size() > 0) {
+			ArrayList<LogicalVariable> requiredVars = new ArrayList<LogicalVariable>();
+			requiredVars.addAll(requiredVariables);
+			ILogicalOperator earlyProjectOp = new ProjectOperator(requiredVars);
+			Mutable<ILogicalOperator> earlyProjectOpRef = new MutableObject<ILogicalOperator>(
+					earlyProjectOp);
+			Mutable<ILogicalOperator> targetRef = middleOp.getInputs().get(0);
+			middleOp.getInputs().set(0, earlyProjectOpRef);
+			earlyProjectOp.getInputs().add(targetRef);
+			context.computeAndSetTypeEnvironmentForOperator(earlyProjectOp);
+			return true;
+		}
+		return false;
+	}
 }

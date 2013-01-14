@@ -18,45 +18,47 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.Va
 
 public class UnionVisitor extends DefaultVisitor {
 
-    List<Mutable<ILogicalOperator>> parents = new ArrayList<Mutable<ILogicalOperator>>();
+	List<Mutable<ILogicalOperator>> parents = new ArrayList<Mutable<ILogicalOperator>>();
 
-    @Override
-    public Mutable<ILogicalOperator> visit(UnionOperator operator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
+	@Override
+	public Mutable<ILogicalOperator> visit(UnionOperator operator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
 
-        parents.add(AlgebricksParentOperator);
-        if (operator.getParentOperators().size() > parents.size()) {
-            return null;
-        }
+		parents.add(AlgebricksParentOperator);
+		if (operator.getParentOperators().size() > parents.size()) {
+			return null;
+		}
 
-        List<LogicalVariable> leftVars = new ArrayList<LogicalVariable>();
-        List<LogicalVariable> rightVars = new ArrayList<LogicalVariable>();
+		List<LogicalVariable> leftVars = new ArrayList<LogicalVariable>();
+		List<LogicalVariable> rightVars = new ArrayList<LogicalVariable>();
 
-        VariableUtilities.getUsedVariables(parents.get(0).getValue(), leftVars);
-        VariableUtilities.getUsedVariables(parents.get(1).getValue(), rightVars);
+		VariableUtilities.getUsedVariables(parents.get(0).getValue(), leftVars);
+		VariableUtilities
+				.getUsedVariables(parents.get(1).getValue(), rightVars);
 
-        List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> triples = new ArrayList<Triple<LogicalVariable, LogicalVariable, LogicalVariable>>();
-        List<LogicalVariable> unionVars = new ArrayList<LogicalVariable>();
+		List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> triples = new ArrayList<Triple<LogicalVariable, LogicalVariable, LogicalVariable>>();
+		List<LogicalVariable> unionVars = new ArrayList<LogicalVariable>();
 
-        for (int i = 0; i < leftVars.size(); i++) {
-            LogicalVariable unionVar = t.getVariable(
-                    leftVars.get(i).getId() + "union" + AlgebricksParentOperator.hashCode(),
-                    TypeInfoFactory.unknownTypeInfo);
-            unionVars.add(unionVar);
-            Triple<LogicalVariable, LogicalVariable, LogicalVariable> triple = new Triple<LogicalVariable, LogicalVariable, LogicalVariable>(
-                    leftVars.get(i), rightVars.get(i), unionVar);
-            t.replaceVariable(leftVars.get(i), unionVar);
-            t.replaceVariable(rightVars.get(i), unionVar);
-            triples.add(triple);
-        }
-        ILogicalOperator currentOperator = new edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator(
-                triples);
-        for (Mutable<ILogicalOperator> parent : parents)
-            currentOperator.getInputs().add(parent);
+		for (int i = 0; i < leftVars.size(); i++) {
+			LogicalVariable unionVar = t.getVariable(leftVars.get(i).getId()
+					+ "union" + AlgebricksParentOperator.hashCode(),
+					TypeInfoFactory.unknownTypeInfo);
+			unionVars.add(unionVar);
+			Triple<LogicalVariable, LogicalVariable, LogicalVariable> triple = new Triple<LogicalVariable, LogicalVariable, LogicalVariable>(
+					leftVars.get(i), rightVars.get(i), unionVar);
+			t.replaceVariable(leftVars.get(i), unionVar);
+			t.replaceVariable(rightVars.get(i), unionVar);
+			triples.add(triple);
+		}
+		ILogicalOperator currentOperator = new edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator(
+				triples);
+		for (Mutable<ILogicalOperator> parent : parents)
+			currentOperator.getInputs().add(parent);
 
-        t.rewriteOperatorOutputSchema(unionVars, operator);
-        parents.clear();
-        return new MutableObject<ILogicalOperator>(currentOperator);
-    }
+		t.rewriteOperatorOutputSchema(unionVars, operator);
+		parents.clear();
+		return new MutableObject<ILogicalOperator>(currentOperator);
+	}
 
 }

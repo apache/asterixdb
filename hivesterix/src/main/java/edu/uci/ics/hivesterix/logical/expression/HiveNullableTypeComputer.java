@@ -5,11 +5,11 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.INullableTypeComp
 
 public class HiveNullableTypeComputer implements INullableTypeComputer {
 
-    public static INullableTypeComputer INSTANCE = new HiveNullableTypeComputer();
+	public static INullableTypeComputer INSTANCE = new HiveNullableTypeComputer();
 
-    @Override
-    public Object makeNullableType(Object type) throws AlgebricksException {
-        return type;
-    }
+	@Override
+	public Object makeNullableType(Object type) throws AlgebricksException {
+		return type;
+	}
 
 }

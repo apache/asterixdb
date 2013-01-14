@@ -18,24 +18,27 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOpera
 
 public class FilterVisitor extends DefaultVisitor {
 
-    @Override
-    public Mutable<ILogicalOperator> visit(FilterOperator operator, Mutable<ILogicalOperator> AlgebricksParentOperatorRef,
-            Translator t) {
-        Schema currentSchema = t.generateInputSchema(operator.getParentOperators().get(0));
+	@Override
+	public Mutable<ILogicalOperator> visit(FilterOperator operator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t) {
+		Schema currentSchema = t.generateInputSchema(operator
+				.getParentOperators().get(0));
 
-        FilterDesc desc = (FilterDesc) operator.getConf();
-        ExprNodeDesc predicate = desc.getPredicate();
-        t.rewriteExpression(predicate);
+		FilterDesc desc = (FilterDesc) operator.getConf();
+		ExprNodeDesc predicate = desc.getPredicate();
+		t.rewriteExpression(predicate);
 
-        Mutable<ILogicalExpression> exprs = t.translateScalarFucntion(desc.getPredicate());
-        ILogicalOperator currentOperator = new SelectOperator(exprs);
-        currentOperator.getInputs().add(AlgebricksParentOperatorRef);
+		Mutable<ILogicalExpression> exprs = t.translateScalarFucntion(desc
+				.getPredicate());
+		ILogicalOperator currentOperator = new SelectOperator(exprs);
+		currentOperator.getInputs().add(AlgebricksParentOperatorRef);
 
-        // populate the schema from upstream operator
-        operator.setSchema(operator.getParentOperators().get(0).getSchema());
-        List<LogicalVariable> latestOutputSchema = t.getVariablesFromSchema(currentSchema);
-        t.rewriteOperatorOutputSchema(latestOutputSchema, operator);
-        return new MutableObject<ILogicalOperator>(currentOperator);
-    }
+		// populate the schema from upstream operator
+		operator.setSchema(operator.getParentOperators().get(0).getSchema());
+		List<LogicalVariable> latestOutputSchema = t
+				.getVariablesFromSchema(currentSchema);
+		t.rewriteOperatorOutputSchema(latestOutputSchema, operator);
+		return new MutableObject<ILogicalOperator>(currentOperator);
+	}
 
 }

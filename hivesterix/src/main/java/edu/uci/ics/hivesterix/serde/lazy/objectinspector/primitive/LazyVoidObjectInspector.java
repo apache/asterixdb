@@ -24,20 +24,21 @@ import org.apache.hadoop.io.NullWritable;
 /**
  * A WritableVoidObjectInspector inspects a NullWritable Object.
  */
-public class LazyVoidObjectInspector extends AbstractPrimitiveLazyObjectInspector<NullWritable> implements
-        VoidObjectInspector {
+public class LazyVoidObjectInspector extends
+		AbstractPrimitiveLazyObjectInspector<NullWritable> implements
+		VoidObjectInspector {
 
-    LazyVoidObjectInspector() {
-        super(PrimitiveObjectInspectorUtils.voidTypeEntry);
-    }
+	LazyVoidObjectInspector() {
+		super(PrimitiveObjectInspectorUtils.voidTypeEntry);
+	}
 
-    @Override
-    public Object copyObject(Object o) {
-        return o;
-    }
+	@Override
+	public Object copyObject(Object o) {
+		return o;
+	}
 
-    @Override
-    public Object getPrimitiveJavaObject(Object o) {
-        throw new RuntimeException("Internal error: cannot create Void object.");
-    }
+	@Override
+	public Object getPrimitiveJavaObject(Object o) {
+		throw new RuntimeException("Internal error: cannot create Void object.");
+	}
 }

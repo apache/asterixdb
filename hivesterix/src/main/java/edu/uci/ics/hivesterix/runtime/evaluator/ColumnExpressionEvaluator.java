@@ -9,9 +9,10 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 
 public class ColumnExpressionEvaluator extends AbstractExpressionEvaluator {
 
-    public ColumnExpressionEvaluator(ExprNodeColumnDesc expr, ObjectInspector oi, IDataOutputProvider output)
-            throws AlgebricksException {
-        super(new ExprNodeColumnEvaluator(expr), oi, output);
-    }
+	public ColumnExpressionEvaluator(ExprNodeColumnDesc expr,
+			ObjectInspector oi, IDataOutputProvider output)
+			throws AlgebricksException {
+		super(new ExprNodeColumnEvaluator(expr), oi, output);
+	}
 
 }

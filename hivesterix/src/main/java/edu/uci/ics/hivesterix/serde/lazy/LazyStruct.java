@@ -43,194 +43,201 @@ import edu.uci.ics.hivesterix.serde.lazy.objectinspector.LazyStructObjectInspect
  */
 public class LazyStruct extends LazyNonPrimitive<LazyStructObjectInspector> {
 
-    private static Log LOG = LogFactory.getLog(LazyStruct.class.getName());
+	private static Log LOG = LogFactory.getLog(LazyStruct.class.getName());
 
-    /**
-     * Whether the data is already parsed or not.
-     */
-    boolean parsed;
+	/**
+	 * Whether the data is already parsed or not.
+	 */
+	boolean parsed;
 
-    /**
-     * The fields of the struct.
-     */
-    LazyObject[] fields;
+	/**
+	 * The fields of the struct.
+	 */
+	LazyObject[] fields;
 
-    /**
-     * Whether a field is initialized or not.
-     */
-    boolean[] fieldInited;
+	/**
+	 * Whether a field is initialized or not.
+	 */
+	boolean[] fieldInited;
 
-    /**
-     * Whether a field is null or not. Because length is 0 does not means the
-     * field is null. In particular, a 0-length string is not null.
-     */
-    boolean[] fieldIsNull;
+	/**
+	 * Whether a field is null or not. Because length is 0 does not means the
+	 * field is null. In particular, a 0-length string is not null.
+	 */
+	boolean[] fieldIsNull;
 
-    /**
-     * The start positions and lengths of struct fields. Only valid when the
-     * data is parsed.
-     */
-    int[] fieldStart;
-    int[] fieldLength;
+	/**
+	 * The start positions and lengths of struct fields. Only valid when the
+	 * data is parsed.
+	 */
+	int[] fieldStart;
+	int[] fieldLength;
 
-    /**
-     * Construct a LazyStruct object with an ObjectInspector.
-     */
-    protected LazyStruct(LazyStructObjectInspector oi) {
-        super(oi);
-    }
+	/**
+	 * Construct a LazyStruct object with an ObjectInspector.
+	 */
+	protected LazyStruct(LazyStructObjectInspector oi) {
+		super(oi);
+	}
 
-    @Override
-    public void init(byte[] bytes, int start, int length) {
-        super.init(bytes, start, length);
-        parsed = false;
-    }
+	@Override
+	public void init(byte[] bytes, int start, int length) {
+		super.init(bytes, start, length);
+		parsed = false;
+	}
 
-    RecordInfo recordInfo = new LazyUtils.RecordInfo();
-    boolean missingFieldWarned = false;
-    boolean extraFieldWarned = false;
+	RecordInfo recordInfo = new LazyUtils.RecordInfo();
+	boolean missingFieldWarned = false;
+	boolean extraFieldWarned = false;
 
-    /**
-     * Parse the byte[] and fill fieldStart, fieldLength, fieldInited and
-     * fieldIsNull.
-     */
-    private void parse() {
+	/**
+	 * Parse the byte[] and fill fieldStart, fieldLength, fieldInited and
+	 * fieldIsNull.
+	 */
+	private void parse() {
 
-        List<? extends StructField> fieldRefs = ((StructObjectInspector) oi).getAllStructFieldRefs();
+		List<? extends StructField> fieldRefs = ((StructObjectInspector) oi)
+				.getAllStructFieldRefs();
 
-        if (fields == null) {
-            fields = new LazyObject[fieldRefs.size()];
-            for (int i = 0; i < fields.length; i++) {
-                ObjectInspector insp = fieldRefs.get(i).getFieldObjectInspector();
-                fields[i] = insp == null ? null : LazyFactory.createLazyObject(insp);
-            }
-            fieldInited = new boolean[fields.length];
-            fieldIsNull = new boolean[fields.length];
-            fieldStart = new int[fields.length];
-            fieldLength = new int[fields.length];
-        }
+		if (fields == null) {
+			fields = new LazyObject[fieldRefs.size()];
+			for (int i = 0; i < fields.length; i++) {
+				ObjectInspector insp = fieldRefs.get(i)
+						.getFieldObjectInspector();
+				fields[i] = insp == null ? null : LazyFactory
+						.createLazyObject(insp);
+			}
+			fieldInited = new boolean[fields.length];
+			fieldIsNull = new boolean[fields.length];
+			fieldStart = new int[fields.length];
+			fieldLength = new int[fields.length];
+		}
 
-        /**
-         * Please note that one null byte is followed by eight fields, then more
-         * null byte and fields.
-         */
+		/**
+		 * Please note that one null byte is followed by eight fields, then more
+		 * null byte and fields.
+		 */
 
-        int fieldId = 0;
-        int structByteEnd = start + length;
+		int fieldId = 0;
+		int structByteEnd = start + length;
 
-        byte nullByte = bytes[start];
-        int lastFieldByteEnd = start + 1;
-        // Go through all bytes in the byte[]
-        for (int i = 0; i < fields.length; i++) {
-            fieldIsNull[i] = true;
-            if ((nullByte & (1 << (i % 8))) != 0) {
-                fieldIsNull[i] = false;
-                LazyUtils.checkObjectByteInfo(fieldRefs.get(i).getFieldObjectInspector(), bytes, lastFieldByteEnd,
-                        recordInfo);
-                fieldStart[i] = lastFieldByteEnd + recordInfo.elementOffset;
-                fieldLength[i] = recordInfo.elementSize;
-                lastFieldByteEnd = fieldStart[i] + fieldLength[i];
-            }
+		byte nullByte = bytes[start];
+		int lastFieldByteEnd = start + 1;
+		// Go through all bytes in the byte[]
+		for (int i = 0; i < fields.length; i++) {
+			fieldIsNull[i] = true;
+			if ((nullByte & (1 << (i % 8))) != 0) {
+				fieldIsNull[i] = false;
+				LazyUtils.checkObjectByteInfo(fieldRefs.get(i)
+						.getFieldObjectInspector(), bytes, lastFieldByteEnd,
+						recordInfo);
+				fieldStart[i] = lastFieldByteEnd + recordInfo.elementOffset;
+				fieldLength[i] = recordInfo.elementSize;
+				lastFieldByteEnd = fieldStart[i] + fieldLength[i];
+			}
 
-            // count how many fields are there
-            if (lastFieldByteEnd <= structByteEnd) {
-                fieldId++;
-            }
-            // next byte is a null byte if there are more bytes to go
-            if (7 == (i % 8)) {
-                if (lastFieldByteEnd < structByteEnd) {
-                    nullByte = bytes[lastFieldByteEnd];
-                    lastFieldByteEnd++;
-                } else {
-                    // otherwise all null afterwards
-                    nullByte = 0;
-                    lastFieldByteEnd++;
-                }
-            }
-        }
+			// count how many fields are there
+			if (lastFieldByteEnd <= structByteEnd) {
+				fieldId++;
+			}
+			// next byte is a null byte if there are more bytes to go
+			if (7 == (i % 8)) {
+				if (lastFieldByteEnd < structByteEnd) {
+					nullByte = bytes[lastFieldByteEnd];
+					lastFieldByteEnd++;
+				} else {
+					// otherwise all null afterwards
+					nullByte = 0;
+					lastFieldByteEnd++;
+				}
+			}
+		}
 
-        // Extra bytes at the end?
-        if (!extraFieldWarned && lastFieldByteEnd < structByteEnd) {
-            extraFieldWarned = true;
-            LOG.warn("Extra bytes detected at the end of the row! Ignoring similar " + "problems.");
-        }
+		// Extra bytes at the end?
+		if (!extraFieldWarned && lastFieldByteEnd < structByteEnd) {
+			extraFieldWarned = true;
+			LOG.warn("Extra bytes detected at the end of the row! Ignoring similar "
+					+ "problems.");
+		}
 
-        // Missing fields?
-        if (!missingFieldWarned && lastFieldByteEnd > structByteEnd) {
-            missingFieldWarned = true;
-            LOG.warn("Missing fields! Expected " + fields.length + " fields but " + "only got " + fieldId
-                    + "! Ignoring similar problems.");
-        }
+		// Missing fields?
+		if (!missingFieldWarned && lastFieldByteEnd > structByteEnd) {
+			missingFieldWarned = true;
+			LOG.warn("Missing fields! Expected " + fields.length
+					+ " fields but " + "only got " + fieldId
+					+ "! Ignoring similar problems.");
+		}
 
-        Arrays.fill(fieldInited, false);
-        parsed = true;
-    }
+		Arrays.fill(fieldInited, false);
+		parsed = true;
+	}
 
-    /**
-     * Get one field out of the struct.
-     * 
-     * If the field is a primitive field, return the actual object. Otherwise
-     * return the LazyObject. This is because PrimitiveObjectInspector does not
-     * have control over the object used by the user - the user simply directly
-     * use the Object instead of going through Object
-     * PrimitiveObjectInspector.get(Object).
-     * 
-     * @param fieldID
-     *            The field ID
-     * @return The field as a LazyObject
-     */
-    public Object getField(int fieldID) {
-        if (!parsed) {
-            parse();
-        }
-        return uncheckedGetField(fieldID);
-    }
+	/**
+	 * Get one field out of the struct.
+	 * 
+	 * If the field is a primitive field, return the actual object. Otherwise
+	 * return the LazyObject. This is because PrimitiveObjectInspector does not
+	 * have control over the object used by the user - the user simply directly
+	 * use the Object instead of going through Object
+	 * PrimitiveObjectInspector.get(Object).
+	 * 
+	 * @param fieldID
+	 *            The field ID
+	 * @return The field as a LazyObject
+	 */
+	public Object getField(int fieldID) {
+		if (!parsed) {
+			parse();
+		}
+		return uncheckedGetField(fieldID);
+	}
 
-    /**
-     * Get the field out of the row without checking parsed. This is called by
-     * both getField and getFieldsAsList.
-     * 
-     * @param fieldID
-     *            The id of the field starting from 0.
-     * @return The value of the field
-     */
-    private Object uncheckedGetField(int fieldID) {
-        // Test the length first so in most cases we avoid doing a byte[]
-        // comparison.
-        if (fieldIsNull[fieldID]) {
-            return null;
-        }
-        if (!fieldInited[fieldID]) {
-            fieldInited[fieldID] = true;
-            fields[fieldID].init(bytes, fieldStart[fieldID], fieldLength[fieldID]);
-        }
-        return fields[fieldID].getObject();
-    }
+	/**
+	 * Get the field out of the row without checking parsed. This is called by
+	 * both getField and getFieldsAsList.
+	 * 
+	 * @param fieldID
+	 *            The id of the field starting from 0.
+	 * @return The value of the field
+	 */
+	private Object uncheckedGetField(int fieldID) {
+		// Test the length first so in most cases we avoid doing a byte[]
+		// comparison.
+		if (fieldIsNull[fieldID]) {
+			return null;
+		}
+		if (!fieldInited[fieldID]) {
+			fieldInited[fieldID] = true;
+			fields[fieldID].init(bytes, fieldStart[fieldID],
+					fieldLength[fieldID]);
+		}
+		return fields[fieldID].getObject();
+	}
 
-    ArrayList<Object> cachedList;
+	ArrayList<Object> cachedList;
 
-    /**
-     * Get the values of the fields as an ArrayList.
-     * 
-     * @return The values of the fields as an ArrayList.
-     */
-    public ArrayList<Object> getFieldsAsList() {
-        if (!parsed) {
-            parse();
-        }
-        if (cachedList == null) {
-            cachedList = new ArrayList<Object>();
-        } else {
-            cachedList.clear();
-        }
-        for (int i = 0; i < fields.length; i++) {
-            cachedList.add(uncheckedGetField(i));
-        }
-        return cachedList;
-    }
+	/**
+	 * Get the values of the fields as an ArrayList.
+	 * 
+	 * @return The values of the fields as an ArrayList.
+	 */
+	public ArrayList<Object> getFieldsAsList() {
+		if (!parsed) {
+			parse();
+		}
+		if (cachedList == null) {
+			cachedList = new ArrayList<Object>();
+		} else {
+			cachedList.clear();
+		}
+		for (int i = 0; i < fields.length; i++) {
+			cachedList.add(uncheckedGetField(i));
+		}
+		return cachedList;
+	}
 
-    @Override
-    public Object getObject() {
-        return this;
-    }
+	@Override
+	public Object getObject() {
+		return this;
+	}
 }

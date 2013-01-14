@@ -14,28 +14,32 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 
 public class NullExpressionEvaluatorFactory implements ICopyEvaluatorFactory {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    private ExprNodeNullDesc expr;
+	private ExprNodeNullDesc expr;
 
-    private Schema schema;
+	private Schema schema;
 
-    public NullExpressionEvaluatorFactory(ILogicalExpression expression, Schema intputSchema,
-            IVariableTypeEnvironment env) throws AlgebricksException {
-        try {
-            expr = (ExprNodeNullDesc) ExpressionTranslator.getHiveExpression(expression, env);
-        } catch (Exception e) {
-            throw new AlgebricksException(e.getMessage());
-        }
-        schema = intputSchema;
-    }
+	public NullExpressionEvaluatorFactory(ILogicalExpression expression,
+			Schema intputSchema, IVariableTypeEnvironment env)
+			throws AlgebricksException {
+		try {
+			expr = (ExprNodeNullDesc) ExpressionTranslator.getHiveExpression(
+					expression, env);
+		} catch (Exception e) {
+			throw new AlgebricksException(e.getMessage());
+		}
+		schema = intputSchema;
+	}
 
-    public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
-        return new NullExpressionEvaluator(expr, schema.toObjectInspector(), output);
-    }
+	public ICopyEvaluator createEvaluator(IDataOutputProvider output)
+			throws AlgebricksException {
+		return new NullExpressionEvaluator(expr, schema.toObjectInspector(),
+				output);
+	}
 
-    public String toString() {
-        return "null expression evaluator factory: " + expr.toString();
-    }
+	public String toString() {
+		return "null expression evaluator factory: " + expr.toString();
+	}
 
 }

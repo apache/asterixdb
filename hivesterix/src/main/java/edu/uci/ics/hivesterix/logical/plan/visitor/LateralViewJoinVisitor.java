@@ -55,67 +55,76 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.Va
 
 public class LateralViewJoinVisitor extends DefaultVisitor {
 
-    private UDTFDesc udtf;
+	private UDTFDesc udtf;
 
-    private List<Mutable<ILogicalOperator>> parents = new ArrayList<Mutable<ILogicalOperator>>();
+	private List<Mutable<ILogicalOperator>> parents = new ArrayList<Mutable<ILogicalOperator>>();
 
-    @Override
-    public Mutable<ILogicalOperator> visit(LateralViewJoinOperator operator,
-            Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t) throws AlgebricksException {
+	@Override
+	public Mutable<ILogicalOperator> visit(LateralViewJoinOperator operator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException {
 
-        parents.add(AlgebricksParentOperatorRef);
-        if (operator.getParentOperators().size() > parents.size()) {
-            return null;
-        }
+		parents.add(AlgebricksParentOperatorRef);
+		if (operator.getParentOperators().size() > parents.size()) {
+			return null;
+		}
 
-        Operator parent0 = operator.getParentOperators().get(0);
-        Operator parent1 = operator.getParentOperators().get(1);
-        List<LogicalVariable> variables;
+		Operator parent0 = operator.getParentOperators().get(0);
+		Operator parent1 = operator.getParentOperators().get(1);
+		List<LogicalVariable> variables;
 
-        ILogicalOperator parentOperator;
-        ILogicalExpression unnestArg;
-        if (parent0 instanceof UDTFOperator) {
-            variables = t.getVariablesFromSchema(t.generateInputSchema(parent1));
-            List<LogicalVariable> unnestVars = new ArrayList<LogicalVariable>();
-            VariableUtilities.getLiveVariables(parents.get(1).getValue(), unnestVars);
-            unnestArg = new VariableReferenceExpression(unnestVars.get(0));
-            parentOperator = parents.get(1).getValue();
-        } else {
-            variables = t.getVariablesFromSchema(t.generateInputSchema(parent0));
-            List<LogicalVariable> unnestVars = new ArrayList<LogicalVariable>();
-            VariableUtilities.getLiveVariables(parents.get(0).getValue(), unnestVars);
-            unnestArg = new VariableReferenceExpression(unnestVars.get(0));
-            parentOperator = parents.get(0).getValue();
-        }
+		ILogicalOperator parentOperator;
+		ILogicalExpression unnestArg;
+		if (parent0 instanceof UDTFOperator) {
+			variables = t
+					.getVariablesFromSchema(t.generateInputSchema(parent1));
+			List<LogicalVariable> unnestVars = new ArrayList<LogicalVariable>();
+			VariableUtilities.getLiveVariables(parents.get(1).getValue(),
+					unnestVars);
+			unnestArg = new VariableReferenceExpression(unnestVars.get(0));
+			parentOperator = parents.get(1).getValue();
+		} else {
+			variables = t
+					.getVariablesFromSchema(t.generateInputSchema(parent0));
+			List<LogicalVariable> unnestVars = new ArrayList<LogicalVariable>();
+			VariableUtilities.getLiveVariables(parents.get(0).getValue(),
+					unnestVars);
+			unnestArg = new VariableReferenceExpression(unnestVars.get(0));
+			parentOperator = parents.get(0).getValue();
+		}
 
-        LogicalVariable var = t.getVariable(udtf.toString(), TypeInfoFactory.unknownTypeInfo);
+		LogicalVariable var = t.getVariable(udtf.toString(),
+				TypeInfoFactory.unknownTypeInfo);
 
-        Mutable<ILogicalExpression> unnestExpr = t.translateUnnestFunction(udtf, new MutableObject<ILogicalExpression>(
-                unnestArg));
-        ILogicalOperator currentOperator = new UnnestOperator(var, unnestExpr);
+		Mutable<ILogicalExpression> unnestExpr = t.translateUnnestFunction(
+				udtf, new MutableObject<ILogicalExpression>(unnestArg));
+		ILogicalOperator currentOperator = new UnnestOperator(var, unnestExpr);
 
-        List<LogicalVariable> outputVars = new ArrayList<LogicalVariable>();
-        VariableUtilities.getLiveVariables(parentOperator, outputVars);
-        outputVars.add(var);
-        currentOperator.getInputs().add(new MutableObject<ILogicalOperator>(parentOperator));
+		List<LogicalVariable> outputVars = new ArrayList<LogicalVariable>();
+		VariableUtilities.getLiveVariables(parentOperator, outputVars);
+		outputVars.add(var);
+		currentOperator.getInputs().add(
+				new MutableObject<ILogicalOperator>(parentOperator));
 
-        parents.clear();
-        udtf = null;
-        t.rewriteOperatorOutputSchema(outputVars, operator);
-        return new MutableObject<ILogicalOperator>(currentOperator);
-    }
+		parents.clear();
+		udtf = null;
+		t.rewriteOperatorOutputSchema(outputVars, operator);
+		return new MutableObject<ILogicalOperator>(currentOperator);
+	}
 
-    @Override
-    public Mutable<ILogicalOperator> visit(UDTFOperator operator,
-            Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t) {
-        Schema currentSchema = t.generateInputSchema(operator.getParentOperators().get(0));
-        udtf = (UDTFDesc) operator.getConf();
+	@Override
+	public Mutable<ILogicalOperator> visit(UDTFOperator operator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t) {
+		Schema currentSchema = t.generateInputSchema(operator
+				.getParentOperators().get(0));
+		udtf = (UDTFDesc) operator.getConf();
 
-        // populate the schema from upstream operator
-        operator.setSchema(operator.getParentOperators().get(0).getSchema());
-        List<LogicalVariable> latestOutputSchema = t.getVariablesFromSchema(currentSchema);
-        t.rewriteOperatorOutputSchema(latestOutputSchema, operator);
-        return null;
-    }
+		// populate the schema from upstream operator
+		operator.setSchema(operator.getParentOperators().get(0).getSchema());
+		List<LogicalVariable> latestOutputSchema = t
+				.getVariablesFromSchema(currentSchema);
+		t.rewriteOperatorOutputSchema(latestOutputSchema, operator);
+		return null;
+	}
 
 }

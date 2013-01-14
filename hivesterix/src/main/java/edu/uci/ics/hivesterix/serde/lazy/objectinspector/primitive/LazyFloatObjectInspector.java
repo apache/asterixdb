@@ -26,25 +26,26 @@ import edu.uci.ics.hivesterix.serde.lazy.LazyFloat;
 /**
  * A FloatObjectInspector inspects a FloatWritable Object.
  */
-public class LazyFloatObjectInspector extends AbstractPrimitiveLazyObjectInspector<FloatWritable> implements
-        FloatObjectInspector {
+public class LazyFloatObjectInspector extends
+		AbstractPrimitiveLazyObjectInspector<FloatWritable> implements
+		FloatObjectInspector {
 
-    LazyFloatObjectInspector() {
-        super(PrimitiveObjectInspectorUtils.floatTypeEntry);
-    }
+	LazyFloatObjectInspector() {
+		super(PrimitiveObjectInspectorUtils.floatTypeEntry);
+	}
 
-    @Override
-    public float get(Object o) {
-        return getPrimitiveWritableObject(o).get();
-    }
+	@Override
+	public float get(Object o) {
+		return getPrimitiveWritableObject(o).get();
+	}
 
-    @Override
-    public Object copyObject(Object o) {
-        return o == null ? null : new LazyFloat((LazyFloat) o);
-    }
+	@Override
+	public Object copyObject(Object o) {
+		return o == null ? null : new LazyFloat((LazyFloat) o);
+	}
 
-    @Override
-    public Object getPrimitiveJavaObject(Object o) {
-        return o == null ? null : Float.valueOf(get(o));
-    }
+	@Override
+	public Object getPrimitiveJavaObject(Object o) {
+		return o == null ? null : Float.valueOf(get(o));
+	}
 }

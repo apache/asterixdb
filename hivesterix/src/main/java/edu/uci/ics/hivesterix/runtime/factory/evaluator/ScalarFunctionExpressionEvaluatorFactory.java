@@ -14,56 +14,64 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 
-public class ScalarFunctionExpressionEvaluatorFactory implements ICopyEvaluatorFactory {
+public class ScalarFunctionExpressionEvaluatorFactory implements
+		ICopyEvaluatorFactory {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    private transient ExprNodeGenericFuncDesc expr;
+	private transient ExprNodeGenericFuncDesc expr;
 
-    private String exprSerialization;
+	private String exprSerialization;
 
-    private Schema inputSchema;
+	private Schema inputSchema;
 
-    private transient Configuration config;
+	private transient Configuration config;
 
-    public ScalarFunctionExpressionEvaluatorFactory(ILogicalExpression expression, Schema schema,
-            IVariableTypeEnvironment env) throws AlgebricksException {
-        try {
-            expr = (ExprNodeGenericFuncDesc) ExpressionTranslator.getHiveExpression(expression, env);
+	public ScalarFunctionExpressionEvaluatorFactory(
+			ILogicalExpression expression, Schema schema,
+			IVariableTypeEnvironment env) throws AlgebricksException {
+		try {
+			expr = (ExprNodeGenericFuncDesc) ExpressionTranslator
+					.getHiveExpression(expression, env);
 
-            exprSerialization = Utilities.serializeExpression(expr);
+			exprSerialization = Utilities.serializeExpression(expr);
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new AlgebricksException(e.getMessage());
-        }
-        inputSchema = schema;
-    }
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new AlgebricksException(e.getMessage());
+		}
+		inputSchema = schema;
+	}
 
-    public synchronized ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
-        if (expr == null) {
-            configClassLoader();
-            expr = (ExprNodeGenericFuncDesc) Utilities.deserializeExpression(exprSerialization, config);
-        }
+	public synchronized ICopyEvaluator createEvaluator(
+			IDataOutputProvider output) throws AlgebricksException {
+		if (expr == null) {
+			configClassLoader();
+			expr = (ExprNodeGenericFuncDesc) Utilities.deserializeExpression(
+					exprSerialization, config);
+		}
 
-        ExprNodeGenericFuncDesc funcDesc = (ExprNodeGenericFuncDesc) expr.clone();
-        return new FunctionExpressionEvaluator(funcDesc, inputSchema.toObjectInspector(), output);
-    }
+		ExprNodeGenericFuncDesc funcDesc = (ExprNodeGenericFuncDesc) expr
+				.clone();
+		return new FunctionExpressionEvaluator(funcDesc,
+				inputSchema.toObjectInspector(), output);
+	}
 
-    private void configClassLoader() {
-        config = new Configuration();
-        ClassLoader loader = this.getClass().getClassLoader();
-        config.setClassLoader(loader);
-        Thread.currentThread().setContextClassLoader(loader);
-    }
+	private void configClassLoader() {
+		config = new Configuration();
+		ClassLoader loader = this.getClass().getClassLoader();
+		config.setClassLoader(loader);
+		Thread.currentThread().setContextClassLoader(loader);
+	}
 
-    public String toString() {
-        if (expr == null){
-            configClassLoader();
-            expr = (ExprNodeGenericFuncDesc) Utilities.deserializeExpression(exprSerialization, new Configuration());
-        }
+	public String toString() {
+		if (expr == null) {
+			configClassLoader();
+			expr = (ExprNodeGenericFuncDesc) Utilities.deserializeExpression(
+					exprSerialization, new Configuration());
+		}
 
-        return "function expression evaluator factory: " + expr.getExprString();
-    }
+		return "function expression evaluator factory: " + expr.getExprString();
+	}
 
 }

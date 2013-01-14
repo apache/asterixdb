@@ -26,17 +26,17 @@ package edu.uci.ics.hivesterix.serde.lazy;
  */
 public class ByteArrayRef {
 
-    /**
-     * Stores the actual data.
-     */
-    byte[] data;
+	/**
+	 * Stores the actual data.
+	 */
+	byte[] data;
 
-    public byte[] getData() {
-        return data;
-    }
+	public byte[] getData() {
+		return data;
+	}
 
-    public void setData(byte[] data) {
-        this.data = data;
-    }
+	public void setData(byte[] data) {
+		this.data = data;
+	}
 
 }

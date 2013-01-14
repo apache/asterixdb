@@ -9,8 +9,9 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 
 public class ConstantExpressionEvaluator extends AbstractExpressionEvaluator {
 
-    public ConstantExpressionEvaluator(ExprNodeConstantDesc expr, ObjectInspector oi, IDataOutputProvider output)
-            throws AlgebricksException {
-        super(new ExprNodeConstantEvaluator(expr), oi, output);
-    }
+	public ConstantExpressionEvaluator(ExprNodeConstantDesc expr,
+			ObjectInspector oi, IDataOutputProvider output)
+			throws AlgebricksException {
+		super(new ExprNodeConstantEvaluator(expr), oi, output);
+	}
 }

@@ -10,17 +10,19 @@ import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
 
 public abstract class AbstractHiveTupleParser implements ITupleParser {
 
-    @Override
-    public void parse(InputStream in, IFrameWriter writer) throws HyracksDataException {
-        // empty implementation
-    }
+	@Override
+	public void parse(InputStream in, IFrameWriter writer)
+			throws HyracksDataException {
+		// empty implementation
+	}
 
-    /**
-     * method for parsing HDFS file split
-     * 
-     * @param split
-     * @param writer
-     */
-    abstract public void parse(FileSplit split, IFrameWriter writer) throws HyracksDataException;
+	/**
+	 * method for parsing HDFS file split
+	 * 
+	 * @param split
+	 * @param writer
+	 */
+	abstract public void parse(FileSplit split, IFrameWriter writer)
+			throws HyracksDataException;
 
 }

@@ -14,86 +14,88 @@ import org.junit.Test;
 import edu.uci.ics.hivesterix.runtime.config.ConfUtil;
 import edu.uci.ics.hivesterix.test.base.AbstractHivesterixTestCase;
 
-public class RuntimeFunctionTestSuiteCaseGenerator extends AbstractHivesterixTestCase {
-    private File resultFile;
-    private FileSystem dfs;
-    
-    RuntimeFunctionTestSuiteCaseGenerator(File queryFile, File resultFile) {
-        super("testRuntimeFunction", queryFile);
-        this.queryFile = queryFile;
-        this.resultFile = resultFile;
-    }
+public class RuntimeFunctionTestSuiteCaseGenerator extends
+		AbstractHivesterixTestCase {
+	private File resultFile;
+	private FileSystem dfs;
 
-    @Test
-    public void testRuntimeFunction() throws Exception {
-        StringBuilder queryString = new StringBuilder();
-        readFileToString(queryFile, queryString);
-        String[] queries = queryString.toString().split(";");
-        StringWriter sw = new StringWriter();
+	RuntimeFunctionTestSuiteCaseGenerator(File queryFile, File resultFile) {
+		super("testRuntimeFunction", queryFile);
+		this.queryFile = queryFile;
+		this.resultFile = resultFile;
+	}
 
-        HiveConf hconf = ConfUtil.getHiveConf();
-        Driver driver = new Driver(hconf, new PrintWriter(sw));
-        driver.init();
+	@Test
+	public void testRuntimeFunction() throws Exception {
+		StringBuilder queryString = new StringBuilder();
+		readFileToString(queryFile, queryString);
+		String[] queries = queryString.toString().split(";");
+		StringWriter sw = new StringWriter();
 
-        dfs = FileSystem.get(ConfUtil.getJobConf());
+		HiveConf hconf = ConfUtil.getHiveConf();
+		Driver driver = new Driver(hconf, new PrintWriter(sw));
+		driver.init();
 
-        int i = 0;
-        for (String query : queries) {
-            if (i == queries.length - 1)
-                break;
-            driver.run(query);
-            driver.clear();
-            i++;
-        }
+		dfs = FileSystem.get(ConfUtil.getJobConf());
 
-        String warehouse = hconf.get("hive.metastore.warehouse.dir");
-        String tableName = removeExt(resultFile.getName());
-        String directory = warehouse + "/" + tableName + "/";
-        String localDirectory = "tmp";
+		int i = 0;
+		for (String query : queries) {
+			if (i == queries.length - 1)
+				break;
+			driver.run(query);
+			driver.clear();
+			i++;
+		}
 
-        FileStatus[] files = dfs.listStatus(new Path(directory));
-        FileSystem lfs = null;
-        if (files == null) {
-            lfs = FileSystem.getLocal(ConfUtil.getJobConf());
-            files = lfs.listStatus(new Path(directory));
-        }
+		String warehouse = hconf.get("hive.metastore.warehouse.dir");
+		String tableName = removeExt(resultFile.getName());
+		String directory = warehouse + "/" + tableName + "/";
+		String localDirectory = "tmp";
 
-        File resultDirectory = new File(localDirectory + "/" + tableName);
-        deleteDir(resultDirectory);
-        resultDirectory.mkdir();
+		FileStatus[] files = dfs.listStatus(new Path(directory));
+		FileSystem lfs = null;
+		if (files == null) {
+			lfs = FileSystem.getLocal(ConfUtil.getJobConf());
+			files = lfs.listStatus(new Path(directory));
+		}
 
-        for (FileStatus fs : files) {
-            Path src = fs.getPath();
-            if (src.getName().indexOf("crc") >= 0)
-                continue;
+		File resultDirectory = new File(localDirectory + "/" + tableName);
+		deleteDir(resultDirectory);
+		resultDirectory.mkdir();
 
-            String destStr = localDirectory + "/" + tableName + "/" + src.getName();
-            Path dest = new Path(destStr);
-            if (lfs != null) {
-                lfs.copyToLocalFile(src, dest);
-                dfs.copyFromLocalFile(dest, new Path(directory));
-            } else
-                dfs.copyToLocalFile(src, dest);
-        }
+		for (FileStatus fs : files) {
+			Path src = fs.getPath();
+			if (src.getName().indexOf("crc") >= 0)
+				continue;
 
-        File[] rFiles = resultDirectory.listFiles();
-        StringBuilder sb = new StringBuilder();
-        for (File r : rFiles) {
-            if (r.getName().indexOf("crc") >= 0)
-                continue;
-            readFileToString(r, sb);
-        }
-        deleteDir(resultDirectory);
+			String destStr = localDirectory + "/" + tableName + "/"
+					+ src.getName();
+			Path dest = new Path(destStr);
+			if (lfs != null) {
+				lfs.copyToLocalFile(src, dest);
+				dfs.copyFromLocalFile(dest, new Path(directory));
+			} else
+				dfs.copyToLocalFile(src, dest);
+		}
 
-        writeStringToFile(resultFile, sb);
-    }
+		File[] rFiles = resultDirectory.listFiles();
+		StringBuilder sb = new StringBuilder();
+		for (File r : rFiles) {
+			if (r.getName().indexOf("crc") >= 0)
+				continue;
+			readFileToString(r, sb);
+		}
+		deleteDir(resultDirectory);
 
-    private void deleteDir(File resultDirectory) {
-        if (resultDirectory.exists()) {
-            File[] rFiles = resultDirectory.listFiles();
-            for (File r : rFiles)
-                r.delete();
-            resultDirectory.delete();
-        }
-    }
+		writeStringToFile(resultFile, sb);
+	}
+
+	private void deleteDir(File resultDirectory) {
+		if (resultDirectory.exists()) {
+			File[] rFiles = resultDirectory.listFiles();
+			for (File r : rFiles)
+				r.delete();
+			resultDirectory.delete();
+		}
+	}
 }

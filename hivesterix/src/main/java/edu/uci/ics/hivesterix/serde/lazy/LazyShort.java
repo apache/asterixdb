@@ -34,28 +34,29 @@ import edu.uci.ics.hivesterix.serde.lazy.objectinspector.primitive.LazyShortObje
  * </p>
  * 
  */
-public class LazyShort extends LazyPrimitive<LazyShortObjectInspector, ShortWritable> {
+public class LazyShort extends
+		LazyPrimitive<LazyShortObjectInspector, ShortWritable> {
 
-    public LazyShort(LazyShortObjectInspector oi) {
-        super(oi);
-        data = new ShortWritable();
-    }
+	public LazyShort(LazyShortObjectInspector oi) {
+		super(oi);
+		data = new ShortWritable();
+	}
 
-    public LazyShort(LazyShort copy) {
-        super(copy);
-        data = new ShortWritable(copy.data.get());
-    }
+	public LazyShort(LazyShort copy) {
+		super(copy);
+		data = new ShortWritable(copy.data.get());
+	}
 
-    @Override
-    public void init(byte[] bytes, int start, int length) {
-        if (length == 0) {
-            isNull = true;
-            return;
-        } else
-            isNull = false;
-        
-        assert (2 == length);
-        data.set(LazyUtils.byteArrayToShort(bytes, start));
-    }
+	@Override
+	public void init(byte[] bytes, int start, int length) {
+		if (length == 0) {
+			isNull = true;
+			return;
+		} else
+			isNull = false;
+
+		assert (2 == length);
+		data.set(LazyUtils.byteArrayToShort(bytes, start));
+	}
 
 }

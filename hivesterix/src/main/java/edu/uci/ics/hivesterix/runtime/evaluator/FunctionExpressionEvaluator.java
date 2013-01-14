@@ -9,9 +9,10 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 
 public class FunctionExpressionEvaluator extends AbstractExpressionEvaluator {
 
-    public FunctionExpressionEvaluator(ExprNodeGenericFuncDesc expr, ObjectInspector oi, IDataOutputProvider output)
-            throws AlgebricksException {
-        super(new ExprNodeGenericFuncEvaluator(expr), oi, output);
-    }
+	public FunctionExpressionEvaluator(ExprNodeGenericFuncDesc expr,
+			ObjectInspector oi, IDataOutputProvider output)
+			throws AlgebricksException {
+		super(new ExprNodeGenericFuncEvaluator(expr), oi, output);
+	}
 
 }

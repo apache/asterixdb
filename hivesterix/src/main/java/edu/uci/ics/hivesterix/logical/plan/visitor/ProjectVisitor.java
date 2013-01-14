@@ -17,40 +17,42 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOper
 
 public class ProjectVisitor extends DefaultVisitor {
 
-    /**
-     * translate project operator
-     */
-    @Override
-    public Mutable<ILogicalOperator> visit(SelectOperator operator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) {
+	/**
+	 * translate project operator
+	 */
+	@Override
+	public Mutable<ILogicalOperator> visit(SelectOperator operator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t) {
 
-        SelectDesc desc = (SelectDesc) operator.getConf();
+		SelectDesc desc = (SelectDesc) operator.getConf();
 
-        if (desc == null)
-            return null;
+		if (desc == null)
+			return null;
 
-        List<ExprNodeDesc> cols = desc.getColList();
+		List<ExprNodeDesc> cols = desc.getColList();
 
-        if (cols == null)
-            return null;
+		if (cols == null)
+			return null;
 
-        // insert assign operator if necessary
-        ArrayList<LogicalVariable> variables = new ArrayList<LogicalVariable>();
+		// insert assign operator if necessary
+		ArrayList<LogicalVariable> variables = new ArrayList<LogicalVariable>();
 
-        for (ExprNodeDesc expr : cols)
-            t.rewriteExpression(expr);
+		for (ExprNodeDesc expr : cols)
+			t.rewriteExpression(expr);
 
-        ILogicalOperator assignOp = t.getAssignOperator(AlgebricksParentOperator, cols, variables);
-        ILogicalOperator currentOperator = null;
-        if (assignOp != null) {
-            currentOperator = assignOp;
-            AlgebricksParentOperator = new MutableObject<ILogicalOperator>(currentOperator);
-        }
+		ILogicalOperator assignOp = t.getAssignOperator(
+				AlgebricksParentOperator, cols, variables);
+		ILogicalOperator currentOperator = null;
+		if (assignOp != null) {
+			currentOperator = assignOp;
+			AlgebricksParentOperator = new MutableObject<ILogicalOperator>(
+					currentOperator);
+		}
 
-        currentOperator = new ProjectOperator(variables);
-        currentOperator.getInputs().add(AlgebricksParentOperator);
-        t.rewriteOperatorOutputSchema(variables, operator);
-        return new MutableObject<ILogicalOperator>(currentOperator);
-    }
+		currentOperator = new ProjectOperator(variables);
+		currentOperator.getInputs().add(AlgebricksParentOperator);
+		t.rewriteOperatorOutputSchema(variables, operator);
+		return new MutableObject<ILogicalOperator>(currentOperator);
+	}
 
 }

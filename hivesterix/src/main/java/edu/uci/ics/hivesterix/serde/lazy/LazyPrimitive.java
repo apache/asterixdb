@@ -25,45 +25,46 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 /**
  * LazyPrimitive stores a primitive Object in a LazyObject.
  */
-public abstract class LazyPrimitive<OI extends ObjectInspector, T extends Writable> extends LazyObject<OI> {
+public abstract class LazyPrimitive<OI extends ObjectInspector, T extends Writable>
+		extends LazyObject<OI> {
 
-    LazyPrimitive(OI oi) {
-        super(oi);
-    }
+	LazyPrimitive(OI oi) {
+		super(oi);
+	}
 
-    LazyPrimitive(LazyPrimitive<OI, T> copy) {
-        super(copy.oi);
-        isNull = copy.isNull;
-    }
+	LazyPrimitive(LazyPrimitive<OI, T> copy) {
+		super(copy.oi);
+		isNull = copy.isNull;
+	}
 
-    T data;
-    boolean isNull = false;
+	T data;
+	boolean isNull = false;
 
-    /**
-     * Returns the primitive object represented by this LazyObject. This is
-     * useful because it can make sure we have "null" for null objects.
-     */
-    @Override
-    public Object getObject() {
-        return isNull ? null : this;
-    }
+	/**
+	 * Returns the primitive object represented by this LazyObject. This is
+	 * useful because it can make sure we have "null" for null objects.
+	 */
+	@Override
+	public Object getObject() {
+		return isNull ? null : this;
+	}
 
-    public T getWritableObject() {
-        return isNull ? null : data;
-    }
+	public T getWritableObject() {
+		return isNull ? null : data;
+	}
 
-    @Override
-    public String toString() {
-        return isNull ? "null" : data.toString();
-    }
+	@Override
+	public String toString() {
+		return isNull ? "null" : data.toString();
+	}
 
-    @Override
-    public int hashCode() {
-        return isNull ? 0 : data.hashCode();
-    }
+	@Override
+	public int hashCode() {
+		return isNull ? 0 : data.hashCode();
+	}
 
-    @Override
-    public void init(IFrameTupleReference tuple) {
-    }
+	@Override
+	public void init(IFrameTupleReference tuple) {
+	}
 
 }

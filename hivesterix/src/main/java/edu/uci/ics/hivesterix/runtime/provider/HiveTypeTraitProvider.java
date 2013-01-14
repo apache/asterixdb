@@ -7,27 +7,27 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 
 public class HiveTypeTraitProvider implements ITypeTraitProvider, Serializable {
 
-    public static HiveTypeTraitProvider INSTANCE = new HiveTypeTraitProvider();
+	public static HiveTypeTraitProvider INSTANCE = new HiveTypeTraitProvider();
 
-    private HiveTypeTraitProvider() {
+	private HiveTypeTraitProvider() {
 
-    }
+	}
 
-    @Override
-    public ITypeTraits getTypeTrait(Object arg0) {
-        return new ITypeTraits() {
-            private static final long serialVersionUID = 1L;
+	@Override
+	public ITypeTraits getTypeTrait(Object arg0) {
+		return new ITypeTraits() {
+			private static final long serialVersionUID = 1L;
 
-            @Override
-            public int getFixedLength() {
-                return -1;
-            }
+			@Override
+			public int getFixedLength() {
+				return -1;
+			}
 
-            @Override
-            public boolean isFixedLength() {
-                return false;
-            }
+			@Override
+			public boolean isFixedLength() {
+				return false;
+			}
 
-        };
-    }
+		};
+	}
 }
