@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.dataflow.data.nontagged.serde;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.regex.Pattern;
 
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AInterval;
@@ -42,8 +41,6 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
             .getSerializerDeserializer(BuiltinType.AINTERVAL);
 
     private static final String errorMessage = "This can not be an instance of interval";
-
-    private static final Pattern COMMA_PATTERN = Pattern.compile(",");
 
     private AIntervalSerializerDeserializer() {
     }

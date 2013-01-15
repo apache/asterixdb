@@ -18,6 +18,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -48,6 +49,7 @@ public class TemporalMonthAccessor extends AbstractScalarFunctionDynamicDescript
     // allowed input types
     private static final byte SER_DATE_TYPE_TAG = ATypeTag.DATE.serialize();
     private static final byte SER_DATETIME_TYPE_TAG = ATypeTag.DATETIME.serialize();
+    private static final byte SER_DURATION_TYPE_TAG = ATypeTag.DURATION.serialize();
     private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
@@ -96,6 +98,14 @@ public class TemporalMonthAccessor extends AbstractScalarFunctionDynamicDescript
                         byte[] bytes = argOut.getByteArray();
 
                         try {
+
+                            if (bytes[0] == SER_DURATION_TYPE_TAG) {
+                                aMutableInt32.setValue(calSystem.getDurationMonth(ADurationSerializerDeserializer
+                                        .getYearMonth(bytes, 1)));
+                                intSerde.serialize(aMutableInt32, out);
+                                return;
+                            }
+
                             long chrononTimeInMs = 0;
                             if (bytes[0] == SER_DATE_TYPE_TAG) {
                                 chrononTimeInMs = AInt32SerializerDeserializer.getInt(bytes, 1)

@@ -12,6 +12,8 @@ import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ABooleanTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ACircleTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.ADateTimeTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.ADateTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ADoubleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.AFloatTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.AInt32TypeComputer;
@@ -21,6 +23,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.APointTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.APolygonTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ARectangleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.AStringTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.ATimeTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.BinaryBooleanOrNullFunctionTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.BinaryStringBoolOrNullTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.BinaryStringStringOrNullTypeComputer;
@@ -394,6 +397,12 @@ public class AsterixBuiltinFunctions {
             "interval_ends", 2);
     public final static FunctionIdentifier INTERVAL_ENDED_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "interval_ended_by", 2);
+    public final static FunctionIdentifier CURRENT_TIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "current_time", 0);
+    public final static FunctionIdentifier CURRENT_DATE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "current_date", 0);
+    public final static FunctionIdentifier CURRENT_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "current_datetime", 0);
 
     // spatial
     public final static FunctionIdentifier CREATE_POINT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -766,6 +775,9 @@ public class AsterixBuiltinFunctions {
         add(INTERVAL_COVERED_BY, OptionalABooleanTypeComputer.INSTANCE);
         add(INTERVAL_ENDS, OptionalABooleanTypeComputer.INSTANCE);
         add(INTERVAL_ENDED_BY, OptionalABooleanTypeComputer.INSTANCE);
+        add(CURRENT_DATE, ADateTypeComputer.INSTANCE);
+        add(CURRENT_TIME, ATimeTypeComputer.INSTANCE);
+        add(CURRENT_DATETIME, ADateTimeTypeComputer.INSTANCE);
 
         // interval constructors
         add(INTERVAL_CONSTRUCTOR_DATE, OptionalAIntervalTypeComputer.INSTANCE);

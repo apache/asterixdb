@@ -175,6 +175,9 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AdjustDateTimeF
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AdjustTimeForTimeZoneDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.CalendarDuartionFromDateDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.CalendarDurationFromDateTimeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.CurrentDateDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.CurrentDateTimeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.CurrentTimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DateFromDatetimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DateFromUnixTimeInDaysDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DatetimeFromDateAndTimeDescriptor;
@@ -452,6 +455,9 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(IntervalCoveredByDescriptor.FACTORY);
         temp.add(IntervalEndsDecriptor.FACTORY);
         temp.add(IntervalEndedByDescriptor.FACTORY);
+        temp.add(CurrentDateDescriptor.FACTORY);
+        temp.add(CurrentTimeDescriptor.FACTORY);
+        temp.add(CurrentDateTimeDescriptor.FACTORY);
 
         // Interval constructor
         temp.add(AIntervalFromDateConstructorDescriptor.FACTORY);
