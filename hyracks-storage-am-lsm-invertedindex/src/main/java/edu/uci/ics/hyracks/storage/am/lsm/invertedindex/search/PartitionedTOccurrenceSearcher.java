@@ -43,6 +43,9 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
     protected final ConcatenatingTupleReference fullLowSearchKey = new ConcatenatingTupleReference(2);
     protected final ConcatenatingTupleReference fullHighSearchKey = new ConcatenatingTupleReference(2);
 
+    // HACK for better IO perf
+    protected final ArrayList<IInvertedListCursor> cursorsOrderedByTokens = new ArrayList<IInvertedListCursor>();
+    
     protected final InvertedListPartitions partitions = new InvertedListPartitions();
 
     public PartitionedTOccurrenceSearcher(IHyracksCommonContext ctx, IInvertedIndex invIndex) {
@@ -101,10 +104,11 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
         short maxCountPossible = numQueryTokens;
         invListCursorCache.reset();
         partitions.reset(numTokensLowerBound, numTokensUpperBound);
+        cursorsOrderedByTokens.clear();
         for (int i = 0; i < numQueryTokens; i++) {
             searchKey.reset(queryTokenAccessor, i);
             if (!partInvIndex.openInvertedListPartitionCursors(this, ictx, numTokensLowerBound, numTokensUpperBound,
-                    partitions)) {
+                    partitions, cursorsOrderedByTokens)) {
                 maxCountPossible--;
                 // No results possible.
                 if (maxCountPossible < occurrenceThreshold) {                    
@@ -112,11 +116,30 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
                 }
             }
         }
-
-        // Process the partitions one-by-one.
+        
         ArrayList<IInvertedListCursor>[] partitionCursors = partitions.getPartitions();
         short start = partitions.getMinValidPartitionIndex();
         short end = partitions.getMaxValidPartitionIndex();
+        
+        // HACK FOR BETTER IO
+        if (!cursorsOrderedByTokens.isEmpty()) {
+            for (int i = start; i <= end; i++) {
+                if (partitionCursors[i] == null) {
+                    continue;
+                }
+                // Prune partition because no element in it can satisfy the occurrence threshold.
+                if (partitionCursors[i].size() < occurrenceThreshold) {
+                    cursorsOrderedByTokens.removeAll(partitionCursors[i]);
+                }
+            }
+            // Pin all the cursors in the order of tokens.
+            int numCursors = cursorsOrderedByTokens.size();
+            for (int i = 0; i < numCursors; i++) {
+                cursorsOrderedByTokens.get(i).pinPages();
+            }
+        }
+        
+        // Process the partitions one-by-one.
         for (int i = start; i <= end; i++) {
             if (partitionCursors[i] == null) {
                 continue;
@@ -130,7 +153,7 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
             invListMerger.reset();
             invListMerger.merge(partitionCursors[i], occurrenceThreshold, numPrefixLists, searchResult);
         }
-
+        
         resultCursor.open(null, searchPred);
     }
 

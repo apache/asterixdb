@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 
+import java.util.ArrayList;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -30,6 +31,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IPartitionedInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.InvertedListPartitions;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.PartitionedTOccurrenceSearcher;
@@ -87,8 +89,8 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
 
     @Override
     public boolean openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
-            short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions)
-            throws HyracksDataException, IndexException {
+            short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions,
+            ArrayList<IInvertedListCursor> cursorsOrderedByTokens) throws HyracksDataException, IndexException {
         short minPartitionIndex;
         short maxPartitionIndex;
         partitionIndexLock.readLock().lock();
@@ -108,7 +110,7 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
         if (numTokensUpperBound >= 0) {
             partitionEndIndex = (short) Math.min(maxPartitionIndex, numTokensUpperBound);
         }
-        
+
         PartitionedTOccurrenceSearcher partSearcher = (PartitionedTOccurrenceSearcher) searcher;
         PartitionedInMemoryInvertedIndexOpContext ctx = (PartitionedInMemoryInvertedIndexOpContext) ictx;
         ctx.setOperation(IndexOperation.SEARCH);

@@ -46,6 +46,8 @@ public class FixedSizeElementInvertedListCursor implements IInvertedListCursor {
     private final FixedSizeTupleReference tuple;
     private ICachedPage[] pages = new ICachedPage[10];
     private int[] elementIndexes = new int[10];
+    
+    private boolean pinned = false;
 
     public FixedSizeElementInvertedListCursor(IBufferCache bufferCache, int fileId, ITypeTraits[] invListFields) {
         this.bufferCache = bufferCache;
@@ -84,12 +86,16 @@ public class FixedSizeElementInvertedListCursor implements IInvertedListCursor {
 
     @Override
     public void pinPages() throws HyracksDataException {
+        if (pinned) {
+            return;
+        }
         int pix = 0;
         for (int i = startPageId; i <= endPageId; i++) {
             pages[pix] = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, i), false);
             pages[pix].acquireReadLatch();
             pix++;
         }
+        pinned = true;
     }
 
     @Override
@@ -99,6 +105,7 @@ public class FixedSizeElementInvertedListCursor implements IInvertedListCursor {
             pages[i].releaseReadLatch();
             bufferCache.unpin(pages[i]);
         }
+        pinned = false;
     }
 
     private void positionCursor(int elementIx) {

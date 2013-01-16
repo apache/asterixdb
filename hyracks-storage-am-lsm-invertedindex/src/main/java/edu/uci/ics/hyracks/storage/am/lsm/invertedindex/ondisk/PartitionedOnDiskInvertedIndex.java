@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk;
 
+import java.util.ArrayList;
+
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -62,8 +64,8 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
 
     @Override
     public boolean openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
-            short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions)
-            throws HyracksDataException, IndexException {
+            short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions,
+            ArrayList<IInvertedListCursor> cursorsOrderedByTokens) throws HyracksDataException, IndexException {
         PartitionedTOccurrenceSearcher partSearcher = (PartitionedTOccurrenceSearcher) searcher;
         OnDiskInvertedIndexOpContext ctx = (OnDiskInvertedIndexOpContext) ictx;
         ITupleReference lowSearchKey = null;
@@ -96,6 +98,7 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
                         btreeTuple.getFieldStart(PARTITIONING_NUM_TOKENS_FIELD));
                 IInvertedListCursor invListCursor = partSearcher.getCachedInvertedListCursor();
                 resetInvertedListCursor(btreeTuple, invListCursor);
+                cursorsOrderedByTokens.add(invListCursor);
                 invListPartitions.addInvertedListCursor(invListCursor, numTokens);
                 tokenExists = true;
             }
