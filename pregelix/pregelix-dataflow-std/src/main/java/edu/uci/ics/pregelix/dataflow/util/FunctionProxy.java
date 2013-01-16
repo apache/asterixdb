@@ -15,6 +15,7 @@
 
 package edu.uci.ics.pregelix.dataflow.util;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -68,16 +69,19 @@ public class FunctionProxy {
     /**
      * Call the function
      * 
-     * @param tb
-     *            input data
+     * @param leftAccessor
+     *            input page accessor
+     * @param leftTupleIndex
+     *            the tuple index in the page
      * @param updateRef
      *            update pointer
      * @throws HyracksDataException
      */
-    public void functionCall(ArrayTupleBuilder tb, ITupleReference updateRef) throws HyracksDataException {
-        Object[] tuple = tupleDe.deserializeRecord(tb);
+    public void functionCall(IFrameTupleAccessor leftAccessor, int leftTupleIndex, ITupleReference right)
+            throws HyracksDataException {
+        Object[] tuple = tupleDe.deserializeRecord(leftAccessor, leftTupleIndex, right);
         function.process(tuple);
-        function.update(updateRef);
+        function.update(right);
     }
 
     /**
@@ -88,6 +92,21 @@ public class FunctionProxy {
      */
     public void functionCall(ITupleReference updateRef) throws HyracksDataException {
         Object[] tuple = tupleDe.deserializeRecord(updateRef);
+        function.process(tuple);
+        function.update(updateRef);
+    }
+
+    /**
+     * Call the function
+     * 
+     * @param tb
+     *            input data
+     * @param updateRef
+     *            update pointer
+     * @throws HyracksDataException
+     */
+    public void functionCall(ArrayTupleBuilder tb, ITupleReference updateRef) throws HyracksDataException {
+        Object[] tuple = tupleDe.deserializeRecord(tb, updateRef);
         function.process(tuple);
         function.update(updateRef);
     }

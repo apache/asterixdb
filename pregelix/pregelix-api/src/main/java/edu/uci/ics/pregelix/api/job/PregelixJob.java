@@ -60,6 +60,8 @@ public class PregelixJob extends Job {
     public static final String NUM_VERTICE = "pregelix.numVertices";
     /** num of edges */
     public static final String NUM_EDGES = "pregelix.numEdges";
+    /** increase state length */
+    public static final String INCREASE_STATE_LENGTH = "pregelix.incStateLength";
     /** job id */
     public static final String JOB_ID = "pregelix.jobid";
 
@@ -130,8 +132,8 @@ public class PregelixJob extends Job {
     /**
      * Set the global aggregator class (optional)
      * 
-     * @param vertexCombinerClass
-     *            Determines how vertex messages are combined
+     * @param globalAggregatorClass
+     *            Determines how messages are globally aggregated
      */
     final public void setGlobalAggregatorClass(Class<?> globalAggregatorClass) {
         getConfiguration().setClass(GLOBAL_AGGREGATOR_CLASS, globalAggregatorClass, GlobalAggregator.class);
@@ -139,11 +141,17 @@ public class PregelixJob extends Job {
 
     /**
      * Set the job Id
-     * 
-     * @param vertexCombinerClass
-     *            Determines how vertex messages are combined
      */
     final public void setJobId(String jobId) {
         getConfiguration().set(JOB_ID, jobId);
+    }
+
+    /**
+     * Set whether the vertex state length can be dynamically increased
+     * 
+     * @param jobId
+     */
+    final public void setIncStateLengthDynamically(boolean incStateLengthDynamically) {
+        getConfiguration().setBoolean(INCREASE_STATE_LENGTH, incStateLengthDynamically);
     }
 }

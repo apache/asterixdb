@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.pregelix.dataflow.std;
 
-import java.io.DataOutput;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
@@ -24,7 +23,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -51,9 +49,6 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
 
     private ByteBuffer writeBuffer;
     private FrameTupleAppender appender;
-    private ArrayTupleBuilder tb;
-    private DataOutput dos;
-
     private BTree btree;
     private PermutingFrameTupleReference lowKey;
     private PermutingFrameTupleReference highKey;
@@ -67,8 +62,6 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
     protected ITreeIndexAccessor indexAccessor;
 
     private RecordDescriptor recDesc;
-    private final RecordDescriptor inputRecDesc;
-
     private final IFrameWriter[] writers;
     private final FunctionProxy functionProxy;
 
@@ -77,7 +70,6 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
             int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
             IUpdateFunctionFactory functionFactory, IRuntimeHookFactory preHookFactory,
             IRuntimeHookFactory postHookFactory, IRecordDescriptorFactory inputRdFactory, int outputArity) {
-        inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         treeIndexOpHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
                 opDesc, ctx, partition);
         this.lowKeyInclusive = lowKeyInclusive;
@@ -144,8 +136,6 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
             rangePred = new RangePredicate(null, null, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
                     highKeySearchCmp);
             writeBuffer = treeIndexOpHelper.getHyracksTaskContext().allocateFrame();
-            tb = new ArrayTupleBuilder(inputRecDesc.getFields().length + btree.getFieldCount());
-            dos = tb.getDataOutput();
             appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksTaskContext().getFrameSize());
             appender.reset(writeBuffer, true);
 
@@ -158,27 +148,13 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
 
     private void writeSearchResults(IFrameTupleAccessor leftAccessor, int tIndex) throws Exception {
         while (cursor.hasNext()) {
-            tb.reset();
             cursor.next();
-
             ITupleReference tupleRef = cursor.getTuple();
-            for (int i = 0; i < inputRecDesc.getFields().length; i++) {
-                int tupleStart = leftAccessor.getTupleStartOffset(tIndex);
-                int fieldStart = leftAccessor.getFieldStartOffset(tIndex, i);
-                int offset = leftAccessor.getFieldSlotsLength() + tupleStart + fieldStart;
-                int len = leftAccessor.getFieldEndOffset(tIndex, i) - fieldStart;
-                dos.write(leftAccessor.getBuffer().array(), offset, len);
-                tb.addFieldEndOffset();
-            }
-            for (int i = 0; i < tupleRef.getFieldCount(); i++) {
-                dos.write(tupleRef.getFieldData(i), tupleRef.getFieldStart(i), tupleRef.getFieldLength(i));
-                tb.addFieldEndOffset();
-            }
 
             /**
              * call the update function
              */
-            functionProxy.functionCall(tb, tupleRef);
+            functionProxy.functionCall(leftAccessor, tIndex, tupleRef);
         }
     }
 

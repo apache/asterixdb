@@ -53,7 +53,7 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
 
     private ByteBuffer writeBuffer;
     private FrameTupleAppender appender;
-    private ArrayTupleBuilder tb;
+    private ArrayTupleBuilder nullTupleBuilder;
     private DataOutput dos;
 
     private BTree btree;
@@ -144,8 +144,15 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
             rangePred = new RangePredicate(null, null, true, true, lowKeySearchCmp, highKeySearchCmp);
 
             writeBuffer = treeIndexOpHelper.getHyracksTaskContext().allocateFrame();
-            tb = new ArrayTupleBuilder(inputRecDesc.getFields().length + btree.getFieldCount());
-            dos = tb.getDataOutput();
+            
+            nullTupleBuilder = new ArrayTupleBuilder(inputRecDesc.getFields().length);            
+            dos = nullTupleBuilder.getDataOutput();
+            nullTupleBuilder.reset();
+            for (int i = 0; i < inputRecDesc.getFields().length; i++) {
+                nullWriter[i].writeNull(dos);
+                nullTupleBuilder.addFieldEndOffset();
+            }
+            
             appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksTaskContext().getFrameSize());
             appender.reset(writeBuffer, true);
 
@@ -172,24 +179,10 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
 
     private void writeResults(IFrameTupleAccessor leftAccessor, int tIndex, ITupleReference frameTuple)
             throws Exception {
-        tb.reset();
-        for (int i = 0; i < inputRecDesc.getFields().length; i++) {
-            int tupleStart = leftAccessor.getTupleStartOffset(tIndex);
-            int fieldStart = leftAccessor.getFieldStartOffset(tIndex, i);
-            int offset = leftAccessor.getFieldSlotsLength() + tupleStart + fieldStart;
-            int len = leftAccessor.getFieldEndOffset(tIndex, i) - fieldStart;
-            dos.write(leftAccessor.getBuffer().array(), offset, len);
-            tb.addFieldEndOffset();
-        }
-        for (int i = 0; i < frameTuple.getFieldCount(); i++) {
-            dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
-            tb.addFieldEndOffset();
-        }
-
         /**
          * function call
          */
-        functionProxy.functionCall(tb, frameTuple);
+        functionProxy.functionCall(leftAccessor, tIndex, frameTuple);
     }
 
     @Override
@@ -271,20 +264,10 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
 
     /** write result for outer case */
     private void writeResults(ITupleReference frameTuple) throws Exception {
-        tb.reset();
-        for (int i = 0; i < inputRecDesc.getFields().length; i++) {
-            nullWriter[i].writeNull(dos);
-            tb.addFieldEndOffset();
-        }
-        for (int i = 0; i < frameTuple.getFieldCount(); i++) {
-            dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
-            tb.addFieldEndOffset();
-        }
-
         /**
          * function call
          */
-        functionProxy.functionCall(tb, frameTuple);
+        functionProxy.functionCall(nullTupleBuilder, frameTuple);
     }
 
     @Override
