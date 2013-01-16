@@ -177,7 +177,7 @@ public abstract class AbstractTestSuiteClass extends TestSuite {
 
 	protected static boolean isIgnored(String q, List<String> ignoreList) {
 		for (String ignore : ignoreList) {
-			if (ignore.equals(q)) {
+			if (q.indexOf(ignore) >= 0) {
 				return true;
 			}
 		}
