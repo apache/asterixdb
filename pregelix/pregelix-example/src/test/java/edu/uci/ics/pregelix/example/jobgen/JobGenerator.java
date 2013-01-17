@@ -157,13 +157,6 @@ public class JobGenerator {
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
-    private static void genPageRank() throws IOException {
-        generatePageRankJob("PageRank", outputBase + "PageRank.xml");
-        generatePageRankJobReal("PageRank", outputBase + "PageRankReal.xml");
-        generatePageRankJobRealComplex("PageRank", outputBase + "PageRankRealComplex.xml");
-        generatePageRankJobRealNoCombiner("PageRank", outputBase + "PageRankRealNoCombiner.xml");
-    }
-
     private static void generateShortestPathJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(ShortestPathsVertex.class);
@@ -175,6 +168,27 @@ public class JobGenerator {
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
         job.getConfiguration().setLong(ShortestPathsVertex.SOURCE_ID, 0);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void generatePageRankJobRealDynamic(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(PageRankVertex.class);
+        job.setVertexInputFormatClass(TextPageRankInputFormat.class);
+        job.setVertexOutputFormatClass(SimplePageRankVertexOutputFormat.class);
+        job.setMessageCombinerClass(PageRankVertex.SimpleSumCombiner.class);
+        job.setDynamicVertexValueSize(true);
+        FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
+        FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
+        job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genPageRank() throws IOException {
+        generatePageRankJob("PageRank", outputBase + "PageRank.xml");
+        generatePageRankJobReal("PageRank", outputBase + "PageRankReal.xml");
+        generatePageRankJobRealDynamic("PageRank", outputBase + "PageRankRealDynamic.xml");
+        generatePageRankJobRealComplex("PageRank", outputBase + "PageRankRealComplex.xml");
+        generatePageRankJobRealNoCombiner("PageRank", outputBase + "PageRankRealNoCombiner.xml");
     }
 
     private static void genShortestPath() throws IOException {

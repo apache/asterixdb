@@ -45,6 +45,7 @@ import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHookFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IUpdateFunctionFactory;
 import edu.uci.ics.pregelix.dataflow.util.FunctionProxy;
+import edu.uci.ics.pregelix.dataflow.util.UpdateBuffer;
 
 public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable extends
         AbstractUnaryInputOperatorNodePushable {
@@ -76,6 +77,8 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
 
     private final IFrameWriter[] writers;
     private final FunctionProxy functionProxy;
+    private ArrayTupleBuilder cloneUpdateTb;
+    private UpdateBuffer updateBuffer;
 
     public IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward,
@@ -100,6 +103,7 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
         this.writers = new IFrameWriter[outputArity];
         this.functionProxy = new FunctionProxy(ctx, functionFactory, preHookFactory, postHookFactory, inputRdFactory,
                 writers);
+        this.updateBuffer = new UpdateBuffer(ctx, 2);
     }
 
     protected void setCursor() {
@@ -144,15 +148,15 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
             rangePred = new RangePredicate(null, null, true, true, lowKeySearchCmp, highKeySearchCmp);
 
             writeBuffer = treeIndexOpHelper.getHyracksTaskContext().allocateFrame();
-            
-            nullTupleBuilder = new ArrayTupleBuilder(inputRecDesc.getFields().length);            
+
+            nullTupleBuilder = new ArrayTupleBuilder(inputRecDesc.getFields().length);
             dos = nullTupleBuilder.getDataOutput();
             nullTupleBuilder.reset();
             for (int i = 0; i < inputRecDesc.getFields().length; i++) {
                 nullWriter[i].writeNull(dos);
                 nullTupleBuilder.addFieldEndOffset();
             }
-            
+
             appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksTaskContext().getFrameSize());
             appender.reset(writeBuffer, true);
 
@@ -171,18 +175,38 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
                 match = false;
             }
 
+            cloneUpdateTb = new ArrayTupleBuilder(btree.getFieldCount());
+
         } catch (Exception e) {
             treeIndexOpHelper.deinit();
             throw new HyracksDataException(e);
         }
     }
 
+    //for the join match casesos
     private void writeResults(IFrameTupleAccessor leftAccessor, int tIndex, ITupleReference frameTuple)
             throws Exception {
         /**
          * function call
          */
-        functionProxy.functionCall(leftAccessor, tIndex, frameTuple);
+        functionProxy.functionCall(leftAccessor, tIndex, frameTuple, cloneUpdateTb);
+
+        //doing clone update
+        if (cloneUpdateTb.getSize() > 0) {
+            if (!updateBuffer.appendTuple(cloneUpdateTb)) {
+                //release the cursor/latch
+                cursor.close();
+                //batch update
+                updateBuffer.updateBTree(indexAccessor);
+
+                //search again and recover the cursor
+                cursor.reset();
+                rangePred.setLowKey(frameTuple, true);
+                rangePred.setHighKey(null, true);
+                indexAccessor.search(cursor, rangePred);
+            }
+            cloneUpdateTb.reset();
+        }
     }
 
     @Override
@@ -236,6 +260,8 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
             }
             try {
                 cursor.close();
+                //batch update
+                updateBuffer.updateBTree(indexAccessor);
             } catch (Exception e) {
                 throw new HyracksDataException(e);
             }
@@ -267,7 +293,24 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
         /**
          * function call
          */
-        functionProxy.functionCall(nullTupleBuilder, frameTuple);
+        functionProxy.functionCall(nullTupleBuilder, frameTuple, cloneUpdateTb);
+
+        //doing clone update
+        if (cloneUpdateTb.getSize() > 0) {
+            if (!updateBuffer.appendTuple(cloneUpdateTb)) {
+                //release the cursor/latch
+                cursor.close();
+                //batch update
+                updateBuffer.updateBTree(indexAccessor);
+
+                //search again and recover the cursor
+                cursor.reset();
+                rangePred.setLowKey(frameTuple, true);
+                rangePred.setHighKey(null, true);
+                indexAccessor.search(cursor, rangePred);
+            }
+            cloneUpdateTb.reset();
+        }
     }
 
     @Override

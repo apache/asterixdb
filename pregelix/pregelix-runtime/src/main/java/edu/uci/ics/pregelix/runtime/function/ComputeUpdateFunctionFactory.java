@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
@@ -90,11 +91,13 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
             private final List<IFrameWriter> writers = new ArrayList<IFrameWriter>();
             private final List<FrameTupleAppender> appenders = new ArrayList<FrameTupleAppender>();
             private final List<ArrayTupleBuilder> tbs = new ArrayList<ArrayTupleBuilder>();
+            private Configuration conf;
 
             @Override
             public void open(IHyracksTaskContext ctx, RecordDescriptor rd, IFrameWriter... writers)
                     throws HyracksDataException {
-                this.aggregator = BspUtils.createGlobalAggregator(confFactory.createConfiguration());
+                this.conf = confFactory.createConfiguration();
+                this.aggregator = BspUtils.createGlobalAggregator(conf);
                 this.aggregator.init();
 
                 this.writerMsg = writers[0];
@@ -177,7 +180,8 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
             private void writeOutGlobalAggregate() throws HyracksDataException {
                 try {
                     /**
-                     * get partial aggregate result and flush to the final aggregator
+                     * get partial aggregate result and flush to the final
+                     * aggregator
                      */
                     Writable agg = aggregator.finishPartial();
                     agg.write(tbGlobalAggregate.getDataOutput());
@@ -203,15 +207,27 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
             }
 
             @Override
-            public void update(ITupleReference tupleRef) throws HyracksDataException {
+            public void update(ITupleReference tupleRef, ArrayTupleBuilder cloneUpdateTb) throws HyracksDataException {
                 try {
                     if (vertex != null && vertex.hasUpdate()) {
-                        int fieldCount = tupleRef.getFieldCount();
-                        for (int i = 1; i < fieldCount; i++) {
-                            byte[] data = tupleRef.getFieldData(i);
-                            int offset = tupleRef.getFieldStart(i);
-                            bbos.setByteArray(data, offset);
-                            vertex.write(output);
+                        if (!BspUtils.getDynamicVertexValueSize(conf)) {
+                            //in-place update
+                            int fieldCount = tupleRef.getFieldCount();
+                            for (int i = 1; i < fieldCount; i++) {
+                                byte[] data = tupleRef.getFieldData(i);
+                                int offset = tupleRef.getFieldStart(i);
+                                bbos.setByteArray(data, offset);
+                                vertex.write(output);
+                            }
+                        } else {
+                            //write the vertex id
+                            DataOutput tbOutput = cloneUpdateTb.getDataOutput();
+                            vertex.getVertexId().write(tbOutput);
+                            cloneUpdateTb.addFieldEndOffset();
+
+                            //write the vertex value
+                            vertex.write(tbOutput);
+                            cloneUpdateTb.addFieldEndOffset();
                         }
                     }
                 } catch (IOException e) {

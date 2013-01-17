@@ -151,7 +151,7 @@ public class PregelixJob extends Job {
      * 
      * @param jobId
      */
-    final public void setIncStateLengthDynamically(boolean incStateLengthDynamically) {
+    final public void setDynamicVertexValueSize(boolean incStateLengthDynamically) {
         getConfiguration().setBoolean(INCREASE_STATE_LENGTH, incStateLengthDynamically);
     }
 }

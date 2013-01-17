@@ -43,6 +43,7 @@ import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHookFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IUpdateFunctionFactory;
 import edu.uci.ics.pregelix.dataflow.util.FunctionProxy;
+import edu.uci.ics.pregelix.dataflow.util.UpdateBuffer;
 
 public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnaryInputOperatorNodePushable {
     protected TreeIndexDataflowHelper treeIndexHelper;
@@ -70,6 +71,8 @@ public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnary
 
     private final IFrameWriter[] writers;
     private final FunctionProxy functionProxy;
+    private ArrayTupleBuilder cloneUpdateTb;
+    private final UpdateBuffer updateBuffer;
 
     public BTreeSearchFunctionUpdateOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward,
@@ -94,6 +97,7 @@ public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnary
         this.writers = new IFrameWriter[outputArity];
         this.functionProxy = new FunctionProxy(ctx, functionFactory, preHookFactory, postHookFactory, inputRdFactory,
                 writers);
+        this.updateBuffer = new UpdateBuffer(ctx, 2);
     }
 
     @Override
@@ -122,6 +126,8 @@ public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnary
             appender = new FrameTupleAppender(treeIndexHelper.getHyracksTaskContext().getFrameSize());
             appender.reset(writeBuffer, true);
             indexAccessor = btree.createAccessor();
+
+            cloneUpdateTb = new ArrayTupleBuilder(btree.getFieldCount());
         } catch (Exception e) {
             treeIndexHelper.deinit();
             throw new HyracksDataException(e);
@@ -136,7 +142,24 @@ public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnary
         while (cursor.hasNext()) {
             cursor.next();
             ITupleReference tuple = cursor.getTuple();
-            functionProxy.functionCall(tuple);
+            functionProxy.functionCall(tuple, cloneUpdateTb);
+
+            //doing clone update
+            if (cloneUpdateTb.getSize() > 0) {
+                if (!updateBuffer.appendTuple(cloneUpdateTb)) {
+                    //release the cursor/latch
+                    cursor.close();
+                    //batch update
+                    updateBuffer.updateBTree(indexAccessor);
+
+                    //search again
+                    cursor.reset();
+                    rangePred.setLowKey(tuple, true);
+                    rangePred.setHighKey(highKey, highKeyInclusive);
+                    indexAccessor.search(cursor, rangePred);
+                }
+            }
+            cloneUpdateTb.reset();
         }
     }
 
@@ -168,6 +191,8 @@ public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnary
         try {
             try {
                 cursor.close();
+                //batch update
+                updateBuffer.updateBTree(indexAccessor);
             } catch (Exception e) {
                 throw new HyracksDataException(e);
             }
