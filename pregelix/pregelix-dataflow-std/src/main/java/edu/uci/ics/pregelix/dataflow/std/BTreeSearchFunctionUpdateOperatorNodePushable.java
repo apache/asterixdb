@@ -128,6 +128,7 @@ public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnary
             indexAccessor = btree.createAccessor();
 
             cloneUpdateTb = new ArrayTupleBuilder(btree.getFieldCount());
+            updateBuffer.setFieldCount(btree.getFieldCount());
         } catch (Exception e) {
             treeIndexHelper.deinit();
             throw new HyracksDataException(e);

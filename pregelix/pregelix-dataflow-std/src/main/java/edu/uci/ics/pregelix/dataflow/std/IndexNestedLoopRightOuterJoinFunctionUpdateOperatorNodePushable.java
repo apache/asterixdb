@@ -176,7 +176,7 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
             }
 
             cloneUpdateTb = new ArrayTupleBuilder(btree.getFieldCount());
-
+            updateBuffer.setFieldCount(btree.getFieldCount());
         } catch (Exception e) {
             treeIndexOpHelper.deinit();
             throw new HyracksDataException(e);

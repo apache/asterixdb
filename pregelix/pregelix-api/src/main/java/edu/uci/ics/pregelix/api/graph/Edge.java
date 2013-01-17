@@ -42,7 +42,7 @@ public class Edge<I extends WritableComparable, E extends Writable> implements W
     private E edgeValue = null;
     /** Configuration - Used to instantiate classes */
     private Configuration conf = null;
-    /** Whether the edgeValue field is not null*/
+    /** Whether the edgeValue field is not null */
     private boolean hasEdgeValue = false;
 
     /**

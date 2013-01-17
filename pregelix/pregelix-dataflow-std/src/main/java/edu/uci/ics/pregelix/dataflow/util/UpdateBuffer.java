@@ -41,7 +41,8 @@ public class UpdateBuffer {
     private final FrameTupleAppender appender;
     private final IHyracksTaskContext ctx;
     private final FrameTupleReference tuple = new FrameTupleReference();
-    private final IFrameTupleAccessor fta;
+    private final int frameSize;
+    private IFrameTupleAccessor fta;
 
     public UpdateBuffer(int numPages, IHyracksTaskContext ctx, int fieldCount) {
         this.appender = new FrameTupleAppender(ctx.getFrameSize());
@@ -50,12 +51,19 @@ public class UpdateBuffer {
         this.appender.reset(buffer, true);
         this.pageLimit = numPages;
         this.ctx = ctx;
-        this.fta = new UpdateBufferTupleAccessor(ctx.getFrameSize(), fieldCount);
+        this.frameSize = ctx.getFrameSize();
+        this.fta = new UpdateBufferTupleAccessor(frameSize, fieldCount);
     }
 
     public UpdateBuffer(IHyracksTaskContext ctx, int fieldCount) {
         //by default, the update buffer has 1000 pages
         this(1000, ctx, fieldCount);
+    }
+
+    public void setFieldCount(int fieldCount) {
+        if (fta.getFieldCount() != fieldCount) {
+            this.fta = new UpdateBufferTupleAccessor(frameSize, fieldCount);
+        }
     }
 
     public boolean appendTuple(ArrayTupleBuilder tb) throws HyracksDataException {

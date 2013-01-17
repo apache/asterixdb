@@ -146,6 +146,7 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
 
             indexAccessor = btree.createAccessor();
             cloneUpdateTb = new ArrayTupleBuilder(btree.getFieldCount());
+            updateBuffer.setFieldCount(btree.getFieldCount());
         } catch (Exception e) {
             treeIndexOpHelper.deinit();
             throw new HyracksDataException(e);
