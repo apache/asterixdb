@@ -28,13 +28,16 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 
 public class LSMInvertedIndexFlushOperation implements ILSMIOOperation {
     private final ILSMIndexAccessorInternal accessor;
+    private final LSMInvertedIndexMutableComponent flushingComponent;
     private final FileReference dictBTreeFlushTarget;
     private final FileReference deletedKeysBTreeFlushTarget;
     private final ILSMIOOperationCallback callback;
 
-    public LSMInvertedIndexFlushOperation(ILSMIndexAccessorInternal accessor, FileReference dictBTreeFlushTarget,
+    public LSMInvertedIndexFlushOperation(ILSMIndexAccessorInternal accessor,
+            LSMInvertedIndexMutableComponent flushingComponent, FileReference dictBTreeFlushTarget,
             FileReference deletedKeysBTreeFlushTarget, ILSMIOOperationCallback callback) {
         this.accessor = accessor;
+        this.flushingComponent = flushingComponent;
         this.dictBTreeFlushTarget = dictBTreeFlushTarget;
         this.deletedKeysBTreeFlushTarget = deletedKeysBTreeFlushTarget;
         this.callback = callback;
@@ -66,5 +69,9 @@ public class LSMInvertedIndexFlushOperation implements ILSMIOOperation {
 
     public FileReference getDeletedKeysBTreeFlushTarget() {
         return deletedKeysBTreeFlushTarget;
+    }
+
+    public LSMInvertedIndexMutableComponent getFlushingComponent() {
+        return flushingComponent;
     }
 }

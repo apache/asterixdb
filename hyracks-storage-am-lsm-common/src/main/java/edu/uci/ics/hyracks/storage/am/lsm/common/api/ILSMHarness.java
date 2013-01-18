@@ -15,8 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
-import java.util.List;
-
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
@@ -24,30 +22,29 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 public interface ILSMHarness {
-    public boolean insertUpdateOrDelete(ITupleReference tuple, ILSMIndexOperationContext ictx, boolean tryOperation)
+    public boolean modify(ILSMIndexOperationContext ictx, boolean tryOperation, ITupleReference tuple)
             throws HyracksDataException, IndexException;
 
-    public boolean noOp(ILSMIndexOperationContext ictx, boolean tryOperation) throws HyracksDataException;
+    public void noOp(ILSMIndexOperationContext ctx) throws HyracksDataException;
 
-    public List<ILSMComponent> search(IIndexCursor cursor, ISearchPredicate pred, ILSMIndexOperationContext ctx,
-            boolean includeMutableComponent) throws HyracksDataException, IndexException;
+    public void search(ILSMIndexOperationContext ctx, IIndexCursor cursor, ISearchPredicate pred)
+            throws HyracksDataException, IndexException;
 
-    // Eventually includeMutableComponent and ctx should be removed.
-    public void closeSearchCursor(List<ILSMComponent> operationalComponents, boolean includeMutableComponent,
-            ILSMIndexOperationContext ctx) throws HyracksDataException;
+    public void endSearch(ILSMIndexOperationContext ctx) throws HyracksDataException;
 
-    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
+    public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+            throws HyracksDataException, IndexException;
+
+    public void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException,
             IndexException;
 
-    public void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException;
+    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+            throws HyracksDataException;
 
-    public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
+    public void flush(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException,
+            IndexException;
 
     public void addBulkLoadedComponent(ILSMComponent index) throws HyracksDataException, IndexException;
 
-    public ILSMIndex getIndex();
-
     public ILSMOperationTracker getOperationTracker();
-
-    public ILSMIOOperationScheduler getIOScheduler();
 }

@@ -16,6 +16,8 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
 
 /**
@@ -27,7 +29,8 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
  * concurrent searches/updates/merges may be ongoing.
  */
 public interface ILSMIndex extends IIndex {
-    public void setFlushStatus(ILSMIndex index, boolean needsFlush);
+    public ILSMIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback);
 
     public boolean getFlushStatus(ILSMIndex index);
 

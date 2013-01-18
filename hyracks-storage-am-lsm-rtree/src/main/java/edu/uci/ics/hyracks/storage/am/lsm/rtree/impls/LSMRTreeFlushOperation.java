@@ -15,13 +15,15 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 public class LSMRTreeFlushOperation implements ILSMIOOperation {
 
     private final ILSMIndexAccessorInternal accessor;
+    private final LSMRTreeMutableComponent flushingComponent;
     private final FileReference rtreeFlushTarget;
     private final FileReference btreeFlushTarget;
     private final ILSMIOOperationCallback callback;
 
-    public LSMRTreeFlushOperation(ILSMIndexAccessorInternal accessor, FileReference rtreeFlushTarget,
-            FileReference btreeFlushTarget, ILSMIOOperationCallback callback) {
+    public LSMRTreeFlushOperation(ILSMIndexAccessorInternal accessor, LSMRTreeMutableComponent flushingComponent,
+            FileReference rtreeFlushTarget, FileReference btreeFlushTarget, ILSMIOOperationCallback callback) {
         this.accessor = accessor;
+        this.flushingComponent = flushingComponent;
         this.rtreeFlushTarget = rtreeFlushTarget;
         this.btreeFlushTarget = btreeFlushTarget;
         this.callback = callback;
@@ -56,5 +58,9 @@ public class LSMRTreeFlushOperation implements ILSMIOOperation {
 
     public FileReference getBTreeFlushTarget() {
         return btreeFlushTarget;
+    }
+
+    public LSMRTreeMutableComponent getFlushingComponent() {
+        return flushingComponent;
     }
 }

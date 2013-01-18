@@ -32,7 +32,7 @@ public class LSMRTreeWithAntiMatterTuplesComponentFactory implements ILSMCompone
 
     @Override
     public ILSMComponent createLSMComponentInstance(LSMComponentFileReferences cfr) throws IndexException {
-        return new LSMRTreeComponent(rtreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()), null);
+        return new LSMRTreeImmutableComponent(rtreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()), null);
     }
 
     @Override

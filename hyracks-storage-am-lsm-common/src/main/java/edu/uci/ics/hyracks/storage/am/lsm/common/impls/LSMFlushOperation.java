@@ -7,6 +7,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
@@ -14,12 +15,14 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 public class LSMFlushOperation implements ILSMIOOperation {
 
     private final ILSMIndexAccessorInternal accessor;
+    private final ILSMComponent flushingComponent;
     private final FileReference flushTarget;
     private final ILSMIOOperationCallback callback;
 
-    public LSMFlushOperation(ILSMIndexAccessorInternal accessor, FileReference flushTarget,
-            ILSMIOOperationCallback callback) {
+    public LSMFlushOperation(ILSMIndexAccessorInternal accessor, ILSMComponent flushingComponent,
+            FileReference flushTarget, ILSMIOOperationCallback callback) {
         this.accessor = accessor;
+        this.flushingComponent = flushingComponent;
         this.flushTarget = flushTarget;
         this.callback = callback;
     }
@@ -48,4 +51,11 @@ public class LSMFlushOperation implements ILSMIOOperation {
         return flushTarget;
     }
 
+    public ILSMIndexAccessorInternal getAccessor() {
+        return accessor;
+    }
+
+    public ILSMComponent getFlushingComponent() {
+        return flushingComponent;
+    }
 }

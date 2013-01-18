@@ -15,8 +15,10 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
@@ -39,6 +41,8 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     protected final ILSMHarness lsmHarness;
 
+    protected final ILSMIOOperationScheduler ioScheduler;
+
     // In-memory components.   
     protected final IInMemoryFreePageManager memFreePageManager;
 
@@ -46,7 +50,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     protected final IBufferCache diskBufferCache;
     protected final ILSMIndexFileManager fileManager;
     protected final IFileMapProvider diskFileMapProvider;
-    protected final LinkedList<ILSMComponent> immutableComponents;
+    protected final AtomicReference<List<ILSMComponent>> componentsRef;
 
     protected boolean isActivated;
 
@@ -58,11 +62,13 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         this.memFreePageManager = memFreePageManager;
         this.diskBufferCache = diskBufferCache;
         this.diskFileMapProvider = diskFileMapProvider;
-        this.immutableComponents = new LinkedList<ILSMComponent>();
         this.fileManager = fileManager;
+        this.ioScheduler = ioScheduler;
         ILSMOperationTracker opTracker = opTrackerFactory.createOperationTracker(this);
-        lsmHarness = new LSMHarness(this, mergePolicy, opTracker, ioScheduler);
+        lsmHarness = new LSMHarness(this, mergePolicy, opTracker);
         isActivated = false;
+        componentsRef = new AtomicReference<List<ILSMComponent>>();
+        componentsRef.set(new LinkedList<ILSMComponent>());
     }
 
     protected void forceFlushDirtyPages(ITreeIndex treeIndex) throws HyracksDataException {
@@ -119,15 +125,30 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     }
 
     @Override
-    public void addComponent(ILSMComponent index) {
-        immutableComponents.addFirst(index);
+    public void addComponent(ILSMComponent c) {
+        List<ILSMComponent> oldList = componentsRef.get();
+        List<ILSMComponent> newList = new ArrayList<ILSMComponent>();
+        newList.add(c);
+        for (ILSMComponent oc : oldList) {
+            newList.add(oc);
+        }
+        componentsRef.set(newList);
     }
 
     @Override
     public void subsumeMergedComponents(ILSMComponent newComponent, List<ILSMComponent> mergedComponents) {
-        int firstComponentIndex = immutableComponents.indexOf(mergedComponents.get(0));
-        immutableComponents.removeAll(mergedComponents);
-        immutableComponents.add(firstComponentIndex, newComponent);
+        List<ILSMComponent> oldList = componentsRef.get();
+        List<ILSMComponent> newList = new ArrayList<ILSMComponent>();
+        int swapIndex = oldList.indexOf(mergedComponents.get(0));
+        int swapSize = mergedComponents.size();
+        for (int i = 0; i < oldList.size(); i++) {
+            if (i < swapIndex || i >= swapIndex + swapSize) {
+                newList.add(oldList.get(i));
+            } else if (i == swapIndex) {
+                newList.add(newComponent);
+            }
+        }
+        componentsRef.set(newList);
     }
 
     @Override
@@ -137,7 +158,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
 
     @Override
     public List<ILSMComponent> getImmutableComponents() {
-        return immutableComponents;
+        return componentsRef.get();
     }
 
     @Override
@@ -157,7 +178,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
 
     @Override
     public ILSMIOOperationScheduler getIOScheduler() {
-        return lsmHarness.getIOScheduler();
+        return ioScheduler;
     }
 
     @Override

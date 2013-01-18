@@ -15,6 +15,9 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
@@ -25,6 +28,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
@@ -38,6 +42,7 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
     public final RTree.RTreeAccessor memRTreeAccessor;
     public final BTree.BTreeAccessor memBTreeAccessor;
     private IndexOperation op;
+    public final List<ILSMComponent> componentHolder;
     public final IModificationOperationCallback modificationCallback;
     public final ISearchOperationCallback searchCallback;
 
@@ -49,6 +54,7 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
             IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback) {
         this.memRTreeAccessor = memRtreeAccessor;
         this.memBTreeAccessor = memBtreeAccessor;
+        this.componentHolder = new LinkedList<ILSMComponent>();
         this.modificationCallback = modificationCallback;
         this.searchCallback = searchCallback;
         this.rtreeOpContext = new RTreeOpContext(rtreeLeafFrame, rtreeInteriorFrame, rtreeMetaFrame, rtreeCmpFactories,
@@ -58,6 +64,7 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
     }
 
     public void setOperation(IndexOperation newOp) {
+        reset();
         if (newOp == IndexOperation.INSERT) {
             rtreeOpContext.setOperation(newOp);
         } else if (newOp == IndexOperation.DELETE) {
@@ -68,7 +75,7 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
 
     @Override
     public void reset() {
-
+        componentHolder.clear();
     }
 
     @Override
@@ -78,6 +85,11 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
 
     public MultiComparator getBTreeMultiComparator() {
         return btreeOpContext.cmp;
+    }
+
+    @Override
+    public List<ILSMComponent> getComponentHolder() {
+        return componentHolder;
     }
 
     @Override

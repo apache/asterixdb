@@ -17,33 +17,21 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMComponent;
+import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractMutableLSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 
-public class LSMInvertedIndexComponent extends AbstractLSMComponent {
+public class LSMInvertedIndexMutableComponent extends AbstractMutableLSMComponent {
 
     private final IInvertedIndex invIndex;
     private final BTree deletedKeysBTree;
+    private final IInMemoryFreePageManager mfpm;
 
-    public LSMInvertedIndexComponent(IInvertedIndex invIndex, BTree deletedKeysBTree) {
+    public LSMInvertedIndexMutableComponent(IInvertedIndex invIndex, BTree deletedKeysBTree,
+            IInMemoryFreePageManager mfpm) {
         this.invIndex = invIndex;
         this.deletedKeysBTree = deletedKeysBTree;
-    }
-
-    @Override
-    public void destroy() throws HyracksDataException {
-        invIndex.deactivate();
-        invIndex.destroy();
-        deletedKeysBTree.deactivate();
-        deletedKeysBTree.destroy();
-    }
-
-    @Override
-    public void reset() throws HyracksDataException {
-        ((InMemoryFreePageManager) deletedKeysBTree.getFreePageManager()).reset();
-        invIndex.clear();
-        deletedKeysBTree.clear();
+        this.mfpm = mfpm;
     }
 
     public IInvertedIndex getInvIndex() {
@@ -52,5 +40,16 @@ public class LSMInvertedIndexComponent extends AbstractLSMComponent {
 
     public BTree getDeletedKeysBTree() {
         return deletedKeysBTree;
+    }
+
+    @Override
+    protected boolean isFull() {
+        return mfpm.isFull();
+    }
+
+    @Override
+    protected void reset() throws HyracksDataException {
+        invIndex.clear();
+        deletedKeysBTree.clear();
     }
 }

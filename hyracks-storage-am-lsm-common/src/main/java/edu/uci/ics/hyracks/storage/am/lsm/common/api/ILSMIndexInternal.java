@@ -22,39 +22,49 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 public interface ILSMIndexInternal extends ILSMIndex {
+    public ILSMIndexAccessorInternal createAccessor(IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback);
 
-    public void insertUpdateOrDelete(ITupleReference tuple, IIndexOperationContext ictx) throws HyracksDataException,
-            IndexException;
+    public void modify(IIndexOperationContext ictx, ITupleReference tuple) throws HyracksDataException, IndexException;
 
-    public void search(IIndexCursor cursor, List<ILSMComponent> diskComponents, ISearchPredicate pred,
-            IIndexOperationContext ictx, boolean includeMemComponent) throws HyracksDataException, IndexException;
+    public void search(ILSMIndexOperationContext ictx, IIndexCursor cursor, ISearchPredicate pred)
+            throws HyracksDataException, IndexException;
+
+    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+            throws HyracksDataException;
 
     public ILSMComponent flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
 
-    public ILSMComponent merge(List<ILSMComponent> mergedComponents, ILSMIOOperation operation)
+    public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException;
 
-    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
-            IndexException;
+    public ILSMComponent merge(List<ILSMComponent> mergedComponents, ILSMIOOperation operation)
+            throws HyracksDataException, IndexException;
 
     public void addComponent(ILSMComponent index);
 
     public void subsumeMergedComponents(ILSMComponent newComponent, List<ILSMComponent> mergedComponents);
 
-    public List<ILSMComponent> getOperationalComponents(IIndexOperationContext ctx);
+    /**
+     * Populates the context's component holder with a snapshot of the components involved in the operation.
+     * 
+     * @param ctx
+     *            - the operation's context
+     */
+    public void getOperationalComponents(ILSMIndexOperationContext ctx);
 
     public IInMemoryFreePageManager getInMemoryFreePageManager();
-
-    public void resetMutableComponent() throws HyracksDataException;
-
-    public ILSMComponent getMutableComponent();
 
     public List<ILSMComponent> getImmutableComponents();
 
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException;
+
+    public void setFlushStatus(ILSMIndex index, boolean needsFlush);
 
 }

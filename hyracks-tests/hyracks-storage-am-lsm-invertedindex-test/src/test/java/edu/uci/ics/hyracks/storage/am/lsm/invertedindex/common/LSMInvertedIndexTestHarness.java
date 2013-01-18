@@ -38,7 +38,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryBuffe
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ThreadCountingOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -83,7 +83,7 @@ public class LSMInvertedIndexTestHarness {
         this.hyracksFrameSize = AccessMethodTestsConfig.LSM_INVINDEX_HYRACKS_FRAME_SIZE;
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
-        this.opTrackerFactory = RefCountingOperationTrackerFactory.INSTANCE;
+        this.opTrackerFactory = ThreadCountingOperationTrackerFactory.INSTANCE;
     }
 
     public LSMInvertedIndexTestHarness(int diskPageSize, int diskNumPages, int diskMaxOpenFiles, int memPageSize,
@@ -96,7 +96,7 @@ public class LSMInvertedIndexTestHarness {
         this.hyracksFrameSize = hyracksFrameSize;
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
-        this.opTrackerFactory = RefCountingOperationTrackerFactory.INSTANCE;
+        this.opTrackerFactory = ThreadCountingOperationTrackerFactory.INSTANCE;
     }
 
     public void setUp() throws HyracksException {

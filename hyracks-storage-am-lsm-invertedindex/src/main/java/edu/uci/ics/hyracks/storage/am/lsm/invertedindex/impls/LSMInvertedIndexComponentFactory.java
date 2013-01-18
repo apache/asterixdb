@@ -36,9 +36,8 @@ public class LSMInvertedIndexComponentFactory implements ILSMComponentFactory {
 
     @Override
     public ILSMComponent createLSMComponentInstance(LSMComponentFileReferences cfr) throws IndexException {
-        return new LSMInvertedIndexComponent(
-                diskInvIndexFactory.createIndexInstance(cfr.getInsertIndexFileReference()),
-                btreeFactory.createIndexInstance(cfr.getDeleteIndexFileReference()));
+        return new LSMInvertedIndexImmutableComponent(diskInvIndexFactory.createIndexInstance(cfr
+                .getInsertIndexFileReference()), btreeFactory.createIndexInstance(cfr.getDeleteIndexFileReference()));
     }
 
     @Override
