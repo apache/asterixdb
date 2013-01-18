@@ -21,7 +21,7 @@ import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTrac
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexImmutableComponent;
 
 public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationCallback {
 
@@ -32,7 +32,7 @@ public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationC
     @Override
     public void afterOperation(ILSMIOOperation operation, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
             throws HyracksDataException {
-        LSMInvertedIndexComponent invIndexComponent = (LSMInvertedIndexComponent) newComponent;
+        LSMInvertedIndexImmutableComponent invIndexComponent = (LSMInvertedIndexImmutableComponent) newComponent;
         putLSNIntoMetadata(invIndexComponent.getDeletedKeysBTree(), oldComponents);
     }
 
@@ -45,7 +45,7 @@ public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationC
         // Get max LSN from the oldComponents. Implies a merge IO operation.
         long maxLSN = -1;
         for (Object o : oldComponents) {
-            LSMInvertedIndexComponent invIndexComponent = (LSMInvertedIndexComponent) o;
+            LSMInvertedIndexImmutableComponent invIndexComponent = (LSMInvertedIndexImmutableComponent) o;
             maxLSN = Math.max(getTreeIndexLSN(invIndexComponent.getDeletedKeysBTree()), maxLSN);
         }
         return maxLSN;

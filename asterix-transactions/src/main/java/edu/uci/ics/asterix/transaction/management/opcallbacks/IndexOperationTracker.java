@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFact
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 
 public class IndexOperationTracker implements ILSMOperationTracker {
 
@@ -47,21 +48,8 @@ public class IndexOperationTracker implements ILSMOperationTracker {
     }
 
     @Override
-    public synchronized boolean beforeOperation(ISearchOperationCallback searchCallback,
-            IModificationOperationCallback modificationCallback, boolean tryOperation) throws HyracksDataException {
-        // Wait for pending flushes to complete.
-        // If flushFlag is set, then the flush is queued to occur by the last completing operation.
-        // This operation should wait for that flush to occur before proceeding.
-        if (index.getFlushStatus(index)) {
-            if (tryOperation) {
-                return false;
-            }
-            try {
-                this.wait();
-            } catch (InterruptedException e) {
-                throw new HyracksDataException(e);
-            }
-        }
+    public void beforeOperation(LSMOperationType opType, ISearchOperationCallback searchCallback,
+            IModificationOperationCallback modificationCallback) throws HyracksDataException {
         numActiveOperations++;
 
         // Increment transactor-local active operations count.
@@ -69,20 +57,19 @@ public class IndexOperationTracker implements ILSMOperationTracker {
         if (opCallback != null) {
             opCallback.incrementLocalNumActiveOperations();
         }
-        return true;
     }
 
     @Override
-    public void afterOperation(ISearchOperationCallback searchCallback,
+    public void afterOperation(LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         // Searches are immediately considered complete, because they should not prevent the execution of flushes.
         if (searchCallback != null) {
-            completeOperation(searchCallback, modificationCallback);
+            completeOperation(opType, searchCallback, modificationCallback);
         }
     }
 
     @Override
-    public synchronized void completeOperation(ISearchOperationCallback searchCallback,
+    public void completeOperation(LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         numActiveOperations--;
 
@@ -93,7 +80,7 @@ public class IndexOperationTracker implements ILSMOperationTracker {
         }
         // If we need a flush, and this is the last completing operation, then schedule the flush.
         // Once the flush has completed notify all waiting operations.
-        if (index.getFlushStatus(index) && numActiveOperations == 0) {
+        if (index.getFlushStatus(index) && numActiveOperations == 0 && opType != LSMOperationType.FLUSH) {
             if (accessor == null) {
                 accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                         NoOpOperationCallback.INSTANCE);

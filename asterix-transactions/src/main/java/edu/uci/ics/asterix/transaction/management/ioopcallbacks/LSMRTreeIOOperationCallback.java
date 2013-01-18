@@ -21,7 +21,7 @@ import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTrac
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeImmutableComponent;
 
 public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback {
 
@@ -30,8 +30,9 @@ public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
     }
 
     @Override
-    public void afterOperation(ILSMIOOperation operation, List<ILSMComponent> oldComponents, ILSMComponent newComponent) throws HyracksDataException {
-        LSMRTreeComponent rtreeComponent = (LSMRTreeComponent) newComponent;
+    public void afterOperation(ILSMIOOperation operation, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
+            throws HyracksDataException {
+        LSMRTreeImmutableComponent rtreeComponent = (LSMRTreeImmutableComponent) newComponent;
         putLSNIntoMetadata(rtreeComponent.getRTree(), oldComponents);
         putLSNIntoMetadata(rtreeComponent.getBTree(), oldComponents);
     }
@@ -45,7 +46,7 @@ public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
         // Get max LSN from the oldComponents. Implies a merge IO operation.
         long maxLSN = -1;
         for (Object o : oldComponents) {
-            LSMRTreeComponent rtreeComponent = (LSMRTreeComponent) o;
+            LSMRTreeImmutableComponent rtreeComponent = (LSMRTreeImmutableComponent) o;
             maxLSN = Math.max(getTreeIndexLSN(rtreeComponent.getRTree()), maxLSN);
         }
         return maxLSN;
