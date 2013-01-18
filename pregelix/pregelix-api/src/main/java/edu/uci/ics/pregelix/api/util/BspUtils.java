@@ -421,4 +421,15 @@ public class BspUtils {
     public static boolean getDynamicVertexValueSize(Configuration conf) {
         return conf.getBoolean(PregelixJob.INCREASE_STATE_LENGTH, false);
     }
+
+    /**
+     * Get the specified frame size
+     * 
+     * @param conf
+     *            the job configuration
+     * @return the specified frame size; -1 if it is not set by users
+     */
+    public static int getFrameSize(Configuration conf) {
+        return conf.getInt(PregelixJob.FRAME_SIZE, -1);
+    }
 }

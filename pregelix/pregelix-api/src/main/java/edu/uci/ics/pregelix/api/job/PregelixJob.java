@@ -64,6 +64,8 @@ public class PregelixJob extends Job {
     public static final String INCREASE_STATE_LENGTH = "pregelix.incStateLength";
     /** job id */
     public static final String JOB_ID = "pregelix.jobid";
+    /** frame size */
+    public static final String FRAME_SIZE = "pregelix.framesize";
 
     /**
      * Constructor that will instantiate the configuration
@@ -153,5 +155,15 @@ public class PregelixJob extends Job {
      */
     final public void setDynamicVertexValueSize(boolean incStateLengthDynamically) {
         getConfiguration().setBoolean(INCREASE_STATE_LENGTH, incStateLengthDynamically);
+    }
+
+    /**
+     * Set the frame size for a job
+     * 
+     * @param frameSize
+     *            the desired frame size
+     */
+    final public void setFrameSize(int frameSize) {
+        getConfiguration().setInt(FRAME_SIZE, frameSize);
     }
 }
