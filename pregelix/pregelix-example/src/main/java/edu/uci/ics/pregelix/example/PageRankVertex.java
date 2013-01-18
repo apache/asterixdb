@@ -97,7 +97,7 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
 
     @Override
     public void compute(Iterator<DoubleWritable> msgIterator) {
-        int maxIteration = this.getContext().getConfiguration().getInt(ITERATIONS, 10);
+        int maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 10);
         if (getSuperstep() == 1) {
             tmpVertexValue.set(1.0 / getNumVertices());
             setVertexValue(tmpVertexValue);

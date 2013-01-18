@@ -31,6 +31,9 @@ import edu.uci.ics.pregelix.example.PageRankVertex.SimplePageRankVertexOutputFor
 import edu.uci.ics.pregelix.example.ReachabilityVertex;
 import edu.uci.ics.pregelix.example.ReachabilityVertex.SimpleReachibilityVertexOutputFormat;
 import edu.uci.ics.pregelix.example.ShortestPathsVertex;
+import edu.uci.ics.pregelix.example.TriangleCountingAggregator;
+import edu.uci.ics.pregelix.example.TriangleCountingVertex;
+import edu.uci.ics.pregelix.example.TriangleCountingVertex.TriangleCountingVertexOutputFormat;
 import edu.uci.ics.pregelix.example.inputformat.TextConnectedComponentsInputFormat;
 import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
 import edu.uci.ics.pregelix.example.inputformat.TextReachibilityVertexInputFormat;
@@ -43,6 +46,9 @@ public class JobGenerator {
 
     private static String HDFS_INPUTPATH2 = "/webmapcomplex";
     private static String HDFS_OUTPUTPAH2 = "/resultcomplex";
+
+    private static String HDFS_INPUTPATH3 = "/clique";
+    private static String HDFS_OUTPUTPAH3 = "/resultclique";
 
     private static void generatePageRankJobReal(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
@@ -183,6 +189,17 @@ public class JobGenerator {
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
+    private static void generateTriangleCountingJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(TriangleCountingVertex.class);
+        job.setGlobalAggregatorClass(TriangleCountingAggregator.class);
+        job.setVertexInputFormatClass(TextPageRankInputFormat.class);
+        job.setVertexOutputFormatClass(TriangleCountingVertexOutputFormat.class);
+        FileInputFormat.setInputPaths(job, HDFS_INPUTPATH3);
+        FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH3));
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
     private static void genPageRank() throws IOException {
         generatePageRankJob("PageRank", outputBase + "PageRank.xml");
         generatePageRankJobReal("PageRank", outputBase + "PageRankReal.xml");
@@ -208,11 +225,15 @@ public class JobGenerator {
                 + "ReachibilityRealComplexNoConnectivity.xml");
     }
 
+    private static void genTriangleCounting() throws IOException {
+        generateTriangleCountingJob("Triangle Counting", outputBase + "TriangleCounting.xml");
+    }
+
     public static void main(String[] args) throws IOException {
         genPageRank();
         genShortestPath();
         genConnectedComponents();
         genReachibility();
+        genTriangleCounting();
     }
-
 }
