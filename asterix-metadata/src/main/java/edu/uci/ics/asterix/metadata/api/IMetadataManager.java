@@ -433,4 +433,12 @@ public interface IMetadataManager {
 
 	
     public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws MetadataException;
+    
+    public void acquireWriteLatch();
+
+    public void releaseWriteLatch();
+
+    public void acquireReadLatch();
+
+    public void releaseReadLatch();
 }

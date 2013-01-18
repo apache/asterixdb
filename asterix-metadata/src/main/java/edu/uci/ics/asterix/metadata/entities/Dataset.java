@@ -35,15 +35,18 @@ public class Dataset implements IMetadataEntity {
     private final DatasetType datasetType;
     private IDatasetDetails datasetDetails;
     private final int datasetId;
+    // Type of pending operations with respect to atomic DDL operation
+    private final int pendingOp;
 
     public Dataset(String dataverseName, String datasetName, String itemTypeName, IDatasetDetails datasetDetails,
-            DatasetType datasetType, int datasetId) {
+            DatasetType datasetType, int datasetId, int pendingOp) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.itemTypeName = itemTypeName;
         this.datasetType = datasetType;
         this.datasetDetails = datasetDetails;
         this.datasetId = datasetId;
+        this.pendingOp = pendingOp;
     }
 
     public String getDataverseName() {
@@ -72,6 +75,10 @@ public class Dataset implements IMetadataEntity {
 
     public int getDatasetId() {
         return datasetId;
+    }
+    
+    public int getPendingOp() {
+        return pendingOp;
     }
 
     @Override

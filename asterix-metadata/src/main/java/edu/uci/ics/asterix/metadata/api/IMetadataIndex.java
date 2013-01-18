@@ -75,6 +75,11 @@ public interface IMetadataIndex {
     public long getResourceID();
 
     public IndexLogger getIndexLogger();
-    
+
     public DatasetId getDatasetId();
+
+    boolean isPrimaryIndex();
+
+    int[] getPrimaryKeyIndexes();
+
 }

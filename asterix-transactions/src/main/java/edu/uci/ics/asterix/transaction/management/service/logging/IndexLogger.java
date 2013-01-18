@@ -167,7 +167,7 @@ public class IndexLogger implements ILogger, ICloseable {
 
                 if (tupleSize != 0) {
                     //old tuple
-                    tupleWriter.writeTuple(reusableLogContentObject.getNewValue(), logicalLogLocator.getBuffer()
+                    tupleWriter.writeTuple(reusableLogContentObject.getOldValue(), logicalLogLocator.getBuffer()
                             .getArray(), logicalLogLocator.getMemoryOffset() + offset);
                 }
             }

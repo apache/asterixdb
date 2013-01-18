@@ -90,7 +90,7 @@ public class DatasetOperations {
 
     private static Logger LOGGER = Logger.getLogger(DatasetOperations.class.getName());
 
-    public static JobSpecification[] createDropDatasetJobSpec(CompiledDatasetDropStatement datasetDropStmt,
+    public static JobSpecification createDropDatasetJobSpec(CompiledDatasetDropStatement datasetDropStmt,
             AqlMetadataProvider metadataProvider) throws AlgebricksException, HyracksDataException, RemoteException,
             ACIDException, AsterixException {
 
@@ -111,67 +111,10 @@ public class DatasetOperations {
             throw new AlgebricksException("DROP DATASET: No metadata for dataset " + datasetName);
         }
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-            return new JobSpecification[0];
+            return new JobSpecification();
         }
-
-        List<Index> datasetIndexes = metadataProvider.getDatasetIndexes(dataset.getDataverseName(),
-                dataset.getDatasetName());
-        int numSecondaryIndexes = 0;
-        for (Index index : datasetIndexes) {
-            if (index.isSecondaryIndex()) {
-                numSecondaryIndexes++;
-            }
-        }
-        JobSpecification[] specs;
-        if (numSecondaryIndexes > 0) {
-            specs = new JobSpecification[numSecondaryIndexes + 1];
-            int i = 0;
-            // First, drop secondary indexes.
-            for (Index index : datasetIndexes) {
-                if (index.isSecondaryIndex()) {
-                    specs[i] = new JobSpecification();
-                    Pair<IFileSplitProvider, AlgebricksPartitionConstraint> idxSplitsAndConstraint = metadataProvider
-                            .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataset.getDataverseName(),
-                                    datasetName, index.getIndexName());
-                    IIndexDataflowHelperFactory dfhFactory;
-                    switch (index.getIndexType()) {
-                        case BTREE:
-                            dfhFactory = new LSMBTreeDataflowHelperFactory(
-                                    AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                                    AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                                    AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
-                            break;
-                        case RTREE:
-                            dfhFactory = new LSMRTreeDataflowHelperFactory(
-                                    new IPrimitiveValueProviderFactory[] { null }, RTreePolicyType.RTREE,
-                                    new IBinaryComparatorFactory[] { null },
-                                    AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
-                                    AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
-                                    AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER, null);
-                            break;
-                        case NGRAM_INVIX:
-                        case WORD_INVIX:
-                            dfhFactory = new LSMInvertedIndexDataflowHelperFactory(
-                                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER);
-                            break;
-                        default:
-                            throw new AsterixException("Unknown index type provided.");
-                    }
-                    IndexDropOperatorDescriptor secondaryBtreeDrop = new IndexDropOperatorDescriptor(specs[i],
-                            AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
-                            AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, idxSplitsAndConstraint.first, dfhFactory);
-                    AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specs[i], secondaryBtreeDrop,
-                            idxSplitsAndConstraint.second);
-                    i++;
-                }
-            }
-        } else {
-            specs = new JobSpecification[1];
-        }
+        
         JobSpecification specPrimary = new JobSpecification();
-        specs[specs.length - 1] = specPrimary;
 
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadataProvider
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataset.getDataverseName(), datasetName,
@@ -187,7 +130,7 @@ public class DatasetOperations {
 
         specPrimary.addRoot(primaryBtreeDrop);
 
-        return specs;
+        return specPrimary;
     }
 
     public static JobSpecification createDatasetJobSpec(Dataverse dataverse, String datasetName,

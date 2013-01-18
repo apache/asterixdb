@@ -80,10 +80,11 @@ public final class MetadataRecordTypes {
     public static final int DATAVERSE_ARECORD_NAME_FIELD_INDEX = 0;
     public static final int DATAVERSE_ARECORD_FORMAT_FIELD_INDEX = 1;
     public static final int DATAVERSE_ARECORD_TIMESTAMP_FIELD_INDEX = 2;
+    public static final int DATAVERSE_ARECORD_PENDINGOP_FIELD_INDEX = 3;
 
     private static final ARecordType createDataverseRecordType() {
-        return new ARecordType("DataverseRecordType", new String[] { "DataverseName", "DataFormat", "Timestamp" },
-                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING }, true);
+        return new ARecordType("DataverseRecordType", new String[] { "DataverseName", "DataFormat", "Timestamp", "PendingOp" },
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32 }, true);
     }
 
     // Helper constants for accessing fields in an ARecord of anonymous type
@@ -158,10 +159,11 @@ public final class MetadataRecordTypes {
     public static final int DATASET_ARECORD_FEEDDETAILS_FIELD_INDEX = 6;
     public static final int DATASET_ARECORD_TIMESTAMP_FIELD_INDEX = 7;
     public static final int DATASET_ARECORD_DATASETID_FIELD_INDEX = 8;
+    public static final int DATASET_ARECORD_PENDINGOP_FIELD_INDEX = 9;
 
     private static final ARecordType createDatasetRecordType() {
         String[] fieldNames = { "DataverseName", "DatasetName", "DataTypeName", "DatasetType", "InternalDetails",
-                "ExternalDetails", "FeedDetails", "Timestamp", "DatasetId" };
+                "ExternalDetails", "FeedDetails", "Timestamp", "DatasetId", "PendingOp" };
 
         List<IAType> internalRecordUnionList = new ArrayList<IAType>();
         internalRecordUnionList.add(BuiltinType.ANULL);
@@ -179,7 +181,8 @@ public final class MetadataRecordTypes {
         AUnionType feedRecordUnion = new AUnionType(feedRecordUnionList, null);
 
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
-                internalRecordUnion, externalRecordUnion, feedRecordUnion, BuiltinType.ASTRING, BuiltinType.AINT32 };
+                internalRecordUnion, externalRecordUnion, feedRecordUnion, BuiltinType.ASTRING, BuiltinType.AINT32,
+                BuiltinType.AINT32 };
         return new ARecordType("DatasetRecordType", fieldNames, fieldTypes, true);
     }
 
@@ -264,13 +267,14 @@ public final class MetadataRecordTypes {
     public static final int INDEX_ARECORD_SEARCHKEY_FIELD_INDEX = 4;
     public static final int INDEX_ARECORD_ISPRIMARY_FIELD_INDEX = 5;
     public static final int INDEX_ARECORD_TIMESTAMP_FIELD_INDEX = 6;
+    public static final int INDEX_ARECORD_PENDINGOP_FIELD_INDEX = 7;
 
     private static final ARecordType createIndexRecordType() {
         AOrderedListType olType = new AOrderedListType(BuiltinType.ASTRING, null);
         String[] fieldNames = { "DataverseName", "DatasetName", "IndexName", "IndexStructure", "SearchKey",
-                "IsPrimary", "Timestamp" };
+                "IsPrimary", "Timestamp", "PendingOp" };
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
-                olType, BuiltinType.ABOOLEAN, BuiltinType.ASTRING };
+                olType, BuiltinType.ABOOLEAN, BuiltinType.ASTRING, BuiltinType.AINT32 };
         return new ARecordType("IndexRecordType", fieldNames, fieldTypes, true);
     };
 

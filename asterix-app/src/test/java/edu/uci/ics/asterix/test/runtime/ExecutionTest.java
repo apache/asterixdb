@@ -95,11 +95,11 @@ public class ExecutionTest {
             File testFile = tcCtx.getTestFile(cUnit);
 
             /*************** to avoid run failure cases ****************
-            if (!testFile.getAbsolutePath().contains("runtimets/queries/failure/")) {
+            if (!testFile.getAbsolutePath().contains("index-selection/")) {
                 continue;
             }
             ************************************************************/
-
+            
             File expectedResultFile = tcCtx.getExpectedResultFile(cUnit);
             File actualFile = new File(PATH_ACTUAL + File.separator
                     + tcCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_" + cUnit.getName() + ".adm");

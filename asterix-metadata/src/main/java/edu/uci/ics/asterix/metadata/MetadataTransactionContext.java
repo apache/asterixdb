@@ -19,6 +19,7 @@ import java.util.ArrayList;
 
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.external.dataset.adapter.AdapterIdentifier;
+import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
@@ -104,19 +105,19 @@ public class MetadataTransactionContext extends MetadataCache {
     }
 
     public void dropDataset(String dataverseName, String datasetName) {
-        Dataset dataset = new Dataset(dataverseName, datasetName, null, null, null, -1);
+        Dataset dataset = new Dataset(dataverseName, datasetName, null, null, null, -1, IMetadataEntity.PENDING_NO_OP);
         droppedCache.addDatasetIfNotExists(dataset);
         logAndApply(new MetadataLogicalOperation(dataset, false));
     }
 
     public void dropIndex(String dataverseName, String datasetName, String indexName) {
-        Index index = new Index(dataverseName, datasetName, indexName, null, null, false);
+        Index index = new Index(dataverseName, datasetName, indexName, null, null, false, IMetadataEntity.PENDING_NO_OP);
         droppedCache.addIndexIfNotExists(index);
         logAndApply(new MetadataLogicalOperation(index, false));
     }
 
     public void dropDataverse(String dataverseName) {
-        Dataverse dataverse = new Dataverse(dataverseName, null);
+        Dataverse dataverse = new Dataverse(dataverseName, null, IMetadataEntity.PENDING_NO_OP);
         droppedCache.addDataverseIfNotExists(dataverse);
         logAndApply(new MetadataLogicalOperation(dataverse, false));
     }
@@ -162,7 +163,7 @@ public class MetadataTransactionContext extends MetadataCache {
         }
         return droppedCache.getDataset(dataverseName, datasetName) != null;
     }
-    
+
     public boolean indexIsDropped(String dataverseName, String datasetName, String indexName) {
         if (droppedCache.getDataverse(dataverseName) != null) {
             return true;

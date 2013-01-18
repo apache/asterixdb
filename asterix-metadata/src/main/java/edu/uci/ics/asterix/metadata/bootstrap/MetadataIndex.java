@@ -73,9 +73,14 @@ public final class MetadataIndex implements IMetadataIndex {
     private IndexLogger indexLogger;
     // datasetId
     private final DatasetId datasetId;
+    // Flag of primary index
+    protected final boolean isPrimaryIndex;
+    // PrimaryKeyField indexes used for secondary index operations
+    protected final int[] primaryKeyIndexes;
 
     public MetadataIndex(String datasetName, String indexName, int numFields, IAType[] keyTypes, String[] keyNames,
-            ARecordType payloadType, int datasetId) throws AsterixRuntimeException {
+            ARecordType payloadType, int datasetId, boolean isPrimaryIndex, int[] primaryKeyIndexes)
+            throws AsterixRuntimeException {
         // Sanity checks.
         if (keyTypes.length != keyNames.length) {
             throw new AsterixRuntimeException("Unequal number of key types and names given.");
@@ -130,6 +135,10 @@ public final class MetadataIndex implements IMetadataIndex {
         }
 
         this.datasetId = new DatasetId(datasetId);
+        this.isPrimaryIndex = isPrimaryIndex;
+
+        //PrimaryKeyFieldIndexes
+        this.primaryKeyIndexes = primaryKeyIndexes;
     }
 
     @Override
@@ -248,5 +257,15 @@ public final class MetadataIndex implements IMetadataIndex {
     @Override
     public DatasetId getDatasetId() {
         return datasetId;
+    }
+    
+    @Override
+    public boolean isPrimaryIndex() {
+        return isPrimaryIndex;
+    }
+    
+    @Override
+    public int[] getPrimaryKeyIndexes() {
+        return primaryKeyIndexes;
     }
 }

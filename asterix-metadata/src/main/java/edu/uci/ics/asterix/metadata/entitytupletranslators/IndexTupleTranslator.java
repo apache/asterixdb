@@ -96,13 +96,15 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         }
         Boolean isPrimaryIndex = ((ABoolean) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_ISPRIMARY_FIELD_INDEX))
                 .getBoolean();
+        int pendingOp = ((AInt32) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_PENDINGOP_FIELD_INDEX))
+                .getIntegerValue();
         // Check if there is a gram length as well.
         int gramLength = -1;
         int gramLenPos = rec.getType().findFieldPosition(GRAM_LENGTH_FIELD_NAME);
         if (gramLenPos >= 0) {
             gramLength = ((AInt32) rec.getValueByPos(gramLenPos)).getIntegerValue();
         }
-        return new Index(dvName, dsName, indexName, indexStructure, searchKey, gramLength, isPrimaryIndex);
+        return new Index(dvName, dsName, indexName, indexStructure, searchKey, gramLength, isPrimaryIndex, pendingOp);
     }
 
     @Override
@@ -174,7 +176,12 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
 
-        // write optional field 7        
+        // write field 7
+        fieldValue.reset();
+        intSerde.serialize(new AInt32(instance.getPendingOp()), fieldValue.getDataOutput());
+        recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_PENDINGOP_FIELD_INDEX, fieldValue);
+
+        // write optional field 8        
         if (instance.getGramLength() > 0) {
             fieldValue.reset();
             nameValue.reset();

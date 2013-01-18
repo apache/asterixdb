@@ -56,14 +56,18 @@ import edu.uci.ics.asterix.om.base.AMutableString;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.transaction.management.opcallbacks.PrimaryIndexModificationOperationCallback;
+import edu.uci.ics.asterix.transaction.management.opcallbacks.SecondaryIndexModificationOperationCallback;
+import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceRepository;
 import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetIdFactory;
+import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -75,10 +79,13 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
 public class MetadataNode implements IMetadataNode {
     private static final long serialVersionUID = 1L;
@@ -88,7 +95,7 @@ public class MetadataNode implements IMetadataNode {
     private static final DatasetId METADATA_DATASET_ID = new DatasetId(MetadataPrimaryIndexes.METADATA_DATASET_ID);
 
     private IIndexLifecycleManager indexLifecycleManager;
-    private TransactionSubsystem transactionProvider;
+    private TransactionSubsystem transactionSubsystem;
 
     public static final MetadataNode INSTANCE = new MetadataNode();
 
@@ -97,26 +104,26 @@ public class MetadataNode implements IMetadataNode {
     }
 
     public void initialize(AsterixAppRuntimeContext runtimeContext) {
-        this.transactionProvider = runtimeContext.getTransactionSubsystem();
+        this.transactionSubsystem = runtimeContext.getTransactionSubsystem();
         this.indexLifecycleManager = runtimeContext.getIndexLifecycleManager();
     }
 
     @Override
     public void beginTransaction(JobId transactionId) throws ACIDException, RemoteException {
-        transactionProvider.getTransactionManager().beginTransaction(transactionId);
+        transactionSubsystem.getTransactionManager().beginTransaction(transactionId);
     }
 
     @Override
     public void commitTransaction(JobId jobId) throws RemoteException, ACIDException {
-        TransactionContext txnCtx = transactionProvider.getTransactionManager().getTransactionContext(jobId);
-        transactionProvider.getTransactionManager().commitTransaction(txnCtx, new DatasetId(-1), -1);
+        TransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+        transactionSubsystem.getTransactionManager().commitTransaction(txnCtx, new DatasetId(-1), -1);
     }
 
     @Override
     public void abortTransaction(JobId jobId) throws RemoteException, ACIDException {
         try {
-            TransactionContext txnCtx = transactionProvider.getTransactionManager().getTransactionContext(jobId);
-            transactionProvider.getTransactionManager().abortTransaction(txnCtx, new DatasetId(-1), -1);
+            TransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+            transactionSubsystem.getTransactionManager().abortTransaction(txnCtx, new DatasetId(-1), -1);
         } catch (ACIDException e) {
             e.printStackTrace();
             throw e;
@@ -125,14 +132,14 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public void lock(JobId jobId, byte lockMode) throws ACIDException, RemoteException {
-        TransactionContext txnCtx = transactionProvider.getTransactionManager().getTransactionContext(jobId);
-        transactionProvider.getLockManager().lock(METADATA_DATASET_ID, -1, lockMode, txnCtx);
+        TransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+        transactionSubsystem.getLockManager().lock(METADATA_DATASET_ID, -1, lockMode, txnCtx);
     }
 
     @Override
     public void unlock(JobId jobId) throws ACIDException, RemoteException {
-        TransactionContext txnCtx = transactionProvider.getTransactionManager().getTransactionContext(jobId);
-        transactionProvider.getLockManager().unlock(METADATA_DATASET_ID, -1, txnCtx);
+        TransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+        transactionSubsystem.getLockManager().unlock(METADATA_DATASET_ID, -1, txnCtx);
     }
 
     @Override
@@ -160,7 +167,7 @@ public class MetadataNode implements IMetadataNode {
                 // Add the primary index for the dataset.
                 InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
                 Index primaryIndex = new Index(dataset.getDataverseName(), dataset.getDatasetName(),
-                        dataset.getDatasetName(), IndexType.BTREE, id.getPrimaryKey(), true);
+                        dataset.getDatasetName(), IndexType.BTREE, id.getPrimaryKey(), true, dataset.getPendingOp());
                 addIndex(jobId, primaryIndex);
                 ITupleReference nodeGroupTuple = createTuple(id.getNodeGroupName(), dataset.getDataverseName(),
                         dataset.getDatasetName());
@@ -253,20 +260,62 @@ public class MetadataNode implements IMetadataNode {
         insertTupleIntoIndex(jobId, MetadataSecondaryIndexes.DATATYPENAME_ON_DATATYPE_INDEX, tuple);
     }
 
-    private void insertTupleIntoIndex(JobId jobId, IMetadataIndex index, ITupleReference tuple) throws Exception {
-        long resourceID = index.getResourceID();
-        IIndex indexInstance = indexLifecycleManager.getIndex(resourceID);
+    private void insertTupleIntoIndex(JobId jobId, IMetadataIndex metadataIndex, ITupleReference tuple)
+            throws Exception {
+        long resourceID = metadataIndex.getResourceID();
+        ILSMIndex lsmIndex = (ILSMIndex) indexLifecycleManager.getIndex(resourceID);
         indexLifecycleManager.open(resourceID);
-        IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
-        TransactionContext txnCtx = transactionProvider.getTransactionManager().getTransactionContext(jobId);
-        transactionProvider.getLockManager().lock(index.getDatasetId(), -1, LockMode.X, txnCtx);
+
+        //prepare a Callback for logging
+        IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID, metadataIndex,
+                lsmIndex, IndexOperation.INSERT);
+
+        IIndexAccessor indexAccessor = null;
+        indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
+
         // TODO: fix exceptions once new BTree exception model is in hyracks.
         indexAccessor.insert(tuple);
-        //TODO: extract the key from the tuple and get the PKHashValue from the key.
-        //index.getIndexLogger().generateLogRecord(transactionProvider, txnCtx, index.getDatasetId().getId(), null,
-        //        resourceID, IndexOperation.INSERT, tuple, null, null);
+
         indexLifecycleManager.close(resourceID);
+    }
+
+    private IModificationOperationCallback createIndexModificationCallback(JobId jobId, long resourceId,
+            IMetadataIndex metadataIndex, ILSMIndex lsmIndex, IndexOperation indexOp) throws Exception {
+        TransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+        TransactionalResourceRepository txnResourceRepository = transactionSubsystem
+                .getTransactionalResourceRepository();
+
+        if (txnResourceRepository.getTransactionalResource(resourceId) == null) {
+            transactionSubsystem.getTransactionalResourceRepository().registerTransactionalResource(resourceId,
+                    lsmIndex);
+        }
+
+        int[] primaryKeyFields = metadataIndex.getPrimaryKeyIndexes();
+        int numKeys = primaryKeyFields.length;
+        IBinaryHashFunctionFactory[] primaryKeyHashFunctionFactories = null;
+        if (metadataIndex.isPrimaryIndex()) {
+            primaryKeyHashFunctionFactories = metadataIndex.getKeyBinaryHashFunctionFactory();
+        } else {
+            primaryKeyHashFunctionFactories = new IBinaryHashFunctionFactory[numKeys];
+            IBinaryHashFunctionFactory[] secondaryKeyHashFunctionFactories = metadataIndex
+                    .getKeyBinaryHashFunctionFactory();
+            for (int i = 0; i < numKeys; i++) {
+                primaryKeyHashFunctionFactories[i] = secondaryKeyHashFunctionFactories[primaryKeyFields[i]];
+            }
+        }
+
+        IModificationOperationCallback callback = null;
+        if (metadataIndex.isPrimaryIndex()) {
+            callback = new PrimaryIndexModificationOperationCallback(metadataIndex.getDatasetId().getId(),
+                    primaryKeyFields, primaryKeyHashFunctionFactories, txnCtx, transactionSubsystem.getLockManager(),
+                    transactionSubsystem, resourceId, ResourceType.LSM_BTREE, indexOp);
+        } else {
+            callback = new SecondaryIndexModificationOperationCallback(metadataIndex.getDatasetId().getId(),
+                    primaryKeyFields, primaryKeyHashFunctionFactories, txnCtx, transactionSubsystem.getLockManager(),
+                    transactionSubsystem, resourceId, ResourceType.LSM_BTREE, indexOp);
+        }
+
+        return callback;
     }
 
     @Override
@@ -524,24 +573,16 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void deleteTupleFromIndex(JobId jobId, IMetadataIndex index, ITupleReference tuple) throws Exception {
-        long resourceID = index.getResourceID();
-        IIndex indexInstance = indexLifecycleManager.getIndex(resourceID);
+    private void deleteTupleFromIndex(JobId jobId, IMetadataIndex metadataIndex, ITupleReference tuple)
+            throws Exception {
+        long resourceID = metadataIndex.getResourceID();
+        ILSMIndex lsmIndex = (ILSMIndex) indexLifecycleManager.getIndex(resourceID);
         indexLifecycleManager.open(resourceID);
-        IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
-        TransactionContext txnCtx = transactionProvider.getTransactionManager().getTransactionContext(jobId);
-        // This lock is actually an upgrade, because a deletion must be preceded
-        // by a search, in order to be able to undo an aborted deletion.
-        // The transaction with txnId will have an S lock on the
-        // resource. Note that lock converters have a higher priority than
-        // regular waiters in the LockManager.
-        transactionProvider.getLockManager().lock(index.getDatasetId(), -1, LockMode.X, txnCtx);
+        //prepare a Callback for logging
+        IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID, metadataIndex,
+                lsmIndex, IndexOperation.DELETE);
+        IIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
         indexAccessor.delete(tuple);
-        //TODO: extract the key from the tuple and get the PKHashValue from the key.
-        //check how to get the oldValue.
-        //index.getIndexLogger().generateLogRecord(transactionProvider, txnCtx, index.getDatasetId().getId(), null,
-        //        resourceID, IndexOperation.DELETE, tuple, operation, null);
         indexLifecycleManager.close(resourceID);
     }
 
@@ -802,8 +843,10 @@ public class MetadataNode implements IMetadataNode {
 
     private <ResultType> void searchIndex(JobId jobId, IMetadataIndex index, ITupleReference searchKey,
             IValueExtractor<ResultType> valueExtractor, List<ResultType> results) throws Exception {
-        TransactionContext txnCtx = transactionProvider.getTransactionManager().getTransactionContext(jobId);
-        transactionProvider.getLockManager().lock(index.getDatasetId(), -1, LockMode.S, txnCtx);
+        TransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+        //#. currently lock is not needed to access any metadata 
+        //   since the non-compatible concurrent access is always protected by the latch in the MetadataManager.
+        //transactionProvider.getLockManager().lock(index.getDatasetId(), -1, LockMode.S, txnCtx);
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
         long resourceID = index.getResourceID();
         IIndex indexInstance = indexLifecycleManager.getIndex(resourceID);

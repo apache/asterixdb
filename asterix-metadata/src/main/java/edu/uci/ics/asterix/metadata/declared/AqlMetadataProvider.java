@@ -129,7 +129,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.linearize.ZCurveIntComparatorFactory
 
 public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, String> {
     private static Logger LOGGER = Logger.getLogger(AqlMetadataProvider.class.getName());
-    private final MetadataTransactionContext mdTxnCtx;
+    private MetadataTransactionContext mdTxnCtx;
     private boolean isWriteTransaction;
     private Map<String, String[]> stores;
     private Map<String, String> config;
@@ -156,8 +156,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         return config;
     }
 
-    public AqlMetadataProvider(MetadataTransactionContext mdTxnCtx, Dataverse defaultDataverse) {
-        this.mdTxnCtx = mdTxnCtx;
+    public AqlMetadataProvider(Dataverse defaultDataverse) {
         this.defaultDataverse = defaultDataverse;
         this.stores = AsterixProperties.INSTANCE.getStores();
     }
@@ -180,6 +179,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     public void setWriterFactory(IAWriterFactory writerFactory) {
         this.writerFactory = writerFactory;
+    }
+    
+    public void setMetadataTxnContext(MetadataTransactionContext mdTxnCtx) {
+        this.mdTxnCtx = mdTxnCtx;
     }
 
     public MetadataTransactionContext getMetadataTxnContext() {

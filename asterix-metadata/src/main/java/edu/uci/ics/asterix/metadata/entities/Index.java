@@ -45,9 +45,11 @@ public class Index implements IMetadataEntity {
     private final boolean isPrimaryIndex;
     // Specific to NGRAM indexes.
     private final int gramLength;
+    // Type of pending operations with respect to atomic DDL operation
+    private final int pendingOp;
 
     public Index(String dataverseName, String datasetName, String indexName, IndexType indexType,
-            List<String> keyFieldNames, int gramLength, boolean isPrimaryIndex) {
+            List<String> keyFieldNames, int gramLength, boolean isPrimaryIndex, int pendingOp) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.indexName = indexName;
@@ -55,10 +57,11 @@ public class Index implements IMetadataEntity {
         this.keyFieldNames = keyFieldNames;
         this.gramLength = gramLength;
         this.isPrimaryIndex = isPrimaryIndex;
+        this.pendingOp = pendingOp;
     }
 
     public Index(String dataverseName, String datasetName, String indexName, IndexType indexType,
-            List<String> keyFieldNames, boolean isPrimaryIndex) {
+            List<String> keyFieldNames, boolean isPrimaryIndex, int pendingOp) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.indexName = indexName;
@@ -66,6 +69,7 @@ public class Index implements IMetadataEntity {
         this.keyFieldNames = keyFieldNames;
         this.gramLength = -1;
         this.isPrimaryIndex = isPrimaryIndex;
+        this.pendingOp = pendingOp;
     }
 
     public String getDataverseName() {
@@ -94,6 +98,10 @@ public class Index implements IMetadataEntity {
 
     public boolean isPrimaryIndex() {
         return isPrimaryIndex;
+    }
+    
+    public int getPendingOp() {
+        return pendingOp;
     }
 
     public boolean isSecondaryIndex() {

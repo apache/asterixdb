@@ -77,9 +77,9 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
     protected ISerializerDeserializer<AInt32> aInt32Serde;
 
     @SuppressWarnings("unchecked")
-	public DatasetTupleTranslator(boolean getTuple) {
+    public DatasetTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.DATASET_DATASET.getFieldCount());
-        aInt32 = new AMutableInt32(-1); 
+        aInt32 = new AMutableInt32(-1);
         aInt32Serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
     }
 
@@ -104,8 +104,10 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_DATATYPENAME_FIELD_INDEX)).getStringValue();
         DatasetType datasetType = DatasetType.valueOf(((AString) datasetRecord.getValueByPos(3)).getStringValue());
         IDatasetDetails datasetDetails = null;
-    	int datasetId = ((AInt32) datasetRecord
+        int datasetId = ((AInt32) datasetRecord
                 .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_DATASETID_FIELD_INDEX)).getIntegerValue();
+        int pendingOp = ((AInt32) datasetRecord
+                .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_PENDINGOP_FIELD_INDEX)).getIntegerValue();
         switch (datasetType) {
             case FEED:
             case INTERNAL: {
@@ -197,7 +199,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 }
                 datasetDetails = new ExternalDatasetDetails(adapter, properties);
         }
-        return new Dataset(dataverseName, datasetName, typeName, datasetDetails, datasetType, datasetId);
+        return new Dataset(dataverseName, datasetName, typeName, datasetDetails, datasetType, datasetId, pendingOp);
     }
 
     @Override
@@ -248,13 +250,19 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         aString.setValue(Calendar.getInstance().getTime().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
-        
+
         // write field 8
         fieldValue.reset();
         aInt32.setValue(dataset.getDatasetId());
         aInt32Serde.serialize(aInt32, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_DATASETID_FIELD_INDEX, fieldValue);
-        
+
+        // write field 9
+        fieldValue.reset();
+        aInt32.setValue(dataset.getPendingOp());
+        aInt32Serde.serialize(aInt32, fieldValue.getDataOutput());
+        recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_PENDINGOP_FIELD_INDEX, fieldValue);
+
         // write record
         recordBuilder.write(tupleBuilder.getDataOutput(), true);
         tupleBuilder.addFieldEndOffset();
@@ -290,13 +298,15 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         fieldValue.reset();
         aString.setValue(name);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        propertyRecordBuilder.addField(MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_ARECORD_NAME_FIELD_INDEX, fieldValue);
+        propertyRecordBuilder.addField(MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_ARECORD_NAME_FIELD_INDEX,
+                fieldValue);
 
         // write field 1
         fieldValue.reset();
         aString.setValue(value);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        propertyRecordBuilder.addField(MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_ARECORD_VALUE_FIELD_INDEX, fieldValue);
+        propertyRecordBuilder.addField(MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_ARECORD_VALUE_FIELD_INDEX,
+                fieldValue);
 
         propertyRecordBuilder.write(out, true);
     }
