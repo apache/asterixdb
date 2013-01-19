@@ -121,14 +121,13 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
                 }
             }
         }
-
-        if (appender.getTupleCount() > 0) {
-            FrameUtils.flushFrame(writeBuffer, writer);
-        }
     }
 
     @Override
     public void close() throws HyracksDataException {
+        if (appender.getTupleCount() > 0) {
+            FrameUtils.flushFrame(writeBuffer, writer);
+        }
         writer.close();
     }
 
