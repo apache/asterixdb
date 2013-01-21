@@ -25,6 +25,9 @@ import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.pregelix.example.io.VLongWritable;
 
+/**
+ * The representation of cliques stored in a vertex.
+ */
 public class CliquesWritable implements Writable {
 
     private List<VLongWritable> cliques = new ArrayList<VLongWritable>();
@@ -39,18 +42,45 @@ public class CliquesWritable implements Writable {
 
     }
 
-    public void setClusterSize(int sizeOfClique) {
+    /**
+     * Set the size of cliques.
+     * 
+     * @param sizeOfClique
+     *            the size of each maximal clique
+     */
+    public void setCliqueSize(int sizeOfClique) {
         this.sizeOfClique = sizeOfClique;
     }
 
+    /**
+     * Set the clique vertexes
+     * 
+     * @param cliques
+     *            the list of vertexes -- can contain multiple cliques
+     */
     public void setCliques(List<VLongWritable> cliques) {
         this.cliques = cliques;
     }
 
+    /**
+     * @return the size of the clique
+     */
     public int getSizeOfClique() {
         return sizeOfClique;
     }
 
+    /**
+     * Get clique vertexes --- can contain multiple vertexes
+     * 
+     * @return all the vertexes
+     */
+    public List<VLongWritable> getVertexes() {
+        return cliques;
+    }
+
+    /**
+     * rese the clique
+     */
     public void reset() {
         this.cliques.clear();
         this.sizeOfClique = 0;

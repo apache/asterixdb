@@ -123,13 +123,13 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
     /**
      * Simple VertexReader that supports {@link SimplePageRankVertex}
      */
-    public static class SimplePageRankVertexReader extends
+    public static class SimulatedPageRankVertexReader extends
             GeneratedVertexReader<VLongWritable, DoubleWritable, FloatWritable, DoubleWritable> {
         /** Class logger */
-        private static final Logger LOG = Logger.getLogger(SimplePageRankVertexReader.class.getName());
+        private static final Logger LOG = Logger.getLogger(SimulatedPageRankVertexReader.class.getName());
         private Map<VLongWritable, FloatWritable> edges = Maps.newHashMap();
 
-        public SimplePageRankVertexReader() {
+        public SimulatedPageRankVertexReader() {
             super();
         }
 
@@ -162,12 +162,12 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
     /**
      * Simple VertexInputFormat that supports {@link SimplePageRankVertex}
      */
-    public static class SimplePageRankVertexInputFormat extends
+    public static class SimulatedPageRankVertexInputFormat extends
             GeneratedVertexInputFormat<VLongWritable, DoubleWritable, FloatWritable, DoubleWritable> {
         @Override
         public VertexReader<VLongWritable, DoubleWritable, FloatWritable, DoubleWritable> createVertexReader(
                 InputSplit split, TaskAttemptContext context) throws IOException {
-            return new SimplePageRankVertexReader();
+            return new SimulatedPageRankVertexReader();
         }
     }
 
@@ -187,7 +187,7 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
                     new Text(vertex.getVertexValue().toString()));
         }
     }
-    
+
     @Override
     public String toString() {
         return getVertexId() + " " + getVertexValue();

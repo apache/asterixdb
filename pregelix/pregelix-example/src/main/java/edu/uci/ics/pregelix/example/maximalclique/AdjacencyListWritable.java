@@ -28,7 +28,7 @@ import org.apache.hadoop.io.Writable;
 import edu.uci.ics.pregelix.example.io.VLongWritable;
 
 /**
- * The adjacency list is the value part of the mapper output
+ * The adjacency list contains <src, list-of-neighbors>
  */
 public class AdjacencyListWritable implements Writable {
 
@@ -70,15 +70,6 @@ public class AdjacencyListWritable implements Writable {
         for (VLongWritable dest : destinationVertexes) {
             dest.write(output);
         }
-    }
-
-    public AdjacencyListWritable clone() {
-        AdjacencyListWritable clone = new AdjacencyListWritable();
-        clone.setSource(sourceVertex);
-        for (VLongWritable dest : destinationVertexes) {
-            clone.addNeighbor(dest);
-        }
-        return clone;
     }
 
     public int numberOfNeighbors() {

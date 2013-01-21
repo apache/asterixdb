@@ -23,6 +23,9 @@ import edu.uci.ics.pregelix.example.client.Client;
 import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
 import edu.uci.ics.pregelix.example.io.VLongWritable;
 
+/**
+ * The triangle counting example -- counting the triangles in an undirected graph.
+ */
 public class TriangleCountingVertex extends Vertex<VLongWritable, VLongWritable, VLongWritable, VLongWritable> {
 
     private VLongWritable tmpValue = new VLongWritable(0);
@@ -95,7 +98,7 @@ public class TriangleCountingVertex extends Vertex<VLongWritable, VLongWritable,
                     new Text(vertex.getVertexValue().toString()));
         }
     }
-    
+
     @Override
     public String toString() {
         return getVertexId() + " " + getVertexValue();
@@ -137,6 +140,9 @@ public class TriangleCountingVertex extends Vertex<VLongWritable, VLongWritable,
     }
 }
 
+/**
+ * The comparator for Edge<VLongWritable, VLongWritable>.
+ */
 class EdgeComparator implements Comparator<Edge<VLongWritable, VLongWritable>> {
 
     @Override
