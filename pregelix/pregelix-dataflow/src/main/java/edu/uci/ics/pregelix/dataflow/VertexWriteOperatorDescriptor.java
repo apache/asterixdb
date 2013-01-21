@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.pregelix.dataflow.std;
+package edu.uci.ics.pregelix.dataflow;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -35,14 +35,14 @@ import edu.uci.ics.hyracks.dataflow.std.util.StringSerializationUtils;
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHookFactory;
 
-public class FileWriteOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
+public class VertexWriteOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
     private final FileSplit[] splits;
     private final IRuntimeHookFactory preHookFactory;
     private final IRuntimeHookFactory postHookFactory;
     private final IRecordDescriptorFactory inputRdFactory;
 
-    public FileWriteOperatorDescriptor(JobSpecification spec, IRecordDescriptorFactory inputRdFactory,
+    public VertexWriteOperatorDescriptor(JobSpecification spec, IRecordDescriptorFactory inputRdFactory,
             IFileSplitProvider fileSplitProvider, IRuntimeHookFactory preHookFactory,
             IRuntimeHookFactory postHookFactory) {
         super(spec, 1, 0);
@@ -60,7 +60,6 @@ public class FileWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
             private RecordDescriptor rd0;
             private FrameDeserializer frameDeserializer;
             private PrintWriter outputWriter;
-            private final static String separator = "|";
 
             @Override
             public void open() throws HyracksDataException {
@@ -82,10 +81,7 @@ public class FileWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
                 frameDeserializer.reset(frame);
                 while (!frameDeserializer.done()) {
                     Object[] tuple = frameDeserializer.deserializeRecord();
-                    for (int i = 0; i < tuple.length - 1; i++) {
-                        outputWriter.print(StringSerializationUtils.toString(tuple[i]));
-                        outputWriter.print(separator);
-                    }
+                    // output the vertex
                     outputWriter.print(StringSerializationUtils.toString(tuple[tuple.length - 1]));
                     outputWriter.println();
                 }

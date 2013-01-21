@@ -74,10 +74,10 @@ import edu.uci.ics.pregelix.core.jobgen.provider.NormalizedKeyComputerFactoryPro
 import edu.uci.ics.pregelix.core.runtime.touchpoint.WritableComparingBinaryComparatorFactory;
 import edu.uci.ics.pregelix.core.util.DataflowUtils;
 import edu.uci.ics.pregelix.core.util.DatatypeHelper;
+import edu.uci.ics.pregelix.dataflow.VertexWriteOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.HDFSFileWriteOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.VertexFileScanOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
-import edu.uci.ics.pregelix.dataflow.std.FileWriteOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHookFactory;
 import edu.uci.ics.pregelix.runtime.bootstrap.StorageManagerInterface;
@@ -339,7 +339,7 @@ public abstract class JobGen implements IJobGen {
 		IRecordDescriptorFactory inputRdFactory = DataflowUtils
 				.getWritableRecordDescriptorFactoryFromWritableClasses(
 						vertexIdClass.getName(), vertexClass.getName());
-		FileWriteOperatorDescriptor writer = new FileWriteOperatorDescriptor(
+		VertexWriteOperatorDescriptor writer = new VertexWriteOperatorDescriptor(
 				spec, inputRdFactory, resultFileSplitProvider, preHookFactory,
 				null);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, writer,
@@ -420,7 +420,7 @@ public abstract class JobGen implements IJobGen {
 		IRecordDescriptorFactory inputRdFactory = DataflowUtils
 				.getWritableRecordDescriptorFactoryFromWritableClasses(
 						vertexIdClass.getName(), vertexClass.getName());
-		FileWriteOperatorDescriptor writer = new FileWriteOperatorDescriptor(
+		VertexWriteOperatorDescriptor writer = new VertexWriteOperatorDescriptor(
 				spec, inputRdFactory, resultFileSplitProvider, preHookFactory,
 				null);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, writer,

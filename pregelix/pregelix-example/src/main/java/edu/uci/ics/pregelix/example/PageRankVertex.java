@@ -187,6 +187,11 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
                     new Text(vertex.getVertexValue().toString()));
         }
     }
+    
+    @Override
+    public String toString() {
+        return getVertexId() + " " + getVertexValue();
+    }
 
     /**
      * Simple VertexOutputFormat that supports {@link SimplePageRankVertex}

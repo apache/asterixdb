@@ -95,6 +95,11 @@ public class TriangleCountingVertex extends Vertex<VLongWritable, VLongWritable,
                     new Text(vertex.getVertexValue().toString()));
         }
     }
+    
+    @Override
+    public String toString() {
+        return getVertexId() + " " + getVertexValue();
+    }
 
     /**
      * output format for triangle counting

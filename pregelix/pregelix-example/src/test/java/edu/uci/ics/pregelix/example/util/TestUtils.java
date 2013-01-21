@@ -62,8 +62,8 @@ public class TestUtils {
             if (row1.equals(row2))
                 continue;
 
-            String[] fields1 = row1.split(",");
-            String[] fields2 = row2.split(",");
+            String[] fields1 = row1.split(" ");
+            String[] fields2 = row2.split(" ");
 
             for (int j = 0; j < fields1.length; j++) {
                 if (fields1[j].equals(fields2[j])) {
@@ -71,8 +71,6 @@ public class TestUtils {
                 } else if (fields1[j].indexOf('.') < 0) {
                     return false;
                 } else {
-                    fields1[j] = fields1[j].split("=")[1];
-                    fields2[j] = fields2[j].split("=")[1];
                     Double double1 = Double.parseDouble(fields1[j]);
                     Double double2 = Double.parseDouble(fields2[j]);
                     float float1 = (float) double1.doubleValue();

@@ -203,6 +203,11 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
             voteToHalt();
         }
     }
+    
+    @Override
+    public String toString() {
+        return getVertexId() + " " + getVertexValue();
+    }
 
     private void sendMsg(List<Edge<VLongWritable, NullWritable>> edges) {
         for (int i = 0; i < edges.size(); i++) {
