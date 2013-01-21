@@ -111,9 +111,10 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
             throw new NotImplementedException(partitioningType + " nested loop joins are not implemented.");
         }
 
+        // ALEX: HACK TO FLIP WHICH SIDE IS BROADCAST
         StructuralPropertiesVector[] pv = new StructuralPropertiesVector[2];
-        pv[0] = new StructuralPropertiesVector(new BroadcastPartitioningProperty(null), null);
-        pv[1] = new StructuralPropertiesVector(null, null);
+        pv[1] = new StructuralPropertiesVector(new BroadcastPartitioningProperty(null), null);
+        pv[0] = new StructuralPropertiesVector(null, null);
         return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
     }
 
