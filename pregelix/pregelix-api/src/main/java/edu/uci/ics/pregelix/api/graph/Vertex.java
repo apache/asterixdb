@@ -234,6 +234,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
         vertexId.readFields(in);
         delegate.setVertexId(vertexId);
         boolean hasVertexValue = in.readBoolean();
+
         if (hasVertexValue) {
             vertexValue = allocateValue();
             vertexValue.readFields(in);

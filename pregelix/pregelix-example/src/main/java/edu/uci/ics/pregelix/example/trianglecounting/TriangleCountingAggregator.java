@@ -1,4 +1,4 @@
-package edu.uci.ics.pregelix.example;
+package edu.uci.ics.pregelix.example.trianglecounting;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;

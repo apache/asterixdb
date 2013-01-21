@@ -1,4 +1,4 @@
-package edu.uci.ics.pregelix.example;
+package edu.uci.ics.pregelix.example.trianglecounting;
 
 import java.io.IOException;
 import java.util.Collections;

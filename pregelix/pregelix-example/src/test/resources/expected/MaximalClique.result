@@ -1,0 +1,7 @@
+1|Vertex(id=1,value=1,2,3,4;, edges=(2,3,4,))
+2|Vertex(id=2,value=2,3,4;, edges=(1,3,4,5,))
+3|Vertex(id=3,value=, edges=(1,2,4,5,))
+4|Vertex(id=4,value=, edges=(1,2,3,))
+5|Vertex(id=5,value=, edges=(6,7,))
+6|Vertex(id=6,value=, edges=(5,7,))
+7|Vertex(id=7,value=, edges=(5,6,))

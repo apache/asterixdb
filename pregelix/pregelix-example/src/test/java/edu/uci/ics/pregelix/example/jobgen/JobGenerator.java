@@ -31,13 +31,16 @@ import edu.uci.ics.pregelix.example.PageRankVertex.SimplePageRankVertexOutputFor
 import edu.uci.ics.pregelix.example.ReachabilityVertex;
 import edu.uci.ics.pregelix.example.ReachabilityVertex.SimpleReachibilityVertexOutputFormat;
 import edu.uci.ics.pregelix.example.ShortestPathsVertex;
-import edu.uci.ics.pregelix.example.TriangleCountingAggregator;
-import edu.uci.ics.pregelix.example.TriangleCountingVertex;
-import edu.uci.ics.pregelix.example.TriangleCountingVertex.TriangleCountingVertexOutputFormat;
 import edu.uci.ics.pregelix.example.inputformat.TextConnectedComponentsInputFormat;
 import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
 import edu.uci.ics.pregelix.example.inputformat.TextReachibilityVertexInputFormat;
 import edu.uci.ics.pregelix.example.inputformat.TextShortestPathsInputFormat;
+import edu.uci.ics.pregelix.example.maximalclique.MaximalCliqueVertex;
+import edu.uci.ics.pregelix.example.maximalclique.MaximalCliqueVertex.MaximalCliqueVertexOutputFormat;
+import edu.uci.ics.pregelix.example.maximalclique.TextMaximalCliqueInputFormat;
+import edu.uci.ics.pregelix.example.trianglecounting.TriangleCountingAggregator;
+import edu.uci.ics.pregelix.example.trianglecounting.TriangleCountingVertex;
+import edu.uci.ics.pregelix.example.trianglecounting.TriangleCountingVertex.TriangleCountingVertexOutputFormat;
 
 public class JobGenerator {
     private static String outputBase = "src/test/resources/jobs/";
@@ -200,6 +203,17 @@ public class JobGenerator {
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
+    private static void generateMaximalCliqueJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(MaximalCliqueVertex.class);
+        job.setVertexInputFormatClass(TextMaximalCliqueInputFormat.class);
+        job.setVertexOutputFormatClass(MaximalCliqueVertexOutputFormat.class);
+        FileInputFormat.setInputPaths(job, HDFS_INPUTPATH3);
+        FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH3));
+        job.setDynamicVertexValueSize(true);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
     private static void genPageRank() throws IOException {
         generatePageRankJob("PageRank", outputBase + "PageRank.xml");
         generatePageRankJobReal("PageRank", outputBase + "PageRankReal.xml");
@@ -229,11 +243,16 @@ public class JobGenerator {
         generateTriangleCountingJob("Triangle Counting", outputBase + "TriangleCounting.xml");
     }
 
+    private static void genMaximalClique() throws IOException {
+        generateMaximalCliqueJob("Maximal Clique", outputBase + "MaximalClique.xml");
+    }
+
     public static void main(String[] args) throws IOException {
         genPageRank();
         genShortestPath();
         genConnectedComponents();
         genReachibility();
         genTriangleCounting();
+        genMaximalClique();
     }
 }
