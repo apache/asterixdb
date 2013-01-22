@@ -39,6 +39,7 @@ import edu.uci.ics.pregelix.example.maximalclique.MaximalCliqueAggregator;
 import edu.uci.ics.pregelix.example.maximalclique.MaximalCliqueVertex;
 import edu.uci.ics.pregelix.example.maximalclique.MaximalCliqueVertex.MaximalCliqueVertexOutputFormat;
 import edu.uci.ics.pregelix.example.maximalclique.TextMaximalCliqueInputFormat;
+import edu.uci.ics.pregelix.example.trianglecounting.TextTriangleCountingInputFormat;
 import edu.uci.ics.pregelix.example.trianglecounting.TriangleCountingAggregator;
 import edu.uci.ics.pregelix.example.trianglecounting.TriangleCountingVertex;
 import edu.uci.ics.pregelix.example.trianglecounting.TriangleCountingVertex.TriangleCountingVertexOutputFormat;
@@ -197,7 +198,7 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(TriangleCountingVertex.class);
         job.setGlobalAggregatorClass(TriangleCountingAggregator.class);
-        job.setVertexInputFormatClass(TextPageRankInputFormat.class);
+        job.setVertexInputFormatClass(TextTriangleCountingInputFormat.class);
         job.setVertexOutputFormatClass(TriangleCountingVertexOutputFormat.class);
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH3);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH3));

@@ -18,7 +18,7 @@ public class MaximalCliqueAggregator
 
     @Override
     public void init() {
-
+        state.reset();
     }
 
     @Override
@@ -38,10 +38,10 @@ public class MaximalCliqueAggregator
             //reset the vertex state
             state.reset();
             state.setCliqueSize(cliques.getSizeOfClique());
-            state.setCliques(cliques.getVertexes());
+            state.addCliques(cliques);
         } else if (cliques.getSizeOfClique() == state.getSizeOfClique()) {
             //add the new cliques
-            state.getVertexes().addAll(cliques.getVertexes());
+            state.addCliques(cliques);
         } else {
             return;
         }

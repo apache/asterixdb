@@ -20,7 +20,6 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 import edu.uci.ics.pregelix.example.client.Client;
-import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
 import edu.uci.ics.pregelix.example.io.VLongWritable;
 
 /**
@@ -133,7 +132,7 @@ public class TriangleCountingVertex extends Vertex<VLongWritable, VLongWritable,
         PregelixJob job = new PregelixJob(TriangleCountingVertex.class.getSimpleName());
         job.setVertexClass(TriangleCountingVertex.class);
         job.setGlobalAggregatorClass(TriangleCountingAggregator.class);
-        job.setVertexInputFormatClass(TextPageRankInputFormat.class);
+        job.setVertexInputFormatClass(TextTriangleCountingInputFormat.class);
         job.setVertexOutputFormatClass(TriangleCountingVertexOutputFormat.class);
         Client.run(args, job);
         System.out.println("triangle count: " + readTriangleCountingResult(job.getConfiguration()));

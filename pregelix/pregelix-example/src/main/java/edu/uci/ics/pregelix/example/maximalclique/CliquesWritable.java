@@ -53,13 +53,23 @@ public class CliquesWritable implements Writable {
     }
 
     /**
-     * Set the clique vertexes
+     * Add the clique vertexes
      * 
      * @param cliques
      *            the list of vertexes -- can contain multiple cliques
      */
-    public void setCliques(List<VLongWritable> cliques) {
-        this.cliques = cliques;
+    public void addCliques(CliquesWritable cliques) {
+        this.cliques.addAll(cliques.cliques);
+    }
+
+    /**
+     * Add the clique vertexes
+     * 
+     * @param cliques
+     *            the list of vertexes -- can contain multiple cliques
+     */
+    public void addCliques(List<VLongWritable> vertexes) {
+        this.cliques.addAll(vertexes);
     }
 
     /**
@@ -67,15 +77,6 @@ public class CliquesWritable implements Writable {
      */
     public int getSizeOfClique() {
         return sizeOfClique;
-    }
-
-    /**
-     * Get clique vertexes --- can contain multiple vertexes
-     * 
-     * @return all the vertexes
-     */
-    public List<VLongWritable> getVertexes() {
-        return cliques;
     }
 
     /**

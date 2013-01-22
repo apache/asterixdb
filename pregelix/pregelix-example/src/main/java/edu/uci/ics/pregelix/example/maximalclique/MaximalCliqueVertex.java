@@ -69,6 +69,7 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
         invertedMap.clear();
         currentMaximalCliques.clear();
         cliques.clear();
+        tmpValue.reset();
 
         // build the initial sub graph
         while (values.hasNext()) {
@@ -121,7 +122,7 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
             int keyIndex = invertedMap.get(srcId);
             clique.set(keyIndex);
             generateClique(clique);
-            tmpValue.setCliques(cliques);
+            tmpValue.addCliques(cliques);
             tmpValue.setCliqueSize(clique.cardinality());
         }
 
@@ -302,7 +303,6 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
                 // only add emit for the vertexes whose id is smaller than the vertex id 
                 // to avoid the duplicate removal step,
                 // because all the resulting cliques will have vertexes in the ascending order.
-                getVertexValue().reset();
                 AdjacencyListWritable msg = new AdjacencyListWritable();
                 msg.setSource(getVertexId());
                 for (int j = i + 1; j < edges.size(); j++) {
