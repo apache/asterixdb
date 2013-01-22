@@ -36,7 +36,8 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
                 harness.getDiskFileMapProvider(), SerdeUtils.serdesToTypeTraits(keySerdes),
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), harness.getMergePolicy(),
-                NoOpOperationTrackerFactory.INSTANCE, harness.getIOScheduler());
+                NoOpOperationTrackerFactory.INSTANCE, harness.getIOScheduler(),
+                harness.getIOOperationCallbackProvider());
     }
 
     @Override
