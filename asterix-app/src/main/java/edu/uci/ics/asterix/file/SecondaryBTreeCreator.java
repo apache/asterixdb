@@ -35,6 +35,7 @@ public class SecondaryBTreeCreator extends SecondaryIndexCreator {
                 secondaryFileSplitProvider, secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories,
                 new LSMBTreeDataflowHelperFactory(AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER), localResourceFactoryProvider,
                 NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
@@ -69,6 +70,7 @@ public class SecondaryBTreeCreator extends SecondaryIndexCreator {
         // Create secondary BTree bulk load op.
         TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(spec, numSecondaryKeys,
                 new LSMBTreeDataflowHelperFactory(AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER), BTree.DEFAULT_FILL_FACTOR);
 

@@ -7,7 +7,9 @@ import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTrac
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -22,7 +24,10 @@ import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 
 public class AsterixRuntimeComponentsProvider implements IIndexLifecycleManagerProvider, IStorageManagerInterface,
-        ILSMIOOperationSchedulerProvider, ILSMMergePolicyProvider, ILSMOperationTrackerFactory {
+        ILSMIOOperationSchedulerProvider, ILSMMergePolicyProvider, ILSMOperationTrackerFactory,
+        ILSMIOOperationCallbackProvider {
+    private static final long serialVersionUID = 1L;
+
     private final ILSMIOOperationCallbackFactory ioOpCallbackFactory;
 
     public static final AsterixRuntimeComponentsProvider LSMBTREE_PROVIDER = new AsterixRuntimeComponentsProvider(
@@ -40,6 +45,11 @@ public class AsterixRuntimeComponentsProvider implements IIndexLifecycleManagerP
     @Override
     public ILSMOperationTracker createOperationTracker(ILSMIndex index) {
         return new IndexOperationTracker(index, ioOpCallbackFactory);
+    }
+
+    @Override
+    public ILSMIOOperationCallback getIOOperationCallback(ILSMIndex index) {
+        return ((IndexOperationTracker) index.getOperationTracker()).getIOOperationCallback();
     }
 
     @Override

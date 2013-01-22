@@ -235,6 +235,7 @@ public abstract class SecondaryIndexCreator {
                 highKeyFields, true, true, new LSMBTreeDataflowHelperFactory(
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER), false,
                 NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, primarySearchOp,

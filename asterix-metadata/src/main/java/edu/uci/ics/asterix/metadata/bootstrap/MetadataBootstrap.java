@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
+import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.external.adapter.factory.IAdapterFactory;
 import edu.uci.ics.asterix.external.dataset.adapter.AdapterIdentifier;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
@@ -227,7 +228,8 @@ public class MetadataBootstrap {
     public static void insertInitialDataverses(MetadataTransactionContext mdTxnCtx) throws Exception {
         String dataverseName = MetadataPrimaryIndexes.DATAVERSE_DATASET.getDataverseName();
         String dataFormat = NonTaggedDataFormat.NON_TAGGED_DATA_FORMAT;
-        MetadataManager.INSTANCE.addDataverse(mdTxnCtx, new Dataverse(dataverseName, dataFormat, IMetadataEntity.PENDING_NO_OP));
+        MetadataManager.INSTANCE.addDataverse(mdTxnCtx, new Dataverse(dataverseName, dataFormat,
+                IMetadataEntity.PENDING_NO_OP));
     }
 
     public static void insertInitialDatasets(MetadataTransactionContext mdTxnCtx) throws Exception {
@@ -333,7 +335,8 @@ public class MetadataBootstrap {
                 metaDataFrameFactory);
         LSMBTree lsmBtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file,
                 bufferCache, fileMapProvider, typeTraits, comparatorFactories, runtimeContext.getLSMMergePolicy(),
-                runtimeContext.getLSMOperationTrackerFactory(), runtimeContext.getLSMIOScheduler());
+                runtimeContext.getLSMOperationTrackerFactory(), runtimeContext.getLSMIOScheduler(),
+                AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
         long resourceID = -1;
         if (create) {
             lsmBtree.create();

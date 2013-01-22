@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 
 public class IndexOperationTracker implements ILSMOperationTracker {
 
@@ -43,7 +44,7 @@ public class IndexOperationTracker implements ILSMOperationTracker {
         if (ioOpCallbackFactory != null) {
             ioOpCallback = ioOpCallbackFactory.createIOOperationCallback(this);
         } else {
-            ioOpCallback = null;
+            ioOpCallback = NoOpIOOperationCallback.INSTANCE;
         }
     }
 
@@ -100,6 +101,10 @@ public class IndexOperationTracker implements ILSMOperationTracker {
         } else {
             return (AbstractOperationCallback) modificationCallback;
         }
+    }
+
+    public ILSMIOOperationCallback getIOOperationCallback() {
+        return ioOpCallback;
     }
 
     public long getLastLSN() {

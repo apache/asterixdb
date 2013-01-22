@@ -199,9 +199,11 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                 dataflowHelperFactory = new LSMInvertedIndexDataflowHelperFactory(
                         AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER);
             } else {
                 dataflowHelperFactory = new PartitionedLSMInvertedIndexDataflowHelperFactory(
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER);

@@ -59,6 +59,7 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
                 new LSMRTreeDataflowHelperFactory(valueProviderFactories, RTreePolicyType.RTREE,
                         primaryComparatorFactories, AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER, AqlMetadataProvider.proposeLinearizer(
                                 keyType, secondaryComparatorFactories.length)), localResourceFactoryProvider,
                 NoOpOperationCallbackFactory.INSTANCE);
@@ -140,6 +141,7 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
                 numNestedSecondaryKeyFields,
                 new LSMRTreeDataflowHelperFactory(valueProviderFactories, RTreePolicyType.RTREE,
                         primaryComparatorFactories, AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER, AqlMetadataProvider.proposeLinearizer(
                                 keyType, secondaryComparatorFactories.length)), BTree.DEFAULT_FILL_FACTOR);

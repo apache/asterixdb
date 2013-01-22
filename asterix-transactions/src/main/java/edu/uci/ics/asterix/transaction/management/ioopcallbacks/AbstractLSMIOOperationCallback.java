@@ -44,13 +44,13 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
 
     @Override
     public synchronized void afterFinalize(ILSMIOOperation operation, ILSMComponent newComponent) {
-        // Wake up all blocked index operations that were waiting for this io operation to complete.
-        opTracker.notifyAll();
+        // Do nothing.
     }
 
     protected abstract long getComponentLSN(List<ILSMComponent> oldComponents) throws HyracksDataException;
-    
-    protected void putLSNIntoMetadata(ITreeIndex treeIndex, List<ILSMComponent> oldComponents) throws HyracksDataException {
+
+    protected void putLSNIntoMetadata(ITreeIndex treeIndex, List<ILSMComponent> oldComponents)
+            throws HyracksDataException {
         long componentLSN = getComponentLSN(oldComponents);
         int fileId = treeIndex.getFileId();
         IBufferCache bufferCache = treeIndex.getBufferCache();

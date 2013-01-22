@@ -254,9 +254,11 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
             return new LSMInvertedIndexDataflowHelperFactory(
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER);
         } else {
             return new PartitionedLSMInvertedIndexDataflowHelperFactory(
+                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER);
