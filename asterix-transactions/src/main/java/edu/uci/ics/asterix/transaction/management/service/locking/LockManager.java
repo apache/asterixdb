@@ -578,7 +578,7 @@ public class LockManager implements ILockManager {
                     }
                 }
 
-                txnContext.setLastLSNToIndexes(logicalLogLocator.getLsn());
+                txnContext.updateLastLSNForIndexes(logicalLogLocator.getLsn());
             }
 
             //1) wake up waiters and remove holder

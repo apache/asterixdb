@@ -30,7 +30,7 @@ public class IndexOperationTracker implements ILSMOperationTracker {
 
     // Number of active operations on a ILSMIndex instance.
     private int numActiveOperations = 0;
-    private long lastLsn;
+    private long lastLSN;
     private final ILSMIndex index;
     private final ILSMIOOperationCallback ioOpCallback;
     private ILSMIndexAccessor accessor;
@@ -103,10 +103,10 @@ public class IndexOperationTracker implements ILSMOperationTracker {
     }
 
     public long getLastLSN() {
-        return lastLsn;
+        return lastLSN;
     }
 
-    public void setLastLSN(long lastLsn) {
-        this.lastLsn = lastLsn;
+    public void updateLastLSN(long lastLSN) {
+        this.lastLSN = Math.max(this.lastLSN, lastLSN);
     }
 }

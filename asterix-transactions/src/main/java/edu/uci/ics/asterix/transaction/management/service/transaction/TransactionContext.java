@@ -90,10 +90,10 @@ public class TransactionContext implements Serializable {
         }
     }
 
-    public void setLastLSNToIndexes(long lastLSN) {
+    public void updateLastLSNForIndexes(long lastLSN) {
         synchronized (indexes) {
             for (ILSMIndex index : indexes) {
-                ((IndexOperationTracker) index.getOperationTracker()).setLastLSN(lastLSN);
+                ((IndexOperationTracker) index.getOperationTracker()).updateLastLSN(lastLSN);
             }
         }
     }
