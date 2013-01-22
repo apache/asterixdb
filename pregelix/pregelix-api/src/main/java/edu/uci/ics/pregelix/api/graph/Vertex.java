@@ -442,6 +442,25 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     }
 
     /**
+     * Add a new vertex into the graph
+     * 
+     * @param vertexId the vertex id
+     * @param vertex the vertex
+     */
+    public final void addVertex(I vertexId, V vertex) {
+        delegate.addVertex(vertexId, vertex);
+    }
+
+    /**
+     * Delete a vertex from id
+     * 
+     * @param vertexId  the vertex id
+     */
+    public final void deleteVertex(I vertexId) {
+        delegate.deleteVertex(vertexId);
+    }
+
+    /**
      * Allocate a vertex value from the object pool
      * 
      * @return a vertex value instance

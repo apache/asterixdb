@@ -59,6 +59,8 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             private final ArrayTupleBuilder tbAlive = new ArrayTupleBuilder(2);
             private final ArrayTupleBuilder tbTerminate = new ArrayTupleBuilder(1);
             private final ArrayTupleBuilder tbGlobalAggregate = new ArrayTupleBuilder(1);
+            private final ArrayTupleBuilder tbInsert = new ArrayTupleBuilder(2);
+            private final ArrayTupleBuilder tbDelete = new ArrayTupleBuilder(1);
 
             // for writing out to message channel
             private IFrameWriter writerMsg;
@@ -82,6 +84,16 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             private FrameTupleAppender appenderTerminate;
             private ByteBuffer bufferTerminate;
             private boolean terminate = true;
+
+            // for writing out to insert vertex channel
+            private IFrameWriter writerInsert;
+            private FrameTupleAppender appenderInsert;
+            private ByteBuffer bufferInsert;
+
+            // for writing out to delete vertex channel
+            private IFrameWriter writerDelete;
+            private FrameTupleAppender appenderDelete;
+            private ByteBuffer bufferDelete;
 
             // dummy empty msgList
             private MsgList msgList = new MsgList();
@@ -120,8 +132,22 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 this.appenderGlobalAggregate = new FrameTupleAppender(ctx.getFrameSize());
                 this.appenderGlobalAggregate.reset(bufferGlobalAggregate, true);
 
-                if (writers.length > 3) {
-                    this.writerAlive = writers[3];
+                this.writerInsert = writers[3];
+                this.bufferInsert = ctx.allocateFrame();
+                this.appenderInsert = new FrameTupleAppender(ctx.getFrameSize());
+                this.appenderInsert.reset(bufferInsert, true);
+                this.writers.add(writerInsert);
+                this.appenders.add(appenderInsert);
+
+                this.writerDelete = writers[4];
+                this.bufferDelete = ctx.allocateFrame();
+                this.appenderDelete = new FrameTupleAppender(ctx.getFrameSize());
+                this.appenderDelete.reset(bufferDelete, true);
+                this.writers.add(writerDelete);
+                this.appenders.add(appenderDelete);
+
+                if (writers.length > 5) {
+                    this.writerAlive = writers[5];
                     this.bufferAlive = ctx.allocateFrame();
                     this.appenderAlive = new FrameTupleAppender(ctx.getFrameSize());
                     this.appenderAlive.reset(bufferAlive, true);
@@ -132,6 +158,8 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 msgList.reset(msgIterator);
 
                 tbs.add(tbMsg);
+                tbs.add(tbInsert);
+                tbs.add(tbDelete);
                 tbs.add(tbAlive);
             }
 
@@ -171,6 +199,9 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             @Override
             public void close() throws HyracksDataException {
                 FrameTupleUtils.flushTuplesFinal(appenderMsg, writerMsg);
+                FrameTupleUtils.flushTuplesFinal(appenderInsert, writerInsert);
+                FrameTupleUtils.flushTuplesFinal(appenderDelete, writerDelete);
+
                 if (pushAlive)
                     FrameTupleUtils.flushTuplesFinal(appenderAlive, writerAlive);
                 if (!terminate) {
