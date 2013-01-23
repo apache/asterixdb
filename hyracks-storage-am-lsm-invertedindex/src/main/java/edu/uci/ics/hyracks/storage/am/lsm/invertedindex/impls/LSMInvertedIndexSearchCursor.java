@@ -153,7 +153,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     public void close() throws HyracksDataException {
         reset();
         accessorIndex = -1;
-        harness.closeSearchCursor(operationalComponents, includeMemComponent, opCtx);
+        harness.endSearch(opCtx);
     }
 
     @Override

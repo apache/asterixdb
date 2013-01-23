@@ -23,16 +23,16 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReference
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
-public class LSMBTreeComponentFactory implements ILSMComponentFactory {
+public class LSMBTreeImmutableComponentFactory implements ILSMComponentFactory {
     private final TreeIndexFactory<BTree> btreeFactory;
 
-    public LSMBTreeComponentFactory(TreeIndexFactory<BTree> btreeFactory) {
+    public LSMBTreeImmutableComponentFactory(TreeIndexFactory<BTree> btreeFactory) {
         this.btreeFactory = btreeFactory;
     }
 
     @Override
     public ILSMComponent createLSMComponentInstance(LSMComponentFileReferences cfr) throws IndexException {
-        return new LSMBTreeComponent(btreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()));
+        return new LSMBTreeImmutableComponent(btreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()));
     }
 
     @Override

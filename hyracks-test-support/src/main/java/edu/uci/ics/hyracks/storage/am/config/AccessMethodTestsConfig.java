@@ -78,8 +78,8 @@ public class AccessMethodTestsConfig {
     // Test parameters.
     public static final int LSM_INVINDEX_NUM_DOCS_TO_INSERT = 100;
     // Used for full-fledged search test.
-    public static final int LSM_INVINDEX_NUM_DOC_QUERIES = 100;
-    public static final int LSM_INVINDEX_NUM_RANDOM_QUERIES = 100;
+    public static final int LSM_INVINDEX_NUM_DOC_QUERIES = 1000;
+    public static final int LSM_INVINDEX_NUM_RANDOM_QUERIES = 1000;
     // Used for non-search tests to sanity check index searches.
     public static final int LSM_INVINDEX_TINY_NUM_DOC_QUERIES = 200;
     public static final int LSM_INVINDEX_TINY_NUM_RANDOM_QUERIES = 200;

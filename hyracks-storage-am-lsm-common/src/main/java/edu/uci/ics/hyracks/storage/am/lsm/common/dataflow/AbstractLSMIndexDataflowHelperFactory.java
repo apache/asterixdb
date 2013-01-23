@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.dataflow;
 
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
@@ -26,11 +27,14 @@ public abstract class AbstractLSMIndexDataflowHelperFactory implements IIndexDat
     protected final ILSMMergePolicyProvider mergePolicyProvider;
     protected final ILSMOperationTrackerFactory opTrackerFactory;
     protected final ILSMIOOperationSchedulerProvider ioSchedulerProvider;
+    protected final ILSMIOOperationCallbackProvider ioOpCallbackProvider;
 
     public AbstractLSMIndexDataflowHelperFactory(ILSMMergePolicyProvider mergePolicyProvider,
-            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationSchedulerProvider ioSchedulerProvider) {
+            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
+            ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
         this.mergePolicyProvider = mergePolicyProvider;
         this.opTrackerFactory = opTrackerFactory;
         this.ioSchedulerProvider = ioSchedulerProvider;
+        this.ioOpCallbackProvider = ioOpCallbackProvider;
     }
 }

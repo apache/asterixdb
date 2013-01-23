@@ -28,6 +28,6 @@ public interface IRTreePolicy {
     public void split(ITreeIndexFrame leftFrame, ByteBuffer buf, ITreeIndexFrame rightFrame, ISlotManager slotManager,
             ITreeIndexTupleReference frameTuple, ITupleReference tuple, ISplitKey splitKey);
 
-    public boolean findBestChild(ITreeIndexFrame frame, ITupleReference tuple, ITreeIndexTupleReference frameTuple,
+    public int findBestChildPosition(ITreeIndexFrame frame, ITupleReference tuple, ITreeIndexTupleReference frameTuple,
             MultiComparator cmp);
 }

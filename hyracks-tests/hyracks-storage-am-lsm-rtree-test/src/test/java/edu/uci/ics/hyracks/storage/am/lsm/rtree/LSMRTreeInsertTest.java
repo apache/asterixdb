@@ -57,7 +57,8 @@ public class LSMRTreeInsertTest extends AbstractRTreeInsertTest {
         return LSMRTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
                 harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
                 harness.getDiskFileMapProvider(), fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType,
-                harness.getMergePolicy(), harness.getOperationTrackerFactory(), harness.getIOScheduler());
+                harness.getMergePolicy(), harness.getOperationTrackerFactory(), harness.getIOScheduler(),
+                harness.getIOOperationCallbackProvider());
     }
 
     @Override

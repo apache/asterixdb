@@ -27,7 +27,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 
@@ -49,30 +48,30 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessorInternal, IInv
     @Override
     public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.INSERT);
-        lsmHarness.insertUpdateOrDelete(tuple, ctx, false);
+        lsmHarness.modify(ctx, false, tuple);
     }
 
     @Override
     public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.DELETE);
-        lsmHarness.insertUpdateOrDelete(tuple, ctx, false);
+        lsmHarness.modify(ctx, false, tuple);
     }
 
     @Override
     public boolean tryInsert(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.INSERT);
-        return lsmHarness.insertUpdateOrDelete(tuple, ctx, true);
+        return lsmHarness.modify(ctx, true, tuple);
     }
 
     @Override
     public boolean tryDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.DELETE);
-        return lsmHarness.insertUpdateOrDelete(tuple, ctx, true);
+        return lsmHarness.modify(ctx, true, tuple);
     }
 
     public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.SEARCH);
-        lsmHarness.search(cursor, searchPred, ctx, true);
+        lsmHarness.search(ctx, cursor, searchPred);
     }
 
     public IIndexCursor createSearchCursor() {
@@ -81,29 +80,24 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessorInternal, IInv
 
     @Override
     public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException {
-        LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
-        lsmHarness.getIOScheduler().scheduleOperation(
-                new LSMInvertedIndexFlushOperation((ILSMIndexAccessorInternal) invIndex.createAccessor(null, null),
-                        componentFileRefs.getInsertIndexFileReference(), componentFileRefs
-                                .getDeleteIndexFileReference(), callback));
+        ctx.setOperation(IndexOperation.FLUSH);
+        lsmHarness.scheduleFlush(ctx, callback);
     }
 
     @Override
     public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
-        lsmHarness.flush(operation);
+        lsmHarness.flush(ctx, operation);
     }
 
     @Override
     public void scheduleMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException {
-        ILSMIOOperation op = lsmHarness.createMergeOperation(callback);
-        if (op != null) {
-            lsmHarness.getIOScheduler().scheduleOperation(op);
-        }
+        ctx.setOperation(IndexOperation.MERGE);
+        lsmHarness.scheduleMerge(ctx, callback);
     }
 
     @Override
     public void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException {
-        lsmHarness.merge(operation);
+        lsmHarness.merge(ctx, operation);
     }
 
     @Override
@@ -118,13 +112,8 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessorInternal, IInv
     }
 
     @Override
-    public boolean tryNoOp() throws HyracksDataException {
-        return lsmHarness.noOp(ctx, true);
-    }
-
-    @Override
     public void noOp() throws HyracksDataException {
-        lsmHarness.noOp(ctx, false);
+        lsmHarness.noOp(ctx);
     }
 
     @Override

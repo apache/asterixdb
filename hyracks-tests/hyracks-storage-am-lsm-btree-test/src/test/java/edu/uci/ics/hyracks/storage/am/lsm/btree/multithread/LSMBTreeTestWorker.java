@@ -36,7 +36,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree.LSMBTreeAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 
 public class LSMBTreeTestWorker extends AbstractIndexTestWorker {
-
     private final LSMBTree lsmBTree;
     private final int numKeyFields;
     private final ArrayTupleBuilder deleteTb;

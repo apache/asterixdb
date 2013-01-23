@@ -58,7 +58,7 @@ public class LSMRTreeWithAntiMatterTuplesMultiBulkLoadTest extends AbstractRTree
                 harness.getMemFreePageManager(), harness.getIOManager(), harness.getFileReference(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes, valueProviderFactories,
                 numKeys, rtreePolicyType, harness.getMergePolicy(), harness.getOperationTrackerFactory(),
-                harness.getIOScheduler());
+                harness.getIOScheduler(), harness.getIOOperationCallbackProvider());
 
     }
 

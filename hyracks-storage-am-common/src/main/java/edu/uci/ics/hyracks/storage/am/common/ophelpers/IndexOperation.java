@@ -24,5 +24,6 @@ public enum IndexOperation {
     DISKORDERSCAN,
     PHYSICALDELETE,
     NOOP,
-    MERGE
+    MERGE,
+    FLUSH
 }

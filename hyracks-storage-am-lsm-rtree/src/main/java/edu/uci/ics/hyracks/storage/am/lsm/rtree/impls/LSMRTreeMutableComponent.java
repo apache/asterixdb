@@ -17,37 +17,20 @@ package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMComponent;
+import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractMutableLSMComponent;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 
-public class LSMRTreeComponent extends AbstractLSMComponent {
+public class LSMRTreeMutableComponent extends AbstractMutableLSMComponent {
 
     private final RTree rtree;
     private final BTree btree;
+    private final IInMemoryFreePageManager mfpm;
 
-    public LSMRTreeComponent(RTree rtree, BTree btree) {
+    public LSMRTreeMutableComponent(RTree rtree, BTree btree, IInMemoryFreePageManager mfpm) {
         this.rtree = rtree;
         this.btree = btree;
-    }
-
-    @Override
-    public void destroy() throws HyracksDataException {
-        rtree.deactivate();
-        rtree.destroy();
-        if (btree != null) {
-            btree.deactivate();
-            btree.destroy();
-        }
-    }
-
-    @Override
-    public void reset() throws HyracksDataException {
-        ((InMemoryFreePageManager) rtree.getFreePageManager()).reset();
-        rtree.clear();
-        if (btree != null) {
-            btree.clear();
-        }
+        this.mfpm = mfpm;
     }
 
     public RTree getRTree() {
@@ -56,5 +39,18 @@ public class LSMRTreeComponent extends AbstractLSMComponent {
 
     public BTree getBTree() {
         return btree;
+    }
+
+    @Override
+    protected boolean isFull() {
+        return mfpm.isFull();
+    }
+
+    @Override
+    protected void reset() throws HyracksDataException {
+        rtree.clear();
+        if (btree != null) {
+            btree.clear();
+        }
     }
 }

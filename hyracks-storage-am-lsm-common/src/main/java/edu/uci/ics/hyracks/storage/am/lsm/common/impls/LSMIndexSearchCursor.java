@@ -83,7 +83,7 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
         rangeCursors = null;
 
         if (searcherRefCount != null) {
-            lsmHarness.closeSearchCursor(operationalComponents, includeMemComponent, opCtx);
+            lsmHarness.endSearch(opCtx);
         }
     }
 
@@ -115,7 +115,7 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
                 }
                 rangeCursors = null;
             } finally {
-                lsmHarness.closeSearchCursor(operationalComponents, includeMemComponent, opCtx);
+                lsmHarness.endSearch(opCtx);
             }
         }
     }

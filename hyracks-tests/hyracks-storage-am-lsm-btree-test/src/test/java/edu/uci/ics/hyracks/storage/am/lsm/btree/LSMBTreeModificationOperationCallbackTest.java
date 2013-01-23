@@ -9,18 +9,19 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallback;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpOperationTrackerFactory;
 
 public class LSMBTreeModificationOperationCallbackTest extends AbstractModificationOperationCallbackTest {
     private static final int NUM_TUPLES = 11;
 
     private final LSMBTreeTestHarness harness;
-    private final BlockingIOOperationCallback ioOpCallback;
+    private final BlockingIOOperationCallbackWrapper ioOpCallback;
 
     public LSMBTreeModificationOperationCallbackTest() {
         super();
-        this.ioOpCallback = new BlockingIOOperationCallback();
+        this.ioOpCallback = new BlockingIOOperationCallbackWrapper(NoOpIOOperationCallback.INSTANCE);
         harness = new LSMBTreeTestHarness();
     }
 
@@ -30,7 +31,8 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
                 harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
                 harness.getDiskFileMapProvider(), SerdeUtils.serdesToTypeTraits(keySerdes),
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), harness.getMergePolicy(),
-                NoOpOperationTrackerFactory.INSTANCE, harness.getIOScheduler());
+                NoOpOperationTrackerFactory.INSTANCE, harness.getIOScheduler(),
+                harness.getIOOperationCallbackProvider());
     }
 
     @Override

@@ -22,9 +22,9 @@ import edu.uci.ics.hyracks.storage.am.rtree.impls.PathList;
 
 public interface IRTreeInteriorFrame extends IRTreeFrame {
 
-    public boolean findBestChild(ITupleReference tuple, MultiComparator cmp);
+    public int findBestChild(ITupleReference tuple, MultiComparator cmp);
 
-    public int getBestChildPageId();
+    public boolean checkIfEnlarementIsNeeded(ITupleReference tuple, MultiComparator cmp);
 
     public int getChildPageId(int tupleIndex);
 

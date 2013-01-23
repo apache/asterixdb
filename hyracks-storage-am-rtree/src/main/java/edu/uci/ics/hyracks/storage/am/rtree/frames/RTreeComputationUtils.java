@@ -113,4 +113,25 @@ public class RTreeComputationUtils {
         return area;
     }
 
+    public static boolean containsRegion(ITupleReference tuple1, ITupleReference tuple2, MultiComparator cmp,
+            IPrimitiveValueProvider[] keyValueProviders) {
+        int maxFieldPos = cmp.getKeyFieldCount() / 2;
+        for (int i = 0; i < maxFieldPos; i++) {
+            int j = maxFieldPos + i;
+            int c = cmp.getComparators()[i]
+                    .compare(tuple1.getFieldData(i), tuple1.getFieldStart(i), tuple1.getFieldLength(i),
+                            tuple2.getFieldData(i), tuple2.getFieldStart(i), tuple2.getFieldLength(i));
+            if (c > 0) {
+                return false;
+            }
+
+            c = cmp.getComparators()[j]
+                    .compare(tuple1.getFieldData(j), tuple1.getFieldStart(j), tuple1.getFieldLength(j),
+                            tuple2.getFieldData(j), tuple2.getFieldStart(j), tuple2.getFieldLength(j));
+            if (c < 0) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

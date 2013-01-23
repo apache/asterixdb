@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
@@ -28,15 +29,16 @@ public class LSMInvertedIndexDataflowHelperFactory extends AbstractLSMIndexDataf
     private static final long serialVersionUID = 1L;
 
     public LSMInvertedIndexDataflowHelperFactory(ILSMMergePolicyProvider mergePolicyProvider,
-            ILSMOperationTrackerFactory opTrackerProvider, ILSMIOOperationSchedulerProvider ioSchedulerProvider) {
-        super(mergePolicyProvider, opTrackerProvider, ioSchedulerProvider);
+            ILSMOperationTrackerFactory opTrackerProvider, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
+            ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
+        super(mergePolicyProvider, opTrackerProvider, ioSchedulerProvider, ioOpCallbackProvider);
     }
 
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
         return new LSMInvertedIndexDataflowHelper(opDesc, ctx, partition, mergePolicyProvider.getMergePolicy(ctx),
-                opTrackerFactory, ioSchedulerProvider.getIOScheduler(ctx));
+                opTrackerFactory, ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackProvider);
     }
 
 }
