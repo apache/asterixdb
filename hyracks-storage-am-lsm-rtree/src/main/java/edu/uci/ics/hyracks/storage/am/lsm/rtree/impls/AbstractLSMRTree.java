@@ -144,20 +144,22 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     }
 
     @Override
-    public synchronized void deactivate() throws HyracksDataException {
+    public synchronized void deactivate(boolean flushOnExit) throws HyracksDataException {
         if (!isActivated) {
             return;
         }
 
-        BlockingIOOperationCallbackWrapper cb = new BlockingIOOperationCallbackWrapper(
-                ioOpCallbackProvider.getIOOperationCallback(this));
-        ILSMIndexAccessor accessor = (ILSMIndexAccessor) createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
-        accessor.scheduleFlush(cb);
-        try {
-            cb.waitForIO();
-        } catch (InterruptedException e) {
-            throw new HyracksDataException(e);
+        if (flushOnExit) {
+            BlockingIOOperationCallbackWrapper cb = new BlockingIOOperationCallbackWrapper(
+                    ioOpCallbackProvider.getIOOperationCallback(this));
+            ILSMIndexAccessor accessor = (ILSMIndexAccessor) createAccessor(NoOpOperationCallback.INSTANCE,
+                    NoOpOperationCallback.INSTANCE);
+            accessor.scheduleFlush(cb);
+            try {
+                cb.waitForIO();
+            } catch (InterruptedException e) {
+                throw new HyracksDataException(e);
+            }
         }
 
         mutableComponent.getRTree().deactivate();

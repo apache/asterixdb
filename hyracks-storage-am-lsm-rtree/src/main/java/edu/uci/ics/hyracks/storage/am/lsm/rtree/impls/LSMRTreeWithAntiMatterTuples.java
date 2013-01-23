@@ -113,14 +113,19 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     }
 
     @Override
-    public synchronized void deactivate() throws HyracksDataException {
-        super.deactivate();
+    public synchronized void deactivate(boolean flushOnExit) throws HyracksDataException {
+        super.deactivate(flushOnExit);
         List<ILSMComponent> immutableComponents = componentsRef.get();
         for (ILSMComponent c : immutableComponents) {
             RTree rtree = (RTree) ((LSMRTreeImmutableComponent) c).getRTree();
             rtree.deactivate();
         }
         isActivated = false;
+    }
+
+    @Override
+    public synchronized void deactivate() throws HyracksDataException {
+        deactivate(true);
     }
 
     @Override

@@ -179,22 +179,24 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     }
 
     @Override
-    public synchronized void deactivate() throws HyracksDataException {
+    public synchronized void deactivate(boolean flushOnExit) throws HyracksDataException {
         if (!isActivated) {
             return;
         }
 
         isActivated = false;
 
-        BlockingIOOperationCallbackWrapper blockingCallBack = new BlockingIOOperationCallbackWrapper(
-                ioOpCallbackProvider.getIOOperationCallback(this));
-        ILSMIndexAccessor accessor = (ILSMIndexAccessor) createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
-        accessor.scheduleFlush(blockingCallBack);
-        try {
-            blockingCallBack.waitForIO();
-        } catch (InterruptedException e) {
-            throw new HyracksDataException(e);
+        if (flushOnExit) {
+            BlockingIOOperationCallbackWrapper blockingCallBack = new BlockingIOOperationCallbackWrapper(
+                    ioOpCallbackProvider.getIOOperationCallback(this));
+            ILSMIndexAccessor accessor = (ILSMIndexAccessor) createAccessor(NoOpOperationCallback.INSTANCE,
+                    NoOpOperationCallback.INSTANCE);
+            accessor.scheduleFlush(blockingCallBack);
+            try {
+                blockingCallBack.waitForIO();
+            } catch (InterruptedException e) {
+                throw new HyracksDataException(e);
+            }
         }
 
         List<ILSMComponent> immutableComponents = componentsRef.get();
@@ -208,6 +210,11 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         mutableComponent.getInvIndex().destroy();
         mutableComponent.getDeletedKeysBTree().destroy();
         ((InMemoryBufferCache) mutableComponent.getInvIndex().getBufferCache()).close();
+    }
+
+    @Override
+    public synchronized void deactivate() throws HyracksDataException {
+        deactivate(true);
     }
 
     @Override

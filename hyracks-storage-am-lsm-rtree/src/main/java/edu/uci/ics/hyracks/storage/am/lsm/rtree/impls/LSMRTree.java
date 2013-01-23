@@ -15,7 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -111,8 +110,8 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
-    public synchronized void deactivate() throws HyracksDataException {
-        super.deactivate();
+    public synchronized void deactivate(boolean flushOnExit) throws HyracksDataException {
+        super.deactivate(flushOnExit);
         List<ILSMComponent> immutableComponents = componentsRef.get();
         for (ILSMComponent c : immutableComponents) {
             LSMRTreeImmutableComponent component = (LSMRTreeImmutableComponent) c;
@@ -122,6 +121,11 @@ public class LSMRTree extends AbstractLSMRTree {
             btree.deactivate();
         }
         isActivated = false;
+    }
+
+    @Override
+    public synchronized void deactivate() throws HyracksDataException {
+        deactivate(true);
     }
 
     @Override
@@ -180,11 +184,6 @@ public class LSMRTree extends AbstractLSMRTree {
             diskComponentIx++;
         }
 
-        List<ILSMComponent> searchComponents = new ArrayList<ILSMComponent>();
-        //        if (includeMutableComponent) {
-        //            searchComponents.add(mutableComponent);
-        //        }
-        //        searchComponents.addAll(operationalComponents);
         LSMRTreeCursorInitialState initialState = new LSMRTreeCursorInitialState(numTrees, rtreeLeafFrameFactory,
                 rtreeInteriorFrameFactory, btreeLeafFrameFactory, ctx.getBTreeMultiComparator(), rTreeAccessors,
                 bTreeAccessors, includeMutableComponent, lsmHarness, comparatorFields, linearizerArray,
