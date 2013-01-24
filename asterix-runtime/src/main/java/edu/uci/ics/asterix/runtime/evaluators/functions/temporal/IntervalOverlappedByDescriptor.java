@@ -23,7 +23,7 @@ public class IntervalOverlappedByDescriptor extends AbstractIntervalLogicFuncDes
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_overlapped_by", 2);
+            "interval-overlapped-by", 2);
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 

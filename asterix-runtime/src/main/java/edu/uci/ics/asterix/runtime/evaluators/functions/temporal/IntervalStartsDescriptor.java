@@ -23,7 +23,7 @@ public class IntervalStartsDescriptor extends AbstractIntervalLogicFuncDescripto
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_starts", 2);
+            "interval-starts", 2);
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 

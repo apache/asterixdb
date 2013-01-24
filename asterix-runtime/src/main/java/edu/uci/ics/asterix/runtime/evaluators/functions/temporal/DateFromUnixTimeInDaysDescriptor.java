@@ -43,7 +43,7 @@ public class DateFromUnixTimeInDaysDescriptor extends AbstractScalarFunctionDyna
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "date_from_unix_time_in_days", 1);
+            "date-from-unix-time-in-days", 1);
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
@@ -99,7 +99,7 @@ public class DateFromUnixTimeInDaysDescriptor extends AbstractScalarFunctionDyna
                                     aDate.setValue(AInt32SerializerDeserializer.getInt(argOut.getByteArray(), 1));
                                 } else {
                                     throw new AlgebricksException(
-                                            "Inapplicable input type for function date_from_unix_time_in_days: expecting integer or null type, but got "
+                                            "Inapplicable input type for function date-from-unix-time-in-days: expecting integer or null type, but got "
                                                     + argOut.getByteArray()[0]);
                                 }
                                 dateSerde.serialize(aDate, out);

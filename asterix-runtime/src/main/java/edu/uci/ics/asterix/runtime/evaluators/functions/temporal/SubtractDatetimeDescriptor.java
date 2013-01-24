@@ -41,7 +41,7 @@ public class SubtractDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "subtract_datetime", 2);
+            "subtract-datetime", 2);
 
     // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
@@ -100,13 +100,13 @@ public class SubtractDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
 
                             if (argOut0.getByteArray()[0] != SER_DATETIME_TYPE_TAG) {
                                 throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 0: expecting ADateTime, but got: "
+                                        "Inapplicable input type for parameter 0: expecting a DateTime, but got: "
                                                 + argOut0.getByteArray()[0]);
                             }
 
                             if (argOut1.getByteArray()[0] != SER_DATETIME_TYPE_TAG) {
                                 throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 1: expecting ADateTime, but got: "
+                                        "Inapplicable input type for parameter 1: expecting a DateTime, but got: "
                                                 + argOut1.getByteArray()[0]);
                             }
 

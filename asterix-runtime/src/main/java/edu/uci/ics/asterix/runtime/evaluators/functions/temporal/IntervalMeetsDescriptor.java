@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 public class IntervalMeetsDescriptor extends AbstractIntervalLogicFuncDescriptor {
 
     private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval_meets",
+    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-meets",
             2);
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {

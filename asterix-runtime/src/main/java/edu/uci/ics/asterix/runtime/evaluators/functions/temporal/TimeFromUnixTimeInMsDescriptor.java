@@ -43,7 +43,7 @@ public class TimeFromUnixTimeInMsDescriptor extends AbstractScalarFunctionDynami
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "time_from_unix_time_in_ms", 1);
+            "time-from-unix-time-in-ms", 1);
 
     // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
@@ -102,7 +102,7 @@ public class TimeFromUnixTimeInMsDescriptor extends AbstractScalarFunctionDynami
                                     aTime.setValue(AInt32SerializerDeserializer.getInt(argOut.getByteArray(), 1));
                                 } else {
                                     throw new AlgebricksException(
-                                            "Inapplicable input type for function time_from_unix_time_in_ms: expecting integer or null type, but got "
+                                            "Inapplicable input type for function time-from-unix-time-in-ms: expecting integer or null type, but got "
                                                     + argOut.getByteArray()[0]);
                                 }
                                 timeSerde.serialize(aTime, out);

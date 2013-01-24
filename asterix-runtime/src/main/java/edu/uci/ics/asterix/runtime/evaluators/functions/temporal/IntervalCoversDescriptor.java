@@ -23,7 +23,7 @@ public class IntervalCoversDescriptor extends AbstractIntervalLogicFuncDescripto
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_covers", 2);
+            "interval-covers", 2);
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 

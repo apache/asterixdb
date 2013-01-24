@@ -37,7 +37,7 @@ public class CurrentDateTimeDescriptor extends AbstractScalarFunctionDynamicDesc
 
     private static final long serialVersionUID = 1L;
     private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "current_datetime", 0);
+            "current-datetime", 0);
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 

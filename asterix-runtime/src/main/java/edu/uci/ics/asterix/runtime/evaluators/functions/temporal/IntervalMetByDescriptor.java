@@ -23,7 +23,7 @@ public class IntervalMetByDescriptor extends AbstractIntervalLogicFuncDescriptor
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_met_by", 2);
+            "interval-met-by", 2);
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 

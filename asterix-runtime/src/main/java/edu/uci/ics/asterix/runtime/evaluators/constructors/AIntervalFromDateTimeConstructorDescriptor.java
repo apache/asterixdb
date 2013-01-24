@@ -43,7 +43,7 @@ public class AIntervalFromDateTimeConstructorDescriptor extends AbstractScalarFu
 
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_from_datetime", 2);
+            "interval-from-datetime", 2);
     private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 

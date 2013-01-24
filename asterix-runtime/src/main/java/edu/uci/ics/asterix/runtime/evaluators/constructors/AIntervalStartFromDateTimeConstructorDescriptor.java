@@ -46,7 +46,7 @@ public class AIntervalStartFromDateTimeConstructorDescriptor extends AbstractSca
 
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_start_from_datetime", 2);
+            "interval-start-from-datetime", 2);
     private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 

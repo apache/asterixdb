@@ -43,7 +43,7 @@ public class AddDatetimeDurationDescriptor extends AbstractScalarFunctionDynamic
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "add_datetime_duration", 2);
+            "add-datetime-duration", 2);
 
     // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
@@ -103,14 +103,14 @@ public class AddDatetimeDurationDescriptor extends AbstractScalarFunctionDynamic
 
                             if (argOut0.getByteArray()[0] != SER_DATETIME_TYPE_TAG) {
                                 throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 0: expecting ADateTime ("
+                                        "Inapplicable input type for parameter 0: expecting a DateTime ("
                                                 + SER_DATETIME_TYPE_TAG + ") or null (" + SER_NULL_TYPE_TAG
                                                 + "), but got: " + argOut0.getByteArray()[0]);
                             }
 
                             if (argOut1.getByteArray()[0] != SER_DURATION_TYPE_TAG) {
                                 throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 1: expecting ADuration ("
+                                        "Inapplicable input type for parameter 1: expecting a Duration ("
                                                 + SER_DURATION_TYPE_TAG + ") or null (" + SER_NULL_TYPE_TAG
                                                 + "), but got: " + argOut1.getByteArray()[0]);
                             }

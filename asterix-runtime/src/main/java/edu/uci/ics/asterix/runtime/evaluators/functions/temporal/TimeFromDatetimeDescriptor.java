@@ -42,7 +42,7 @@ public class TimeFromDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
 
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "time_from_datetime", 1);
+            "time-from-datetime", 1);
 
     // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
@@ -94,7 +94,7 @@ public class TimeFromDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
                             } else {
                                 if (argOut.getByteArray()[0] != SER_DATETIME_TYPE_TAG) {
                                     throw new AlgebricksException(
-                                            "Inapplicable input type for function time_from_datetime: expecting ADataTime ("
+                                            "Inapplicable input type for function time-from-datetime: expecting a DataTime ("
                                                     + SER_DATETIME_TYPE_TAG + ") or null (" + SER_NULL_TYPE_TAG
                                                     + "), but got: " + argOut.getByteArray()[0]);
                                 }

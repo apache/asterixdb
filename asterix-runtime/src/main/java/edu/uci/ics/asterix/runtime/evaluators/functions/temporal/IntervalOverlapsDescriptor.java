@@ -23,7 +23,7 @@ public class IntervalOverlapsDescriptor extends AbstractIntervalLogicFuncDescrip
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_overlaps", 2);
+            "interval-overlaps", 2);
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 

@@ -44,7 +44,7 @@ public class CalendarDuartionFromDateDescriptor extends AbstractScalarFunctionDy
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "calendar_duration_from_date", 2);
+            "calendar-duration-from-date", 2);
 
     // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
@@ -108,13 +108,13 @@ public class CalendarDuartionFromDateDescriptor extends AbstractScalarFunctionDy
 
                             if (argOut0.getByteArray()[0] != SER_DATE_TYPE_TAG) {
                                 throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 0: expecting ADateTime, but got: "
+                                        "Inapplicable input type for parameter 0: expecting a Date, but got: "
                                                 + argOut0.getByteArray()[0]);
                             }
 
                             if (argOut1.getByteArray()[0] != SER_DURATION_TYPE_TAG) {
                                 throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 1: expecting ADateTime, but got: "
+                                        "Inapplicable input type for parameter 1: expecting a Date, but got: "
                                                 + argOut1.getByteArray()[0]);
                             }
 

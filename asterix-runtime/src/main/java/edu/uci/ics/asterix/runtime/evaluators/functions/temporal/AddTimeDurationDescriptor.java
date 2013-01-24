@@ -43,7 +43,7 @@ public class AddTimeDurationDescriptor extends AbstractScalarFunctionDynamicDesc
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "add_time_duration", 2);
+            "add-time-duration", 2);
 
     // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
@@ -103,14 +103,14 @@ public class AddTimeDurationDescriptor extends AbstractScalarFunctionDynamicDesc
 
                             if (argOut0.getByteArray()[0] != SER_TIME_TYPE_TAG) {
                                 throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 0: expecting ATime ("
+                                        "Inapplicable input type for parameter 0: expecting a Time ("
                                                 + SER_TIME_TYPE_TAG + ") or null (" + SER_NULL_TYPE_TAG
                                                 + "), but got: " + argOut0.getByteArray()[0]);
                             }
 
                             if (argOut1.getByteArray()[0] != SER_DURATION_TYPE_TAG) {
                                 throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 1: expecting ADuration ("
+                                        "Inapplicable input type for parameter 1: expecting a Duration ("
                                                 + SER_DURATION_TYPE_TAG + ") or null (" + SER_DURATION_TYPE_TAG
                                                 + "), but got: " + argOut1.getByteArray()[0]);
                             }
@@ -118,13 +118,14 @@ public class AddTimeDurationDescriptor extends AbstractScalarFunctionDynamicDesc
                             // get duration fields: yearMonth field and dayTime field
                             int yearMonth = ADurationSerializerDeserializer.getYearMonth(argOut1.getByteArray(), 1);
 
+                            // cannot add a year-month duration to a time value
                             if (yearMonth != 0) {
                                 throw new AlgebricksException("ATime cannot be added by a year-month duration.");
                             }
 
                             long dayTime = ADurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1);
 
-                            // get date fields
+                            // get time fields
                             int timeChronon = ATimeSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
 
                             timeChronon = DurationArithmeticOperations.addDuration(timeChronon, dayTime);

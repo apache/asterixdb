@@ -41,7 +41,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class SubtractDateDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "subtract_date",
+    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "subtract-date",
             2);
 
     // allowed input types
@@ -98,14 +98,14 @@ public class SubtractDateDescriptor extends AbstractScalarFunctionDynamicDescrip
 
                             if (argOut0.getByteArray()[0] != SER_DATE_TYPE_TAG) {
                                 throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 0: expecting ADate ("
+                                        "Inapplicable input type for parameter 0: expecting a Date ("
                                                 + SER_DATE_TYPE_TAG + ") or null (" + SER_NULL_TYPE_TAG
                                                 + "), but got: " + argOut0.getByteArray()[0]);
                             }
 
                             if (argOut1.getByteArray()[0] != SER_DATE_TYPE_TAG) {
                                 throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 1: expecting ADate ("
+                                        "Inapplicable input type for parameter 1: expecting a Date ("
                                                 + SER_DATE_TYPE_TAG + ") or null (" + SER_NULL_TYPE_TAG
                                                 + "), but got: " + argOut1.getByteArray()[0]);
                             }

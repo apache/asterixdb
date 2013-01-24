@@ -361,48 +361,48 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier DURATION_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "duration", 1);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_DATE = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "interval_from_date", 2);
+            FunctionConstants.ASTERIX_NS, "interval-from-date", 2);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_TIME = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "interval_from_time", 2);
+            FunctionConstants.ASTERIX_NS, "interval-from-time", 2);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_DATETIME = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "interval_from_datetime", 2);
+            FunctionConstants.ASTERIX_NS, "interval-from-datetime", 2);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_DATE = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "interval_start_from_date", 2);
+            FunctionConstants.ASTERIX_NS, "interval-start-from-date", 2);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_TIME = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "interval_start_from_time", 2);
+            FunctionConstants.ASTERIX_NS, "interval-start-from-time", 2);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_DATETIME = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "interval_start_from_datetime", 2);
+            FunctionConstants.ASTERIX_NS, "interval-start-from-datetime", 2);
     public final static FunctionIdentifier INTERVAL_BEFORE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_before", 2);
+            "interval-before", 2);
     public final static FunctionIdentifier INTERVAL_AFTER = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_after", 2);
+            "interval-after", 2);
     public final static FunctionIdentifier INTERVAL_MEETS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_meets", 2);
+            "interval-meets", 2);
     public final static FunctionIdentifier INTERVAL_MET_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_met_by", 2);
+            "interval-met-by", 2);
     public final static FunctionIdentifier INTERVAL_OVERLAPS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_overlaps", 2);
+            "interval-overlaps", 2);
     public final static FunctionIdentifier INTERVAL_OVERLAPPED_BY = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "interval_overlapped_by", 2);
+            FunctionConstants.ASTERIX_NS, "interval-overlapped-by", 2);
     public final static FunctionIdentifier OVERLAP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "overlap", 2);
     public final static FunctionIdentifier INTERVAL_STARTS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_starts", 2);
+            "interval-starts", 2);
     public final static FunctionIdentifier INTERVAL_STARTED_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_started_by", 2);
+            "interval-started-by", 2);
     public final static FunctionIdentifier INTERVAL_COVERS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_covers", 2);
+            "interval-covers", 2);
     public final static FunctionIdentifier INTERVAL_COVERED_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_covered_by", 2);
+            "interval-covered-by", 2);
     public final static FunctionIdentifier INTERVAL_ENDS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_ends", 2);
+            "interval-ends", 2);
     public final static FunctionIdentifier INTERVAL_ENDED_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_ended_by", 2);
+            "interval-ended-by", 2);
     public final static FunctionIdentifier CURRENT_TIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "current_time", 0);
+            "current-time", 0);
     public final static FunctionIdentifier CURRENT_DATE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "current_date", 0);
+            "current-date", 0);
     public final static FunctionIdentifier CURRENT_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "current_datetime", 0);
+            "current-datetime", 0);
 
     // spatial
     public final static FunctionIdentifier CREATE_POINT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -452,37 +452,37 @@ public class AsterixBuiltinFunctions {
 
     // Temporal functions
     public static final FunctionIdentifier DATE_FROM_UNIX_TIME_IN_DAYS = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "date_from_unix_time_in_days", 1);
+            FunctionConstants.ASTERIX_NS, "date-from-unix-time-in-days", 1);
     public static final FunctionIdentifier DATE_FROM_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "date_from_datetime", 1);
+            "date-from-datetime", 1);
     public final static FunctionIdentifier ADD_DATE_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "add_date_duration", 2);
+            "add-date-duration", 2);
     public final static FunctionIdentifier SUBTRACT_DATE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "subtract_date", 2);
+            "subtract-date", 2);
     public final static FunctionIdentifier TIME_FROM_UNIX_TIME_IN_MS = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "time_from_unix_time_in_ms", 1);
+            FunctionConstants.ASTERIX_NS, "time-from-unix-time-in-ms", 1);
     public final static FunctionIdentifier TIME_FROM_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "time_from_datetime", 1);
+            "time-from-datetime", 1);
     public final static FunctionIdentifier SUBTRACT_TIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "subtract_time", 2);
+            "subtract-time", 2);
     public final static FunctionIdentifier ADD_TIME_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "add_time_duration", 2);
+            "add-time-duration", 2);
     public final static FunctionIdentifier DATETIME_FROM_UNIX_TIME_IN_MS = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "datetime_from_unix_time_in_ms", 1);
+            FunctionConstants.ASTERIX_NS, "datetime-from-unix-time-in-ms", 1);
     public final static FunctionIdentifier DATETIME_FROM_DATE_TIME = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "datetime_from_date_time", 2);
+            FunctionConstants.ASTERIX_NS, "datetime-from-date-time", 2);
     public final static FunctionIdentifier SUBTRACT_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "subtract_datetime", 2);
+            "subtract-datetime", 2);
     public final static FunctionIdentifier ADD_DATETIME_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "add_datetime_duration", 2);
+            "add-datetime-duration", 2);
     public final static FunctionIdentifier CALENDAR_DURATION_FROM_DATETIME = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "calendar_duration_from_datetime", 2);
+            FunctionConstants.ASTERIX_NS, "calendar-duration-from-datetime", 2);
     public final static FunctionIdentifier CALENDAR_DURATION_FROM_DATE = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "calendar_duration_from_date", 2);
+            FunctionConstants.ASTERIX_NS, "calendar-duration-from-date", 2);
     public final static FunctionIdentifier ADJUST_TIME_FOR_TIMEZONE = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "adjust_time_for_timezone", 2);
+            FunctionConstants.ASTERIX_NS, "adjust-time-for-timezone", 2);
     public final static FunctionIdentifier ADJUST_DATETIME_FOR_TIMEZONE = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "adjust_datetime_for_timezone", 2);
+            FunctionConstants.ASTERIX_NS, "adjust-datetime-for-timezone", 2);
 
     public static final FunctionIdentifier EQ = AlgebricksBuiltinFunctions.EQ;
     public static final FunctionIdentifier LE = AlgebricksBuiltinFunctions.LE;

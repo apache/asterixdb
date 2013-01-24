@@ -42,23 +42,27 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
  * This function converts a given duration into a "human-readable" duration containing both year-month and day-time
- * duration parts, by re-organizing values between the duration fields from the given reference time point.<p/>
- * 
+ * duration parts, by re-organizing values between the duration fields from the given reference time point.
+ * <p/>
  * The basic algorithm for this convert is simple: <br/>
  * 1. Calculate the time point by adding the given duration to the given time point;<br/>
  * 2. Calculate the differences by fields between two different time points;<br/>
- * 3. Re-format the duration into a human-readable one.<p/>
- * 
- * In the implementation, we always do the subtraction from the later time point, resulting a positive duration always. Then
- * the sign of the duration is decided by the input duration.<p/>
- * 
- * 
+ * 3. Re-format the duration into a human-readable one.
+ * <p/>
+ * Here "human-readable" means the value of each field of the duration is within the value range of the field in the
+ * calendar system. For example, month would be in [0, 12), and hour would be in [0, 24).
+ * <p/>
+ * The result can be considered as a "field-based" difference between the two datetime value, but all negative values
+ * would be converted to be non-negative.
+ * <p/>
+ * In the implementation, we always do the subtraction from the later time point, resulting a positive duration always.
+ * <p/>
  */
 public class CalendarDurationFromDateTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "calendar_duration_from_datetime", 2);
+            "calendar-duration-from-datetime", 2);
 
     // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();

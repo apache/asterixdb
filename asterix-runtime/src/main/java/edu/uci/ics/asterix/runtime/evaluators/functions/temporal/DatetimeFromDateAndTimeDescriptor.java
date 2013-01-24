@@ -43,7 +43,7 @@ public class DatetimeFromDateAndTimeDescriptor extends AbstractScalarFunctionDyn
 
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "datetime_from_date_time", 2);
+            "datetime-from-date-time", 2);
 
     // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
@@ -102,7 +102,7 @@ public class DatetimeFromDateAndTimeDescriptor extends AbstractScalarFunctionDyn
                             } else {
                                 if (argOut0.getByteArray()[0] != SER_DATE_TYPE_TAG) {
                                     throw new AlgebricksException(
-                                            "Inapplicable input type for function datetime_from_date_time: expecting ADate ("
+                                            "Inapplicable input type for function datetime-from-date-time: expecting a Date ("
                                                     + SER_DATE_TYPE_TAG + ") or null (" + SER_NULL_TYPE_TAG
                                                     + ") for the first parameter, but got: "
                                                     + argOut0.getByteArray()[0]);
@@ -110,7 +110,7 @@ public class DatetimeFromDateAndTimeDescriptor extends AbstractScalarFunctionDyn
 
                                 if (argOut1.getByteArray()[0] != SER_TIME_TYPE_TAG) {
                                     throw new AlgebricksException(
-                                            "Inapplicable input type for function datetime_from_date_time: expecting ATime ("
+                                            "Inapplicable input type for function datetime-from-date-time: expecting a Time ("
                                                     + SER_TIME_TYPE_TAG + ") or null (" + SER_NULL_TYPE_TAG
                                                     + ") for the secon parameter, but got: "
                                                     + argOut1.getByteArray()[0]);

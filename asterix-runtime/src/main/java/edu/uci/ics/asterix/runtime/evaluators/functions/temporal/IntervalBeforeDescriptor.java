@@ -23,7 +23,7 @@ public class IntervalBeforeDescriptor extends AbstractIntervalLogicFuncDescripto
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval_before", 2);
+            "interval-before", 2);
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 

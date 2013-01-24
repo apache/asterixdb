@@ -40,7 +40,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class SubtractTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "subtract_time",
+    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "subtract-time",
             2);
 
     // allowed input types
@@ -100,14 +100,14 @@ public class SubtractTimeDescriptor extends AbstractScalarFunctionDynamicDescrip
 
                             if (argOut0.getByteArray()[0] != SER_TIME_TYPE_TAG) {
                                 throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 0: expecting ATime ("
+                                        "Inapplicable input type for parameter 0: expecting a Time ("
                                                 + SER_TIME_TYPE_TAG + ") or null (" + SER_NULL_TYPE_TAG
                                                 + "), but got: " + argOut0.getByteArray()[0]);
                             }
 
                             if (argOut1.getByteArray()[0] != SER_TIME_TYPE_TAG) {
                                 throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 1: expecting ATime ("
+                                        "Inapplicable input type for parameter 1: expecting a Time ("
                                                 + SER_TIME_TYPE_TAG + ") or null (" + SER_NULL_TYPE_TAG
                                                 + "), but got: " + argOut1.getByteArray()[0]);
                             }

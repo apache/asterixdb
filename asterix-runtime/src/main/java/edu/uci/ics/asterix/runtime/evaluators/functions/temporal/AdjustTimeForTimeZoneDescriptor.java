@@ -37,13 +37,12 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
 
 public class AdjustTimeForTimeZoneDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "adjust_time_for_timezone", 2);
+            "adjust-time-for-timezone", 2);
 
     // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
@@ -102,13 +101,13 @@ public class AdjustTimeForTimeZoneDescriptor extends AbstractScalarFunctionDynam
 
                             if (argOut0.getByteArray()[0] != SER_TIME_TYPE_TAG) {
                                 throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 0: expecting ATime, but got: "
+                                        "Inapplicable input type for parameter 0: expecting a Time, but got: "
                                                 + argOut0.getByteArray()[0]);
                             }
 
                             if (argOut1.getByteArray()[0] != SER_STRING_TYPE_TAG) {
                                 throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 0: expecting AString, but got: "
+                                        "Inapplicable input type for parameter 0: expecting a String, but got: "
                                                 + argOut1.getByteArray()[0]);
                             }
 
