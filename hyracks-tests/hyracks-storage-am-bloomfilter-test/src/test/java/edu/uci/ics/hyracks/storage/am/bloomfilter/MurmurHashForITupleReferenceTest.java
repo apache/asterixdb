@@ -178,15 +178,7 @@ public class MurmurHashForITupleReferenceTest extends AbstractBloomFilterTest {
         return length;
     }
 
-    public static String randomString(int length, Random random) {
-        char[] chars = "abcdefghijklmnopqrstuvwxyz".toCharArray();
-        StringBuilder strBuilder = new StringBuilder();
-        for (int i = 0; i < length; ++i) {
-            char c = chars[random.nextInt(chars.length)];
-            strBuilder.append(c);
-        }
-        return strBuilder.toString();
-    }
+    
 
     protected static long getblock(ByteBuffer key, int offset, int index) {
         int i_8 = index << 3;

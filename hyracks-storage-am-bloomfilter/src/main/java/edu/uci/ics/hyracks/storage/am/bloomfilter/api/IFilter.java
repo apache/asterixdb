@@ -20,11 +20,11 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public interface IFilter {
 
+    public void add(ITupleReference tuple, long[] hashes);
+
+    public boolean contains(ITupleReference tuple, long[] hashes);
+
     public void create() throws HyracksDataException;
-
-    public void add(ITupleReference tuple);
-
-    public boolean contains(ITupleReference tuple);
 
     public void destroy() throws HyracksDataException;
 

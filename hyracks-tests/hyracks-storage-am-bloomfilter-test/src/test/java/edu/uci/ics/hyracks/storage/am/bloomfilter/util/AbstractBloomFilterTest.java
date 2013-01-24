@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.bloomfilter.util;
 
+import java.util.Random;
 import java.util.logging.Logger;
 
 import org.junit.After;
@@ -43,5 +44,15 @@ public abstract class AbstractBloomFilterTest {
     @After
     public void tearDown() throws HyracksDataException {
         harness.tearDown();
+    }
+
+    public static String randomString(int length, Random random) {
+        char[] chars = "abcdefghijklmnopqrstuvwxyz".toCharArray();
+        StringBuilder strBuilder = new StringBuilder();
+        for (int i = 0; i < length; ++i) {
+            char c = chars[random.nextInt(chars.length)];
+            strBuilder.append(c);
+        }
+        return strBuilder.toString();
     }
 }
