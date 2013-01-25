@@ -202,6 +202,7 @@ public class LSMHarness implements ILSMHarness {
         List<ILSMComponent> mergedComponents = new ArrayList<ILSMComponent>();
         operation.getCallback().beforeOperation(operation);
         ILSMComponent newComponent = lsmIndex.merge(mergedComponents, operation);
+        ctx.getComponentHolder().addAll(mergedComponents);
         operation.getCallback().afterOperation(operation, mergedComponents, newComponent);
         lsmIndex.markAsValid(newComponent);
         operation.getCallback().afterFinalize(operation, newComponent);
