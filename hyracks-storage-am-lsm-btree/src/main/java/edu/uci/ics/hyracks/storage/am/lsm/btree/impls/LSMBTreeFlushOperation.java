@@ -1,6 +1,7 @@
-package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -12,18 +13,20 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 
-public class LSMFlushOperation implements ILSMIOOperation {
+public class LSMBTreeFlushOperation implements ILSMIOOperation {
 
     private final ILSMIndexAccessorInternal accessor;
     private final ILSMComponent flushingComponent;
-    private final FileReference flushTarget;
+    private final FileReference btreeFlushTarget;
+    private final FileReference bloomFilterFlushTarget;
     private final ILSMIOOperationCallback callback;
 
-    public LSMFlushOperation(ILSMIndexAccessorInternal accessor, ILSMComponent flushingComponent,
-            FileReference flushTarget, ILSMIOOperationCallback callback) {
+    public LSMBTreeFlushOperation(ILSMIndexAccessorInternal accessor, ILSMComponent flushingComponent,
+            FileReference btreeFlushTarget, FileReference bloomFilterFlushTarget, ILSMIOOperationCallback callback) {
         this.accessor = accessor;
         this.flushingComponent = flushingComponent;
-        this.flushTarget = flushTarget;
+        this.btreeFlushTarget = btreeFlushTarget;
+        this.bloomFilterFlushTarget = bloomFilterFlushTarget;
         this.callback = callback;
     }
 
@@ -34,7 +37,10 @@ public class LSMFlushOperation implements ILSMIOOperation {
 
     @Override
     public Set<IODeviceHandle> getWriteDevices() {
-        return Collections.singleton(flushTarget.getDeviceHandle());
+        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
+        devs.add(btreeFlushTarget.getDeviceHandle());
+        devs.add(bloomFilterFlushTarget.getDeviceHandle());
+        return devs;
     }
 
     @Override
@@ -47,8 +53,12 @@ public class LSMFlushOperation implements ILSMIOOperation {
         return callback;
     }
 
-    public FileReference getFlushTarget() {
-        return flushTarget;
+    public FileReference getBTreeFlushTarget() {
+        return btreeFlushTarget;
+    }
+
+    public FileReference getBloomFilterFlushTarget() {
+        return bloomFilterFlushTarget;
     }
 
     public ILSMIndexAccessorInternal getAccessor() {

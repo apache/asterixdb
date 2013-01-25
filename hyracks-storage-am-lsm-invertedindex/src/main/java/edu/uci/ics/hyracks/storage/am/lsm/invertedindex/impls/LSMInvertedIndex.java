@@ -574,7 +574,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             FileReference dictBTreeFileRef, FileReference btreeFileRef, boolean create) throws HyracksDataException,
             IndexException {
         LSMInvertedIndexImmutableComponent component = (LSMInvertedIndexImmutableComponent) factory
-                .createLSMComponentInstance(new LSMComponentFileReferences(dictBTreeFileRef, btreeFileRef));
+                .createLSMComponentInstance(new LSMComponentFileReferences(dictBTreeFileRef, btreeFileRef, null));
         if (create) {
             component.getInvIndex().create();
             component.getDeletedKeysBTree().create();

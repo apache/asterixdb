@@ -15,7 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,15 +34,18 @@ public class LSMBTreeMergeOperation implements ILSMIOOperation {
     private final ILSMIndexAccessorInternal accessor;
     private final List<ILSMComponent> mergingComponents;
     private final ITreeIndexCursor cursor;
-    private final FileReference mergeTarget;
+    private final FileReference btreeMergeTarget;
+    private final FileReference bloomFilterMergeTarget;
     private final ILSMIOOperationCallback callback;
 
     public LSMBTreeMergeOperation(ILSMIndexAccessorInternal accessor, List<ILSMComponent> mergingComponents,
-            ITreeIndexCursor cursor, FileReference mergeTarget, ILSMIOOperationCallback callback) {
+            ITreeIndexCursor cursor, FileReference btreeMergeTarget, FileReference bloomFilterMergeTarget,
+            ILSMIOOperationCallback callback) {
         this.accessor = accessor;
         this.mergingComponents = mergingComponents;
         this.cursor = cursor;
-        this.mergeTarget = mergeTarget;
+        this.btreeMergeTarget = btreeMergeTarget;
+        this.bloomFilterMergeTarget = bloomFilterMergeTarget;
         this.callback = callback;
     }
 
@@ -59,7 +61,10 @@ public class LSMBTreeMergeOperation implements ILSMIOOperation {
 
     @Override
     public Set<IODeviceHandle> getWriteDevices() {
-        return Collections.singleton(mergeTarget.getDeviceHandle());
+        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
+        devs.add(btreeMergeTarget.getDeviceHandle());
+        devs.add(bloomFilterMergeTarget.getDeviceHandle());
+        return devs;
     }
 
     @Override
@@ -72,8 +77,12 @@ public class LSMBTreeMergeOperation implements ILSMIOOperation {
         return callback;
     }
 
-    public FileReference getMergeTarget() {
-        return mergeTarget;
+    public FileReference getBTreeMergeTarget() {
+        return btreeMergeTarget;
+    }
+
+    public FileReference getBloomFilterMergeTarget() {
+        return bloomFilterMergeTarget;
     }
 
     public ITreeIndexCursor getCursor() {

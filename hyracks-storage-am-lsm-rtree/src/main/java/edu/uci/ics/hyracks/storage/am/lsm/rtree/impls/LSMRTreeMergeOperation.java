@@ -1,6 +1,5 @@
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -40,14 +39,21 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
         for (ILSMComponent o : mergingComponents) {
             LSMRTreeImmutableComponent component = (LSMRTreeImmutableComponent) o;
             devs.add(component.getRTree().getFileReference().getDeviceHandle());
-            devs.add(component.getBTree().getFileReference().getDeviceHandle());
+            if (component.getBTree() != null) {
+                devs.add(component.getBTree().getFileReference().getDeviceHandle());
+            }
         }
         return devs;
     }
 
     @Override
     public Set<IODeviceHandle> getWriteDevices() {
-        return Collections.singleton(rtreeMergeTarget.getDeviceHandle());
+        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
+        devs.add(rtreeMergeTarget.getDeviceHandle());
+        if (btreeMergeTarget != null) {
+            devs.add(btreeMergeTarget.getDeviceHandle());
+        }
+        return devs;
     }
 
     @Override

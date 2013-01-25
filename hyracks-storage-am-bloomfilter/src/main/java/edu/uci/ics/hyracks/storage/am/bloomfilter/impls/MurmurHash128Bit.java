@@ -17,6 +17,10 @@ package edu.uci.ics.hyracks.storage.am.bloomfilter.impls;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
+/**
+ * The idea of this class is borrowed from http://murmurhash.googlepages.com/ and cassandra source code.3
+ * We changed the hash function to operate on ITupleReference instead of a byte array.
+ **/
 public class MurmurHash128Bit {
 
     private final static int DUMMY_FIELD = 0;

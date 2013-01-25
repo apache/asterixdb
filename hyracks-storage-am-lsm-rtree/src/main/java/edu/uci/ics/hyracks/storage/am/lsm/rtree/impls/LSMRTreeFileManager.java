@@ -30,12 +30,12 @@ import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class LSMRTreeFileManager extends LSMIndexFileManager {
+public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
     private static final String RTREE_STRING = "r";
     private static final String BTREE_STRING = "b";
 
@@ -69,7 +69,7 @@ public class LSMRTreeFileManager extends LSMIndexFileManager {
         String baseName = baseDir + ts + SPLIT_STRING + ts;
         // Begin timestamp and end timestamp are identical since it is a flush
         return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + RTREE_STRING),
-                createFlushFile(baseName + SPLIT_STRING + BTREE_STRING));
+                createFlushFile(baseName + SPLIT_STRING + BTREE_STRING), null);
     }
 
     @Override
@@ -81,7 +81,7 @@ public class LSMRTreeFileManager extends LSMIndexFileManager {
         String baseName = baseDir + firstTimestampRange[0] + SPLIT_STRING + lastTimestampRange[1];
         // Get the range of timestamps by taking the earliest and the latest timestamps
         return new LSMComponentFileReferences(createMergeFile(baseName + SPLIT_STRING + RTREE_STRING),
-                createMergeFile(baseName + SPLIT_STRING + BTREE_STRING));
+                createMergeFile(baseName + SPLIT_STRING + BTREE_STRING), null);
     }
 
     @Override
@@ -127,7 +127,8 @@ public class LSMRTreeFileManager extends LSMIndexFileManager {
         }
 
         if (allRTreeFiles.size() == 1 && allBTreeFiles.size() == 1) {
-            validFiles.add(new LSMComponentFileReferences(allRTreeFiles.get(0).fileRef, allBTreeFiles.get(0).fileRef));
+            validFiles.add(new LSMComponentFileReferences(allRTreeFiles.get(0).fileRef, allBTreeFiles.get(0).fileRef,
+                    null));
             return validFiles;
         }
 
@@ -178,7 +179,7 @@ public class LSMRTreeFileManager extends LSMIndexFileManager {
         while (rtreeFileIter.hasNext() && btreeFileIter.hasNext()) {
             ComparableFileName cmpRTreeFileName = rtreeFileIter.next();
             ComparableFileName cmpBTreeFileName = btreeFileIter.next();
-            validFiles.add(new LSMComponentFileReferences(cmpRTreeFileName.fileRef, cmpBTreeFileName.fileRef));
+            validFiles.add(new LSMComponentFileReferences(cmpRTreeFileName.fileRef, cmpBTreeFileName.fileRef, null));
         }
 
         return validFiles;

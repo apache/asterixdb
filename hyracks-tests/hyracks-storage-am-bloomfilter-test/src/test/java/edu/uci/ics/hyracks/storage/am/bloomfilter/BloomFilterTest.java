@@ -52,14 +52,14 @@ public class BloomFilterTest extends AbstractBloomFilterTest {
 
         IBufferCache bufferCache = harness.getBufferCache();
 
-        long numElements = 100L;
+        int numElements = 100;
         int[] keyFields = { 0 };
         int numHashes = 5;
 
         BloomFilter bf = new BloomFilter(bufferCache, harness.getFileMapProvider(), harness.getFileReference(),
-                keyFields, numElements, numHashes);
+                keyFields);
 
-        bf.create();
+        bf.create(numElements, numHashes);
         bf.activate();
 
         int fieldCount = 2;
@@ -115,14 +115,14 @@ public class BloomFilterTest extends AbstractBloomFilterTest {
 
         IBufferCache bufferCache = harness.getBufferCache();
 
-        long numElements = 10000L;
+        int numElements = 10000;
         int[] keyFields = { 2, 4, 1 };
         int numHashes = 10;
 
         BloomFilter bf = new BloomFilter(bufferCache, harness.getFileMapProvider(), harness.getFileReference(),
-                keyFields, numElements, numHashes);
+                keyFields);
 
-        bf.create();
+        bf.create(numElements, numHashes);
         bf.activate();
 
         int fieldCount = 5;

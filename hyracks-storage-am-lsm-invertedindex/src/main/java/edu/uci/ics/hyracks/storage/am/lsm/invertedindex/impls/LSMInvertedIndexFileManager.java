@@ -29,14 +29,14 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexFileNameMapper;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 // TODO: Refactor for better code sharing with other file managers.
-public class LSMInvertedIndexFileManager extends LSMIndexFileManager implements IInvertedIndexFileNameMapper {
+public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager implements IInvertedIndexFileNameMapper {
     private static final String DICT_BTREE_SUFFIX = "b";
     private static final String INVLISTS_SUFFIX = "i";
     private static final String DELETED_KEYS_BTREE_SUFFIX = "d";
@@ -69,7 +69,7 @@ public class LSMInvertedIndexFileManager extends LSMIndexFileManager implements 
         String baseName = baseDir + ts + SPLIT_STRING + ts;
         // Begin timestamp and end timestamp are identical since it is a flush
         return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX),
-                createFlushFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX));
+                createFlushFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX), null);
     }
 
     @Override
@@ -81,7 +81,7 @@ public class LSMInvertedIndexFileManager extends LSMIndexFileManager implements 
         String baseName = baseDir + firstTimestampRange[0] + SPLIT_STRING + lastTimestampRange[1];
         // Get the range of timestamps by taking the earliest and the latest timestamps
         return new LSMComponentFileReferences(createMergeFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX),
-                createMergeFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX));
+                createMergeFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX), null);
     }
 
     @Override
@@ -132,7 +132,7 @@ public class LSMInvertedIndexFileManager extends LSMIndexFileManager implements 
 
         if (allDictBTreeFiles.size() == 1 && allDeletedKeysBTreeFiles.size() == 1) {
             validFiles.add(new LSMComponentFileReferences(allDictBTreeFiles.get(0).fileRef, allDeletedKeysBTreeFiles
-                    .get(0).fileRef));
+                    .get(0).fileRef, null));
             return validFiles;
         }
 
@@ -183,7 +183,8 @@ public class LSMInvertedIndexFileManager extends LSMIndexFileManager implements 
         while (dictBTreeFileIter.hasNext() && deletedKeysBTreeIter.hasNext()) {
             ComparableFileName cmpDictBTreeFile = dictBTreeFileIter.next();
             ComparableFileName cmpDeletedKeysBTreeFile = deletedKeysBTreeIter.next();
-            validFiles.add(new LSMComponentFileReferences(cmpDictBTreeFile.fileRef, cmpDeletedKeysBTreeFile.fileRef));
+            validFiles.add(new LSMComponentFileReferences(cmpDictBTreeFile.fileRef, cmpDeletedKeysBTreeFile.fileRef,
+                    null));
         }
 
         return validFiles;

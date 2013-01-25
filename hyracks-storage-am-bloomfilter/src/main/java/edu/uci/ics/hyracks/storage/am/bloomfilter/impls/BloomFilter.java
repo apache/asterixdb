@@ -21,18 +21,18 @@ import java.util.ArrayList;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.bloomfilter.api.IFilter;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class BloomFilter implements IFilter {
+public class BloomFilter {
 
     private final static int METADATA_PAGE_ID = 0;
     private final static int NUM_PAGES_OFFSET = 0; // 0
-    private final static int NUM_HASHES_USED_OFFSET = NUM_PAGES_OFFSET + 8; // 8
-    private final static int NUM_BITS = NUM_HASHES_USED_OFFSET + 4; // 12
+    private final static int NUM_HASHES_USED_OFFSET = NUM_PAGES_OFFSET + 4; // 4
+    private final static int NUM_ELEMENTS_OFFSET = NUM_HASHES_USED_OFFSET + 4; // 8
+    private final static int NUM_BITS_OFFSET = NUM_ELEMENTS_OFFSET + 8; // 12
 
     private final static int NUM_BITS_PER_ELEMENT = 10;
 
@@ -40,31 +40,17 @@ public class BloomFilter implements IFilter {
     private final IFileMapProvider fileMapProvider;
     private final FileReference file;
     private final int[] keyFields;
-    private int numHashes;
     private int fileId = -1;
     private boolean isActivated = false;
-    private long numPages;
 
+    private int numPages;
+    private int numHashes;
+    private long numElements;
     private long numBits;
     private int numBitsPerPage;
 
     private final ArrayList<ICachedPage> bloomFilterPages = new ArrayList<ICachedPage>();
     private final static long SEED = 0L;
-
-    private final boolean isNewFilter;
-
-    public BloomFilter(IBufferCache bufferCache, IFileMapProvider fileMapProvider, FileReference file, int[] keyFields,
-            long numElements, int numHashes) throws HyracksDataException {
-        this.bufferCache = bufferCache;
-        this.fileMapProvider = fileMapProvider;
-        this.file = file;
-        this.keyFields = keyFields;
-        this.numHashes = numHashes;
-        numBitsPerPage = bufferCache.getPageSize() * Byte.SIZE;
-        numBits = numElements * NUM_BITS_PER_ELEMENT;
-        numPages = (long) Math.ceil(numBits / (double) numBitsPerPage);
-        isNewFilter = true;
-    }
 
     public BloomFilter(IBufferCache bufferCache, IFileMapProvider fileMapProvider, FileReference file, int[] keyFields)
             throws HyracksDataException {
@@ -72,8 +58,6 @@ public class BloomFilter implements IFilter {
         this.fileMapProvider = fileMapProvider;
         this.file = file;
         this.keyFields = keyFields;
-        numBitsPerPage = bufferCache.getPageSize() * Byte.SIZE;
-        isNewFilter = false;
     }
 
     public int getFileId() {
@@ -84,7 +68,20 @@ public class BloomFilter implements IFilter {
         return file;
     }
 
-    @Override
+    public int getNumPages() throws HyracksDataException {
+        if (!isActivated) {
+            throw new HyracksDataException("The bloom filter is not activated.");
+        }
+        return numPages;
+    }
+
+    public long getNumElements() throws HyracksDataException {
+        if (!isActivated) {
+            throw new HyracksDataException("The bloom filter is not activated.");
+        }
+        return numElements;
+    }
+
     public void add(ITupleReference tuple, long[] hashes) {
         MurmurHash128Bit.hash3_x64_128(tuple, keyFields, SEED, hashes);
         for (int i = 0; i < numHashes; ++i) {
@@ -100,7 +97,6 @@ public class BloomFilter implements IFilter {
         }
     }
 
-    @Override
     public boolean contains(ITupleReference tuple, long[] hashes) {
         MurmurHash128Bit.hash3_x64_128(tuple, keyFields, SEED, hashes);
         for (int i = 0; i < numHashes; ++i) {
@@ -142,9 +138,10 @@ public class BloomFilter implements IFilter {
     private void persistBloomFilterMetaData() throws HyracksDataException {
         ICachedPage metaPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, METADATA_PAGE_ID), false);
         metaPage.acquireWriteLatch();
-        metaPage.getBuffer().putLong(NUM_PAGES_OFFSET, numPages);
+        metaPage.getBuffer().putInt(NUM_PAGES_OFFSET, numPages);
         metaPage.getBuffer().putInt(NUM_HASHES_USED_OFFSET, numHashes);
-        metaPage.getBuffer().putLong(NUM_BITS, numBits);
+        metaPage.getBuffer().putLong(NUM_ELEMENTS_OFFSET, numElements);
+        metaPage.getBuffer().putLong(NUM_BITS_OFFSET, numBits);
         metaPage.releaseWriteLatch();
         bufferCache.unpin(metaPage);
     }
@@ -152,28 +149,33 @@ public class BloomFilter implements IFilter {
     private void readBloomFilterMetaData() throws HyracksDataException {
         ICachedPage metaPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, METADATA_PAGE_ID), false);
         metaPage.acquireReadLatch();
-        numPages = metaPage.getBuffer().getLong(NUM_PAGES_OFFSET);
+        numPages = metaPage.getBuffer().getInt(NUM_PAGES_OFFSET);
         numHashes = metaPage.getBuffer().getInt(NUM_HASHES_USED_OFFSET);
-        numBits = metaPage.getBuffer().getLong(NUM_BITS);
+        numElements = metaPage.getBuffer().getLong(NUM_ELEMENTS_OFFSET);
+        numBits = metaPage.getBuffer().getLong(NUM_BITS_OFFSET);
         metaPage.releaseReadLatch();
         bufferCache.unpin(metaPage);
     }
 
-    @Override
-    public synchronized void create() throws HyracksDataException {
+    public synchronized void create(long numElements, int numHashes) throws HyracksDataException {
         if (isActivated) {
             throw new HyracksDataException("Failed to create the bloom filter since it is activated.");
-        } else if (!isNewFilter) {
-            throw new HyracksDataException(
-                    "Cannot create a bloom filter with this bloom filter instance. Please use a different bloom filter constructor.");
         }
+        this.numElements = numElements;
+        this.numHashes = numHashes;
+        numBitsPerPage = bufferCache.getPageSize() * Byte.SIZE;
+        numBits = numElements * NUM_BITS_PER_ELEMENT;
+        long tmp = (long) Math.ceil(numBits / (double) numBitsPerPage);
+        if (tmp > Integer.MAX_VALUE) {
+            throw new HyracksDataException("Cannot create a bloom filter with his huge number of pages.");
+        }
+        numPages = (int) tmp;
 
         prepareFile();
         persistBloomFilterMetaData();
         bufferCache.closeFile(fileId);
     }
 
-    @Override
     public synchronized void activate() throws HyracksDataException {
         if (isActivated) {
             return;
@@ -192,12 +194,14 @@ public class BloomFilter implements IFilter {
         isActivated = true;
     }
 
-    @Override
     public synchronized void deactivate() throws HyracksDataException {
         if (!isActivated) {
             return;
         }
 
+        if (fileId == 1) {
+            System.out.println();
+        }
         for (int i = 0; i < numPages; ++i) {
             ICachedPage page = bloomFilterPages.get(i);
             page.releaseWriteLatch();
@@ -208,7 +212,6 @@ public class BloomFilter implements IFilter {
         isActivated = false;
     }
 
-    @Override
     public synchronized void destroy() throws HyracksDataException {
         if (isActivated) {
             throw new HyracksDataException("Failed to destroy the bloom filter since it is activated.");

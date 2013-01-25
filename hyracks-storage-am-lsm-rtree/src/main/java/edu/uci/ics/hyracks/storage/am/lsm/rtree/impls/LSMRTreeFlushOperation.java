@@ -8,6 +8,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
@@ -15,12 +16,12 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 public class LSMRTreeFlushOperation implements ILSMIOOperation {
 
     private final ILSMIndexAccessorInternal accessor;
-    private final LSMRTreeMutableComponent flushingComponent;
+    private final ILSMComponent flushingComponent;
     private final FileReference rtreeFlushTarget;
     private final FileReference btreeFlushTarget;
     private final ILSMIOOperationCallback callback;
 
-    public LSMRTreeFlushOperation(ILSMIndexAccessorInternal accessor, LSMRTreeMutableComponent flushingComponent,
+    public LSMRTreeFlushOperation(ILSMIndexAccessorInternal accessor, ILSMComponent flushingComponent,
             FileReference rtreeFlushTarget, FileReference btreeFlushTarget, ILSMIOOperationCallback callback) {
         this.accessor = accessor;
         this.flushingComponent = flushingComponent;
@@ -38,7 +39,9 @@ public class LSMRTreeFlushOperation implements ILSMIOOperation {
     public Set<IODeviceHandle> getWriteDevices() {
         Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
         devs.add(rtreeFlushTarget.getDeviceHandle());
-        devs.add(btreeFlushTarget.getDeviceHandle());
+        if (btreeFlushTarget != null) {
+            devs.add(btreeFlushTarget.getDeviceHandle());
+        }
         return devs;
     }
 
@@ -60,7 +63,7 @@ public class LSMRTreeFlushOperation implements ILSMIOOperation {
         return btreeFlushTarget;
     }
 
-    public LSMRTreeMutableComponent getFlushingComponent() {
+    public ILSMComponent getFlushingComponent() {
         return flushingComponent;
     }
 }

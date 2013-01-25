@@ -178,8 +178,9 @@ public class MurmurHashForITupleReferenceTest extends AbstractBloomFilterTest {
         return length;
     }
 
-    
-
+    /**
+     * The hash3_x64_128 and getblock functions are borrowed from cassandra source code for testing purpose
+     **/
     protected static long getblock(ByteBuffer key, int offset, int index) {
         int i_8 = index << 3;
         int blockOffset = offset + i_8;

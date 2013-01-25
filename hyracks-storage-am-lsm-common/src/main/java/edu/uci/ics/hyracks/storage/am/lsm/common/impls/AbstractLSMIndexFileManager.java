@@ -48,7 +48,6 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     protected final IFileMapProvider fileMapProvider;
 
     // baseDir should reflect dataset name and partition name.
-    protected FileReference file;
     protected String baseDir;
     protected final Format formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
     protected final Comparator<String> cmp = new FileNameComparator();
@@ -61,7 +60,6 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
 
     public AbstractLSMIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
             TreeIndexFactory<? extends ITreeIndex> treeFactory, int startIODeviceIndex) {
-        this.file = file;
         this.baseDir = file.getFile().getPath();
         if (!baseDir.endsWith(System.getProperty("file.separator"))) {
             baseDir += System.getProperty("file.separator");
@@ -100,9 +98,21 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         }
     }
 
-    abstract protected void cleanupAndGetValidFilesInternal(IODeviceHandle dev, FilenameFilter filter,
+    protected void cleanupAndGetValidFilesInternal(IODeviceHandle dev, FilenameFilter filter,
             TreeIndexFactory<? extends ITreeIndex> treeFactory, ArrayList<ComparableFileName> allFiles)
-            throws HyracksDataException, IndexException;
+            throws HyracksDataException, IndexException {
+        File dir = new File(dev.getPath(), baseDir);
+        String[] files = dir.list(filter);
+        for (String fileName : files) {
+            File file = new File(dir.getPath() + File.separator + fileName);
+            FileReference fileRef = new FileReference(file);
+            if (isValidTreeIndex(treeFactory.createIndexInstance(fileRef))) {
+                allFiles.add(new ComparableFileName(fileRef));
+            } else {
+                file.delete();
+            }
+        }
+    }
 
     @Override
     public void createDirs() {
@@ -145,7 +155,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         Date date = new Date();
         String ts = formatter.format(date);
         // Begin timestamp and end timestamp are identical since it is a flush
-        return new LSMComponentFileReferences(createFlushFile(baseDir + ts + SPLIT_STRING + ts), null);
+        return new LSMComponentFileReferences(createFlushFile(baseDir + ts + SPLIT_STRING + ts), null, null);
     }
 
     @Override
@@ -155,7 +165,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         String[] lastTimestampRange = lastFileName.split(SPLIT_STRING);
         // Get the range of timestamps by taking the earliest and the latest timestamps
         return new LSMComponentFileReferences(createMergeFile(baseDir + firstTimestampRange[0] + SPLIT_STRING
-                + lastTimestampRange[1]), null);
+                + lastTimestampRange[1]), null, null);
     }
 
     @Override
@@ -177,7 +187,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         }
 
         if (allFiles.size() == 1) {
-            validFiles.add(new LSMComponentFileReferences(allFiles.get(0).fileRef, null));
+            validFiles.add(new LSMComponentFileReferences(allFiles.get(0).fileRef, null, null));
             return validFiles;
         }
 
@@ -209,7 +219,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         // Sort valid files in reverse lexicographical order, such that newer files come first.
         Collections.sort(validComparableFiles, recencyCmp);
         for (ComparableFileName cmpFileName : validComparableFiles) {
-            validFiles.add(new LSMComponentFileReferences(cmpFileName.fileRef, null));
+            validFiles.add(new LSMComponentFileReferences(cmpFileName.fileRef, null, null));
         }
 
         return validFiles;

@@ -228,7 +228,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             FileReference deleteFileRef, boolean createComponent) throws HyracksDataException, IndexException {
         // Create new tree instance.
         LSMRTreeImmutableComponent component = (LSMRTreeImmutableComponent) factory
-                .createLSMComponentInstance(new LSMComponentFileReferences(insertFileRef, deleteFileRef));
+                .createLSMComponentInstance(new LSMComponentFileReferences(insertFileRef, deleteFileRef, null));
         if (createComponent) {
             component.getRTree().create();
             if (component.getBTree() != null) {
