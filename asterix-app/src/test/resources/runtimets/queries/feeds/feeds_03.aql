@@ -1,0 +1,34 @@
+/*
+ * Description  : Create a feed dataset with an associated function and verify contents in Metadata
+ * Expected Res : Success
+ * Date         : 24th Dec 2012
+ */
+drop dataverse feeds if exists;
+create dataverse feeds;
+use dataverse feeds;
+
+create type TweetType as closed {
+  id: string,
+  username : string,
+  location : string,
+  text : string,
+  timestamp : string
+}      
+
+create function feed_processor($x) {
+$x
+}
+
+create feed dataset TweetFeed(TweetType)
+using "edu.uci.ics.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory"
+(("fs"="localfs"),("path"="nc1://data/twitter/obamatweets.adm"),("format"="adm"),("output-type-name"="TweetType"),("tuple-interval"="10"))
+apply function feed_processor@1
+partitioned by key id;
+
+write output to nc1:"rttest/feeds_feeds_03.adm";
+
+for $x in dataset('Metadata.Dataset')
+where $x.DataverseName='feeds' and $x.DatasetName='TweetFeed'
+return $x
+
+drop dataverse feeds;

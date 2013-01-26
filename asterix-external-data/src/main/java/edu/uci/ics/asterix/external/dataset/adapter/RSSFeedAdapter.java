@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -19,24 +19,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.asterix.feed.intake.IPullBasedFeedClient;
-import edu.uci.ics.asterix.feed.intake.RSSFeedClient;
 import edu.uci.ics.asterix.feed.managed.adapter.IManagedFeedAdapter;
-import edu.uci.ics.asterix.feed.managed.adapter.IMutableFeedAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
-public class RSSFeedAdapter extends PullBasedAdapter implements IManagedFeedAdapter, IMutableFeedAdapter {
+/**
+ * RSSFeedAdapter provides the functionality of fetching an RSS based feed.
+ */
+public class RSSFeedAdapter extends PullBasedAdapter implements IManagedFeedAdapter {
+
+    private static final long serialVersionUID = 1L;
 
     private List<String> feedURLs = new ArrayList<String>();
     private boolean isStopRequested = false;
     private boolean isAlterRequested = false;
     private Map<String, String> alteredParams = new HashMap<String, String>();
     private String id_prefix = "";
-    private int interval = 10;
     private ARecordType recordType;
 
     private IPullBasedFeedClient rssFeedClient;
@@ -53,37 +55,15 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IManagedFeedAdap
     }
 
     @Override
-    public void alter(Map<String, String> properties) throws Exception {
+    public void alter(Map<String, String> properties) {
         isAlterRequested = true;
         this.alteredParams = properties;
         reconfigure(properties);
     }
 
-    public void postAlteration() {
-        alteredParams = null;
-        isAlterRequested = false;
-    }
-
     @Override
-    public void suspend() throws Exception {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void resume() throws Exception {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void stop() throws Exception {
+    public void stop() {
         isStopRequested = true;
-    }
-
-    @Override
-    public AdapterDataFlowType getAdapterDataFlowType() {
-        return AdapterDataFlowType.PULL;
     }
 
     @Override
@@ -149,6 +129,14 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IManagedFeedAdap
     @Override
     public ARecordType getAdapterOutputType() {
         return recordType;
+    }
+
+    @Override
+    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
+        if (partitionConstraint == null) {
+            configurePartitionConstraints();
+        }
+        return partitionConstraint;
     }
 
 }

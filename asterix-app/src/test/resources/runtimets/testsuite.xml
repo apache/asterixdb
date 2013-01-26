@@ -2624,6 +2624,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="scan">
+      <compilation-unit name="issue238_query_1">
+        <output-file compare="Text">issue238_query_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
+      <compilation-unit name="issue238_query_2">
+        <output-file compare="Text">issue238_query_2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
       <compilation-unit name="30">
         <output-file compare="Text">30.adm</output-file>
       </compilation-unit>
@@ -3814,6 +3824,58 @@
       <compilation-unit name="f01">
         <output-file compare="Text">f01.adm</output-file>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="load">
+    <test-case FilePath="load">
+      <compilation-unit name="issue14_query">
+        <output-file compare="Text">none.adm</output-file>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="feeds">
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_01">
+        <output-file compare="Text">feeds_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_02">
+        <output-file compare="Text">feeds_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_03">
+        <output-file compare="Text">feeds_03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_04">
+        <output-file compare="Text">feeds_04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="issue_230_feeds">
+        <output-file compare="Text">issue_230_feeds.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="hdfs">
+    <test-case FilePath="hdfs">
+      <compilation-unit name="issue_245_hdfs">
+        <output-file compare="Text">issue_245_hdfs.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="hdfs">
+      <compilation-unit name="hdfs_02">
+        <output-file compare="Text">hdfs_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="hdfs">
+      <compilation-unit name="hdfs_03">
+        <output-file compare="Text">hdfs_03.adm</output-file>
       </compilation-unit>
     </test-case>
   </test-group>

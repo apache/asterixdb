@@ -805,7 +805,7 @@ FeedDetailsDecl FeedDatasetDeclaration() throws ParseException :
   dataverse = nameComponents.first != null ? nameComponents.first.getValue() : defaultDataverse;
   functionName = nameComponents.second.getValue();
   }
-  ("@" <IDENTIFIER> 
+  ("@" <INTEGER_LITERAL> 
      {
         arity = Integer.parseInt(token.image);
      }
@@ -866,7 +866,7 @@ ControlFeedStatement AlterFeedDeclaration() throws ParseException :
    { 
    configuration = getConfiguration();
    }
-  ";"
+  
   {
     return new ControlFeedStatement(ControlFeedStatement.OperationType.ALTER, nameComponents.first, nameComponents.second, configuration);
   }

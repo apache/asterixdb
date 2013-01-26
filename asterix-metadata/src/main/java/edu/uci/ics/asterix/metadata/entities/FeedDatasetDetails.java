@@ -34,6 +34,11 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 
+/**
+ * Provides functionality for writing parameters for a FEED dataset into the
+ * Metadata. Since FEED dataset is a special kind of INTERNAL dataset, this
+ * class extends InternalDatasetDetails.
+ */
 public class FeedDatasetDetails extends InternalDatasetDetails {
 
     private static final long serialVersionUID = 1L;
@@ -141,8 +146,8 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
 
         // write field 7
         fieldValue.reset();
-        if (getFunction() != null) {
-            aString.setValue(getFunction().toString());
+        if (signature != null) {
+            aString.setValue(signature.toString());
             stringSerde.serialize(aString, fieldValue.getDataOutput());
             feedRecordBuilder.addField(MetadataRecordTypes.FEED_DETAILS_ARECORD_FUNCTION_FIELD_INDEX, fieldValue);
         }

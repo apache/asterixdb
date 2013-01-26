@@ -137,12 +137,18 @@ public final class MetadataRecordTypes {
 
     private static final ARecordType createFeedDetailsRecordType() {
         AOrderedListType orderedListType = new AOrderedListType(BuiltinType.ASTRING, null);
-        AOrderedListType orderedListOfPropertiesType = new AOrderedListType(DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE, null);
+        AOrderedListType orderedListOfPropertiesType = new AOrderedListType(DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE,
+                null);
         String[] fieldNames = { "FileStructure", "PartitioningStrategy", "PartitioningKey", "PrimaryKey", "GroupName",
                 "DatasourceAdapter", "Properties", "Function", "Status" };
 
+        List<IAType> feedFunctionUnionList = new ArrayList<IAType>();
+        feedFunctionUnionList.add(BuiltinType.ANULL);
+        feedFunctionUnionList.add(BuiltinType.ASTRING);
+        AUnionType feedFunctionUnion = new AUnionType(feedFunctionUnionList, null);
+
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, orderedListType, orderedListType,
-                BuiltinType.ASTRING, BuiltinType.ASTRING, orderedListOfPropertiesType, BuiltinType.ASTRING,
+                BuiltinType.ASTRING, BuiltinType.ASTRING, orderedListOfPropertiesType, feedFunctionUnion,
                 BuiltinType.ASTRING };
 
         return new ARecordType(null, fieldNames, fieldTypes, true);
