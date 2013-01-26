@@ -16,10 +16,8 @@ package edu.uci.ics.hyracks.storage.common.file;
 
 public class TransientLocalResourceFactory implements ILocalResourceFactory {
 
-    public static final int TransientResource = 0;
-    
     @Override
-    public LocalResource createLocalResource(long resourceId, String resourceName) {
-        return new LocalResource(resourceId, resourceName, TransientResource, null);
+    public LocalResource createLocalResource(long resourceId, String resourceName, int partition) {
+        return new LocalResource(resourceId, resourceName, partition, LocalResource.TransientResource, null);
     }
 }
