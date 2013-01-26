@@ -39,7 +39,7 @@ public class CCConfig {
     public int heartbeatPeriod = 10000;
 
     @Option(name = "-max-heartbeat-lapse-periods", usage = "Sets the maximum number of missed heartbeats before a node is marked as dead (default: 5)")
-    public int maxHeartbeatLapsePeriods = 5;
+    public int maxHeartbeatLapsePeriods = 10000;
 
     @Option(name = "-profile-dump-period", usage = "Sets the time duration between two profile dumps from each node controller in milliseconds. 0 to disable. (default: 0)")
     public int profileDumpPeriod = 0;
