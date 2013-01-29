@@ -23,6 +23,8 @@ public class TreeOperatorTestHelper implements ITreeIndexOperatorTestHelper {
 
     protected final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final String sep = System.getProperty("file.separator");
+    protected static int DEFAULT_MEM_PAGE_SIZE = 32768;
+    protected static int DEFAULT_MEM_NUM_PAGES = 1000;
 
     public String getPrimaryIndexName() {
         return System.getProperty("java.io.tmpdir") + sep + "primary" + simpleDateFormat.format(new Date());
