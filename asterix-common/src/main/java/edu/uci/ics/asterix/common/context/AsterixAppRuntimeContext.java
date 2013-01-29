@@ -157,27 +157,27 @@ public class AsterixAppRuntimeContext {
     public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory() {
         return lsmBTreeOpTrackerFactory;
     }
-    
+
     public ILSMOperationTrackerFactory getLSMRTreeOperationTrackerFactory() {
         return lsmRTreeOpTrackerFactory;
     }
-    
+
     public ILSMOperationTrackerFactory getLSMInvertedIndexOperationTrackerFactory() {
         return lsmInvertedIndexOpTrackerFactory;
     }
-    
+
     public ILSMIOOperationCallbackProvider getLSMBTreeIOOperationCallbackProvider() {
         return AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER;
     }
-    
+
     public ILSMIOOperationCallbackProvider getLSMRTreeIOOperationCallbackProvider() {
         return AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER;
     }
-    
+
     public ILSMIOOperationCallbackProvider getLSMInvertedIndexIOOperationCallbackProvider() {
         return AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER;
     }
-    
+
     public ILSMIOOperationCallbackProvider getNoOpIOOperationCallbackProvider() {
         return AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER;
     }
