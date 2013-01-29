@@ -591,7 +591,7 @@ public abstract class OrderedIndexExamplesTest {
             LOGGER.info("Bulk loading " + ins + " tuples");
         }
         long start = System.currentTimeMillis();
-        IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, false);
+        IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, false, ins);
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         for (int i = 0; i < ins; i++) {
@@ -656,7 +656,7 @@ public abstract class OrderedIndexExamplesTest {
             treeIndex.activate();
 
             // Load sorted records, and expect to fail at tuple i.
-            IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, true);
+            IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, true, ins);
             for (int j = 0; j < ins; j++) {
                 if (j > i) {
                     fail("Bulk load failure test unexpectedly succeeded past tuple: " + j);

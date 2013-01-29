@@ -152,9 +152,6 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
             return;
         }
 
-        if (fileId == 0) {
-            System.out.println();
-        }
         bufferCache.closeFile(fileId);
         freePageManager.close();
 

@@ -33,6 +33,7 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
     private final IHyracksTaskContext ctx;
     private final float fillFactor;
     private final boolean verifyInput;
+    private final long numElementsHint;
     private final IIndexDataflowHelper indexHelper;
     private FrameTupleAccessor accessor;
     private IIndex index;
@@ -41,12 +42,14 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
     private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 
     public IndexBulkLoadOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            int[] fieldPermutation, float fillFactor, boolean verifyInput, IRecordDescriptorProvider recordDescProvider) {
+            int[] fieldPermutation, float fillFactor, boolean verifyInput, long numElementsHint,
+            IRecordDescriptorProvider recordDescProvider) {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
         this.fillFactor = fillFactor;
         this.verifyInput = verifyInput;
+        this.numElementsHint = numElementsHint;
         this.recDescProvider = recordDescProvider;
         tuple.setFieldPermutation(fieldPermutation);
     }
@@ -58,7 +61,7 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
         indexHelper.open();
         index = indexHelper.getIndexInstance();
         try {
-            bulkLoader = index.createBulkLoader(fillFactor, verifyInput);
+            bulkLoader = index.createBulkLoader(fillFactor, verifyInput, numElementsHint);
         } catch (Exception e) {
             indexHelper.close();
             throw new HyracksDataException(e);

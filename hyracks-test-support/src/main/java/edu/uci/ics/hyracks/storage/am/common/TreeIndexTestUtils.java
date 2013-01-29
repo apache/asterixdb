@@ -106,7 +106,7 @@ public abstract class TreeIndexTestUtils {
     }
 
     public void checkDiskOrderScan(IIndexTestContext ctx) throws Exception {
-    	try {
+        try {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Testing Disk-Order Scan.");
             }
@@ -243,7 +243,7 @@ public abstract class TreeIndexTestUtils {
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         // Perform bulk load.
-        IIndexBulkLoader bulkLoader = ctx.getIndex().createBulkLoader(0.7f, false);
+        IIndexBulkLoader bulkLoader = ctx.getIndex().createBulkLoader(0.7f, false, numTuples);
         int c = 1;
         for (CheckTuple checkTuple : checkTuples) {
             if (LOGGER.isLoggable(Level.INFO)) {
