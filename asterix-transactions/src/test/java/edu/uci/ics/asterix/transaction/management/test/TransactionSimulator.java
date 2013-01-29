@@ -50,7 +50,7 @@ public class TransactionSimulator {
 
     public TransactionSimulator(IResource resource, IResourceManager resourceMgr) throws ACIDException {
         String id = "nc1";
-        transactionProvider = new TransactionSubsystem(id);
+        transactionProvider = new TransactionSubsystem(id, null);
         transactionManager = transactionProvider.getTransactionManager();
         logManager = transactionProvider.getLogManager();
         lockManager = transactionProvider.getLockManager();

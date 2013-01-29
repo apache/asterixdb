@@ -39,7 +39,7 @@ class LockRequestController implements Runnable {
     long defaultWaitTime;
 
     public LockRequestController(String requestFileName) throws ACIDException {
-        this.txnProvider = new TransactionSubsystem("LockManagerPredefinedUnitTest");;
+        this.txnProvider = new TransactionSubsystem("LockManagerPredefinedUnitTest", null);;
         this.workerReadyQueue = new WorkerReadyQueue();
         this.requestList = new ArrayList<LockRequest>();
         this.expectedResultList = new ArrayList<ArrayList<Integer>>();

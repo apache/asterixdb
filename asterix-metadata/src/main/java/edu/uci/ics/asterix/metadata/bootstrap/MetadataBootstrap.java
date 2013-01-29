@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
+import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.external.adapter.factory.IAdapterFactory;
@@ -80,7 +81,6 @@ import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.LocalResource;
 import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
-import edu.uci.ics.hyracks.storage.common.file.TransientLocalResourceFactoryProvider;
 
 /**
  * Initializes the remote metadata storage facilities ("universe") using a
@@ -339,7 +339,7 @@ public class MetadataBootstrap {
                 metaDataFrameFactory);
         LSMBTree lsmBtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file,
                 bufferCache, fileMapProvider, typeTraits, comparatorFactories, runtimeContext.getLSMMergePolicy(),
-                runtimeContext.getLSMOperationTrackerFactory(), runtimeContext.getLSMIOScheduler(),
+                runtimeContext.getLSMBTreeOperationTrackerFactory(), runtimeContext.getLSMIOScheduler(),
                 AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
         long resourceID = -1;
         if (create) {
@@ -347,7 +347,8 @@ public class MetadataBootstrap {
             resourceID = runtimeContext.getResourceIdFactory().createId();
 
             ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits,
-                    comparatorFactories, index.isPrimaryIndex());
+                    comparatorFactories, index.isPrimaryIndex(), GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE,
+                    GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES);
             ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                     localResourceMetadata, LocalResource.LSMBTreeResource);
             ILocalResourceFactory localResourceFactory = localResourceFactoryProvider.getLocalResourceFactory();

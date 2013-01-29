@@ -18,5 +18,4 @@ public class PersistentLocalResourceFactoryProvider implements ILocalResourceFac
     public ILocalResourceFactory getLocalResourceFactory() {
         return new PersistentLocalResourceFactory(localResourceMetadata, resourceType);
     }
-
 }

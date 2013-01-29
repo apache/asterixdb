@@ -31,7 +31,7 @@ public class RecoverySimulator {
     public static void main(String args[]) throws IOException, ACIDException {
         String id = "nc1";
         try {
-            TransactionSubsystem factory = new TransactionSubsystem(id);
+            TransactionSubsystem factory = new TransactionSubsystem(id, null);
             IRecoveryManager recoveryManager = factory.getRecoveryManager();
             recoveryManager.startRecovery(true);
         } catch (ACIDException acide) {

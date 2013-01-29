@@ -19,8 +19,9 @@ import edu.uci.ics.asterix.transaction.management.resource.TransactionalResource
 import edu.uci.ics.asterix.transaction.management.service.locking.ILockManager;
 import edu.uci.ics.asterix.transaction.management.service.locking.LockManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.ILogManager;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.IndexLoggerRepository;
+import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
+import edu.uci.ics.asterix.transaction.management.service.recovery.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager;
 import edu.uci.ics.asterix.transaction.management.service.recovery.RecoveryManager;
 
@@ -36,8 +37,10 @@ public class TransactionSubsystem {
     private final IRecoveryManager recoveryManager;
     private final TransactionalResourceRepository resourceRepository;
     private final IndexLoggerRepository loggerRepository;
+    private final IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider;
 
-    public TransactionSubsystem(String id) throws ACIDException {
+    public TransactionSubsystem(String id, IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider)
+            throws ACIDException {
         this.id = id;
         this.transactionManager = new TransactionManager(this);
         this.logManager = new LogManager(this);
@@ -45,6 +48,7 @@ public class TransactionSubsystem {
         this.recoveryManager = new RecoveryManager(this);
         this.loggerRepository = new IndexLoggerRepository(this);
         this.resourceRepository = new TransactionalResourceRepository();
+        this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
     }
 
     public ILogManager getLogManager() {
@@ -62,13 +66,17 @@ public class TransactionSubsystem {
     public IRecoveryManager getRecoveryManager() {
         return recoveryManager;
     }
-    
+
     public TransactionalResourceRepository getTransactionalResourceRepository() {
         return resourceRepository;
     }
-    
+
     public IndexLoggerRepository getTreeLoggerRepository() {
         return loggerRepository;
+    }
+
+    public IAsterixAppRuntimeContextProvider getAsterixAppRuntimeContextProvider() {
+        return asterixAppRuntimeContextProvider;
     }
 
     public String getId() {

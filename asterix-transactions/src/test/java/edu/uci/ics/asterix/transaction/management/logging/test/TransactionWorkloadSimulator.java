@@ -49,7 +49,7 @@ public class TransactionWorkloadSimulator {
     }
 
     public void beginWorkload() throws ACIDException {
-        provider = new TransactionSubsystem("nc1");
+        provider = new TransactionSubsystem("nc1", null);
         logManager = provider.getLogManager();
         lockManager = provider.getLockManager();
         provider.getTransactionalResourceRepository().registerTransactionalResourceManager(DummyResourceMgr.id,

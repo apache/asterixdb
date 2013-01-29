@@ -34,4 +34,8 @@ public class GlobalConfig {
     public static final float DEFAULT_BTREE_FILL_FACTOR = 1.00f;
     
     public static int DEFAULT_INPUT_DATA_COLUMN = 0;
+    
+    public static int DEFAULT_INDEX_MEM_PAGE_SIZE = 32768;
+    
+    public static int DEFAULT_INDEX_MEM_NUM_PAGES = 1000;
 }
