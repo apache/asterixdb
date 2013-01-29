@@ -15,14 +15,13 @@
 package edu.uci.ics.hyracks.dataflow.common.comm.io;
 
 import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
-import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
+import edu.uci.ics.hyracks.data.std.util.GrowableArray;
 
 /**
  * Array backed tuple builder.
@@ -30,25 +29,21 @@ import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
  * @author vinayakb
  */
 public class ArrayTupleBuilder implements IDataOutputProvider {
-    private final ByteArrayAccessibleOutputStream baaos;
-    private final DataOutputStream dos;
+    private final GrowableArray fieldData = new GrowableArray();
     private final int[] fEndOffsets;
     private int nextField;
 
     public ArrayTupleBuilder(int nFields) {
-        baaos = new ByteArrayAccessibleOutputStream();
-        dos = new DataOutputStream(baaos);
         fEndOffsets = new int[nFields];
     }
 
     /**
      * Resets the builder.
-     * 
      * reset() must be called before attempting to create a new tuple.
      */
     public void reset() {
         nextField = 0;
-        baaos.reset();
+        fieldData.reset();
     }
 
     /**
@@ -66,7 +61,7 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
      * @return Data byte array.
      */
     public byte[] getByteArray() {
-        return baaos.getByteArray();
+        return fieldData.getByteArray();
     }
 
     /**
@@ -75,7 +70,7 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
      * @return data area size.
      */
     public int getSize() {
-        return baaos.size();
+        return fieldData.getLength();
     }
 
     /**
@@ -96,14 +91,15 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
         int fStartOffset = accessor.getFieldStartOffset(tIndex, fIndex);
         int fLen = accessor.getFieldEndOffset(tIndex, fIndex) - fStartOffset;
         try {
-            dos.write(accessor.getBuffer().array(), startOffset + accessor.getFieldSlotsLength() + fStartOffset, fLen);
+            fieldData.getDataOutput().write(accessor.getBuffer().array(),
+                    startOffset + accessor.getFieldSlotsLength() + fStartOffset, fLen);
             if (FrameConstants.DEBUG_FRAME_IO) {
-                dos.writeInt(FrameConstants.FRAME_FIELD_MAGIC);
+                fieldData.getDataOutput().writeInt(FrameConstants.FRAME_FIELD_MAGIC);
             }
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
-        fEndOffsets[nextField++] = baaos.size();
+        fEndOffsets[nextField++] = fieldData.getLength();
     }
 
     /**
@@ -117,8 +113,8 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
      * @throws HyracksDataException
      */
     public <T> void addField(ISerializerDeserializer<T> serDeser, T instance) throws HyracksDataException {
-        serDeser.serialize(instance, dos);
-        fEndOffsets[nextField++] = baaos.size();
+        serDeser.serialize(instance, fieldData.getDataOutput());
+        fEndOffsets[nextField++] = fieldData.getLength();
     }
 
     /**
@@ -134,11 +130,11 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
      */
     public void addField(byte[] bytes, int start, int length) throws HyracksDataException {
         try {
-            dos.write(bytes, start, length);
+            fieldData.getDataOutput().write(bytes, start, length);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
-        fEndOffsets[nextField++] = baaos.size();
+        fEndOffsets[nextField++] = fieldData.getLength();
     }
 
     /**
@@ -146,7 +142,14 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
      */
     @Override
     public DataOutput getDataOutput() {
-        return dos;
+        return fieldData.getDataOutput();
+    }
+
+    /**
+     * Get the growable array storing the field data.
+     */
+    public GrowableArray getFieldData() {
+        return fieldData;
     }
 
     /**
@@ -156,6 +159,6 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
      * data.
      */
     public void addFieldEndOffset() {
-        fEndOffsets[nextField++] = baaos.size();
+        fEndOffsets[nextField++] = fieldData.getLength();
     }
 }

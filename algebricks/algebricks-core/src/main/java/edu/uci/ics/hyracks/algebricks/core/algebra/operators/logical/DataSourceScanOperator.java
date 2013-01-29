@@ -106,5 +106,4 @@ public class DataSourceScanOperator extends AbstractScanOperator {
         }
         return env;
     }
-
 }

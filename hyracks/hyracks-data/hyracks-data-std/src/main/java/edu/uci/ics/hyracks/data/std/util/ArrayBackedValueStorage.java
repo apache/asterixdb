@@ -1,34 +1,28 @@
 package edu.uci.ics.hyracks.data.std.util;
 
 import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.data.std.api.IMutableValueStorage;
 import edu.uci.ics.hyracks.data.std.api.IValueReference;
 
 public class ArrayBackedValueStorage implements IMutableValueStorage {
-    private final ByteArrayAccessibleOutputStream baaos;
-    private final DataOutputStream dos;
-
-    public ArrayBackedValueStorage() {
-        baaos = new ByteArrayAccessibleOutputStream();
-        dos = new DataOutputStream(baaos);
-    }
+   
+    private final GrowableArray data = new GrowableArray();
 
     @Override
     public void reset() {
-        baaos.reset();
+        data.reset();
     }
 
     @Override
     public DataOutput getDataOutput() {
-        return dos;
+        return data.getDataOutput();
     }
 
     @Override
     public byte[] getByteArray() {
-        return baaos.getByteArray();
+        return data.getByteArray();
     }
 
     @Override
@@ -38,12 +32,12 @@ public class ArrayBackedValueStorage implements IMutableValueStorage {
 
     @Override
     public int getLength() {
-        return baaos.size();
+        return data.getLength();
     }
 
     public void append(IValueReference value) {
         try {
-            dos.write(value.getByteArray(), value.getStartOffset(), value.getLength());
+            data.append(value);
         } catch (IOException e) {
             e.printStackTrace();
         }

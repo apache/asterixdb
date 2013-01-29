@@ -15,7 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.impls;
 
-import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -28,6 +27,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
+import edu.uci.ics.hyracks.data.std.util.GrowableArray;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -75,7 +75,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
     protected RecordDescriptor queryTokenRecDesc = new RecordDescriptor(
             new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
     protected ArrayTupleBuilder queryTokenBuilder = new ArrayTupleBuilder(queryTokenRecDesc.getFieldCount());
-    protected DataOutput queryTokenDos = queryTokenBuilder.getDataOutput();
+    protected GrowableArray queryTokenFieldData = queryTokenBuilder.getFieldData();
     protected FrameTupleAppender queryTokenAppender;
     protected ByteBuffer queryTokenFrame;
 
@@ -158,7 +158,7 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
             queryTokenBuilder.reset();
             try {
                 IToken token = queryTokenizer.getToken();
-                token.serializeToken(queryTokenDos);
+                token.serializeToken(queryTokenFieldData);
                 queryTokenBuilder.addFieldEndOffset();
                 // WARNING: assuming one frame is big enough to hold all tokens
                 queryTokenAppender.append(queryTokenBuilder.getFieldEndOffsets(), queryTokenBuilder.getByteArray(), 0,
@@ -294,7 +294,8 @@ public class TOccurrenceSearcher implements IInvertedIndexSearcher {
         boolean advanceCursor = true;
         boolean advancePrevResult = false;
         int resultTidx = 0;
-
+        currentNumResults = 0;
+        
         resultFrameTupleAcc.reset(prevCurrentBuffer);
         resultFrameTupleApp.reset(newCurrentBuffer, true);
 

@@ -158,5 +158,13 @@ public class HashPartitionMergeExchangePOperator extends AbstractExchangePOperat
                 comparatorFactories);
         return new Pair<IConnectorDescriptor, TargetConstraint>(conn, null);
     }
+    
+    public List<LogicalVariable> getPartitionFields() {
+        return partitionFields;
+    }
+    
+    public List<OrderColumn> getOrderColumns() {
+        return orderColumns;
+    }
 
 }

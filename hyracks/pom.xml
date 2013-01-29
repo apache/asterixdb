@@ -11,21 +11,6 @@
     <jvm.extraargs />
   </properties>
 
-  <profiles>
-    <profile>
-      <id>macosx</id>
-      <activation>
-        <os>
-          <name>mac os x</name>
-        </os>
-        <jdk>1.7</jdk>
-      </activation>
-      <properties>
-        <jvm.extraargs>-Djava.nio.channels.spi.SelectorProvider=sun.nio.ch.KQueueSelectorProvider</jvm.extraargs>
-      </properties>
-    </profile>
-  </profiles>
-
   <build>
     <plugins>
       <plugin>
