@@ -89,18 +89,18 @@ public class IndexResourceManager implements IResourceManager {
                     offset += oldValueSize;
 
                     if (oldOperation == (byte) IndexOperation.DELETE.ordinal()) {
-                        indexAccessor.delete(oldTuple);
+                        indexAccessor.forceDelete(oldTuple);
                     } else {
-                        indexAccessor.insert(oldTuple);
+                        indexAccessor.forceInsert(oldTuple);
                     }
                 } else {
-                    indexAccessor.physicalDelete(newTuple);
+                    indexAccessor.forcePhysicalDelete(newTuple);
                 }
             } else {
                 if (newOperation == (byte) IndexOperation.DELETE.ordinal()) {
-                    indexAccessor.insert(newTuple);
+                    indexAccessor.forceInsert(newTuple);
                 } else {
-                    indexAccessor.delete(newTuple);
+                    indexAccessor.forceDelete(newTuple);
                 }
             }
         } catch (Exception e) {

@@ -1005,7 +1005,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             //prepare callback
             JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
             int datasetId = dataset.getDatasetId();
-            int[] primaryKeyFields = new int[numKeys];
+            int[] primaryKeyFields = new int[numPrimaryKeys];
             i = 0;
             for (LogicalVariable varKey : primaryKeys) {
                 int idx = propagatedSchema.findVariable(varKey);

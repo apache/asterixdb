@@ -42,7 +42,8 @@ public class SecondaryIndexModificationOperationCallback extends AbstractOperati
 
     public SecondaryIndexModificationOperationCallback(int datasetId, int[] primaryKeyFields,
             IBinaryHashFunctionFactory[] primaryKeyHashFunctionFactories, TransactionContext txnCtx,
-            ILockManager lockManager, TransactionSubsystem txnSubsystem, long resourceId, byte resourceType, IndexOperation indexOp) {
+            ILockManager lockManager, TransactionSubsystem txnSubsystem, long resourceId, byte resourceType,
+            IndexOperation indexOp) {
         super(datasetId, primaryKeyFields, primaryKeyHashFunctionFactories, txnCtx, lockManager);
         this.resourceId = resourceId;
         this.resourceType = resourceType;
