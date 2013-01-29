@@ -125,4 +125,22 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessorInternal 
     public void noOp() throws HyracksDataException {
         lsmHarness.noOp(ctx);
     }
+
+    @Override
+    public void forcePhysicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
+        ctx.setOperation(IndexOperation.PHYSICALDELETE);
+        lsmHarness.forceModify(ctx, tuple);
+    }
+
+    @Override
+    public void forceInsert(ITupleReference tuple) throws HyracksDataException, IndexException {
+        ctx.setOperation(IndexOperation.INSERT);
+        lsmHarness.forceModify(ctx, tuple);
+    }
+
+    @Override
+    public void forceDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
+        ctx.setOperation(IndexOperation.DELETE);
+        lsmHarness.forceModify(ctx, tuple);
+    }
 }

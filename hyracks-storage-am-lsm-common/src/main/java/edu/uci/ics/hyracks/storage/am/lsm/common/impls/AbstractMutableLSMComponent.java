@@ -25,14 +25,20 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
     @Override
     public synchronized boolean threadEnter(LSMOperationType opType) throws InterruptedException {
         switch (opType) {
+            case FORCE_MODIFICATION:
+                if (state != ComponentState.READABLE_WRITABLE && state != ComponentState.READABLE_UNWRITABLE) {
+                    return false;
+                }
+                writerCount++;
+                break;
             case MODIFICATION:
-                while (state != ComponentState.READABLE_WRITABLE) {
+                if (state != ComponentState.READABLE_WRITABLE) {
                     return false;
                 }
                 writerCount++;
                 break;
             case SEARCH:
-                while (state == ComponentState.UNREADABLE_UNWRITABLE) {
+                if (state == ComponentState.UNREADABLE_UNWRITABLE) {
                     return false;
                 }
                 readerCount++;
@@ -58,6 +64,7 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
     @Override
     public synchronized void threadExit(LSMOperationType opType, boolean failedOperation) throws HyracksDataException {
         switch (opType) {
+            case FORCE_MODIFICATION:
             case MODIFICATION:
                 writerCount--;
                 if (state == ComponentState.READABLE_WRITABLE && isFull()) {

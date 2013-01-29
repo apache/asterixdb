@@ -50,6 +50,9 @@ public abstract class AbstractIntegrationTest {
     private static IHyracksClientConnection hcc;
 
     private final List<File> outputFiles;
+    
+    protected static int DEFAULT_MEM_PAGE_SIZE = 32768;
+    protected static int DEFAULT_MEM_NUM_PAGES = 1000;
 
     @Rule
     public TemporaryFolder outputFolder = new TemporaryFolder();

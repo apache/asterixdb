@@ -117,6 +117,23 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessorInternal, IInv
     }
 
     @Override
+    public void forcePhysicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
+        throw new UnsupportedOperationException("Physical delete not supported by lsm inverted index.");
+    }
+
+    @Override
+    public void forceInsert(ITupleReference tuple) throws HyracksDataException, IndexException {
+        ctx.setOperation(IndexOperation.INSERT);
+        lsmHarness.forceModify(ctx, tuple);
+    }
+
+    @Override
+    public void forceDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
+        ctx.setOperation(IndexOperation.DELETE);
+        lsmHarness.forceModify(ctx, tuple);
+    }
+
+    @Override
     public void physicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
         throw new UnsupportedOperationException("Physical delete not supported by lsm inverted index.");
     }

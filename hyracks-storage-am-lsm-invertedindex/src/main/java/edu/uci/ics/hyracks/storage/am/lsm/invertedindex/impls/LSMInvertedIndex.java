@@ -274,7 +274,14 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     @Override
     public void modify(IIndexOperationContext ictx, ITupleReference tuple) throws HyracksDataException, IndexException {
         LSMInvertedIndexOpContext ctx = (LSMInvertedIndexOpContext) ictx;
+        // TODO: This is a hack to support logging properly in ASTERIX.
+        // The proper undo operations are only dependent on the after image so 
+        // it is correct to say we found nothing (null) as the before image (at least 
+        // in the perspective of ASTERIX). The semantics for the operation callbacks 
+        // are violated here (and they are somewhat unclear in the first place as to 
+        // what they should be for an inverted index).
         ctx.modificationCallback.before(tuple);
+        ctx.modificationCallback.found(null, tuple);
         switch (ctx.getOperation()) {
             case INSERT: {
                 // Insert into the in-memory inverted index.                
@@ -282,7 +289,6 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 break;
             }
             case DELETE: {
-                ctx.modificationCallback.before(tuple);
                 // First remove all entries in the in-memory inverted index (if any).
                 ctx.memInvIndexAccessor.delete(tuple);
                 // Insert key into the deleted-keys BTree.

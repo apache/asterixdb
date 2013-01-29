@@ -22,7 +22,11 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 public interface ILSMHarness {
-    public boolean modify(ILSMIndexOperationContext ictx, boolean tryOperation, ITupleReference tuple)
+
+    public void forceModify(ILSMIndexOperationContext ctx, ITupleReference tuple) throws HyracksDataException,
+            IndexException;
+
+    public boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple)
             throws HyracksDataException, IndexException;
 
     public void noOp(ILSMIndexOperationContext ctx) throws HyracksDataException;

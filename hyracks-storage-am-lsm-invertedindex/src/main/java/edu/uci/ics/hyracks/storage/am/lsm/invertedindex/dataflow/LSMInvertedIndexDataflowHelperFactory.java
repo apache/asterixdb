@@ -30,14 +30,15 @@ public class LSMInvertedIndexDataflowHelperFactory extends AbstractLSMIndexDataf
 
     public LSMInvertedIndexDataflowHelperFactory(ILSMMergePolicyProvider mergePolicyProvider,
             ILSMOperationTrackerFactory opTrackerProvider, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
-            ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
-        super(mergePolicyProvider, opTrackerProvider, ioSchedulerProvider, ioOpCallbackProvider);
+            ILSMIOOperationCallbackProvider ioOpCallbackProvider, int memPageSize, int memNumPages) {
+        super(mergePolicyProvider, opTrackerProvider, ioSchedulerProvider, ioOpCallbackProvider, memPageSize,
+                memNumPages);
     }
 
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
-        return new LSMInvertedIndexDataflowHelper(opDesc, ctx, partition, mergePolicyProvider.getMergePolicy(ctx),
+        return new LSMInvertedIndexDataflowHelper(opDesc, ctx, partition, memPageSize, memNumPages, mergePolicyProvider.getMergePolicy(ctx),
                 opTrackerFactory, ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackProvider);
     }
 

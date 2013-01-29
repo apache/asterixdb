@@ -30,14 +30,15 @@ public class PartitionedLSMInvertedIndexDataflowHelperFactory extends AbstractLS
 
     public PartitionedLSMInvertedIndexDataflowHelperFactory(ILSMMergePolicyProvider mergePolicyProvider,
             ILSMOperationTrackerFactory opTrackerProvider, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
-            ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
-        super(mergePolicyProvider, opTrackerProvider, ioSchedulerProvider, ioOpCallbackProvider);
+            ILSMIOOperationCallbackProvider ioOpCallbackProvider, int memPageSize, int memNumPages) {
+        super(mergePolicyProvider, opTrackerProvider, ioSchedulerProvider, ioOpCallbackProvider, memNumPages,
+                memNumPages);
     }
 
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
-        return new PartitionedLSMInvertedIndexDataflowHelper(opDesc, ctx, partition,
+        return new PartitionedLSMInvertedIndexDataflowHelper(opDesc, ctx, partition, memPageSize, memNumPages,
                 mergePolicyProvider.getMergePolicy(ctx), opTrackerFactory, ioSchedulerProvider.getIOScheduler(ctx),
                 ioOpCallbackProvider);
     }

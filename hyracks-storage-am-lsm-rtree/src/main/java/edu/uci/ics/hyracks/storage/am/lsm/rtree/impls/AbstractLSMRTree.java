@@ -30,6 +30,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -277,7 +278,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     public void modify(IIndexOperationContext ictx, ITupleReference tuple) throws HyracksDataException, IndexException {
         LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;
         if (ctx.getOperation() == IndexOperation.PHYSICALDELETE) {
-            throw new UnsupportedOperationException("Physical delete not yet supported in LSM R-tree");
+            throw new UnsupportedOperationException("Physical delete not supported in the LSM-RTree");
         }
 
         if (ctx.getOperation() == IndexOperation.INSERT) {
@@ -325,15 +326,14 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         }
     }
 
-    protected LSMRTreeOpContext createOpContext() {
-        return new LSMRTreeOpContext((RTree.RTreeAccessor) mutableComponent.getRTree().createAccessor(
-                NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE),
-                (IRTreeLeafFrame) rtreeLeafFrameFactory.createFrame(),
+    protected LSMRTreeOpContext createOpContext(IModificationOperationCallback modCallback) {
+        return new LSMRTreeOpContext((RTree.RTreeAccessor) mutableComponent.getRTree().createAccessor(modCallback,
+                NoOpOperationCallback.INSTANCE), (IRTreeLeafFrame) rtreeLeafFrameFactory.createFrame(),
                 (IRTreeInteriorFrame) rtreeInteriorFrameFactory.createFrame(), memFreePageManager
                         .getMetaDataFrameFactory().createFrame(), 4, (BTree.BTreeAccessor) mutableComponent.getBTree()
-                        .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE),
-                btreeLeafFrameFactory, btreeInteriorFrameFactory, memFreePageManager.getMetaDataFrameFactory()
-                        .createFrame(), rtreeCmpFactories, btreeCmpFactories, null, null);
+                        .createAccessor(modCallback, NoOpOperationCallback.INSTANCE), btreeLeafFrameFactory,
+                btreeInteriorFrameFactory, memFreePageManager.getMetaDataFrameFactory().createFrame(),
+                rtreeCmpFactories, btreeCmpFactories, null, null);
     }
 
     @Override

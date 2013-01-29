@@ -15,5 +15,5 @@
 package edu.uci.ics.hyracks.storage.common.file;
 
 public interface ILocalResourceFactory {
-    public LocalResource createLocalResource(long resourceId, String resourceName);
+    public LocalResource createLocalResource(long resourceId, String resourceName, int partition);
 }
