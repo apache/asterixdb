@@ -141,8 +141,8 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
         }
 
         if (allBTreeFiles.size() == 1 && allBloomFilterFiles.size() == 1) {
-            validFiles.add(new LSMComponentFileReferences(allBTreeFiles.get(0).fileRef,
-                    allBloomFilterFiles.get(0).fileRef, null));
+            validFiles.add(new LSMComponentFileReferences(allBTreeFiles.get(0).fileRef, null, allBloomFilterFiles
+                    .get(0).fileRef));
             return validFiles;
         }
 
