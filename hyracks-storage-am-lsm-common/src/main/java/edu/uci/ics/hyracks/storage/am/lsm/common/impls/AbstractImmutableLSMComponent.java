@@ -53,6 +53,7 @@ public abstract class AbstractImmutableLSMComponent implements ILSMComponent {
             case MODIFICATION:
             case SEARCH:
                 readerCount--;
+
                 if (readerCount == 0 && state == ComponentState.READABLE_MERGING) {
                     destroy();
                     state = ComponentState.KILLED;

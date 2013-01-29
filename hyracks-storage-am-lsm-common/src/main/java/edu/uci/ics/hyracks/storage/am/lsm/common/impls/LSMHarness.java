@@ -48,12 +48,6 @@ public class LSMHarness implements ILSMHarness {
         if (!lsmIndex.getFlushStatus(lsmIndex) && lsmIndex.getInMemoryFreePageManager().isFull()) {
             lsmIndex.setFlushStatus(lsmIndex, true);
         }
-        if (opTracker == null) {
-            System.out.println("break");
-        }
-        if (opCtx == null) {
-            System.out.println("break");
-        }
         opTracker.afterOperation(opType, opCtx.getSearchOperationCallback(), opCtx.getModificationCallback());
     }
 
@@ -111,9 +105,21 @@ public class LSMHarness implements ILSMHarness {
     }
 
     @Override
+    public void forceModify(ILSMIndexOperationContext ctx, ITupleReference tuple) throws HyracksDataException,
+            IndexException {
+        LSMOperationType opType = LSMOperationType.FORCE_MODIFICATION;
+        modify(ctx, false, tuple, opType);
+    }
+
+    @Override
     public boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple)
             throws HyracksDataException, IndexException {
         LSMOperationType opType = LSMOperationType.MODIFICATION;
+        return modify(ctx, tryOperation, tuple, opType);
+    }
+
+    private boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple,
+            LSMOperationType opType) throws HyracksDataException, IndexException {
         if (!getAndEnterComponents(ctx, opType, tryOperation)) {
             return false;
         }

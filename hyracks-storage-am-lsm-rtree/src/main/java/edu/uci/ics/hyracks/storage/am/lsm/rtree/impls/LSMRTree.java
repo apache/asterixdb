@@ -195,7 +195,7 @@ public class LSMRTree extends AbstractLSMRTree {
     public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
         LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
-        ILSMIndexOperationContext rctx = createOpContext();
+        ILSMIndexOperationContext rctx = createOpContext(NoOpOperationCallback.INSTANCE);
         LSMRTreeMutableComponent flushingComponent = (LSMRTreeMutableComponent) ctx.getComponentHolder().get(0);
         rctx.setOperation(IndexOperation.FLUSH);
         rctx.getComponentHolder().addAll(ctx.getComponentHolder());
@@ -297,7 +297,7 @@ public class LSMRTree extends AbstractLSMRTree {
         // read the file names when we open the tree.
         // The RTree should be renamed before the BTree.
         List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
-        ILSMIndexOperationContext rctx = createOpContext();
+        ILSMIndexOperationContext rctx = createOpContext(NoOpOperationCallback.INSTANCE);
         rctx.getComponentHolder().addAll(mergingComponents);
         ITreeIndexCursor cursor = new LSMRTreeSortedCursor(rctx, linearizer);
         ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
@@ -351,7 +351,7 @@ public class LSMRTree extends AbstractLSMRTree {
     @Override
     public ILSMIndexAccessorInternal createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
-        return new LSMRTreeAccessor(lsmHarness, createOpContext());
+        return new LSMRTreeAccessor(lsmHarness, createOpContext(modificationCallback));
     }
 
     public class LSMRTreeAccessor extends LSMTreeIndexAccessor {

@@ -199,7 +199,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     @Override
     public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
-        LSMRTreeOpContext opCtx = createOpContext();
+        LSMRTreeOpContext opCtx = createOpContext(NoOpOperationCallback.INSTANCE);
         LSMComponentFileReferences relFlushFileRefs = fileManager.getRelFlushFileReference();
         ILSMComponent flushingComponent = ctx.getComponentHolder().get(0);
         opCtx.setOperation(IndexOperation.FLUSH);
@@ -308,7 +308,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException {
         List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
-        LSMRTreeOpContext rctx = createOpContext();
+        LSMRTreeOpContext rctx = createOpContext(NoOpOperationCallback.INSTANCE);
         rctx.getComponentHolder().addAll(mergingComponents);
         ITreeIndexCursor cursor = new LSMRTreeWithAntiMatterTuplesSearchCursor(ctx);
         ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
@@ -354,7 +354,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     @Override
     public ILSMIndexAccessorInternal createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
-        return new LSMRTreeWithAntiMatterTuplesAccessor(lsmHarness, createOpContext());
+        return new LSMRTreeWithAntiMatterTuplesAccessor(lsmHarness, createOpContext(modificationCallback));
     }
 
     public class LSMRTreeWithAntiMatterTuplesAccessor extends LSMTreeIndexAccessor {
