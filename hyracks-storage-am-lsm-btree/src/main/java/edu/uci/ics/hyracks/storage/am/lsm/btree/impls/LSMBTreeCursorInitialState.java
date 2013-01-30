@@ -33,6 +33,7 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
     private final ITreeIndexFrameFactory leafFrameFactory;
     private MultiComparator cmp;
     private final boolean includeMemComponent;
+    private final boolean pointSearch;
     private final ILSMHarness lsmHarness;
 
     private final IIndexAccessor memBtreeAccessor;
@@ -42,7 +43,7 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
     private final List<ILSMComponent> operationalComponents;
 
     public LSMBTreeCursorInitialState(int numBTrees, ITreeIndexFrameFactory leafFrameFactory, MultiComparator cmp,
-            boolean includeMemComponent, ILSMHarness lsmHarness, IIndexAccessor memBtreeAccessor,
+            boolean includeMemComponent, boolean pointSearch, ILSMHarness lsmHarness, IIndexAccessor memBtreeAccessor,
             ISearchPredicate predicate, ISearchOperationCallback searchCallback,
             List<ILSMComponent> operationalComponents) {
         this.numBTrees = numBTrees;
@@ -54,6 +55,7 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
         this.memBtreeAccessor = memBtreeAccessor;
         this.predicate = predicate;
         this.operationalComponents = operationalComponents;
+        this.pointSearch = pointSearch;
     }
 
     public int getNumBTrees() {
@@ -75,6 +77,10 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
 
     public boolean getIncludeMemComponent() {
         return includeMemComponent;
+    }
+
+    public boolean isPointSearch() {
+        return pointSearch;
     }
 
     public ILSMHarness getLSMHarness() {

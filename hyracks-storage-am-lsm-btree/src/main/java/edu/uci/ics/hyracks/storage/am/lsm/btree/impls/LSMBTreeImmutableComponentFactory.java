@@ -45,4 +45,8 @@ public class LSMBTreeImmutableComponentFactory implements ILSMComponentFactory {
     public IBufferCache getBufferCache() {
         return btreeFactory.getBufferCache();
     }
+
+    public int[] getKeyFields() {
+        return bloomFilterFactory.getKeyFields();
+    }
 }

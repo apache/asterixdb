@@ -34,4 +34,8 @@ public class BloomFilterFactory {
     public BloomFilter createBloomFiltertInstance(FileReference file) throws HyracksDataException {
         return new BloomFilter(bufferCache, fileMapProvider, file, keyFields);
     }
+
+    public int[] getKeyFields() {
+        return keyFields;
+    }
 }

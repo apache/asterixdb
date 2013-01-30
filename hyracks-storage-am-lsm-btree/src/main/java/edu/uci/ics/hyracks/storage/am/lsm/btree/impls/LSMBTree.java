@@ -316,10 +316,24 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         int numBTrees = operationalComponents.size();
         assert numBTrees > 0;
 
+        boolean isPointSearch = false;
+        RangePredicate btreePred = (RangePredicate) pred;
+        if (btreePred.getLowKey() != null && btreePred.getHighKey() != null) {
+            if (btreePred.isLowKeyInclusive() && btreePred.isHighKeyInclusive()) {
+                if (btreePred.getLowKeyComparator().getKeyFieldCount() == btreePred.getHighKeyComparator()
+                        .getKeyFieldCount()) {
+                    if (btreePred.getLowKeyComparator().getKeyFieldCount() == componentFactory.getKeyFields().length) {
+                        if (ctx.cmp.compare(btreePred.getLowKey(), btreePred.getHighKey()) == 0) {
+                            isPointSearch = true;
+                        }
+                    }
+                }
+            }
+        }
         boolean includeMutableComponent = operationalComponents.get(0) == mutableComponent;
         LSMBTreeCursorInitialState initialState = new LSMBTreeCursorInitialState(numBTrees, insertLeafFrameFactory,
-                ctx.cmp, includeMutableComponent, lsmHarness, ctx.memBTreeAccessor, pred, ctx.searchCallback,
-                operationalComponents);
+                ctx.cmp, includeMutableComponent, isPointSearch, lsmHarness, ctx.memBTreeAccessor, pred,
+                ctx.searchCallback, operationalComponents);
         lsmTreeCursor.open(initialState, pred);
 
         int cursorIx;
