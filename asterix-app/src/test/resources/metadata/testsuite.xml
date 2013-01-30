@@ -105,6 +105,21 @@
         <output-file compare="Text">meta21.adm</output-file>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="issue_251_dataset_hint_2">
+        <output-file compare="Text">issue_251_dataset_hint_2.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="issue_251_dataset_hint_3">
+        <output-file compare="Text">issue_251_dataset_hint_3.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="issue_251_dataset_hint_4">
+        <output-file compare="Text">issue_251_dataset_hint_4.adm</output-file>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="exception">
     <test-case FilePath="exception">
@@ -153,6 +168,18 @@
       <compilation-unit name="issue_239_drop_system_dataset_8">
         <output-file compare="Text">none.adm</output-file>
         <expected-error>MetadataException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="issue_251_dataset_hint_error_1">
+        <output-file compare="Text">none.adm</output-file>
+        <expected-error>AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="issue_251_dataset_hint_error_2">
+        <output-file compare="Text">none.adm</output-file>
+        <expected-error>AsterixException</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

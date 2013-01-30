@@ -669,7 +669,8 @@ DatasetDecl DatasetDeclaration(DatasetType datasetType) throws ParseException :
   String nameComponentSecond = null;
   boolean ifNotExists = false;
   IDatasetDetailsDecl datasetDetails = null;
-  Pair<Identifier,Identifier> nameComponents = null;	
+  Pair<Identifier,Identifier> nameComponents = null;
+  Map<String,String> hints = new HashMap<String,String>();	
 }
 {
   {
@@ -701,11 +702,19 @@ DatasetDecl DatasetDeclaration(DatasetType datasetType) throws ParseException :
       else if(datasetType == DatasetType.FEED) {
       	datasetDetails = FeedDatasetDeclaration();
       }
-      dd = new DatasetDecl(dataverseName, datasetName, itemTypeName, datasetType, datasetDetails,ifNotExists);
-      
   }
+  
+  (
+  "hints"
   {
-    return dd;
+      initProperties(hints);
+  }
+  )?
+   ";"
+ 
+  {
+   dd = new DatasetDecl(dataverseName, datasetName, itemTypeName, hints, datasetType, datasetDetails,ifNotExists);
+   return dd;
   }
 }
 
@@ -733,7 +742,7 @@ InternalDetailsDecl InternalDatasetDeclaration() throws ParseException :
         nodeGroupName = new Identifier(token.image);
     }
   )?
-  ";"
+  
   {
     idd = new InternalDetailsDecl(nodeGroupName, partitioningExprs);
     return idd;
@@ -767,7 +776,6 @@ ExternalDetailsDecl ExternalDatasetDeclaration() throws ParseException :
 		  edd.setAdapter(adapterClassname);
    		  edd.setProperties(properties);
     } 
-  ";"
  
   {
     return edd;
@@ -833,7 +841,7 @@ FeedDetailsDecl FeedDatasetDeclaration() throws ParseException :
     	nodeGroupName = new Identifier(token.image);
   }
   )?
-  ";"
+  
   {
     fdd = new FeedDetailsDecl(adapterFactoryClassname, properties, appliedFunction, nodeGroupName, partitioningExprs);
     return fdd;
@@ -922,6 +930,75 @@ Map<String,String> getConfiguration()  throws ParseException :
      	return configuration;
      }
 }
+
+void initProperties(Map<String,String> properties)  throws ParseException :
+{
+	String key;
+	String value;
+}
+{
+    (
+      <LEFTPAREN>
+        (
+          <IDENTIFIER>
+          {
+            key = (new Identifier(token.image)).getValue();
+          }
+          "=" 
+          (
+            (<STRING_LITERAL>
+             {
+              value = removeQuotesAndEscapes(token.image);
+             }
+            ) |
+            (<INTEGER_LITERAL>
+             {
+             try{
+              value = "" + Integer.valueOf(token.image);
+              } catch (NumberFormatException nfe){
+                  throw new ParseException("inapproriate value: " + token.image); 
+              }
+             } 
+            )
+          )
+        {
+          properties.put(key, value);
+        }
+       ( 
+        "," 
+        (
+          <IDENTIFIER>
+          {
+            key = (new Identifier(token.image)).getValue();
+          }
+          "=" 
+          (
+           (<STRING_LITERAL>
+            {
+              value = removeQuotesAndEscapes(token.image);
+            }
+           ) |
+           (<INTEGER_LITERAL>
+            {
+              try{
+                value = "" + Integer.valueOf(token.image);
+              } catch (NumberFormatException nfe){
+              	throw new ParseException("inapproriate value: " + token.image); 
+              }
+            } 
+           )
+          ) 
+        )
+        {
+          properties.put(key, value);
+        }
+        
+       )*
+      )
+       <RIGHTPAREN>
+    )?
+}
+
 
 
 NodegroupDecl NodegroupDeclaration() throws ParseException :

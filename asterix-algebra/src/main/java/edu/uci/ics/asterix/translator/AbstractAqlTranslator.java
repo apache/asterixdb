@@ -15,8 +15,10 @@
 package edu.uci.ics.asterix.translator;
 
 import java.util.Map;
+import java.util.Map.Entry;
 
 import edu.uci.ics.asterix.aql.base.Statement;
+import edu.uci.ics.asterix.aql.expression.DatasetDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDropStatement;
 import edu.uci.ics.asterix.aql.expression.DeleteStatement;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
@@ -27,10 +29,11 @@ import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
 import edu.uci.ics.asterix.metadata.entities.AsterixBuiltinTypeMap;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 
 /**
- * Base class for AQL translators. 
- * Contains the common validation logic for AQL statements.
+ * Base class for AQL translators. Contains the common validation logic for AQL
+ * statements.
  */
 public abstract class AbstractAqlTranslator {
 
@@ -91,6 +94,26 @@ public abstract class AbstractAqlTranslator {
                 if (invalidOperation) {
                     message = "Cannot drop a dataset belonging to the dataverse:"
                             + MetadataConstants.METADATA_DATAVERSE_NAME;
+                }
+                break;
+            case DATASET_DECL:
+                DatasetDecl datasetStmt = (DatasetDecl) stmt;
+                Map<String, String> hints = datasetStmt.getHints();
+                if (hints != null && !hints.isEmpty()) {
+                    Pair<Boolean, String> validationResult = null;
+                    StringBuffer errorMsgBuffer = new StringBuffer();
+                    for (Entry<String, String> hint : hints.entrySet()) {
+                        validationResult = DatasetHints.validate(hint.getKey(), hint.getValue());
+                        if (!validationResult.first) {
+                            errorMsgBuffer.append("Dataset: " + datasetStmt.getName().getValue()
+                                    + " error in processing hint: " + hint.getKey() + " " + validationResult.second);
+                            errorMsgBuffer.append(" \n");
+                        }
+                    }
+                    invalidOperation = errorMsgBuffer.length() > 0;
+                    if (invalidOperation) {
+                        message = errorMsgBuffer.toString();
+                    }
                 }
                 break;
 
