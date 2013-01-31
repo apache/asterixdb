@@ -56,10 +56,12 @@ public class DatasetHints {
 }
 
 /**
- * Represents the expected number of tuples in the dataset.
+ * Hint representing the expected number of tuples in the dataset.
  */
 class DatasetCardinalityHint implements IHint {
     private static final String name = "CARDINALITY";
+
+    public static final long DEFAULT = 1000000L;
 
     @Override
     public String getName() {
