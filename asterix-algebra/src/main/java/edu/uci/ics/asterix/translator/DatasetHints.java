@@ -69,15 +69,15 @@ class DatasetCardinalityHint implements IHint {
     @Override
     public Pair<Boolean, String> validateValue(String value) {
         boolean valid = true;
-        int intValue;
+        long longValue;
         try {
-            intValue = Integer.parseInt(value);
-            if (intValue < 0) {
+            longValue = Long.parseLong(value);
+            if (longValue < 0) {
                 return new Pair<Boolean, String>(false, "Value must be >= 0");
             }
         } catch (NumberFormatException nfe) {
             valid = false;
-            return new Pair<Boolean, String>(valid, "Inappropriate value, not an integer");
+            return new Pair<Boolean, String>(valid, "Inappropriate value");
         }
         return new Pair<Boolean, String>(true, null);
     }
