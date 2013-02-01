@@ -1,5 +1,10 @@
 package edu.uci.ics.asterix.runtime.evaluators.functions;
 
+import java.io.DataOutput;
+import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ABoolean;
 import edu.uci.ics.asterix.om.base.AString;
@@ -12,10 +17,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import java.io.DataOutput;
-import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
 

@@ -57,12 +57,15 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
     // Register access methods.
     protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<FunctionIdentifier, List<IAccessMethod>>();
     static {
-        registerAccessMethod(InvertedIndexAccessMethod.INSTANCE, accessMethods);
+        registerAccessMethod(BTreeAccessMethod.INSTANCE, accessMethods);
+        registerAccessMethod(RTreeAccessMethod.INSTANCE, accessMethods);
+        registerAccessMethod(InvertedIndexAccessMethod.INSTANCE, accessMethods);        
     }
 
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
+        clear();
         setMetadataDeclarations(context);
 
         // Match operator pattern and initialize optimizable sub trees.
@@ -116,7 +119,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         boolean res = chosenIndex.first.applyJoinPlanTransformation(joinRef, leftSubTree, rightSubTree,
                 chosenIndex.second, analysisCtx, context);
         if (res) {
-            OperatorPropertiesUtil.typeOpRec(opRef, context);
+            OperatorPropertiesUtil.typeOpRec(opRef, context);            
         }
         context.addToDontApplySet(this, join);
         return res;
@@ -152,5 +155,11 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
     @Override
     public Map<FunctionIdentifier, List<IAccessMethod>> getAccessMethods() {
         return accessMethods;
+    }
+    
+    private void clear() {
+        joinRef = null;
+        join = null;
+        joinCond = null;
     }
 }

@@ -1,0 +1,12 @@
+/*
+ * Description      :  Test return clause of the FLWOR expression
+ * Expected Result  :  Success
+ * Date             :  26th July 2012
+ */
+
+// return a constant
+
+write output to nc1:"rttest/flwor_ret-09.adm";
+
+let $b:=true
+return 1

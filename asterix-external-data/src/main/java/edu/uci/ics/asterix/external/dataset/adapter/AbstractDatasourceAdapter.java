@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.uci.ics.asterix.external.data.adapter.api.IDatasourceAdapter;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -35,68 +34,58 @@ import edu.uci.ics.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
  */
 public abstract class AbstractDatasourceAdapter implements IDatasourceAdapter {
 
-    private static final long serialVersionUID = -3510610289692452466L;
+    private static final long serialVersionUID = 1L;
 
     protected Map<String, String> configuration;
-
     protected transient AlgebricksPartitionConstraint partitionConstraint;
-
     protected IAType atype;
-
     protected IHyracksTaskContext ctx;
-
-    protected static final HashMap<ATypeTag, IValueParserFactory> typeToValueParserFactMap = new HashMap<ATypeTag, IValueParserFactory>();
-
-    protected static final HashMap<String, String> formatToParserMap = new HashMap<String, String>();
-
-    protected static final HashMap<String, String> formatToManagedParserMap = new HashMap<String, String>();
-
-    protected AdapterDataFlowType dataFlowType;
-
     protected AdapterType adapterType;
 
+    protected static final HashMap<ATypeTag, IValueParserFactory> typeToValueParserFactMap = new HashMap<ATypeTag, IValueParserFactory>();
     static {
         typeToValueParserFactMap.put(ATypeTag.INT32, IntegerParserFactory.INSTANCE);
         typeToValueParserFactMap.put(ATypeTag.FLOAT, FloatParserFactory.INSTANCE);
         typeToValueParserFactMap.put(ATypeTag.DOUBLE, DoubleParserFactory.INSTANCE);
         typeToValueParserFactMap.put(ATypeTag.INT64, LongParserFactory.INSTANCE);
         typeToValueParserFactMap.put(ATypeTag.STRING, UTF8StringParserFactory.INSTANCE);
-
-        formatToParserMap.put("delimited-text", "edu.uci.ics.asterix.external.data.parser.DelimitedDataStreamParser");
-        formatToParserMap.put("adm", "edu.uci.ics.asterix.external.data.parser.ADMStreamParser");
-
-        formatToManagedParserMap.put("delimited-text",
-                "edu.uci.ics.asterix.external.data.parser.ManagedDelimitedDataStreamParser");
-        formatToManagedParserMap.put("adm", "edu.uci.ics.asterix.external.data.parser.ManagedAdmStreamParser");
-
     }
 
-    public static final String KEY_FORMAT = "format";
-    public static final String KEY_PARSER = "parser";
+    protected static final Map<String, String> formatToParserFactoryMap = initializeFormatParserFactoryMap();
 
+    public static final String KEY_FORMAT = "format";
+    public static final String KEY_PARSER_FACTORY = "parser";
     public static final String FORMAT_DELIMITED_TEXT = "delimited-text";
     public static final String FORMAT_ADM = "adm";
 
-    abstract public void initialize(IHyracksTaskContext ctx) throws Exception;
-
-    abstract public void configure(Map<String, String> arguments, IAType atype) throws Exception;
-
-    abstract public AdapterDataFlowType getAdapterDataFlowType();
-
-    abstract public AdapterType getAdapterType();
-
-    public AlgebricksPartitionConstraint getPartitionConstraint() {
-        return partitionConstraint;
+    private static Map<String, String> initializeFormatParserFactoryMap() {
+        Map<String, String> map = new HashMap<String, String>();
+        map.put(FORMAT_DELIMITED_TEXT, "edu.uci.ics.asterix.runtime.operators.file.NtDelimitedDataTupleParserFactory");
+        map.put(FORMAT_ADM, "edu.uci.ics.asterix.runtime.operators.file.AdmSchemafullRecordParserFactory");
+        return map;
     }
 
-    public void setAdapterProperty(String property, String value) {
-        configuration.put(property, value);
-    }
+    /**
+     * Get the partition constraint chosen by the adapter.
+     * An adapter may have preferences as to where it needs to be instantiated and used.
+     */
+    public abstract AlgebricksPartitionConstraint getPartitionConstraint() throws Exception;
 
+    /**
+     * Get the configured value from the adapter configuration parameters, corresponding to the an attribute.
+     * 
+     * @param attribute
+     *            The attribute whose value needs to be obtained.
+     */
     public String getAdapterProperty(String attribute) {
         return configuration.get(attribute);
     }
 
+    /**
+     * Get the adapter configuration parameters.
+     * 
+     * @return A Map<String,String> instance representing the adapter configuration.
+     */
     public Map<String, String> getConfiguration() {
         return configuration;
     }

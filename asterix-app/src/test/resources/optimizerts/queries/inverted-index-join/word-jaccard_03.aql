@@ -18,10 +18,6 @@ create type DBLPType as closed {
 
 create dataset DBLP(DBLPType) partitioned by key id;
 
-load dataset DBLP 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
-
 create index keyword_index on DBLP(title) type keyword;
 
 write output to nc1:"rttest/inverted-index-join_word-jaccard_03.adm";

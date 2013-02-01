@@ -4,5 +4,7 @@
  * Date            :  6th July 2012 
  */
 
+write output to nc1:"rttest/flwor_let05.adm";
+
 let $x := {"a":(1+1*(100/20))}
 return $x

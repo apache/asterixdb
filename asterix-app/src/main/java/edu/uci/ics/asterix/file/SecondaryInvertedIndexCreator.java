@@ -5,10 +5,12 @@ import java.util.List;
 import edu.uci.ics.asterix.common.context.AsterixIndexRegistryProvider;
 import edu.uci.ics.asterix.common.context.AsterixStorageManagerInterface;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.optimizer.rules.am.InvertedIndexAccessMethod;
-import edu.uci.ics.asterix.translator.DmlTranslator.CompiledCreateIndexStatement;
+import edu.uci.ics.asterix.runtime.formats.FormatUtils;
+import edu.uci.ics.asterix.translator.CompiledStatements.CompiledCreateIndexStatement;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
@@ -54,7 +56,7 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
 
     @Override
     @SuppressWarnings("rawtypes")
-    protected void setSecondaryRecDescAndComparators(CompiledCreateIndexStatement createIndexStmt)
+    protected void setSecondaryRecDescAndComparators(CompiledCreateIndexStatement createIndexStmt, AqlMetadataProvider metadata)
             throws AlgebricksException, AsterixException {
         // Sanity checks.
         if (numPrimaryKeys > 1) {
@@ -68,11 +70,11 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         secondaryFieldAccessEvalFactories = new ICopyEvaluatorFactory[numSecondaryKeys];
         ISerializerDeserializer[] secondaryRecFields = new ISerializerDeserializer[numPrimaryKeys + numSecondaryKeys];
         ITypeTraits[] secondaryTypeTraits = new ITypeTraits[numSecondaryKeys + numPrimaryKeys];
-        ISerializerDeserializerProvider serdeProvider = metadata.getFormat().getSerdeProvider();
-        ITypeTraitProvider typeTraitProvider = metadata.getFormat().getTypeTraitProvider();
+        ISerializerDeserializerProvider serdeProvider = FormatUtils.getDefaultFormat().getSerdeProvider();
+        ITypeTraitProvider typeTraitProvider = FormatUtils.getDefaultFormat().getTypeTraitProvider();
         for (int i = 0; i < numSecondaryKeys; i++) {
-            secondaryFieldAccessEvalFactories[i] = metadata.getFormat().getFieldAccessEvaluatorFactory(itemType,
-                    secondaryKeyFields.get(i), numPrimaryKeys);
+            secondaryFieldAccessEvalFactories[i] = FormatUtils.getDefaultFormat().getFieldAccessEvaluatorFactory(
+                    itemType, secondaryKeyFields.get(i), numPrimaryKeys);
             Pair<IAType, Boolean> keyTypePair = Index.getNonNullableKeyFieldType(secondaryKeyFields.get(i), itemType);
             secondaryKeyType = keyTypePair.first;
             anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;

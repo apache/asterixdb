@@ -1,9 +1,9 @@
 package edu.uci.ics.asterix.formats.nontagged;
 
-import edu.uci.ics.asterix.dataflow.data.common.IBinaryTokenizerFactoryProvider;
 import edu.uci.ics.asterix.dataflow.data.common.AListElementTokenFactory;
 import edu.uci.ics.asterix.dataflow.data.common.AOrderedListBinaryTokenizerFactory;
 import edu.uci.ics.asterix.dataflow.data.common.AUnorderedListBinaryTokenizerFactory;
+import edu.uci.ics.asterix.dataflow.data.common.IBinaryTokenizerFactoryProvider;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.HashedUTF8WordTokenFactory;

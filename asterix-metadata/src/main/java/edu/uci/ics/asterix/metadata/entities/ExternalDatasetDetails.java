@@ -18,7 +18,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Map;
 
-import edu.uci.ics.asterix.builders.IAOrderedListBuilder;
 import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
@@ -42,7 +41,7 @@ public class ExternalDatasetDetails implements IDatasetDetails {
     private final Map<String, String> properties;
 
     private final static ARecordType externalRecordType = MetadataRecordTypes.EXTERNAL_DETAILS_RECORDTYPE;
-    private final static ARecordType propertyRecordType = MetadataRecordTypes.ADAPTER_PROPERTIES_RECORDTYPE;
+    private final static ARecordType propertyRecordType = MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE;
 
     public ExternalDatasetDetails(String adapter, Map<String, String> properties) {
         this.properties = properties;
@@ -65,7 +64,7 @@ public class ExternalDatasetDetails implements IDatasetDetails {
     @Override
     public void writeDatasetDetailsRecordType(DataOutput out) throws HyracksDataException {
         IARecordBuilder externalRecordBuilder = new RecordBuilder();
-        IAOrderedListBuilder listBuilder = new OrderedListBuilder();
+        OrderedListBuilder listBuilder = new OrderedListBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
         externalRecordBuilder.reset(externalRecordType);
@@ -77,7 +76,7 @@ public class ExternalDatasetDetails implements IDatasetDetails {
         fieldValue.reset();
         aString.setValue(this.getAdapter());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_ADAPTER_FIELD_INDEX, fieldValue);
+        externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_DATASOURCE_ADAPTER_FIELD_INDEX, fieldValue);
 
         // write field 1
         listBuilder.reset((AOrderedListType) externalRecordType.getFieldTypes()[1]);

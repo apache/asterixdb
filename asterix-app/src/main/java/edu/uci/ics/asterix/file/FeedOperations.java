@@ -14,21 +14,21 @@
  */
 package edu.uci.ics.asterix.file;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.feed.comm.AlterFeedMessage;
-import edu.uci.ics.asterix.feed.comm.FeedMessage;
-import edu.uci.ics.asterix.feed.comm.IFeedMessage;
-import edu.uci.ics.asterix.feed.comm.IFeedMessage.MessageType;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
+import edu.uci.ics.asterix.external.feed.lifecycle.AlterFeedMessage;
+import edu.uci.ics.asterix.external.feed.lifecycle.FeedMessage;
+import edu.uci.ics.asterix.external.feed.lifecycle.IFeedMessage;
+import edu.uci.ics.asterix.external.feed.lifecycle.IFeedMessage.MessageType;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
-import edu.uci.ics.asterix.translator.DmlTranslator.CompiledControlFeedStatement;
+import edu.uci.ics.asterix.translator.CompiledStatements.CompiledControlFeedStatement;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -38,18 +38,31 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
 
+/**
+ * Provides helper method(s) for creating JobSpec for operations on a feed.
+ */
 public class FeedOperations {
 
     private static final Logger LOGGER = Logger.getLogger(IndexOperations.class.getName());
 
+    /**
+     * @param controlFeedStatement
+     *            The statement representing the action that describes the
+     *            action that needs to be taken on the feed. E.g. of actions are
+     *            stop feed or alter feed.
+     * @param metadataProvider
+     *            An instance of the MetadataProvider
+     * @return An instance of JobSpec for the job that would send an appropriate
+     *         control message to the running feed.
+     * @throws AsterixException
+     * @throws AlgebricksException
+     */
     public static JobSpecification buildControlFeedJobSpec(CompiledControlFeedStatement controlFeedStatement,
-            AqlCompiledMetadataDeclarations datasetDecls) throws AsterixException, AlgebricksException {
+            AqlMetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
         switch (controlFeedStatement.getOperationType()) {
             case ALTER:
-            case SUSPEND:
-            case RESUME:
             case END: {
-                return createSendMessageToFeedJobSpec(controlFeedStatement, datasetDecls);
+                return createSendMessageToFeedJobSpec(controlFeedStatement, metadataProvider);
             }
             default: {
                 throw new AsterixException("Unknown Operation Type: " + controlFeedStatement.getOperationType());
@@ -59,15 +72,17 @@ public class FeedOperations {
     }
 
     private static JobSpecification createSendMessageToFeedJobSpec(CompiledControlFeedStatement controlFeedStatement,
-            AqlCompiledMetadataDeclarations metadata) throws AsterixException {
-        String datasetName = controlFeedStatement.getDatasetName().getValue();
-        String datasetPath = metadata.getRelativePath(datasetName);
+            AqlMetadataProvider metadataProvider) throws AsterixException {
+        String dataverseName = controlFeedStatement.getDataverseName() == null ? metadataProvider
+                .getDefaultDataverseName() : controlFeedStatement.getDataverseName();
+        String datasetName = controlFeedStatement.getDatasetName();
+        String datasetPath = dataverseName + File.separator + datasetName;
 
         LOGGER.info(" DATASETPATH: " + datasetPath);
 
         Dataset dataset;
         try {
-            dataset = metadata.findDataset(datasetName);
+            dataset = metadataProvider.findDataset(dataverseName, datasetName);
         } catch (AlgebricksException e) {
             throw new AsterixException(e);
         }
@@ -84,14 +99,8 @@ public class FeedOperations {
 
         List<IFeedMessage> feedMessages = new ArrayList<IFeedMessage>();
         switch (controlFeedStatement.getOperationType()) {
-            case SUSPEND:
-                feedMessages.add(new FeedMessage(MessageType.SUSPEND));
-                break;
             case END:
                 feedMessages.add(new FeedMessage(MessageType.STOP));
-                break;
-            case RESUME:
-                feedMessages.add(new FeedMessage(MessageType.RESUME));
                 break;
             case ALTER:
                 feedMessages.add(new AlterFeedMessage(controlFeedStatement.getProperties()));
@@ -99,8 +108,8 @@ public class FeedOperations {
         }
 
         try {
-            Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = AqlMetadataProvider.buildFeedMessengerRuntime(
-                    spec, metadata, (FeedDatasetDetails) dataset.getDatasetDetails(), metadata.getDataverseName(),
+            Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = metadataProvider.buildFeedMessengerRuntime(
+                    metadataProvider, spec, (FeedDatasetDetails) dataset.getDatasetDetails(), dataverseName,
                     datasetName, feedMessages);
             feedMessenger = p.first;
             messengerPc = p.second;

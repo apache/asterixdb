@@ -1,0 +1,25 @@
+/*
+ * Description  : Test matches string function using regular expressions
+ * Expected Res : Success
+ * Date         : May 21 2012
+ */
+
+write output to nc1:"rttest/string_matches06.adm";
+
+for $a in [matches("mnop","."),
+matches("abcdefABCDEF","/d"),
+matches("12345","\d"),
+matches("abcdefGHIJK","\D"),
+matches("       ","\s"),
+matches("       ","\S"),
+matches("Welcome to pattern matching!","[a-zA-Z_0-9]"),
+matches("!@#$%^&*()","[a-zA-Z_0-9]"),
+matches("!@#$%^&*()","[^\W]"),
+matches("!@#$%^&*","[^\w]"),
+matches("0xffff","[\p{XDigit}]"),
+matches("FFFFFFFF","[\p{XDigit}]"),
+matches("abcdefgh","[\p{javaLowerCase}]"),
+matches("ABCDEF","[\p{javaLowerCase}]"),
+matches(codepoint-to-string([0163]),"[\p{Sc}]")]
+return $a
+

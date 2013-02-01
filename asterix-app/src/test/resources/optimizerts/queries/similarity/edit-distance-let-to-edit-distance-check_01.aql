@@ -20,10 +20,6 @@ create type DBLPType as closed {
 
 create dataset DBLP(DBLPType) partitioned by key id;
 
-load dataset DBLP 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
-
 write output to nc1:"rttest/similarity_edit-distance-let-to-edit-distance-check_01.adm";
 
 for $o in dataset('DBLP')

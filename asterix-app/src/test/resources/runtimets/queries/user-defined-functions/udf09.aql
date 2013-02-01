@@ -1,0 +1,31 @@
+/*
+ * Description  : Create UDF to read from internal dataset 
+ * Expected Res : Success
+ * Date         : Sep 4th 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+write output to nc1:"rttest/user-defined-functions_udf09.adm";
+
+create type test.TestType as open {
+id : int32
+}
+
+create dataset test.t1(TestType) partitioned by key id;
+
+insert into dataset test.t1({"id":345});
+insert into dataset test.t1({"id":315});
+insert into dataset test.t1({"id":245});
+insert into dataset test.t1({"id":385});
+insert into dataset test.t1({"id":241});
+insert into dataset test.t1({"id":745});
+insert into dataset test.t1({"id":349});
+insert into dataset test.t1({"id":845});
+
+create function test.readDataset($a) {
+$a
+}
+   
+test.readDataset(for $a in dataset('test.t1') order by $a.id return $a);

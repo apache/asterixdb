@@ -4,7 +4,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -15,6 +14,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADouble;
 import edu.uci.ics.asterix.om.base.AMutableDouble;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -35,7 +35,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class SerializableAvgAggregateDescriptor extends AbstractSerializableAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "avg-serial", 1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SerializableAvgAggregateDescriptor();
@@ -44,12 +43,12 @@ public class SerializableAvgAggregateDescriptor extends AbstractSerializableAggr
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.SERIAL_AVG;
     }
 
     @Override
-    public ICopySerializableAggregateFunctionFactory createAggregateFunctionFactory(ICopyEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public ICopySerializableAggregateFunctionFactory createSerializableAggregateFunctionFactory(
+            ICopyEvaluatorFactory[] args) throws AlgebricksException {
         final ICopyEvaluatorFactory[] evals = args;
 
         return new ICopySerializableAggregateFunctionFactory() {
@@ -89,8 +88,8 @@ public class SerializableAvgAggregateDescriptor extends AbstractSerializableAggr
                         boolean metNull = BufferSerDeUtil.getBoolean(state, start + 16);
                         if (inputVal.getLength() > 0) {
                             ++count;
-                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                                    .deserialize(inputVal.getByteArray()[0]);
+                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal
+                                    .getByteArray()[0]);
                             switch (typeTag) {
                                 case INT8: {
                                     byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);

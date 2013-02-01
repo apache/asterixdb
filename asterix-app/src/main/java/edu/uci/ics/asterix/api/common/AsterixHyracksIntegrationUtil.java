@@ -17,11 +17,11 @@ public class AsterixHyracksIntegrationUtil {
 
     public static final String NC1_ID = "nc1";
     public static final String NC2_ID = "nc2";
+    public static final String[] ASTERIX_DATA_DIRS = new String[] { "nc1data", "nc2data" };
 
     public static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
 
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
-
 
     private static ClusterControllerService cc;
     private static NodeControllerService nc1;

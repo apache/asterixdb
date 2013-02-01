@@ -4,5 +4,7 @@
  * Date             :  7th July 2012
  */
 
+write output to nc1:"rttest/flwor_for15.adm";
+
 for $a in [{"name":"Rocky","age":59,"sex":"M"},[1]]
 return $a

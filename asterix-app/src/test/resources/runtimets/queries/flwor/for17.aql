@@ -4,6 +4,8 @@
  * Date            : 24th July 2012
  */
 
+write output to nc1:"rttest/flwor_for17.adm";
+
 (for $a in [{"id":1234,"name":"John Doe","age":56,"salary":50000,"dept":"HR"}]
 return $a)
 union

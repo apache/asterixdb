@@ -1,9 +1,8 @@
 package edu.uci.ics.asterix.runtime.evaluators.functions;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
-import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.common.WordTokensEvaluator;
@@ -20,8 +19,6 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.ITokenFactory;
 public class HashedWordTokensDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "hashed-word-tokens", 1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new HashedWordTokensDescriptor();
@@ -30,7 +27,7 @@ public class HashedWordTokensDescriptor extends AbstractScalarFunctionDynamicDes
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.HASHED_WORD_TOKENS;
     }
 
     @Override
@@ -40,8 +37,7 @@ public class HashedWordTokensDescriptor extends AbstractScalarFunctionDynamicDes
 
             @Override
             public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
-                ITokenFactory tokenFactory = new HashedUTF8WordTokenFactory(ATypeTag.INT32.serialize(),
-                        ATypeTag.INT32.serialize());
+                ITokenFactory tokenFactory = new HashedUTF8WordTokenFactory();
                 IBinaryTokenizer tokenizer = new DelimitedUTF8StringBinaryTokenizer(true, true, tokenFactory);
                 return new WordTokensEvaluator(args, output, tokenizer, BuiltinType.AINT32);
             }

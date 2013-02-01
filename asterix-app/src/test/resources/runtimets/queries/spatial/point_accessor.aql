@@ -1,0 +1,14 @@
+/*
+ * Description      :   Test spatial accessors
+ * Expected Result  :   Success
+ * Date             :   Oct 17, 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/spatial_point_accessor.adm";
+
+let $point := create-point(2.3,5.0)
+return {"x-coordinate": get-x($point), "y-coordinate": get-y($point)}

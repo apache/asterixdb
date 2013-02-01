@@ -1,90 +1,103 @@
+/*
+ * Copyright 2009-2012 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.translator;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.asterix.aql.base.Statement;
-import edu.uci.ics.asterix.aql.expression.DataverseDecl;
-import edu.uci.ics.asterix.aql.expression.SetStatement;
-import edu.uci.ics.asterix.aql.expression.TypeDecl;
-import edu.uci.ics.asterix.aql.expression.WriteStatement;
-import edu.uci.ics.asterix.metadata.MetadataException;
-import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.aql.expression.DataverseDropStatement;
+import edu.uci.ics.asterix.aql.expression.DeleteStatement;
+import edu.uci.ics.asterix.aql.expression.DropStatement;
+import edu.uci.ics.asterix.aql.expression.InsertStatement;
+import edu.uci.ics.asterix.aql.expression.NodeGroupDropStatement;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.data.IAWriterFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
-import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
+import edu.uci.ics.asterix.metadata.entities.AsterixBuiltinTypeMap;
+import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.om.types.BuiltinType;
 
+/**
+ * Base class for AQL translators. 
+ * Contains the common validation logic for AQL statements.
+ */
 public abstract class AbstractAqlTranslator {
 
-    public AqlCompiledMetadataDeclarations compileMetadata(MetadataTransactionContext mdTxnCtx,
-            List<Statement> statements, boolean online) throws AlgebricksException, MetadataException {
-        List<TypeDecl> typeDeclarations = new ArrayList<TypeDecl>();
-        Map<String, String> config = new HashMap<String, String>();
+    protected static final Map<String, BuiltinType> builtinTypeMap = AsterixBuiltinTypeMap.getBuiltinTypes();
 
-        FileSplit outputFile = null;
-        IAWriterFactory writerFactory = null;
-        String dataverseName = MetadataConstants.METADATA_DATAVERSE_NAME;
-        for (Statement stmt : statements) {
-            switch (stmt.getKind()) {
-                case TYPE_DECL: {
-                    typeDeclarations.add((TypeDecl) stmt);
-                    break;
+    public void validateOperation(Dataverse defaultDataverse, Statement stmt) throws AsterixException {
+        boolean invalidOperation = false;
+        String message = null;
+        String dataverse = defaultDataverse != null ? defaultDataverse.getDataverseName() : null;
+        switch (stmt.getKind()) {
+            case INSERT:
+                InsertStatement insertStmt = (InsertStatement) stmt;
+                if (insertStmt.getDataverseName() != null) {
+                    dataverse = insertStmt.getDataverseName().getValue();
                 }
-                case DATAVERSE_DECL: {
-                    DataverseDecl dstmt = (DataverseDecl) stmt;
-                    dataverseName = dstmt.getDataverseName().toString();
-                    break;
+                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverse);
+                if (invalidOperation) {
+                    message = "Insert operation is not permitted in dataverse "
+                            + MetadataConstants.METADATA_DATAVERSE_NAME;
                 }
-                case WRITE: {
-                    if (outputFile != null) {
-                        throw new AlgebricksException("Multiple 'write' statements.");
-                    }
-                    WriteStatement ws = (WriteStatement) stmt;
-                    File f = new File(ws.getFileName());
-                    outputFile = new FileSplit(ws.getNcName().getValue(), new FileReference(f));
-                    if (ws.getWriterClassName() != null) {
-                        try {
-                            writerFactory = (IAWriterFactory) Class.forName(ws.getWriterClassName()).newInstance();
-                        } catch (Exception e) {
-                            throw new AlgebricksException(e);
-                        }
-                    }
-                    break;
+                break;
+
+            case DELETE:
+                DeleteStatement deleteStmt = (DeleteStatement) stmt;
+                if (deleteStmt.getDataverseName() != null) {
+                    dataverse = deleteStmt.getDataverseName().getValue();
                 }
-                case SET: {
-                    SetStatement ss = (SetStatement) stmt;
-                    String pname = ss.getPropName();
-                    String pvalue = ss.getPropValue();
-                    config.put(pname, pvalue);
-                    break;
+                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverse);
+                if (invalidOperation) {
+                    message = "Delete operation is not permitted in dataverse "
+                            + MetadataConstants.METADATA_DATAVERSE_NAME;
                 }
-            }
+                break;
+
+            case NODEGROUP_DROP:
+                String nodegroupName = ((NodeGroupDropStatement) stmt).getNodeGroupName().getValue();
+                invalidOperation = MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME.equals(nodegroupName);
+                if (invalidOperation) {
+                    message = "Cannot drop nodegroup:" + nodegroupName;
+                }
+                break;
+
+            case DATAVERSE_DROP:
+                DataverseDropStatement dvDropStmt = (DataverseDropStatement) stmt;
+                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dvDropStmt.getDataverseName()
+                        .getValue());
+                if (invalidOperation) {
+                    message = "Cannot drop dataverse:" + dvDropStmt.getDataverseName().getValue();
+                }
+                break;
+
+            case DATASET_DROP:
+                DropStatement dropStmt = (DropStatement) stmt;
+                if (dropStmt.getDataverseName() != null) {
+                    dataverse = dropStmt.getDataverseName().getValue();
+                }
+                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverse);
+                if (invalidOperation) {
+                    message = "Cannot drop a dataset belonging to the dataverse:"
+                            + MetadataConstants.METADATA_DATAVERSE_NAME;
+                }
+                break;
+
         }
-        if (writerFactory == null) {
-            writerFactory = PrinterBasedWriterFactory.INSTANCE;
-        }
 
-        MetadataDeclTranslator metadataTranslator = new MetadataDeclTranslator(mdTxnCtx, dataverseName, outputFile,
-                writerFactory, config, typeDeclarations);
-        return metadataTranslator.computeMetadataDeclarations(online);
-    }
-
-    public void validateOperation(AqlCompiledMetadataDeclarations compiledDeclarations, Statement stmt)
-            throws AlgebricksException {
-        if (compiledDeclarations.getDataverseName() != null
-                && compiledDeclarations.getDataverseName().equals(MetadataConstants.METADATA_DATAVERSE_NAME)) {
-            if (stmt.getKind() == Statement.Kind.INSERT || stmt.getKind() == Statement.Kind.UPDATE
-                    || stmt.getKind() == Statement.Kind.DELETE) {
-                throw new AlgebricksException(" Operation  " + stmt.getKind() + " not permitted in system dataverse-"
-                        + MetadataConstants.METADATA_DATAVERSE_NAME);
-            }
+        if (invalidOperation) {
+            throw new AsterixException("Invalid operation - " + message);
         }
     }
 }

@@ -7,12 +7,14 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public class IndexDropStatement implements Statement {
 
+    private Identifier dataverseName;
     private Identifier datasetName;
     private Identifier indexName;
     private boolean ifExists;
 
-    public IndexDropStatement(Identifier dataverseName, Identifier indexName, boolean ifExists) {
-        this.datasetName = dataverseName;
+    public IndexDropStatement(Identifier dataverseName, Identifier datasetName, Identifier indexName, boolean ifExists) {
+        this.dataverseName = dataverseName;
+        this.datasetName = datasetName;
         this.indexName = indexName;
         this.ifExists = ifExists;
     }
@@ -20,6 +22,10 @@ public class IndexDropStatement implements Statement {
     @Override
     public Kind getKind() {
         return Kind.INDEX_DROP;
+    }
+
+    public Identifier getDataverseName() {
+        return dataverseName;
     }
 
     public Identifier getDatasetName() {

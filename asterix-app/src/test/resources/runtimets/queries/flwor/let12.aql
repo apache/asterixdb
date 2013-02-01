@@ -4,6 +4,8 @@
  * Date            :  6th July 2012 
  */
 
+write output to nc1:"rttest/flwor_let12.adm";
+
 let $a := 1 
 let $b := $a
 let $c := $a+$b 

@@ -2,11 +2,10 @@ package edu.uci.ics.asterix.runtime.evaluators.functions;
 
 import java.io.IOException;
 
-import edu.uci.ics.asterix.builders.IAOrderedListBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ABoolean;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
@@ -27,8 +26,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 public class EditDistanceCheckDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "edit-distance-check", 3);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new EditDistanceCheckDescriptor();
@@ -49,14 +46,14 @@ public class EditDistanceCheckDescriptor extends AbstractScalarFunctionDynamicDe
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK;
     }
 
     private static class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
 
         private final ICopyEvaluator edThreshEval;
         private int edThresh = -1;
-        private IAOrderedListBuilder listBuilder;
+        private final OrderedListBuilder listBuilder;
         private ArrayBackedValueStorage inputVal;
         @SuppressWarnings("unchecked")
         private final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE

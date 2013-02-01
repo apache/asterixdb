@@ -3,7 +3,6 @@ package edu.uci.ics.asterix.test.optimizer;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
@@ -22,7 +21,8 @@ import org.junit.runners.Parameterized.Parameters;
 
 import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
 import edu.uci.ics.asterix.api.java.AsterixJavaClient;
-import edu.uci.ics.asterix.common.config.GlobalConfig;import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.test.base.AsterixTestHelper;
 import edu.uci.ics.asterix.test.common.TestHelper;
 
@@ -126,7 +126,7 @@ public class OptimizerTest {
             AsterixJavaClient asterix = new AsterixJavaClient(
                     AsterixHyracksIntegrationUtil.getHyracksClientConnection(), query, plan);
             try {
-                asterix.compile(true, false, false, false, true, true, false);
+                asterix.compile(true, false, false, true, true, false, false);
             } catch (AsterixException e) {
                 plan.close();
                 query.close();

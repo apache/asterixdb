@@ -10,14 +10,16 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 public class DeleteStatement implements Statement {
 
     private VariableExpr vars;
+    private Identifier dataverseName;
     private Identifier datasetName;
     private Expression condition;
     private Clause dieClause;
     private int varCounter;
 
-    public DeleteStatement(VariableExpr vars, Identifier datasetName, Expression condition, Clause dieClause,
-            int varCounter) {
+    public DeleteStatement(VariableExpr vars, Identifier dataverseName, Identifier datasetName, Expression condition,
+            Clause dieClause, int varCounter) {
         this.vars = vars;
+        this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.condition = condition;
         this.dieClause = dieClause;
@@ -31,6 +33,10 @@ public class DeleteStatement implements Statement {
 
     public VariableExpr getVariableExpr() {
         return vars;
+    }
+
+    public Identifier getDataverseName() {
+        return dataverseName;
     }
 
     public Identifier getDatasetName() {

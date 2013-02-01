@@ -78,6 +78,7 @@
                 <module>asterix-external-data</module>
                 <module>asterix-metadata</module>
                 <module>asterix-dist</module>
+                <module>asterix-test-framework</module>
         </modules>
 
 	<repositories>
@@ -128,5 +129,12 @@
 			<url>http://obelix.ics.uci.edu/nexus/content/repositories/algebricks-snapshots/</url>
 		</repository>
 	</repositories>
-
+    <dependencies>
+        <dependency>
+            <groupId>net.sourceforge.cobertura</groupId>
+            <artifactId>cobertura</artifactId>
+            <version>1.9.4</version>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
 </project>

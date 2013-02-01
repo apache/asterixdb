@@ -7,10 +7,12 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public class DropStatement implements Statement {
 
-    private Identifier datasetName;
+    private final Identifier dataverseName;
+    private final Identifier datasetName;
     private boolean ifExists;
 
-    public DropStatement(Identifier datasetName, boolean ifExists) {
+    public DropStatement(Identifier dataverseName, Identifier datasetName, boolean ifExists) {
+        this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.ifExists = ifExists;
     }
@@ -18,6 +20,10 @@ public class DropStatement implements Statement {
     @Override
     public Kind getKind() {
         return Kind.DATASET_DROP;
+    }
+
+    public Identifier getDataverseName() {
+        return dataverseName;
     }
 
     public Identifier getDatasetName() {

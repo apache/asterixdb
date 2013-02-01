@@ -4,6 +4,8 @@
  * Date            :  6th July 2012 
  */
 
+write output to nc1:"rttest/flwor_let17.adm";
+
 let $a := ["and","here","we","are",["this is new","stuff"]]
 return $a
 

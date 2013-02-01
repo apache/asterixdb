@@ -26,7 +26,6 @@ import edu.uci.ics.asterix.aql.literal.LongIntegerLiteral;
 import edu.uci.ics.asterix.aql.literal.NullLiteral;
 import edu.uci.ics.asterix.aql.literal.StringLiteral;
 import edu.uci.ics.asterix.aql.literal.TrueLiteral;
-
 import edu.uci.ics.asterix.aql.parser.ScopeChecker;
 import edu.uci.ics.asterix.aql.base.*;
 import edu.uci.ics.asterix.aql.expression.*;
@@ -36,8 +35,15 @@ import edu.uci.ics.asterix.aql.base.Statement.Kind;
 import edu.uci.ics.asterix.aql.context.Scope;
 import edu.uci.ics.asterix.aql.context.RootScopeFactory;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-
 import edu.uci.ics.asterix.om.functions.AsterixFunction;
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
+import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
+
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
+
+
 
 public class AQLPlusParser extends ScopeChecker {
 
@@ -57,6 +63,8 @@ public class AQLPlusParser extends ScopeChecker {
     private static final String HASH_GROUP_BY_HINT = "hash";
     private static final String BROADCAST_JOIN_HINT = "bcast";
     private static final String INMEMORY_HINT = "inmem";
+    private static final String INDEXED_NESTED_LOOP_JOIN_HINT = "indexnl";
+   
     
    
     private static String getHint(Token t) {
@@ -75,17 +83,7 @@ public class AQLPlusParser extends ScopeChecker {
 			File file = new File(args[0]);
 			Reader fis = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
 		    AQLPlusParser parser = new AQLPlusParser(fis);
-		    Statement st = parser.Statement();
-		    st.accept(new AQLPrintVisitor(), 0);
-		    
-//		    System.out.println("FunctionCalls not found:");
-//		    for(FunctionDescriptor fd: notFoundFunctionList)
-//		    {
-//			if(lookupFunctionSignature(fd.getValue(), fd.getArity())!=null)
-//				notFoundFunctionList.remove(fd);
-//		    }
-//			System.out.println(notFoundFunctionList.toString());
-
+		    List<Statement> st = parser.Statement();
 	}
 
     public void initScope() {
@@ -96,7 +94,7 @@ public class AQLPlusParser extends ScopeChecker {
 PARSER_END(AQLPlusParser)
 
 
-Statement Statement() throws ParseException:
+List<Statement> Statement() throws ParseException:
 {
   Query query = null;
   // scopeStack.push(RootScopeFactory.createRootScope(this));
@@ -129,26 +127,20 @@ Statement Statement() throws ParseException:
           | "set" {
                        decls.add(SetStatement());
                     }
+          |          
+            {
+             decls.add(Query()) ;
+           } ";"
                                                      
+                                                      
         )*
-        (query = Query())?
       )
 
       <EOF>
     )
     {
-      if (query == null) {
-        query = new Query(true);
-      }
-      query.setPrologDeclList(decls);
-    
-//        for(FunctionDecl fdc : fdList)
-//        {
-//        	FunctionDescriptor fd = (FunctionDescriptor) fdc.getIdent();
-//                notFoundFunctionList.remove(fd);
-//        }
-// }
-      return query;
+     
+     return decls;  
     }
 }
 
@@ -187,7 +179,7 @@ Statement WriteStatement() throws ParseException:
      <DATASET> <IDENTIFIER> { datasetName = new Identifier(token.image); }
      <LEFTPAREN> query = Query() <RIGHTPAREN>
      {
-        stmt = new WriteFromQueryResultStatement(datasetName, query, getVarCounter());
+        stmt = new WriteFromQueryResultStatement(null, datasetName, query, getVarCounter());
      } ))  
         
     ";"
@@ -201,10 +193,10 @@ DataverseDecl DataverseDeclaration() throws ParseException:
   Identifier dvName = null;  
 }
 {
-  "dataverse" <IDENTIFIER> { dvName = new Identifier(token.image); }
+  "dataverse" <IDENTIFIER> { defaultDataverse = token.image;}
   ";"
   {
-    return new DataverseDecl(dvName);
+    return new DataverseDecl(new Identifier(defaultDataverse));
   }
 }
 
@@ -272,7 +264,7 @@ LoadFromFileStatement LoadStatement() throws ParseException:
         
   ";"
   {
-     return new LoadFromFileStatement(datasetName, adapter, properties, alreadySorted);
+     return new LoadFromFileStatement(null, datasetName, adapter, properties, alreadySorted);
   }   
 }
 
@@ -289,7 +281,7 @@ TypeDecl TypeDeclaration() throws ParseException:
   "as"
   ( typeExpr = TypeExpr() )
   {
-    return new TypeDecl(ident, typeExpr);
+    return new TypeDecl(null, ident, typeExpr);
   }
 }
 
@@ -393,8 +385,8 @@ UnorderedListTypeDefinition UnorderedListTypeDef() throws ParseException:
 
 FunctionDecl FunctionDeclaration() throws ParseException:
 {
-  FunctionDecl func = new FunctionDecl();
-  AsterixFunction ident;
+  FunctionDecl funcDecl;
+  FunctionSignature signature;
   String functionName;
   int arity = 0;
   List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
@@ -427,12 +419,10 @@ FunctionDecl FunctionDeclaration() throws ParseException:
     })*)? <RIGHTPAREN> "{" funcBody = Expression() "}"
 
     {
-      ident = new AsterixFunction(functionName, arity);
-      getCurrentScope().addFunctionDescriptor(ident, false);
-      func.setIdent(ident);
-      func.setFuncBody(funcBody);
-      func.setParamList(paramList);
-      return func;
+      signature = new FunctionSignature(defaultDataverse, functionName, arity);
+      getCurrentScope().addFunctionDescriptor(signature, false);
+      funcDecl = new FunctionDecl(signature, paramList, funcBody);
+      return funcDecl;
     }
 }
 
@@ -1044,16 +1034,24 @@ FieldBinding FieldBinding() throws ParseException:
 
 Expression FunctionCallExpr() throws ParseException:
 {
-  CallExpr pf = new CallExpr();
-  List<Expression > argList = new ArrayList<Expression >();
+  CallExpr callExpr;
+  List<Expression> argList = new ArrayList<Expression>();
   Expression tmp;
   int arity = 0;
-  Token funcName;
+  String funcName;
+  String dataverse;
+  String hint=null;
+  String id1=null;
+  String id2=null;
 }
-{
-    ( <IDENTIFIER> | <DATASET> )
+{  
+    ( <IDENTIFIER> { dataverse = defaultDataverse; funcName = token.image;} 
+     ("." <IDENTIFIER> { dataverse = funcName; funcName = token.image;})? 
+     | 
+     <DATASET> {dataverse = MetadataConstants.METADATA_DATAVERSE_NAME; funcName = getToken(0).toString();}
+    )
     {
-		funcName = getToken(0);
+       hint=getHint(token);
     }
      <LEFTPAREN> (tmp = Expression()
      {
@@ -1062,16 +1060,16 @@ Expression FunctionCallExpr() throws ParseException:
      } ("," tmp = Expression() { argList.add(tmp); arity++; })*)? <RIGHTPAREN>
 
      {
-       AsterixFunction fd = lookupFunctionSignature(funcName.toString(), arity);
-	     if(fd == null)
-	     {
-	        fd = new AsterixFunction(funcName.toString(), arity);
-//	     	notFoundFunctionList.add(fd);
-	     }
-//	     	throw new ParseException("can't find function "+ funcName.toString() + "@" + arity);
-       pf.setIdent(fd);
-       pf.setExprList(argList);
-       return pf;
+       FunctionSignature signature = lookupFunctionSignature(dataverse, funcName.toString(), arity);
+             if(signature == null)
+             {
+                signature = new FunctionSignature(dataverse, funcName.toString(), arity);
+             }
+       callExpr = new CallExpr(signature,argList);
+       if (hint != null && hint.startsWith(INDEXED_NESTED_LOOP_JOIN_HINT)) {
+          callExpr.addHint(IndexedNLJoinExpressionAnnotation.INSTANCE);
+        }
+       return callExpr;
      }
 }
 

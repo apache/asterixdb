@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -20,6 +19,7 @@ import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AMutableDouble;
 import edu.uci.ics.asterix.om.base.AMutableInt32;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -47,7 +47,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-avg", 1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new AvgAggregateDescriptor();
@@ -56,7 +55,7 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.AVG;
     }
 
     @Override
@@ -79,9 +78,10 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
 
                     private DataOutput out = provider.getDataOutput();
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(inputVal);
+                    private ICopyEvaluator eval = args[0].createEvaluator(inputVal);                    
                     private double sum;
                     private int count;
+                    private ATypeTag aggType;
                     private AMutableDouble aDouble = new AMutableDouble(0);
                     private AMutableInt32 aInt32 = new AMutableInt32(0);
 
@@ -104,10 +104,10 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
-                    private boolean metNull;
 
                     @Override
                     public void init() throws AlgebricksException {
+                        aggType = ATypeTag.SYSTEM_NULL;
                         sum = 0.0;
                         count = 0;
                     }
@@ -115,70 +115,72 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
                     @Override
                     public void step(IFrameTupleReference tuple) throws AlgebricksException {
                         inputVal.reset();
-                        eval.evaluate(tuple);
-                        if (inputVal.getLength() > 0) {
+                        eval.evaluate(tuple);                        
+                        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                                .deserialize(inputVal.getByteArray()[0]);
+                        if (typeTag == ATypeTag.NULL || aggType == ATypeTag.NULL) {
+                            aggType = ATypeTag.NULL;
+                            return;
+                        } else if (aggType == ATypeTag.SYSTEM_NULL) {                           
+                            aggType = typeTag;
+                        } else if (typeTag != ATypeTag.SYSTEM_NULL && typeTag != aggType) {
+                            throw new AlgebricksException("Unexpected type " + typeTag
+                                    + " in aggregation input stream. Expected type " + aggType + ".");
+                        }
+                        if (typeTag != ATypeTag.SYSTEM_NULL) {
                             ++count;
-                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal
-                                    .getByteArray()[0]);
-                            switch (typeTag) {
-                                case INT8: {
-                                    byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);
-                                    sum += val;
-                                    break;
-                                }
-                                case INT16: {
-                                    short val = AInt16SerializerDeserializer.getShort(inputVal.getByteArray(), 1);
-                                    sum += val;
-                                    break;
-                                }
-                                case INT32: {
-                                    int val = AInt32SerializerDeserializer.getInt(inputVal.getByteArray(), 1);
-                                    sum += val;
-                                    break;
-                                }
-                                case INT64: {
-                                    long val = AInt64SerializerDeserializer.getLong(inputVal.getByteArray(), 1);
-                                    sum += val;
-                                    break;
-                                }
-                                case FLOAT: {
-                                    float val = AFloatSerializerDeserializer.getFloat(inputVal.getByteArray(), 1);
-                                    sum += val;
-                                    break;
-                                }
-                                case DOUBLE: {
-                                    double val = ADoubleSerializerDeserializer.getDouble(inputVal.getByteArray(), 1);
-                                    sum += val;
-                                    break;
-                                }
-                                case NULL: {
-                                    metNull = true;
-                                    break;
-                                }
-                                default: {
-                                    throw new NotImplementedException("Cannot compute AVG for values of type "
-                                            + typeTag);
-                                }
+                        }                        
+                        switch (typeTag) {
+                            case INT8: {
+                                byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);
+                                sum += val;
+                                break;
                             }
-                            inputVal.reset();
+                            case INT16: {
+                                short val = AInt16SerializerDeserializer.getShort(inputVal.getByteArray(), 1);
+                                sum += val;
+                                break;
+                            }
+                            case INT32: {
+                                int val = AInt32SerializerDeserializer.getInt(inputVal.getByteArray(), 1);
+                                sum += val;
+                                break;
+                            }
+                            case INT64: {
+                                long val = AInt64SerializerDeserializer.getLong(inputVal.getByteArray(), 1);
+                                sum += val;
+                                break;
+                            }
+                            case FLOAT: {
+                                float val = AFloatSerializerDeserializer.getFloat(inputVal.getByteArray(), 1);
+                                sum += val;
+                                break;
+                            }
+                            case DOUBLE: {
+                                double val = ADoubleSerializerDeserializer.getDouble(inputVal.getByteArray(), 1);
+                                sum += val;
+                                break;
+                            }
+                            case NULL: {
+                                break;
+                            }
+                            default: {
+                                throw new NotImplementedException("Cannot compute AVG for values of type " + typeTag);
+                            }
                         }
                     }
 
                     @Override
                     public void finish() throws AlgebricksException {
-                        if (count == 0) {
-                            GlobalConfig.ASTERIX_LOGGER.fine("AVG aggregate ran over empty input.");
-                        } else {
-                            try {
-                                if (metNull)
-                                    nullSerde.serialize(ANull.NULL, out);
-                                else {
-                                    aDouble.setValue(sum / count);
-                                    doubleSerde.serialize(aDouble, out);
-                                }
-                            } catch (IOException e) {
-                                throw new AlgebricksException(e);
+                        try {
+                            if (count == 0 || aggType == ATypeTag.NULL) {
+                                nullSerde.serialize(ANull.NULL, out);
+                            } else {
+                                aDouble.setValue(sum / count);
+                                doubleSerde.serialize(aDouble, out);
                             }
+                        } catch (IOException e) {
+                            throw new AlgebricksException(e);
                         }
                     }
 
@@ -190,7 +192,7 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
                             }
                         } else {
                             try {
-                                if (metNull) {
+                                if (aggType == ATypeTag.NULL) {
                                     sumBytes.reset();
                                     nullSerde.serialize(ANull.NULL, sumBytesOutput);
                                 } else {

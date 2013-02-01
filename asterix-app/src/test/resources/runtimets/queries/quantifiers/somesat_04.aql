@@ -6,16 +6,11 @@
  * Date             : 5th July 2012
  */
 
-
-drop dataverse test if exists;
-create dataverse test;
-use dataverse test;
-
 write output to nc1:"rttest/quantifiers_somesat_04.adm";
 
 let $a := [
-some $x in ["foo","foobar","foot","fox"] satisfies string-length($x) = 1,
-some $x in [1,2,3,4,5,6,7,8] satisfies count($x) = 8,
+some $x in ["foo","foobar","foot","fox"] satisfies string-length($x) = 3,
+some $x in [[5,4,3,2],[1,2,3,4,5,6,7,8],[4,2,3,4]] satisfies count($x) = 8,
 some $x in [1, 2] satisfies $x = 1 or $x = 2,
 some $x in [1, 2] satisfies $x = 1 and ($x +1) = 2,
 some $x in ["A","B","C"] satisfies $x = "A",

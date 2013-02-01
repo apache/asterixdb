@@ -1,0 +1,45 @@
+/*
+ * Description  : This test case is to verify the fix for issue208
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=208
+ * Expected Res : Success
+ * Date         : 26th November 2012
+ */
+
+drop dataverse OpenSocialNetworkData if exists;
+create dataverse OpenSocialNetworkData;
+
+use dataverse OpenSocialNetworkData;
+
+create type TwitterUserType as open {
+screen-name: string,
+lang: string,
+friends_count: int32,
+statuses_count: int32,
+name: string,
+followers_count: int32
+}
+
+create type TweetMessageType as open {
+tweetid: string,
+tweetid-copy: string,
+send-time-copy: datetime
+}
+
+create dataset TweetMessages(TweetMessageType)
+partitioned by key tweetid;
+
+load dataset TweetMessages
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/twitter/tw_messages.adm"),("format"="adm"));
+
+write output to nc1:"rttest/open-closed_query-issue208.adm"; 
+for $t in dataset('TweetMessages')
+where $t.send-time >= datetime('2005-04-13T17:17:22') and
+$t.send-time <= datetime('2011-04-13T17:18:22')
+group by $uid := $t.user.screen-name with $t
+order by $uid
+return {
+    "user": $uid,
+    "count": count($t)
+}
+

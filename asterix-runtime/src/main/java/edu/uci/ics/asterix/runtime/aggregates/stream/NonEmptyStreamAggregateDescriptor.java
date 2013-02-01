@@ -2,9 +2,9 @@ package edu.uci.ics.asterix.runtime.aggregates.stream;
 
 import java.io.DataOutput;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ABoolean;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.BuiltinType;
@@ -23,8 +23,6 @@ public class NonEmptyStreamAggregateDescriptor extends AbstractAggregateFunction
 
     private static final long serialVersionUID = 1L;
 
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "non-empty-stream", 0);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new NonEmptyStreamAggregateDescriptor();
@@ -83,7 +81,7 @@ public class NonEmptyStreamAggregateDescriptor extends AbstractAggregateFunction
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.NON_EMPTY_STREAM;
     }
 
 }

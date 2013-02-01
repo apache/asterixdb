@@ -63,6 +63,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAStringTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalATimeTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListConstructorResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAInt32TypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAPointTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAStringTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAnyTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.QuadStringStringOrNullTypeComputer;
@@ -98,7 +99,7 @@ public class AsterixBuiltinFunctions {
         SI
     }
 
-    private final static Map<FunctionIdentifier, IFunctionInfo> asterixFunctionIdToInfo = new HashMap<FunctionIdentifier, IFunctionInfo>();
+    private static final FunctionInfoRepository finfoRepo = new FunctionInfoRepository();
 
     // it is supposed to be an identity mapping
     private final static Map<IFunctionInfo, IFunctionInfo> builtinFunctionsSet = new HashMap<IFunctionInfo, IFunctionInfo>();
@@ -231,16 +232,19 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier LIKE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "like", 2);
     public final static FunctionIdentifier CONTAINS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "contains",
             2);
-    private final static FunctionIdentifier STARTS_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+    public final static FunctionIdentifier STARTS_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "starts-with", 2);
-    private final static FunctionIdentifier ENDS_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+    public final static FunctionIdentifier ENDS_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "ends-with", 2);
 
     public final static FunctionIdentifier AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-avg", 1);
     public final static FunctionIdentifier COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-count", 1);
     public final static FunctionIdentifier SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sum", 1);
+    public final static FunctionIdentifier LOCAL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sum", 1);
     public final static FunctionIdentifier MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-max", 1);
+    public final static FunctionIdentifier LOCAL_MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-max", 1);
     public final static FunctionIdentifier MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-min", 1);
+    public final static FunctionIdentifier LOCAL_MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-min", 1);
     public final static FunctionIdentifier GLOBAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "agg-global-avg", 1);
     public final static FunctionIdentifier LOCAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -264,6 +268,8 @@ public class AsterixBuiltinFunctions {
             "count-serial", 1);
     public final static FunctionIdentifier SERIAL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "sum-serial", 1);
+    public final static FunctionIdentifier SERIAL_LOCAL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "local-sum-serial", 1);
     public final static FunctionIdentifier SERIAL_GLOBAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "global-avg-serial", 1);
     public final static FunctionIdentifier SERIAL_LOCAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -484,6 +490,12 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier ADJUST_DATETIME_FOR_TIMEZONE = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "adjust-datetime-for-timezone", 2);
 
+    public final static FunctionIdentifier GET_POINT_X_COORDINATE_ACCESSOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-x", 1);
+    public final static FunctionIdentifier GET_POINT_Y_COORDINATE_ACCESSOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-y", 1);
+    public final static FunctionIdentifier GET_CIRCLE_RADIUS_ACCESSOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-radius", 1);
+    public final static FunctionIdentifier GET_CIRCLE_CENTER_ACCESSOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-center", 1);
+    public final static FunctionIdentifier GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-points", 1);
+    
     public static final FunctionIdentifier EQ = AlgebricksBuiltinFunctions.EQ;
     public static final FunctionIdentifier LE = AlgebricksBuiltinFunctions.LE;
     public static final FunctionIdentifier GE = AlgebricksBuiltinFunctions.GE;
@@ -497,18 +509,15 @@ public class AsterixBuiltinFunctions {
     public static final FunctionIdentifier IS_NULL = AlgebricksBuiltinFunctions.IS_NULL;
 
     public static IFunctionInfo getAsterixFunctionInfo(FunctionIdentifier fid) {
-        IFunctionInfo finfo = asterixFunctionIdToInfo.get(fid);
+        IFunctionInfo finfo = finfoRepo.get(fid);;
         if (finfo == null) {
             finfo = new AsterixFunctionInfo(fid);
-            //   if (fid.isBuiltin()) {
-            asterixFunctionIdToInfo.put(fid, finfo);
-            //  }
         }
         return finfo;
     }
 
     public static AsterixFunctionInfo lookupFunction(FunctionIdentifier fid) {
-        return (AsterixFunctionInfo) asterixFunctionIdToInfo.get(fid);
+        return (AsterixFunctionInfo) finfoRepo.get(fid);
     }
 
     static {
@@ -528,7 +537,7 @@ public class AsterixBuiltinFunctions {
 
         // and then, Asterix builtin functions
         add(ANY_COLLECTION_MEMBER, NonTaggedCollectionMemberResultType.INSTANCE);
-        add(AVG, OptionalADoubleTypeComputer.INSTANCE);
+        addPrivateFunction(AVG, OptionalADoubleTypeComputer.INSTANCE);
         add(BOOLEAN_CONSTRUCTOR, UnaryBooleanOrNullFunctionTypeComputer.INSTANCE);
         add(CARET, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
         add(CIRCLE_CONSTRUCTOR, OptionalACircleTypeComputer.INSTANCE);
@@ -550,7 +559,7 @@ public class AsterixBuiltinFunctions {
             }
         });
         add(CONTAINS, ABooleanTypeComputer.INSTANCE);
-        add(COUNT, AInt32TypeComputer.INSTANCE);
+        addPrivateFunction(COUNT, AInt32TypeComputer.INSTANCE);
         add(COUNTHASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         add(COUNTHASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         add(CREATE_CIRCLE, ACircleTypeComputer.INSTANCE);
@@ -585,7 +594,7 @@ public class AsterixBuiltinFunctions {
         add(GET_HANDLE, null); // TODO
         add(GET_ITEM, NonTaggedGetItemResultType.INSTANCE);
         add(GET_DATA, null); // TODO
-        add(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
+        addPrivateFunction(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
         add(GRAM_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE);
         add(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
         add(HASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
@@ -606,11 +615,13 @@ public class AsterixBuiltinFunctions {
         add(LIKE, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
         add(LINE_CONSTRUCTOR, OptionalALineTypeComputer.INSTANCE);
         add(LISTIFY, OrderedListConstructorResultType.INSTANCE);
-        add(LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
+        addPrivateFunction(LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
         add(MAKE_FIELD_INDEX_HANDLE, null); // TODO
         add(MAKE_FIELD_NAME_HANDLE, null); // TODO
         add(MAX, NonTaggedSumTypeComputer.INSTANCE);
+        add(LOCAL_MAX, NonTaggedSumTypeComputer.INSTANCE);
         add(MIN, NonTaggedSumTypeComputer.INSTANCE);
+        add(LOCAL_MIN, NonTaggedSumTypeComputer.INSTANCE);
         add(NON_EMPTY_STREAM, ABooleanTypeComputer.INSTANCE);
         add(NULL_CONSTRUCTOR, ANullTypeComputer.INSTANCE);
         add(NUMERIC_UNARY_MINUS, NonTaggedUnaryMinusTypeComputer.INSTANCE);
@@ -620,7 +631,6 @@ public class AsterixBuiltinFunctions {
         add(NUMERIC_MOD, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
         add(NUMERIC_IDIV, AInt32TypeComputer.INSTANCE);
 
-        // Xiaoyu Ma Add for new functions
         add(NUMERIC_ABS, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
         add(NUMERIC_CEILING, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
         add(NUMERIC_FLOOR, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
@@ -630,7 +640,7 @@ public class AsterixBuiltinFunctions {
 
         add(STRING_TO_CODEPOINT, OrderedListOfAInt32TypeComputer.INSTANCE);
         add(CODEPOINT_TO_STRING, AStringTypeComputer.INSTANCE);
-        add(STRING_CONCAT, AStringTypeComputer.INSTANCE);
+        add(STRING_CONCAT, OptionalAStringTypeComputer.INSTANCE);
         add(SUBSTRING2, Substring2TypeComputer.INSTANCE);
         add(STRING_LENGTH, UnaryStringInt32OrNullTypeComputer.INSTANCE);
         add(STRING_LOWERCASE, UnaryStringOrNullTypeComputer.INSTANCE);
@@ -667,6 +677,7 @@ public class AsterixBuiltinFunctions {
         add(SERIAL_GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
         add(SERIAL_LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
         add(SERIAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
+        add(SERIAL_LOCAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
         add(SIMILARITY_JACCARD, AFloatTypeComputer.INSTANCE);
         add(SIMILARITY_JACCARD_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
         add(SIMILARITY_JACCARD_SORTED, AFloatTypeComputer.INSTANCE);
@@ -677,6 +688,11 @@ public class AsterixBuiltinFunctions {
         add(SPATIAL_CELL, ARectangleTypeComputer.INSTANCE);
         add(SPATIAL_DISTANCE, ADoubleTypeComputer.INSTANCE);
         add(SPATIAL_INTERSECT, ABooleanTypeComputer.INSTANCE);
+        add(GET_POINT_X_COORDINATE_ACCESSOR, ADoubleTypeComputer.INSTANCE);
+        add(GET_POINT_Y_COORDINATE_ACCESSOR, ADoubleTypeComputer.INSTANCE);
+        add(GET_CIRCLE_RADIUS_ACCESSOR, ADoubleTypeComputer.INSTANCE);
+        add(GET_CIRCLE_CENTER_ACCESSOR, APointTypeComputer.INSTANCE);
+        add(GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR, OrderedListOfAPointTypeComputer.INSTANCE);
         add(STARTS_WITH, ABooleanTypeComputer.INSTANCE);
         add(STRING_CONSTRUCTOR, OptionalAStringTypeComputer.INSTANCE);
         add(SUBSET_COLLECTION, new IResultTypeComputer() {
@@ -717,7 +733,8 @@ public class AsterixBuiltinFunctions {
             }
         });
         add(SUBSTRING, SubstringTypeComputer.INSTANCE);
-        add(SUM, NonTaggedSumTypeComputer.INSTANCE);
+        addPrivateFunction(SUM, NonTaggedSumTypeComputer.INSTANCE);
+        add(LOCAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
         add(SWITCH_CASE, NonTaggedSwitchCaseComputer.INSTANCE);
         add(REG_EXP, ABooleanTypeComputer.INSTANCE);
         add(INJECT_FAILURE, InjectFailureTypeComputer.INSTANCE);
@@ -818,15 +835,17 @@ public class AsterixBuiltinFunctions {
         addGlobalAgg(COUNT, SUM);
 
         addAgg(MAX);
-        addLocalAgg(MAX, MAX);
+        addAgg(LOCAL_MAX);
+        addLocalAgg(MAX, LOCAL_MAX);
         addGlobalAgg(MAX, MAX);
 
         addAgg(MIN);
-        addLocalAgg(MIN, MIN);
+        addLocalAgg(MIN, LOCAL_MIN);
         addGlobalAgg(MIN, MIN);
 
         addAgg(SUM);
-        addLocalAgg(SUM, SUM);
+        addAgg(LOCAL_SUM);
+        addLocalAgg(SUM, LOCAL_SUM);
         addGlobalAgg(SUM, SUM);
 
         addAgg(LISTIFY);
@@ -835,6 +854,7 @@ public class AsterixBuiltinFunctions {
         addSerialAgg(AVG, SERIAL_AVG);
         addSerialAgg(COUNT, SERIAL_COUNT);
         addSerialAgg(SUM, SERIAL_SUM);
+        addSerialAgg(LOCAL_SUM, SERIAL_LOCAL_SUM);
         addSerialAgg(LOCAL_AVG, SERIAL_LOCAL_AVG);
         addSerialAgg(GLOBAL_AVG, SERIAL_GLOBAL_AVG);
 
@@ -849,7 +869,8 @@ public class AsterixBuiltinFunctions {
         addGlobalAgg(SERIAL_AVG, SERIAL_GLOBAL_AVG);
 
         addAgg(SERIAL_SUM);
-        addLocalAgg(SERIAL_SUM, SERIAL_SUM);
+        addAgg(SERIAL_LOCAL_SUM);
+        addLocalAgg(SERIAL_SUM, SERIAL_LOCAL_SUM);
         addGlobalAgg(SERIAL_SUM, SERIAL_SUM);
     }
 
@@ -964,7 +985,14 @@ public class AsterixBuiltinFunctions {
         IFunctionInfo functionInfo = getAsterixFunctionInfo(fi);
         builtinFunctionsSet.put(functionInfo, functionInfo);
         funTypeComputer.put(functionInfo, typeComputer);
-        asterixFunctionIdToInfo.put(fi, functionInfo);
+        finfoRepo.put(fi);
+    }
+    
+    private static IFunctionInfo addPrivateFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer) {
+        IFunctionInfo functionInfo = getAsterixFunctionInfo(fi);
+        builtinFunctionsSet.put(functionInfo, functionInfo);
+        funTypeComputer.put(functionInfo, typeComputer);
+        return functionInfo;
     }
 
     private static void addAgg(FunctionIdentifier fi) {

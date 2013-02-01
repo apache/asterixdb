@@ -1,9 +1,8 @@
 package edu.uci.ics.asterix.runtime.evaluators.functions;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
-import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.common.WordTokensEvaluator;
@@ -20,7 +19,6 @@ import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.UTF8WordTokenFact
 public class WordTokensDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "word-tokens", 1);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new WordTokensDescriptor();
@@ -29,7 +27,7 @@ public class WordTokensDescriptor extends AbstractScalarFunctionDynamicDescripto
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.WORD_TOKENS;
     }
 
     @Override
@@ -39,8 +37,7 @@ public class WordTokensDescriptor extends AbstractScalarFunctionDynamicDescripto
 
             @Override
             public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
-                ITokenFactory tokenFactory = new UTF8WordTokenFactory(ATypeTag.STRING.serialize(),
-                        ATypeTag.INT32.serialize());
+                ITokenFactory tokenFactory = new UTF8WordTokenFactory();
                 IBinaryTokenizer tokenizer = new DelimitedUTF8StringBinaryTokenizer(true, true, tokenFactory);
                 return new WordTokensEvaluator(args, output, tokenizer, BuiltinType.ASTRING);
             }

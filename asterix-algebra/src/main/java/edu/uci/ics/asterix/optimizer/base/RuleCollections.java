@@ -28,18 +28,22 @@ import edu.uci.ics.asterix.optimizer.rules.FeedScanCollectionToUnnest;
 import edu.uci.ics.asterix.optimizer.rules.FuzzyEqRule;
 import edu.uci.ics.asterix.optimizer.rules.FuzzyJoinRule;
 import edu.uci.ics.asterix.optimizer.rules.IfElseToSwitchCaseFunctionRule;
-import edu.uci.ics.asterix.optimizer.rules.InlineAssignIntoAggregateRule;
+import edu.uci.ics.asterix.optimizer.rules.InlineUnnestFunctionRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceDynamicTypeCastRule;
+import edu.uci.ics.asterix.optimizer.rules.IntroduceEnforcedListTypeRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceStaticTypeCastRule;
 import edu.uci.ics.asterix.optimizer.rules.LoadRecordFieldsRule;
 import edu.uci.ics.asterix.optimizer.rules.NestGroupByRule;
 import edu.uci.ics.asterix.optimizer.rules.PullPositionalVariableFromUnnestRule;
+import edu.uci.ics.asterix.optimizer.rules.PushAggFuncIntoStandaloneAggregateRule;
 import edu.uci.ics.asterix.optimizer.rules.PushAggregateIntoGroupbyRule;
 import edu.uci.ics.asterix.optimizer.rules.PushFieldAccessRule;
 import edu.uci.ics.asterix.optimizer.rules.PushGroupByThroughProduct;
 import edu.uci.ics.asterix.optimizer.rules.PushProperJoinThroughProduct;
+import edu.uci.ics.asterix.optimizer.rules.PushSimilarityFunctionsBelowJoin;
 import edu.uci.ics.asterix.optimizer.rules.RemoveRedundantListifyRule;
+import edu.uci.ics.asterix.optimizer.rules.RemoveUnusedOneToOneEquiJoinRule;
 import edu.uci.ics.asterix.optimizer.rules.SetAsterixPhysicalOperatorsRule;
 import edu.uci.ics.asterix.optimizer.rules.SetClosedRecordConstructorsRule;
 import edu.uci.ics.asterix.optimizer.rules.SimilarityCheckRule;
@@ -55,19 +59,24 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.ConsolidateAssignsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ConsolidateSelectsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.EliminateSubplanRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.EnforceStructuralPropertiesRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.ExtractCommonExpressionsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ExtractCommonOperatorsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ExtractGbyExpressionsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.FactorRedundantGroupAndDecorVarsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.InferTypesRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.InlineAssignIntoAggregateRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.InlineSingleReferenceVariablesRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.InsertOuterJoinRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.InsertProjectBeforeUnionRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroHashPartitionMergeExchange;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroJoinInsideSubplanRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceCombinerRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceGroupByForStandaloneAggregRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceAggregateCombinerRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceGroupByCombinerRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceGroupByForSubplanRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceProjectsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IsolateHyracksOperatorsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PullSelectOutOfEqJoin;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushAssignBelowUnionAllRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushAssignDownThroughProductRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushDieUpRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushLimitDownRule;
@@ -77,6 +86,8 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectDownRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectIntoJoinRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSubplanWithAggregateDownThroughProductRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ReinferAllTypesRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveRedundantGroupByDecorVars;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveRedundantVariablesRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveUnusedAssignAndAggregateRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.SetAlgebricksPhysicalOperatorsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.SetExecutionModeRule;
@@ -87,6 +98,7 @@ public final class RuleCollections {
 
     public final static List<IAlgebraicRewriteRule> buildTypeInferenceRuleCollection() {
         List<IAlgebraicRewriteRule> typeInfer = new LinkedList<IAlgebraicRewriteRule>();
+        typeInfer.add(new InlineUnnestFunctionRule());
         typeInfer.add(new InferTypesRule());
         return typeInfer;
     }
@@ -94,17 +106,19 @@ public final class RuleCollections {
     public final static List<IAlgebraicRewriteRule> buildNormalizationRuleCollection() {
         List<IAlgebraicRewriteRule> normalization = new LinkedList<IAlgebraicRewriteRule>();
         normalization.add(new EliminateSubplanRule());
-        normalization.add(new IntroduceGroupByForStandaloneAggregRule());
+        normalization.add(new PushAggFuncIntoStandaloneAggregateRule());
         normalization.add(new BreakSelectIntoConjunctsRule());
         normalization.add(new ExtractGbyExpressionsRule());
         normalization.add(new ExtractDistinctByExpressionsRule());
         normalization.add(new ExtractOrderExpressionsRule());
+        normalization.add(new ExtractCommonExpressionsRule());
 
         // IntroduceStaticTypeCastRule should go before
         // IntroduceDynamicTypeCastRule to
         // avoid unnecessary dynamic casting
         normalization.add(new IntroduceStaticTypeCastRule());
         normalization.add(new IntroduceDynamicTypeCastRule());
+        normalization.add(new IntroduceEnforcedListTypeRule());
         normalization.add(new ConstantFoldingRule());
         normalization.add(new UnnestToDataScanRule());
         normalization.add(new IfElseToSwitchCaseFunctionRule());
@@ -129,8 +143,11 @@ public final class RuleCollections {
         condPushDownAndJoinInference.add(new IntroduceGroupByForSubplanRule());
         condPushDownAndJoinInference.add(new SubplanOutOfGroupRule());
         condPushDownAndJoinInference.add(new InsertOuterJoinRule());
+
+        condPushDownAndJoinInference.add(new RemoveRedundantVariablesRule());
         condPushDownAndJoinInference.add(new AsterixInlineVariablesRule());
         condPushDownAndJoinInference.add(new RemoveUnusedAssignAndAggregateRule());
+
         condPushDownAndJoinInference.add(new FactorRedundantGroupAndDecorVarsRule());
         condPushDownAndJoinInference.add(new PushAggregateIntoGroupbyRule());
         condPushDownAndJoinInference.add(new EliminateSubplanRule());
@@ -147,8 +164,8 @@ public final class RuleCollections {
         fieldLoads.add(new PushFieldAccessRule());
         // fieldLoads.add(new ByNameToByHandleFieldAccessRule()); -- disabled
         fieldLoads.add(new ByNameToByIndexFieldAccessRule());
+        fieldLoads.add(new RemoveRedundantVariablesRule());
         fieldLoads.add(new AsterixInlineVariablesRule());
-        // fieldLoads.add(new InlineRecordAccessRule());
         fieldLoads.add(new RemoveUnusedAssignAndAggregateRule());
         fieldLoads.add(new ConstantFoldingRule());
         fieldLoads.add(new FeedScanCollectionToUnnest());
@@ -168,20 +185,34 @@ public final class RuleCollections {
         consolidation.add(new ConsolidateSelectsRule());
         consolidation.add(new ConsolidateAssignsRule());
         consolidation.add(new InlineAssignIntoAggregateRule());
-        consolidation.add(new IntroduceCombinerRule());
+        consolidation.add(new IntroduceGroupByCombinerRule());
+        consolidation.add(new IntroduceAggregateCombinerRule());
         consolidation.add(new CountVarToCountOneRule());
-        consolidation.add(new IntroduceSelectAccessMethodRule());
-        consolidation.add(new IntroduceJoinAccessMethodRule());
         consolidation.add(new RemoveUnusedAssignAndAggregateRule());
-        consolidation.add(new IntroduceSecondaryIndexInsertDeleteRule());
+        consolidation.add(new RemoveRedundantGroupByDecorVars());
         return consolidation;
     }
 
-    public final static List<IAlgebraicRewriteRule> buildOpPushDownRuleCollection() {
-        List<IAlgebraicRewriteRule> opPushDown = new LinkedList<IAlgebraicRewriteRule>();
-        opPushDown.add(new PushProjectDownRule());
-        opPushDown.add(new PushSelectDownRule());
-        return opPushDown;
+    public final static List<IAlgebraicRewriteRule> buildAccessMethodRuleCollection() {
+        List<IAlgebraicRewriteRule> accessMethod = new LinkedList<IAlgebraicRewriteRule>();
+        accessMethod.add(new IntroduceSelectAccessMethodRule());
+        accessMethod.add(new IntroduceJoinAccessMethodRule());
+        accessMethod.add(new IntroduceSecondaryIndexInsertDeleteRule());
+        accessMethod.add(new RemoveUnusedOneToOneEquiJoinRule());
+        accessMethod.add(new PushSimilarityFunctionsBelowJoin());
+        accessMethod.add(new RemoveUnusedAssignAndAggregateRule());
+        return accessMethod;
+    }
+
+    public final static List<IAlgebraicRewriteRule> buildPlanCleanupRuleCollection() {
+        List<IAlgebraicRewriteRule> planCleanupRules = new LinkedList<IAlgebraicRewriteRule>();
+        planCleanupRules.add(new PushAssignBelowUnionAllRule());
+        planCleanupRules.add(new ExtractCommonExpressionsRule());
+        planCleanupRules.add(new RemoveRedundantVariablesRule());
+        planCleanupRules.add(new PushProjectDownRule());
+        planCleanupRules.add(new PushSelectDownRule());
+        planCleanupRules.add(new RemoveUnusedAssignAndAggregateRule());
+        return planCleanupRules;
     }
 
     public final static List<IAlgebraicRewriteRule> buildDataExchangeRuleCollection() {
@@ -201,6 +232,11 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new PullPositionalVariableFromUnnestRule());
         physicalRewritesAllLevels.add(new PushProjectDownRule());
         physicalRewritesAllLevels.add(new InsertProjectBeforeUnionRule());
+        physicalRewritesAllLevels.add(new InlineSingleReferenceVariablesRule());
+        physicalRewritesAllLevels.add(new RemoveUnusedAssignAndAggregateRule());
+        physicalRewritesAllLevels.add(new ConsolidateAssignsRule());
+        // After adding projects, we may need need to set physical operators again.
+        physicalRewritesAllLevels.add(new SetAlgebricksPhysicalOperatorsRule());
         return physicalRewritesAllLevels;
     }
 
@@ -208,6 +244,9 @@ public final class RuleCollections {
         List<IAlgebraicRewriteRule> physicalRewritesTopLevel = new LinkedList<IAlgebraicRewriteRule>();
         physicalRewritesTopLevel.add(new PushNestedOrderByUnderPreSortedGroupByRule());
         physicalRewritesTopLevel.add(new PushLimitDownRule());
+        physicalRewritesTopLevel.add(new IntroduceProjectsRule());
+        physicalRewritesTopLevel.add(new SetAlgebricksPhysicalOperatorsRule());
+        physicalRewritesTopLevel.add(new SetExecutionModeRule());
         return physicalRewritesTopLevel;
     }
 

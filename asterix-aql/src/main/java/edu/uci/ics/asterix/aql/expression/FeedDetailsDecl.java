@@ -14,34 +14,37 @@
  */
 package edu.uci.ics.asterix.aql.expression;
 
+import java.util.List;
 import java.util.Map;
 
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
+
 public class FeedDetailsDecl extends InternalDetailsDecl {
-    private Map<String, String> properties;
-    private String adapterClassname;
-    private String functionIdentifier;
+    private final Map<String, String> configuration;
+    private final String adapterFactoryClassname;
+    private final FunctionSignature functionSignature;
 
-    public void setFunctionIdentifier(String functionIdentifier) {
-        this.functionIdentifier = functionIdentifier;
+    public FeedDetailsDecl(String adapterFactoryClassname, Map<String, String> configuration,
+            FunctionSignature signature, Identifier nodeGroupName, List<String> partitioningExpr) {
+        super(nodeGroupName, partitioningExpr);
+        this.adapterFactoryClassname = adapterFactoryClassname;
+        this.configuration = configuration;
+        this.functionSignature = signature;
     }
 
-    public void setAdapterClassname(String adapter) {
-        this.adapterClassname = adapter;
+    public Map<String, String> getConfiguration() {
+        return configuration;
     }
 
-    public void setProperties(Map<String, String> properties) {
-        this.properties = properties;
+    public String getAdapterFactoryClassname() {
+        return adapterFactoryClassname;
     }
 
-    public String getAdapterClassname() {
-        return adapterClassname;
+    public FunctionSignature getSignature() {
+        return functionSignature;
     }
 
-    public Map<String, String> getProperties() {
-        return properties;
-    }
-
-    public String getFunctionIdentifier() {
-        return functionIdentifier;
+    public FunctionSignature getFunctionSignature() {
+        return functionSignature;
     }
 }

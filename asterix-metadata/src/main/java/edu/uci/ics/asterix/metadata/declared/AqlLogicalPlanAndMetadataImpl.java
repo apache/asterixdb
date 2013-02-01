@@ -45,8 +45,7 @@ public class AqlLogicalPlanAndMetadataImpl implements ILogicalPlanAndMetadata {
 
     @Override
     public AlgebricksPartitionConstraint getClusterLocations() {
-        AqlCompiledMetadataDeclarations metadata = metadataProvider.getMetadataDeclarations();
-        Map<String, String[]> stores = metadata.getAllStores();
+        Map<String, String[]> stores = metadataProvider.getAllStores();
         ArrayList<String> locs = new ArrayList<String>();
         for (String k : stores.keySet()) {
             String[] nodeStores = stores.get(k);

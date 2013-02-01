@@ -1,0 +1,10 @@
+/*
+ * Description  : Test string to codepoint function with valid inputs
+ * Expected Res : Success
+ * Date         : 7th Aug 2012
+ */
+
+write output to nc1:"rttest/string_strtocpt01.adm";
+
+let $x := "ABCDEFGHIJKLMNOPQRSTUVWXYZ-01234567890"
+return string-to-codepoint($x)

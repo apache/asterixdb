@@ -2,12 +2,13 @@ package edu.uci.ics.asterix.aql.expression;
 
 import java.util.ArrayList;
 
+import edu.uci.ics.asterix.aql.base.AbstractExpression;
 import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
-public class OperatorExpr implements Expression {
+public class OperatorExpr extends AbstractExpression {
     private ArrayList<Expression> exprList;
     private ArrayList<OperatorType> opList;
     private ArrayList<Integer> exprBroadcastIdx;

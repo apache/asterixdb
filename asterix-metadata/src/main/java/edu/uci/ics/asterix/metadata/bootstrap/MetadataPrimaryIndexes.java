@@ -32,7 +32,7 @@ public class MetadataPrimaryIndexes {
     public static IMetadataIndex NODE_DATASET;
     public static IMetadataIndex NODEGROUP_DATASET;
     public static IMetadataIndex FUNCTION_DATASET;
-
+    public static IMetadataIndex DATASOURCE_ADAPTER_DATASET;
 
     /**
      * Create all metadata primary index descriptors. MetadataRecordTypes must
@@ -68,11 +68,14 @@ public class MetadataPrimaryIndexes {
 
         NODEGROUP_DATASET = new MetadataIndex("Nodegroup", null, 2, new IAType[] { BuiltinType.ASTRING },
                 new String[] { "GroupName" }, MetadataRecordTypes.NODEGROUP_RECORDTYPE);
-        
-        FUNCTION_DATASET = new MetadataIndex("Function", null, 4,
-				new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING,
-						BuiltinType.ASTRING }, new String[] { "DataverseName",
-                        "FunctionName", "FunctionArity" }, MetadataRecordTypes.FUNCTION_RECORDTYPE);
+
+        FUNCTION_DATASET = new MetadataIndex("Function", null, 4, new IAType[] { BuiltinType.ASTRING,
+                BuiltinType.ASTRING, BuiltinType.ASTRING }, new String[] { "DataverseName", "Name", "Arity" },
+                MetadataRecordTypes.FUNCTION_RECORDTYPE);
+
+        DATASOURCE_ADAPTER_DATASET = new MetadataIndex("DatasourceAdapter", null, 3,
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING }, new String[] { "DataverseName", "Name" },
+                MetadataRecordTypes.DATASOURCE_ADAPTER_RECORDTYPE);
 
     }
 }

@@ -14,6 +14,7 @@ import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.optimizer.rules.am.AccessMethodJobGenParams;
+import edu.uci.ics.asterix.optimizer.rules.am.BTreeJobGenParams;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
@@ -149,8 +150,8 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                         AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
                         jobGenParams.readFromFuncArgs(f.getArguments());
                         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-                        String dataverseName = mp.getMetadataDeclarations().getDataverseName();
-                        AqlSourceId dataSourceId = new AqlSourceId(dataverseName, jobGenParams.getDatasetName());
+                        AqlSourceId dataSourceId = new AqlSourceId(jobGenParams.getDataverseName(),
+                                jobGenParams.getDatasetName());
                         IDataSourceIndex<String, AqlSourceId> dsi = mp.findDataSourceIndex(jobGenParams.getIndexName(),
                                 dataSourceId);
                         if (dsi == null) {
@@ -161,7 +162,11 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                         boolean requiresBroadcast = jobGenParams.getRequiresBroadcast();
                         switch (indexType) {
                             case BTREE: {
-                                op.setPhysicalOperator(new BTreeSearchPOperator(dsi, requiresBroadcast));
+                                BTreeJobGenParams btreeJobGenParams = new BTreeJobGenParams();
+                                btreeJobGenParams.readFromFuncArgs(f.getArguments());
+                                op.setPhysicalOperator(new BTreeSearchPOperator(dsi, requiresBroadcast,
+                                        btreeJobGenParams.isPrimaryIndex(), btreeJobGenParams.getLowKeyVarList(),
+                                        btreeJobGenParams.getHighKeyVarList()));
                                 break;
                             }
                             case RTREE: {

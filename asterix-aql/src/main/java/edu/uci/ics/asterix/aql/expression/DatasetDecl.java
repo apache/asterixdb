@@ -21,26 +21,26 @@ import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public class DatasetDecl implements Statement {
-    protected Identifier name;
-    protected Identifier itemTypeName;
-    protected DatasetType datasetType;
-    protected IDatasetDetailsDecl datasetDetailsDecl;
+    protected final Identifier name;
+    protected final Identifier dataverse;
+    protected final Identifier itemTypeName;
+    protected final DatasetType datasetType;
+    protected final IDatasetDetailsDecl datasetDetailsDecl;
 
     public boolean ifNotExists;
 
-    public DatasetDecl(Identifier name, Identifier itemTypeName, IDatasetDetailsDecl idd, boolean ifNotExists) {
+    public DatasetDecl(Identifier dataverse, Identifier name, Identifier itemTypeName, DatasetType datasetType,
+            IDatasetDetailsDecl idd, boolean ifNotExists) {
+        this.dataverse = dataverse;
         this.name = name;
         this.itemTypeName = itemTypeName;
         this.ifNotExists = ifNotExists;
+        this.datasetType = datasetType;
         datasetDetailsDecl = idd;
     }
 
     public boolean getIfNotExists() {
         return this.ifNotExists;
-    }
-
-    public void setDatasetType(DatasetType datasetType) {
-        this.datasetType = datasetType;
     }
 
     public DatasetType getDatasetType() {
@@ -51,16 +51,8 @@ public class DatasetDecl implements Statement {
         return name;
     }
 
-    public void setName(Identifier name) {
-        this.name = name;
-    }
-
     public Identifier getItemTypeName() {
         return itemTypeName;
-    }
-
-    public void setItemTypeName(Identifier itemTypeName) {
-        this.itemTypeName = itemTypeName;
     }
 
     @Override
@@ -82,7 +74,8 @@ public class DatasetDecl implements Statement {
         return datasetDetailsDecl;
     }
 
-    public void setDatasetDetailsDecl(IDatasetDetailsDecl datasetDetailsDecl) {
-        this.datasetDetailsDecl = datasetDetailsDecl;
+    public Identifier getDataverse() {
+        return dataverse;
     }
+
 }

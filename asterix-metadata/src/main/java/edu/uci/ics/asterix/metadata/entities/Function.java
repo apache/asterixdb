@@ -7,63 +7,73 @@ import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
 
 public class Function implements IMetadataEntity {
 
-	private String dataverseName;
-	private String functionName;
-	private int arity;
-	private List<String> params;
-	private String functionBody;
+    public static final String LANGUAGE_AQL = "AQL";
+    public static final String LANGUAGE_JAVA = "JAVA";
 
-	public Function(String dataverseName, String functionName, int arity,
-			List<String> params,
-			String functionBody) {
-		this.dataverseName = dataverseName;
-		this.functionName = functionName;
-		this.arity = arity;
-		this.params = params;
-		this.functionBody = functionBody;
-	}
+    public static final String RETURNTYPE_VOID = "VOID";
+    public static final String NOT_APPLICABLE = "N/A";
 
-	public String getDataverseName() {
-		return dataverseName;
-	}
+    private final String dataverse;
+    private final String name;
+    private final int arity;
+    private final List<String> params;
+    private final String body;
+    private final String returnType;
+    private final String language;
+    private final String kind;
 
-	public void setDataverseName(String dataverseName) {
-		this.dataverseName = dataverseName;
-	}
+    public Function(String dataverseName, String functionName, int arity, List<String> params, String returnType,
+            String functionBody, String language, String functionKind) {
+        this.dataverse = dataverseName;
+        this.name = functionName;
+        this.params = params;
+        this.body = functionBody;
+        this.returnType = returnType == null ? RETURNTYPE_VOID : returnType;
+        this.language = language;
+        this.kind = functionKind;
+        this.arity = arity;
+    }
 
-	public String getFunctionName() {
-		return functionName;
-	}
+    public String getDataverseName() {
+        return dataverse;
+    }
 
-	public int getFunctionArity() {
-		return arity;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public List<String> getParams() {
-		return params;
-	}
+    public List<String> getParams() {
+        return params;
+    }
 
-	public void setParams(List<String> params) {
-		this.params = params;
-	}
+    public String getFunctionBody() {
+        return body;
+    }
 
-	public String getFunctionBody() {
-		return functionBody;
-	}
+    public String getReturnType() {
+        return returnType;
+    }
 
-	public void setFunctionBody(String functionBody) {
-		this.functionBody = functionBody;
-	}
+    public String getLanguage() {
+        return language;
+    }
 
-	@Override
-	public Object addToCache(MetadataCache cache) {
-		return cache.addFunctionIfNotExists(this);
-	}
+    public int getArity() {
+        return arity;
+    }
 
-	@Override
-	public Object dropFromCache(MetadataCache cache) {
-		return cache.dropFunction(this);
-	}
+    public String getKind() {
+        return kind;
+    }
+
+    @Override
+    public Object addToCache(MetadataCache cache) {
+        return cache.addFunctionIfNotExists(this);
+    }
+
+    @Override
+    public Object dropFromCache(MetadataCache cache) {
+        return cache.dropFunction(this);
+    }
 
 }
-

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -19,29 +19,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.asterix.external.data.adapter.api.IDatasourceAdapter;
-import edu.uci.ics.asterix.external.data.parser.IDataParser;
-import edu.uci.ics.asterix.external.data.parser.IDataStreamParser;
-import edu.uci.ics.asterix.external.data.parser.IManagedDataParser;
-import edu.uci.ics.asterix.external.data.parser.ManagedDelimitedDataStreamParser;
-import edu.uci.ics.asterix.feed.intake.FeedStream;
-import edu.uci.ics.asterix.feed.intake.IFeedClient;
-import edu.uci.ics.asterix.feed.intake.RSSFeedClient;
 import edu.uci.ics.asterix.feed.managed.adapter.IManagedFeedAdapter;
-import edu.uci.ics.asterix.feed.managed.adapter.IMutableFeedAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
-public class RSSFeedAdapter extends AbstractDatasourceAdapter implements IDatasourceAdapter, IManagedFeedAdapter,
-        IMutableFeedAdapter {
+/**
+ * RSSFeedAdapter provides the functionality of fetching an RSS based feed.
+ */
+public class RSSFeedAdapter extends PullBasedAdapter implements IManagedFeedAdapter {
+
+    private static final long serialVersionUID = 1L;
 
     private List<String> feedURLs = new ArrayList<String>();
     private boolean isStopRequested = false;
     private boolean isAlterRequested = false;
     private Map<String, String> alteredParams = new HashMap<String, String>();
     private String id_prefix = "";
+    private ARecordType recordType;
+
+    private IPullBasedFeedClient rssFeedClient;
 
     public static final String KEY_RSS_URL = "url";
     public static final String KEY_INTERVAL = "interval";
@@ -55,55 +55,15 @@ public class RSSFeedAdapter extends AbstractDatasourceAdapter implements IDataso
     }
 
     @Override
-    public IDataParser getDataParser(int partition) throws Exception {
-        IDataParser dataParser = new ManagedDelimitedDataStreamParser();
-        ((IManagedDataParser) dataParser).setAdapter(this);
-        dataParser.configure(configuration);
-        dataParser.initialize((ARecordType) atype, ctx);
-        IFeedClient feedClient = new RSSFeedClient(this, feedURLs.get(partition), id_prefix);
-        FeedStream feedStream = new FeedStream(feedClient, ctx);
-        ((IDataStreamParser) dataParser).setInputStream(feedStream);
-        return dataParser;
-    }
-
-    @Override
-    public void alter(Map<String, String> properties) throws Exception {
+    public void alter(Map<String, String> properties) {
         isAlterRequested = true;
         this.alteredParams = properties;
         reconfigure(properties);
     }
 
-    public void postAlteration() {
-        alteredParams = null;
-        isAlterRequested = false;
-    }
-
     @Override
-    public void beforeSuspend() throws Exception {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void beforeResume() throws Exception {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void beforeStop() throws Exception {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void stop() throws Exception {
+    public void stop() {
         isStopRequested = true;
-    }
-
-    @Override
-    public AdapterDataFlowType getAdapterDataFlowType() {
-        return AdapterDataFlowType.PULL;
     }
 
     @Override
@@ -112,16 +72,17 @@ public class RSSFeedAdapter extends AbstractDatasourceAdapter implements IDataso
     }
 
     @Override
-    public void configure(Map<String, String> arguments, IAType atype) throws Exception {
+    public void configure(Map<String, String> arguments) throws Exception {
         configuration = arguments;
-        this.atype = atype;
         String rssURLProperty = configuration.get(KEY_RSS_URL);
         if (rssURLProperty == null) {
             throw new IllegalArgumentException("no rss url provided");
         }
         initializeFeedURLs(rssURLProperty);
         configurePartitionConstraints();
-
+        recordType = new ARecordType("FeedRecordType", new String[] { "id", "title", "description", "link" },
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                false);
     }
 
     private void initializeFeedURLs(String rssURLProperty) {
@@ -155,6 +116,27 @@ public class RSSFeedAdapter extends AbstractDatasourceAdapter implements IDataso
 
     public Map<String, String> getAlteredParams() {
         return alteredParams;
+    }
+
+    @Override
+    public IPullBasedFeedClient getFeedClient(int partition) throws Exception {
+        if (rssFeedClient == null) {
+            rssFeedClient = new RSSFeedClient(this, feedURLs.get(partition), id_prefix);
+        }
+        return rssFeedClient;
+    }
+
+    @Override
+    public ARecordType getAdapterOutputType() {
+        return recordType;
+    }
+
+    @Override
+    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
+        if (partitionConstraint == null) {
+            configurePartitionConstraints();
+        }
+        return partitionConstraint;
     }
 
 }

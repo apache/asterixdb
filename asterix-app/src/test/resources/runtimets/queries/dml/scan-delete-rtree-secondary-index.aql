@@ -10,7 +10,8 @@ create type MyRecord as closed {
   line2: line,
   poly1: polygon,
   poly2: polygon,
-  rec: rectangle
+  rec: rectangle,
+  circle: circle
 }
 
 create dataset MyData(MyRecord)

@@ -4,6 +4,8 @@
  * Date            :  6th July 2012 
  */
 
+write output to nc1:"rttest/flwor_let11.adm";
+
 // Return an ordered list comprising of records and other values
 
 let $a := ["a",{"i":1},"b",{"j":2},"c",{"k":3}]

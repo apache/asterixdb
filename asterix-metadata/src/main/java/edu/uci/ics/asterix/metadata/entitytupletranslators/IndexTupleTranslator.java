@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import edu.uci.ics.asterix.builders.IAOrderedListBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -58,7 +57,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     // Field name of open field.
     public static final String GRAM_LENGTH_FIELD_NAME = "GramLength";
 
-    private IAOrderedListBuilder listBuilder = new OrderedListBuilder();
+    private OrderedListBuilder listBuilder = new OrderedListBuilder();
     private ArrayBackedValueStorage nameValue = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
     private List<String> searchKey;

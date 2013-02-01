@@ -9,7 +9,6 @@ import edu.uci.ics.hyracks.algebricks.data.utils.WriteValueTools;
 
 public class AStringPrinter implements IPrinter {
 
-    private static final long serialVersionUID = 1L;
     public static final AStringPrinter INSTANCE = new AStringPrinter();
 
     @Override

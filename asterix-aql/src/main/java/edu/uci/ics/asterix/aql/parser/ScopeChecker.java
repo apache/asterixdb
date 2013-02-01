@@ -4,7 +4,7 @@ import java.util.Stack;
 
 import edu.uci.ics.asterix.aql.context.Scope;
 import edu.uci.ics.asterix.aql.expression.Identifier;
-import edu.uci.ics.asterix.om.functions.AsterixFunction;
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.Counter;
 
 public abstract class ScopeChecker {
@@ -14,6 +14,14 @@ public abstract class ScopeChecker {
     protected Stack<Scope> scopeStack = new Stack<Scope>();
 
     protected Stack<Scope> forbiddenScopeStack = new Stack<Scope>();
+
+    protected String[] inputLines;
+
+    protected String defaultDataverse;
+
+    protected void setInput(String s) {
+        inputLines = s.split("\n");
+    }
 
     // Forbidden scopes are used to disallow, in a limit clause, variables
     // having the same name as a variable defined by the FLWOR in which that
@@ -95,9 +103,9 @@ public abstract class ScopeChecker {
      * 
      * @return functionDescriptor
      */
-    public final AsterixFunction lookupFunctionSignature(String name, int arity) {
-        if (name != null) {
-            return getCurrentScope().findFunctionSignature(name, arity);
+    public final FunctionSignature lookupFunctionSignature(String dataverse, String name, int arity) {
+        if (dataverse != null) {
+            return getCurrentScope().findFunctionSignature(dataverse, name, arity);
         } else {
             return null;
         }
@@ -137,4 +145,18 @@ public abstract class ScopeChecker {
         String stripped = s.substring(1, s.length() - 1);
         return stripped.replaceAll("\\\\" + q, "\\" + q);
     }
+
+    public String extractFragment(int beginLine, int beginColumn, int endLine, int endColumn) {
+        StringBuilder extract = new StringBuilder();
+        extract.append(inputLines[beginLine - 1].trim().length() > 1 ? inputLines[beginLine - 1].trim().substring(beginColumn)
+                : "");
+        for (int i = beginLine + 1; i < endLine; i++) {
+            extract.append("\n");
+            extract.append(inputLines[i - 1]);
+        }
+        extract.append("\n");
+        extract.append(inputLines[endLine - 1].substring(0, endColumn - 1));
+        return extract.toString().trim();
+    }
+
 }

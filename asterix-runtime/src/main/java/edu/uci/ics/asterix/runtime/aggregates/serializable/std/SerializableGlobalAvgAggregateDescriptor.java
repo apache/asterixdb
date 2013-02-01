@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
@@ -17,6 +15,7 @@ import edu.uci.ics.asterix.om.base.AInt64;
 import edu.uci.ics.asterix.om.base.AMutableDouble;
 import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -42,10 +41,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class SerializableGlobalAvgAggregateDescriptor extends AbstractSerializableAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "global-avg-serial", 1);
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_RECORD_TYPE_TAG = ATypeTag.RECORD.serialize();
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SerializableGlobalAvgAggregateDescriptor();
@@ -54,12 +49,12 @@ public class SerializableGlobalAvgAggregateDescriptor extends AbstractSerializab
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.SERIAL_GLOBAL_AVG;
     }
 
     @Override
-    public ICopySerializableAggregateFunctionFactory createAggregateFunctionFactory(ICopyEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public ICopySerializableAggregateFunctionFactory createSerializableAggregateFunctionFactory(
+            ICopyEvaluatorFactory[] args) throws AlgebricksException {
         final ICopyEvaluatorFactory[] evals = args;
         List<IAType> unionList = new ArrayList<IAType>();
         unionList.add(BuiltinType.ANULL);
@@ -119,11 +114,24 @@ public class SerializableGlobalAvgAggregateDescriptor extends AbstractSerializab
                         inputVal.reset();
                         eval.evaluate(tuple);
                         byte[] serBytes = inputVal.getByteArray();
-                        if (serBytes[0] == SER_NULL_TYPE_TAG)
-                            metNull = true;
-                        if (serBytes[0] != SER_RECORD_TYPE_TAG) {
-                            throw new AlgebricksException("Global-Avg is not defined for values of type "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serBytes[0]));
+                        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serBytes[0]);
+                        switch (typeTag) {
+                            case NULL: {
+                                metNull = true;
+                                break;
+                            }
+                            case SYSTEM_NULL: {
+                                // Ignore and return.
+                                return;
+                            }
+                            case RECORD: {
+                                // Expected.
+                                break;
+                            }
+                            default: {
+                                throw new AlgebricksException("Global-Avg is not defined for values of type "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serBytes[0]));
+                            }
                         }
                         int offset1 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, 0, 1, true);
                         if (offset1 == 0) // the sum is null
@@ -146,19 +154,15 @@ public class SerializableGlobalAvgAggregateDescriptor extends AbstractSerializab
                         long globalCount = BufferSerDeUtil.getLong(state, start + 8);
                         boolean metNull = BufferSerDeUtil.getBoolean(state, start + 16);
 
-                        if (globalCount == 0) {
-                            GlobalConfig.ASTERIX_LOGGER.fine("AVG aggregate ran over empty input.");
-                        } else {
-                            try {
-                                if (metNull)
-                                    nullSerde.serialize(ANull.NULL, result);
-                                else {
-                                    aDouble.setValue(globalSum / globalCount);
-                                    doubleSerde.serialize(aDouble, result);
-                                }
-                            } catch (IOException e) {
-                                throw new AlgebricksException(e);
+                        try {
+                            if (globalCount == 0 || metNull)
+                                nullSerde.serialize(ANull.NULL, result);
+                            else {
+                                aDouble.setValue(globalSum / globalCount);
+                                doubleSerde.serialize(aDouble, result);
                             }
+                        } catch (IOException e) {
+                            throw new AlgebricksException(e);
                         }
                     }
 
@@ -170,28 +174,24 @@ public class SerializableGlobalAvgAggregateDescriptor extends AbstractSerializab
                         boolean metNull = BufferSerDeUtil.getBoolean(state, start + 16);
 
                         if (recordEval == null)
-                            recordEval = new ClosedRecordConstructorEval(recType,
-                                    new ICopyEvaluator[] { evalSum, evalCount }, avgBytes, result);
+                            recordEval = new ClosedRecordConstructorEval(recType, new ICopyEvaluator[] { evalSum,
+                                    evalCount }, avgBytes, result);
 
-                        if (globalCount == 0) {
-                            GlobalConfig.ASTERIX_LOGGER.fine("AVG aggregate ran over empty input.");
-                        } else {
-                            try {
-                                if (metNull) {
-                                    sumBytes.reset();
-                                    nullSerde.serialize(ANull.NULL, sumBytesOutput);
-                                } else {
-                                    sumBytes.reset();
-                                    aDouble.setValue(globalSum);
-                                    doubleSerde.serialize(aDouble, sumBytesOutput);
-                                }
-                                countBytes.reset();
-                                aInt64.setValue(globalCount);
-                                longSerde.serialize(aInt64, countBytesOutput);
-                                recordEval.evaluate(null);
-                            } catch (IOException e) {
-                                throw new AlgebricksException(e);
+                        try {
+                            if (globalCount == 0 || metNull) {
+                                sumBytes.reset();
+                                nullSerde.serialize(ANull.NULL, sumBytesOutput);
+                            } else {
+                                sumBytes.reset();
+                                aDouble.setValue(globalSum);
+                                doubleSerde.serialize(aDouble, sumBytesOutput);
                             }
+                            countBytes.reset();
+                            aInt64.setValue(globalCount);
+                            longSerde.serialize(aInt64, countBytesOutput);
+                            recordEval.evaluate(null);
+                        } catch (IOException e) {
+                            throw new AlgebricksException(e);
                         }
                     }
                 };
