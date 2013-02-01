@@ -35,8 +35,8 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
         index = LSMBTreeUtils.createLSMTree(harness.getMemBufferCache(), harness.getMemFreePageManager(),
                 harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
                 harness.getDiskFileMapProvider(), SerdeUtils.serdesToTypeTraits(keySerdes),
-                SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), harness.getMergePolicy(),
-                NoOpOperationTrackerFactory.INSTANCE, harness.getIOScheduler(),
+                SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), bloomFilterKeyFields,
+                harness.getMergePolicy(), NoOpOperationTrackerFactory.INSTANCE, harness.getIOScheduler(),
                 harness.getIOOperationCallbackProvider());
     }
 

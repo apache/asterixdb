@@ -40,8 +40,8 @@ public class BTreeExamplesTest extends OrderedIndexExamplesTest {
         harness.tearDown();
     }
 
-    protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
-            throws TreeIndexException {
+    protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
+            int[] bloomFilterKeyFields) throws TreeIndexException {
         return BTreeUtils.createBTree(harness.getBufferCache(), harness.getFileMapProvider(), typeTraits, cmpFactories,
                 BTreeLeafFrameType.REGULAR_NSM, harness.getFileReference());
     }

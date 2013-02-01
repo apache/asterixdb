@@ -28,6 +28,10 @@ public class LSMBTreeSecondaryIndexInsertOperatorTest extends BTreeSecondaryInde
 
     @Override
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory() {
-        return ((LSMBTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory();
+        int[] bloomFilterKeyFields = new int[secondaryKeyFieldCount];
+        for (int i = 0; i < secondaryKeyFieldCount; ++i) {
+            bloomFilterKeyFields[i] = i;
+        }
+        return ((LSMBTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(bloomFilterKeyFields);
     }
 }

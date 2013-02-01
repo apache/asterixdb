@@ -41,6 +41,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManager {
 
     protected static final String SPLIT_STRING = "_";
+    protected static final String BLOOM_FILTER_STRING = "f";
 
     // Use all IODevices registered in ioManager in a round-robin fashion to choose
     // where to flush and merge
@@ -106,7 +107,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         for (String fileName : files) {
             File file = new File(dir.getPath() + File.separator + fileName);
             FileReference fileRef = new FileReference(file);
-            if (isValidTreeIndex(treeFactory.createIndexInstance(fileRef))) {
+            if (treeFactory == null || isValidTreeIndex(treeFactory.createIndexInstance(fileRef))) {
                 allFiles.add(new ComparableFileName(fileRef));
             } else {
                 file.delete();
@@ -138,6 +139,12 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         }
         f.delete();
     }
+
+    protected static FilenameFilter bloomFilterFilter = new FilenameFilter() {
+        public boolean accept(File dir, String name) {
+            return !name.startsWith(".") && name.endsWith(BLOOM_FILTER_STRING);
+        }
+    };
 
     protected FileReference createFlushFile(String relFlushFileName) {
         // Assigns new files to I/O devices in round-robin fashion.

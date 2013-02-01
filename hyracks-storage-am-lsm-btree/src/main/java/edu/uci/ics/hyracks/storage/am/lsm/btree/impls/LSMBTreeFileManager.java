@@ -37,7 +37,6 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
     private static final String BTREE_STRING = "b";
-    private static final String BLOOM_FILTER_STRING = "f";
 
     private final TreeIndexFactory<? extends ITreeIndex> btreeFactory;
 
@@ -45,22 +44,6 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
             TreeIndexFactory<? extends ITreeIndex> btreeFactory, int startIODeviceIndex) {
         super(ioManager, fileMapProvider, file, null, startIODeviceIndex);
         this.btreeFactory = btreeFactory;
-    }
-
-    protected void cleanupAndGetValidFilesInternal(IODeviceHandle dev, FilenameFilter filter,
-            TreeIndexFactory<? extends ITreeIndex> treeFactory, ArrayList<ComparableFileName> allFiles)
-            throws HyracksDataException, IndexException {
-        File dir = new File(dev.getPath(), baseDir);
-        String[] files = dir.list(filter);
-        for (String fileName : files) {
-            File file = new File(dir.getPath() + File.separator + fileName);
-            FileReference fileRef = new FileReference(file);
-            if (treeFactory == null || isValidTreeIndex(treeFactory.createIndexInstance(fileRef))) {
-                allFiles.add(new ComparableFileName(fileRef));
-            } else {
-                file.delete();
-            }
-        }
     }
 
     @Override
@@ -88,12 +71,6 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
     private static FilenameFilter btreeFilter = new FilenameFilter() {
         public boolean accept(File dir, String name) {
             return !name.startsWith(".") && name.endsWith(BTREE_STRING);
-        }
-    };
-
-    private static FilenameFilter bloomFilterFilter = new FilenameFilter() {
-        public boolean accept(File dir, String name) {
-            return !name.startsWith(".") && name.endsWith(BLOOM_FILTER_STRING);
         }
     };
 

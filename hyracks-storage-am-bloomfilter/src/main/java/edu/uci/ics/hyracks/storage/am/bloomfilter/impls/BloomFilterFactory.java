@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -23,19 +23,19 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 public class BloomFilterFactory {
     private final IBufferCache bufferCache;
     private final IFileMapProvider fileMapProvider;
-    private final int[] keyFields;
+    private final int[] bloomFilterKeyFields;
 
-    public BloomFilterFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider, int[] keyFields) {
+    public BloomFilterFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider, int[] bloomFilterKeyFields) {
         this.bufferCache = bufferCache;
         this.fileMapProvider = fileMapProvider;
-        this.keyFields = keyFields;
+        this.bloomFilterKeyFields = bloomFilterKeyFields;
     }
 
     public BloomFilter createBloomFiltertInstance(FileReference file) throws HyracksDataException {
-        return new BloomFilter(bufferCache, fileMapProvider, file, keyFields);
+        return new BloomFilter(bufferCache, fileMapProvider, file, bloomFilterKeyFields);
     }
 
-    public int[] getKeyFields() {
-        return keyFields;
+    public int[] getBloomFilterKeyFields() {
+        return bloomFilterKeyFields;
     }
 }

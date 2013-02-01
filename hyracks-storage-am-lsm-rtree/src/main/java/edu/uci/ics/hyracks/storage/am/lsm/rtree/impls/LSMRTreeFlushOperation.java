@@ -19,14 +19,17 @@ public class LSMRTreeFlushOperation implements ILSMIOOperation {
     private final ILSMComponent flushingComponent;
     private final FileReference rtreeFlushTarget;
     private final FileReference btreeFlushTarget;
+    private final FileReference bloomFilterFlushTarget;
     private final ILSMIOOperationCallback callback;
 
     public LSMRTreeFlushOperation(ILSMIndexAccessorInternal accessor, ILSMComponent flushingComponent,
-            FileReference rtreeFlushTarget, FileReference btreeFlushTarget, ILSMIOOperationCallback callback) {
+            FileReference rtreeFlushTarget, FileReference btreeFlushTarget, FileReference bloomFilterFlushTarget,
+            ILSMIOOperationCallback callback) {
         this.accessor = accessor;
         this.flushingComponent = flushingComponent;
         this.rtreeFlushTarget = rtreeFlushTarget;
         this.btreeFlushTarget = btreeFlushTarget;
+        this.bloomFilterFlushTarget = bloomFilterFlushTarget;
         this.callback = callback;
     }
 
@@ -41,6 +44,7 @@ public class LSMRTreeFlushOperation implements ILSMIOOperation {
         devs.add(rtreeFlushTarget.getDeviceHandle());
         if (btreeFlushTarget != null) {
             devs.add(btreeFlushTarget.getDeviceHandle());
+            devs.add(bloomFilterFlushTarget.getDeviceHandle());
         }
         return devs;
     }
@@ -61,6 +65,10 @@ public class LSMRTreeFlushOperation implements ILSMIOOperation {
 
     public FileReference getBTreeFlushTarget() {
         return btreeFlushTarget;
+    }
+
+    public FileReference getBloomFilterFlushTarget() {
+        return bloomFilterFlushTarget;
     }
 
     public ILSMComponent getFlushingComponent() {

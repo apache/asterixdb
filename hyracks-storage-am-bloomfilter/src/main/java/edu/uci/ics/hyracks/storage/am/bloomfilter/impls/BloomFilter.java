@@ -36,8 +36,6 @@ public class BloomFilter {
     private final static int NUM_ELEMENTS_OFFSET = NUM_HASHES_USED_OFFSET + 4; // 8
     private final static int NUM_BITS_OFFSET = NUM_ELEMENTS_OFFSET + 8; // 12
 
-    private final static int NUM_BITS_PER_ELEMENT = 10;
-
     private final IBufferCache bufferCache;
     private final IFileMapProvider fileMapProvider;
     private final FileReference file;
@@ -193,8 +191,9 @@ public class BloomFilter {
         fileId = -1;
     }
 
-    public IIndexBulkLoader createBuilder(long numElements, int numHashes) throws HyracksDataException {
-        return new BloomFilterBuilder(numElements, numHashes);
+    public IIndexBulkLoader createBuilder(long numElements, int numHashes, int numBitsPerElement)
+            throws HyracksDataException {
+        return new BloomFilterBuilder(numElements, numHashes, numBitsPerElement);
     }
 
     public class BloomFilterBuilder implements IIndexBulkLoader {
@@ -205,27 +204,29 @@ public class BloomFilter {
         private final long numBits;
         private final int numPages;
 
-        public BloomFilterBuilder(long numElements, int numHashes) throws HyracksDataException {
+        public BloomFilterBuilder(long numElements, int numHashes, int numBitsPerElement) throws HyracksDataException {
             if (!isActivated) {
                 throw new HyracksDataException("Failed to create the bloom filter builder since it is not activated.");
             }
+
             this.numElements = numElements;
             this.numHashes = numHashes;
-            numBits = numElements * NUM_BITS_PER_ELEMENT;
+            numBits = numElements * numBitsPerElement;
             long tmp = (long) Math.ceil(numBits / (double) numBitsPerPage);
             if (tmp > Integer.MAX_VALUE) {
                 throw new HyracksDataException("Cannot create a bloom filter with his huge number of pages.");
             }
             numPages = (int) tmp;
-            persistBloomFilterMetaData();
-            readBloomFilterMetaData();
-
-            int currentPageId = 1;
-            while (currentPageId <= numPages) {
-                ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
-                page.acquireWriteLatch();
-                bloomFilterPages.add(page);
-                ++currentPageId;
+            if (numElements > 0) {
+                persistBloomFilterMetaData();
+                readBloomFilterMetaData();
+                int currentPageId = 1;
+                while (currentPageId <= numPages) {
+                    ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
+                    page.acquireWriteLatch();
+                    bloomFilterPages.add(page);
+                    ++currentPageId;
+                }
             }
         }
 

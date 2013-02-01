@@ -31,7 +31,9 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
+import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomCalculations;
 import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilter;
+import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilterSpecification;
 import edu.uci.ics.hyracks.storage.am.bloomfilter.util.AbstractBloomFilterTest;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -55,14 +57,19 @@ public class BloomFilterTest extends AbstractBloomFilterTest {
 
         int numElements = 100;
         int[] keyFields = { 0 };
-        int numHashes = 5;
 
         BloomFilter bf = new BloomFilter(bufferCache, harness.getFileMapProvider(), harness.getFileReference(),
                 keyFields);
 
+        double acceptanleFalsePositiveRate = 0.1;
+        int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElements);
+        BloomFilterSpecification bloomFilterSpec = BloomCalculations.computeBloomSpec(maxBucketsPerElement,
+                acceptanleFalsePositiveRate);
+
         bf.create();
         bf.activate();
-        IIndexBulkLoader builder = bf.createBuilder(numElements, numHashes);
+        IIndexBulkLoader builder = bf.createBuilder(numElements, bloomFilterSpec.getNumHashes(),
+                bloomFilterSpec.getNumBucketsPerElements());
 
         int fieldCount = 2;
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
@@ -109,14 +116,19 @@ public class BloomFilterTest extends AbstractBloomFilterTest {
 
         int numElements = 10000;
         int[] keyFields = { 2, 4, 1 };
-        int numHashes = 10;
 
         BloomFilter bf = new BloomFilter(bufferCache, harness.getFileMapProvider(), harness.getFileReference(),
                 keyFields);
 
+        double acceptanleFalsePositiveRate = 0.1;
+        int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElements);
+        BloomFilterSpecification bloomFilterSpec = BloomCalculations.computeBloomSpec(maxBucketsPerElement,
+                acceptanleFalsePositiveRate);
+
         bf.create();
         bf.activate();
-        IIndexBulkLoader builder = bf.createBuilder(numElements, numHashes);
+        IIndexBulkLoader builder = bf.createBuilder(numElements, bloomFilterSpec.getNumHashes(),
+                bloomFilterSpec.getNumBucketsPerElements());
 
         int fieldCount = 5;
         ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE,

@@ -6,7 +6,6 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractImmutableLSMComponent;
 
 public class LSMBTreeImmutableComponent extends AbstractImmutableLSMComponent {
-
     private final BTree btree;
     private final BloomFilter bloomFilter;
 

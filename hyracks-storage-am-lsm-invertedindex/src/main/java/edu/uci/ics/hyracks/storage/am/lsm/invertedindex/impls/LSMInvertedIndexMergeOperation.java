@@ -36,16 +36,18 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
     private final IIndexCursor cursor;
     private final FileReference dictBTreeMergeTarget;
     private final FileReference deletedKeysBTreeMergeTarget;
+    private final FileReference bloomFilterMergeTarget;
     private final ILSMIOOperationCallback callback;
 
     public LSMInvertedIndexMergeOperation(ILSMIndexAccessorInternal accessor, List<ILSMComponent> mergingComponents,
             IIndexCursor cursor, FileReference dictBTreeMergeTarget, FileReference deletedKeysBTreeMergeTarget,
-            ILSMIOOperationCallback callback) {
+            FileReference bloomFilterMergeTarget, ILSMIOOperationCallback callback) {
         this.accessor = accessor;
         this.mergingComponents = mergingComponents;
         this.cursor = cursor;
         this.dictBTreeMergeTarget = dictBTreeMergeTarget;
         this.deletedKeysBTreeMergeTarget = deletedKeysBTreeMergeTarget;
+        this.bloomFilterMergeTarget = bloomFilterMergeTarget;
         this.callback = callback;
     }
 
@@ -57,15 +59,17 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
             OnDiskInvertedIndex invIndex = (OnDiskInvertedIndex) component.getInvIndex();
             devs.add(invIndex.getBTree().getFileReference().getDeviceHandle());
             devs.add(component.getDeletedKeysBTree().getFileReference().getDeviceHandle());
+            devs.add(component.getBloomFilter().getFileReference().getDeviceHandle());
         }
         return devs;
     }
 
     @Override
     public Set<IODeviceHandle> getWriteDevices() {
-        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>(2);
+        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
         devs.add(dictBTreeMergeTarget.getDeviceHandle());
         devs.add(deletedKeysBTreeMergeTarget.getDeviceHandle());
+        devs.add(bloomFilterMergeTarget.getDeviceHandle());
         return devs;
     }
 
@@ -85,6 +89,10 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
 
     public FileReference getDeletedKeysBTreeMergeTarget() {
         return deletedKeysBTreeMergeTarget;
+    }
+
+    public FileReference getBloomFilterMergeTarget() {
+        return bloomFilterMergeTarget;
     }
 
     public IIndexCursor getCursor() {

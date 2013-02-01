@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -16,16 +16,16 @@
 package edu.uci.ics.hyracks.storage.am.bloomfilter.impls;
 
 public final class BloomFilterSpecification {
-    private final long numElements;
+    private final int numBucketsPerElement;
     private final int numHashes;
 
-    public BloomFilterSpecification(long numElements, int numHashes) {
-        this.numElements = numElements;
+    public BloomFilterSpecification(int numBucketsPerElement, int numHashes) {
+        this.numBucketsPerElement = numBucketsPerElement;
         this.numHashes = numHashes;
     }
 
-    public long getNumElements() {
-        return numElements;
+    public int getNumBucketsPerElements() {
+        return numBucketsPerElement;
     }
 
     public int getNumHashes() {

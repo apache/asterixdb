@@ -33,7 +33,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     private int fileId = -1;
     private ICachedPage page = null;
     private IRTreeInteriorFrame interiorFrame = null;
-    private IRTreeLeafFrame leafFrame = null;
+    protected IRTreeLeafFrame leafFrame = null;
     private IBufferCache bufferCache = null;
 
     private SearchPredicate pred;
@@ -88,7 +88,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
         return page;
     }
 
-    private boolean fetchNextLeafPage() throws HyracksDataException {
+    protected boolean fetchNextLeafPage() throws HyracksDataException {
         boolean succeeded = false;
         if (readLatched) {
             page.releaseReadLatch();

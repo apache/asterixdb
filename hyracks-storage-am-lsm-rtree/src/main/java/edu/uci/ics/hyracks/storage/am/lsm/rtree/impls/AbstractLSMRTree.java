@@ -67,10 +67,6 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     protected final LSMRTreeMutableComponent mutableComponent;
     protected final IInMemoryBufferCache memBufferCache;
 
-    // This is used to estimate number of tuples in the memory RTree and BTree
-    // for efficient memory allocation in the sort operation prior to flushing
-    protected int memRTreeTuples;
-    protected int memBTreeTuples;
     protected TreeTupleSorter rTreeTupleSorter;
 
     // On-disk components.
@@ -115,8 +111,6 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         this.linearizer = linearizer;
         this.comparatorFields = comparatorFields;
         this.linearizerArray = linearizerArray;
-        memRTreeTuples = 0;
-        memBTreeTuples = 0;
         rTreeTupleSorter = null;
     }
 
@@ -226,20 +220,24 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     }
 
     protected LSMRTreeImmutableComponent createDiskComponent(ILSMComponentFactory factory, FileReference insertFileRef,
-            FileReference deleteFileRef, boolean createComponent) throws HyracksDataException, IndexException {
+            FileReference deleteFileRef, FileReference bloomFilterFileRef, boolean createComponent)
+            throws HyracksDataException, IndexException {
         // Create new tree instance.
         LSMRTreeImmutableComponent component = (LSMRTreeImmutableComponent) factory
-                .createLSMComponentInstance(new LSMComponentFileReferences(insertFileRef, deleteFileRef, null));
+                .createLSMComponentInstance(new LSMComponentFileReferences(insertFileRef, deleteFileRef,
+                        bloomFilterFileRef));
         if (createComponent) {
             component.getRTree().create();
             if (component.getBTree() != null) {
                 component.getBTree().create();
+                component.getBloomFilter().create();
             }
         }
         // Tree will be closed during cleanup of merge().
         component.getRTree().activate();
         if (component.getBTree() != null) {
             component.getBTree().activate();
+            component.getBloomFilter().activate();
         }
         return component;
     }
@@ -302,7 +300,6 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             if (foundTupleInMemoryBTree) {
                 try {
                     ctx.memBTreeAccessor.delete(tuple);
-                    memBTreeTuples--;
                 } catch (BTreeNonExistentKeyException e) {
                     // Tuple has been deleted in the meantime. Do nothing.
                     // This normally shouldn't happen if we are dealing with
@@ -312,13 +309,11 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
                 }
             } else {
                 ctx.memRTreeAccessor.insert(tuple);
-                memRTreeTuples++;
             }
 
         } else {
             try {
                 ctx.memBTreeAccessor.insert(tuple);
-                memBTreeTuples++;
             } catch (BTreeDuplicateKeyException e) {
                 // Do nothing, because one delete tuple is enough to indicate
                 // that all the corresponding insert tuples are deleted

@@ -28,6 +28,10 @@ public class LSMBTreePrimaryIndexSearchOperatorTest extends BTreePrimaryIndexSea
 
     @Override
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory() {
-        return ((LSMBTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory();
+        int[] bloomFilterKeyFields = new int[primaryKeyFieldCount];
+        for (int i = 0; i < primaryKeyFieldCount; ++i) {
+            bloomFilterKeyFields[i] = i;
+        }
+        return ((LSMBTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(bloomFilterKeyFields);
     }
 }
