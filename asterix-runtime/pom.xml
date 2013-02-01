@@ -5,11 +5,7 @@
 		<groupId>edu.uci.ics.asterix</groupId>
 		<version>0.0.4-SNAPSHOT</version>
 	</parent>
-	<groupId>edu.uci.ics.asterix</groupId>
 	<artifactId>asterix-runtime</artifactId>
-	<version>0.0.4-SNAPSHOT</version>
-
-
 	<build>
 		<plugins>
 			<plugin>
@@ -56,7 +52,6 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 		        <artifactId>hyracks-storage-am-btree</artifactId>
-			<version>0.2.2-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 		        <groupId>edu.uci.ics.asterix</groupId>

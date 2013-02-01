@@ -20,6 +20,11 @@
 		</plugins>
 	</build>
 
+    <properties>
+    	<algebricks.version>0.2.3-SNAPSHOT</algebricks.version>
+    	<hyracks.version>0.2.3-SNAPSHOT</hyracks.version>
+    </properties>
+
 	<scm>
 		<connection>scm:svn:https://grape.ics.uci.edu/svn/asterix/trunk/asterix</connection>
 		<developerConnection>scm:svn:https://grape.ics.uci.edu/svn/asterix/trunk/asterix</developerConnection>
@@ -137,4 +142,65 @@
             <optional>true</optional>
         </dependency>
     </dependencies>
+    <dependencyManagement>
+    	<dependencies>
+    		<dependency>
+    			<groupId>edu.uci.ics.hyracks</groupId>
+    			<artifactId>algebricks-compiler</artifactId>
+    			<version>${algebricks.version}</version>
+    		</dependency>
+    		<dependency>
+    			<groupId>edu.uci.ics.hyracks</groupId>
+    			<artifactId>hyracks-dataflow-std</artifactId>
+    			<version>${hyracks.version}</version>
+    		</dependency>
+    		<dependency>
+    			<groupId>edu.uci.ics.hyracks</groupId>
+    			<artifactId>hyracks-control-cc</artifactId>
+    			<version>${hyracks.version}</version>
+    		</dependency>
+    		<dependency>
+    			<groupId>edu.uci.ics.hyracks</groupId>
+    			<artifactId>hyracks-control-nc</artifactId>
+    			<version>${hyracks.version}</version>
+    		</dependency>
+    		<dependency>
+    			<groupId>edu.uci.ics.hyracks</groupId>
+    			<artifactId>hyracks-server</artifactId>
+    			<version>${hyracks.version}</version>
+    		</dependency>
+    		<dependency>
+    			<groupId>edu.uci.ics.hyracks</groupId>
+    			<artifactId>hyracks-cli</artifactId>
+    			<version>${hyracks.version}</version>
+    		</dependency>
+    		<dependency>
+    			<groupId>edu.uci.ics.hyracks</groupId>
+    			<artifactId>hyracks-dataflow-hadoop</artifactId>
+    			<version>${hyracks.version}</version>
+    		</dependency>
+    		<dependency>
+    			<groupId>edu.uci.ics.hyracks</groupId>
+    			<artifactId>hyracks-storage-am-btree</artifactId>
+    			<version>${hyracks.version}</version>
+    		</dependency>
+    		<dependency>
+    			<groupId>edu.uci.ics.hyracks</groupId>
+    			<artifactId>hyracks-storage-am-rtree</artifactId>
+    			<version>${hyracks.version}</version>
+    		</dependency>
+    		<dependency>
+    			<groupId>edu.uci.ics.hyracks</groupId>
+    			<artifactId>
+    				hyracks-storage-am-invertedindex
+    			</artifactId>
+    			<version>${hyracks.version}</version>
+    		</dependency>
+    		<dependency>
+    			<groupId>edu.uci.ics.hyracks</groupId>
+    			<artifactId>hyracks-storage-am-common</artifactId>
+    			<version>${hyracks.version}</version>
+    		</dependency>
+    	</dependencies>
+    </dependencyManagement>
 </project>
