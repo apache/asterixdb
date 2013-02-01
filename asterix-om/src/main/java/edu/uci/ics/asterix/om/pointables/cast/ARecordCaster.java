@@ -15,9 +15,11 @@
 
 package edu.uci.ics.asterix.om.pointables.cast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +30,7 @@ import edu.uci.ics.asterix.om.pointables.ARecordPointable;
 import edu.uci.ics.asterix.om.pointables.PointableAllocator;
 import edu.uci.ics.asterix.om.pointables.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
+import edu.uci.ics.asterix.om.pointables.printer.APrintVisitor;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
@@ -35,6 +38,7 @@ import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.om.util.ResettableByteArrayOutputStream;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
@@ -184,7 +188,7 @@ class ARecordCaster {
     }
 
     private void matchClosedPart(List<IVisitablePointable> fieldNames, List<IVisitablePointable> fieldTypeTags,
-            List<IVisitablePointable> fieldValues) {
+            List<IVisitablePointable> fieldValues) throws AsterixException {
         // sort-merge based match
         quickSort(fieldNamesSortedIndex, fieldNames, 0, numInputFields - 1);
         int fnStart = 0;
@@ -213,8 +217,30 @@ class ARecordCaster {
 
         // check unmatched fields in the input type
         for (int i = 0; i < openFields.length; i++) {
-            if (openFields[i] == true && !cachedReqType.isOpen())
-                throw new IllegalStateException("type mismatch: including extra closed fields");
+            if (openFields[i] == true && !cachedReqType.isOpen()) {
+                //print the field name
+                IVisitablePointable fieldName = fieldNames.get(i);
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                PrintStream ps = new PrintStream(bos);
+                APrintVisitor printVisitor = new APrintVisitor();
+                Pair<PrintStream, ATypeTag> visitorArg = new Pair<PrintStream, ATypeTag>(ps, ATypeTag.STRING);
+                fieldName.accept(printVisitor, visitorArg);
+
+                //print the colon
+                ps.print(":");
+
+                //print the field type
+                IVisitablePointable fieldType = fieldTypeTags.get(i);
+                ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(fieldType.getByteArray()[fieldType
+                        .getStartOffset()]);
+                ps.print(typeTag);
+
+                //collect the output message
+                byte[] output = bos.toByteArray();
+
+                //throw the exception
+                throw new IllegalStateException("type mismatch: including an extra field " + new String(output));
+            }
         }
 
         // check unmatched fields in the required type
@@ -223,7 +249,8 @@ class ARecordCaster {
                 IAType t = cachedReqType.getFieldTypes()[i];
                 if (!(t.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t))) {
                     // no matched field in the input for a required closed field
-                    throw new IllegalStateException("type mismatch: miss a required closed field");
+                    throw new IllegalStateException("type mismatch: miss a required closed field "
+                            + cachedReqType.getFieldNames()[i] + ":" + t.getTypeName());
                 }
             }
         }
@@ -288,8 +315,7 @@ class ARecordCaster {
         int j = right;
         while (true) {
             // grow from the left
-            while (compare(names.get(index[++i]), names.get(index[right])) < 0)
-                ;
+            while (compare(names.get(index[++i]), names.get(index[right])) < 0);
             // lower from the right
             while (compare(names.get(index[right]), names.get(index[--j])) < 0)
                 if (j == left)
