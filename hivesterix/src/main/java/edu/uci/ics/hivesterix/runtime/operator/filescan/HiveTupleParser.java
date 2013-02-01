@@ -175,9 +175,7 @@ public class HiveTupleParser extends AbstractHiveTupleParser {
 				if (outputColumnsOffset[i] >= 0)
 					outputFieldRefs[outputColumnsOffset[i]] = fieldRefs.get(i);
 
-			long serDeTime = 0;
 			while (reader.next(key, value)) {
-				long start = System.currentTimeMillis();
 				// reuse the tuple builder
 				tb.reset();
 				if (parser != null) {
@@ -205,8 +203,6 @@ public class HiveTupleParser extends AbstractHiveTupleParser {
 						i++;
 					}
 				}
-				long end = System.currentTimeMillis();
-				serDeTime += (end - start);
 
 				if (!appender.append(tb.getFieldEndOffsets(),
 						tb.getByteArray(), 0, tb.getSize())) {
@@ -221,7 +217,6 @@ public class HiveTupleParser extends AbstractHiveTupleParser {
 					}
 				}
 			}
-			System.out.println("serde time: " + serDeTime);
 			reader.close();
 			System.gc();
 

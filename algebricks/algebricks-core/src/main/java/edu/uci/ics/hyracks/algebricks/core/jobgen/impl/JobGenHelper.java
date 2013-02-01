@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvi
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFamilyProvider;
 import edu.uci.ics.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
@@ -31,6 +32,7 @@ import edu.uci.ics.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import edu.uci.ics.hyracks.algebricks.data.ITypeTraitProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
@@ -42,8 +44,8 @@ public final class JobGenHelper {
 
     @SuppressWarnings("rawtypes")
     public static RecordDescriptor mkRecordDescriptor(IVariableTypeEnvironment env, IOperatorSchema opSchema,
-            JobGenContext context) throws AlgebricksException {        
-		ISerializerDeserializer[] fields = new ISerializerDeserializer[opSchema.getSize()];
+            JobGenContext context) throws AlgebricksException {
+        ISerializerDeserializer[] fields = new ISerializerDeserializer[opSchema.getSize()];
         ITypeTraits[] typeTraits = new ITypeTraits[opSchema.getSize()];
         ISerializerDeserializerProvider sdp = context.getSerializerDeserializerProvider();
         ITypeTraitProvider ttp = context.getTypeTraitProvider();
@@ -59,7 +61,7 @@ public final class JobGenHelper {
         }
         return new RecordDescriptor(fields, typeTraits);
     }
-    
+
     public static IPrinterFactory[] mkPrinterFactories(IOperatorSchema opSchema, IVariableTypeEnvironment env,
             JobGenContext context, int[] printColumns) throws AlgebricksException {
         IPrinterFactory[] pf = new IPrinterFactory[printColumns.length];
@@ -94,7 +96,20 @@ public final class JobGenHelper {
         }
         return funFactories;
     }
-    
+
+    public static IBinaryHashFunctionFamily[] variablesToBinaryHashFunctionFamilies(
+            Collection<LogicalVariable> varLogical, IVariableTypeEnvironment env, JobGenContext context)
+            throws AlgebricksException {
+        IBinaryHashFunctionFamily[] funFamilies = new IBinaryHashFunctionFamily[varLogical.size()];
+        int i = 0;
+        IBinaryHashFunctionFamilyProvider bhffProvider = context.getBinaryHashFunctionFamilyProvider();
+        for (LogicalVariable var : varLogical) {
+            Object type = env.getVarType(var);
+            funFamilies[i++] = bhffProvider.getBinaryHashFunctionFamily(type);
+        }
+        return funFamilies;
+    }
+
     public static IBinaryComparatorFactory[] variablesToAscBinaryComparatorFactories(
             Collection<LogicalVariable> varLogical, IVariableTypeEnvironment env, JobGenContext context)
             throws AlgebricksException {
@@ -107,15 +122,14 @@ public final class JobGenHelper {
         }
         return compFactories;
     }
-    
-    public static IBinaryComparatorFactory[] variablesToAscBinaryComparatorFactories(
-            List<LogicalVariable> varLogical, int start, int size, IVariableTypeEnvironment env, JobGenContext context)
-            throws AlgebricksException {
+
+    public static IBinaryComparatorFactory[] variablesToAscBinaryComparatorFactories(List<LogicalVariable> varLogical,
+            int start, int size, IVariableTypeEnvironment env, JobGenContext context) throws AlgebricksException {
         IBinaryComparatorFactory[] compFactories = new IBinaryComparatorFactory[size];
         IBinaryComparatorFactoryProvider bcfProvider = context.getBinaryComparatorFactoryProvider();
         for (int i = 0; i < size; i++) {
-                Object type = env.getVarType(varLogical.get(start + i));
-                compFactories[i] = bcfProvider.getBinaryComparatorFactory(type, true);
+            Object type = env.getVarType(varLogical.get(start + i));
+            compFactories[i] = bcfProvider.getBinaryComparatorFactory(type, true);
         }
         return compFactories;
     }
@@ -144,15 +158,14 @@ public final class JobGenHelper {
         }
         return typeTraits;
     }
-    
-    public static ITypeTraits[] variablesToTypeTraits(
-            List<LogicalVariable> varLogical, int start, int size, IVariableTypeEnvironment env, JobGenContext context)
-            throws AlgebricksException {
+
+    public static ITypeTraits[] variablesToTypeTraits(List<LogicalVariable> varLogical, int start, int size,
+            IVariableTypeEnvironment env, JobGenContext context) throws AlgebricksException {
         ITypeTraits[] typeTraits = new ITypeTraits[size];
         ITypeTraitProvider typeTraitProvider = context.getTypeTraitProvider();
         for (int i = 0; i < size; i++) {
-                Object type = env.getVarType(varLogical.get(start + i));
-                typeTraits[i] = typeTraitProvider.getTypeTrait(type);
+            Object type = env.getVarType(varLogical.get(start + i));
+            typeTraits[i] = typeTraitProvider.getTypeTrait(type);
         }
         return typeTraits;
     }

@@ -19,10 +19,10 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
+import edu.uci.ics.hyracks.data.std.util.GrowableArray;
 
 public class HashedUTF8WordToken extends UTF8WordToken {
 
@@ -76,12 +76,12 @@ public class HashedUTF8WordToken extends UTF8WordToken {
     }
 
     @Override
-    public void serializeToken(DataOutput dos) throws IOException {
+    public void serializeToken(GrowableArray out) throws IOException {
         if (tokenTypeTag > 0) {
-            dos.write(tokenTypeTag);
+            out.getDataOutput().write(tokenTypeTag);
         }
 
         // serialize hash value
-        dos.writeInt(hash);
+        out.getDataOutput().writeInt(hash);
     }
 }

@@ -30,6 +30,7 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationCon
 import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFamilyProvider;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import edu.uci.ics.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
@@ -44,6 +45,7 @@ public abstract class AbstractCompilerFactoryBuilder {
     protected ITypeTraitProvider typeTraitProvider;
     protected ISerializerDeserializerProvider serializerDeserializerProvider;
     protected IBinaryHashFunctionFactoryProvider hashFunctionFactoryProvider;
+    protected IBinaryHashFunctionFamilyProvider hashFunctionFamilyProvider;
     protected IBinaryComparatorFactoryProvider comparatorFactoryProvider;
     protected IBinaryBooleanInspectorFactory binaryBooleanInspectorFactory;
     protected IBinaryIntegerInspectorFactory binaryIntegerInspectorFactory;
@@ -92,6 +94,14 @@ public abstract class AbstractCompilerFactoryBuilder {
 
     public IBinaryHashFunctionFactoryProvider getHashFunctionFactoryProvider() {
         return hashFunctionFactoryProvider;
+    }
+
+    public void setHashFunctionFamilyProvider(IBinaryHashFunctionFamilyProvider hashFunctionFamilyProvider) {
+        this.hashFunctionFamilyProvider = hashFunctionFamilyProvider;
+    }
+
+    public IBinaryHashFunctionFamilyProvider getHashFunctionFamilyProvider() {
+        return hashFunctionFamilyProvider;
     }
 
     public void setComparatorFactoryProvider(IBinaryComparatorFactoryProvider comparatorFactoryProvider) {

@@ -89,4 +89,8 @@ public class AssignOperator extends AbstractAssignOperator {
         return env;
     }
 
+    @Override
+    public boolean requiresVariableReferenceExpressions() {
+        return false;
+    }
 }
