@@ -24,54 +24,55 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 /**
  * LazyPrimitive stores a primitive Object in a LazyObject.
  */
-public abstract class LazyNonPrimitive<OI extends ObjectInspector> extends LazyObject<OI> {
+public abstract class LazyNonPrimitive<OI extends ObjectInspector> extends
+		LazyObject<OI> {
 
-    protected byte[] bytes;
-    protected int start;
-    protected int length;
+	protected byte[] bytes;
+	protected int start;
+	protected int length;
 
-    /**
-     * Create a LazyNonPrimitive object with the specified ObjectInspector.
-     * 
-     * @param oi
-     *            The ObjectInspector would have to have a hierarchy of
-     *            LazyObjectInspectors with the leaf nodes being
-     *            WritableObjectInspectors. It's used both for accessing the
-     *            type hierarchy of the complex object, as well as getting meta
-     *            information (separator, nullSequence, etc) when parsing the
-     *            lazy object.
-     */
-    protected LazyNonPrimitive(OI oi) {
-        super(oi);
-        bytes = null;
-        start = 0;
-        length = 0;
-    }
+	/**
+	 * Create a LazyNonPrimitive object with the specified ObjectInspector.
+	 * 
+	 * @param oi
+	 *            The ObjectInspector would have to have a hierarchy of
+	 *            LazyObjectInspectors with the leaf nodes being
+	 *            WritableObjectInspectors. It's used both for accessing the
+	 *            type hierarchy of the complex object, as well as getting meta
+	 *            information (separator, nullSequence, etc) when parsing the
+	 *            lazy object.
+	 */
+	protected LazyNonPrimitive(OI oi) {
+		super(oi);
+		bytes = null;
+		start = 0;
+		length = 0;
+	}
 
-    @Override
-    public void init(byte[] bytes, int start, int length) {
-        if (bytes == null) {
-            throw new RuntimeException("bytes cannot be null!");
-        }
-        this.bytes = bytes;
-        this.start = start;
-        this.length = length;
-        assert start >= 0;
-        assert start + length <= bytes.length;
-    }
+	@Override
+	public void init(byte[] bytes, int start, int length) {
+		if (bytes == null) {
+			throw new RuntimeException("bytes cannot be null!");
+		}
+		this.bytes = bytes;
+		this.start = start;
+		this.length = length;
+		assert start >= 0;
+		assert start + length <= bytes.length;
+	}
 
-    @Override
-    public Object getObject() {
-        return this;
-    }
+	@Override
+	public Object getObject() {
+		return this;
+	}
 
-    @Override
-    public int hashCode() {
-        return LazyUtils.hashBytes(bytes, start, length);
-    }
+	@Override
+	public int hashCode() {
+		return LazyUtils.hashBytes(bytes, start, length);
+	}
 
-    @Override
-    public void init(IFrameTupleReference tuple) {
-    }
+	@Override
+	public void init(IFrameTupleReference tuple) {
+	}
 
 }

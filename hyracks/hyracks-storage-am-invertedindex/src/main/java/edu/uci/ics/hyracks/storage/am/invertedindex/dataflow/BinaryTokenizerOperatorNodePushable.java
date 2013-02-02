@@ -15,13 +15,13 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.dataflow;
 
-import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.util.GrowableArray;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -41,7 +41,7 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
 
     private FrameTupleAccessor accessor;
     private ArrayTupleBuilder builder;
-    private DataOutput builderDos;
+    private GrowableArray builderFieldData;
     private FrameTupleAppender appender;
     private ByteBuffer writeBuffer;
 
@@ -60,7 +60,7 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
         accessor = new FrameTupleAccessor(ctx.getFrameSize(), inputRecDesc);
         writeBuffer = ctx.allocateFrame();
         builder = new ArrayTupleBuilder(outputRecDesc.getFieldCount());
-        builderDos = builder.getDataOutput();
+        builderFieldData = builder.getFieldData();
         appender = new FrameTupleAppender(ctx.getFrameSize());
         appender.reset(writeBuffer, true);
         writer.open();
@@ -87,7 +87,7 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
                     builder.reset();
                     try {
                         IToken token = tokenizer.getToken();
-                        token.serializeToken(builderDos);
+                        token.serializeToken(builderFieldData);
                         builder.addFieldEndOffset();
                     } catch (IOException e) {
                         throw new HyracksDataException(e.getMessage());

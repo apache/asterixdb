@@ -142,45 +142,6 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
         usedValue = 0;
     }
 
-    private Edge<I, E> allocateEdge() {
-        Edge<I, E> edge;
-        if (usedEdge < edgePool.size()) {
-            edge = edgePool.get(usedEdge);
-            usedEdge++;
-        } else {
-            edge = new Edge<I, E>();
-            edgePool.add(edge);
-            usedEdge++;
-        }
-        return edge;
-    }
-
-    private M allocateMessage() {
-        M message;
-        if (usedMessage < msgPool.size()) {
-            message = msgPool.get(usedEdge);
-            usedMessage++;
-        } else {
-            message = BspUtils.<M> createMessageValue(getContext().getConfiguration());
-            msgPool.add(message);
-            usedMessage++;
-        }
-        return message;
-    }
-
-    private V allocateValue() {
-        V value;
-        if (usedValue < valuePool.size()) {
-            value = valuePool.get(usedEdge);
-            usedValue++;
-        } else {
-            value = BspUtils.<V> createVertexValue(getContext().getConfiguration());
-            valuePool.add(value);
-            usedValue++;
-        }
-        return value;
-    }
-
     /**
      * Set the vertex id
      * 
@@ -201,58 +162,22 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     }
 
     /**
-     * Set the global superstep for all the vertices (internal use)
+     * Get the vertex value
      * 
-     * @param superstep
-     *            New superstep
+     * @return the vertex value
      */
-    public static void setSuperstep(long superstep) {
-        Vertex.superstep = superstep;
-    }
-
-    public static long getCurrentSuperstep() {
-        return superstep;
-    }
-
-    public final long getSuperstep() {
-        return superstep;
-    }
-
     public final V getVertexValue() {
         return vertexValue;
     }
 
+    /**
+     * Set the vertex value
+     * 
+     * @param vertexValue
+     */
     public final void setVertexValue(V vertexValue) {
         this.vertexValue = vertexValue;
         this.updated = true;
-    }
-
-    /**
-     * Set the total number of vertices from the last superstep.
-     * 
-     * @param numVertices
-     *            Aggregate vertices in the last superstep
-     */
-    public static void setNumVertices(long numVertices) {
-        Vertex.numVertices = numVertices;
-    }
-
-    public final long getNumVertices() {
-        return numVertices;
-    }
-
-    /**
-     * Set the total number of edges from the last superstep.
-     * 
-     * @param numEdges
-     *            Aggregate edges in the last superstep
-     */
-    public static void setNumEdges(long numEdges) {
-        Vertex.numEdges = numEdges;
-    }
-
-    public final long getNumEdges() {
-        return numEdges;
     }
 
     /***
@@ -309,6 +234,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
         vertexId.readFields(in);
         delegate.setVertexId(vertexId);
         boolean hasVertexValue = in.readBoolean();
+
         if (hasVertexValue) {
             vertexValue = allocateValue();
             vertexValue.readFields(in);
@@ -352,12 +278,6 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
         out.writeBoolean(halt);
     }
 
-    private boolean addEdge(Edge<I, E> edge) {
-        edge.setConf(getContext().getConfiguration());
-        destEdgeList.add(edge);
-        return true;
-    }
-
     /**
      * Get the list of incoming messages
      * 
@@ -376,14 +296,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
         return this.destEdgeList;
     }
 
-    public final Mapper<?, ?, ?, ?>.Context getContext() {
-        return context;
-    }
-
-    public final static void setContext(Mapper<?, ?, ?, ?>.Context context) {
-        Vertex.context = context;
-    }
-
+    @Override
     @SuppressWarnings("unchecked")
     public String toString() {
         Collections.sort(destEdgeList);
@@ -396,37 +309,236 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
         return "Vertex(id=" + getVertexId() + ",value=" + getVertexValue() + ", edges=" + edgeBuffer + ")";
     }
 
-    public void setOutputWriters(List<IFrameWriter> writers) {
-        delegate.setOutputWriters(writers);
-    }
-
-    public void setOutputAppenders(List<FrameTupleAppender> appenders) {
-        delegate.setOutputAppenders(appenders);
-    }
-
-    public void setOutputTupleBuilders(List<ArrayTupleBuilder> tbs) {
-        delegate.setOutputTupleBuilders(tbs);
-    }
-
-    public void finishCompute() throws IOException {
-        delegate.finishCompute();
-    }
-
-    public boolean hasUpdate() {
-        return this.updated;
-    }
-
-    public boolean hasMessage() {
-        return this.hasMessage;
-    }
-
+    /**
+     * Get the number of outgoing edges
+     * 
+     * @return the number of outging edges
+     */
     public int getNumOutEdges() {
         return destEdgeList.size();
     }
 
+    /**
+     * Pregelix internal use only
+     * 
+     * @param writers
+     */
+    public void setOutputWriters(List<IFrameWriter> writers) {
+        delegate.setOutputWriters(writers);
+    }
+
+    /**
+     * Pregelix internal use only
+     * 
+     * @param writers
+     */
+    public void setOutputAppenders(List<FrameTupleAppender> appenders) {
+        delegate.setOutputAppenders(appenders);
+    }
+
+    /**
+     * Pregelix internal use only
+     * 
+     * @param writers
+     */
+    public void setOutputTupleBuilders(List<ArrayTupleBuilder> tbs) {
+        delegate.setOutputTupleBuilders(tbs);
+    }
+
+    /**
+     * Pregelix internal use only
+     * 
+     * @param writers
+     */
+    public void finishCompute() throws IOException {
+        delegate.finishCompute();
+    }
+
+    /**
+     * Pregelix internal use only
+     */
+    public boolean hasUpdate() {
+        return this.updated;
+    }
+
+    /**
+     * Pregelix internal use only
+     */
+    public boolean hasMessage() {
+        return this.hasMessage;
+    }
+
+    /**
+     * sort the edges
+     */
     @SuppressWarnings("unchecked")
     public void sortEdges() {
-        Collections.sort((List) destEdgeList);
+        Collections.sort(destEdgeList);
+    }
+
+    /**
+     * Allocate a new edge from the edge pool
+     */
+    private Edge<I, E> allocateEdge() {
+        Edge<I, E> edge;
+        if (usedEdge < edgePool.size()) {
+            edge = edgePool.get(usedEdge);
+            usedEdge++;
+        } else {
+            edge = new Edge<I, E>();
+            edgePool.add(edge);
+            usedEdge++;
+        }
+        return edge;
+    }
+
+    /**
+     * Allocate a new message from the message pool
+     */
+    private M allocateMessage() {
+        M message;
+        if (usedMessage < msgPool.size()) {
+            message = msgPool.get(usedEdge);
+            usedMessage++;
+        } else {
+            message = BspUtils.<M> createMessageValue(getContext().getConfiguration());
+            msgPool.add(message);
+            usedMessage++;
+        }
+        return message;
+    }
+
+    /**
+     * Set the global superstep for all the vertices (internal use)
+     * 
+     * @param superstep
+     *            New superstep
+     */
+    public static final void setSuperstep(long superstep) {
+        Vertex.superstep = superstep;
+    }
+
+    /**
+     * Add an outgoing edge into the vertex
+     * 
+     * @param edge
+     *            the edge to be added
+     * @return true if the edge list changed as a result of this call
+     */
+    public boolean addEdge(Edge<I, E> edge) {
+        edge.setConf(getContext().getConfiguration());
+        return destEdgeList.add(edge);
+    }
+
+    /**
+     * remove an outgoing edge in the graph
+     * 
+     * @param edge
+     *            the edge to be removed
+     * @return true if the edge is in the edge list of the vertex
+     */
+    public boolean removeEdge(Edge<I, E> edge) {
+        return destEdgeList.remove(edge);
+    }
+
+    /**
+     * Add a new vertex into the graph
+     * 
+     * @param vertexId the vertex id
+     * @param vertex the vertex
+     */
+    public final void addVertex(I vertexId, V vertex) {
+        delegate.addVertex(vertexId, vertex);
+    }
+
+    /**
+     * Delete a vertex from id
+     * 
+     * @param vertexId  the vertex id
+     */
+    public final void deleteVertex(I vertexId) {
+        delegate.deleteVertex(vertexId);
+    }
+
+    /**
+     * Allocate a vertex value from the object pool
+     * 
+     * @return a vertex value instance
+     */
+    private V allocateValue() {
+        V value;
+        if (usedValue < valuePool.size()) {
+            value = valuePool.get(usedValue);
+            usedValue++;
+        } else {
+            value = BspUtils.<V> createVertexValue(getContext().getConfiguration());
+            valuePool.add(value);
+            usedValue++;
+        }
+        return value;
+    }
+
+    /**
+     * Get the current global superstep number
+     * 
+     * @return the current superstep number
+     */
+    public static final long getSuperstep() {
+        return superstep;
+    }
+
+    /**
+     * Set the total number of vertices from the last superstep.
+     * 
+     * @param numVertices
+     *            Aggregate vertices in the last superstep
+     */
+    public static final void setNumVertices(long numVertices) {
+        Vertex.numVertices = numVertices;
+    }
+
+    /**
+     * Get the number of vertexes in the graph
+     * 
+     * @return the number of vertexes in the graph
+     */
+    public static final long getNumVertices() {
+        return numVertices;
+    }
+
+    /**
+     * Set the total number of edges from the last superstep.
+     * 
+     * @param numEdges
+     *            Aggregate edges in the last superstep
+     */
+    public static void setNumEdges(long numEdges) {
+        Vertex.numEdges = numEdges;
+    }
+
+    /**
+     * Get the number of edges from this graph
+     * 
+     * @return the number of edges in the graph
+     */
+    public static final long getNumEdges() {
+        return numEdges;
+    }
+
+    /**
+     * Pregelix internal use only
+     */
+    public static final Mapper<?, ?, ?, ?>.Context getContext() {
+        return context;
+    }
+
+    /**
+     * Pregelix internal use only
+     * 
+     * @param context
+     */
+    public static final void setContext(Mapper<?, ?, ?, ?>.Context context) {
+        Vertex.context = context;
     }
 
 }

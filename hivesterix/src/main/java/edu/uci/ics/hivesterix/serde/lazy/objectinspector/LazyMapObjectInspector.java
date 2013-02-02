@@ -31,31 +31,32 @@ import edu.uci.ics.hivesterix.serde.lazy.LazyMap;
  */
 public class LazyMapObjectInspector extends StandardMapObjectInspector {
 
-    protected LazyMapObjectInspector(ObjectInspector mapKeyObjectInspector, ObjectInspector mapValueObjectInspector) {
-        super(mapKeyObjectInspector, mapValueObjectInspector);
-    }
+	protected LazyMapObjectInspector(ObjectInspector mapKeyObjectInspector,
+			ObjectInspector mapValueObjectInspector) {
+		super(mapKeyObjectInspector, mapValueObjectInspector);
+	}
 
-    @Override
-    public Map<?, ?> getMap(Object data) {
-        if (data == null) {
-            return null;
-        }
-        return ((LazyMap) data).getMap();
-    }
+	@Override
+	public Map<?, ?> getMap(Object data) {
+		if (data == null) {
+			return null;
+		}
+		return ((LazyMap) data).getMap();
+	}
 
-    @Override
-    public int getMapSize(Object data) {
-        if (data == null) {
-            return -1;
-        }
-        return ((LazyMap) data).getMapSize();
-    }
+	@Override
+	public int getMapSize(Object data) {
+		if (data == null) {
+			return -1;
+		}
+		return ((LazyMap) data).getMapSize();
+	}
 
-    @Override
-    public Object getMapValueElement(Object data, Object key) {
-        if (data == null) {
-            return -1;
-        }
-        return ((LazyMap) data).getMapValueElement(key);
-    }
+	@Override
+	public Object getMapValueElement(Object data, Object key) {
+		if (data == null) {
+			return -1;
+		}
+		return ((LazyMap) data).getMapValueElement(key);
+	}
 }

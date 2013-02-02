@@ -59,6 +59,10 @@ public class RunJobTestSuite extends TestSuite {
     private static final String DATA_PATH2 = "data/webmapcomplex/webmap_link.txt";
     private static final String HDFS_PATH2 = "/webmapcomplex/";
 
+    private static final String DATA_PATH3 = "data/clique/clique.txt";
+    private static final String HDFS_PATH3 = "/clique/";
+
+    private static final String HYRACKS_APP_NAME = "giraph";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private MiniDFSCluster dfsCluster;
 
@@ -99,6 +103,11 @@ public class RunJobTestSuite extends TestSuite {
 
         src = new Path(DATA_PATH2);
         dest = new Path(HDFS_PATH2);
+        dfs.mkdirs(dest);
+        dfs.copyFromLocalFile(src, dest);
+
+        src = new Path(DATA_PATH3);
+        dest = new Path(HDFS_PATH3);
         dfs.mkdirs(dest);
         dfs.copyFromLocalFile(src, dest);
 

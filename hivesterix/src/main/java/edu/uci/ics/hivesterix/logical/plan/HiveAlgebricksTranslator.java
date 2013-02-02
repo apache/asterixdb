@@ -77,6 +77,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 
+@SuppressWarnings("rawtypes")
 public class HiveAlgebricksTranslator implements Translator {
 
     private int currentVariable = 0;
@@ -212,6 +213,7 @@ public class HiveAlgebricksTranslator implements Translator {
 
     /**
      * get the number of variables
+     * s
      * 
      * @return
      */
@@ -373,6 +375,7 @@ public class HiveAlgebricksTranslator implements Translator {
                 ;
             if (hiveOperator.getChildOperators() != null && hiveOperator.getChildOperators().size() > 0
                     && continueTraverse) {
+                @SuppressWarnings("unchecked")
                 List<Operator> children = hiveOperator.getChildOperators();
                 if (currentOperatorRef == null)
                     currentOperatorRef = AlgebricksParentOperator;
@@ -521,8 +524,8 @@ public class HiveAlgebricksTranslator implements Translator {
         printOperatorSchema(operator);
         List<ColumnInfo> columns = operator.getSchema().getSignature();
         if (variables.size() != columns.size()) {
-            System.out.println("output cardinality error " + operator.getName() + " variable size: " + variables.size()
-                    + " expected " + columns.size());
+            throw new IllegalStateException("output cardinality error " + operator.getName() + " variable size: "
+                    + variables.size() + " expected " + columns.size());
         }
 
         for (int i = 0; i < variables.size(); i++) {
@@ -556,7 +559,7 @@ public class HiveAlgebricksTranslator implements Translator {
                         fieldName = "null." + desc.getColumn();
                         var = getVariableOnly(fieldName);
                         if (var == null) {
-                            System.out.println(fieldName + " is wrong!!! ");
+                            throw new IllegalStateException(fieldName + " is wrong!!! ");
                         }
                     }
                 }

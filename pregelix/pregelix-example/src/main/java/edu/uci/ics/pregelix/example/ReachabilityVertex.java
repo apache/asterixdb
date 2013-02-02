@@ -160,6 +160,11 @@ public class ReachabilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
         }
         voteToHalt();
     }
+    
+    @Override
+    public String toString() {
+        return getVertexId() + " " + getVertexValue();
+    }
 
     private void signalTerminate() {
         Configuration conf = getContext().getConfiguration();

@@ -31,47 +31,50 @@ import edu.uci.ics.hivesterix.serde.lazy.LazyColumnar;
  * 
  * @see LazyColumnar
  */
-public class LazyColumnarObjectInspector extends StandardStructObjectInspector implements Serializable {
+public class LazyColumnarObjectInspector extends StandardStructObjectInspector
+		implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    public LazyColumnarObjectInspector(List<String> structFieldNames, List<ObjectInspector> structFieldObjectInspectors) {
-        super(structFieldNames, structFieldObjectInspectors);
-    }
+	public LazyColumnarObjectInspector(List<String> structFieldNames,
+			List<ObjectInspector> structFieldObjectInspectors) {
+		super(structFieldNames, structFieldObjectInspectors);
+	}
 
-    public LazyColumnarObjectInspector(List<StructField> fields) {
-        super(fields);
-    }
+	public LazyColumnarObjectInspector(List<StructField> fields) {
+		super(fields);
+	}
 
-    @Override
-    public Object getStructFieldData(Object data, StructField fieldRef) {
-        if (data == null) {
-            return null;
-        }
-        LazyColumnar struct = (LazyColumnar) data;
-        MyField f = (MyField) fieldRef;
+	@Override
+	public Object getStructFieldData(Object data, StructField fieldRef) {
+		if (data == null) {
+			return null;
+		}
+		LazyColumnar struct = (LazyColumnar) data;
+		MyField f = (MyField) fieldRef;
 
-        int fieldID = f.getFieldID();
-        assert (fieldID >= 0 && fieldID < fields.size());
+		int fieldID = f.getFieldID();
+		assert (fieldID >= 0 && fieldID < fields.size());
 
-        Object column = struct.getField(fieldID);
-        return column;
-    }
+		Object column = struct.getField(fieldID);
+		return column;
+	}
 
-    @Override
-    public List<Object> getStructFieldsDataAsList(Object data) {
-        if (data == null) {
-            return null;
-        }
-        LazyColumnar struct = (LazyColumnar) data;
-        return struct.getFieldsAsList();
-    }
+	@Override
+	public List<Object> getStructFieldsDataAsList(Object data) {
+		if (data == null) {
+			return null;
+		}
+		LazyColumnar struct = (LazyColumnar) data;
+		return struct.getFieldsAsList();
+	}
 
-    public String toString() {
-        String str = "";
-        for (MyField f : fields) {
-            str += f.getFieldName() + ":" + f.getFieldObjectInspector().getTypeName() + "  ";
-        }
-        return str;
-    }
+	public String toString() {
+		String str = "";
+		for (MyField f : fields) {
+			str += f.getFieldName() + ":"
+					+ f.getFieldObjectInspector().getTypeName() + "  ";
+		}
+		return str;
+	}
 }

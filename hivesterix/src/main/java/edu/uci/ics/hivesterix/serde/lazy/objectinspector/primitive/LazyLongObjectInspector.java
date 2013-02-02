@@ -26,25 +26,26 @@ import edu.uci.ics.hivesterix.serde.lazy.LazyLong;
 /**
  * A WritableLongObjectInspector inspects a LongWritable Object.
  */
-public class LazyLongObjectInspector extends AbstractPrimitiveLazyObjectInspector<LongWritable> implements
-        LongObjectInspector {
+public class LazyLongObjectInspector extends
+		AbstractPrimitiveLazyObjectInspector<LongWritable> implements
+		LongObjectInspector {
 
-    LazyLongObjectInspector() {
-        super(PrimitiveObjectInspectorUtils.longTypeEntry);
-    }
+	LazyLongObjectInspector() {
+		super(PrimitiveObjectInspectorUtils.longTypeEntry);
+	}
 
-    @Override
-    public long get(Object o) {
-        return getPrimitiveWritableObject(o).get();
-    }
+	@Override
+	public long get(Object o) {
+		return getPrimitiveWritableObject(o).get();
+	}
 
-    @Override
-    public Object copyObject(Object o) {
-        return o == null ? null : new LazyLong((LazyLong) o);
-    }
+	@Override
+	public Object copyObject(Object o) {
+		return o == null ? null : new LazyLong((LazyLong) o);
+	}
 
-    @Override
-    public Object getPrimitiveJavaObject(Object o) {
-        return o == null ? null : Long.valueOf(get(o));
-    }
+	@Override
+	public Object getPrimitiveJavaObject(Object o) {
+		return o == null ? null : Long.valueOf(get(o));
+	}
 }

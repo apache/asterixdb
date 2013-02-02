@@ -52,7 +52,8 @@ public class PregelixHyracksIntegrationUtil {
         ccConfig.clusterNetPort = TEST_HYRACKS_CC_PORT;
         ccConfig.clientNetPort = TEST_HYRACKS_CC_CLIENT_PORT;
         ccConfig.defaultMaxJobAttempts = 0;
-        ccConfig.jobHistorySize = 10;
+        ccConfig.jobHistorySize = 0;
+        ccConfig.profileDumpPeriod = -1;
 
         // cluster controller
         cc = new ClusterControllerService(ccConfig);

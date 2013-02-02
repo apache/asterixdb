@@ -34,34 +34,35 @@ import edu.uci.ics.hivesterix.serde.lazy.objectinspector.primitive.LazyBooleanOb
  * </p>
  * 
  */
-public class LazyBoolean extends LazyPrimitive<LazyBooleanObjectInspector, BooleanWritable> {
+public class LazyBoolean extends
+		LazyPrimitive<LazyBooleanObjectInspector, BooleanWritable> {
 
-    public LazyBoolean(LazyBooleanObjectInspector oi) {
-        super(oi);
-        data = new BooleanWritable();
-    }
+	public LazyBoolean(LazyBooleanObjectInspector oi) {
+		super(oi);
+		data = new BooleanWritable();
+	}
 
-    public LazyBoolean(LazyBoolean copy) {
-        super(copy);
-        data = new BooleanWritable(copy.data.get());
-    }
+	public LazyBoolean(LazyBoolean copy) {
+		super(copy);
+		data = new BooleanWritable(copy.data.get());
+	}
 
-    @Override
-    public void init(byte[] bytes, int start, int length) {
-        if (length == 0) {
-            isNull = true;
-            return;
-        } else
-            isNull = false;
-        
-        // a temporal hack
-        assert (1 == length);
-        byte val = bytes[start];
-        if (val == 0) {
-            data.set(false);
-        } else if (val == 1) {
-            data.set(true);
-        }
-    }
+	@Override
+	public void init(byte[] bytes, int start, int length) {
+		if (length == 0) {
+			isNull = true;
+			return;
+		} else
+			isNull = false;
+
+		// a temporal hack
+		assert (1 == length);
+		byte val = bytes[start];
+		if (val == 0) {
+			data.set(false);
+		} else if (val == 1) {
+			data.set(true);
+		}
+	}
 
 }

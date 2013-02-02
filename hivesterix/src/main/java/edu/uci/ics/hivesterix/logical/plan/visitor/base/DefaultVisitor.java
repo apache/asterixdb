@@ -31,115 +31,136 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
  */
 public class DefaultVisitor implements Visitor {
 
-    @Override
-    public Mutable<ILogicalOperator> visit(CollectOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
-        return null;
-    }
+	@Override
+	public Mutable<ILogicalOperator> visit(CollectOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    @Override
-    public Mutable<ILogicalOperator> visit(JoinOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
-        return null;
-    }
+	@Override
+	public Mutable<ILogicalOperator> visit(JoinOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    @Override
-    public Mutable<ILogicalOperator> visit(ExtractOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
-        return null;
-    }
+	@Override
+	public Mutable<ILogicalOperator> visit(ExtractOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    @Override
-    public Mutable<ILogicalOperator> visit(MapJoinOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
-        return null;
-    }
+	@Override
+	public Mutable<ILogicalOperator> visit(MapJoinOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    @Override
-    public Mutable<ILogicalOperator> visit(SMBMapJoinOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
-        return null;
-    }
+	@Override
+	public Mutable<ILogicalOperator> visit(SMBMapJoinOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    public Mutable<ILogicalOperator> visit(FileSinkOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
-        return null;
-    }
+	public Mutable<ILogicalOperator> visit(FileSinkOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    public Mutable<ILogicalOperator> visit(ReduceSinkOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
-        return null;
-    }
+	public Mutable<ILogicalOperator> visit(ReduceSinkOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    @Override
-    public Mutable<ILogicalOperator> visit(FilterOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
-        return null;
-    }
+	@Override
+	public Mutable<ILogicalOperator> visit(FilterOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    @Override
-    public Mutable<ILogicalOperator> visit(ForwardOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
-        return null;
-    }
+	@Override
+	public Mutable<ILogicalOperator> visit(ForwardOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    @Override
-    public Mutable<ILogicalOperator> visit(GroupByOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
-        return null;
-    }
+	@Override
+	public Mutable<ILogicalOperator> visit(GroupByOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    @Override
-    public Mutable<ILogicalOperator> visit(LateralViewForwardOperator hiveOperator,
-            Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t) throws AlgebricksException {
-        return null;
-    }
+	@Override
+	public Mutable<ILogicalOperator> visit(
+			LateralViewForwardOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    @Override
-    public Mutable<ILogicalOperator> visit(LateralViewJoinOperator hiveOperator,
-            Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t) throws AlgebricksException {
-        return null;
-    }
+	@Override
+	public Mutable<ILogicalOperator> visit(
+			LateralViewJoinOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    @Override
-    public Mutable<ILogicalOperator> visit(LimitOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
-        return null;
-    }
+	@Override
+	public Mutable<ILogicalOperator> visit(LimitOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    @Override
-    public Mutable<ILogicalOperator> visit(MapOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
-        return null;
-    }
+	@Override
+	public Mutable<ILogicalOperator> visit(MapOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    @Override
-    public Mutable<ILogicalOperator> visit(ScriptOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
-        return null;
-    }
+	@Override
+	public Mutable<ILogicalOperator> visit(ScriptOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    @Override
-    public Mutable<ILogicalOperator> visit(SelectOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
-        return null;
-    }
+	@Override
+	public Mutable<ILogicalOperator> visit(SelectOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    @Override
-    public Mutable<ILogicalOperator> visit(TableScanOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
-        return null;
-    }
+	@Override
+	public Mutable<ILogicalOperator> visit(TableScanOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    @Override
-    public Mutable<ILogicalOperator> visit(UDTFOperator operator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
-        return null;
-    }
+	@Override
+	public Mutable<ILogicalOperator> visit(UDTFOperator operator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 
-    @Override
-    public Mutable<ILogicalOperator> visit(UnionOperator operator, Mutable<ILogicalOperator> AlgebricksParentOperator,
-            Translator t) throws AlgebricksException {
-        return null;
-    }
+	@Override
+	public Mutable<ILogicalOperator> visit(UnionOperator operator,
+			Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t)
+			throws AlgebricksException {
+		return null;
+	}
 }

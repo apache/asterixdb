@@ -37,7 +37,7 @@ import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoin;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 import edu.uci.ics.pregelix.example.PageRankVertex;
-import edu.uci.ics.pregelix.example.PageRankVertex.SimplePageRankVertexInputFormat;
+import edu.uci.ics.pregelix.example.PageRankVertex.SimulatedPageRankVertexInputFormat;
 import edu.uci.ics.pregelix.example.util.TestUtils;
 
 @SuppressWarnings("deprecation")
@@ -65,7 +65,7 @@ public class DataLoadTest {
     public DataLoadTest() throws Exception {
         job = new PregelixJob(GIRAPH_JOB_NAME);
         job.setVertexClass(PageRankVertex.class);
-        job.setVertexInputFormatClass(SimplePageRankVertexInputFormat.class);
+        job.setVertexInputFormatClass(SimulatedPageRankVertexInputFormat.class);
         job.getConfiguration().setClass(PregelixJob.VERTEX_INDEX_CLASS, LongWritable.class, WritableComparable.class);
         job.getConfiguration().setClass(PregelixJob.VERTEX_VALUE_CLASS, DoubleWritable.class, Writable.class);
         job.getConfiguration().setClass(PregelixJob.EDGE_VALUE_CLASS, FloatWritable.class, Writable.class);

@@ -26,22 +26,24 @@ import edu.uci.ics.hivesterix.serde.lazy.LazyPrimitive;
 /**
  * An AbstractPrimitiveLazyObjectInspector for a LazyPrimitive object.
  */
-public abstract class AbstractPrimitiveLazyObjectInspector<T extends Writable> extends AbstractPrimitiveObjectInspector {
+public abstract class AbstractPrimitiveLazyObjectInspector<T extends Writable>
+		extends AbstractPrimitiveObjectInspector {
 
-    protected AbstractPrimitiveLazyObjectInspector(PrimitiveTypeEntry typeEntry) {
-        super(typeEntry);
-    }
+	protected AbstractPrimitiveLazyObjectInspector(PrimitiveTypeEntry typeEntry) {
+		super(typeEntry);
+	}
 
-    @Override
-    public T getPrimitiveWritableObject(Object o) {
-        if(o==null)
-            System.out.println("sth. wrong");
-        return o == null ? null : ((LazyPrimitive<?, T>) o).getWritableObject();
-    }
+	@SuppressWarnings("unchecked")
+	@Override
+	public T getPrimitiveWritableObject(Object o) {
+		if (o == null)
+			System.out.println("sth. wrong");
+		return o == null ? null : ((LazyPrimitive<?, T>) o).getWritableObject();
+	}
 
-    @Override
-    public boolean preferWritable() {
-        return true;
-    }
+	@Override
+	public boolean preferWritable() {
+		return true;
+	}
 
 }

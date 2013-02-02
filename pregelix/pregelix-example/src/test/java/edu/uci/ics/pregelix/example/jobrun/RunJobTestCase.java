@@ -30,6 +30,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.jobgen.JobGen;
 import edu.uci.ics.pregelix.core.jobgen.JobGenInnerJoin;
 import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoin;
+import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoinSingleSort;
 import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoinSort;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
@@ -43,6 +44,9 @@ public class RunJobTestCase extends TestCase {
 
     private static String HDFS_INPUTPATH2 = "/webmapcomplex";
     private static String HDFS_OUTPUTPAH2 = "/resultcomplex";
+
+    private static String HDFS_INPUTPATH3 = "/clique";
+    private static String HDFS_OUTPUTPAH3 = "/resultclique";
 
     private final PregelixJob job;
     private JobGen[] giraphJobGens;
@@ -61,21 +65,24 @@ public class RunJobTestCase extends TestCase {
         if (inputPaths[0].toString().endsWith(HDFS_INPUTPATH)) {
             FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
             FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
-        } else {
+        } else if (inputPaths[0].toString().endsWith(HDFS_INPUTPATH2)) {
             FileInputFormat.setInputPaths(job, HDFS_INPUTPATH2);
             FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH2));
+        } else {
+            FileInputFormat.setInputPaths(job, HDFS_INPUTPATH3);
+            FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH3));
         }
         job.setJobName(jobName);
         this.resultFileName = resultFile;
         this.expectedFileName = expectedFile;
-        giraphJobGens = new JobGen[3];
+        giraphJobGens = new JobGen[4];
         giraphJobGens[0] = new JobGenOuterJoin(job);
         waitawhile();
         giraphJobGens[1] = new JobGenInnerJoin(job);
         waitawhile();
         giraphJobGens[2] = new JobGenOuterJoinSort(job);
-        //waitawhile();
-        // giraphJobGens[3] = new JobGenOuterJoinSingleSort(job);
+        waitawhile();
+        giraphJobGens[3] = new JobGenOuterJoinSingleSort(job);
     }
 
     private void waitawhile() throws InterruptedException {

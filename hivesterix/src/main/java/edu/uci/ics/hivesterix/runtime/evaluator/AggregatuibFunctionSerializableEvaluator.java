@@ -21,228 +21,239 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunction;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class AggregatuibFunctionSerializableEvaluator implements ICopySerializableAggregateFunction {
+public class AggregatuibFunctionSerializableEvaluator implements
+		ICopySerializableAggregateFunction {
 
-    /**
-     * the mode of aggregation function
-     */
-    private GenericUDAFEvaluator.Mode mode;
+	/**
+	 * the mode of aggregation function
+	 */
+	private GenericUDAFEvaluator.Mode mode;
 
-    /**
-     * an array of evaluators
-     */
-    private ExprNodeEvaluator[] evaluators;
+	/**
+	 * an array of evaluators
+	 */
+	private ExprNodeEvaluator[] evaluators;
 
-    /**
-     * udaf evaluator partial
-     */
-    private GenericUDAFEvaluator udafPartial;
+	/**
+	 * udaf evaluator partial
+	 */
+	private GenericUDAFEvaluator udafPartial;
 
-    /**
-     * udaf evaluator complete
-     */
-    private GenericUDAFEvaluator udafComplete;
+	/**
+	 * udaf evaluator complete
+	 */
+	private GenericUDAFEvaluator udafComplete;
 
-    /**
-     * cached parameter objects
-     */
-    private Object[] cachedParameters;
+	/**
+	 * cached parameter objects
+	 */
+	private Object[] cachedParameters;
 
-    /**
-     * cached row objects
-     */
-    private LazyObject<? extends ObjectInspector> cachedRowObject;
+	/**
+	 * cached row objects
+	 */
+	private LazyObject<? extends ObjectInspector> cachedRowObject;
 
-    /**
-     * aggregation buffer
-     */
-    private SerializableBuffer aggBuffer;
+	/**
+	 * aggregation buffer
+	 */
+	private SerializableBuffer aggBuffer;
 
-    /**
-     * we only use lazy serde to do serialization
-     */
-    private SerDe lazySer;
+	/**
+	 * we only use lazy serde to do serialization
+	 */
+	private SerDe lazySer;
 
-    /**
-     * the output object inspector for this aggregation function
-     */
-    private ObjectInspector outputInspector;
+	/**
+	 * the output object inspector for this aggregation function
+	 */
+	private ObjectInspector outputInspector;
 
-    /**
-     * the output object inspector for this aggregation function
-     */
-    private ObjectInspector outputInspectorPartial;
+	/**
+	 * the output object inspector for this aggregation function
+	 */
+	private ObjectInspector outputInspectorPartial;
 
-    /**
-     * parameter inspectors
-     */
-    private ObjectInspector[] parameterInspectors;
+	/**
+	 * parameter inspectors
+	 */
+	private ObjectInspector[] parameterInspectors;
 
-    /**
-     * output make sure the aggregation functio has least object creation
-     * 
-     * @param desc
-     * @param oi
-     * @param output
-     */
-    public AggregatuibFunctionSerializableEvaluator(List<ExprNodeDesc> inputs, List<TypeInfo> inputTypes,
-            String genericUDAFName, GenericUDAFEvaluator.Mode aggMode, boolean distinct, ObjectInspector oi,
-            ExprNodeEvaluator[] evals, ObjectInspector[] pInspectors, Object[] parameterCache, SerDe serde,
-            LazyObject<? extends ObjectInspector> row, GenericUDAFEvaluator udafunctionPartial,
-            GenericUDAFEvaluator udafunctionComplete, ObjectInspector outputOi, ObjectInspector outputOiPartial)
-            throws AlgebricksException {
-        // shared object across threads
-        this.mode = aggMode;
-        this.parameterInspectors = pInspectors;
+	/**
+	 * output make sure the aggregation functio has least object creation
+	 * 
+	 * @param desc
+	 * @param oi
+	 * @param output
+	 */
+	public AggregatuibFunctionSerializableEvaluator(List<ExprNodeDesc> inputs,
+			List<TypeInfo> inputTypes, String genericUDAFName,
+			GenericUDAFEvaluator.Mode aggMode, boolean distinct,
+			ObjectInspector oi, ExprNodeEvaluator[] evals,
+			ObjectInspector[] pInspectors, Object[] parameterCache,
+			SerDe serde, LazyObject<? extends ObjectInspector> row,
+			GenericUDAFEvaluator udafunctionPartial,
+			GenericUDAFEvaluator udafunctionComplete, ObjectInspector outputOi,
+			ObjectInspector outputOiPartial) throws AlgebricksException {
+		// shared object across threads
+		this.mode = aggMode;
+		this.parameterInspectors = pInspectors;
 
-        // thread local objects
-        this.evaluators = evals;
-        this.cachedParameters = parameterCache;
-        this.cachedRowObject = row;
-        this.lazySer = serde;
-        this.udafPartial = udafunctionPartial;
-        this.udafComplete = udafunctionComplete;
-        this.outputInspector = outputOi;
-        this.outputInspectorPartial = outputOiPartial;
+		// thread local objects
+		this.evaluators = evals;
+		this.cachedParameters = parameterCache;
+		this.cachedRowObject = row;
+		this.lazySer = serde;
+		this.udafPartial = udafunctionPartial;
+		this.udafComplete = udafunctionComplete;
+		this.outputInspector = outputOi;
+		this.outputInspectorPartial = outputOiPartial;
 
-        try {
-            aggBuffer = (SerializableBuffer) udafPartial.getNewAggregationBuffer();
-        } catch (HiveException e) {
-            throw new AlgebricksException(e);
-        }
-    }
+		try {
+			aggBuffer = (SerializableBuffer) udafPartial
+					.getNewAggregationBuffer();
+		} catch (HiveException e) {
+			throw new AlgebricksException(e);
+		}
+	}
 
-    @Override
-    public void init(DataOutput output) throws AlgebricksException {
-        try {
-            udafPartial.reset(aggBuffer);
-            outputAggBuffer(aggBuffer, output);
-        } catch (HiveException e) {
-            throw new AlgebricksException(e);
-        }
-    }
+	@Override
+	public void init(DataOutput output) throws AlgebricksException {
+		try {
+			udafPartial.reset(aggBuffer);
+			outputAggBuffer(aggBuffer, output);
+		} catch (HiveException e) {
+			throw new AlgebricksException(e);
+		}
+	}
 
-    @Override
-    public void step(IFrameTupleReference tuple, byte[] data, int start, int len) throws AlgebricksException {
-        deSerializeAggBuffer(aggBuffer, data, start, len);
-        readIntoCache(tuple);
-        processRow();
-        serializeAggBuffer(aggBuffer, data, start, len);
-    }
+	@Override
+	public void step(IFrameTupleReference tuple, byte[] data, int start, int len)
+			throws AlgebricksException {
+		deSerializeAggBuffer(aggBuffer, data, start, len);
+		readIntoCache(tuple);
+		processRow();
+		serializeAggBuffer(aggBuffer, data, start, len);
+	}
 
-    private void processRow() throws AlgebricksException {
-        try {
-            // get values by evaluating them
-            for (int i = 0; i < cachedParameters.length; i++) {
-                cachedParameters[i] = evaluators[i].evaluate(cachedRowObject);
-            }
-            processAggregate();
-        } catch (HiveException e) {
-            throw new AlgebricksException(e);
-        }
-    }
+	private void processRow() throws AlgebricksException {
+		try {
+			// get values by evaluating them
+			for (int i = 0; i < cachedParameters.length; i++) {
+				cachedParameters[i] = evaluators[i].evaluate(cachedRowObject);
+			}
+			processAggregate();
+		} catch (HiveException e) {
+			throw new AlgebricksException(e);
+		}
+	}
 
-    private void processAggregate() throws HiveException {
-        /**
-         * accumulate the aggregation function
-         */
-        switch (mode) {
-            case PARTIAL1:
-            case COMPLETE:
-                udafPartial.iterate(aggBuffer, cachedParameters);
-                break;
-            case PARTIAL2:
-            case FINAL:
-                if (udafPartial instanceof GenericUDAFCount.GenericUDAFCountEvaluator) {
-                    Object parameter = ((PrimitiveObjectInspector) parameterInspectors[0])
-                            .getPrimitiveWritableObject(cachedParameters[0]);
-                    udafPartial.merge(aggBuffer, parameter);
-                } else
-                    udafPartial.merge(aggBuffer, cachedParameters[0]);
-                break;
-            default:
-                break;
-        }
-    }
+	private void processAggregate() throws HiveException {
+		/**
+		 * accumulate the aggregation function
+		 */
+		switch (mode) {
+		case PARTIAL1:
+		case COMPLETE:
+			udafPartial.iterate(aggBuffer, cachedParameters);
+			break;
+		case PARTIAL2:
+		case FINAL:
+			if (udafPartial instanceof GenericUDAFCount.GenericUDAFCountEvaluator) {
+				Object parameter = ((PrimitiveObjectInspector) parameterInspectors[0])
+						.getPrimitiveWritableObject(cachedParameters[0]);
+				udafPartial.merge(aggBuffer, parameter);
+			} else
+				udafPartial.merge(aggBuffer, cachedParameters[0]);
+			break;
+		default:
+			break;
+		}
+	}
 
-    /**
-     * serialize the result
-     * 
-     * @param result
-     *            the evaluation result
-     * @throws IOException
-     * @throws AlgebricksException
-     */
-    private void serializeResult(Object result, ObjectInspector oi, DataOutput out) throws IOException,
-            AlgebricksException {
-        try {
-            BytesWritable outputWritable = (BytesWritable) lazySer.serialize(result, oi);
-            out.write(outputWritable.getBytes(), 0, outputWritable.getLength());
-        } catch (SerDeException e) {
-            throw new AlgebricksException(e);
-        }
-    }
+	/**
+	 * serialize the result
+	 * 
+	 * @param result
+	 *            the evaluation result
+	 * @throws IOException
+	 * @throws AlgebricksException
+	 */
+	private void serializeResult(Object result, ObjectInspector oi,
+			DataOutput out) throws IOException, AlgebricksException {
+		try {
+			BytesWritable outputWritable = (BytesWritable) lazySer.serialize(
+					result, oi);
+			out.write(outputWritable.getBytes(), 0, outputWritable.getLength());
+		} catch (SerDeException e) {
+			throw new AlgebricksException(e);
+		}
+	}
 
-    /**
-     * bind the tuple reference to the cached row object
-     * 
-     * @param r
-     */
-    private void readIntoCache(IFrameTupleReference r) {
-        cachedRowObject.init(r);
-    }
+	/**
+	 * bind the tuple reference to the cached row object
+	 * 
+	 * @param r
+	 */
+	private void readIntoCache(IFrameTupleReference r) {
+		cachedRowObject.init(r);
+	}
 
-    @Override
-    public void finish(byte[] data, int start, int len, DataOutput output) throws AlgebricksException {
-        deSerializeAggBuffer(aggBuffer, data, start, len);
-        // aggregator
-        try {
-            Object result = null;
-            result = udafPartial.terminatePartial(aggBuffer);
-            if (mode == GenericUDAFEvaluator.Mode.COMPLETE || mode == GenericUDAFEvaluator.Mode.FINAL) {
-                result = udafComplete.terminate(aggBuffer);
-                serializeResult(result, outputInspector, output);
-            } else {
-                serializeResult(result, outputInspectorPartial, output);
-            }
-        } catch (HiveException e) {
-            throw new AlgebricksException(e);
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
-        }
-    }
+	@Override
+	public void finish(byte[] data, int start, int len, DataOutput output)
+			throws AlgebricksException {
+		deSerializeAggBuffer(aggBuffer, data, start, len);
+		// aggregator
+		try {
+			Object result = null;
+			result = udafPartial.terminatePartial(aggBuffer);
+			if (mode == GenericUDAFEvaluator.Mode.COMPLETE
+					|| mode == GenericUDAFEvaluator.Mode.FINAL) {
+				result = udafComplete.terminate(aggBuffer);
+				serializeResult(result, outputInspector, output);
+			} else {
+				serializeResult(result, outputInspectorPartial, output);
+			}
+		} catch (HiveException e) {
+			throw new AlgebricksException(e);
+		} catch (IOException e) {
+			throw new AlgebricksException(e);
+		}
+	}
 
-    @Override
-    public void finishPartial(byte[] data, int start, int len, DataOutput output) throws AlgebricksException {
-        deSerializeAggBuffer(aggBuffer, data, start, len);
-        // aggregator.
-        try {
-            Object result = null;
-            // get aggregations
-            result = udafPartial.terminatePartial(aggBuffer);
-            serializeResult(result, outputInspectorPartial, output);
-        } catch (HiveException e) {
-            throw new AlgebricksException(e);
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
-        }
-    }
+	@Override
+	public void finishPartial(byte[] data, int start, int len, DataOutput output)
+			throws AlgebricksException {
+		deSerializeAggBuffer(aggBuffer, data, start, len);
+		// aggregator.
+		try {
+			Object result = null;
+			// get aggregations
+			result = udafPartial.terminatePartial(aggBuffer);
+			serializeResult(result, outputInspectorPartial, output);
+		} catch (HiveException e) {
+			throw new AlgebricksException(e);
+		} catch (IOException e) {
+			throw new AlgebricksException(e);
+		}
+	}
 
-    private void serializeAggBuffer(SerializableBuffer buffer, byte[] data, int start, int len)
-            throws AlgebricksException {
-        buffer.serializeAggBuffer(data, start, len);
-    }
+	private void serializeAggBuffer(SerializableBuffer buffer, byte[] data,
+			int start, int len) throws AlgebricksException {
+		buffer.serializeAggBuffer(data, start, len);
+	}
 
-    private void deSerializeAggBuffer(SerializableBuffer buffer, byte[] data, int start, int len)
-            throws AlgebricksException {
-        buffer.deSerializeAggBuffer(data, start, len);
-    }
+	private void deSerializeAggBuffer(SerializableBuffer buffer, byte[] data,
+			int start, int len) throws AlgebricksException {
+		buffer.deSerializeAggBuffer(data, start, len);
+	}
 
-    private void outputAggBuffer(SerializableBuffer buffer, DataOutput out) throws AlgebricksException {
-        try {
-            buffer.serializeAggBuffer(out);
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
-        }
-    }
+	private void outputAggBuffer(SerializableBuffer buffer, DataOutput out)
+			throws AlgebricksException {
+		try {
+			buffer.serializeAggBuffer(out);
+		} catch (IOException e) {
+			throw new AlgebricksException(e);
+		}
+	}
 }

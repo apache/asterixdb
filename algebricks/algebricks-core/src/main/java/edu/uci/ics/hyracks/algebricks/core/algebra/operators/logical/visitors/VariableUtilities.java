@@ -61,14 +61,22 @@ public class VariableUtilities {
             ITypingContext ctx) throws AlgebricksException {
         substituteVariables(op, v1, v2, true, ctx);
     }
-
+    
+    public static void substituteVariablesInDescendantsAndSelf(ILogicalOperator op, LogicalVariable v1,
+            LogicalVariable v2, ITypingContext ctx) throws AlgebricksException {
+        for (Mutable<ILogicalOperator> childOp : op.getInputs()) {
+            substituteVariablesInDescendantsAndSelf(childOp.getValue(), v1, v2, ctx);
+        }
+        substituteVariables(op, v1, v2, true, ctx);
+    }
+    
     public static void substituteVariables(ILogicalOperator op, LogicalVariable v1, LogicalVariable v2,
             boolean goThroughNts, ITypingContext ctx) throws AlgebricksException {
         ILogicalOperatorVisitor<Void, Pair<LogicalVariable, LogicalVariable>> visitor = new SubstituteVariableVisitor(
                 goThroughNts, ctx);
         op.accept(visitor, new Pair<LogicalVariable, LogicalVariable>(v1, v2));
     }
-
+    
     public static <T> boolean varListEqualUnordered(List<T> var, List<T> varArg) {
         Set<T> varSet = new HashSet<T>();
         Set<T> varArgSet = new HashSet<T>();

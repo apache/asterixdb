@@ -43,6 +43,7 @@ import edu.uci.ics.hivesterix.runtime.jobgen.HiveConnectorPolicyAssignmentPolicy
 import edu.uci.ics.hivesterix.runtime.jobgen.HiveConnectorPolicyAssignmentPolicy.Policy;
 import edu.uci.ics.hivesterix.runtime.provider.HiveBinaryComparatorFactoryProvider;
 import edu.uci.ics.hivesterix.runtime.provider.HiveBinaryHashFunctionFactoryProvider;
+import edu.uci.ics.hivesterix.runtime.provider.HiveBinaryHashFunctionFamilyProvider;
 import edu.uci.ics.hivesterix.runtime.provider.HiveNormalizedKeyComputerFactoryProvider;
 import edu.uci.ics.hivesterix.runtime.provider.HivePrinterFactoryProvider;
 import edu.uci.ics.hivesterix.runtime.provider.HiveSerializerDeserializerProvider;
@@ -68,6 +69,7 @@ import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class HyracksExecutionEngine implements IExecutionEngine {
 
     private static final Log LOG = LogFactory.getLog(HyracksExecutionEngine.class.getName());
@@ -191,7 +193,6 @@ public class HyracksExecutionEngine implements IExecutionEngine {
 
             if (plan.getRoots() != null && plan.getRoots().size() > 0 && plan.getRoots().get(0).getValue() != null) {
                 translator.printOperators();
-                System.out.println("translate complete");
                 ILogicalPlanAndMetadata planAndMetadata = new HiveLogicalPlanAndMetaData(plan,
                         translator.getMetadataProvider());
 
@@ -223,7 +224,7 @@ public class HyracksExecutionEngine implements IExecutionEngine {
     private void codeGen() throws AlgebricksException {
         // number of cpu cores in the cluster
         builder.setClusterLocations(new AlgebricksAbsolutePartitionConstraint(ConfUtil.getNCs()));
-        //builder.setClusterTopology(ConfUtil.getClusterTopology());
+        // builder.setClusterTopology(ConfUtil.getClusterTopology());
         builder.setBinaryBooleanInspectorFactory(HiveBinaryBooleanInspectorFactory.INSTANCE);
         builder.setBinaryIntegerInspectorFactory(HiveBinaryIntegerInspectorFactory.INSTANCE);
         builder.setComparatorFactoryProvider(HiveBinaryComparatorFactoryProvider.INSTANCE);
@@ -235,6 +236,7 @@ public class HyracksExecutionEngine implements IExecutionEngine {
         builder.setNormalizedKeyComputerFactoryProvider(HiveNormalizedKeyComputerFactoryProvider.INSTANCE);
         builder.setPartialAggregationTypeComputer(HivePartialAggregationTypeComputer.INSTANCE);
         builder.setTypeTraitProvider(HiveTypeTraitProvider.INSTANCE);
+        builder.setHashFunctionFamilyProvider(HiveBinaryHashFunctionFamilyProvider.INSTANCE);
 
         jobSpec = compiler.createJob(null);
 
@@ -244,9 +246,7 @@ public class HyracksExecutionEngine implements IExecutionEngine {
             policyStr = "PIPELINING";
         Policy policyValue = Policy.valueOf(policyStr);
         jobSpec.setConnectorPolicyAssignmentPolicy(new HiveConnectorPolicyAssignmentPolicy(policyValue));
-
-        // execute the job
-        System.out.println(jobSpec.toString());
+        jobSpec.setUseConnectorPolicyForScheduling(false);
     }
 
     @Override
@@ -341,7 +341,6 @@ public class HyracksExecutionEngine implements IExecutionEngine {
                 // remove map-reduce branches in condition task
                 ConditionalTask condition = (ConditionalTask) task;
                 List<Task<? extends Serializable>> branches = condition.getListTasks();
-                boolean existMR = false;
                 for (int i = branches.size() - 1; i >= 0; i--) {
                     Task branch = branches.get(i);
                     if (branch instanceof MapRedTask) {
@@ -436,9 +435,7 @@ public class HyracksExecutionEngine implements IExecutionEngine {
 
         List<Operator> mapChildren = new ArrayList<Operator>();
         if (task.getChildTasks() != null && task.getChildTasks().size() > 0) {
-            System.out.println("have child tasks!!");
             for (Object child : task.getChildTasks()) {
-                System.out.println(child.getClass().getName());
                 List<Operator> childMapOps = articulateMapReduceOperators((Task) child, rootOps, aliasToPath, rootTasks);
                 if (childMapOps == null)
                     continue;
@@ -514,16 +511,16 @@ public class HyracksExecutionEngine implements IExecutionEngine {
     private void executeHyraxJob(JobSpecification job) throws Exception {
         String ipAddress = conf.get("hive.hyracks.host");
         int port = Integer.parseInt(conf.get("hive.hyracks.port"));
-        System.out.println("connect to " + ipAddress + " " + port);
+        //System.out.println("connect to " + ipAddress + " " + port);
 
         IHyracksClientConnection hcc = new HyracksConnection(ipAddress, port);
 
-        System.out.println("get connected");
+        //System.out.println("get connected");
         long start = System.currentTimeMillis();
         JobId jobId = hcc.startJob(job);
         hcc.waitForCompletion(jobId);
 
-        System.out.println("job finished: " + jobId.toString());
+        //System.out.println("job finished: " + jobId.toString());
         // call all leave nodes to end
         for (Operator leaf : leaveOps) {
             jobClose(leaf);

@@ -17,50 +17,55 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class LocalGroupByRule implements IAlgebraicRewriteRule {
 
-    @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
-        return false;
-    }
+	@Override
+	public boolean rewritePre(Mutable<ILogicalOperator> opRef,
+			IOptimizationContext context) throws AlgebricksException {
+		return false;
+	}
 
-    @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
-            throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        if (op.getOperatorTag() != LogicalOperatorTag.GROUP) {
-            return false;
-        }
-        Boolean localGby = (Boolean) op.getAnnotations().get(HiveOperatorAnnotations.LOCAL_GROUP_BY);
-        if (localGby != null && localGby.equals(Boolean.TRUE)) {
-            Boolean hashGby = (Boolean) op.getAnnotations().get(OperatorAnnotations.USE_HASH_GROUP_BY);
-            Boolean externalGby = (Boolean) op.getAnnotations().get(OperatorAnnotations.USE_EXTERNAL_GROUP_BY);
-            if ((hashGby != null && (hashGby.equals(Boolean.TRUE)) || (externalGby != null && externalGby
-                    .equals(Boolean.TRUE)))) {
-                reviseExchange(op);
-            } else {
-                ILogicalOperator child = op.getInputs().get(0).getValue();
-                AbstractLogicalOperator childOp = (AbstractLogicalOperator) child;
-                while (child.getInputs().size() > 0) {
-                    if (childOp.getOperatorTag() == LogicalOperatorTag.ORDER)
-                        break;
-                    else {
-                        child = child.getInputs().get(0).getValue();
-                        childOp = (AbstractLogicalOperator) child;
-                    }
-                }
-                if (childOp.getOperatorTag() == LogicalOperatorTag.ORDER)
-                    reviseExchange(childOp);
-            }
-            return true;
-        }
-        return false;
-    }
+	@Override
+	public boolean rewritePost(Mutable<ILogicalOperator> opRef,
+			IOptimizationContext context) throws AlgebricksException {
+		AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+		if (op.getOperatorTag() != LogicalOperatorTag.GROUP) {
+			return false;
+		}
+		Boolean localGby = (Boolean) op.getAnnotations().get(
+				HiveOperatorAnnotations.LOCAL_GROUP_BY);
+		if (localGby != null && localGby.equals(Boolean.TRUE)) {
+			Boolean hashGby = (Boolean) op.getAnnotations().get(
+					OperatorAnnotations.USE_HASH_GROUP_BY);
+			Boolean externalGby = (Boolean) op.getAnnotations().get(
+					OperatorAnnotations.USE_EXTERNAL_GROUP_BY);
+			if ((hashGby != null && (hashGby.equals(Boolean.TRUE)) || (externalGby != null && externalGby
+					.equals(Boolean.TRUE)))) {
+				reviseExchange(op);
+			} else {
+				ILogicalOperator child = op.getInputs().get(0).getValue();
+				AbstractLogicalOperator childOp = (AbstractLogicalOperator) child;
+				while (child.getInputs().size() > 0) {
+					if (childOp.getOperatorTag() == LogicalOperatorTag.ORDER)
+						break;
+					else {
+						child = child.getInputs().get(0).getValue();
+						childOp = (AbstractLogicalOperator) child;
+					}
+				}
+				if (childOp.getOperatorTag() == LogicalOperatorTag.ORDER)
+					reviseExchange(childOp);
+			}
+			return true;
+		}
+		return false;
+	}
 
-    private void reviseExchange(AbstractLogicalOperator op) {
-        ExchangeOperator exchange = (ExchangeOperator) op.getInputs().get(0).getValue();
-        IPhysicalOperator physicalOp = exchange.getPhysicalOperator();
-        if (physicalOp.getOperatorTag() == PhysicalOperatorTag.HASH_PARTITION_EXCHANGE) {
-            exchange.setPhysicalOperator(new OneToOneExchangePOperator());
-        }
-    }
+	private void reviseExchange(AbstractLogicalOperator op) {
+		ExchangeOperator exchange = (ExchangeOperator) op.getInputs().get(0)
+				.getValue();
+		IPhysicalOperator physicalOp = exchange.getPhysicalOperator();
+		if (physicalOp.getOperatorTag() == PhysicalOperatorTag.HASH_PARTITION_EXCHANGE) {
+			exchange.setPhysicalOperator(new OneToOneExchangePOperator());
+		}
+	}
 
 }

@@ -249,6 +249,7 @@ public class ProducedVariableVisitor implements ILogicalOperatorVisitor<Void, Vo
 
     @Override
     public Void visitExtensionOperator(ExtensionOperator op, Void arg) throws AlgebricksException {
+        op.getDelegate().getProducedVariables(producedVariables);
         return null;
     }
 }

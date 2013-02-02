@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
+import edu.uci.ics.hyracks.data.std.util.GrowableArray;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
@@ -112,20 +113,19 @@ public class SearchTest extends AbstractInvIndexSearchTest {
 	}
 
 	private class TokenIdPair implements Comparable<TokenIdPair> {
-		public ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
-		public DataOutputStream dos = new DataOutputStream(baaos);
+	    public final GrowableArray tokenStorage = new GrowableArray();
 		public int id;
 
 		TokenIdPair(IToken token, int id) throws IOException {
-			token.serializeToken(dos);
+			token.serializeToken(tokenStorage);
 			this.id = id;
 		}
 
 		@Override
 		public int compareTo(TokenIdPair o) {
-			int cmp = btreeBinCmps[0].compare(baaos.getByteArray(), 0,
-					baaos.getByteArray().length, o.baaos.getByteArray(), 0,
-					o.baaos.getByteArray().length);
+			int cmp = btreeBinCmps[0].compare(tokenStorage.getByteArray(), 0,
+			        tokenStorage.getByteArray().length, o.tokenStorage.getByteArray(), 0,
+					o.tokenStorage.getByteArray().length);
 			if (cmp == 0) {
 				return id - o.id;
 			} else {
@@ -157,8 +157,8 @@ public class SearchTest extends AbstractInvIndexSearchTest {
 
 		for (TokenIdPair t : pairs) {
 			tb.reset();
-			tb.addField(t.baaos.getByteArray(), 0,
-					t.baaos.getByteArray().length);
+			tb.addField(t.tokenStorage.getByteArray(), 0,
+					t.tokenStorage.getByteArray().length);
 			IntegerSerializerDeserializer.INSTANCE.serialize(t.id, tb.getDataOutput());
 			tb.addFieldEndOffset();
 			tuple.reset(tb.getFieldEndOffsets(), tb.getByteArray());

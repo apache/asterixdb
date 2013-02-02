@@ -26,60 +26,81 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 
 public interface Visitor {
 
-    public Mutable<ILogicalOperator> visit(CollectOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperatorRef,
-            Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(CollectOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(JoinOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperatorRef,
-            Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(JoinOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(ExtractOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperatorRef,
-            Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(ExtractOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(MapJoinOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperatorRef,
-            Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(MapJoinOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(SMBMapJoinOperator hiveOperator,
-            Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(SMBMapJoinOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(FilterOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperatorRef,
-            Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(FilterOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(ForwardOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperatorRef,
-            Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(ForwardOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(GroupByOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperatorRef,
-            Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(GroupByOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(LateralViewForwardOperator hiveOperator,
-            Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(
+			LateralViewForwardOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(LateralViewJoinOperator hiveOperator,
-            Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(
+			LateralViewJoinOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(LimitOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperatorRef,
-            Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(LimitOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(MapOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperatorRef,
-            Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(MapOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(ScriptOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperatorRef,
-            Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(ScriptOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(SelectOperator hiveOperator, Mutable<ILogicalOperator> AlgebricksParentOperatorRef,
-            Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(SelectOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(TableScanOperator hiveOperator,
-            Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(TableScanOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(FileSinkOperator hiveOperator,
-            Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(FileSinkOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(ReduceSinkOperator hiveOperator,
-            Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(ReduceSinkOperator hiveOperator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(UDTFOperator operator, Mutable<ILogicalOperator> AlgebricksParentOperatorRef,
-            Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(UDTFOperator operator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 
-    public Mutable<ILogicalOperator> visit(UnionOperator operator, Mutable<ILogicalOperator> AlgebricksParentOperatorRef,
-            Translator t) throws AlgebricksException;
+	public Mutable<ILogicalOperator> visit(UnionOperator operator,
+			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t)
+			throws AlgebricksException;
 }

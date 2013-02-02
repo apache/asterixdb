@@ -29,7 +29,7 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
  */
 public class MsgList<M extends Writable> extends ArrayListWritable<M> {
     /** Defining a layout version for a serializable class. */
-    private static final long serialVersionUID = 100L;
+    private static final long serialVersionUID = 1L;
 
     /**
      * Default constructor.s

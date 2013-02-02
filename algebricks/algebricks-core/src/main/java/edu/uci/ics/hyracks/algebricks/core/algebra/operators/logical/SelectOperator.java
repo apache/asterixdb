@@ -102,4 +102,8 @@ public class SelectOperator extends AbstractLogicalOperator {
         return env;
     }
 
+    @Override
+    public boolean requiresVariableReferenceExpressions() {
+        return false;
+    }
 }
