@@ -57,7 +57,7 @@ public interface IRecoveryManager {
      *         recovery.
      * @throws ACIDException
      */
-    public SystemState startRecovery(boolean synchronous) throws IOException, ACIDException;
+    public void startRecovery(boolean synchronous) throws IOException, ACIDException;
 
     /**
      * Rolls back a transaction.
@@ -67,4 +67,6 @@ public interface IRecoveryManager {
      * @throws ACIDException
      */
     public void rollbackTransaction(TransactionContext txnContext) throws ACIDException;
+
+    public void checkpoint() throws ACIDException;
 }

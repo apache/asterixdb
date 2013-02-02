@@ -163,13 +163,15 @@ public class MetadataBootstrap {
         fileMapProvider = runtimeContext.getFileMapManager();
         ioManager = ncApplicationContext.getRootContext().getIOManager();
 
-        // Begin a transaction against the metadata.
-        // Lock the metadata in X mode.
-        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        MetadataManager.INSTANCE.lock(mdTxnCtx, LockMode.X);
-
-        try {
-            if (isNewUniverse) {
+        if (isNewUniverse) {
+            //Do checkpoint only if it is new universe
+            runtimeContext.getTransactionSubsystem().getRecoveryManager().checkpoint();
+            MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            try {
+                // Begin a transaction against the metadata.
+                // Lock the metadata in X mode.
+                MetadataManager.INSTANCE.lock(mdTxnCtx, LockMode.X);
+                
                 for (int i = 0; i < primaryIndexes.length; i++) {
                     enlistMetadataDataset(primaryIndexes[i], true);
                     registerTransactionalResource(primaryIndexes[i], resourceRepository);
@@ -185,24 +187,26 @@ public class MetadataBootstrap {
                 insertNodes(mdTxnCtx);
                 insertInitialGroups(mdTxnCtx);
                 insertInitialAdapters(mdTxnCtx);
-                LOGGER.info("FINISHED CREATING METADATA B-TREES.");
-            } else {
-                for (int i = 0; i < primaryIndexes.length; i++) {
-                    enlistMetadataDataset(primaryIndexes[i], false);
-                    registerTransactionalResource(primaryIndexes[i], resourceRepository);
-                }
-                for (int i = 0; i < secondaryIndexes.length; i++) {
-                    enlistMetadataDataset(secondaryIndexes[i], false);
-                    registerTransactionalResource(secondaryIndexes[i], resourceRepository);
-                }
-                LOGGER.info("FINISHED ENLISTMENT OF METADATA B-TREES.");
+                
+                MetadataManager.INSTANCE.initializeDatasetIdFactory(mdTxnCtx);
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            } catch (Exception e) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+                throw e;
             }
-            MetadataManager.INSTANCE.initializeDatasetIdFactory(mdTxnCtx);
-            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-        } catch (Exception e) {
-            MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
-            throw e;
+            LOGGER.info("FINISHED CREATING METADATA B-TREES.");
+        } else {
+            for (int i = 0; i < primaryIndexes.length; i++) {
+                enlistMetadataDataset(primaryIndexes[i], false);
+                registerTransactionalResource(primaryIndexes[i], resourceRepository);
+            }
+            for (int i = 0; i < secondaryIndexes.length; i++) {
+                enlistMetadataDataset(secondaryIndexes[i], false);
+                registerTransactionalResource(secondaryIndexes[i], resourceRepository);
+            }
+            LOGGER.info("FINISHED ENLISTMENT OF METADATA B-TREES.");
         }
+
     }
 
     public static void stopUniverse() throws HyracksDataException {

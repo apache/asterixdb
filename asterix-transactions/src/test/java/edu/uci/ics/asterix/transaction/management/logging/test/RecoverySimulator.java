@@ -24,8 +24,8 @@ public class RecoverySimulator {
 
     private static IRecoveryManager recoveryManager;
 
-    public static IRecoveryManager.SystemState startRecovery() throws IOException, ACIDException {
-        return recoveryManager.startRecovery(true);
+    public static void startRecovery() throws IOException, ACIDException {
+        recoveryManager.startRecovery(true);
     }
 
     public static void main(String args[]) throws IOException, ACIDException {

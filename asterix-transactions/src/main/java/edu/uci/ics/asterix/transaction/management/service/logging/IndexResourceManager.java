@@ -108,8 +108,46 @@ public class IndexResourceManager implements IResourceManager {
         }
     }
 
-    public void redo(ILogRecordHelper logRecordHelper, LogicalLogLocator logicalLogLocator) throws ACIDException {
-        throw new UnsupportedOperationException(" Redo logic will be implemented as part of crash recovery feature");
+    public void redo(ILogRecordHelper logRecordHelper, LogicalLogLocator logLocator) throws ACIDException {
+        long resourceId = logRecordHelper.getResourceId(logLocator);
+        int offset = logRecordHelper.getLogContentBeginPos(logLocator);
+
+        IIndex index = (IIndex) provider.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
+                .getIndex(resourceId);
+
+        /* field count */
+        int fieldCount = logLocator.getBuffer().readInt(logLocator.getMemoryOffset() + offset);
+        offset += 4;
+
+        /* new operation */
+        byte newOperation = logLocator.getBuffer().getByte(logLocator.getMemoryOffset() + offset);
+        offset += 1;
+
+        /* new value size */
+        int newValueSize = logLocator.getBuffer().readInt(logLocator.getMemoryOffset() + offset);
+        offset += 4;
+
+        /* new value */
+        SimpleTupleWriter tupleWriter = new SimpleTupleWriter();
+        SimpleTupleReference newTuple = (SimpleTupleReference) tupleWriter.createTupleReference();
+        newTuple.setFieldCount(fieldCount);
+        newTuple.resetByTupleOffset(logLocator.getBuffer().getByteBuffer(), offset);
+        offset += newValueSize;
+
+        ILSMIndexAccessor indexAccessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
+
+        try {
+            if (newOperation == IndexOperation.INSERT.ordinal()) {
+                indexAccessor.insert(newTuple);
+            } else if (newOperation == IndexOperation.DELETE.ordinal()) {
+                indexAccessor.delete(newTuple);
+            } else {
+                new ACIDException("Unsupported operation type for undo operation : " + newOperation);
+            }
+        } catch (Exception e) {
+            throw new ACIDException("Redo failed", e);
+        }
     }
 
 }

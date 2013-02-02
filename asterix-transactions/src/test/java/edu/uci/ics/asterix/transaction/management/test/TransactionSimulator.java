@@ -95,10 +95,9 @@ public class TransactionSimulator {
         transactionManager.commitTransaction(context, new DatasetId(-1), -1);
     }
 
-    public SystemState recover() throws ACIDException, IOException {
-        SystemState state = recoveryManager.startRecovery(true);
+    public void recover() throws ACIDException, IOException {
+        recoveryManager.startRecovery(true);
         ((FileResource) resource).sync();
-        return state;
     }
 
     /**
@@ -125,8 +124,7 @@ public class TransactionSimulator {
         }
 
         int finalExpectedValue = existingValue + schedule.getDeltaChange();
-        SystemState state = txnSimulator.recover();
-        System.out.println(" State is " + state);
+        txnSimulator.recover();
         boolean isCorrect = ((FileResource) resource).checkIfValueInSync(finalExpectedValue);
         System.out.println(" Did recovery happen correctly " + isCorrect);
     }

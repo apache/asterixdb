@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.transaction.management.service.transaction;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,6 +32,7 @@ public class TransactionManager implements ITransactionManager {
     private static final Logger LOGGER = Logger.getLogger(TransactionManager.class.getName());
     private final TransactionSubsystem transactionProvider;
     private Map<JobId, TransactionContext> transactionContextRepository = new HashMap<JobId, TransactionContext>();
+    private AtomicInteger maxJobId = new AtomicInteger(0);
 
     public TransactionManager(TransactionSubsystem provider) {
         this.transactionProvider = provider;
@@ -64,6 +66,7 @@ public class TransactionManager implements ITransactionManager {
 
     @Override
     public TransactionContext beginTransaction(JobId jobId) throws ACIDException {
+        setMaxJobId(jobId.getId());
         TransactionContext txnContext = new TransactionContext(jobId, transactionProvider);
         synchronized (this) {
             transactionContextRepository.put(jobId, txnContext);
@@ -73,6 +76,7 @@ public class TransactionManager implements ITransactionManager {
 
     @Override
     public TransactionContext getTransactionContext(JobId jobId) throws ACIDException {
+        setMaxJobId(jobId.getId());
         synchronized (transactionContextRepository) {
 
             TransactionContext context = transactionContextRepository.get(jobId);
@@ -141,5 +145,13 @@ public class TransactionManager implements ITransactionManager {
     @Override
     public TransactionSubsystem getTransactionProvider() {
         return transactionProvider;
+    }
+    
+    public void setMaxJobId(int jobId) {
+        maxJobId.set(Math.max(maxJobId.get(), jobId));
+    }
+    
+    public int getMaxJobId() {
+        return maxJobId.get();
     }
 }
