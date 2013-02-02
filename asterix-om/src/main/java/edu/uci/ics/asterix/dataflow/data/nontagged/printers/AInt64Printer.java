@@ -13,8 +13,6 @@ import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 
 public class AInt64Printer implements IPrinter {
 
-    private static final long serialVersionUID = 1L;
-
     private static final String SUFFIX_STRING = "i64";
     private static byte[] _suffix;
     private static int _suffix_count;
@@ -23,6 +21,7 @@ public class AInt64Printer implements IPrinter {
         DataOutput dout = new DataOutputStream(interm);
         try {
             dout.writeUTF(SUFFIX_STRING);
+            interm.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

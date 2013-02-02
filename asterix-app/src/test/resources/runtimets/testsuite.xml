@@ -739,6 +739,11 @@
   </test-group>
   <test-group name="dml">
     <test-case FilePath="dml">
+      <compilation-unit name="query-issue205">
+        <output-file compare="Text">query-issue205.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="delete-from-loaded-dataset-with-index">
         <output-file compare="Text">delete-from-loaded-dataset-with-index.adm</output-file>
       </compilation-unit>
@@ -1471,6 +1476,12 @@
     <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-aqlplus_1">
         <output-file compare="Text">dblp-aqlplus_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-aqlplus_2">
+        <output-file compare="Text">dblp-aqlplus_2.adm</output-file>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
@@ -2363,6 +2374,36 @@
         <output-file compare="Text">open-closed-14.adm</output-file>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue134">
+        <output-file compare="Text">query-issue134.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue55">
+        <output-file compare="Text">query-issue55.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue55-1">
+        <output-file compare="Text">query-issue55-1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue166">
+        <output-file compare="Text">query-issue166.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue208">
+        <output-file compare="Text">query-issue208.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue236">
+       <output-file compare="Text">query-issue236.adm</output-file>
+      </compilation-unit>
+    </test-case>
     <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="open-closed-15">
@@ -2561,6 +2602,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="records">
+      <compilation-unit name="field-access-on-open-field">
+        <output-file compare="Text">field-access-on-open-field.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="records">
       <compilation-unit name="open-record-constructor_01">
         <output-file compare="Text">open-record-constructor_01.adm</output-file>
       </compilation-unit>
@@ -2580,6 +2626,16 @@
     <test-case FilePath="scan">
       <compilation-unit name="20">
         <output-file compare="Text">20.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
+      <compilation-unit name="issue238_query_1">
+        <output-file compare="Text">issue238_query_1.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
+      <compilation-unit name="issue238_query_2">
+        <output-file compare="Text">issue238_query_2.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="scan">
@@ -3402,6 +3458,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
+      <compilation-unit name="q10_returned_item_int64">
+	<output-file compare="Text">q10_returned_item_int64.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
       <compilation-unit name="q11_important_stock">
         <output-file compare="Text">q11_important_stock.adm</output-file>
       </compilation-unit>
@@ -3621,6 +3682,11 @@
   </test-group>
   <test-group name="user-defined-functions">
     <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-issue201">
+        <output-file compare="Text">query-issue201.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf01">
         <output-file compare="Text">udf01.adm</output-file>
       </compilation-unit>
@@ -3768,6 +3834,58 @@
       <compilation-unit name="f01">
         <output-file compare="Text">f01.adm</output-file>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="load">
+    <test-case FilePath="load">
+      <compilation-unit name="issue14_query">
+        <output-file compare="Text">none.adm</output-file>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="feeds">
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_01">
+        <output-file compare="Text">feeds_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_02">
+        <output-file compare="Text">feeds_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_03">
+        <output-file compare="Text">feeds_03.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_04">
+        <output-file compare="Text">feeds_04.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="issue_230_feeds">
+        <output-file compare="Text">issue_230_feeds.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="hdfs">
+    <test-case FilePath="hdfs">
+      <compilation-unit name="issue_245_hdfs">
+        <output-file compare="Text">issue_245_hdfs.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="hdfs">
+      <compilation-unit name="hdfs_02">
+        <output-file compare="Text">hdfs_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="hdfs">
+      <compilation-unit name="hdfs_03">
+        <output-file compare="Text">hdfs_03.adm</output-file>
       </compilation-unit>
     </test-case>
   </test-group>

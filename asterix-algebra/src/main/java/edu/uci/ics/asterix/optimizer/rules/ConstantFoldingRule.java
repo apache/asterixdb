@@ -28,6 +28,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryBooleanInspectorImpl;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryHashFunctionFactoryProvider;
+import edu.uci.ics.asterix.formats.nontagged.AqlBinaryHashFunctionFamilyProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryIntegerInspector;
 import edu.uci.ics.asterix.formats.nontagged.AqlPrinterFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -37,7 +38,10 @@ import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -103,8 +107,8 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
 
     private static final JobGenContext _jobGenCtx = new JobGenContext(null, null, null,
             AqlSerializerDeserializerProvider.INSTANCE, AqlBinaryHashFunctionFactoryProvider.INSTANCE,
-            AqlBinaryComparatorFactoryProvider.INSTANCE, AqlTypeTraitProvider.INSTANCE,
-            AqlBinaryBooleanInspectorImpl.FACTORY, AqlBinaryIntegerInspector.FACTORY,
+            AqlBinaryHashFunctionFamilyProvider.INSTANCE, AqlBinaryComparatorFactoryProvider.INSTANCE,
+            AqlTypeTraitProvider.INSTANCE, AqlBinaryBooleanInspectorImpl.FACTORY, AqlBinaryIntegerInspector.FACTORY,
             AqlPrinterFactoryProvider.INSTANCE, AqlNullWriterFactory.INSTANCE, null,
             new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(AqlLogicalExpressionJobGen.INSTANCE),
             AqlExpressionTypeComputer.INSTANCE, AqlNullableTypeComputer.INSTANCE, null, null, null,
@@ -163,10 +167,22 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             if (!checkArgs(expr)) {
                 return new Pair<Boolean, ILogicalExpression>(changed, expr);
             }
-            // TODO: currently ARecord is always a closed record
+            //Current ARecord SerDe assumes a closed record, so we do not constant fold open record constructors
             if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)
                     || expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.CAST_RECORD)) {
                 return new Pair<Boolean, ILogicalExpression>(false, null);
+            }
+            //Current List SerDe assumes a strongly typed list, so we do not constant fold the list constructors if they are not strongly typed
+            if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR)
+                    || expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR)) {
+                AbstractCollectionType listType = (AbstractCollectionType) TypeComputerUtilities.getRequiredType(expr);
+                if (listType != null
+                        && (listType.getItemType().getTypeTag() == ATypeTag.ANY || listType.getItemType() instanceof AbstractCollectionType)) {
+                    //case1: listType == null,  could be a nested list inside a list<ANY>
+                    //case2: itemType = ANY
+                    //case3: itemType = a nested list
+                    return new Pair<Boolean, ILogicalExpression>(false, null);
+                }
             }
             if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
                 ARecordType rt = (ARecordType) _emptyTypeEnv.getType(expr.getArguments().get(0).getValue());

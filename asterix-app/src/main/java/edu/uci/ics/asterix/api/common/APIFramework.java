@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2012 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.api.common;
 
 import java.io.PrintWriter;
@@ -57,6 +71,10 @@ import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
+/**
+ * Provides helper methods for compilation of a query into a JobSpec and submission
+ * to Hyracks through the Hyracks client interface.
+ */
 public class APIFramework {
 
     private static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> buildDefaultLogicalRewrites() {
@@ -131,8 +149,9 @@ public class APIFramework {
         HTML
     }
 
-    public static Pair<Query, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions, AqlMetadataProvider metadataProvider,
-            Query q, SessionConfig pc, PrintWriter out, DisplayFormat pdf) throws AsterixException {
+    public static Pair<Query, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions,
+            AqlMetadataProvider metadataProvider, Query q, SessionConfig pc, PrintWriter out, DisplayFormat pdf)
+            throws AsterixException {
         if (!pc.isPrintPhysicalOpsOnly() && pc.isPrintExprParam()) {
             out.println();
             switch (pdf) {
@@ -261,7 +280,7 @@ public class APIFramework {
 
         OptimizationConfUtil.getPhysicalOptimizationConfig().setFrameSize(frameSize);
         builder.setPhysicalOptimizationConfig(OptimizationConfUtil.getPhysicalOptimizationConfig());
-        
+
         ICompiler compiler = compilerFactory.createCompiler(plan, queryMetadataProvider, t.getVarCounter());
         if (pc.isOptimize()) {
             compiler.optimize();
@@ -310,13 +329,14 @@ public class APIFramework {
         builder.setExpressionRuntimeProvider(new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(
                 AqlLogicalExpressionJobGen.INSTANCE));
         builder.setHashFunctionFactoryProvider(format.getBinaryHashFunctionFactoryProvider());
+        builder.setHashFunctionFamilyProvider(format.getBinaryHashFunctionFamilyProvider());
         builder.setNullWriterFactory(format.getNullWriterFactory());
         builder.setPrinterProvider(format.getPrinterFactoryProvider());
         builder.setSerializerDeserializerProvider(format.getSerdeProvider());
         builder.setTypeTraitProvider(format.getTypeTraitProvider());
         builder.setNormalizedKeyComputerFactoryProvider(format.getNormalizedKeyComputerFactoryProvider());
 
-        JobSpecification spec = compiler.createJob(AsterixAppContextInfoImpl.INSTANCE);
+        JobSpecification spec = compiler.createJob(AsterixAppContextInfoImpl.getInstance());
         // set the job event listener
         spec.setJobletEventListenerFactory(new JobEventListenerFactory(queryMetadataProvider.getJobTxnId(),
                 isWriteTransaction));

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -16,7 +16,12 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 
 import java.io.Serializable;
 
+/**
+ * A unique identifier for a datasource adapter.
+ */
 public class AdapterIdentifier implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final String namespace;
     private final String adapterName;

@@ -108,43 +108,49 @@
   </test-group>
   <test-group name="exception">
     <test-case FilePath="exception">
-      <compilation-unit name="exception_drop_dataset"> 
-        <expected-error>MetadataException</expected-error>
+      <compilation-unit name="issue_239_drop_system_dataset_1">
         <output-file compare="Text">none.adm</output-file>
+        <expected-error>MetadataException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
-      <compilation-unit name="exception_drop_dataverse"> 
-        <expected-error>MetadataException</expected-error>
+      <compilation-unit name="issue_239_drop_system_dataset_2">
         <output-file compare="Text">none.adm</output-file>
+        <expected-error>MetadataException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
-      <compilation-unit name="exception_drop_index"> 
-        <expected-error>MetadataException</expected-error>
+      <compilation-unit name="issue_239_drop_system_dataset_3">
         <output-file compare="Text">none.adm</output-file>
+        <expected-error>MetadataException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
-      <compilation-unit name="exception_drop_nodegroup"> 
-        <expected-error>MetadataException</expected-error>
+      <compilation-unit name="issue_239_drop_system_dataset_4">
         <output-file compare="Text">none.adm</output-file>
+        <expected-error>MetadataException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
-      <compilation-unit name="exception_drop_type1"> 
-        <expected-error>MetadataException</expected-error>
+      <compilation-unit name="issue_239_drop_system_dataset_5">
         <output-file compare="Text">none.adm</output-file>
+        <expected-error>MetadataException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
-      <compilation-unit name="exception_drop_type2"> 
-        <expected-error>MetadataException</expected-error>
+      <compilation-unit name="issue_239_drop_system_dataset_6">
         <output-file compare="Text">none.adm</output-file>
+        <expected-error>MetadataException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
-      <compilation-unit name="exception_drop_type3"> 
+      <compilation-unit name="issue_239_drop_system_dataset_7">
+        <output-file compare="Text">none.adm</output-file>
+        <expected-error>MetadataException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="issue_239_drop_system_dataset_8">
         <output-file compare="Text">none.adm</output-file>
         <expected-error>MetadataException</expected-error>
       </compilation-unit>

@@ -19,8 +19,8 @@ import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
 import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.primitive.LongPointable;
+import edu.uci.ics.hyracks.data.std.primitive.RawUTF8StringPointable;
 import edu.uci.ics.hyracks.data.std.primitive.ShortPointable;
-import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
 public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFactoryProvider, Serializable {
 
@@ -39,7 +39,7 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
     public static final PointableBinaryComparatorFactory DOUBLE_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
             DoublePointable.FACTORY);
     public static final PointableBinaryComparatorFactory UTF8STRING_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
-            UTF8StringPointable.FACTORY);
+            RawUTF8StringPointable.FACTORY);
     // Equivalent to UTF8STRING_POINTABLE_INSTANCE but all characters are considered lower case to implement case-insensitive comparisons.    
     public static final PointableBinaryComparatorFactory UTF8STRING_LOWERCASE_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
             UTF8StringLowercasePointable.FACTORY);
@@ -64,11 +64,11 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
     public IBinaryComparatorFactory getBinaryComparatorFactory(Object type, boolean ascending) {
         if (type == null) {
             return anyBinaryComparatorFactory(ascending);
-        }        
+        }
         IAType aqlType = (IAType) type;
         return getBinaryComparatorFactory(aqlType.getTypeTag(), ascending);
     }
-    
+
     public IBinaryComparatorFactory getBinaryComparatorFactory(ATypeTag type, boolean ascending) {
         switch (type) {
             case ANY:
@@ -125,8 +125,7 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
                 return addOffset(ADateTimeAscBinaryComparatorFactory.INSTANCE, ascending);
             }
             default: {
-                throw new NotImplementedException("No binary comparator factory implemented for type "
-                        + type + " .");
+                throw new NotImplementedException("No binary comparator factory implemented for type " + type + " .");
             }
         }
     }

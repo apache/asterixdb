@@ -38,6 +38,9 @@ public class FieldAccessByIndexResultType implements IResultTypeComputer {
         }
         IAType type0 = (IAType) obj;
         ARecordType t0 = NonTaggedFieldAccessByNameResultType.getRecordTypeFromType(type0, expression);
+        if (t0 == null) {
+            return BuiltinType.ANY;
+        }
         ILogicalExpression arg1 = f.getArguments().get(1).getValue();
         if (arg1.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
             return BuiltinType.ANY;

@@ -29,6 +29,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import edu.uci.ics.asterix.api.aqlj.server.APIClientThreadFactory;
 import edu.uci.ics.asterix.api.aqlj.server.ThreadedServer;
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
@@ -37,6 +38,10 @@ import edu.uci.ics.asterix.metadata.bootstrap.AsterixStateProxy;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.application.ICCBootstrap;
 
+/**
+ * The bootstrap class of the application that will manage its
+ * life cycle at the Cluster Controller.
+ */
 public class CCBootstrapImpl implements ICCBootstrap {
     private static final Logger LOGGER = Logger.getLogger(CCBootstrapImpl.class.getName());
 
@@ -71,6 +76,9 @@ public class CCBootstrapImpl implements ICCBootstrap {
         // Setup and start the API server
         setupAPIServer();
         apiServer.start();
+
+        //Initialize AsterixAppContext
+        AsterixAppContextInfoImpl.initialize(appCtx);
     }
 
     @Override
@@ -79,7 +87,7 @@ public class CCBootstrapImpl implements ICCBootstrap {
             LOGGER.info("Stopping Asterix cluster controller");
         }
         AsterixStateProxy.unregisterRemoteObject();
-        
+
         webServer.stop();
         apiServer.shutdown();
     }
@@ -107,11 +115,7 @@ public class CCBootstrapImpl implements ICCBootstrap {
         // set the APINodeDataServer ports
         int startPort = DEFAULT_API_NODEDATA_SERVER_PORT;
         Map<String, Set<String>> nodeNameMap = new HashMap<String, Set<String>>();
-        try {
-            appCtx.getCCContext().getIPAddressNodeMap(nodeNameMap);
-        } catch (Exception e) {
-            throw new IOException("Unable to obtain IP address node map", e);
-        }
+        getIPAddressNodeMap(nodeNameMap);
 
         for (Map.Entry<String, Set<String>> entry : nodeNameMap.entrySet()) {
             Set<String> nodeNames = entry.getValue();
@@ -122,7 +126,15 @@ public class CCBootstrapImpl implements ICCBootstrap {
                 proxy.setAsterixNodeState(it.next(), ns);
             }
         }
-
         apiServer = new ThreadedServer(DEFAULT_API_SERVER_PORT, new APIClientThreadFactory(appCtx));
+    }
+
+    private void getIPAddressNodeMap(Map<String, Set<String>> nodeNameMap) throws IOException {
+        nodeNameMap.clear();
+        try {
+            appCtx.getCCContext().getIPAddressNodeMap(nodeNameMap);
+        } catch (Exception e) {
+            throw new IOException("Unable to obtain IP address node map", e);
+        }
     }
 }

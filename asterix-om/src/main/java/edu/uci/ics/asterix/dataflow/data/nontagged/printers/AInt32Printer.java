@@ -10,7 +10,6 @@ import edu.uci.ics.hyracks.algebricks.data.utils.WriteValueTools;
 
 public class AInt32Printer implements IPrinter {
 
-    private static final long serialVersionUID = 1L;
     public static final AInt32Printer INSTANCE = new AInt32Printer();
 
     @Override
