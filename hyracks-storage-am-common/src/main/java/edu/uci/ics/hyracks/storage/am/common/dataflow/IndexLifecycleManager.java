@@ -27,6 +27,9 @@ public class IndexLifecycleManager implements IIndexLifecycleManager {
     }
 
     private boolean evictCandidateIndex() throws HyracksDataException {
+        // Why min()? As a heuristic for eviction, we will take an open index (an index consuming memory) 
+        // that is not being used (refcount == 0) and has been least recently used. The sort order defined 
+        // for IndexInfo maintains this. See IndexInfo.compareTo().
         IndexInfo info = Collections.min(indexInfos.values());
         if (info.referenceCount != 0 || !info.isOpen) {
             return false;
@@ -126,6 +129,15 @@ public class IndexLifecycleManager implements IIndexLifecycleManager {
         @Override
         public int compareTo(IndexInfo i) {
             // sort by (isOpen, referenceCount, lastAccess) ascending, where true < false
+            //
+            // Example sort order:
+            // -------------------
+            // (F, 0, 70)       <-- largest
+            // (F, 0, 60)
+            // (T, 10, 80)
+            // (T, 10, 70)
+            // (T, 9, 90)
+            // (T, 0, 100)      <-- smallest
             if (isOpen && !i.isOpen) {
                 return -1;
             } else if (!isOpen && i.isOpen) {
@@ -149,7 +161,8 @@ public class IndexLifecycleManager implements IIndexLifecycleManager {
         }
 
         public String toString() {
-            return "{lastAccess: " + lastAccess + ", refCount: " + referenceCount + "}";
+            return "{index: " + index + ", isOpen: " + isOpen + ", refCount: " + referenceCount + ", lastAccess: "
+                    + lastAccess + "}";
         }
     }
 }

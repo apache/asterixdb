@@ -57,7 +57,7 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor implements ITre
             }
         } finally {
             if (open) {
-                lsmHarness.closeSearchCursor(operationalComponents, includeMemRTree, opCtx);
+                lsmHarness.endSearch(opCtx);
             }
         }
     }

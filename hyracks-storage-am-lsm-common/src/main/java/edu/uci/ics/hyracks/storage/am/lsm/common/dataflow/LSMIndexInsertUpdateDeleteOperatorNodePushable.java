@@ -46,11 +46,7 @@ public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertU
                 if (tupleFilter != null) {
                     frameTuple.reset(accessor, i);
                     if (!tupleFilter.accept(frameTuple)) {
-                        if (!lsmAccessor.tryNoOp()) {
-                            flushPartialFrame(lastFlushedTupleIndex, i);
-                            lastFlushedTupleIndex = (i == 0) ? 0 : i - 1;
-                            lsmAccessor.noOp();
-                        }
+                        lsmAccessor.noOp();
                         continue;
                     }
                 }

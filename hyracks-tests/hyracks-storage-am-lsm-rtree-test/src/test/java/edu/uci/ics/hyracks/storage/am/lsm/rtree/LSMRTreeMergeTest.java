@@ -33,12 +33,12 @@ import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 @SuppressWarnings("rawtypes")
 public class LSMRTreeMergeTest extends LSMRTreeMergeTestDriver {
 
-	private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
+    private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
 
-	public LSMRTreeMergeTest() {
-		super(AccessMethodTestsConfig.LSM_RTREE_TEST_RSTAR_POLICY);
-	}
-	
+    public LSMRTreeMergeTest() {
+        super(AccessMethodTestsConfig.LSM_RTREE_TEST_RSTAR_POLICY);
+    }
+
     @Before
     public void setUp() throws HyracksException {
         harness.setUp();
@@ -56,8 +56,8 @@ public class LSMRTreeMergeTest extends LSMRTreeMergeTestDriver {
         return LSMRTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
                 harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
                 harness.getDiskFileMapProvider(), fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType,
-                harness.getFlushController(), harness.getMergePolicy(), harness.getOperationTrackerFactory(),
-                harness.getIOScheduler());
+                harness.getMergePolicy(), harness.getOperationTrackerFactory(), harness.getIOScheduler(),
+                harness.getIOOperationCallbackProvider());
     }
 
     @Override

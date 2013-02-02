@@ -39,10 +39,10 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.FlushController;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ImmediateScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.RefCountingOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ThreadCountingOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -93,10 +93,10 @@ public class LSMTreeRunner implements IExperimentRunner {
                 inMemNumPages, new TransientFileMapManager());
         IInMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(inMemNumPages,
                 new LIFOMetaDataFrameFactory());
-        this.ioScheduler = ImmediateScheduler.INSTANCE;
+        this.ioScheduler = SynchronousScheduler.INSTANCE;
         lsmtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file, bufferCache, fmp,
-                typeTraits, cmpFactories, new FlushController(), NoMergePolicy.INSTANCE,
-                RefCountingOperationTrackerFactory.INSTANCE, ioScheduler);
+                typeTraits, cmpFactories, NoMergePolicy.INSTANCE, ThreadCountingOperationTrackerFactory.INSTANCE,
+                ioScheduler, NoOpIOOperationCallback.INSTANCE);
     }
 
     @Override

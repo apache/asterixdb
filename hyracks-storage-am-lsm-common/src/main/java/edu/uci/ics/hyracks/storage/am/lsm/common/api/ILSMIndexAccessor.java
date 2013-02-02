@@ -19,7 +19,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 
 /**
  * Client handle for performing operations
@@ -29,26 +28,9 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
  * concurrent operations).
  */
 public interface ILSMIndexAccessor extends IIndexAccessor {
-    public ILSMIOOperation createFlushOperation(ILSMIOOperationCallback callback);
+    public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException;
 
-    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
-            IndexException;
-
-    /**
-     * Force a flush of the in-memory component.
-     * 
-     * @throws HyracksDataException
-     * @throws TreeIndexException
-     */
-    public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
-
-    /**
-     * Merge all on-disk components.
-     * 
-     * @throws HyracksDataException
-     * @throws TreeIndexException
-     */
-    public void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException;
+    public void scheduleMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException;
 
     /**
      * Deletes the tuple from the memory component only.
@@ -121,23 +103,18 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      *             If there is no matching tuple in the index.
      */
     public boolean tryUpsert(ITupleReference tuple) throws HyracksDataException, IndexException;
-    
+
+    public void forcePhysicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
+
+    public void forceInsert(ITupleReference tuple) throws HyracksDataException, IndexException;
+
+    public void forceDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
+
     /**
      * This method can be used to increase the number of 'active' operations of an index artificially,
      * without actually modifying the index.
-     * If the operation would have to wait for a flush then we return false.
-     * Otherwise, beforeOperation() and afterOperation() of the ILSMOperationTracker are called,
-     * and true is returned.
-     * 
-     * @throws HyracksDataException
-     */
-    public boolean tryNoOp() throws HyracksDataException;
-    
-    /**
-     * This method can be used to increase the number of 'active' operations of an index artificially,
-     * without actually modifying the index.
-     * This method may block waiting for a flush to finish, and will eventually call
-     * beforeOperation() and afterOperation() of the ILSMOperationTracker.
+     * This method does not block and is guaranteed to trigger the {@link ILSMOperationTracker}'s beforeOperation
+     * and afterOperation calls.
      * 
      * @throws HyracksDataException
      */

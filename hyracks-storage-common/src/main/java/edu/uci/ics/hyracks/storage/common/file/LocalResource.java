@@ -20,14 +20,21 @@ public class LocalResource implements Serializable {
     private static final long serialVersionUID = 1L;
     private final long resourceId;
     private final String resourceName;
+    private final int partition;
     private final int resourceType;
     private final Object object;
 
-    public LocalResource(long resourceId, String resourceName, int resourceType, Object object) {
+    public static final int TransientResource = 0;
+    public static final int LSMBTreeResource = 1;
+    public static final int LSMRTreeResource = 2;
+    public static final int LSMInvertedIndexResource = 3;
+
+    public LocalResource(long resourceId, String resourceName, int partition, int resourceType, Object object) {
         this.resourceId = resourceId;
         this.resourceName = resourceName;
-        this.object = object;
+        this.partition = partition;
         this.resourceType = resourceType;
+        this.object = object;
     }
 
     public long getResourceId() {
@@ -36,6 +43,10 @@ public class LocalResource implements Serializable {
 
     public String getResourceName() {
         return resourceName;
+    }
+
+    public int getPartition() {
+        return partition;
     }
 
     public int getResourceType() {

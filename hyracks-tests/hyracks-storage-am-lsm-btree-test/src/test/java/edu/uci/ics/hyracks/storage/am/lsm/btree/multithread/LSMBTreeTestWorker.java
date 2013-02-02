@@ -33,12 +33,9 @@ import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree.LSMBTreeAccessor;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeInProgressException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 
 public class LSMBTreeTestWorker extends AbstractIndexTestWorker {
-
     private final LSMBTree lsmBTree;
     private final int numKeyFields;
     private final ArrayTupleBuilder deleteTb;
@@ -108,19 +105,7 @@ public class LSMBTreeTestWorker extends AbstractIndexTestWorker {
                 break;
 
             case MERGE:
-                try {
-                    ILSMIOOperation ioop = accessor.createMergeOperation(NoOpIOOperationCallback.INSTANCE);
-                    if (ioop != null) {
-                        accessor.merge(ioop);
-                    }
-                } catch (LSMMergeInProgressException e) {
-                    // Ignore ongoing merges. Do an insert instead.
-                    try {
-                        accessor.insert(tuple);
-                    } catch (BTreeDuplicateKeyException e1) {
-                        // Ignore duplicate keys, since we get random tuples.
-                    }
-                }
+                accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE);
                 break;
 
             default:

@@ -15,6 +15,9 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -22,6 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
@@ -29,17 +33,18 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccess
 public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
 
     private static final int NUM_DOCUMENT_FIELDS = 1;
-    
+
     private IndexOperation op;
     private final IInvertedIndex memInvIndex;
     private final IIndex memDeletedKeysBTree;
+    private final List<ILSMComponent> componentHolder;
 
     public final IModificationOperationCallback modificationCallback;
     public final ISearchOperationCallback searchCallback;
-    
+
     // Tuple that only has the inverted-index elements (aka keys), projecting away the document fields.
     public PermutingTupleReference keysOnlyTuple;
-    
+
     // Accessor to the in-memory inverted index.
     public IInvertedIndexAccessor memInvIndexAccessor;
     // Accessor to the deleted-keys BTree.
@@ -49,17 +54,20 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
             IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback) {
         this.memInvIndex = memInvIndex;
         this.memDeletedKeysBTree = memDeletedKeysBTree;
+        this.componentHolder = new LinkedList<ILSMComponent>();
         this.modificationCallback = modificationCallback;
         this.searchCallback = searchCallback;
     }
 
     @Override
     public void reset() {
+        componentHolder.clear();
     }
 
     @Override
     // TODO: Ignore opcallback for now.
     public void setOperation(IndexOperation newOp) {
+        reset();
         switch (newOp) {
             case INSERT:
             case DELETE:
@@ -82,10 +90,15 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
         }
         op = newOp;
     }
-    
+
     @Override
     public IndexOperation getOperation() {
         return op;
+    }
+
+    @Override
+    public List<ILSMComponent> getComponentHolder() {
+        return componentHolder;
     }
 
     @Override

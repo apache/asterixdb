@@ -24,7 +24,6 @@ import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestDriver;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 
@@ -65,10 +64,7 @@ public abstract class LSMBTreeMergeTestDriver extends OrderedIndexTestDriver {
             }
 
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) ctx.getIndexAccessor();
-            ILSMIOOperation ioop = accessor.createMergeOperation(NoOpIOOperationCallback.INSTANCE);
-            if (ioop != null) {
-                accessor.merge(ioop);
-            }
+            accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE);
 
             orderedIndexTestUtils.checkPointSearches(ctx);
             orderedIndexTestUtils.checkScan(ctx);

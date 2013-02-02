@@ -78,7 +78,8 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
                 resourceID = resourceIdFactory.createId();
                 ILocalResourceFactory localResourceFactory = opDesc.getLocalResourceFactoryProvider()
                         .getLocalResourceFactory();
-                localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, file.getFile().getPath()));
+                localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, file.getFile()
+                        .getPath(), partition));
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }

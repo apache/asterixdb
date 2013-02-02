@@ -33,8 +33,8 @@ import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 @SuppressWarnings("rawtypes")
 public class LSMRTreeMultiBulkLoadTest extends AbstractRTreeBulkLoadTest {
-    
-	public LSMRTreeMultiBulkLoadTest() {
+
+    public LSMRTreeMultiBulkLoadTest() {
         super(AccessMethodTestsConfig.LSM_RTREE_BULKLOAD_ROUNDS, AccessMethodTestsConfig.LSM_RTREE_TEST_RSTAR_POLICY);
     }
 
@@ -57,8 +57,8 @@ public class LSMRTreeMultiBulkLoadTest extends AbstractRTreeBulkLoadTest {
         return LSMRTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
                 harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
                 harness.getDiskFileMapProvider(), fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType,
-                harness.getFlushController(), harness.getMergePolicy(), harness.getOperationTrackerFactory(),
-                harness.getIOScheduler());
+                harness.getMergePolicy(), harness.getOperationTrackerFactory(), harness.getIOScheduler(),
+                harness.getIOOperationCallbackProvider());
     }
 
     @Override

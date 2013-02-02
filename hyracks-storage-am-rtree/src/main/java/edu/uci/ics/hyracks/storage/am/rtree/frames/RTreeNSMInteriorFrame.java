@@ -48,8 +48,16 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     }
 
     @Override
-    public boolean findBestChild(ITupleReference tuple, MultiComparator cmp) {
-        return rtreePolicy.findBestChild(this, tuple, frameTuple, cmp);
+    public int findBestChild(ITupleReference tuple, MultiComparator cmp) {
+        int bestChild = rtreePolicy.findBestChildPosition(this, tuple, frameTuple, cmp);
+        frameTuple.resetByTupleIndex(this, bestChild);
+        return buf.getInt(getChildPointerOff(frameTuple));
+    }
+
+    // frameTuple is assumed to have the tuple to be tested against.
+    @Override
+    public boolean checkIfEnlarementIsNeeded(ITupleReference tuple, MultiComparator cmp) {
+        return !RTreeComputationUtils.containsRegion(frameTuple, tuple, cmp, keyValueProviders);
     }
 
     @Override
@@ -57,11 +65,6 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
         ITreeIndexTupleReference tuple = tupleWriter.createTupleReference();
         tuple.setFieldCount(keyFieldCount);
         return tuple;
-    }
-
-    @Override
-    public int getBestChildPageId() {
-        return buf.getInt(getChildPointerOff(frameTuple));
     }
 
     @Override

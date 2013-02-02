@@ -18,7 +18,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushControllerProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
@@ -28,17 +28,17 @@ public class LSMBTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
 
     private static final long serialVersionUID = 1L;
 
-    public LSMBTreeDataflowHelperFactory(ILSMFlushControllerProvider flushControllerProvider,
-            ILSMMergePolicyProvider mergePolicyProvider, ILSMOperationTrackerFactory opTrackerFactory,
-            ILSMIOOperationSchedulerProvider ioSchedulerProvider) {
-        super(flushControllerProvider, mergePolicyProvider, opTrackerFactory, ioSchedulerProvider);
+    public LSMBTreeDataflowHelperFactory(ILSMMergePolicyProvider mergePolicyProvider,
+            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
+            ILSMIOOperationCallbackProvider ioOpCallbackProvider, int memPageSize, int memNumPages) {
+        super(mergePolicyProvider, opTrackerFactory, ioSchedulerProvider, ioOpCallbackProvider, memPageSize,
+                memNumPages);
     }
 
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
-        return new LSMBTreeDataflowHelper(opDesc, ctx, partition, flushControllerProvider.getFlushController(ctx),
-                mergePolicyProvider.getMergePolicy(ctx), opTrackerFactory,
-                ioSchedulerProvider.getIOScheduler(ctx));
+        return new LSMBTreeDataflowHelper(opDesc, ctx, partition, memPageSize, memNumPages, mergePolicyProvider.getMergePolicy(ctx),
+                opTrackerFactory, ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackProvider);
     }
 }

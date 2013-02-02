@@ -1,44 +1,44 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 
 public class LSMFlushOperation implements ILSMIOOperation {
 
-    private final ILSMIndex index;
+    private final ILSMIndexAccessorInternal accessor;
+    private final ILSMComponent flushingComponent;
     private final FileReference flushTarget;
     private final ILSMIOOperationCallback callback;
 
-    public LSMFlushOperation(ILSMIndex index, FileReference flushTarget, ILSMIOOperationCallback callback) {
-        this.index = index;
+    public LSMFlushOperation(ILSMIndexAccessorInternal accessor, ILSMComponent flushingComponent,
+            FileReference flushTarget, ILSMIOOperationCallback callback) {
+        this.accessor = accessor;
+        this.flushingComponent = flushingComponent;
         this.flushTarget = flushTarget;
         this.callback = callback;
     }
 
     @Override
-    public List<IODeviceHandle> getReadDevices() {
-        return Collections.emptyList();
+    public Set<IODeviceHandle> getReadDevices() {
+        return Collections.emptySet();
     }
 
     @Override
-    public List<IODeviceHandle> getWriteDevices() {
-        return Collections.singletonList(flushTarget.getDevideHandle());
+    public Set<IODeviceHandle> getWriteDevices() {
+        return Collections.singleton(flushTarget.getDeviceHandle());
     }
 
     @Override
     public void perform() throws HyracksDataException, IndexException {
-        ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
         accessor.flush(this);
     }
 
@@ -51,4 +51,11 @@ public class LSMFlushOperation implements ILSMIOOperation {
         return flushTarget;
     }
 
+    public ILSMIndexAccessorInternal getAccessor() {
+        return accessor;
+    }
+
+    public ILSMComponent getFlushingComponent() {
+        return flushingComponent;
+    }
 }

@@ -53,8 +53,9 @@ public class LSMBTreeDeleteTest extends OrderedIndexDeleteTest {
             BTreeLeafFrameType leafType) throws Exception {
         return LSMBTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
                 harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
-                harness.getDiskFileMapProvider(), fieldSerdes, numKeys, harness.getFlushController(),
-                harness.getMergePolicy(), harness.getOperationTrackerFactory(), harness.getIOScheduler());
+                harness.getDiskFileMapProvider(), fieldSerdes, numKeys, harness.getMergePolicy(),
+                harness.getOperationTrackerFactory(), harness.getIOScheduler(),
+                harness.getIOOperationCallbackProvider());
     }
 
     @Override

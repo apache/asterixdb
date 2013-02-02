@@ -255,9 +255,9 @@ public class RTree extends AbstractTreeIndex {
                 ctx.pathList.add(pageId, pageLsn, -1);
 
                 if (!isLeaf) {
-                    // findBestChild must be called *before* getBestChildPageId
-                    boolean enlarementIsNeeded = ctx.interiorFrame.findBestChild(ctx.getTuple(), ctx.cmp);
-                    int childPageId = ctx.interiorFrame.getBestChildPageId();
+                    // findBestChild must be called *before* checkIfEnlarementIsNeeded
+                    int childPageId = ctx.interiorFrame.findBestChild(ctx.getTuple(), ctx.cmp);
+                    boolean enlarementIsNeeded = ctx.interiorFrame.checkIfEnlarementIsNeeded(ctx.getTuple(), ctx.cmp);
 
                     if (enlarementIsNeeded) {
                         if (!writeLatched) {

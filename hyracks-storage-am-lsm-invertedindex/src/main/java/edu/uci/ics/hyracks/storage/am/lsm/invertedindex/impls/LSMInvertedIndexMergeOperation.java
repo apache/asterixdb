@@ -15,34 +15,33 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 
 public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
-    private final ILSMIndex index;
+    private final ILSMIndexAccessorInternal accessor;
     private final List<ILSMComponent> mergingComponents;
     private final IIndexCursor cursor;
     private final FileReference dictBTreeMergeTarget;
     private final FileReference deletedKeysBTreeMergeTarget;
     private final ILSMIOOperationCallback callback;
 
-    public LSMInvertedIndexMergeOperation(ILSMIndex index, List<ILSMComponent> mergingComponents, IIndexCursor cursor,
-            FileReference dictBTreeMergeTarget, FileReference deletedKeysBTreeMergeTarget,
+    public LSMInvertedIndexMergeOperation(ILSMIndexAccessorInternal accessor, List<ILSMComponent> mergingComponents,
+            IIndexCursor cursor, FileReference dictBTreeMergeTarget, FileReference deletedKeysBTreeMergeTarget,
             ILSMIOOperationCallback callback) {
-        this.index = index;
+        this.accessor = accessor;
         this.mergingComponents = mergingComponents;
         this.cursor = cursor;
         this.dictBTreeMergeTarget = dictBTreeMergeTarget;
@@ -51,29 +50,27 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
     }
 
     @Override
-    public List<IODeviceHandle> getReadDevices() {
-        List<IODeviceHandle> devs = new ArrayList<IODeviceHandle>();
+    public Set<IODeviceHandle> getReadDevices() {
+        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
         for (Object o : mergingComponents) {
-            LSMInvertedIndexComponent component = (LSMInvertedIndexComponent) o;
+            LSMInvertedIndexImmutableComponent component = (LSMInvertedIndexImmutableComponent) o;
             OnDiskInvertedIndex invIndex = (OnDiskInvertedIndex) component.getInvIndex();
-            devs.add(invIndex.getBTree().getFileReference().getDevideHandle());
-            devs.add(component.getDeletedKeysBTree().getFileReference().getDevideHandle());
+            devs.add(invIndex.getBTree().getFileReference().getDeviceHandle());
+            devs.add(component.getDeletedKeysBTree().getFileReference().getDeviceHandle());
         }
         return devs;
     }
 
     @Override
-    public List<IODeviceHandle> getWriteDevices() {
-        List<IODeviceHandle> devs = new ArrayList<IODeviceHandle>(2);
-        devs.add(dictBTreeMergeTarget.getDevideHandle());
-        devs.add(deletedKeysBTreeMergeTarget.getDevideHandle());
+    public Set<IODeviceHandle> getWriteDevices() {
+        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>(2);
+        devs.add(dictBTreeMergeTarget.getDeviceHandle());
+        devs.add(deletedKeysBTreeMergeTarget.getDeviceHandle());
         return devs;
     }
 
     @Override
     public void perform() throws HyracksDataException, IndexException {
-        ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
         accessor.merge(this);
     }
 

@@ -55,6 +55,7 @@ public class RTreePolicy implements IRTreePolicy {
         }
     }
 
+    @Override
     public void split(ITreeIndexFrame leftFrame, ByteBuffer buf, ITreeIndexFrame rightFrame, ISlotManager slotManager,
             ITreeIndexTupleReference frameTuple, ITupleReference tuple, ISplitKey splitKey) {
         RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
@@ -199,7 +200,8 @@ public class RTreePolicy implements IRTreePolicy {
         rTreeSplitKey.getRightTuple().resetByTupleOffset(rTreeSplitKey.getRightPageBuffer(), 0);
     }
 
-    public boolean findBestChild(ITreeIndexFrame frame, ITupleReference tuple, ITreeIndexTupleReference frameTuple,
+    @Override
+    public int findBestChildPosition(ITreeIndexFrame frame, ITupleReference tuple, ITreeIndexTupleReference frameTuple,
             MultiComparator cmp) {
         cmpFrameTuple.setFieldCount(cmp.getKeyFieldCount());
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
@@ -224,12 +226,7 @@ public class RTreePolicy implements IRTreePolicy {
             }
         }
 
-        frameTuple.resetByTupleIndex(frame, bestChild);
-        if (minEnlargedArea > 0.0) {
-            return true;
-        } else {
-            return false;
-        }
+        return bestChild;
     }
 
 }

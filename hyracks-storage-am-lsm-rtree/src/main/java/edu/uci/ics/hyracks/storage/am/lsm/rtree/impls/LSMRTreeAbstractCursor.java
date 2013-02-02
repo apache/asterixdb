@@ -105,7 +105,7 @@ public abstract class LSMRTreeAbstractCursor {
             rtreeCursors = null;
             btreeCursors = null;
         } finally {
-            lsmHarness.closeSearchCursor(operationalComponents, includeMemRTree, opCtx);
+            lsmHarness.endSearch(opCtx);
         }
 
         open = false;

@@ -30,8 +30,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMMergeInProgressException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.exceptions.OccurrenceThresholdPanicException;
@@ -45,12 +43,12 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokeni
 public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
 
     protected final LSMInvertedIndex invIndex;
-    protected final List<ITupleReference> documentCorpus = new ArrayList<ITupleReference>();    
+    protected final List<ITupleReference> documentCorpus = new ArrayList<ITupleReference>();
     protected final Random rnd = new Random(50);
-    
+
     protected final IInvertedIndexSearchModifier[] TEST_SEARCH_MODIFIERS = new IInvertedIndexSearchModifier[] {
             new ConjunctiveSearchModifier(), new JaccardSearchModifier(0.8f), new JaccardSearchModifier(0.5f) };
-    
+
     public LSMInvertedIndexTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index,
             int numBatches) {
         super(dataGen, opSelector, index, numBatches);
@@ -67,7 +65,7 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
         int searchModifierIndex = Math.abs(rnd.nextInt()) % TEST_SEARCH_MODIFIERS.length;
         InvertedIndexSearchPredicate searchPred = new InvertedIndexSearchPredicate(tokenizerFactory.createTokenizer(),
                 TEST_SEARCH_MODIFIERS[searchModifierIndex]);
-        
+
         switch (op) {
             case INSERT: {
                 insert(accessor, tuple);
@@ -99,7 +97,7 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
                     consumeCursorTuples(searchCursor);
                 } catch (OccurrenceThresholdPanicException e) {
                     // Ignore.
-                }                
+                }
                 break;
             }
 
@@ -111,14 +109,7 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
             }
 
             case MERGE: {
-                try {
-                    ILSMIOOperation ioop = accessor.createMergeOperation(NoOpIOOperationCallback.INSTANCE);
-                    if (ioop != null) {
-                        accessor.merge(ioop);
-                    }
-                } catch (LSMMergeInProgressException e) {
-                    insert(accessor, tuple);
-                }
+                accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE);
                 break;
             }
 
@@ -126,8 +117,9 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
                 throw new HyracksDataException("Op " + op.toString() + " not supported.");
         }
     }
-    
-    private void insert(LSMInvertedIndexAccessor accessor, ITupleReference tuple) throws HyracksDataException, IndexException {
+
+    private void insert(LSMInvertedIndexAccessor accessor, ITupleReference tuple) throws HyracksDataException,
+            IndexException {
         // Ignore ongoing merges. Do an insert instead.
         accessor.insert(tuple);
         // Add tuple to document corpus so we can delete it.

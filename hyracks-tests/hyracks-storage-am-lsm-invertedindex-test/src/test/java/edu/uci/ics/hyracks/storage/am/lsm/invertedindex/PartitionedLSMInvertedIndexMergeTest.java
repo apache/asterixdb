@@ -22,7 +22,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleGenerator;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common.AbstractInvertedIndexLoadTest;
@@ -33,7 +32,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTes
 public class PartitionedLSMInvertedIndexMergeTest extends AbstractInvertedIndexLoadTest {
 
     private final int maxTreesToMerge = AccessMethodTestsConfig.LSM_INVINDEX_MAX_TREES_TO_MERGE;
-    
+
     public PartitionedLSMInvertedIndexMergeTest() {
         super(InvertedIndexType.PARTITIONED_LSM, true, 1);
     }
@@ -41,10 +40,11 @@ public class PartitionedLSMInvertedIndexMergeTest extends AbstractInvertedIndexL
     @Override
     protected void runTest(LSMInvertedIndexTestContext testCtx, TupleGenerator tupleGen) throws IOException,
             IndexException {
-        IIndex invIndex = testCtx.getIndex();        
+        IIndex invIndex = testCtx.getIndex();
         invIndex.create();
         invIndex.activate();
-        ILSMIndexAccessor invIndexAccessor = (ILSMIndexAccessor) invIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        ILSMIndexAccessor invIndexAccessor = (ILSMIndexAccessor) invIndex.createAccessor(
+                NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
 
         for (int i = 0; i < maxTreesToMerge; i++) {
             for (int j = 0; j < i; j++) {
@@ -55,14 +55,11 @@ public class PartitionedLSMInvertedIndexMergeTest extends AbstractInvertedIndexL
                 }
             }
             // Perform merge.
-            ILSMIOOperation ioop = invIndexAccessor.createMergeOperation(NoOpIOOperationCallback.INSTANCE);
-            if (ioop != null) {
-                invIndexAccessor.merge(ioop);
-            }
+            invIndexAccessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE);
             validateAndCheckIndex(testCtx);
             runTinySearchWorkload(testCtx, tupleGen);
         }
-        
+
         invIndex.deactivate();
         invIndex.destroy();
     }

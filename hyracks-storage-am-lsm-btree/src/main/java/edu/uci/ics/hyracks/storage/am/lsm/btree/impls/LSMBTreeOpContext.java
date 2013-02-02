@@ -15,6 +15,9 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
@@ -25,6 +28,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 
 public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
@@ -40,6 +44,7 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
     public final MultiComparator cmp;
     public final IModificationOperationCallback modificationCallback;
     public final ISearchOperationCallback searchCallback;
+    private final List<ILSMComponent> componentHolder;
 
     public LSMBTreeOpContext(BTree memBTree, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, IModificationOperationCallback modificationCallback,
@@ -61,18 +66,19 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
         if (deleteLeafFrame != null && this.cmp != null) {
             deleteLeafFrame.setMultiComparator(cmp);
         }
+        this.componentHolder = new LinkedList<ILSMComponent>();
         this.modificationCallback = modificationCallback;
         this.searchCallback = searchCallback;
     }
 
     @Override
     public void setOperation(IndexOperation newOp) {
+        reset();
         this.op = newOp;
         switch (newOp) {
             case SEARCH:
                 setMemBTreeAccessor();
                 break;
-
             case DISKORDERSCAN:
             case UPDATE:
                 // Attention: It is important to leave the leafFrame and
@@ -82,12 +88,10 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
                 // previously requested operation.
                 setMemBTreeAccessor();
                 return;
-
             case UPSERT:
             case INSERT:
                 setInsertMode();
                 break;
-
             case PHYSICALDELETE:
             case DELETE:
                 setDeleteMode();
@@ -117,10 +121,16 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
 
     @Override
     public void reset() {
+        componentHolder.clear();
     }
 
     public IndexOperation getOperation() {
         return op;
+    }
+
+    @Override
+    public List<ILSMComponent> getComponentHolder() {
+        return componentHolder;
     }
 
     @Override

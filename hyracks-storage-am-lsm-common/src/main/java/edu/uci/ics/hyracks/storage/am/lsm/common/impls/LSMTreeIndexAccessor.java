@@ -24,10 +24,10 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 
-public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
+public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessorInternal {
     protected ILSMHarness lsmHarness;
     protected ILSMIndexOperationContext ctx;
 
@@ -39,88 +39,108 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     @Override
     public void insert(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.INSERT);
-        lsmHarness.insertUpdateOrDelete(tuple, ctx, false);
+        lsmHarness.modify(ctx, false, tuple);
     }
 
     @Override
     public void update(ITupleReference tuple) throws HyracksDataException, IndexException {
         // Update is the same as insert.
         ctx.setOperation(IndexOperation.UPDATE);
-        lsmHarness.insertUpdateOrDelete(tuple, ctx, false);
+        lsmHarness.modify(ctx, false, tuple);
     }
 
     @Override
     public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.DELETE);
-        lsmHarness.insertUpdateOrDelete(tuple, ctx, false);
+        lsmHarness.modify(ctx, false, tuple);
     }
 
     @Override
     public void upsert(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.UPSERT);
-        lsmHarness.insertUpdateOrDelete(tuple, ctx, false);
+        lsmHarness.modify(ctx, false, tuple);
     }
 
     @Override
     public boolean tryInsert(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.INSERT);
-        return lsmHarness.insertUpdateOrDelete(tuple, ctx, true);
+        return lsmHarness.modify(ctx, true, tuple);
     }
 
     @Override
     public boolean tryDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.DELETE);
-        return lsmHarness.insertUpdateOrDelete(tuple, ctx, true);
+        return lsmHarness.modify(ctx, true, tuple);
     }
 
     @Override
     public boolean tryUpdate(ITupleReference tuple) throws HyracksDataException, IndexException {
         // Update is the same as insert.
         ctx.setOperation(IndexOperation.UPDATE);
-        return lsmHarness.insertUpdateOrDelete(tuple, ctx, true);
+        return lsmHarness.modify(ctx, true, tuple);
     }
 
     @Override
     public boolean tryUpsert(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.UPSERT);
-        return lsmHarness.insertUpdateOrDelete(tuple, ctx, true);        
+        return lsmHarness.modify(ctx, true, tuple);
     }
-    
+
     @Override
     public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.SEARCH);
-        lsmHarness.search(cursor, searchPred, ctx, true);
+        lsmHarness.search(ctx, cursor, searchPred);
     }
 
     @Override
     public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
-        lsmHarness.flush(operation);
+        lsmHarness.flush(ctx, operation);
     }
 
     @Override
     public void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException {
-        lsmHarness.merge(operation);
+        ctx.setOperation(IndexOperation.MERGE);
+        lsmHarness.merge(ctx, operation);
     }
 
     @Override
     public void physicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.PHYSICALDELETE);
-        lsmHarness.insertUpdateOrDelete(tuple, ctx, false);
+        lsmHarness.modify(ctx, false, tuple);
     }
 
     @Override
-    public ILSMIOOperation createMergeOperation(ILSMIOOperationCallback callback) throws HyracksDataException,
-            IndexException {
-        return lsmHarness.createMergeOperation(callback);
+    public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException {
+        ctx.setOperation(IndexOperation.FLUSH);
+        lsmHarness.scheduleFlush(ctx, callback);
     }
-    
+
     @Override
-    public boolean tryNoOp() throws HyracksDataException {
-        return lsmHarness.noOp(ctx, true);
+    public void scheduleMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException {
+        ctx.setOperation(IndexOperation.MERGE);
+        lsmHarness.scheduleMerge(ctx, callback);
     }
 
     @Override
     public void noOp() throws HyracksDataException {
-        lsmHarness.noOp(ctx, false);
+        lsmHarness.noOp(ctx);
+    }
+
+    @Override
+    public void forcePhysicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
+        ctx.setOperation(IndexOperation.PHYSICALDELETE);
+        lsmHarness.forceModify(ctx, tuple);
+    }
+
+    @Override
+    public void forceInsert(ITupleReference tuple) throws HyracksDataException, IndexException {
+        ctx.setOperation(IndexOperation.INSERT);
+        lsmHarness.forceModify(ctx, tuple);
+    }
+
+    @Override
+    public void forceDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
+        ctx.setOperation(IndexOperation.DELETE);
+        lsmHarness.forceModify(ctx, tuple);
     }
 }

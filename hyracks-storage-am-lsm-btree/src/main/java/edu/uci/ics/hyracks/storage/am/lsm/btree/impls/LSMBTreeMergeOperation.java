@@ -15,33 +15,32 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 
 public class LSMBTreeMergeOperation implements ILSMIOOperation {
 
-    private final ILSMIndex index;
+    private final ILSMIndexAccessorInternal accessor;
     private final List<ILSMComponent> mergingComponents;
     private final ITreeIndexCursor cursor;
     private final FileReference mergeTarget;
     private final ILSMIOOperationCallback callback;
 
-    public LSMBTreeMergeOperation(ILSMIndex index, List<ILSMComponent> mergingComponents, ITreeIndexCursor cursor,
-            FileReference mergeTarget, ILSMIOOperationCallback callback) {
-        this.index = index;
+    public LSMBTreeMergeOperation(ILSMIndexAccessorInternal accessor, List<ILSMComponent> mergingComponents,
+            ITreeIndexCursor cursor, FileReference mergeTarget, ILSMIOOperationCallback callback) {
+        this.accessor = accessor;
         this.mergingComponents = mergingComponents;
         this.cursor = cursor;
         this.mergeTarget = mergeTarget;
@@ -49,24 +48,22 @@ public class LSMBTreeMergeOperation implements ILSMIOOperation {
     }
 
     @Override
-    public List<IODeviceHandle> getReadDevices() {
-        List<IODeviceHandle> devs = new ArrayList<IODeviceHandle>();
+    public Set<IODeviceHandle> getReadDevices() {
+        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
         for (ILSMComponent o : mergingComponents) {
-            LSMBTreeComponent component = (LSMBTreeComponent) o;
-            devs.add(component.getBTree().getFileReference().getDevideHandle());
+            LSMBTreeImmutableComponent component = (LSMBTreeImmutableComponent) o;
+            devs.add(component.getBTree().getFileReference().getDeviceHandle());
         }
         return devs;
     }
 
     @Override
-    public List<IODeviceHandle> getWriteDevices() {
-        return Collections.singletonList(mergeTarget.getDevideHandle());
+    public Set<IODeviceHandle> getWriteDevices() {
+        return Collections.singleton(mergeTarget.getDeviceHandle());
     }
 
     @Override
     public void perform() throws HyracksDataException, IndexException {
-        ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
         accessor.merge(this);
     }
 

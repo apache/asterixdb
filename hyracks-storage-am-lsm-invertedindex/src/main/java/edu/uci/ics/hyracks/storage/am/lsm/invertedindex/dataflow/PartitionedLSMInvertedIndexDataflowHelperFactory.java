@@ -18,7 +18,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMFlushControllerProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
@@ -28,18 +28,19 @@ public class PartitionedLSMInvertedIndexDataflowHelperFactory extends AbstractLS
 
     private static final long serialVersionUID = 1L;
 
-    public PartitionedLSMInvertedIndexDataflowHelperFactory(ILSMFlushControllerProvider flushControllerProvider,
-            ILSMMergePolicyProvider mergePolicyProvider, ILSMOperationTrackerFactory opTrackerProvider,
-            ILSMIOOperationSchedulerProvider ioSchedulerProvider) {
-        super(flushControllerProvider, mergePolicyProvider, opTrackerProvider, ioSchedulerProvider);
+    public PartitionedLSMInvertedIndexDataflowHelperFactory(ILSMMergePolicyProvider mergePolicyProvider,
+            ILSMOperationTrackerFactory opTrackerProvider, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
+            ILSMIOOperationCallbackProvider ioOpCallbackProvider, int memPageSize, int memNumPages) {
+        super(mergePolicyProvider, opTrackerProvider, ioSchedulerProvider, ioOpCallbackProvider, memNumPages,
+                memNumPages);
     }
 
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
-        return new PartitionedLSMInvertedIndexDataflowHelper(opDesc, ctx, partition,
-                flushControllerProvider.getFlushController(ctx), mergePolicyProvider.getMergePolicy(ctx),
-                opTrackerFactory, ioSchedulerProvider.getIOScheduler(ctx));
+        return new PartitionedLSMInvertedIndexDataflowHelper(opDesc, ctx, partition, memPageSize, memNumPages,
+                mergePolicyProvider.getMergePolicy(ctx), opTrackerFactory, ioSchedulerProvider.getIOScheduler(ctx),
+                ioOpCallbackProvider);
     }
 
 }
