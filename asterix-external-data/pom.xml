@@ -5,9 +5,7 @@
 		<groupId>edu.uci.ics.asterix</groupId>
 		<version>0.0.4-SNAPSHOT</version>
 	</parent>
-	<groupId>edu.uci.ics.asterix</groupId>
 	<artifactId>asterix-external-data</artifactId>
-	<version>0.0.4-SNAPSHOT</version>
 
 	<build>
 		<plugins>
@@ -131,7 +129,6 @@
 	        <dependency>
 		         <groupId>edu.uci.ics.hyracks</groupId>
 		         <artifactId>hyracks-dataflow-hadoop</artifactId>
-		         <version>0.2.2-SNAPSHOT</version>
 	        </dependency>
 <dependency>
             <groupId>jdom</groupId>
