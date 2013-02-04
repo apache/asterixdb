@@ -38,9 +38,9 @@ create type OrderType as closed {
 create dataset Customers(CustomerType) partitioned by key cid;
 create dataset Orders(OrderType) partitioned by key oid;
 
-write output to nc1:"rttest/btree-index-join_primary-equi-join_04.adm";
+write output to nc1:"rttest/btree-index-join_primary-equi-join_05.adm";
 
-for $c in dataset('Customers')
 for $o in dataset('Orders')
-where $c.cid /*+ indexnl */ = $o.cid
+for $c in dataset('Customers')
+where $o.cid /*+ indexnl */ = $c.cid 
 return {"customer":$c, "order": $o} 
