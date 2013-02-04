@@ -1,0 +1,26 @@
+/*
+ * Description  : This is a negative test, mis-spelt/incorrect HINT should result in error 
+ * Expected Res : Success
+ * Date         : 29th November 2012
+ */
+
+drop dataverse test1 if exists;
+create dataverse test1;
+
+create type test1.TestType as open {
+          key1: int32,
+          key2: int32,
+          fname : string,
+          lname : string
+}
+
+create dataset test1.DsOne(TestType) partitioned by key key1;
+create dataset test1.DsTwo(TestType) partitioned by key key1;
+
+// Please note content enclosed in the comment in the predicate is the HINT to the optimizer
+
+for $x in dataset('test1.DsOne')
+for $y in dataset('test1.DsTwo')
+where $x.key2 /*+ index */ = $y.key1
+return $x
+

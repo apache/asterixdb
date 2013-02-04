@@ -1,0 +1,37 @@
+/*
+ * Description  : Notice the query hint to use an indexed nested-loops join plan.
+ *              : We expect a plan that hash-exchanges internal dataset DsTwo, then probes internal dataset DsOne’s primary index.
+ *              : The two internal datasets are in two different dataverses.
+ * Expected Res : Success
+ * Date         : 29th November 2012
+ */
+
+
+drop dataverse test1 if exists;
+create dataverse test1;
+
+drop dataverse test2 if exists;
+create dataverse test2;
+
+create type test1.TestType as open {
+          key1: int32,
+          key2: int32,
+          fname : string,
+          lname : string
+}
+
+create type test2.TestType as open {
+          key1: int32,
+          key2: int32,
+          fname : string,
+          lname : string
+}
+
+create dataset test1.DsOne(TestType) partitioned by key key1;
+create dataset test2.DsTwo(TestType) partitioned by key key1;
+
+for $x in dataset('test1.DsOne')
+for $y in dataset('test2.DsTwo')
+where $x.key2 /*+ indexnl */ = $y.key1
+return $x
+
