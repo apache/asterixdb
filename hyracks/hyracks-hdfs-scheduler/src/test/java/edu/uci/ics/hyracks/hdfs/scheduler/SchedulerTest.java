@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uc.ics.hyracks.hdfs.scheduler;
+package edu.uci.ics.hyracks.hdfs.scheduler;
 
 import java.net.InetAddress;
 import java.util.HashMap;
