@@ -20,6 +20,8 @@ create dataset test1.DsTwo(TestType) partitioned by key key1;
 
 // Please note content enclosed in the comment in the predicate is the HINT to the optimizer
 
+write output to nc1:"rttest/btree-index-join_primary-le-join_02.adm";
+
 for $x in dataset('test1.DsOne')
 for $y in dataset('test1.DsTwo')
 where $x.key2 /*+ indexnl */ >= $y.key1
