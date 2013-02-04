@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uc.ics.hyracks.hdfs.scheduler;
+package edu.uci.ics.hyracks.hdfs.scheduler;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -76,9 +76,9 @@ public class Scheduler {
      * @param inputFormatClass
      * @throws HyracksException
      */
-    public String[] getLocationConstraints(JobConf conf, Class<InputFormat> inputFormatClass) throws HyracksException {
+    public String[] getLocationConstraints(JobConf conf) throws HyracksException {
         try {
-            InputFormat inputFormat = inputFormatClass.newInstance();
+            InputFormat inputFormat = conf.getInputFormat();
             InputSplit[] splits = inputFormat.getSplits(conf, NCs.length);
             return getLocationConstraints(splits);
         } catch (Exception e) {

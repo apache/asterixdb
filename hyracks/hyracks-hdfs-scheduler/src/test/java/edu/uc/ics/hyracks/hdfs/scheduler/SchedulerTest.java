@@ -29,6 +29,7 @@ import org.apache.hadoop.mapred.InputSplit;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.client.NodeStatus;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
 @SuppressWarnings("deprecation")
 public class SchedulerTest extends TestCase {
