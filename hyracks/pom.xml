@@ -101,7 +101,7 @@
     <module>hyracks-hadoop-compat</module>
     <!--module>hyracks-yarn</module-->
     <module>hyracks-maven-plugins</module>
-    <module>hyracks-hdfs-scheduler</module>
+    <module>hyracks-hdfs</module>
     <module>hyracks-dist</module>
   </modules>
 </project>

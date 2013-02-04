@@ -8,11 +8,9 @@
 		<groupId>edu.uci.ics.hyracks</groupId>
 		<version>0.2.3-SNAPSHOT</version>
 	</parent>
-
-	<groupId>edu.uc.ics.hyracks</groupId>
-	<artifactId>hyracks-hdfs-scheduler</artifactId>
-	<version>1.0-SNAPSHOT</version>
-	<name>hyracks-hdfs-scheduler</name>
+	
+	<artifactId>hyracks-hdfs</artifactId>
+	<name>hyracks-hdfs</name>
 
 	<build>
 		<plugins>
