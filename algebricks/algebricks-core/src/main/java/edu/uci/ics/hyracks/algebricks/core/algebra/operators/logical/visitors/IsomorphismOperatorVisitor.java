@@ -345,7 +345,7 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         AbstractLogicalOperator aop = (AbstractLogicalOperator) arg;
         if (aop.getOperatorTag() != LogicalOperatorTag.UNNEST_MAP)
             return Boolean.FALSE;
-        UnnestOperator unnestOpArg = (UnnestOperator) copyAndSubstituteVar(op, arg);
+        UnnestMapOperator unnestOpArg = (UnnestMapOperator) copyAndSubstituteVar(op, arg);
         boolean isomorphic = VariableUtilities.varListEqualUnordered(op.getVariables(), unnestOpArg.getVariables());
         if (!isomorphic)
             return Boolean.FALSE;
