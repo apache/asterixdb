@@ -171,7 +171,7 @@ public class MetadataBootstrap {
                 // Begin a transaction against the metadata.
                 // Lock the metadata in X mode.
                 MetadataManager.INSTANCE.lock(mdTxnCtx, LockMode.X);
-                
+
                 for (int i = 0; i < primaryIndexes.length; i++) {
                     enlistMetadataDataset(primaryIndexes[i], true);
                     registerTransactionalResource(primaryIndexes[i], resourceRepository);
@@ -187,7 +187,7 @@ public class MetadataBootstrap {
                 insertNodes(mdTxnCtx);
                 insertInitialGroups(mdTxnCtx);
                 insertInitialAdapters(mdTxnCtx);
-                
+
                 MetadataManager.INSTANCE.initializeDatasetIdFactory(mdTxnCtx);
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             } catch (Exception e) {
@@ -338,21 +338,22 @@ public class MetadataBootstrap {
                 DEFAULT_MEM_NUM_PAGES, new TransientFileMapManager());
         ITypeTraits[] typeTraits = index.getTypeTraits();
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
+        int[] bloomFilterKeyFields = index.getBloomFilterKeyFields();
         ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
         IInMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(DEFAULT_MEM_NUM_PAGES,
                 metaDataFrameFactory);
         LSMBTree lsmBtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file,
-                bufferCache, fileMapProvider, typeTraits, comparatorFactories, runtimeContext.getLSMMergePolicy(),
-                runtimeContext.getLSMBTreeOperationTrackerFactory(), runtimeContext.getLSMIOScheduler(),
-                AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
+                bufferCache, fileMapProvider, typeTraits, comparatorFactories, bloomFilterKeyFields,
+                runtimeContext.getLSMMergePolicy(), runtimeContext.getLSMBTreeOperationTrackerFactory(),
+                runtimeContext.getLSMIOScheduler(), AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
         long resourceID = -1;
         if (create) {
             lsmBtree.create();
             resourceID = runtimeContext.getResourceIdFactory().createId();
 
             ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits,
-                    comparatorFactories, index.isPrimaryIndex(), GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE,
-                    GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES);
+                    comparatorFactories, bloomFilterKeyFields, index.isPrimaryIndex(),
+                    GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES);
             ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                     localResourceMetadata, LocalResource.LSMBTreeResource);
             ILocalResourceFactory localResourceFactory = localResourceFactoryProvider.getLocalResourceFactory();

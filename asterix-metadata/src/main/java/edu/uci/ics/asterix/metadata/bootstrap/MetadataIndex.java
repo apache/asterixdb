@@ -53,6 +53,8 @@ public final class MetadataIndex implements IMetadataIndex {
     protected final String[] keyNames;
     // Field permutation for BTree insert. Auto-created based on numFields.
     protected final int[] fieldPermutation;
+    // Key Fields that will be used for the bloom filters in the LSM-btree.
+    protected final int[] bloomFilterKeyFields;
     // Type of payload record for primary indexes. null for secondary indexes.
     protected final ARecordType payloadType;
     // Record descriptor of btree tuple. Created in c'tor.
@@ -79,8 +81,8 @@ public final class MetadataIndex implements IMetadataIndex {
     protected final int[] primaryKeyIndexes;
 
     public MetadataIndex(String datasetName, String indexName, int numFields, IAType[] keyTypes, String[] keyNames,
-            ARecordType payloadType, int datasetId, boolean isPrimaryIndex, int[] primaryKeyIndexes)
-            throws AsterixRuntimeException {
+            int numSecondaryIndexKeys, ARecordType payloadType, int datasetId, boolean isPrimaryIndex,
+            int[] primaryKeyIndexes) throws AsterixRuntimeException {
         // Sanity checks.
         if (keyTypes.length != keyNames.length) {
             throw new AsterixRuntimeException("Unequal number of key types and names given.");
@@ -134,6 +136,18 @@ public final class MetadataIndex implements IMetadataIndex {
             bhffs[i] = AqlBinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(keyTypes[i]);
         }
 
+        if (isPrimaryIndex) {
+            bloomFilterKeyFields = new int[primaryKeyIndexes.length];
+            for (int i = 0; i < primaryKeyIndexes.length; ++i) {
+                bloomFilterKeyFields[i] = primaryKeyIndexes[i];
+            }
+        } else {
+            bloomFilterKeyFields = new int[numSecondaryIndexKeys];
+            for (int i = 0; i < numSecondaryIndexKeys; ++i) {
+                bloomFilterKeyFields[i] = i;
+            }
+        }
+
         this.datasetId = new DatasetId(datasetId);
         this.isPrimaryIndex = isPrimaryIndex;
 
@@ -149,6 +163,11 @@ public final class MetadataIndex implements IMetadataIndex {
     @Override
     public int[] getFieldPermutation() {
         return fieldPermutation;
+    }
+
+    @Override
+    public int[] getBloomFilterKeyFields() {
+        return bloomFilterKeyFields;
     }
 
     @Override
@@ -258,12 +277,12 @@ public final class MetadataIndex implements IMetadataIndex {
     public DatasetId getDatasetId() {
         return datasetId;
     }
-    
+
     @Override
     public boolean isPrimaryIndex() {
         return isPrimaryIndex;
     }
-    
+
     @Override
     public int[] getPrimaryKeyIndexes() {
         return primaryKeyIndexes;

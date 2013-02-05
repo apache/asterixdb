@@ -22,14 +22,16 @@ public class LSMBTreeLocalResourceMetadata implements ILocalResourceMetadata {
 
     private final ITypeTraits[] typeTraits;
     private final IBinaryComparatorFactory[] cmpFactories;
+    private final int[] bloomFilterKeyFields;
     private final boolean isPrimary;
     private final int memPageSize;
     private final int memNumPages;
 
     public LSMBTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
-            boolean isPrimary, int memPageSize, int memNumPages) {
+            int[] bloomFilterKeyFields, boolean isPrimary, int memPageSize, int memNumPages) {
         this.typeTraits = typeTraits;
         this.cmpFactories = cmpFactories;
+        this.bloomFilterKeyFields = bloomFilterKeyFields;
         this.isPrimary = isPrimary;
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
@@ -45,7 +47,7 @@ public class LSMBTreeLocalResourceMetadata implements ILocalResourceMetadata {
         IInMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(memNumPages, metaDataFrameFactory);
         LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager,
                 runtimeContextProvider.getIOManager(), file, runtimeContextProvider.getBufferCache(),
-                runtimeContextProvider.getFileMapManager(), typeTraits, cmpFactories,
+                runtimeContextProvider.getFileMapManager(), typeTraits, cmpFactories, bloomFilterKeyFields,
                 runtimeContextProvider.getLSMMergePolicy(),
                 runtimeContextProvider.getLSMBTreeOperationTrackerFactory(),
                 runtimeContextProvider.getLSMIOScheduler(),

@@ -48,6 +48,8 @@ public interface IMetadataIndex {
 
     public ITypeTraits[] getTypeTraits();
 
+    public int[] getBloomFilterKeyFields();
+
     public RecordDescriptor getRecordDescriptor();
 
     public IBinaryComparatorFactory[] getKeyBinaryComparatorFactory();
