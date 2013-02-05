@@ -83,10 +83,6 @@ public class LSMBTreeUtils {
         TreeIndexFactory<BTree> bulkLoadBTreeFactory = new BTreeFactory(diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, interiorFrameFactory, insertLeafFrameFactory, cmpFactories, typeTraits.length);
 
-        //        int[] bloomFilterKeyFields = new int[cmpFactories.length];
-        //        for (int i = 0; i < cmpFactories.length; i++) {
-        //            bloomFilterKeyFields[i] = i;
-        //        }
         BloomFilterFactory bloomFilterFactory = new BloomFilterFactory(diskBufferCache, diskFileMapProvider,
                 bloomFilterKeyFields);
 

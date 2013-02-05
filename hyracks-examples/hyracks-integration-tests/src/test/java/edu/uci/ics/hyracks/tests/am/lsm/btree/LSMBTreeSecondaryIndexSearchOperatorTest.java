@@ -25,13 +25,9 @@ public class LSMBTreeSecondaryIndexSearchOperatorTest extends BTreeSecondaryInde
     protected ITreeIndexOperatorTestHelper createTestHelper() throws HyracksException {
         return new LSMBTreeOperatorTestHelper(TestStorageManagerComponentHolder.getIOManager());
     }
-    
+
     @Override
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory() {
-        int[] bloomFilterKeyFields = new int[secondaryKeyFieldCount];
-        for (int i = 0; i < secondaryKeyFieldCount; ++i) {
-            bloomFilterKeyFields[i] = i;
-        }
-        return ((LSMBTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(bloomFilterKeyFields);
+        return ((LSMBTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory();
     }
 }

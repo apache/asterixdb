@@ -38,11 +38,12 @@ public class TreeIndexStatsOperatorDescriptor extends AbstractTreeIndexOperatorD
 
     public TreeIndexStatsOperatorDescriptor(IOperatorDescriptorRegistry spec, IStorageManagerInterface storageManager,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
-            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories,
+            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields,
             IIndexDataflowHelperFactory dataflowHelperFactory, ISearchOperationCallbackFactory searchOpCallbackProvider) {
         super(spec, 0, 1, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, dataflowHelperFactory, null, false, NoOpLocalResourceFactoryProvider.INSTANCE,
-                searchOpCallbackProvider, NoOpOperationCallbackFactory.INSTANCE);
+                comparatorFactories, bloomFilterKeyFields, dataflowHelperFactory, null, false,
+                NoOpLocalResourceFactoryProvider.INSTANCE, searchOpCallbackProvider,
+                NoOpOperationCallbackFactory.INSTANCE);
     }
 
     @Override

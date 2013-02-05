@@ -105,6 +105,19 @@ public class MultiComparator {
         }
     }
 
+    public static MultiComparator createIgnoreFieldLength(IBinaryComparatorFactory[] cmpFactories, int startIndex,
+            int numCmps) {
+        IBinaryComparator[] cmps = new IBinaryComparator[numCmps];
+        for (int i = startIndex; i < startIndex + numCmps; i++) {
+            cmps[i] = cmpFactories[i].createBinaryComparator();
+        }
+        if (cmps.length == 1) {
+            return new FieldLengthIgnoringSingleComparator(cmps);
+        } else {
+            return new FieldLengthIgnoringMultiComparator(cmps);
+        }
+    }
+
     public static MultiComparator create(IBinaryComparatorFactory[] cmpFactories, int startIndex, int numCmps) {
         IBinaryComparator[] cmps = new IBinaryComparator[numCmps];
         for (int i = startIndex; i < startIndex + numCmps; i++) {

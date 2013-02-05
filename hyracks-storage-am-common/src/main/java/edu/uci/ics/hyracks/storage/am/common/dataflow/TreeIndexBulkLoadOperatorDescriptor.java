@@ -40,12 +40,14 @@ public class TreeIndexBulkLoadOperatorDescriptor extends AbstractTreeIndexOperat
     public TreeIndexBulkLoadOperatorDescriptor(IOperatorDescriptorRegistry spec,
             IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
             IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation, float fillFactor,
-            boolean verifyInput, long numElementsHint, IIndexDataflowHelperFactory dataflowHelperFactory,
+            IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields, int[] fieldPermutation,
+            float fillFactor, boolean verifyInput, long numElementsHint,
+            IIndexDataflowHelperFactory dataflowHelperFactory,
             IModificationOperationCallbackFactory modificationOpCallbackFactory) {
         super(spec, 1, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, dataflowHelperFactory, null, false, NoOpLocalResourceFactoryProvider.INSTANCE,
-                NoOpOperationCallbackFactory.INSTANCE, modificationOpCallbackFactory);
+                comparatorFactories, bloomFilterKeyFields, dataflowHelperFactory, null, false,
+                NoOpLocalResourceFactoryProvider.INSTANCE, NoOpOperationCallbackFactory.INSTANCE,
+                modificationOpCallbackFactory);
         this.fieldPermutation = fieldPermutation;
         this.fillFactor = fillFactor;
         this.verifyInput = verifyInput;

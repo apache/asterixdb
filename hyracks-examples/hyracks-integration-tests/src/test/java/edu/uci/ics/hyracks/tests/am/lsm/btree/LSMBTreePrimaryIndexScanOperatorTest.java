@@ -29,10 +29,6 @@ public class LSMBTreePrimaryIndexScanOperatorTest extends BTreePrimaryIndexScanO
 
     @Override
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory() {
-        int[] bloomFilterKeyFields = new int[primaryKeyFieldCount];
-        for (int i = 0; i < primaryKeyFieldCount; ++i) {
-            bloomFilterKeyFields[i] = i;
-        }
-        return ((LSMBTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(bloomFilterKeyFields);
+        return ((LSMBTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory();
     }
 }

@@ -322,8 +322,9 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             if (btreePred.isLowKeyInclusive() && btreePred.isHighKeyInclusive()) {
                 if (btreePred.getLowKeyComparator().getKeyFieldCount() == btreePred.getHighKeyComparator()
                         .getKeyFieldCount()) {
-                    if (btreePred.getLowKeyComparator().getKeyFieldCount() == componentFactory.getBloomFilterKeyFields().length) {
-                        if (ctx.cmp.compare(btreePred.getLowKey(), btreePred.getHighKey()) == 0) {
+                    if (btreePred.getLowKeyComparator().getKeyFieldCount() == componentFactory
+                            .getBloomFilterKeyFields().length) {
+                        if (ctx.bloomFilterCmps.compare(btreePred.getLowKey(), btreePred.getHighKey()) == 0) {
                             isPointSearch = true;
                         }
                     }
@@ -594,7 +595,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     public LSMBTreeOpContext createOpContext(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
         return new LSMBTreeOpContext(mutableComponent.getBTree(), insertLeafFrameFactory, deleteLeafFrameFactory,
-                modificationCallback, searchCallback);
+                modificationCallback, searchCallback, componentFactory.getBloomFilterKeyFields().length);
     }
 
     @Override

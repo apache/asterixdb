@@ -151,8 +151,8 @@ public class InsertPipelineExample {
         // create operator descriptor
         TreeIndexInsertUpdateDeleteOperatorDescriptor primaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, recDesc, storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits,
-                primaryComparatorFactories, primaryFieldPermutation, IndexOperation.INSERT, dataflowHelperFactory, null,
-                NoOpOperationCallbackFactory.INSTANCE);
+                primaryComparatorFactories, null, primaryFieldPermutation, IndexOperation.INSERT,
+                dataflowHelperFactory, null, NoOpOperationCallbackFactory.INSTANCE);
         JobHelper.createPartitionConstraint(spec, primaryInsert, splitNCs);
 
         // prepare insertion into secondary index
@@ -175,8 +175,8 @@ public class InsertPipelineExample {
         // create operator descriptor
         TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, recDesc, storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
-                secondaryComparatorFactories, secondaryFieldPermutation, IndexOperation.INSERT, dataflowHelperFactory, null,
-                NoOpOperationCallbackFactory.INSTANCE);
+                secondaryComparatorFactories, null, secondaryFieldPermutation, IndexOperation.INSERT,
+                dataflowHelperFactory, null, NoOpOperationCallbackFactory.INSTANCE);
         JobHelper.createPartitionConstraint(spec, secondaryInsert, splitNCs);
 
         // end the insert pipeline at this sink operator
