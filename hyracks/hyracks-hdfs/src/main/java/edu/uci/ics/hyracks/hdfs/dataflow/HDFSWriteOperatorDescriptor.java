@@ -45,6 +45,17 @@ public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
     private ConfFactory confFactory;
     private ITupleWriterFactory tupleWriterFactory;
 
+    /**
+     * The constructor of HDFSWriteOperatorDescriptor.
+     * 
+     * @param spec
+     *            the JobSpecification object
+     * @param conf
+     *            the Hadoop JobConf which contains the output path
+     * @param tupleWriterFactory
+     *            the ITupleWriterFactory implementation object
+     * @throws HyracksException
+     */
     public HDFSWriteOperatorDescriptor(JobSpecification spec, JobConf conf, ITupleWriterFactory tupleWriterFactory)
             throws HyracksException {
         super(spec, 1, 0);

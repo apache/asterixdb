@@ -35,7 +35,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 /**
  * The scheduler conduct data-local scheduling for data on HDFS
  */
-@SuppressWarnings({ "rawtypes", "deprecation" })
+@SuppressWarnings("deprecation")
 public class Scheduler {
 
     /** a list of NCs */

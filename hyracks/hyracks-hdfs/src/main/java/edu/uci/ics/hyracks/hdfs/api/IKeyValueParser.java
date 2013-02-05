@@ -18,9 +18,33 @@ package edu.uci.ics.hyracks.hdfs.api;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
+/**
+ * Users need to implement this interface to use the HDFSReadOperatorDescriptor.
+ * 
+ * @param <K>
+ *            the key type
+ * @param <V>
+ *            the value type
+ */
 public interface IKeyValueParser<K, V> {
 
+    /**
+     * Parse a key-value pair returned by HDFS record reader to a tuple.
+     * when the parsers' internal buffer is full, it can flush the buffer to the writer
+     * 
+     * @param key
+     * @param value
+     * @param writer
+     * @throws HyracksDataException
+     */
     public void parse(K key, V value, IFrameWriter writer) throws HyracksDataException;
 
+    /**
+     * Flush the residual tuples in the internal buffer to the writer.
+     * This method is called in the close() of HDFSReadOperatorDescriptor.
+     * 
+     * @param writer
+     * @throws HyracksDataException
+     */
     public void flush(IFrameWriter writer) throws HyracksDataException;
 }

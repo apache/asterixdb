@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.hdfs.dataflow;
 
+import java.util.Arrays;
+
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -37,11 +39,30 @@ import edu.uci.ics.hyracks.hdfs.api.IKeyValueParserFactory;
 public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private ConfFactory confFactory;
-    private InputSplitsFactory splitsFactory;
-    private String[] scheduledLocations;
-    private IKeyValueParserFactory tupleParserFactory;
+    private final ConfFactory confFactory;
+    private final InputSplitsFactory splitsFactory;
+    private final String[] scheduledLocations;
+    private final IKeyValueParserFactory tupleParserFactory;
+    private final boolean[] executed;
 
+    /**
+     * The constructor of HDFSReadOperatorDescriptor.
+     * 
+     * @param spec
+     *            the JobSpecification object
+     * @param rd
+     *            the output record descriptor
+     * @param conf
+     *            the Hadoop JobConf object, which contains the input format and the input paths
+     * @param splits
+     *            the array of FileSplits (HDFS chunks).
+     * @param scheduledLocations
+     *            the node controller names to scan the FileSplits, which is an one-to-one mapping. The String array
+     *            is obtained from the edu.cui.ics.hyracks.hdfs.scheduler.Scheduler.getLocationConstraints(InputSplits[]).
+     * @param tupleParserFactory
+     *            the ITupleParserFactory implementation instance.
+     * @throws HyracksException
+     */
     public HDFSReadOperatorDescriptor(JobSpecification spec, RecordDescriptor rd, JobConf conf, InputSplit[] splits,
             String[] scheduledLocations, IKeyValueParserFactory tupleParserFactory) throws HyracksException {
         super(spec, 0, 1);
@@ -52,6 +73,8 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
             throw new HyracksException(e);
         }
         this.scheduledLocations = scheduledLocations;
+        this.executed = new boolean[scheduledLocations.length];
+        Arrays.fill(executed, false);
         this.tupleParserFactory = tupleParserFactory;
         this.recordDescriptors[0] = rd;
     }
@@ -78,6 +101,22 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                          * read all the partitions scheduled to the current node
                          */
                         if (scheduledLocations[i].equals(nodeName)) {
+                            /**
+                             * pick an unread split to read
+                             * synchronize among simultaneous partitions in the same machine
+                             */
+                            synchronized (executed) {
+                                if (executed[i] == false) {
+                                    executed[i] = true;
+                                    System.out.println("thread " + Thread.currentThread().getId() + " setting " + i);
+                                } else {
+                                    continue;
+                                }
+                            }
+
+                            /**
+                             * read the split
+                             */
                             RecordReader reader = inputFormat.getRecordReader(inputSplits[i], conf, Reporter.NULL);
                             Object key = reader.createKey();
                             Object value = reader.createValue();

@@ -19,8 +19,23 @@ import java.io.Serializable;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
+/**
+ * Users need to implement this interface to use the HDFSReadOperatorDescriptor.
+ * 
+ * @param <K>
+ *            the key type
+ * @param <V>
+ *            the value type
+ */
 public interface IKeyValueParserFactory<K, V> extends Serializable {
 
+    /**
+     * This method creates a key-value parser.
+     * 
+     * @param ctx
+     *            the IHyracksTaskContext
+     * @return a key-value parser instance.
+     */
     public IKeyValueParser<K, V> createKeyValueParser(IHyracksTaskContext ctx);
 
 }

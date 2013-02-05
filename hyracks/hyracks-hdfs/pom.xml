@@ -43,12 +43,12 @@
 						<fileset>
 							<directory>.</directory>
 							<includes>
-								<include>teststore*</include>
 								<include>edu*</include>
 								<include>actual*</include>
 								<include>build*</include>
 								<include>expect*</include>
 								<include>ClusterController*</include>
+								<include>edu.uci.*</include>
 							</includes>
 						</fileset>
 					</filesets>

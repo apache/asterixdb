@@ -17,8 +17,14 @@ package edu.uci.ics.hyracks.hdfs.api;
 
 import java.io.Serializable;
 
+/**
+ * Users need to implement this interface to use the HDFSWriteOperatorDescriptor.
+ */
 public interface ITupleWriterFactory extends Serializable {
 
+    /**
+     * @return a tuple writer instance
+     */
     public ITupleWriter getTupleWriter();
 
 }

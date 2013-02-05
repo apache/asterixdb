@@ -37,12 +37,19 @@ import org.apache.hadoop.mapred.TextInputFormat;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
+import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningMergingConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
+import edu.uci.ics.hyracks.hdfs.lib.RawBinaryComparatorFactory;
+import edu.uci.ics.hyracks.hdfs.lib.RawBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.hdfs.lib.TextKeyValueParserFactory;
 import edu.uci.ics.hyracks.hdfs.lib.TextTupleWriterFactory;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
@@ -126,23 +133,32 @@ public class DataflowTest extends TestCase {
         conf.setInputFormat(TextInputFormat.class);
 
         Scheduler scheduler = new Scheduler(HyracksUtils.CC_HOST, HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT);
-        InputSplit[] splits = conf.getInputFormat().getSplits(conf, numberOfNC);
+        InputSplit[] splits = conf.getInputFormat().getSplits(conf, numberOfNC * 4);
 
         String[] readSchedule = scheduler.getLocationConstraints(splits);
         JobSpecification jobSpec = new JobSpecification();
         RecordDescriptor recordDesc = new RecordDescriptor(
                 new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
 
-        String[] locations = new String[] { HyracksUtils.NC1_ID, HyracksUtils.NC2_ID };
+        String[] locations = new String[] { HyracksUtils.NC1_ID, HyracksUtils.NC1_ID, HyracksUtils.NC2_ID,
+                HyracksUtils.NC2_ID };
         HDFSReadOperatorDescriptor readOperator = new HDFSReadOperatorDescriptor(jobSpec, recordDesc, conf, splits,
                 readSchedule, new TextKeyValueParserFactory());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, readOperator, locations);
 
+        ExternalSortOperatorDescriptor sortOperator = new ExternalSortOperatorDescriptor(jobSpec, 10, new int[] { 0 },
+                new IBinaryComparatorFactory[] { RawBinaryComparatorFactory.INSTANCE }, recordDesc);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, sortOperator, locations);
+
         HDFSWriteOperatorDescriptor writeOperator = new HDFSWriteOperatorDescriptor(jobSpec, conf,
                 new TextTupleWriterFactory());
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, writeOperator, locations);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, writeOperator, HyracksUtils.NC1_ID);
 
-        jobSpec.connect(new OneToOneConnectorDescriptor(jobSpec), readOperator, 0, writeOperator, 0);
+        jobSpec.connect(new OneToOneConnectorDescriptor(jobSpec), readOperator, 0, sortOperator, 0);
+        jobSpec.connect(new MToNPartitioningMergingConnectorDescriptor(jobSpec, new FieldHashPartitionComputerFactory(
+                new int[] { 0 }, new IBinaryHashFunctionFactory[] { RawBinaryHashFunctionFactory.INSTANCE }),
+                new int[] { 0 }, new IBinaryComparatorFactory[] { RawBinaryComparatorFactory.INSTANCE }), sortOperator,
+                0, writeOperator, 0);
         jobSpec.addRoot(writeOperator);
 
         IHyracksClientConnection client = new HyracksConnection(HyracksUtils.CC_HOST,
@@ -167,8 +183,6 @@ public class DataflowTest extends TestCase {
 
         TestUtils.compareWithResult(new File(EXPECTED_RESULT_PATH + File.separator + "part-0"), new File(
                 ACTUAL_RESULT_DIR + File.separator + "customer_result" + File.separator + "part-0"));
-        TestUtils.compareWithResult(new File(EXPECTED_RESULT_PATH + File.separator + "part-1"), new File(
-                ACTUAL_RESULT_DIR + File.separator + "customer_result" + File.separator + "part-1"));
         return true;
     }
 

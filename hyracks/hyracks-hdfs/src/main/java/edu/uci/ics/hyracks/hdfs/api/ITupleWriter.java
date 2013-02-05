@@ -20,8 +20,20 @@ import java.io.DataOutput;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
+/**
+ * Users need to implement this interface to use the HDFSWriteOperatorDescriptor.
+ */
 public interface ITupleWriter {
 
+    /**
+     * Write the tuple to the DataOutput.
+     * 
+     * @param output
+     *            the DataOutput channel
+     * @param tuple
+     *            the tuple to write
+     * @throws HyracksDataException
+     */
     public void write(DataOutput output, ITupleReference tuple) throws HyracksDataException;
 
 }

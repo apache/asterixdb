@@ -19,7 +19,7 @@
    </property>
    <property>
       <name>mapred.min.split.size</name>
-      <value>8192</value>
+      <value>2048</value>
    </property>
 
 </configuration>
