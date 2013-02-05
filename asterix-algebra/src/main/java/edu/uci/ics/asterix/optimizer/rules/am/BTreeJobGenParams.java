@@ -22,13 +22,14 @@ public class BTreeJobGenParams extends AccessMethodJobGenParams {
 
     protected boolean lowKeyInclusive;
     protected boolean highKeyInclusive;
+    protected boolean isEqCondition;
 
     public BTreeJobGenParams() {
         super();
     }
 
-    public BTreeJobGenParams(String indexName, IndexType indexType, String dataverseName, String datasetName, boolean retainInput,
-            boolean requiresBroadcast) {
+    public BTreeJobGenParams(String indexName, IndexType indexType, String dataverseName, String datasetName,
+            boolean retainInput, boolean requiresBroadcast) {
         super(indexName, indexType, dataverseName, datasetName, retainInput, requiresBroadcast);
     }
 
@@ -56,12 +57,17 @@ public class BTreeJobGenParams extends AccessMethodJobGenParams {
         this.highKeyInclusive = highKeyInclusive;
     }
 
+    public void setIsEqCondition(boolean isEqConsition) {
+        this.isEqCondition = isEqConsition;
+    }
+
     public void writeToFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {
         super.writeToFuncArgs(funcArgs);
         writeVarList(lowKeyVarList, funcArgs);
         writeVarList(highKeyVarList, funcArgs);
-        writeKeyInclusive(lowKeyInclusive, funcArgs);
-        writeKeyInclusive(highKeyInclusive, funcArgs);
+        writeBoolean(lowKeyInclusive, funcArgs);
+        writeBoolean(highKeyInclusive, funcArgs);
+        writeBoolean(isEqCondition, funcArgs);
     }
 
     public void readFromFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {
@@ -71,16 +77,24 @@ public class BTreeJobGenParams extends AccessMethodJobGenParams {
         highKeyVarList = new ArrayList<LogicalVariable>();
         int nextIndex = readVarList(funcArgs, index, lowKeyVarList);
         nextIndex = readVarList(funcArgs, nextIndex, highKeyVarList);
-        readKeyInclusives(funcArgs, nextIndex);
+        nextIndex = readKeyInclusives(funcArgs, nextIndex);
+        readIsEqCondition(funcArgs, nextIndex);
     }
 
-    private void readKeyInclusives(List<Mutable<ILogicalExpression>> funcArgs, int index) {
+    private int readKeyInclusives(List<Mutable<ILogicalExpression>> funcArgs, int index) {
         lowKeyInclusive = ((ConstantExpression) funcArgs.get(index).getValue()).getValue().isTrue();
+        // Read the next function argument at index + 1.
         highKeyInclusive = ((ConstantExpression) funcArgs.get(index + 1).getValue()).getValue().isTrue();
+        // We have read two of the function arguments, so the next index is at index + 2.
+        return index + 2;
     }
 
-    private void writeKeyInclusive(boolean keyInclusive, List<Mutable<ILogicalExpression>> funcArgs) {
-        ILogicalExpression keyExpr = keyInclusive ? ConstantExpression.TRUE : ConstantExpression.FALSE;
+    private void readIsEqCondition(List<Mutable<ILogicalExpression>> funcArgs, int index) {
+        isEqCondition = ((ConstantExpression) funcArgs.get(index).getValue()).getValue().isTrue();
+    }
+
+    private void writeBoolean(boolean val, List<Mutable<ILogicalExpression>> funcArgs) {
+        ILogicalExpression keyExpr = val ? ConstantExpression.TRUE : ConstantExpression.FALSE;
         funcArgs.add(new MutableObject<ILogicalExpression>(keyExpr));
     }
 
@@ -90,6 +104,10 @@ public class BTreeJobGenParams extends AccessMethodJobGenParams {
 
     public List<LogicalVariable> getHighKeyVarList() {
         return highKeyVarList;
+    }
+
+    public boolean isEqCondition() {
+        return isEqCondition;
     }
 
     public boolean isLowKeyInclusive() {

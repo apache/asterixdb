@@ -165,8 +165,8 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                                 BTreeJobGenParams btreeJobGenParams = new BTreeJobGenParams();
                                 btreeJobGenParams.readFromFuncArgs(f.getArguments());
                                 op.setPhysicalOperator(new BTreeSearchPOperator(dsi, requiresBroadcast,
-                                        btreeJobGenParams.isPrimaryIndex(), btreeJobGenParams.getLowKeyVarList(),
-                                        btreeJobGenParams.getHighKeyVarList()));
+                                        btreeJobGenParams.isPrimaryIndex(), btreeJobGenParams.isEqCondition(),
+                                        btreeJobGenParams.getLowKeyVarList(), btreeJobGenParams.getHighKeyVarList()));
                                 break;
                             }
                             case RTREE: {
