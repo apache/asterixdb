@@ -24,9 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
@@ -67,23 +65,6 @@ public class Scheduler {
 
     public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos) throws HyracksException {
         loadIPAddressToNCMap(ncNameToNcInfos);
-    }
-
-    /**
-     * Set the location constraints for a file scan operator with an input format class
-     * 
-     * @conf the Hadoop job configuration
-     * @param inputFormatClass
-     * @throws HyracksException
-     */
-    public String[] getLocationConstraints(JobConf conf) throws HyracksException {
-        try {
-            InputFormat inputFormat = conf.getInputFormat();
-            InputSplit[] splits = inputFormat.getSplits(conf, NCs.length);
-            return getLocationConstraints(splits);
-        } catch (Exception e) {
-            throw new HyracksException(e);
-        }
     }
 
     /**

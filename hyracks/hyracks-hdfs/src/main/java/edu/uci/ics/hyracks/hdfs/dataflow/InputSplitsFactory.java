@@ -21,6 +21,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 
 import org.apache.hadoop.mapred.InputSplit;
 
@@ -76,13 +77,21 @@ public class InputSplitsFactory implements Serializable {
      */
     private InputSplit[] bytesToSplits(byte[] bytes) throws HyracksDataException {
         try {
+            Class splitClass = Class.forName(splitClassName);
+            Constructor[] constructors = splitClass.getDeclaredConstructors();
+            Constructor defaultConstructor = null;
+            for (Constructor constructor : constructors) {
+                if (constructor.getParameterTypes().length == 0) {
+                    constructor.setAccessible(true);
+                    defaultConstructor = constructor;
+                }
+            }
             ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
             DataInputStream dis = new DataInputStream(bis);
             int size = dis.readInt();
             InputSplit[] splits = new InputSplit[size];
             for (int i = 0; i < size; i++) {
-                Class splitNameClass = Class.forName(splitClassName);
-                splits[i] = (InputSplit) splitNameClass.newInstance();
+                splits[i] = (InputSplit) defaultConstructor.newInstance();
                 splits[i].readFields(dis);
             }
             dis.close();

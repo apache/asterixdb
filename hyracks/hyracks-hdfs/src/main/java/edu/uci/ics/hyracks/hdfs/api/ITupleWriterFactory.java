@@ -15,7 +15,9 @@
 
 package edu.uci.ics.hyracks.hdfs.api;
 
-public interface ITupleWriterFactory {
+import java.io.Serializable;
+
+public interface ITupleWriterFactory extends Serializable {
 
     public ITupleWriter getTupleWriter();
 

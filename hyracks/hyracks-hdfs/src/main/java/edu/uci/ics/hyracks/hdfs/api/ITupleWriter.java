@@ -17,10 +17,11 @@ package edu.uci.ics.hyracks.hdfs.api;
 
 import java.io.DataOutput;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public interface ITupleWriter {
 
-    public void write(DataOutput output, ITupleReference tuple);
+    public void write(DataOutput output, ITupleReference tuple) throws HyracksDataException;
 
 }

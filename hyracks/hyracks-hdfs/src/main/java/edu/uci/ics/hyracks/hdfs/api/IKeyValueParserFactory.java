@@ -15,9 +15,11 @@
 
 package edu.uci.ics.hyracks.hdfs.api;
 
+import java.io.Serializable;
+
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
-public interface IKeyValueParserFactory<K, V> {
+public interface IKeyValueParserFactory<K, V> extends Serializable {
 
     public IKeyValueParser<K, V> createKeyValueParser(IHyracksTaskContext ctx);
 

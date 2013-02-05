@@ -19,6 +19,7 @@ import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.mapred.Reporter;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
@@ -41,12 +42,10 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
     private String[] scheduledLocations;
     private IKeyValueParserFactory tupleParserFactory;
 
-    public HDFSReadOperatorDescriptor(JobSpecification spec, RecordDescriptor rd, JobConf conf,
+    public HDFSReadOperatorDescriptor(JobSpecification spec, RecordDescriptor rd, JobConf conf, InputSplit[] splits,
             String[] scheduledLocations, IKeyValueParserFactory tupleParserFactory) throws HyracksException {
         super(spec, 0, 1);
-        InputFormat inputFormat = conf.getInputFormat();
         try {
-            InputSplit[] splits = inputFormat.getSplits(conf, 10);
             this.splitsFactory = new InputSplitsFactory(splits);
             this.confFactory = new ConfFactory(conf);
         } catch (Exception e) {
@@ -79,7 +78,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                          * read all the partitions scheduled to the current node
                          */
                         if (scheduledLocations[i].equals(nodeName)) {
-                            RecordReader reader = inputFormat.getRecordReader(inputSplits[i], conf, null);
+                            RecordReader reader = inputFormat.getRecordReader(inputSplits[i], conf, Reporter.NULL);
                             Object key = reader.createKey();
                             Object value = reader.createValue();
                             while (reader.next(key, value) == true) {
@@ -87,6 +86,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                             }
                         }
                     }
+                    parser.flush(writer);
                     writer.close();
                 } catch (Exception e) {
                     throw new HyracksDataException(e);

@@ -21,4 +21,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 public interface IKeyValueParser<K, V> {
 
     public void parse(K key, V value, IFrameWriter writer) throws HyracksDataException;
+
+    public void flush(IFrameWriter writer) throws HyracksDataException;
 }
