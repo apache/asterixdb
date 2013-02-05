@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -31,15 +32,18 @@ public class LSMInvertedIndexFlushOperation implements ILSMIOOperation {
     private final LSMInvertedIndexMutableComponent flushingComponent;
     private final FileReference dictBTreeFlushTarget;
     private final FileReference deletedKeysBTreeFlushTarget;
+    private final FileReference bloomFilterFlushTarget;
     private final ILSMIOOperationCallback callback;
 
     public LSMInvertedIndexFlushOperation(ILSMIndexAccessorInternal accessor,
             LSMInvertedIndexMutableComponent flushingComponent, FileReference dictBTreeFlushTarget,
-            FileReference deletedKeysBTreeFlushTarget, ILSMIOOperationCallback callback) {
+            FileReference deletedKeysBTreeFlushTarget, FileReference bloomFilterFlushTarget,
+            ILSMIOOperationCallback callback) {
         this.accessor = accessor;
         this.flushingComponent = flushingComponent;
         this.dictBTreeFlushTarget = dictBTreeFlushTarget;
         this.deletedKeysBTreeFlushTarget = deletedKeysBTreeFlushTarget;
+        this.bloomFilterFlushTarget = bloomFilterFlushTarget;
         this.callback = callback;
     }
 
@@ -50,7 +54,12 @@ public class LSMInvertedIndexFlushOperation implements ILSMIOOperation {
 
     @Override
     public Set<IODeviceHandle> getWriteDevices() {
-        return Collections.singleton(dictBTreeFlushTarget.getDeviceHandle());
+        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
+        devs.add(dictBTreeFlushTarget.getDeviceHandle());
+        devs.add(deletedKeysBTreeFlushTarget.getDeviceHandle());
+        devs.add(bloomFilterFlushTarget.getDeviceHandle());
+        return devs;
+
     }
 
     @Override
@@ -69,6 +78,10 @@ public class LSMInvertedIndexFlushOperation implements ILSMIOOperation {
 
     public FileReference getDeletedKeysBTreeFlushTarget() {
         return deletedKeysBTreeFlushTarget;
+    }
+
+    public FileReference getBloomFilterFlushTarget() {
+        return bloomFilterFlushTarget;
     }
 
     public LSMInvertedIndexMutableComponent getFlushingComponent() {

@@ -42,19 +42,24 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
     public BTreeOpContext memBTreeOpCtx;
     public IndexOperation op;
     public final MultiComparator cmp;
+    public final MultiComparator bloomFilterCmps;
     public final IModificationOperationCallback modificationCallback;
     public final ISearchOperationCallback searchCallback;
     private final List<ILSMComponent> componentHolder;
 
     public LSMBTreeOpContext(BTree memBTree, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback) {
+            ISearchOperationCallback searchCallback, int numBloomFilterKeyFields) {
         IBinaryComparatorFactory cmpFactories[] = memBTree.getComparatorFactories();
         if (cmpFactories[0] != null) {
             this.cmp = MultiComparator.createIgnoreFieldLength(memBTree.getComparatorFactories());
         } else {
             this.cmp = null;
         }
+
+        bloomFilterCmps = MultiComparator.createIgnoreFieldLength(memBTree.getComparatorFactories(), 0,
+                numBloomFilterKeyFields);
+
         this.memBTree = memBTree;
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;

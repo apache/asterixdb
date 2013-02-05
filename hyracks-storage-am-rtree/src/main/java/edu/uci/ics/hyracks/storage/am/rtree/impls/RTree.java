@@ -848,7 +848,8 @@ public class RTree extends AbstractTreeIndex {
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws TreeIndexException {
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
+            throws TreeIndexException {
         // TODO: verifyInput currently does nothing.
         try {
             return new RTreeBulkLoader(fillFactor);

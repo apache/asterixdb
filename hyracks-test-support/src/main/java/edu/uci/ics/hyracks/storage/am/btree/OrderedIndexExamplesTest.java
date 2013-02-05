@@ -54,8 +54,8 @@ public abstract class OrderedIndexExamplesTest {
     protected static final Logger LOGGER = Logger.getLogger(OrderedIndexExamplesTest.class.getName());
     protected final Random rnd = new Random(50);
 
-    protected abstract ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
-            throws TreeIndexException;
+    protected abstract ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
+            int[] bloomFilterKeyFields) throws TreeIndexException;
 
     /**
      * Fixed-Length Key,Value Example. Create a tree index with one fixed-length
@@ -82,7 +82,11 @@ public abstract class OrderedIndexExamplesTest {
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
         cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
+        // This is only used for the LSM-BTree.
+        int[] bloomFilterKeyFields = new int[keyFieldCount];
+        bloomFilterKeyFields[0] = 0;
+
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields);
         treeIndex.create();
         treeIndex.activate();
 
@@ -162,7 +166,11 @@ public abstract class OrderedIndexExamplesTest {
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
         cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
+        // This is only used for the LSM-BTree.
+        int[] bloomFilterKeyFields = new int[keyFieldCount];
+        bloomFilterKeyFields[0] = 0;
+
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields);
         treeIndex.create();
         treeIndex.activate();
 
@@ -234,7 +242,12 @@ public abstract class OrderedIndexExamplesTest {
         cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
         cmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
+        // This is only used for the LSM-BTree.
+        int[] bloomFilterKeyFields = new int[keyFieldCount];
+        bloomFilterKeyFields[0] = 0;
+        bloomFilterKeyFields[1] = 1;
+
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields);
         treeIndex.create();
         treeIndex.activate();
 
@@ -313,7 +326,11 @@ public abstract class OrderedIndexExamplesTest {
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
         cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
+        // This is only used for the LSM-BTree.
+        int[] bloomFilterKeyFields = new int[keyFieldCount];
+        bloomFilterKeyFields[0] = 0;
+
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields);
         treeIndex.create();
         treeIndex.activate();
 
@@ -393,7 +410,11 @@ public abstract class OrderedIndexExamplesTest {
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
         cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
+        // This is only used for the LSM-BTree.
+        int[] bloomFilterKeyFields = new int[keyFieldCount];
+        bloomFilterKeyFields[0] = 0;
+
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields);
         treeIndex.create();
         treeIndex.activate();
 
@@ -495,7 +516,11 @@ public abstract class OrderedIndexExamplesTest {
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
         cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
+        // This is only used for the LSM-BTree.
+        int[] bloomFilterKeyFields = new int[keyFieldCount];
+        bloomFilterKeyFields[0] = 0;
+
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields);
         treeIndex.create();
         treeIndex.activate();
 
@@ -581,7 +606,12 @@ public abstract class OrderedIndexExamplesTest {
         cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
         cmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
+        // This is only used for the LSM-BTree.
+        int[] bloomFilterKeyFields = new int[keyFieldCount];
+        bloomFilterKeyFields[0] = 0;
+        bloomFilterKeyFields[1] = 1;
+
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields);
         treeIndex.create();
         treeIndex.activate();
 
@@ -591,7 +621,7 @@ public abstract class OrderedIndexExamplesTest {
             LOGGER.info("Bulk loading " + ins + " tuples");
         }
         long start = System.currentTimeMillis();
-        IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, false);
+        IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, false, ins);
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         for (int i = 0; i < ins; i++) {
@@ -649,14 +679,19 @@ public abstract class OrderedIndexExamplesTest {
         Random rnd = new Random();
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
+
+        // This is only used for the LSM-BTree.
+        int[] bloomFilterKeyFields = new int[keyFieldCount];
+        bloomFilterKeyFields[0] = 0;
+
         int ins = 1000;
         for (int i = 1; i < ins; i++) {
-            ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories);
+            ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields);
             treeIndex.create();
             treeIndex.activate();
 
             // Load sorted records, and expect to fail at tuple i.
-            IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, true);
+            IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, true, ins);
             for (int j = 0; j < ins; j++) {
                 if (j > i) {
                     fail("Bulk load failure test unexpectedly succeeded past tuple: " + j);

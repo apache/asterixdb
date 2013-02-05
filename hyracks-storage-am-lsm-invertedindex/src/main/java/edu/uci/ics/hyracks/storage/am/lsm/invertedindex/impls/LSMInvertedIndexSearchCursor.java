@@ -18,6 +18,7 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
@@ -29,6 +30,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BloomFilterAwareBTreePointSearchCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.exceptions.OccurrenceThresholdPanicException;
 
 /**
@@ -48,7 +50,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     private ISearchOperationCallback searchCallback;
 
     // Assuming the cursor for all deleted-keys indexes are of the same type.
-    private IIndexCursor deletedKeysBTreeCursor;
+    private IIndexCursor[] deletedKeysBTreeCursors;
     private List<IIndexAccessor> deletedKeysBTreeAccessors;
     private RangePredicate keySearchPred;
     private ILSMIndexOperationContext opCtx;
@@ -69,7 +71,19 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
 
         // For searching the deleted-keys BTrees.
         deletedKeysBTreeAccessors = lsmInitState.getDeletedKeysBTreeAccessors();
-        deletedKeysBTreeCursor = deletedKeysBTreeAccessors.get(0).createSearchCursor();
+        deletedKeysBTreeCursors = new IIndexCursor[deletedKeysBTreeAccessors.size()];
+        int i = 0;
+        if (includeMemComponent) {
+            // No need for a bloom filter for the in-memory BTree.
+            deletedKeysBTreeCursors[i] = deletedKeysBTreeAccessors.get(i).createSearchCursor();
+            ++i;
+        }
+        for (; i < deletedKeysBTreeCursors.length; i++) {
+            deletedKeysBTreeCursors[i] = new BloomFilterAwareBTreePointSearchCursor((IBTreeLeafFrame) lsmInitState
+                    .getgetDeletedKeysBTreeLeafFrameFactory().createFrame(), false,
+                    ((LSMInvertedIndexImmutableComponent) operationalComponents.get(i)).getBloomFilter());
+        }
+
         MultiComparator keyCmp = lsmInitState.getKeyComparator();
         keySearchPred = new RangePredicate(null, null, true, true, keyCmp, keyCmp);
     }
@@ -78,16 +92,16 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
         keySearchPred.setLowKey(key, true);
         keySearchPred.setHighKey(key, true);
         for (int i = 0; i < accessorIndex; i++) {
-            deletedKeysBTreeCursor.reset();
+            deletedKeysBTreeCursors[i].reset();
             try {
-                deletedKeysBTreeAccessors.get(i).search(deletedKeysBTreeCursor, keySearchPred);
-                if (deletedKeysBTreeCursor.hasNext()) {
+                deletedKeysBTreeAccessors.get(i).search(deletedKeysBTreeCursors[i], keySearchPred);
+                if (deletedKeysBTreeCursors[i].hasNext()) {
                     return true;
                 }
             } catch (IndexException e) {
                 throw new HyracksDataException(e);
             } finally {
-                deletedKeysBTreeCursor.close();
+                deletedKeysBTreeCursors[i].close();
             }
         }
         return false;

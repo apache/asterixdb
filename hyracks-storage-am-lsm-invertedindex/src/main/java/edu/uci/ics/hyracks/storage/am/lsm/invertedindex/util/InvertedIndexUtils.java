@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
+import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
@@ -141,6 +142,13 @@ public class InvertedIndexUtils {
         BTreeFactory deletedKeysBTreeFactory = createDeletedKeysBTreeFactory(diskFileMapProvider, invListTypeTraits,
                 invListCmpFactories, diskBufferCache);
 
+        int[] bloomFilterKeyFields = new int[invListCmpFactories.length];
+        for (int i = 0; i < invListCmpFactories.length; i++) {
+            bloomFilterKeyFields[i] = i;
+        }
+        BloomFilterFactory bloomFilterFactory = new BloomFilterFactory(diskBufferCache, diskFileMapProvider,
+                bloomFilterKeyFields);
+
         FileReference onDiskDirFileRef = new FileReference(new File(onDiskDir));
         LSMInvertedIndexFileManager fileManager = new LSMInvertedIndexFileManager(ioManager, diskFileMapProvider,
                 onDiskDirFileRef, deletedKeysBTreeFactory, startIODeviceIndex);
@@ -152,9 +160,9 @@ public class InvertedIndexUtils {
                 tokenCmpFactories, fileManager);
 
         LSMInvertedIndex invIndex = new LSMInvertedIndex(memBufferCache, memFreePageManager, invIndexFactory,
-                deletedKeysBTreeFactory, fileManager, diskFileMapProvider, invListTypeTraits, invListCmpFactories,
-                tokenTypeTraits, tokenCmpFactories, tokenizerFactory, mergePolicy, opTrackerFactory, ioScheduler,
-                ioOpCallbackProvider);
+                deletedKeysBTreeFactory, bloomFilterFactory, fileManager, diskFileMapProvider, invListTypeTraits,
+                invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory, mergePolicy,
+                opTrackerFactory, ioScheduler, ioOpCallbackProvider);
         return invIndex;
     }
 
@@ -184,6 +192,13 @@ public class InvertedIndexUtils {
         BTreeFactory deletedKeysBTreeFactory = createDeletedKeysBTreeFactory(diskFileMapProvider, invListTypeTraits,
                 invListCmpFactories, diskBufferCache);
 
+        int[] bloomFilterKeyFields = new int[invListCmpFactories.length];
+        for (int i = 0; i < invListCmpFactories.length; i++) {
+            bloomFilterKeyFields[i] = i;
+        }
+        BloomFilterFactory bloomFilterFactory = new BloomFilterFactory(diskBufferCache, diskFileMapProvider,
+                bloomFilterKeyFields);
+
         FileReference onDiskDirFileRef = new FileReference(new File(onDiskDir));
         LSMInvertedIndexFileManager fileManager = new LSMInvertedIndexFileManager(ioManager, diskFileMapProvider,
                 onDiskDirFileRef, deletedKeysBTreeFactory, startIODeviceIndex);
@@ -195,9 +210,9 @@ public class InvertedIndexUtils {
                 tokenTypeTraits, tokenCmpFactories, fileManager);
 
         PartitionedLSMInvertedIndex invIndex = new PartitionedLSMInvertedIndex(memBufferCache, memFreePageManager,
-                invIndexFactory, deletedKeysBTreeFactory, fileManager, diskFileMapProvider, invListTypeTraits,
-                invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory, mergePolicy,
-                opTrackerFactory, ioScheduler, ioOpCallbackProvider);
+                invIndexFactory, deletedKeysBTreeFactory, bloomFilterFactory, fileManager, diskFileMapProvider,
+                invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
+                mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackProvider);
         return invIndex;
     }
 }

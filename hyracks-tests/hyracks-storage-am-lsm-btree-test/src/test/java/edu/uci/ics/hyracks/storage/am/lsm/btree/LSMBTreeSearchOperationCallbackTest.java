@@ -35,8 +35,8 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
         index = LSMBTreeUtils.createLSMTree(harness.getMemBufferCache(), harness.getMemFreePageManager(),
                 harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
                 harness.getDiskFileMapProvider(), SerdeUtils.serdesToTypeTraits(keySerdes),
-                SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), harness.getMergePolicy(),
-                NoOpOperationTrackerFactory.INSTANCE, harness.getIOScheduler(),
+                SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), bloomFilterKeyFields,
+                harness.getMergePolicy(), NoOpOperationTrackerFactory.INSTANCE, harness.getIOScheduler(),
                 harness.getIOOperationCallbackProvider());
     }
 
@@ -228,7 +228,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 throw new IllegalArgumentException("Invalid range: [" + begin + ", " + end + "]");
             }
 
-            IIndexBulkLoader bulkloader = index.createBulkLoader(1.0f, false);
+            IIndexBulkLoader bulkloader = index.createBulkLoader(1.0f, false, end - begin);
             for (int i = begin; i <= end; i++) {
                 TupleUtils.createIntegerTuple(builder, tuple, i);
                 bulkloader.add(tuple);

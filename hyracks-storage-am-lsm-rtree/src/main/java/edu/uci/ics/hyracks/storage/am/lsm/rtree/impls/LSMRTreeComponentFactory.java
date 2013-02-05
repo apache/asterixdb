@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -27,16 +29,21 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 public class LSMRTreeComponentFactory implements ILSMComponentFactory {
     private final TreeIndexFactory<RTree> rtreeFactory;
     private final TreeIndexFactory<BTree> btreeFactory;
+    private final BloomFilterFactory bloomFilterFactory;
 
-    public LSMRTreeComponentFactory(TreeIndexFactory<RTree> rtreeFactory, TreeIndexFactory<BTree> btreeFactory) {
+    public LSMRTreeComponentFactory(TreeIndexFactory<RTree> rtreeFactory, TreeIndexFactory<BTree> btreeFactory,
+            BloomFilterFactory bloomFilterFactory) {
         this.rtreeFactory = rtreeFactory;
         this.btreeFactory = btreeFactory;
+        this.bloomFilterFactory = bloomFilterFactory;
     }
 
     @Override
-    public ILSMComponent createLSMComponentInstance(LSMComponentFileReferences cfr) throws IndexException {
+    public ILSMComponent createLSMComponentInstance(LSMComponentFileReferences cfr) throws IndexException,
+            HyracksDataException {
         return new LSMRTreeImmutableComponent(rtreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()),
-                btreeFactory.createIndexInstance(cfr.getDeleteIndexFileReference()));
+                btreeFactory.createIndexInstance(cfr.getDeleteIndexFileReference()),
+                bloomFilterFactory.createBloomFiltertInstance(cfr.getBloomFilterFileReference()));
     }
 
     @Override

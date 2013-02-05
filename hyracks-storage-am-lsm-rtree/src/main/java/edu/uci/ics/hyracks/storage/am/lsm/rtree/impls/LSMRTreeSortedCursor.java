@@ -20,11 +20,10 @@ import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 
-public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor implements ITreeIndexCursor {
+public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
 
     private ILinearizeComparator linearizeCmp;
     private boolean[] depletedRtreeCursors;
@@ -63,7 +62,7 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor implements ITre
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException {
+    public boolean hasNext() throws HyracksDataException, IndexException {
         while (!foundNext) {
             frameTuple = null;
 

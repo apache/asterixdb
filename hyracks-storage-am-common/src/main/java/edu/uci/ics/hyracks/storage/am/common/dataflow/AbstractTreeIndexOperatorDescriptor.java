@@ -33,11 +33,12 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractIndexO
 
     protected final ITypeTraits[] typeTraits;
     protected final IBinaryComparatorFactory[] comparatorFactories;
+    protected final int[] bloomFilterKeyFields;
 
     public AbstractTreeIndexOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
-            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories,
+            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields,
             IIndexDataflowHelperFactory dataflowHelperFactory, ITupleFilterFactory tupleFilterFactory,
             boolean retainInput, ILocalResourceFactoryProvider localResourceFactoryProvider,
             ISearchOperationCallbackFactory searchOpCallbackFactory,
@@ -47,6 +48,7 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractIndexO
                 searchOpCallbackFactory, modificationOpCallbackFactory);
         this.typeTraits = typeTraits;
         this.comparatorFactories = comparatorFactories;
+        this.bloomFilterKeyFields = bloomFilterKeyFields;
     }
 
     public IBinaryComparatorFactory[] getTreeIndexComparatorFactories() {
@@ -55,5 +57,9 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractIndexO
 
     public ITypeTraits[] getTreeIndexTypeTraits() {
         return typeTraits;
+    }
+    
+    public int[] getTreeIndexBloomFilterKeyFields() {
+        return bloomFilterKeyFields;
     }
 }

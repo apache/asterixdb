@@ -1,6 +1,5 @@
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,16 +20,18 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
     private final ITreeIndexCursor cursor;
     private final FileReference rtreeMergeTarget;
     private final FileReference btreeMergeTarget;
+    private final FileReference bloomFilterMergeTarget;
     private final ILSMIOOperationCallback callback;
 
     public LSMRTreeMergeOperation(ILSMIndexAccessorInternal accessor, List<ILSMComponent> mergingComponents,
             ITreeIndexCursor cursor, FileReference rtreeMergeTarget, FileReference btreeMergeTarget,
-            ILSMIOOperationCallback callback) {
+            FileReference bloomFilterMergeTarget, ILSMIOOperationCallback callback) {
         this.accessor = accessor;
         this.mergingComponents = mergingComponents;
         this.cursor = cursor;
         this.rtreeMergeTarget = rtreeMergeTarget;
         this.btreeMergeTarget = btreeMergeTarget;
+        this.bloomFilterMergeTarget = bloomFilterMergeTarget;
         this.callback = callback;
     }
 
@@ -40,14 +41,23 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
         for (ILSMComponent o : mergingComponents) {
             LSMRTreeImmutableComponent component = (LSMRTreeImmutableComponent) o;
             devs.add(component.getRTree().getFileReference().getDeviceHandle());
-            devs.add(component.getBTree().getFileReference().getDeviceHandle());
+            if (component.getBTree() != null) {
+                devs.add(component.getBTree().getFileReference().getDeviceHandle());
+                devs.add(component.getBloomFilter().getFileReference().getDeviceHandle());
+            }
         }
         return devs;
     }
 
     @Override
     public Set<IODeviceHandle> getWriteDevices() {
-        return Collections.singleton(rtreeMergeTarget.getDeviceHandle());
+        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
+        devs.add(rtreeMergeTarget.getDeviceHandle());
+        if (btreeMergeTarget != null) {
+            devs.add(btreeMergeTarget.getDeviceHandle());
+            devs.add(bloomFilterMergeTarget.getDeviceHandle());
+        }
+        return devs;
     }
 
     @Override
@@ -68,6 +78,10 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
         return btreeMergeTarget;
     }
 
+    public FileReference getBloomFilterMergeTarget() {
+        return bloomFilterMergeTarget;
+    }
+
     public ITreeIndexCursor getCursor() {
         return cursor;
     }
@@ -75,5 +89,4 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
     public List<ILSMComponent> getMergingComponents() {
         return mergingComponents;
     }
-
 }
