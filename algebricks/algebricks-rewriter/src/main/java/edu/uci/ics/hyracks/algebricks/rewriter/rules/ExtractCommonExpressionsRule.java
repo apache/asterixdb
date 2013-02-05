@@ -94,6 +94,8 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  */
 public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
 
+    private final List<ILogicalExpression> originalAssignExprs = new ArrayList<ILogicalExpression>();
+    
     private final CommonExpressionSubstitutionVisitor substVisitor = new CommonExpressionSubstitutionVisitor();
     private final Map<ILogicalExpression, ExprEquivalenceClass> exprEqClassMap = new HashMap<ILogicalExpression, ExprEquivalenceClass>();
     
@@ -124,11 +126,11 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
         return modified;
     }
 
-    private void updateEquivalenceClassMap(LogicalVariable lhs, Mutable<ILogicalExpression> rhsExprRef, ILogicalOperator op) {
-        ExprEquivalenceClass exprEqClass = exprEqClassMap.get(rhsExprRef.getValue());
+    private void updateEquivalenceClassMap(LogicalVariable lhs, Mutable<ILogicalExpression> rhsExprRef, ILogicalExpression rhsExpr, ILogicalOperator op) {
+        ExprEquivalenceClass exprEqClass = exprEqClassMap.get(rhsExpr);
         if (exprEqClass == null) {
             exprEqClass = new ExprEquivalenceClass(op, rhsExprRef);
-            exprEqClassMap.put(rhsExprRef.getValue(), exprEqClass);
+            exprEqClassMap.put(rhsExpr, exprEqClass);
         }
         exprEqClass.setVariable(lhs);
     }
@@ -159,6 +161,19 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
             return modified;
         }
         
+        // Remember a copy of the original assign expressions, so we can add them to the equivalence class map
+        // after replacing expressions within the assign operator itself.
+        if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+            AssignOperator assignOp = (AssignOperator) op;
+            originalAssignExprs.clear();
+            int numVars = assignOp.getVariables().size();
+            for (int i = 0; i < numVars; i++) {
+                Mutable<ILogicalExpression> exprRef = assignOp.getExpressions().get(i);
+                ILogicalExpression expr = exprRef.getValue();
+                originalAssignExprs.add(expr.cloneExpression());
+            }
+        }
+        
         // Perform common subexpression elimination.
         substVisitor.setOperator(op);
         if (op.acceptExpressionTransform(substVisitor)) {
@@ -178,7 +193,10 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
                 }
                 // Update equivalence class map.
                 LogicalVariable lhs = assignOp.getVariables().get(i);
-                updateEquivalenceClassMap(lhs, exprRef, op);
+                updateEquivalenceClassMap(lhs, exprRef, exprRef.getValue(), op);
+                
+                // Update equivalence class map with original assign expression.
+                updateEquivalenceClassMap(lhs, exprRef, originalAssignExprs.get(i), op);
             }
         }
 
