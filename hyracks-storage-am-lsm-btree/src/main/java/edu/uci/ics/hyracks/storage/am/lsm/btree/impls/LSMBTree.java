@@ -534,7 +534,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         private final ILSMComponent component;
         private final BTreeBulkLoader bulkLoader;
         private final IIndexBulkLoader builder;
-        private boolean endCalledBasedOnFailure = false;
+        private boolean endHasBeenCalled = false;
 
         public LSMBTreeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
                 throws TreeIndexException, HyracksDataException {
@@ -573,7 +573,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         }
 
         protected void handleException() throws HyracksDataException, IndexException {
-            if (!endCalledBasedOnFailure) {
+            if (!endHasBeenCalled) {
                 builder.end();
             }
             ((LSMBTreeImmutableComponent) component).getBTree().deactivate();
@@ -586,7 +586,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         public void end() throws HyracksDataException, IndexException {
             bulkLoader.end();
             builder.end();
-            endCalledBasedOnFailure = true;
+            endHasBeenCalled = true;
             lsmHarness.addBulkLoadedComponent(component);
         }
 
