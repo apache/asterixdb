@@ -1,6 +1,7 @@
 package edu.uci.ics.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -291,22 +292,18 @@ public class BTreeAccessMethod implements IAccessMethod {
             return null;
         }
 
+        // If the select condition contains mixed open/closed intervals on multiple keys, then we make all intervals closed to obtain a superset of answers and leave the original selection in place.
         boolean primaryIndexPostProccessingIsNeeded = false;
-        // If the condition is a mixed open/closed intervals due to a composite key, then we will make all open all the intervals and will do post-processing later.
         for (int i = 1; i < numSecondaryKeys; ++i) {
             if (lowKeyInclusive[i] != lowKeyInclusive[0]) {
-                for (int j = 0; j < numSecondaryKeys; ++j) {
-                    lowKeyInclusive[j] = true;
-                }
+                Arrays.fill(lowKeyInclusive, true);
                 primaryIndexPostProccessingIsNeeded = true;
                 break;
             }
         }
         for (int i = 1; i < numSecondaryKeys; ++i) {
             if (highKeyInclusive[i] != highKeyInclusive[0]) {
-                for (int j = 0; j < numSecondaryKeys; ++j) {
-                    highKeyInclusive[j] = true;
-                }
+                Arrays.fill(highKeyInclusive, true);
                 primaryIndexPostProccessingIsNeeded = true;
                 break;
             }
