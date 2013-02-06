@@ -71,9 +71,13 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
             throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
+        int[] bloomFilterKeyFields = new int[numKeyFields];
+        for (int i = 0; i < numKeyFields; ++i) {
+            bloomFilterKeyFields[i] = i;
+        }
         LSMBTree lsmTree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file,
-                diskBufferCache, diskFileMapProvider, typeTraits, cmpFactories, mergePolicy, opTrackerFactory,
-                ioScheduler, ioOpCallbackProvider);
+                diskBufferCache, diskFileMapProvider, typeTraits, cmpFactories, bloomFilterKeyFields, mergePolicy,
+                opTrackerFactory, ioScheduler, ioOpCallbackProvider);
         LSMBTreeTestContext testCtx = new LSMBTreeTestContext(fieldSerdes, lsmTree);
         return testCtx;
     }

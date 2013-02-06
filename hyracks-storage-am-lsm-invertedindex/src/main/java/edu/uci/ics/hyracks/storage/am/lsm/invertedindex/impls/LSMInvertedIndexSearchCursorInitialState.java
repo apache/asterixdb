@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -39,17 +40,20 @@ public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialS
     private MultiComparator originalCmp;
     private final MultiComparator keyCmp;
     private final PermutingTupleReference keysOnlyTuple;
+    private final ITreeIndexFrameFactory deletedKeysBtreeLeafFrameFactory;
 
     private final List<ILSMComponent> operationalComponents;
 
     public LSMInvertedIndexSearchCursorInitialState(final MultiComparator keyCmp,
             PermutingTupleReference keysOnlyTuple, List<IIndexAccessor> indexAccessors,
-            List<IIndexAccessor> deletedKeysBTreeAccessors, IIndexOperationContext ctx, boolean includeMemComponent,
-            ILSMHarness lsmHarness, List<ILSMComponent> operationalComponents) {
+            List<IIndexAccessor> deletedKeysBTreeAccessors, ITreeIndexFrameFactory deletedKeysBtreeLeafFrameFactory,
+            IIndexOperationContext ctx, boolean includeMemComponent, ILSMHarness lsmHarness,
+            List<ILSMComponent> operationalComponents) {
         this.keyCmp = keyCmp;
         this.keysOnlyTuple = keysOnlyTuple;
         this.indexAccessors = indexAccessors;
         this.deletedKeysBTreeAccessors = deletedKeysBTreeAccessors;
+        this.deletedKeysBtreeLeafFrameFactory = deletedKeysBtreeLeafFrameFactory;
         this.includeMemComponent = includeMemComponent;
         this.operationalComponents = operationalComponents;
         this.lsmHarness = lsmHarness;
@@ -112,6 +116,10 @@ public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialS
 
     public List<IIndexAccessor> getDeletedKeysBTreeAccessors() {
         return deletedKeysBTreeAccessors;
+    }
+    
+    public ITreeIndexFrameFactory getgetDeletedKeysBTreeLeafFrameFactory() {
+        return deletedKeysBtreeLeafFrameFactory;
     }
 
     public PermutingTupleReference getKeysOnlyTuple() {

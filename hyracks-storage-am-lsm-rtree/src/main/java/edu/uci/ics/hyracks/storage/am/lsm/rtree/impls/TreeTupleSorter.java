@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
 public class TreeTupleSorter implements ITreeIndexCursor {
+    private final static int INITIAL_SIZE = 1000000;
     private int numTuples;
     private int currentTupleIndex;
     private int[] tPointers;
@@ -38,18 +39,18 @@ public class TreeTupleSorter implements ITreeIndexCursor {
     private ITreeIndexTupleReference frameTuple1;
     private ITreeIndexTupleReference frameTuple2;
     private final int fileId;
-    private final static int ARRAY_GROWTH = 1000; // Must be at least of size 2
+    private final static int ARRAY_GROWTH = 1000000; // Must be at least of size 2
     private final int[] comparatorFields;
     private final MultiComparator cmp;
 
-    public TreeTupleSorter(int initialSize, int fileId, IBinaryComparatorFactory[] comparatorFactories,
-            ITreeIndexFrame leafFrame1, ITreeIndexFrame leafFrame2, IBufferCache bufferCache, int[] comparatorFields) {
+    public TreeTupleSorter(int fileId, IBinaryComparatorFactory[] comparatorFactories, ITreeIndexFrame leafFrame1,
+            ITreeIndexFrame leafFrame2, IBufferCache bufferCache, int[] comparatorFields) {
         this.fileId = fileId;
         this.leafFrame1 = leafFrame1;
         this.leafFrame2 = leafFrame2;
         this.bufferCache = bufferCache;
         this.comparatorFields = comparatorFields;
-        tPointers = new int[initialSize * 2];
+        tPointers = new int[INITIAL_SIZE * 2];
         frameTuple1 = leafFrame1.createTupleReference();
         frameTuple2 = leafFrame2.createTupleReference();
         currentTupleIndex = 0;

@@ -12,6 +12,7 @@ public abstract class AbstractOperationCallbackTest {
     @SuppressWarnings("rawtypes")
     protected final ISerializerDeserializer[] keySerdes;
     protected final MultiComparator cmp;
+    protected final int[] bloomFilterKeyFields;
 
     protected IIndex index;
 
@@ -20,6 +21,10 @@ public abstract class AbstractOperationCallbackTest {
     public AbstractOperationCallbackTest() {
         this.keySerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
         this.cmp = MultiComparator.create(SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length));
+        bloomFilterKeyFields = new int[NUM_KEY_FIELDS];
+        for (int i = 0; i < NUM_KEY_FIELDS; ++i) {
+            bloomFilterKeyFields[i] = i;
+        }
     }
 
     public void setup() throws Exception {

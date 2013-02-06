@@ -53,8 +53,8 @@ public abstract class OrderedIndexMultiThreadTest {
 
     protected abstract void tearDown() throws HyracksDataException;
 
-    protected abstract IIndex createIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
-            throws TreeIndexException;
+    protected abstract IIndex createIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
+            int[] bloomFilterKeyFields) throws TreeIndexException;
 
     protected abstract IIndexTestWorkerFactory getWorkerFactory();
 
@@ -75,7 +75,13 @@ public abstract class OrderedIndexMultiThreadTest {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeys);
 
-        IIndex index = createIndex(typeTraits, cmpFactories);
+        // This is only used for the LSM-BTree.
+        int[] bloomFilterKeyFields = new int[numKeys];
+        for (int i = 0; i < numKeys; ++i) {
+            bloomFilterKeyFields[i] = i;
+        }
+
+        IIndex index = createIndex(typeTraits, cmpFactories, bloomFilterKeyFields);
         IIndexTestWorkerFactory workerFactory = getWorkerFactory();
 
         // 4 batches per thread.

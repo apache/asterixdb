@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
-public class LSMRTreeFlushCursor implements ITreeIndexCursor {
+public class LSMRTreeWithAntiMatterTuplesFlushCursor implements ITreeIndexCursor {
     private final TreeTupleSorter rTreeTupleSorter;
     private final TreeTupleSorter bTreeTupleSorter;
     private final int[] comparatorFields;
@@ -36,7 +36,7 @@ public class LSMRTreeFlushCursor implements ITreeIndexCursor {
     private ITupleReference btreeTuple;
     private boolean foundNext = false;
 
-    public LSMRTreeFlushCursor(TreeTupleSorter rTreeTupleSorter, TreeTupleSorter bTreeTupleSorter,
+    public LSMRTreeWithAntiMatterTuplesFlushCursor(TreeTupleSorter rTreeTupleSorter, TreeTupleSorter bTreeTupleSorter,
             int[] comparatorFields, IBinaryComparatorFactory[] comparatorFactories) {
         this.rTreeTupleSorter = rTreeTupleSorter;
         this.bTreeTupleSorter = bTreeTupleSorter;

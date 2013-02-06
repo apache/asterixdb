@@ -8,6 +8,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
@@ -15,17 +16,20 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 public class LSMRTreeFlushOperation implements ILSMIOOperation {
 
     private final ILSMIndexAccessorInternal accessor;
-    private final LSMRTreeMutableComponent flushingComponent;
+    private final ILSMComponent flushingComponent;
     private final FileReference rtreeFlushTarget;
     private final FileReference btreeFlushTarget;
+    private final FileReference bloomFilterFlushTarget;
     private final ILSMIOOperationCallback callback;
 
-    public LSMRTreeFlushOperation(ILSMIndexAccessorInternal accessor, LSMRTreeMutableComponent flushingComponent,
-            FileReference rtreeFlushTarget, FileReference btreeFlushTarget, ILSMIOOperationCallback callback) {
+    public LSMRTreeFlushOperation(ILSMIndexAccessorInternal accessor, ILSMComponent flushingComponent,
+            FileReference rtreeFlushTarget, FileReference btreeFlushTarget, FileReference bloomFilterFlushTarget,
+            ILSMIOOperationCallback callback) {
         this.accessor = accessor;
         this.flushingComponent = flushingComponent;
         this.rtreeFlushTarget = rtreeFlushTarget;
         this.btreeFlushTarget = btreeFlushTarget;
+        this.bloomFilterFlushTarget = bloomFilterFlushTarget;
         this.callback = callback;
     }
 
@@ -38,7 +42,10 @@ public class LSMRTreeFlushOperation implements ILSMIOOperation {
     public Set<IODeviceHandle> getWriteDevices() {
         Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
         devs.add(rtreeFlushTarget.getDeviceHandle());
-        devs.add(btreeFlushTarget.getDeviceHandle());
+        if (btreeFlushTarget != null) {
+            devs.add(btreeFlushTarget.getDeviceHandle());
+            devs.add(bloomFilterFlushTarget.getDeviceHandle());
+        }
         return devs;
     }
 
@@ -60,7 +67,11 @@ public class LSMRTreeFlushOperation implements ILSMIOOperation {
         return btreeFlushTarget;
     }
 
-    public LSMRTreeMutableComponent getFlushingComponent() {
+    public FileReference getBloomFilterFlushTarget() {
+        return bloomFilterFlushTarget;
+    }
+
+    public ILSMComponent getFlushingComponent() {
         return flushingComponent;
     }
 }

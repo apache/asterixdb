@@ -91,6 +91,15 @@ public class AccessMethodTestsConfig {
     public static final int LSM_INVINDEX_SCAN_COUNT_ARRAY_SIZE = 1000000;
     public static final int LSM_INVINDEX_MULTITHREAD_NUM_OPERATIONS = 200;
 
+    // Test params for BloomFilter
+    public static final int BLOOM_FILTER_NUM_TUPLES_TO_INSERT = 100;
+
+    // Mem configuration for BloomFilter.
+    public static final int BLOOM_FILTER_PAGE_SIZE = 256;
+    public static final int BLOOM_FILTER_NUM_PAGES = 1000;
+    public static final int BLOOM_FILTER_MAX_OPEN_FILES = 10;
+    public static final int BLOOM_FILTER_HYRACKS_FRAME_SIZE = 128;
+
 }
 
 /* ORIGINAL TEST PARAMETERS: DO NOT EDIT!

@@ -76,7 +76,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     protected final int invListEndPageIdField;
     protected final int invListStartOffField;
     protected final int invListNumElementsField;
-    
+
     // Type traits to be appended to the token type trait which finally form the BTree field type traits.
     protected static final ITypeTraits[] btreeValueTypeTraits = new ITypeTraits[4];
     static {
@@ -283,7 +283,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
                 btreeTuple.getFieldStart(invListNumElementsField));
         listCursor.reset(startPageId, endPageId, startOff, numElements);
     }
-    
+
     public final class OnDiskInvertedIndexBulkLoader implements IIndexBulkLoader {
         private final ArrayTupleBuilder btreeTupleBuilder;
         private final ArrayTupleReference btreeTupleReference;
@@ -302,8 +302,8 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         private final boolean verifyInput;
         private final MultiComparator allCmp;
 
-        public OnDiskInvertedIndexBulkLoader(float btreeFillFactor, boolean verifyInput, int startPageId, int fileId)
-                throws IndexException, HyracksDataException {
+        public OnDiskInvertedIndexBulkLoader(float btreeFillFactor, boolean verifyInput, long numElementsHint,
+                int startPageId, int fileId) throws IndexException, HyracksDataException {
             this.verifyInput = verifyInput;
             this.tokenCmp = MultiComparator.create(btree.getComparatorFactories());
             this.invListCmp = MultiComparator.create(invListCmpFactories);
@@ -316,7 +316,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
             this.btreeTupleReference = new ArrayTupleReference();
             this.lastTupleBuilder = new ArrayTupleBuilder(numTokenFields + numInvListKeys);
             this.lastTuple = new ArrayTupleReference();
-            this.btreeBulkloader = btree.createBulkLoader(btreeFillFactor, verifyInput);
+            this.btreeBulkloader = btree.createBulkLoader(btreeFillFactor, verifyInput, numElementsHint);
             currentPageId = startPageId;
             currentPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
             currentPage.acquireWriteLatch();
@@ -477,7 +477,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
             this.index = index;
             this.searcher = searcher;
         }
-        
+
         @Override
         public IIndexCursor createSearchCursor() {
             return new OnDiskInvertedIndexSearchCursor(searcher, index.getInvListTypeTraits().length);
@@ -563,9 +563,10 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput) throws IndexException {
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
+            throws IndexException {
         try {
-            return new OnDiskInvertedIndexBulkLoader(fillFactor, verifyInput, rootPageId, fileId);
+            return new OnDiskInvertedIndexBulkLoader(fillFactor, verifyInput, numElementsHint, rootPageId, fileId);
         } catch (HyracksDataException e) {
             throw new InvertedIndexException(e);
         }

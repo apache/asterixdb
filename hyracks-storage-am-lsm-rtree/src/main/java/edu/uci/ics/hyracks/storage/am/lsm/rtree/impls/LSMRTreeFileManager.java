@@ -30,12 +30,12 @@ import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-public class LSMRTreeFileManager extends LSMIndexFileManager {
+public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
     private static final String RTREE_STRING = "r";
     private static final String BTREE_STRING = "b";
 
@@ -69,7 +69,8 @@ public class LSMRTreeFileManager extends LSMIndexFileManager {
         String baseName = baseDir + ts + SPLIT_STRING + ts;
         // Begin timestamp and end timestamp are identical since it is a flush
         return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + RTREE_STRING),
-                createFlushFile(baseName + SPLIT_STRING + BTREE_STRING));
+                createFlushFile(baseName + SPLIT_STRING + BTREE_STRING), createFlushFile(baseName + SPLIT_STRING
+                        + BLOOM_FILTER_STRING));
     }
 
     @Override
@@ -81,7 +82,8 @@ public class LSMRTreeFileManager extends LSMIndexFileManager {
         String baseName = baseDir + firstTimestampRange[0] + SPLIT_STRING + lastTimestampRange[1];
         // Get the range of timestamps by taking the earliest and the latest timestamps
         return new LSMComponentFileReferences(createMergeFile(baseName + SPLIT_STRING + RTREE_STRING),
-                createMergeFile(baseName + SPLIT_STRING + BTREE_STRING));
+                createMergeFile(baseName + SPLIT_STRING + BTREE_STRING), createMergeFile(baseName + SPLIT_STRING
+                        + BLOOM_FILTER_STRING));
     }
 
     @Override
@@ -89,15 +91,37 @@ public class LSMRTreeFileManager extends LSMIndexFileManager {
         List<LSMComponentFileReferences> validFiles = new ArrayList<LSMComponentFileReferences>();
         ArrayList<ComparableFileName> allRTreeFiles = new ArrayList<ComparableFileName>();
         ArrayList<ComparableFileName> allBTreeFiles = new ArrayList<ComparableFileName>();
+        ArrayList<ComparableFileName> allBloomFilterFiles = new ArrayList<ComparableFileName>();
 
         // Gather files from all IODeviceHandles.
         for (IODeviceHandle dev : ioManager.getIODevices()) {
-            cleanupAndGetValidFilesInternal(dev, btreeFilter, btreeFactory, allBTreeFiles);
-            HashSet<String> btreeFilesSet = new HashSet<String>();
-            for (ComparableFileName cmpFileName : allBTreeFiles) {
+            cleanupAndGetValidFilesInternal(dev, bloomFilterFilter, null, allBloomFilterFiles);
+            HashSet<String> bloomFilterFilesSet = new HashSet<String>();
+            for (ComparableFileName cmpFileName : allBloomFilterFiles) {
                 int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
-                btreeFilesSet.add(cmpFileName.fileName.substring(0, index));
+                bloomFilterFilesSet.add(cmpFileName.fileName.substring(0, index));
             }
+
+            // List of valid BTree files that may or may not have a bloom filter buddy. Will check for buddies below.
+            ArrayList<ComparableFileName> tmpAllBTreeFiles = new ArrayList<ComparableFileName>();
+            cleanupAndGetValidFilesInternal(dev, btreeFilter, btreeFactory, tmpAllBTreeFiles);
+            // Look for buddy bloom filters for all valid BTrees. 
+            // If no buddy is found, delete the file, otherwise add the BTree to allBTreeFiles. 
+            HashSet<String> btreeFilesSet = new HashSet<String>();
+            for (ComparableFileName cmpFileName : tmpAllBTreeFiles) {
+                int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
+                String file = cmpFileName.fileName.substring(0, index);
+                if (bloomFilterFilesSet.contains(file)) {
+                    allBTreeFiles.add(cmpFileName);
+                    btreeFilesSet.add(cmpFileName.fileName.substring(0, index));
+                } else {
+                    // Couldn't find the corresponding bloom filter file; thus, delete
+                    // the BTree file.
+                    File invalidBTreeFile = new File(cmpFileName.fullPath);
+                    invalidBTreeFile.delete();
+                }
+            }
+
             // List of valid RTree files that may or may not have a BTree buddy. Will check for buddies below.
             ArrayList<ComparableFileName> tmpAllRTreeFiles = new ArrayList<ComparableFileName>();
             cleanupAndGetValidFilesInternal(dev, rtreeFilter, rtreeFactory, tmpAllRTreeFiles);
@@ -117,23 +141,26 @@ public class LSMRTreeFileManager extends LSMIndexFileManager {
             }
         }
         // Sanity check.
-        if (allRTreeFiles.size() != allBTreeFiles.size()) {
-            throw new HyracksDataException("Unequal number of valid RTree and BTree files found. Aborting cleanup.");
+        if (allRTreeFiles.size() != allBTreeFiles.size() || allBTreeFiles.size() != allBloomFilterFiles.size()) {
+            throw new HyracksDataException(
+                    "Unequal number of valid RTree, BTree, and Bloom Filter files found. Aborting cleanup.");
         }
 
         // Trivial cases.
-        if (allRTreeFiles.isEmpty() || allBTreeFiles.isEmpty()) {
+        if (allRTreeFiles.isEmpty() || allBTreeFiles.isEmpty() || allBloomFilterFiles.isEmpty()) {
             return validFiles;
         }
 
-        if (allRTreeFiles.size() == 1 && allBTreeFiles.size() == 1) {
-            validFiles.add(new LSMComponentFileReferences(allRTreeFiles.get(0).fileRef, allBTreeFiles.get(0).fileRef));
+        if (allRTreeFiles.size() == 1 && allBTreeFiles.size() == 1 && allBloomFilterFiles.size() == 1) {
+            validFiles.add(new LSMComponentFileReferences(allRTreeFiles.get(0).fileRef, allBTreeFiles.get(0).fileRef,
+                    allBloomFilterFiles.get(0).fileRef));
             return validFiles;
         }
 
         // Sorts files names from earliest to latest timestamp.
         Collections.sort(allRTreeFiles);
         Collections.sort(allBTreeFiles);
+        Collections.sort(allBloomFilterFiles);
 
         List<ComparableFileName> validComparableRTreeFiles = new ArrayList<ComparableFileName>();
         ComparableFileName lastRTree = allRTreeFiles.get(0);
@@ -143,25 +170,37 @@ public class LSMRTreeFileManager extends LSMIndexFileManager {
         ComparableFileName lastBTree = allBTreeFiles.get(0);
         validComparableBTreeFiles.add(lastBTree);
 
+        List<ComparableFileName> validComparableBloomFilterFiles = new ArrayList<ComparableFileName>();
+        ComparableFileName lastBloomFilter = allBloomFilterFiles.get(0);
+        validComparableBloomFilterFiles.add(lastBloomFilter);
+
         for (int i = 1; i < allRTreeFiles.size(); i++) {
             ComparableFileName currentRTree = allRTreeFiles.get(i);
             ComparableFileName currentBTree = allBTreeFiles.get(i);
+            ComparableFileName currentBloomFilter = allBloomFilterFiles.get(i);
             // Current start timestamp is greater than last stop timestamp.
             if (currentRTree.interval[0].compareTo(lastRTree.interval[1]) > 0
-                    && currentBTree.interval[0].compareTo(lastBTree.interval[1]) > 0) {
+                    && currentBTree.interval[0].compareTo(lastBTree.interval[1]) > 0
+                    && currentBloomFilter.interval[0].compareTo(lastBloomFilter.interval[1]) > 0) {
                 validComparableRTreeFiles.add(currentRTree);
                 validComparableBTreeFiles.add(currentBTree);
+                validComparableBloomFilterFiles.add(currentBloomFilter);
                 lastRTree = currentRTree;
                 lastBTree = currentBTree;
+                lastBloomFilter = currentBloomFilter;
             } else if (currentRTree.interval[0].compareTo(lastRTree.interval[0]) >= 0
                     && currentRTree.interval[1].compareTo(lastRTree.interval[1]) <= 0
                     && currentBTree.interval[0].compareTo(lastBTree.interval[0]) >= 0
-                    && currentBTree.interval[1].compareTo(lastBTree.interval[1]) <= 0) {
+                    && currentBTree.interval[1].compareTo(lastBTree.interval[1]) <= 0
+                    && currentBloomFilter.interval[0].compareTo(lastBloomFilter.interval[0]) >= 0
+                    && currentBloomFilter.interval[1].compareTo(lastBloomFilter.interval[1]) <= 0) {
                 // Invalid files are completely contained in last interval.
                 File invalidRTreeFile = new File(currentRTree.fullPath);
                 invalidRTreeFile.delete();
                 File invalidBTreeFile = new File(currentBTree.fullPath);
                 invalidBTreeFile.delete();
+                File invalidBloomFilterFile = new File(currentBloomFilter.fullPath);
+                invalidBloomFilterFile.delete();
             } else {
                 // This scenario should not be possible.
                 throw new HyracksDataException("Found LSM files with overlapping but not contained timetamp intervals.");
@@ -172,13 +211,17 @@ public class LSMRTreeFileManager extends LSMIndexFileManager {
         // files come first.
         Collections.sort(validComparableRTreeFiles, recencyCmp);
         Collections.sort(validComparableBTreeFiles, recencyCmp);
+        Collections.sort(validComparableBloomFilterFiles, recencyCmp);
 
         Iterator<ComparableFileName> rtreeFileIter = validComparableRTreeFiles.iterator();
         Iterator<ComparableFileName> btreeFileIter = validComparableBTreeFiles.iterator();
+        Iterator<ComparableFileName> bloomFilterFileIter = validComparableBloomFilterFiles.iterator();
         while (rtreeFileIter.hasNext() && btreeFileIter.hasNext()) {
             ComparableFileName cmpRTreeFileName = rtreeFileIter.next();
             ComparableFileName cmpBTreeFileName = btreeFileIter.next();
-            validFiles.add(new LSMComponentFileReferences(cmpRTreeFileName.fileRef, cmpBTreeFileName.fileRef));
+            ComparableFileName cmpBloomFilterFileName = bloomFilterFileIter.next();
+            validFiles.add(new LSMComponentFileReferences(cmpRTreeFileName.fileRef, cmpBTreeFileName.fileRef,
+                    cmpBloomFilterFileName.fileRef));
         }
 
         return validFiles;

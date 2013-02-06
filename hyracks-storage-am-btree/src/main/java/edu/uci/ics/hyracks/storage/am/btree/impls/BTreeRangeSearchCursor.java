@@ -65,7 +65,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     private RangePredicate pred;
     private MultiComparator lowKeyCmp;
     private MultiComparator highKeyCmp;
-    private ITupleReference lowKey;
+    protected ITupleReference lowKey;
     private ITupleReference highKey;
 
     public BTreeRangeSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes) {

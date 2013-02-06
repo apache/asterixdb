@@ -33,6 +33,13 @@
   	</dependency> 
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
+  		<artifactId>hyracks-storage-am-bloomfilter</artifactId>
+  		<version>0.2.2-SNAPSHOT</version>
+  		<type>jar</type>
+  		<scope>compile</scope>
+  	</dependency> 
+  	<dependency>
+  		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-am-lsm-common</artifactId>
   		<version>0.2.2-SNAPSHOT</version>
   		<type>jar</type>
