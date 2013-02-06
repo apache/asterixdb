@@ -18,7 +18,7 @@
       <value>20</value>
    </property>
    <property>
-      <name>mapred.min.split.size</name>
+      <name>mapred.max.split.size</name>
       <value>2048</value>
    </property>
 

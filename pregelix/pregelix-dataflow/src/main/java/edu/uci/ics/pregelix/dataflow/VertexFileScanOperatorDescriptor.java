@@ -17,6 +17,7 @@ package edu.uci.ics.pregelix.dataflow;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -55,15 +56,20 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
     private final List<InputSplit> splits;
     private final IConfigurationFactory confFactory;
     private final int fieldSize = 2;
+    private final String[] scheduledLocations;
+    private final boolean[] executed;
 
     /**
      * @param spec
      */
     public VertexFileScanOperatorDescriptor(JobSpecification spec, RecordDescriptor rd, List<InputSplit> splits,
-            IConfigurationFactory confFactory) throws HyracksException {
+            String[] scheduledLocations, IConfigurationFactory confFactory) throws HyracksException {
         super(spec, 0, 1);
         this.splits = splits;
         this.confFactory = confFactory;
+        this.scheduledLocations = scheduledLocations;
+        this.executed = new boolean[scheduledLocations.length];
+        Arrays.fill(executed, false);
         this.recordDescriptors[0] = rd;
     }
 
@@ -78,7 +84,21 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
                 try {
                     Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
                     writer.open();
-                    loadVertices(ctx, partition);
+                    for (int i = 0; i < scheduledLocations.length; i++) {
+                        if (scheduledLocations[i].equals(ctx.getJobletContext().getApplicationContext().getNodeId())) {
+                            /**
+                             * pick one from the FileSplit queue
+                             */
+                            synchronized (executed) {
+                                if (!executed[i]) {
+                                    executed[i] = true;
+                                } else {
+                                    continue;
+                                }
+                            }
+                            loadVertices(ctx, i);
+                        }
+                    }
                     writer.close();
                 } catch (Exception e) {
                     throw new HyracksDataException(e);
@@ -104,13 +124,13 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
 
                 VertexInputFormat vertexInputFormat = BspUtils.createVertexInputFormat(conf);
                 TaskAttemptContext context = new TaskAttemptContext(conf, new TaskAttemptID());
-                InputSplit split = splits.get(partition);
+                InputSplit split = splits.get(partitionId);
 
                 if (split instanceof FileSplit) {
                     FileSplit fileSplit = (FileSplit) split;
                     LOGGER.info("read file split: " + fileSplit.getPath() + " location:" + fileSplit.getLocations()[0]
                             + " start:" + fileSplit.getStart() + " length:" + split.getLength() + " partition:"
-                            + partition);
+                            + partitionId);
                 }
                 VertexReader vertexReader = vertexInputFormat.createVertexReader(split, context);
                 vertexReader.initialize(split, context);
@@ -122,7 +142,7 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
                  * set context
                  */
                 Context mapperContext = new Mapper().new Context(conf, new TaskAttemptID(), null, null, null, null,
-                        splits.get(partition));
+                        splits.get(partitionId));
                 Vertex.setContext(mapperContext);
 
                 /**
@@ -166,5 +186,4 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
             }
         };
     }
-
 }

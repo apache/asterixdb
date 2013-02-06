@@ -13,15 +13,17 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.hdfs.dataflow;
+package edu.uci.ics.hyracks.hdfs2.dataflow;
 
 import java.util.Arrays;
 
-import org.apache.hadoop.mapred.InputFormat;
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.RecordReader;
-import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapreduce.InputFormat;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.TaskAttemptID;
+import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
@@ -35,12 +37,12 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNo
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParser;
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParserFactory;
 
-@SuppressWarnings({ "deprecation", "rawtypes" })
+@SuppressWarnings("rawtypes")
 public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
     private final ConfFactory confFactory;
-    private final InputSplitsFactory splitsFactory;
+    private final InputSplit[] inputSplits;
     private final String[] scheduledLocations;
     private final IKeyValueParserFactory tupleParserFactory;
     private final boolean[] executed;
@@ -63,11 +65,11 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
      *            the ITupleParserFactory implementation instance.
      * @throws HyracksException
      */
-    public HDFSReadOperatorDescriptor(JobSpecification spec, RecordDescriptor rd, JobConf conf, InputSplit[] splits,
+    public HDFSReadOperatorDescriptor(JobSpecification spec, RecordDescriptor rd, Job conf, InputSplit[] splits,
             String[] scheduledLocations, IKeyValueParserFactory tupleParserFactory) throws HyracksException {
         super(spec, 0, 1);
         try {
-            this.splitsFactory = new InputSplitsFactory(splits);
+            this.inputSplits = splits;
             this.confFactory = new ConfFactory(conf);
         } catch (Exception e) {
             throw new HyracksException(e);
@@ -83,8 +85,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
             throws HyracksDataException {
-        final InputSplit[] inputSplits = splitsFactory.getSplits();
-        final JobConf conf = confFactory.getConf();
+        final Job conf = confFactory.getConf();
 
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
             private String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
@@ -93,9 +94,11 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
             @Override
             public void initialize() throws HyracksDataException {
                 try {
+                    Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
                     IKeyValueParser parser = tupleParserFactory.createKeyValueParser(ctx);
                     writer.open();
-                    InputFormat inputFormat = conf.getInputFormat();
+                    InputFormat inputFormat = ReflectionUtils.newInstance(conf.getInputFormatClass(),
+                            conf.getConfiguration());
                     for (int i = 0; i < inputSplits.length; i++) {
                         /**
                          * read all the partitions scheduled to the current node
@@ -108,6 +111,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                             synchronized (executed) {
                                 if (executed[i] == false) {
                                     executed[i] = true;
+                                    System.out.println("thread " + Thread.currentThread().getId() + " setting " + i);
                                 } else {
                                     continue;
                                 }
@@ -116,11 +120,12 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                             /**
                              * read the split
                              */
-                            RecordReader reader = inputFormat.getRecordReader(inputSplits[i], conf, Reporter.NULL);
-                            Object key = reader.createKey();
-                            Object value = reader.createValue();
-                            while (reader.next(key, value) == true) {
-                                parser.parse(key, value, writer);
+                            TaskAttemptContext context = new TaskAttemptContext(conf.getConfiguration(),
+                                    new TaskAttemptID());
+                            RecordReader reader = inputFormat.createRecordReader(inputSplits[i], context);
+                            reader.initialize(inputSplits[i], context);
+                            while (reader.nextKeyValue() == true) {
+                                parser.parse(reader.getCurrentKey(), reader.getCurrentValue(), writer);
                             }
                         }
                     }
