@@ -15,12 +15,10 @@
 
 package edu.uci.ics.asterix.transaction.management.resource;
 
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
-import edu.uci.ics.asterix.transaction.management.service.transaction.MutableResourceId;
 
 /**
  * Represents a repository containing Resource Managers and Resources in the
@@ -31,38 +29,15 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.MutableRes
  * recovery. An example of resource is a @see ITreeIndex that is managed by a
  * resource manager @see TreeResourceManager
  */
-public class TransactionalResourceRepository {
-
-    private Map<MutableResourceId, Object> resourceRepository = new HashMap<MutableResourceId, Object>(); // repository
+public class TransactionalResourceManagerRepository {
 
     private Map<Byte, IResourceManager> resourceMgrRepository = new HashMap<Byte, IResourceManager>(); // repository
-    
-    private MutableResourceId mutableResourceId = new MutableResourceId(0);
-
-    public void registerTransactionalResource(long resourceId, Object resource) {
-        synchronized (resourceRepository) {
-            mutableResourceId.setId(resourceId);
-//            MutableResourceId newMutableResourceId = new MutableResourceId(resourceId);
-//            resourceRepository.put(newMutableResourceId, resource);
-            if (resourceRepository.get(resourceId) == null) {
-                MutableResourceId newMutableResourceId = new MutableResourceId(resourceId);
-                resourceRepository.put(newMutableResourceId, resource);
-            }
-        }
-    }
 
     public void registerTransactionalResourceManager(byte id, IResourceManager resourceMgr) {
         synchronized (resourceMgrRepository) {
             if (resourceMgrRepository.get(id) == null) {
                 resourceMgrRepository.put(id, resourceMgr);
             }
-        }
-    }
-
-    public Object getTransactionalResource(long resourceId) {
-        synchronized (resourceRepository) {
-            mutableResourceId.setId(resourceId);
-            return resourceRepository.get(mutableResourceId);
         }
     }
 

@@ -15,7 +15,7 @@
 package edu.uci.ics.asterix.transaction.management.service.transaction;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceRepository;
+import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceManagerRepository;
 import edu.uci.ics.asterix.transaction.management.service.locking.ILockManager;
 import edu.uci.ics.asterix.transaction.management.service.locking.LockManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.ILogManager;
@@ -35,7 +35,7 @@ public class TransactionSubsystem {
     private final ILockManager lockManager;
     private final ITransactionManager transactionManager;
     private final IRecoveryManager recoveryManager;
-    private final TransactionalResourceRepository resourceRepository;
+    private final TransactionalResourceManagerRepository resourceRepository;
     private final IndexLoggerRepository loggerRepository;
     private final IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider;
 
@@ -47,7 +47,7 @@ public class TransactionSubsystem {
         this.lockManager = new LockManager(this);
         this.recoveryManager = new RecoveryManager(this);
         this.loggerRepository = new IndexLoggerRepository(this);
-        this.resourceRepository = new TransactionalResourceRepository();
+        this.resourceRepository = new TransactionalResourceManagerRepository();
         this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
     }
 
@@ -67,7 +67,7 @@ public class TransactionSubsystem {
         return recoveryManager;
     }
 
-    public TransactionalResourceRepository getTransactionalResourceRepository() {
+    public TransactionalResourceManagerRepository getTransactionalResourceRepository() {
         return resourceRepository;
     }
 

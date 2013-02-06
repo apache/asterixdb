@@ -38,7 +38,7 @@ import edu.uci.ics.asterix.transaction.management.resource.ILocalResourceMetadat
 import edu.uci.ics.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
 import edu.uci.ics.asterix.transaction.management.resource.LSMInvertedIndexLocalResourceMetadata;
 import edu.uci.ics.asterix.transaction.management.resource.LSMRTreeLocalResourceMetadata;
-import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceRepository;
+import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceManagerRepository;
 import edu.uci.ics.asterix.transaction.management.service.logging.IBuffer;
 import edu.uci.ics.asterix.transaction.management.service.logging.ILogCursor;
 import edu.uci.ics.asterix.transaction.management.service.logging.ILogFilter;
@@ -84,13 +84,6 @@ public class RecoveryManager implements IRecoveryManager {
 
     public RecoveryManager(TransactionSubsystem TransactionProvider) throws ACIDException {
         this.txnSubsystem = TransactionProvider;
-        /**********
-         * try {
-         * FileUtil.createFileIfNotExists(checkpoint_record_file);
-         * } catch (IOException ioe) {
-         * throw new ACIDException(" unable to create checkpoint record file " + checkpoint_record_file, ioe);
-         * }
-         ***********/
     }
 
     /**
@@ -114,10 +107,9 @@ public class RecoveryManager implements IRecoveryManager {
             new ACIDException("Checkpoint file doesn't exist", e);
         }
 
-        //#. if checkpointLSN in the checkpoint file is equal to the lastLSN in the log file, 
+        //#. if minMCTFirstLSN is equal to -1,
         //   then return healthy state. Otherwise, return corrupted.
-        LogManager logMgr = (LogManager) txnSubsystem.getLogManager();
-        if (checkpointObject.getCheckpointLSN() == logMgr.getCurrentLsn().get()) {
+        if (checkpointObject.getMinMCTFirstLSN() == -1) {
             state = SystemState.HEALTHY;
             return state;
         } else {
@@ -137,7 +129,7 @@ public class RecoveryManager implements IRecoveryManager {
         ILogManager logManager = txnSubsystem.getLogManager();
         ILogRecordHelper logRecordHelper = logManager.getLogRecordHelper();
         ITransactionManager txnManager = txnSubsystem.getTransactionManager();
-        TransactionalResourceRepository txnResourceRepository = txnSubsystem.getTransactionalResourceRepository();
+        TransactionalResourceManagerRepository txnResourceRepository = txnSubsystem.getTransactionalResourceRepository();
 
         //winnerTxnTable is used to add pairs, <committed TxnId, the most recent commit LSN of the TxnId>
         Map<TxnId, Long> winnerTxnTable = new HashMap<TxnId, Long>();
@@ -276,7 +268,7 @@ public class RecoveryManager implements IRecoveryManager {
                                 txnSubsystem.getTransactionalResourceRepository().registerTransactionalResourceManager(
                                         resourceMgrId, resourceMgr);
                             }
-                            
+
                             //redo finally.
                             resourceMgr.redo(logRecordHelper, currentLogLocator);
                         }
@@ -307,9 +299,9 @@ public class RecoveryManager implements IRecoveryManager {
         //#. create and store the checkpointObject into the new checkpoint file
         //TODO
         //put the correct minMCTFirstLSN by getting from Zach. :)
-        long minMCTFirstLSM = 0;
-        CheckpointObject checkpointObject = new CheckpointObject(logMgr.getCurrentLsn().get(), minMCTFirstLSM,
-                txnMgr.getMaxJobId(), System.currentTimeMillis());
+        long minMCTFirstLSM = -1;
+        CheckpointObject checkpointObject = new CheckpointObject(minMCTFirstLSM, txnMgr.getMaxJobId(),
+                System.currentTimeMillis());
 
         FileOutputStream fos = null;
         ObjectOutputStream oosToFos = null;

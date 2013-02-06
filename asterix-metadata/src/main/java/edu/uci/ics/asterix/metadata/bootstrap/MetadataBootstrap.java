@@ -53,7 +53,7 @@ import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.resource.ILocalResourceMetadata;
 import edu.uci.ics.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
-import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceRepository;
+import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceManagerRepository;
 import edu.uci.ics.asterix.transaction.management.service.logging.IndexResourceManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
@@ -137,7 +137,7 @@ public class MetadataBootstrap {
         initLocalIndexArrays();
 
         boolean isNewUniverse = true;
-        TransactionalResourceRepository resourceRepository = runtimeContext.getTransactionSubsystem()
+        TransactionalResourceManagerRepository resourceRepository = runtimeContext.getTransactionSubsystem()
                 .getTransactionalResourceRepository();
         resourceRepository.registerTransactionalResourceManager(ResourceType.LSM_BTREE, new IndexResourceManager(
                 ResourceType.LSM_BTREE, runtimeContext.getTransactionSubsystem()));
@@ -174,11 +174,9 @@ public class MetadataBootstrap {
 
                 for (int i = 0; i < primaryIndexes.length; i++) {
                     enlistMetadataDataset(primaryIndexes[i], true);
-                    registerTransactionalResource(primaryIndexes[i], resourceRepository);
                 }
                 for (int i = 0; i < secondaryIndexes.length; i++) {
                     enlistMetadataDataset(secondaryIndexes[i], true);
-                    registerTransactionalResource(secondaryIndexes[i], resourceRepository);
                 }
                 insertInitialDataverses(mdTxnCtx);
                 insertInitialDatasets(mdTxnCtx);
@@ -198,11 +196,9 @@ public class MetadataBootstrap {
         } else {
             for (int i = 0; i < primaryIndexes.length; i++) {
                 enlistMetadataDataset(primaryIndexes[i], false);
-                registerTransactionalResource(primaryIndexes[i], resourceRepository);
             }
             for (int i = 0; i < secondaryIndexes.length; i++) {
                 enlistMetadataDataset(secondaryIndexes[i], false);
-                registerTransactionalResource(secondaryIndexes[i], resourceRepository);
             }
             LOGGER.info("FINISHED ENLISTMENT OF METADATA B-TREES.");
         }
@@ -223,14 +219,6 @@ public class MetadataBootstrap {
             indexLifecycleManager.close(resourceID);
             indexLifecycleManager.unregister(resourceID);
         }
-    }
-
-    private static void registerTransactionalResource(IMetadataIndex metadataIndex,
-            TransactionalResourceRepository resourceRepository) throws ACIDException {
-        long resourceId = metadataIndex.getResourceID();
-        IIndex index = indexLifecycleManager.getIndex(resourceId);
-        resourceRepository.registerTransactionalResource(resourceId, index);
-        metadataIndex.initIndexLogger(index);
     }
 
     public static void insertInitialDataverses(MetadataTransactionContext mdTxnCtx) throws Exception {

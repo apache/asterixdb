@@ -28,11 +28,11 @@ public class IndexResourceManager implements IResourceManager {
 
     public final byte resourceType;
 
-    private final TransactionSubsystem provider;
+    private final TransactionSubsystem txnSubsystem;
 
     public IndexResourceManager(byte resourceType, TransactionSubsystem provider) {
         this.resourceType = resourceType;
-        this.provider = provider;
+        this.txnSubsystem = provider;
     }
 
     public byte getResourceManagerId() {
@@ -46,7 +46,8 @@ public class IndexResourceManager implements IResourceManager {
         //TODO
         //replace TransactionResourceRepository with IndexLifeCycleManager
         // look up the repository to obtain the resource object
-        IIndex index = (IIndex) provider.getTransactionalResourceRepository().getTransactionalResource(resourceId);
+        IIndex index = (IIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
+                .getIndex(resourceId);
 
         /* field count */
         int fieldCount = logLocator.getBuffer().readInt(logLocator.getMemoryOffset() + offset);
@@ -112,7 +113,7 @@ public class IndexResourceManager implements IResourceManager {
         long resourceId = logRecordHelper.getResourceId(logLocator);
         int offset = logRecordHelper.getLogContentBeginPos(logLocator);
 
-        IIndex index = (IIndex) provider.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
+        IIndex index = (IIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
                 .getIndex(resourceId);
 
         /* field count */

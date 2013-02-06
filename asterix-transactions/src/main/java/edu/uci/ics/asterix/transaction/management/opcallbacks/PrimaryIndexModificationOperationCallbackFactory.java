@@ -16,7 +16,7 @@
 package edu.uci.ics.asterix.transaction.management.opcallbacks;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceRepository;
+import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceManagerRepository;
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionSubsystemProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
@@ -24,6 +24,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
@@ -48,14 +49,13 @@ public class PrimaryIndexModificationOperationCallbackFactory extends AbstractOp
     @Override
     public IModificationOperationCallback createModificationOperationCallback(long resourceId, Object resource,
             IHyracksTaskContext ctx) throws HyracksDataException {
-        TransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
-        TransactionalResourceRepository txnResourceRepository = txnSubsystem.getTransactionalResourceRepository();
-        ILSMIndex index = (ILSMIndex) txnResourceRepository.getTransactionalResource(resourceId);
 
-        //register the resource if it is not registered
+        TransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
+        IIndexLifecycleManager indexLifeCycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
+                .getIndexLifecycleManager();
+        ILSMIndex index = (ILSMIndex) indexLifeCycleManager.getIndex(resourceId);
         if (index == null) {
-            txnSubsystem.getTransactionalResourceRepository().registerTransactionalResource(resourceId, resource);
-            index = (ILSMIndex) resource;
+            throw new HyracksDataException("Index(id:"+resourceId+") is not registered.");
         }
 
         try {

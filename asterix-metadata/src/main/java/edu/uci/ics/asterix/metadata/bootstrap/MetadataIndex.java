@@ -71,8 +71,6 @@ public final class MetadataIndex implements IMetadataIndex {
     protected int fileId;
     // Resource id of this index for use in transactions.
     protected long resourceId;
-    // Logger for tree indexes.
-    private IndexLogger indexLogger;
     // datasetId
     private final DatasetId datasetId;
     // Flag of primary index
@@ -235,11 +233,6 @@ public final class MetadataIndex implements IMetadataIndex {
     }
 
     @Override
-    public void initIndexLogger(IIndex index) throws ACIDException {
-        this.indexLogger = new IndexLogger(resourceId, ResourceType.LSM_BTREE, index);
-    }
-
-    @Override
     public int getFileId() {
         return fileId;
     }
@@ -247,10 +240,6 @@ public final class MetadataIndex implements IMetadataIndex {
     @Override
     public ARecordType getPayloadRecordType() {
         return payloadType;
-    }
-
-    public IndexLogger getIndexLogger() {
-        return indexLogger;
     }
 
     @Override

@@ -58,7 +58,7 @@ import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.opcallbacks.PrimaryIndexModificationOperationCallback;
 import edu.uci.ics.asterix.transaction.management.opcallbacks.SecondaryIndexModificationOperationCallback;
-import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceRepository;
+import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceManagerRepository;
 import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
@@ -282,13 +282,6 @@ public class MetadataNode implements IMetadataNode {
     private IModificationOperationCallback createIndexModificationCallback(JobId jobId, long resourceId,
             IMetadataIndex metadataIndex, ILSMIndex lsmIndex, IndexOperation indexOp) throws Exception {
         TransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
-        TransactionalResourceRepository txnResourceRepository = transactionSubsystem
-                .getTransactionalResourceRepository();
-
-        if (txnResourceRepository.getTransactionalResource(resourceId) == null) {
-            transactionSubsystem.getTransactionalResourceRepository().registerTransactionalResource(resourceId,
-                    lsmIndex);
-        }
 
         int[] primaryKeyFields = metadataIndex.getPrimaryKeyIndexes();
         int numKeys = primaryKeyFields.length;

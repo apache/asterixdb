@@ -24,11 +24,11 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 public class IndexLoggerRepository {
 
     private final Map<MutableResourceId, IndexLogger> loggers = new HashMap<MutableResourceId, IndexLogger>();
-    private final TransactionSubsystem provider;
+    private final TransactionSubsystem txnSubsystem;
     private MutableResourceId mutableResourceId;
 
     public IndexLoggerRepository(TransactionSubsystem provider) {
-        this.provider = provider;
+        this.txnSubsystem = provider;
         mutableResourceId = new MutableResourceId(0);
     }
 
@@ -37,7 +37,8 @@ public class IndexLoggerRepository {
         IndexLogger logger = loggers.get(mutableResourceId);
         if (logger == null) {
             MutableResourceId newMutableResourceId = new MutableResourceId(resourceId);
-            IIndex index = (IIndex) provider.getTransactionalResourceRepository().getTransactionalResource(resourceId);
+            IIndex index = (IIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
+                    .getIndex(resourceId);
             logger = new IndexLogger(resourceId, resourceType, index);
             loggers.put(newMutableResourceId, logger);
         }
