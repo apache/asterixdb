@@ -14,14 +14,17 @@ create type MyRecord as closed {
 create dataset MyData(MyRecord)
   partitioned by key id;
 
+create index rtree_index on MyData(loc) type rtree;
+
 load dataset MyData 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/twitter/smalltweets.txt"),("format"="adm")) pre-sorted;
 
-delete $l from dataset MyData where $l.id>=50 die after 1000;
+delete $l from dataset MyData where spatial-intersect($l.loc, create-rectangle(create-point(0.0,-100.0), create-point(55.5,50.0))) die after 1000;
 
 write output to nc1:"rttest/failure_delete-rtree.adm";      
 
 for $o in dataset('MyData')
+where spatial-intersect($o.loc, create-rectangle(create-point(0.0,-100.0), create-point(55.5,50.0)))
 order by $o.id
 return {"id":$o.id}
