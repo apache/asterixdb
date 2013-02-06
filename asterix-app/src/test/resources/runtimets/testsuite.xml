@@ -1641,6 +1641,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="btree-index-composite-key-mixed-intervals">
+        <output-file compare="Text">btree-index-composite-key-mixed-intervals.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="btree-index-rewrite-multiple">
         <output-file compare="Text">btree-index-rewrite-multiple.adm</output-file>
       </compilation-unit>

@@ -204,7 +204,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                 if (optFuncExpr.getNumLogicalVars() > 1) {
                     // If we are optimizing a join, the matching field may be the second field name.
                     keyPos = indexOf(optFuncExpr.getFieldName(1), chosenIndex.getKeyFieldNames());
-                }                
+                }
             }
             if (keyPos < 0) {
                 throw new AlgebricksException(
@@ -291,12 +291,30 @@ public class BTreeAccessMethod implements IAccessMethod {
             return null;
         }
 
+        boolean primaryIndexPostProccessingIsNeeded = false;
+        // If the condition is a mixed open/closed intervals due to a composite key, then we will make all open all the intervals and will do post-processing later.
+        for (int i = 1; i < numSecondaryKeys; ++i) {
+            if (lowKeyInclusive[i] != lowKeyInclusive[0]) {
+                for (int j = 0; j < numSecondaryKeys; ++j) {
+                    lowKeyInclusive[j] = true;
+                }
+                primaryIndexPostProccessingIsNeeded = true;
+                break;
+            }
+        }
+        for (int i = 1; i < numSecondaryKeys; ++i) {
+            if (highKeyInclusive[i] != highKeyInclusive[0]) {
+                for (int j = 0; j < numSecondaryKeys; ++j) {
+                    highKeyInclusive[j] = true;
+                }
+                primaryIndexPostProccessingIsNeeded = true;
+                break;
+            }
+        }
+
         // Rule out the cases unsupported by the current btree search
         // implementation.
         for (int i = 1; i < numSecondaryKeys; i++) {
-            if (lowKeyInclusive[i] != lowKeyInclusive[0] || highKeyInclusive[i] != highKeyInclusive[0]) {
-                return null;
-            }
             if (lowKeyLimits[0] == null && lowKeyLimits[i] != null || lowKeyLimits[0] != null
                     && lowKeyLimits[i] == null) {
                 return null;
@@ -364,14 +382,16 @@ public class BTreeAccessMethod implements IAccessMethod {
                     secondaryIndexUnnestOp.getExpressionRef(), primaryIndexOutputTypes, retainInput);
             primaryIndexUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
 
-            List<Mutable<ILogicalExpression>> remainingFuncExprs = new ArrayList<Mutable<ILogicalExpression>>();
-            getNewConditionExprs(conditionRef, replacedFuncExprs, remainingFuncExprs);
-            // Generate new condition.
-            if (!remainingFuncExprs.isEmpty()) {
-                ILogicalExpression pulledCond = createSelectCondition(remainingFuncExprs);
-                conditionRef.setValue(pulledCond);
-            } else {
-                conditionRef.setValue(null);
+            if (!primaryIndexPostProccessingIsNeeded) {
+                List<Mutable<ILogicalExpression>> remainingFuncExprs = new ArrayList<Mutable<ILogicalExpression>>();
+                getNewConditionExprs(conditionRef, replacedFuncExprs, remainingFuncExprs);
+                // Generate new condition.
+                if (!remainingFuncExprs.isEmpty()) {
+                    ILogicalExpression pulledCond = createSelectCondition(remainingFuncExprs);
+                    conditionRef.setValue(pulledCond);
+                } else {
+                    conditionRef.setValue(null);
+                }
             }
         }
         return primaryIndexUnnestOp;
