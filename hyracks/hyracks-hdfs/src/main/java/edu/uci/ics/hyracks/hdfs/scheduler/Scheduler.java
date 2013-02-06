@@ -33,7 +33,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 
 /**
- * The scheduler conduct data-local scheduling for data on HDFS
+ * The scheduler conduct data-local scheduling for data reading on HDFS.
+ * This class works for Hadoop old API.
  */
 @SuppressWarnings("deprecation")
 public class Scheduler {

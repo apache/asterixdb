@@ -22,6 +22,9 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.JobID;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
@@ -37,12 +40,15 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodeP
 import edu.uci.ics.hyracks.hdfs.api.ITupleWriter;
 import edu.uci.ics.hyracks.hdfs.api.ITupleWriterFactory;
 
+/**
+ * The HDFS file write operator using the Hadoop new API.
+ * To use this operator, a user need to provide an ITupleWriterFactory.
+ */
 public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
     private ConfFactory confFactory;
     private ITupleWriterFactory tupleWriterFactory;
-    private String outputPath;
 
     /**
      * The constructor of HDFSWriteOperatorDescriptor.
@@ -55,12 +61,11 @@ public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
      *            the ITupleWriterFactory implementation object
      * @throws HyracksException
      */
-    public HDFSWriteOperatorDescriptor(JobSpecification spec, Job conf, String outputPath,
-            ITupleWriterFactory tupleWriterFactory) throws HyracksException {
+    public HDFSWriteOperatorDescriptor(JobSpecification spec, Job conf, ITupleWriterFactory tupleWriterFactory)
+            throws HyracksException {
         super(spec, 1, 0);
         this.confFactory = new ConfFactory(conf);
         this.tupleWriterFactory = tupleWriterFactory;
-        this.outputPath = outputPath;
     }
 
     @Override
@@ -68,6 +73,8 @@ public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
             final IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
             throws HyracksDataException {
         final Job conf = confFactory.getConf();
+        final String outputPath = FileOutputFormat.getOutputPath(new JobContext(conf.getConfiguration(), new JobID()))
+                .toString();
 
         return new AbstractUnaryInputSinkOperatorNodePushable() {
 

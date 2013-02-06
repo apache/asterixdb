@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.hdfs.dataflow;
+package edu.uci.ics.hyracks.hdfs2.dataflow;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -22,26 +22,28 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-@SuppressWarnings({ "deprecation", "rawtypes" })
-class InputSplitsFactory implements Serializable {
+@SuppressWarnings("rawtypes")
+class FileSplitsFactory implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private byte[] splitBytes;
     private String splitClassName;
 
-    public InputSplitsFactory(InputSplit[] splits) throws HyracksDataException {
+    public FileSplitsFactory(List<FileSplit> splits) throws HyracksDataException {
         splitBytes = splitsToBytes(splits);
-        if (splits.length > 0) {
-            splitClassName = splits[0].getClass().getName();
+        if (splits.size() > 0) {
+            splitClassName = splits.get(0).getClass().getName();
         }
     }
 
-    public InputSplit[] getSplits() throws HyracksDataException {
+    public List<FileSplit> getSplits() throws HyracksDataException {
         return bytesToSplits(splitBytes);
     }
 
@@ -53,13 +55,14 @@ class InputSplitsFactory implements Serializable {
      * @return bytes which serialize the splits
      * @throws IOException
      */
-    private byte[] splitsToBytes(InputSplit[] splits) throws HyracksDataException {
+    private byte[] splitsToBytes(List<FileSplit> splits) throws HyracksDataException {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             DataOutputStream dos = new DataOutputStream(bos);
-            dos.writeInt(splits.length);
-            for (int i = 0; i < splits.length; i++) {
-                splits[i].write(dos);
+            dos.writeInt(splits.size());
+            int size = splits.size();
+            for (int i = 0; i < size; i++) {
+                splits.get(i).write(dos);
             }
             dos.close();
             return bos.toByteArray();
@@ -75,7 +78,7 @@ class InputSplitsFactory implements Serializable {
      * @return
      * @throws HyracksDataException
      */
-    private InputSplit[] bytesToSplits(byte[] bytes) throws HyracksDataException {
+    private List<FileSplit> bytesToSplits(byte[] bytes) throws HyracksDataException {
         try {
             Class splitClass = Class.forName(splitClassName);
             Constructor[] constructors = splitClass.getDeclaredConstructors();
@@ -89,10 +92,10 @@ class InputSplitsFactory implements Serializable {
             ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
             DataInputStream dis = new DataInputStream(bis);
             int size = dis.readInt();
-            InputSplit[] splits = new InputSplit[size];
+            List<FileSplit> splits = new ArrayList<FileSplit>();
             for (int i = 0; i < size; i++) {
-                splits[i] = (InputSplit) defaultConstructor.newInstance();
-                splits[i].readFields(dis);
+                splits.add((FileSplit) defaultConstructor.newInstance());
+                splits.get(i).readFields(dis);
             }
             dis.close();
             return splits;

@@ -35,6 +35,11 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNo
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParser;
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParserFactory;
 
+/**
+ * The HDFS file read operator using the Hadoop old API.
+ * To use this operator, a user need to provide an IKeyValueParserFactory implementation which convert
+ * key-value pairs into tuples.
+ */
 @SuppressWarnings({ "deprecation", "rawtypes" })
 public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 

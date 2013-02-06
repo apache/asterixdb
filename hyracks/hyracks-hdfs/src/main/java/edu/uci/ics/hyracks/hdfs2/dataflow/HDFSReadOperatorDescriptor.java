@@ -15,7 +15,9 @@
 
 package edu.uci.ics.hyracks.hdfs2.dataflow;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -23,6 +25,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -37,12 +40,17 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNo
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParser;
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParserFactory;
 
+/**
+ * The HDFS file read operator using the Hadoop new API.
+ * To use this operator, a user need to provide an IKeyValueParserFactory implementation which convert
+ * key-value pairs into tuples.
+ */
 @SuppressWarnings("rawtypes")
 public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
     private final ConfFactory confFactory;
-    private final InputSplit[] inputSplits;
+    private final FileSplitsFactory splitsFactory;
     private final String[] scheduledLocations;
     private final IKeyValueParserFactory tupleParserFactory;
     private final boolean[] executed;
@@ -65,11 +73,15 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
      *            the ITupleParserFactory implementation instance.
      * @throws HyracksException
      */
-    public HDFSReadOperatorDescriptor(JobSpecification spec, RecordDescriptor rd, Job conf, InputSplit[] splits,
+    public HDFSReadOperatorDescriptor(JobSpecification spec, RecordDescriptor rd, Job conf, List<InputSplit> splits,
             String[] scheduledLocations, IKeyValueParserFactory tupleParserFactory) throws HyracksException {
         super(spec, 0, 1);
         try {
-            this.inputSplits = splits;
+            List<FileSplit> fileSplits = new ArrayList<FileSplit>();
+            for (int i = 0; i < splits.size(); i++) {
+                fileSplits.add((FileSplit) splits.get(i));
+            }
+            this.splitsFactory = new FileSplitsFactory(fileSplits);
             this.confFactory = new ConfFactory(conf);
         } catch (Exception e) {
             throw new HyracksException(e);
@@ -86,6 +98,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
             IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
             throws HyracksDataException {
         final Job conf = confFactory.getConf();
+        final List<FileSplit> inputSplits = splitsFactory.getSplits();
 
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
             private String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
@@ -99,7 +112,8 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                     writer.open();
                     InputFormat inputFormat = ReflectionUtils.newInstance(conf.getInputFormatClass(),
                             conf.getConfiguration());
-                    for (int i = 0; i < inputSplits.length; i++) {
+                    int size = inputSplits.size();
+                    for (int i = 0; i < size; i++) {
                         /**
                          * read all the partitions scheduled to the current node
                          */
@@ -122,8 +136,8 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                              */
                             TaskAttemptContext context = new TaskAttemptContext(conf.getConfiguration(),
                                     new TaskAttemptID());
-                            RecordReader reader = inputFormat.createRecordReader(inputSplits[i], context);
-                            reader.initialize(inputSplits[i], context);
+                            RecordReader reader = inputFormat.createRecordReader(inputSplits.get(i), context);
+                            reader.initialize(inputSplits.get(i), context);
                             while (reader.nextKeyValue() == true) {
                                 parser.parse(reader.getCurrentKey(), reader.getCurrentValue(), writer);
                             }
