@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.client.dataset;
 import java.net.InetSocketAddress;
 
 import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
+import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord.Status;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetDirectoryServiceConnection;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetDirectoryServiceInterface;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
@@ -37,6 +38,11 @@ public class HyracksDatasetDirectoryServiceConnection implements IHyracksDataset
         ipc.start();
         IIPCHandle ddsIpchandle = ipc.getHandle(new InetSocketAddress(ddsHost, ddsPort));
         this.ddsi = new HyracksDatasetDirectoryServiceInterfaceRemoteProxy(ddsIpchandle, rpci);
+    }
+
+    @Override
+    public Status getDatasetResultStatus(JobId jobId, ResultSetId rsId) throws Exception {
+        return ddsi.getDatasetResultStatus(jobId, rsId);
     }
 
     @Override

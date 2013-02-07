@@ -33,6 +33,7 @@ public class HyracksClientInterfaceFunctions {
         GET_JOB_STATUS,
         START_JOB,
         GET_DATASET_DIRECTORY_SERIVICE_INFO,
+        GET_DATASET_RESULT_STATUS,
         GET_DATASET_RECORD_DESCRIPTOR,
         GET_DATASET_RESULT_LOCATIONS,
         WAIT_FOR_COMPLETION,
@@ -167,6 +168,32 @@ public class HyracksClientInterfaceFunctions {
         @Override
         public FunctionId getFunctionId() {
             return FunctionId.GET_DATASET_DIRECTORY_SERIVICE_INFO;
+        }
+    }
+
+    public static class GetDatasetResultStatusFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final JobId jobId;
+
+        private final ResultSetId rsId;
+
+        public GetDatasetResultStatusFunction(JobId jobId, ResultSetId rsId) {
+            this.jobId = jobId;
+            this.rsId = rsId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.GET_DATASET_RESULT_STATUS;
+        }
+
+        public JobId getJobId() {
+            return jobId;
+        }
+
+        public ResultSetId getResultSetId() {
+            return rsId;
         }
     }
 

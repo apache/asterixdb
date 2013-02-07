@@ -17,11 +17,14 @@ package edu.uci.ics.hyracks.api.dataset;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord.Status;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobId;
 
 public interface IHyracksDataset {
     public void open(JobId jobId, ResultSetId resultSetId) throws IOException;
+
+    public Status getResultStatus();
 
     public byte[] getSerializedRecordDescriptor();
 

@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.api.dataset;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord.Status;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobId;
 
@@ -25,6 +26,8 @@ public interface IDatasetDirectoryService {
     public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition);
 
     public void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition);
+
+    public Status getResultStatus(JobId jobId, ResultSetId rsId) throws HyracksDataException;
 
     public byte[] getRecordDescriptor(JobId jobId, ResultSetId rsId) throws HyracksDataException;
 

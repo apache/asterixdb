@@ -14,9 +14,22 @@
  */
 package edu.uci.ics.hyracks.api.dataset;
 
+import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord.Status;
 import edu.uci.ics.hyracks.api.job.JobId;
 
 public interface IHyracksDatasetDirectoryServiceConnection {
+    /**
+     * Gets the result status for the given result set.
+     * 
+     * @param jobId
+     *            ID of the job
+     * @param rsId
+     *            ID of the result set
+     * @return {@link Status}
+     * @throws Exception
+     */
+    public Status getDatasetResultStatus(JobId jobId, ResultSetId rsId) throws Exception;
+
     /**
      * Gets the record descriptor for the given result set.
      * 

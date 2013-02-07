@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.api.channels.IInputChannel;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
+import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord.Status;
 import edu.uci.ics.hyracks.api.dataset.IDatasetInputChannelMonitor;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetDirectoryServiceConnection;
@@ -83,6 +84,17 @@ public class HyracksDataset implements IHyracksDataset {
         this.jobId = jobId;
         this.resultSetId = resultSetId;
         netManager.start();
+    }
+
+    @Override
+    public Status getResultStatus() {
+        Status status = null;
+        try {
+            status = datasetDirectoryServiceConnection.getDatasetResultStatus(jobId, resultSetId);
+        } catch (Exception e) {
+            // TODO(madhusudancs): Decide what to do in case of error
+        }
+        return status;
     }
 
     @Override

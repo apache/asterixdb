@@ -14,12 +14,14 @@
  */
 package edu.uci.ics.hyracks.control.cc.dataset;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
+import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord.Status;
 import edu.uci.ics.hyracks.api.dataset.IDatasetDirectoryService;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -73,6 +75,51 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     public synchronized void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition) {
         DatasetDirectoryRecord ddr = getDatasetDirectoryRecord(jobId, rsId, partition);
         ddr.fail();
+    }
+
+    @Override
+    public synchronized Status getResultStatus(JobId jobId, ResultSetId rsId) throws HyracksDataException {
+        Map<ResultSetId, ResultSetMetaData> rsMap;
+        while ((rsMap = jobResultLocationsMap.get(jobId)) == null) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                throw new HyracksDataException(e);
+            }
+        }
+
+        ResultSetMetaData resultSetMetaData = rsMap.get(rsId);
+        if (resultSetMetaData == null || resultSetMetaData.getRecords() == null) {
+            throw new HyracksDataException("ResultSet locations uninitialized when it is expected to be initialized.");
+        }
+        DatasetDirectoryRecord[] records = resultSetMetaData.getRecords();
+
+        ArrayList<Status> statuses = new ArrayList<Status>(records.length);
+        for (int i = 0; i < records.length; i++) {
+            statuses.add(records[i].getStatus());
+        }
+
+        // Default status is idle
+        Status status = Status.IDLE;
+        if (statuses.contains(Status.FAILED)) {
+            // Even if there is at least one failed entry we should return failed status.
+            return Status.FAILED;
+        } else if (statuses.contains(Status.RUNNING)) {
+            // If there are not failed entry and if there is at least one running entry we should return running status.
+            return Status.RUNNING;
+        } else {
+            // If each and every partition has reported success do we report success as the status.
+            int successCount = 0;
+            for (int i = 0; i < statuses.size(); i++) {
+                if (statuses.get(i) == Status.SUCCESS) {
+                    successCount++;
+                }
+            }
+            if (successCount == statuses.size()) {
+                return Status.SUCCESS;
+            }
+        }
+        return status;
     }
 
     @Override
