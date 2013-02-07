@@ -85,7 +85,7 @@ import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.types.TypeSignature;
-import edu.uci.ics.asterix.result.ReaderUtils;
+import edu.uci.ics.asterix.result.ResultUtils;
 import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionIDFactory;
@@ -298,7 +298,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         buffer.clear();
                         JSONArray results = new JSONArray();
                         while (resultReader.read(buffer) > 0) {
-                            results.put(ReaderUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor(),
+                            results.put(ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor(),
                                     resultReader.getRecordDescriptor()));
                         }
                         response.put("results", results);

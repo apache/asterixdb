@@ -26,7 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import edu.uci.ics.asterix.result.ReaderUtils;
+import edu.uci.ics.asterix.result.ResultUtils;
 import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.asterix.runtime.formats.FormatUtils;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
@@ -71,7 +71,7 @@ public class QueryResultAPIServlet extends HttpServlet {
             JSONObject jsonResponse = new JSONObject();
             JSONArray results = new JSONArray();
             while (resultReader.read(buffer) > 0) {
-                results.put(ReaderUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor(),
+                results.put(ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor(),
                         resultReader.getRecordDescriptor()));
             }
             jsonResponse.put("results", results);

@@ -17,9 +17,9 @@ package edu.uci.ics.asterix.result;
 import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 
+import org.json.JSONArray;
 import org.json.JSONException;
-
-import twitter4j.internal.org.json.JSONArray;
+import org.json.JSONObject;
 
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -27,7 +27,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
-public class ReaderUtils {
+public class ResultUtils {
     public static JSONArray getJSONFromBuffer(ByteBuffer buffer, FrameTupleAccessor fta,
             RecordDescriptor recordDescriptor) throws HyracksDataException {
         JSONArray resultRecords = new JSONArray();
@@ -51,5 +51,18 @@ public class ReaderUtils {
             throw new HyracksDataException(e);
         }
         return resultRecords;
+    }
+
+    public static JSONObject getErrorResponse(int errorCode, String errorMessage) {
+        JSONObject errorResp = new JSONObject();
+        JSONArray errorArray = new JSONArray();
+        errorArray.put(errorCode);
+        errorArray.put(errorMessage);
+        try {
+            errorResp.put("error-code", errorArray);
+        } catch (JSONException e) {
+            // TODO(madhusudancs): Figure out what to do when JSONException occurs while building the results.
+        }
+        return errorResp;
     }
 }

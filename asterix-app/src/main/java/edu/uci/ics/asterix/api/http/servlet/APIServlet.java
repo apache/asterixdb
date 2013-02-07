@@ -18,9 +18,7 @@ import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
-import edu.uci.ics.asterix.aql.translator.QueryResult;
 import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 
@@ -339,10 +337,9 @@ public class APIServlet extends HttpServlet {
                     isSet(printOptimizedLogicalPlanParam), false, true, isSet(printJob));
             MetadataManager.INSTANCE.init();
             AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, DisplayFormat.HTML);
-            List<QueryResult> executionResults = null;
             double duration = 0;
             long startTime = System.currentTimeMillis();
-            executionResults = aqlTranslator.compileAndExecute(hcc, false);
+            aqlTranslator.compileAndExecute(hcc, false);
             long endTime = System.currentTimeMillis();
             duration = (endTime - startTime) / 1000.00;
             out.println("<PRE>Duration of all jobs: " + duration + "</PRE>");
