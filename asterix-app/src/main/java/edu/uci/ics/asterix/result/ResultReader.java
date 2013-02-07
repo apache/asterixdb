@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord.Status;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -61,6 +62,10 @@ public class ResultReader {
                 .getSerdeProvider().getClass().getClassLoader());
 
         frameTupleAccessor = new FrameTupleAccessor(datasetClientCtx.getFrameSize(), recordDescriptor);
+    }
+
+    public Status getStatus() {
+        return hyracksDataset.getResultStatus();
     }
 
     public int read(ByteBuffer buffer) throws HyracksDataException {
