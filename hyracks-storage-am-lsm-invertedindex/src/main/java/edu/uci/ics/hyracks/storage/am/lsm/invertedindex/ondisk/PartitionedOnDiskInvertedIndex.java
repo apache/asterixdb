@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk;
 
+import java.util.ArrayList;
+
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -61,9 +63,9 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
     }
 
     @Override
-    public void openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
-            short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions)
-            throws HyracksDataException, IndexException {
+    public boolean openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
+            short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions,
+            ArrayList<IInvertedListCursor> cursorsOrderedByTokens) throws HyracksDataException, IndexException {
         PartitionedTOccurrenceSearcher partSearcher = (PartitionedTOccurrenceSearcher) searcher;
         OnDiskInvertedIndexOpContext ctx = (OnDiskInvertedIndexOpContext) ictx;
         ITupleReference lowSearchKey = null;
@@ -86,6 +88,7 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
         ctx.btreePred.setLowKey(lowSearchKey, true);
         ctx.btreePred.setHighKey(highSearchKey, true);
         ctx.btreeAccessor.search(ctx.btreeCursor, ctx.btreePred);
+        boolean tokenExists = false;
         try {
             while (ctx.btreeCursor.hasNext()) {
                 ctx.btreeCursor.next();
@@ -95,11 +98,19 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
                         btreeTuple.getFieldStart(PARTITIONING_NUM_TOKENS_FIELD));
                 IInvertedListCursor invListCursor = partSearcher.getCachedInvertedListCursor();
                 resetInvertedListCursor(btreeTuple, invListCursor);
+                cursorsOrderedByTokens.add(invListCursor);
                 invListPartitions.addInvertedListCursor(invListCursor, numTokens);
+                tokenExists = true;
             }
         } finally {
             ctx.btreeCursor.close();
             ctx.btreeCursor.reset();
         }
+        return tokenExists;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return false;
     }
 }

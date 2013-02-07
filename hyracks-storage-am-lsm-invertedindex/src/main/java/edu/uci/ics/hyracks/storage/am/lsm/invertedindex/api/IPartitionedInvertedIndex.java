@@ -15,13 +15,17 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api;
 
+import java.util.ArrayList;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.InvertedListPartitions;
 
 public interface IPartitionedInvertedIndex {
-    public void openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
-            short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions)
-            throws HyracksDataException, IndexException;
+    public boolean openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
+            short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions,
+            ArrayList<IInvertedListCursor> cursorsOrderedByTokens) throws HyracksDataException, IndexException;
+
+    public boolean isEmpty();
 }

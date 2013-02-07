@@ -43,6 +43,10 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
     protected final ConcatenatingTupleReference fullLowSearchKey = new ConcatenatingTupleReference(2);
     protected final ConcatenatingTupleReference fullHighSearchKey = new ConcatenatingTupleReference(2);
 
+    // Inverted list cursors ordered by token. Used to read relevant inverted-list partitions of one token one after
+    // the other for better I/O performance (because the partitions of one inverted list are stored contiguously in a file).
+    // The above implies that we currently require holding all inverted list for a query in memory.
+    protected final ArrayList<IInvertedListCursor> cursorsOrderedByTokens = new ArrayList<IInvertedListCursor>();
     protected final InvertedListPartitions partitions = new InvertedListPartitions();
 
     public PartitionedTOccurrenceSearcher(IHyracksCommonContext ctx, IInvertedIndex invIndex) {
@@ -80,32 +84,69 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
 
     public void search(OnDiskInvertedIndexSearchCursor resultCursor, InvertedIndexSearchPredicate searchPred,
             IIndexOperationContext ictx) throws HyracksDataException, IndexException {
+        IPartitionedInvertedIndex partInvIndex = (IPartitionedInvertedIndex) invIndex;
+        searchResult.reset();
+        if (partInvIndex.isEmpty()) {
+            return;
+        }
+        
         tokenizeQuery(searchPred);
         short numQueryTokens = (short) queryTokenAccessor.getTupleCount();
 
         IInvertedIndexSearchModifier searchModifier = searchPred.getSearchModifier();
         short numTokensLowerBound = searchModifier.getNumTokensLowerBound(numQueryTokens);
         short numTokensUpperBound = searchModifier.getNumTokensUpperBound(numQueryTokens);
-
-        IPartitionedInvertedIndex partInvIndex = (IPartitionedInvertedIndex) invIndex;
-        invListCursorCache.reset();
-        partitions.reset(numTokensLowerBound, numTokensUpperBound);
-        for (int i = 0; i < numQueryTokens; i++) {
-            searchKey.reset(queryTokenAccessor, i);
-            partInvIndex.openInvertedListPartitionCursors(this, ictx, numTokensLowerBound, numTokensUpperBound,
-                    partitions);
-        }
-
+        
         occurrenceThreshold = searchModifier.getOccurrenceThreshold(numQueryTokens);
         if (occurrenceThreshold <= 0) {
             throw new OccurrenceThresholdPanicException("Merge Threshold is <= 0. Failing Search.");
         }
-
-        // Process the partitions one-by-one.
+        
+        short maxCountPossible = numQueryTokens;
+        invListCursorCache.reset();
+        partitions.reset(numTokensLowerBound, numTokensUpperBound);
+        cursorsOrderedByTokens.clear();
+        for (int i = 0; i < numQueryTokens; i++) {
+            searchKey.reset(queryTokenAccessor, i);
+            if (!partInvIndex.openInvertedListPartitionCursors(this, ictx, numTokensLowerBound, numTokensUpperBound,
+                    partitions, cursorsOrderedByTokens)) {
+                maxCountPossible--;
+                // No results possible.
+                if (maxCountPossible < occurrenceThreshold) {                    
+                    return;
+                }
+            }
+        }
+        
         ArrayList<IInvertedListCursor>[] partitionCursors = partitions.getPartitions();
         short start = partitions.getMinValidPartitionIndex();
         short end = partitions.getMaxValidPartitionIndex();
-        searchResult.reset();
+        
+        // Typically, we only enter this case for disk-based inverted indexes. 
+        // TODO: This behavior could potentially lead to a deadlock if we cannot pin 
+        // all inverted lists in memory, and are forced to wait for a page to get evicted
+        // (other concurrent searchers may be in the same situation).
+        // We should detect such cases, then unpin all pages, and then keep retrying to pin until we succeed.
+        // This will require a different "tryPin()" mechanism in the BufferCache that will return false
+        // if we'd have to wait for a page to get evicted.
+        if (!cursorsOrderedByTokens.isEmpty()) {
+            for (int i = start; i <= end; i++) {
+                if (partitionCursors[i] == null) {
+                    continue;
+                }
+                // Prune partition because no element in it can satisfy the occurrence threshold.
+                if (partitionCursors[i].size() < occurrenceThreshold) {
+                    cursorsOrderedByTokens.removeAll(partitionCursors[i]);
+                }
+            }
+            // Pin all the cursors in the order of tokens.
+            int numCursors = cursorsOrderedByTokens.size();
+            for (int i = 0; i < numCursors; i++) {
+                cursorsOrderedByTokens.get(i).pinPages();
+            }
+        }
+        
+        // Process the partitions one-by-one.
         for (int i = start; i <= end; i++) {
             if (partitionCursors[i] == null) {
                 continue;
@@ -119,7 +160,7 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
             invListMerger.reset();
             invListMerger.merge(partitionCursors[i], occurrenceThreshold, numPrefixLists, searchResult);
         }
-
+        
         resultCursor.open(null, searchPred);
     }
 
