@@ -11,7 +11,7 @@ import org.apache.hadoop.mapred.JobConf;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 @SuppressWarnings("deprecation")
-class ConfFactory implements Serializable {
+public class ConfFactory implements Serializable {
     private static final long serialVersionUID = 1L;
     private byte[] confBytes;
 

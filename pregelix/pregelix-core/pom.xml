@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>pregelix-core</artifactId>
 	<packaging>jar</packaging>
@@ -54,20 +55,6 @@
 							</archive>
 							<includes>
 								<include>**/edu/uci/ics/pregelix/core/util/DataGenerator*</include>
-							</includes>
-						</configuration>
-					</execution>
-					<execution>
-						<id>patch</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-						<phase>package</phase>
-						<configuration>
-							<classifier>patch</classifier>
-							<finalName>a-hadoop</finalName>
-							<includes>
-								<include>**/org/apache/**</include>
 							</includes>
 						</configuration>
 					</execution>
@@ -158,25 +145,6 @@
 							</resources>
 						</configuration>
 					</execution>
-					<execution>
-						<id>copy-hadoop-patch</id>
-						<!-- here the phase you need -->
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>target/appassembler/lib</outputDirectory>
-							<resources>
-								<resource>
-									<directory>target</directory>
-									<includes>
-										<include>a-hadoop-patch.jar</include>
-									</includes>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
 				</executions>
 			</plugin>
 			<plugin>
@@ -185,7 +153,8 @@
 				<version>2.7.2</version>
 				<configuration>
 					<forkMode>pertest</forkMode>
-					<argLine>-enableassertions -Xmx512m -XX:MaxPermSize=300m -Dfile.encoding=UTF-8
+					<argLine>-enableassertions -Xmx512m -XX:MaxPermSize=300m
+						-Dfile.encoding=UTF-8
 						-Djava.util.logging.config.file=src/test/resources/logging.properties</argLine>
 					<includes>
 						<include>**/*TestSuite.java</include>

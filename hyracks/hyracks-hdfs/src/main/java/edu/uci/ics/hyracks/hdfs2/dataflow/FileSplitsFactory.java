@@ -30,7 +30,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 @SuppressWarnings("rawtypes")
-class FileSplitsFactory implements Serializable {
+public class FileSplitsFactory implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private byte[] splitBytes;

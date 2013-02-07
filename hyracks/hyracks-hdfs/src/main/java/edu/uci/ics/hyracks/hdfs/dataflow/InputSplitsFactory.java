@@ -28,7 +28,7 @@ import org.apache.hadoop.mapred.InputSplit;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 @SuppressWarnings({ "deprecation", "rawtypes" })
-class InputSplitsFactory implements Serializable {
+public class InputSplitsFactory implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private byte[] splitBytes;

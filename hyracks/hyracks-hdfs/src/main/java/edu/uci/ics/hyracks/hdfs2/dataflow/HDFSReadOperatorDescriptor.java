@@ -125,7 +125,6 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                             synchronized (executed) {
                                 if (executed[i] == false) {
                                     executed[i] = true;
-                                    System.out.println("thread " + Thread.currentThread().getId() + " setting " + i);
                                 } else {
                                     continue;
                                 }
