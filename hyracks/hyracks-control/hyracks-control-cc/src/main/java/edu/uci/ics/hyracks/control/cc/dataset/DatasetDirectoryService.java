@@ -62,6 +62,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
             records[partition] = new DatasetDirectoryRecord();
         }
         records[partition].setNetworkAddress(networkAddress);
+        records[partition].start();
         notifyAll();
     }
 
