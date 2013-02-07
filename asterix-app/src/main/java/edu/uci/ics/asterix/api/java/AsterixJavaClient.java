@@ -15,7 +15,6 @@ import edu.uci.ics.asterix.aql.parser.ParseException;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
@@ -68,11 +67,8 @@ public class AsterixJavaClient {
                 false, printRewrittenExpressions, printLogicalPlan, printOptimizedPlan, printPhysicalOpsOnly,
                 generateBinaryRuntime, printJob);
 
-        ResultReader resultReader = new ResultReader(hcc, writer);
-        new Thread(resultReader).start();
-
         AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, writer, pc, DisplayFormat.TEXT);
-        aqlTranslator.compileAndExecute(hcc, resultReader);
+        aqlTranslator.compileAndExecute(hcc, false);
         writer.flush();
     }
 

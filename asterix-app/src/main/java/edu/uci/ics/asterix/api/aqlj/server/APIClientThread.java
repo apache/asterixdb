@@ -41,7 +41,6 @@ import edu.uci.ics.asterix.hyracks.bootstrap.AsterixNodeState;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
-import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
@@ -223,13 +222,10 @@ public class APIClientThread extends Thread {
             SessionConfig pc = new SessionConfig(AsterixHyracksIntegrationUtil.DEFAULT_HYRACKS_CC_CLIENT_PORT, true,
                     false, false, false, false, false, true, false);
 
-            ResultReader resultReader = new ResultReader(hcc, out);
-            new Thread(resultReader).start();
-
             MetadataManager.INSTANCE.init();
             if (statements != null && statements.size() > 0) {
                 AqlTranslator translator = new AqlTranslator(statements, out, pc, DisplayFormat.TEXT);
-                executionResults = translator.compileAndExecute(hcc, resultReader);
+                executionResults = translator.compileAndExecute(hcc, false);
             }
         } catch (ParseException e) {
             e.printStackTrace();
