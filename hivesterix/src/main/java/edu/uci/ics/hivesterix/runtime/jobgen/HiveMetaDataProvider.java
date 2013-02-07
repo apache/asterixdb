@@ -102,6 +102,12 @@ public class HiveMetaDataProvider<S, T> implements IMetadataProvider<S, T> {
     }
 
     @Override
+    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getResultHandleRuntime(IDataSink sink,
+            RecordDescriptor recordDescriptor, boolean ordered, JobSpecification spec) throws AlgebricksException {
+        return null;
+    }
+
+    @Override
     public IFunctionInfo lookupFunction(FunctionIdentifier arg0) {
         return new HiveFunctionInfo(arg0, null);
     }
