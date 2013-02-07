@@ -58,7 +58,7 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
 
     @Override
     public String toString() {
-        return "JobId@" + jobId + " Partition@" + partition + " ResultSetId@" + rsId + " NPartitions@" + nPartitions
+        return "JobId@" + jobId + " ResultSetId@" + rsId + " Partition@" + partition + " NPartitions@" + nPartitions
                 + " ResultPartitionLocation@" + networkAddress + " OrderedResult@" + orderedResult;
     }
 }
