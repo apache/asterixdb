@@ -43,7 +43,7 @@ public final class JobGenHelper {
     @SuppressWarnings("rawtypes")
     public static RecordDescriptor mkRecordDescriptor(IVariableTypeEnvironment env, IOperatorSchema opSchema,
             JobGenContext context) throws AlgebricksException {        
-		ISerializerDeserializer[] fields = new ISerializerDeserializer[opSchema.getSize()];
+        ISerializerDeserializer[] fields = new ISerializerDeserializer[opSchema.getSize()];
         ITypeTraits[] typeTraits = new ITypeTraits[opSchema.getSize()];
         ISerializerDeserializerProvider sdp = context.getSerializerDeserializerProvider();
         ITypeTraitProvider ttp = context.getTypeTraitProvider();
@@ -59,7 +59,7 @@ public final class JobGenHelper {
         }
         return new RecordDescriptor(fields, typeTraits);
     }
-    
+
     public static IPrinterFactory[] mkPrinterFactories(IOperatorSchema opSchema, IVariableTypeEnvironment env,
             JobGenContext context, int[] printColumns) throws AlgebricksException {
         IPrinterFactory[] pf = new IPrinterFactory[printColumns.length];

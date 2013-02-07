@@ -187,7 +187,7 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
         // TODO Auto-generated method stub
         return null;
     }
-    
+
     @Override
     public IFunctionInfo lookupFunction(FunctionIdentifier fid) {
         return FN_MAP.get(fid);

@@ -34,7 +34,9 @@ public interface IHyracksDatasetDirectoryServiceConnection {
      * 
      * @param jobId
      *            ID of the job
-     * @param knownLocations
+     * @param rsId
+     *            ID of the result set
+     * @param knownRecords
      *            Locations that are already known to the client
      * @return {@link NetworkAddress[]}
      * @throws Exception
