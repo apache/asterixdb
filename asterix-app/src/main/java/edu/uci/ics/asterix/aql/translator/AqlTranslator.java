@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.aql.translator;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.ByteBuffer;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.json.JSONException;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import edu.uci.ics.asterix.api.common.APIFramework;
 import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
@@ -82,6 +85,7 @@ import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.types.TypeSignature;
+import edu.uci.ics.asterix.result.ReaderUtils;
 import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionIDFactory;
@@ -281,8 +285,26 @@ public class AqlTranslator extends AbstractAqlTranslator {
             for (JobSpecification jobspec : jobsToExecute) {
                 JobId jobId = runJob(hcc, jobspec);
                 if (stmt.getKind() == Kind.QUERY) {
-                    resultReader.setFormat(metadataProvider.getFormat());
-                    resultReader.notifyJobStart(jobId, metadataProvider.getResultSetId());
+                    JSONObject response = new JSONObject();
+
+                    if (asyncResults) {
+                        JSONArray handle = new JSONArray();
+                        handle.put(jobId.getId());
+                        handle.put(metadataProvider.getResultSetId().getId());
+                        response.put("handle", handle);
+                    } else {
+                        ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
+                        ResultReader resultReader = new ResultReader(hcc, metadataProvider.getFormat());
+                        resultReader.open(jobId, metadataProvider.getResultSetId());
+                        buffer.clear();
+                        JSONArray results = new JSONArray();
+                        while (resultReader.read(buffer) > 0) {
+                            results.put(ReaderUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor(),
+                                    resultReader.getRecordDescriptor()));
+                        }
+                        response.put("results", results);
+                    }
+                    out.write(response.toString());
                 }
                 hcc.waitForCompletion(jobId);
             }
