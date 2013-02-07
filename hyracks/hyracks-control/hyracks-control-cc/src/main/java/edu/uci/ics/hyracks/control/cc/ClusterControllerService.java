@@ -459,8 +459,9 @@ public class ClusterControllerService extends AbstractRemoteService {
                 case REGISTER_RESULT_PARTITION_LOCATION: {
                     CCNCFunctions.RegisterResultPartitionLocationFunction rrplf = (CCNCFunctions.RegisterResultPartitionLocationFunction) fn;
                     workQueue.schedule(new RegisterResultPartitionLocationWork(ClusterControllerService.this, rrplf
-                            .getJobId(), rrplf.getOrderedResult(), rrplf.getResultSetId(), rrplf.getPartition(), rrplf
-                            .getNPartitions(), rrplf.getNetworkAddress()));
+                            .getJobId(), rrplf.getResultSetId(), rrplf.getOrderedResult(), rrplf
+                            .getSerializedRecordDescriptor(), rrplf.getPartition(), rrplf.getNPartitions(), rrplf
+                            .getNetworkAddress()));
                     return;
                 }
 

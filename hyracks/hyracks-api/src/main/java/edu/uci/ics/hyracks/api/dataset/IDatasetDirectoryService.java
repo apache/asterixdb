@@ -19,8 +19,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobId;
 
 public interface IDatasetDirectoryService {
-    public void registerResultPartitionLocation(JobId jobId, boolean orderedResult, ResultSetId rsId, int partition,
-            int nPartitions, NetworkAddress networkAddress);
+    public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult,
+            byte[] serializedRecordDescriptor, int partition, int nPartitions, NetworkAddress networkAddress);
 
     public byte[] getRecordDescriptor(JobId jobId, ResultSetId rsId) throws HyracksDataException;
 
