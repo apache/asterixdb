@@ -14,17 +14,20 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.result;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
+import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 
@@ -35,10 +38,14 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
 
     private final boolean ordered;
 
-    public ResultWriterOperatorDescriptor(IOperatorDescriptorRegistry spec, ResultSetId rsId, boolean ordered) {
+    private final byte[] serializedRecordDescriptor;
+
+    public ResultWriterOperatorDescriptor(IOperatorDescriptorRegistry spec, ResultSetId rsId, boolean ordered,
+            RecordDescriptor recordDescriptor) throws IOException {
         super(spec, 1, 0);
         this.rsId = rsId;
         this.ordered = ordered;
+        this.serializedRecordDescriptor = JavaSerializationUtils.serialize(recordDescriptor);
     }
 
     @Override
@@ -52,8 +59,8 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
             @Override
             public void open() throws HyracksDataException {
                 try {
-                    datasetPartitionWriter = dpm.createDatasetPartitionWriter(ctx, ordered, rsId, partition,
-                            nPartitions);
+                    datasetPartitionWriter = dpm.createDatasetPartitionWriter(ctx, rsId, ordered,
+                            serializedRecordDescriptor, partition, nPartitions);
                     datasetPartitionWriter.open();
                 } catch (HyracksException e) {
                     throw new HyracksDataException(e);
