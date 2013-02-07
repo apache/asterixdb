@@ -106,7 +106,7 @@ public interface IHyracksClientConnection {
      * @return {@link NetworkAddress}
      * @throws Exception
      */
-    public NetworkAddress getDatasetDirectoryServiceInfo(JobId jobId) throws Exception;
+    public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception;
 
     /**
      * Waits until the specified job has completed, either successfully or has
@@ -116,7 +116,7 @@ public interface IHyracksClientConnection {
      *            JobId of the Job
      * @throws Exception
      */
-    public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception;
+    public void waitForCompletion(JobId jobId) throws Exception;
 
     /**
      * Gets a map of node controller names to node information.
