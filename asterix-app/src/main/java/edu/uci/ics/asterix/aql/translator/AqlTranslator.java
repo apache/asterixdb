@@ -149,13 +149,12 @@ public class AqlTranslator extends AbstractAqlTranslator {
      * Compiles and submits for execution a list of AQL statements.
      * @param hcc
      *            A Hyracks client connection that is used to submit a jobspec to Hyracks.
-     * @param resultReader
-     *            A Result Reading client API object from which the query results will be read.
+     * @param asyncResults
+     *            True if the results should be read asynchronously or false if we should wait for results to be read.
      * @return A List<QueryResult> containing a QueryResult instance corresponding to each submitted query.
      * @throws Exception
      */
-    public List<QueryResult> compileAndExecute(IHyracksClientConnection hcc, ResultReader resultReader)
-            throws Exception {
+    public List<QueryResult> compileAndExecute(IHyracksClientConnection hcc, boolean asyncResults) throws Exception {
         int resultSetIdCounter = 0;
         List<QueryResult> executionResult = new ArrayList<QueryResult>();
         FileSplit outputFile = null;
