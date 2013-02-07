@@ -16,23 +16,36 @@ package edu.uci.ics.asterix.aql.translator;
 
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.Query;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
+import edu.uci.ics.hyracks.api.job.JobId;
 
 public class QueryResult {
 
     private final Query query;
-    private final String resultPath;
 
-    public QueryResult(Query statement, String resultPath) {
+    private final ResultSetId resultSetId;
+
+    private JobId jobId;
+
+    public QueryResult(Query statement, ResultSetId resultSetId) {
         this.query = statement;
-        this.resultPath = resultPath;
+        this.resultSetId = resultSetId;
+    }
+
+    public void setJobId(JobId jobId) {
+        this.jobId = jobId;
+    }
+
+    public JobId getJobId() {
+        return jobId;
     }
 
     public Statement getStatement() {
         return query;
     }
 
-    public String getResultPath() {
-        return resultPath;
+    public ResultSetId getResultId() {
+        return resultSetId;
     }
 
 }
