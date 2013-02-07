@@ -4,9 +4,9 @@ import java.util.logging.Logger;
 
 public class GlobalConfig {
     public static final boolean DEBUG = true;
-    
+
     public static final String ASTERIX_LOGGER_NAME = "edu.uci.ics.asterix";
-    
+
     public static final Logger ASTERIX_LOGGER = Logger.getLogger(ASTERIX_LOGGER_NAME);
 
     public static final String ASTERIX_LOGFILE_PATTERN = "%t/asterix.log";
@@ -34,6 +34,6 @@ public class GlobalConfig {
     public static final String FRAME_SIZE_PROPERTY = "FrameSize";
 
     public static final float DEFAULT_BTREE_FILL_FACTOR = 1.00f;
-    
+
     public static int DEFAULT_INPUT_DATA_COLUMN = 0;
 }

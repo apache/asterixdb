@@ -44,8 +44,7 @@ public class QueryResult {
         return query;
     }
 
-    public ResultSetId getResultId() {
+    public ResultSetId getResultSetId() {
         return resultSetId;
     }
-
 }
