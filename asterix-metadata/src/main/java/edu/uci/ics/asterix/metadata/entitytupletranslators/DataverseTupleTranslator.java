@@ -67,7 +67,7 @@ public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse>
         ARecord dataverseRecord = recordSerDes.deserialize(in);
         return new Dataverse(((AString) dataverseRecord.getValueByPos(0)).getStringValue(),
                 ((AString) dataverseRecord.getValueByPos(1)).getStringValue(),
-                ((AInt32) dataverseRecord.getValueByPos(2)).getIntegerValue());
+                ((AInt32) dataverseRecord.getValueByPos(3)).getIntegerValue());
     }
 
     @Override

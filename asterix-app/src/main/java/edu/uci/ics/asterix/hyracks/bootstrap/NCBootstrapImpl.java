@@ -78,6 +78,9 @@ public class NCBootstrapImpl implements INCBootstrap {
         recoveryMgr.checkpoint();
         
         if (isMetadataNode) {
+            //#. clean-up incomplete DDL operations, which is DDLRecovery
+            MetadataBootstrap.startDDLRecovery();
+            
             // Start a sub-component for the API server. This server is only connected to by the 
             // API server that lives on the CC and never by a client wishing to execute AQL.
             // TODO: The API sub-system will change dramatically in the future and this code will go away, 

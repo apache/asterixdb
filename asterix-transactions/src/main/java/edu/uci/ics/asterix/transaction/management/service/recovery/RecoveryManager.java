@@ -53,6 +53,7 @@ import edu.uci.ics.asterix.transaction.management.service.logging.PhysicalLogLoc
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManager;
@@ -107,9 +108,12 @@ public class RecoveryManager implements IRecoveryManager {
             new ACIDException("Checkpoint file doesn't exist", e);
         }
 
-        //#. if minMCTFirstLSN is equal to -1,
+        //#. if minMCTFirstLSN is equal to -1 && 
+        //   checkpointLSN in the checkpoint file is equal to the lastLSN in the log file,
         //   then return healthy state. Otherwise, return corrupted.
-        if (checkpointObject.getMinMCTFirstLSN() == -1) {
+        LogManager logMgr = (LogManager) txnSubsystem.getLogManager();
+        if (checkpointObject.getMinMCTFirstLSN() == -1
+                && checkpointObject.getCheckpointLSN() == logMgr.getCurrentLsn().get()) {
             state = SystemState.HEALTHY;
             return state;
         } else {
@@ -129,7 +133,8 @@ public class RecoveryManager implements IRecoveryManager {
         ILogManager logManager = txnSubsystem.getLogManager();
         ILogRecordHelper logRecordHelper = logManager.getLogRecordHelper();
         ITransactionManager txnManager = txnSubsystem.getTransactionManager();
-        TransactionalResourceManagerRepository txnResourceRepository = txnSubsystem.getTransactionalResourceRepository();
+        TransactionalResourceManagerRepository txnResourceRepository = txnSubsystem
+                .getTransactionalResourceRepository();
 
         //winnerTxnTable is used to add pairs, <committed TxnId, the most recent commit LSN of the TxnId>
         Map<TxnId, Long> winnerTxnTable = new HashMap<TxnId, Long>();
@@ -244,6 +249,25 @@ public class RecoveryManager implements IRecoveryManager {
                         index = indexLifecycleManager.getIndex(resourceId);
                         if (index == null) {
                             localResource = localResourceRepository.getResourceById(resourceId);
+
+                            /*******************************************************************
+                             * [Notice]
+                             * -> Issue
+                             * Delete index may cause a problem during redo.
+                             * The index operation to be redone couldn't be redone because the corresponding index
+                             * may not exist in NC due to the possible index drop DDL operation.
+                             * -> Approach
+                             * Avoid the problem during redo.
+                             * More specifically, the problem will be detected when the localResource of
+                             * the corresponding index is retrieved, which will end up with 'null' return from
+                             * localResourceRepository. If null is returned, then just go and process the next
+                             * log record.
+                             *******************************************************************/
+                            if (localResource == null) {
+                                continue;
+                            }
+                            /*******************************************************************/
+
                             localResourceMetadata = (ILocalResourceMetadata) localResource.getResourceObject();
                             index = localResourceMetadata.createIndexInstance(appRuntimeContext,
                                     localResource.getResourceName(), localResource.getPartition());
@@ -283,6 +307,8 @@ public class RecoveryManager implements IRecoveryManager {
                     throw new ACIDException("Unsupported LogType: " + logType);
             }
         }
+        
+        JobIdFactory.initJobId(maxJobId);
     }
 
     @Override
@@ -300,8 +326,8 @@ public class RecoveryManager implements IRecoveryManager {
         //TODO
         //put the correct minMCTFirstLSN by getting from Zach. :)
         long minMCTFirstLSM = -1;
-        CheckpointObject checkpointObject = new CheckpointObject(minMCTFirstLSM, txnMgr.getMaxJobId(),
-                System.currentTimeMillis());
+        CheckpointObject checkpointObject = new CheckpointObject(logMgr.getCurrentLsn().get(), minMCTFirstLSM,
+                txnMgr.getMaxJobId(), System.currentTimeMillis());
 
         FileOutputStream fos = null;
         ObjectOutputStream oosToFos = null;

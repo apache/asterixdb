@@ -580,6 +580,23 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
+    public List<Dataverse> getDataverses(JobId jobId) throws MetadataException, RemoteException {
+        try {
+            DataverseTupleTranslator tupleReaderWriter = new DataverseTupleTranslator(false);
+            IValueExtractor<Dataverse> valueExtractor = new MetadataEntityValueExtractor<Dataverse>(tupleReaderWriter);
+            List<Dataverse> results = new ArrayList<Dataverse>();
+            searchIndex(jobId, MetadataPrimaryIndexes.DATAVERSE_DATASET, null, valueExtractor, results);
+            if (results.isEmpty()) {
+                return null;
+            }
+            return results;
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+
+    }
+
+    @Override
     public Dataverse getDataverse(JobId jobId, String dataverseName) throws MetadataException, RemoteException {
         try {
             ITupleReference searchKey = createTuple(dataverseName);
@@ -847,12 +864,18 @@ public class MetadataNode implements IMetadataNode {
         IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
         ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
-        IBinaryComparator[] searchCmps = new IBinaryComparator[searchKey.getFieldCount()];
-        for (int i = 0; i < searchKey.getFieldCount(); i++) {
-            searchCmps[i] = comparatorFactories[i].createBinaryComparator();
+
+        IBinaryComparator[] searchCmps = null;
+        MultiComparator searchCmp = null;
+        RangePredicate rangePred = null;
+        if (searchKey != null) {
+            searchCmps = new IBinaryComparator[searchKey.getFieldCount()];
+            for (int i = 0; i < searchKey.getFieldCount(); i++) {
+                searchCmps[i] = comparatorFactories[i].createBinaryComparator();
+            }
+            searchCmp = new MultiComparator(searchCmps);
         }
-        MultiComparator searchCmp = new MultiComparator(searchCmps);
-        RangePredicate rangePred = new RangePredicate(searchKey, searchKey, true, true, searchCmp, searchCmp);
+        rangePred = new RangePredicate(searchKey, searchKey, true, true, searchCmp, searchCmp);
         indexAccessor.search(rangeCursor, rangePred);
 
         try {

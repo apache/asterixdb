@@ -100,6 +100,19 @@ public interface IMetadataNode extends Remote, Serializable {
     public void addDataverse(JobId jobId, Dataverse dataverse) throws MetadataException, RemoteException;
 
     /**
+     * Retrieves all dataverses, acquiring local locks on behalf of
+     * the given transaction id.
+     * 
+     * @param jobId
+     *            A globally unique id for an active metadata transaction.
+     * @return A list of dataverse instances.
+     * @throws MetadataException
+     *             For example, if the dataverse does not exist.
+     * @throws RemoteException
+     */
+    public List<Dataverse> getDataverses(JobId jobId) throws MetadataException, RemoteException;
+
+    /**
      * Retrieves a dataverse with given name, acquiring local locks on behalf of
      * the given transaction id.
      * 
@@ -460,4 +473,5 @@ public interface IMetadataNode extends Remote, Serializable {
     public void addAdapter(JobId jobId, DatasourceAdapter adapter) throws MetadataException, RemoteException;
 
     public void initializeDatasetIdFactory(JobId jobId) throws MetadataException, RemoteException;
+
 }

@@ -16,6 +16,7 @@
 package edu.uci.ics.asterix.metadata.bootstrap;
 
 import java.io.File;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -31,6 +32,7 @@ import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.external.adapter.factory.IAdapterFactory;
 import edu.uci.ics.asterix.external.dataset.adapter.AdapterIdentifier;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
+import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
@@ -64,7 +66,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
@@ -364,4 +365,51 @@ public class MetadataBootstrap {
         return metadataNodeName;
     }
 
+    public static void startDDLRecovery() throws RemoteException, ACIDException, MetadataException {
+        //#. clean up any record which has pendingAdd/DelOp flag 
+        //   as traversing all records from DATAVERSE_DATASET to DATASET_DATASET, and then to INDEX_DATASET.
+        String dataverseName = null;
+        String datasetName = null;
+        String indexName = null;
+        MetadataTransactionContext mdTxnCtx = null;
+        
+        MetadataManager.INSTANCE.acquireWriteLatch();
+        
+        try {
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+
+            List<Dataverse> dataverses = MetadataManager.INSTANCE.getDataverses(mdTxnCtx);
+            for (Dataverse dataverse : dataverses) {
+                dataverseName = dataverse.getDataverseName();
+                if (dataverse.getPendingOp() != IMetadataEntity.PENDING_NO_OP) {
+                    //drop pending dataverse
+                    MetadataManager.INSTANCE.dropDataverse(mdTxnCtx, dataverseName);
+                } else {
+                    List<Dataset> datasets = MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dataverseName);
+                    for (Dataset dataset : datasets) {
+                        datasetName = dataset.getDatasetName();
+                        if (dataset.getPendingOp() != IMetadataEntity.PENDING_NO_OP) {
+                            //drop pending dataset
+                            MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataverseName, datasetName);
+                        } else {
+                            List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName,
+                                    datasetName);
+                            for (Index index : indexes) {
+                                indexName = index.getIndexName();
+                                if (index.getPendingOp() != IMetadataEntity.PENDING_NO_OP) {
+                                    //drop pending index
+                                    MetadataManager.INSTANCE.dropIndex(mdTxnCtx, dataverseName, datasetName, indexName);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            throw new MetadataException(e);
+        } finally {
+            MetadataManager.INSTANCE.releaseWriteLatch();
+        }
+    }
 }

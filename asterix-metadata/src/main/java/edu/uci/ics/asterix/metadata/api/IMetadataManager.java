@@ -120,6 +120,16 @@ public interface IMetadataManager {
     public void addDataverse(MetadataTransactionContext ctx, Dataverse dataverse) throws MetadataException;
 
     /**
+     * Retrieves all dataverses
+     * 
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @return A list of dataverse instances.
+     * @throws MetadataException
+     */
+    List<Dataverse> getDataverses(MetadataTransactionContext ctx) throws MetadataException;
+    
+    /**
      * Retrieves a dataverse with given name.
      * 
      * @param ctx
@@ -169,7 +179,7 @@ public interface IMetadataManager {
      *             For example, if the dataset already exists.
      */
     public void addDataset(MetadataTransactionContext ctx, Dataset dataset) throws MetadataException;
-
+    
     /**
      * Retrieves a dataset within a given dataverse.
      * 
@@ -441,4 +451,6 @@ public interface IMetadataManager {
     public void acquireReadLatch();
 
     public void releaseReadLatch();
+
+
 }

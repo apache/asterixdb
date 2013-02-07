@@ -157,6 +157,15 @@ public class MetadataManager implements IMetadataManager {
         }
         ctx.dropDataverse(dataverseName);
     }
+    
+    @Override
+    public List<Dataverse> getDataverses(MetadataTransactionContext ctx) throws MetadataException {
+        try {
+            return metadataNode.getDataverses(ctx.getJobId());
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+    }
 
     @Override
     public Dataverse getDataverse(MetadataTransactionContext ctx, String dataverseName) throws MetadataException {
