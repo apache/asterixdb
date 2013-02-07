@@ -15,27 +15,24 @@
 package edu.uci.ics.hyracks.control.cc.work;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
-import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.common.work.IResultCallback;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
 public class GetDatasetDirectoryServiceInfoWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
-    private final JobId jobId;
+
     private final IResultCallback<NetworkAddress> callback;
 
-    public GetDatasetDirectoryServiceInfoWork(ClusterControllerService ccs, JobId jobId,
-            IResultCallback<NetworkAddress> callback) {
+    public GetDatasetDirectoryServiceInfoWork(ClusterControllerService ccs, IResultCallback<NetworkAddress> callback) {
         this.ccs = ccs;
-        this.jobId = jobId;
         this.callback = callback;
     }
 
     @Override
     public void doRun() {
         try {
-            NetworkAddress addr = ccs.getDatasetDirectoryServiceInfo(jobId);
+            NetworkAddress addr = ccs.getDatasetDirectoryServiceInfo();
             callback.setValue(addr);
         } catch (Exception e) {
             callback.setException(e);

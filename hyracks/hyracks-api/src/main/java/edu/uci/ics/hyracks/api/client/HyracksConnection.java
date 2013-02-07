@@ -119,8 +119,8 @@ public final class HyracksConnection implements IHyracksClientConnection {
         return hci.startJob(appName, JavaSerializationUtils.serialize(acggf), jobFlags);
     }
 
-    public NetworkAddress getDatasetDirectoryServiceInfo(JobId jobId) throws Exception {
-        return hci.getDatasetDirectoryServiceInfo(jobId);
+    public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception {
+        return hci.getDatasetDirectoryServiceInfo();
     }
 
     @Override

@@ -275,7 +275,7 @@ public class ClusterControllerService extends AbstractRemoteService {
         return clusterIPC;
     }
 
-    public NetworkAddress getDatasetDirectoryServiceInfo(JobId jobId) {
+    public NetworkAddress getDatasetDirectoryServiceInfo() {
         return new NetworkAddress(ccConfig.clientNetIpAddress.getBytes(), ccConfig.clientNetPort);
     }
 
@@ -341,9 +341,8 @@ public class ClusterControllerService extends AbstractRemoteService {
                 }
 
                 case GET_DATASET_DIRECTORY_SERIVICE_INFO: {
-                    HyracksClientInterfaceFunctions.GetDatasetDirectoryServiceInfoFunction gddsf = (HyracksClientInterfaceFunctions.GetDatasetDirectoryServiceInfoFunction) fn;
-                    workQueue.schedule(new GetDatasetDirectoryServiceInfoWork(ClusterControllerService.this, gddsf
-                            .getJobId(), new IPCResponder<NetworkAddress>(handle, mid)));
+                    workQueue.schedule(new GetDatasetDirectoryServiceInfoWork(ClusterControllerService.this,
+                            new IPCResponder<NetworkAddress>(handle, mid)));
                     return;
                 }
 

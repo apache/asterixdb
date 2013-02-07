@@ -103,8 +103,6 @@ public interface IHyracksClientConnection {
     /**
      * Gets the IP Address and port for the DatasetDirectoryService wrapped in NetworkAddress
      * 
-     * @param jobId
-     *            JobId of the Job
      * @return {@link NetworkAddress}
      * @throws Exception
      */
@@ -118,7 +116,7 @@ public interface IHyracksClientConnection {
      *            JobId of the Job
      * @throws Exception
      */
-    public void waitForCompletion(JobId jobId) throws Exception;
+    public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception;
 
     /**
      * Gets a map of node controller names to node information.
