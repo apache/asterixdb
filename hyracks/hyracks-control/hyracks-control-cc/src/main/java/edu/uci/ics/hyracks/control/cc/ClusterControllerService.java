@@ -67,6 +67,8 @@ import edu.uci.ics.hyracks.control.cc.work.RegisterPartitionRequestWork;
 import edu.uci.ics.hyracks.control.cc.work.RegisterResultPartitionLocationWork;
 import edu.uci.ics.hyracks.control.cc.work.RemoveDeadNodesWork;
 import edu.uci.ics.hyracks.control.cc.work.ReportProfilesWork;
+import edu.uci.ics.hyracks.control.cc.work.ReportResultPartitionFailureWork;
+import edu.uci.ics.hyracks.control.cc.work.ReportResultPartitionWriteCompletionWork;
 import edu.uci.ics.hyracks.control.cc.work.TaskCompleteWork;
 import edu.uci.ics.hyracks.control.cc.work.TaskFailureWork;
 import edu.uci.ics.hyracks.control.cc.work.UnregisterNodeWork;
@@ -462,6 +464,20 @@ public class ClusterControllerService extends AbstractRemoteService {
                             .getJobId(), rrplf.getResultSetId(), rrplf.getOrderedResult(), rrplf
                             .getSerializedRecordDescriptor(), rrplf.getPartition(), rrplf.getNPartitions(), rrplf
                             .getNetworkAddress()));
+                    return;
+                }
+
+                case REPORT_RESULT_PARTITION_WRITE_COMPLETION: {
+                    CCNCFunctions.ReportResultPartitionWriteCompletionFunction rrplf = (CCNCFunctions.ReportResultPartitionWriteCompletionFunction) fn;
+                    workQueue.schedule(new ReportResultPartitionWriteCompletionWork(ClusterControllerService.this,
+                            rrplf.getJobId(), rrplf.getResultSetId(), rrplf.getPartition()));
+                    return;
+                }
+
+                case REPORT_RESULT_PARTITION_FAILURE: {
+                    CCNCFunctions.ReportResultPartitionFailureFunction rrplf = (CCNCFunctions.ReportResultPartitionFailureFunction) fn;
+                    workQueue.schedule(new ReportResultPartitionFailureWork(ClusterControllerService.this, rrplf
+                            .getJobId(), rrplf.getResultSetId(), rrplf.getPartition()));
                     return;
                 }
 

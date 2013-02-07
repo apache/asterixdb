@@ -23,10 +23,13 @@ import java.util.logging.Logger;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IFileHandle;
 import edu.uci.ics.hyracks.api.io.IIOManager;
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.IPartition;
 import edu.uci.ics.hyracks.comm.channels.NetworkOutputChannel;
 
@@ -38,6 +41,10 @@ public class DatasetPartitionWriter implements IFrameWriter, IPartition {
     private final IHyracksTaskContext ctx;
 
     private final IDatasetPartitionManager manager;
+
+    private final JobId jobId;
+
+    private final ResultSetId resultSetId;
 
     private final int partition;
 
@@ -71,7 +78,6 @@ public class DatasetPartitionWriter implements IFrameWriter, IPartition {
         handle = ctx.getIOManager().open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
                 IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
         size = 0;
-        failed = false;
     }
 
     @Override
@@ -82,7 +88,11 @@ public class DatasetPartitionWriter implements IFrameWriter, IPartition {
 
     @Override
     public void fail() throws HyracksDataException {
-        failed = true;
+        try {
+            manager.reportPartitionFailure(jobId, resultSetId, partition);
+        } catch (HyracksException e) {
+            throw new HyracksDataException(e);
+        }
     }
 
     @Override
@@ -90,12 +100,14 @@ public class DatasetPartitionWriter implements IFrameWriter, IPartition {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("close(" + partition + ")");
         }
-        eos.set(true);
-        notifyAll();
-        /* TODO(madhusudancs): Do something more intelligent here than closing the file handle because read still
-         * wants it :-P
-         */
-        // ctx.getIOManager().close(handle);
+
+        try {
+            eos.set(true);
+            notifyAll();
+            manager.reportPartitionWriteCompletion(jobId, resultSetId, partition);
+        } catch (HyracksException e) {
+            throw new HyracksDataException(e);
+        }
     }
 
     @Override

@@ -52,6 +52,10 @@ public interface IClusterController {
             byte[] serializedRecordDescriptor, int partition, int nPartitions, NetworkAddress networkAddress)
             throws Exception;
 
+    public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws Exception;
+
+    public void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition) throws Exception;
+
     public void notifyApplicationStateChange(String nodeId, String appName, ApplicationStatus status) throws Exception;
 
     public void sendApplicationMessageToCC(byte[] data, String appName, String nodeId) throws Exception;

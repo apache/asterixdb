@@ -24,6 +24,10 @@ public interface IDatasetPartitionManager {
     public IFrameWriter createDatasetPartitionWriter(IHyracksTaskContext ctx, ResultSetId rsId, boolean orderedResult,
             byte[] serializedRecordDescriptor, int partition, int nPartitions) throws HyracksException;
 
+    public void reportPartitionWriteCompletion(JobId jobId, ResultSetId resultSetId, int partition) throws HyracksException;
+
+    public void reportPartitionFailure(JobId jobId, ResultSetId resultSetId, int partition) throws HyracksException;
+
     public void initializeDatasetPartitionReader(JobId jobId, int partition, IFrameWriter noc) throws HyracksException;
 
     public IWorkspaceFileFactory getFileFactory();

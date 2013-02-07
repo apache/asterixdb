@@ -64,6 +64,18 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     }
 
     @Override
+    public synchronized void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) {
+        DatasetDirectoryRecord ddr = getDatasetDirectoryRecord(jobId, rsId, partition);
+        ddr.writeEOS();
+    }
+
+    @Override
+    public synchronized void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition) {
+        DatasetDirectoryRecord ddr = getDatasetDirectoryRecord(jobId, rsId, partition);
+        ddr.fail();
+    }
+
+    @Override
     public synchronized byte[] getRecordDescriptor(JobId jobId, ResultSetId rsId) throws HyracksDataException {
         Map<ResultSetId, ResultSetMetaData> rsMap;
         while ((rsMap = jobResultLocationsMap.get(jobId)) == null) {
@@ -94,6 +106,13 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
             }
         }
         return newRecords;
+    }
+
+    public DatasetDirectoryRecord getDatasetDirectoryRecord(JobId jobId, ResultSetId rsId, int partition) {
+        Map<ResultSetId, ResultSetMetaData> rsMap = jobResultLocationsMap.get(jobId);
+        ResultSetMetaData resultSetMetaData = rsMap.get(rsId);
+        DatasetDirectoryRecord[] records = resultSetMetaData.getRecords();
+        return records[partition];
     }
 
     /**
@@ -158,7 +177,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
                     return null;
                 }
                 if (knownRecords[i] == null) {
-                    if ((i == 0 || knownRecords[i - 1].getEOS()) && records[i] != null) {
+                    if ((i == 0 || knownRecords[i - 1].hasReachedReadEOS()) && records[i] != null) {
                         knownRecords[i] = records[i];
                         return knownRecords;
                     }

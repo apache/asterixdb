@@ -74,6 +74,24 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
     }
 
     @Override
+    public void reportPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws HyracksException {
+        try {
+            ncs.getClusterController().reportResultPartitionWriteCompletion(jobId, rsId, partition);
+        } catch (Exception e) {
+            throw new HyracksException(e);
+        }
+    }
+
+    @Override
+    public void reportPartitionFailure(JobId jobId, ResultSetId rsId, int partition) throws HyracksException {
+        try {
+            ncs.getClusterController().reportResultPartitionFailure(jobId, rsId, partition);
+        } catch (Exception e) {
+            throw new HyracksException(e);
+        }
+    }
+
+    @Override
     public void initializeDatasetPartitionReader(JobId jobId, int partition, IFrameWriter writer)
             throws HyracksException {
         DatasetPartitionWriter[] writers = partitionDatasetWriterMap.get(jobId);

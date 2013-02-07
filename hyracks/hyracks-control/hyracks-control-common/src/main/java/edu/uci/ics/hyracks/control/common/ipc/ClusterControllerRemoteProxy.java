@@ -106,6 +106,20 @@ public class ClusterControllerRemoteProxy implements IClusterController {
     }
 
     @Override
+    public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws Exception {
+        CCNCFunctions.ReportResultPartitionWriteCompletionFunction fn = new CCNCFunctions.ReportResultPartitionWriteCompletionFunction(
+                jobId, rsId, partition);
+        ipcHandle.send(-1, fn, null);
+    }
+
+    @Override
+    public void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition) throws Exception {
+        CCNCFunctions.ReportResultPartitionFailureFunction fn = new CCNCFunctions.ReportResultPartitionFailureFunction(
+                jobId, rsId, partition);
+        ipcHandle.send(-1, fn, null);
+    }
+
+    @Override
     public void notifyApplicationStateChange(String nodeId, String appName, ApplicationStatus status) throws Exception {
         CCNCFunctions.ApplicationStateChangeResponseFunction fn = new CCNCFunctions.ApplicationStateChangeResponseFunction(
                 nodeId, appName, status);
