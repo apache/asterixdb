@@ -40,7 +40,7 @@ public interface IHyracksDatasetDirectoryServiceInterface {
      * @return {@link byte[]}
      * @throws Exception
      */
-    public byte[] getDatasetSerializedRecordDescriptorFunction(JobId jobId, ResultSetId rsId) throws Exception;
+    public byte[] getDatasetSerializedRecordDescriptor(JobId jobId, ResultSetId rsId) throws Exception;
 
     /**
      * Gets the IP Addresses and ports for the partition generating the result for each location.
@@ -54,6 +54,6 @@ public interface IHyracksDatasetDirectoryServiceInterface {
      * @return {@link NetworkAddress[]}
      * @throws Exception
      */
-    public DatasetDirectoryRecord[] getDatasetResultLocationsFunction(JobId jobId, ResultSetId rsId,
+    public DatasetDirectoryRecord[] getDatasetResultLocations(JobId jobId, ResultSetId rsId,
             DatasetDirectoryRecord[] knownRecords) throws Exception;
 }

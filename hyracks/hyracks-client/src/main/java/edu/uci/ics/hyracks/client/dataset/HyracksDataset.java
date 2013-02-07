@@ -117,8 +117,8 @@ public class HyracksDataset implements IHyracksDataset {
         if (lastReadPartition == -1) {
             while (knownRecords == null || knownRecords[0] == null) {
                 try {
-                    knownRecords = datasetDirectoryServiceConnection.getDatasetResultLocationsFunction(jobId,
-                            resultSetId, knownRecords);
+                    knownRecords = datasetDirectoryServiceConnection.getDatasetResultLocations(jobId, resultSetId,
+                            knownRecords);
                     lastReadPartition = 0;
                     resultChannel = new DatasetNetworkInputChannel(netManager,
                             getSocketAddress(knownRecords[lastReadPartition]), jobId, lastReadPartition,
@@ -155,8 +155,8 @@ public class HyracksDataset implements IHyracksDataset {
                         lastReadPartition++;
                         while (knownRecords[lastReadPartition] == null) {
                             try {
-                                knownRecords = datasetDirectoryServiceConnection.getDatasetResultLocationsFunction(
-                                        jobId, resultSetId, knownRecords);
+                                knownRecords = datasetDirectoryServiceConnection.getDatasetResultLocations(jobId,
+                                        resultSetId, knownRecords);
                             } catch (Exception e) {
                                 // Do nothing here.
                             }

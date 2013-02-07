@@ -54,6 +54,6 @@ public interface IHyracksDatasetDirectoryServiceConnection {
      * @return {@link NetworkAddress[]}
      * @throws Exception
      */
-    public DatasetDirectoryRecord[] getDatasetResultLocationsFunction(JobId jobId, ResultSetId rsId,
+    public DatasetDirectoryRecord[] getDatasetResultLocations(JobId jobId, ResultSetId rsId,
             DatasetDirectoryRecord[] knownRecords) throws Exception;
 }
