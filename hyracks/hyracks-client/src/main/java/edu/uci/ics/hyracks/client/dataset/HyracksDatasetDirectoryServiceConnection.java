@@ -40,6 +40,11 @@ public class HyracksDatasetDirectoryServiceConnection implements IHyracksDataset
     }
 
     @Override
+    public byte[] getDatasetSerializedRecordDescriptor(JobId jobId, ResultSetId rsId) throws Exception {
+        return ddsi.getDatasetSerializedRecordDescriptorFunction(jobId, rsId);
+    }
+
+    @Override
     public DatasetDirectoryRecord[] getDatasetResultLocationsFunction(JobId jobId, ResultSetId rsId,
             DatasetDirectoryRecord[] knownRecords) throws Exception {
         return ddsi.getDatasetResultLocationsFunction(jobId, rsId, knownRecords);

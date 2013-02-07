@@ -18,6 +18,18 @@ import edu.uci.ics.hyracks.api.job.JobId;
 
 public interface IHyracksDatasetDirectoryServiceInterface {
     /**
+     * Gets the record descriptor for the given result set.
+     * 
+     * @param jobId
+     *            ID of the job
+     * @param rsId
+     *            ID of the result set
+     * @return {@link byte[]}
+     * @throws Exception
+     */
+    public byte[] getDatasetSerializedRecordDescriptorFunction(JobId jobId, ResultSetId rsId) throws Exception;
+
+    /**
      * Gets the IP Addresses and ports for the partition generating the result for each location.
      * 
      * @param jobId

@@ -22,6 +22,8 @@ public interface IDatasetDirectoryService {
     public void registerResultPartitionLocation(JobId jobId, boolean orderedResult, ResultSetId rsId, int partition,
             int nPartitions, NetworkAddress networkAddress);
 
+    public byte[] getRecordDescriptor(JobId jobId, ResultSetId rsId) throws HyracksDataException;
+
     public DatasetDirectoryRecord[] getResultPartitionLocations(JobId jobId, ResultSetId rsId,
             DatasetDirectoryRecord[] knownLocations) throws HyracksDataException;
 }

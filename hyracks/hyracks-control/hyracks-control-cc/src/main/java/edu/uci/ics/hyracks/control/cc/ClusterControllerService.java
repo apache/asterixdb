@@ -56,6 +56,7 @@ import edu.uci.ics.hyracks.control.cc.work.GetDatasetDirectoryServiceInfoWork;
 import edu.uci.ics.hyracks.control.cc.work.GetIpAddressNodeNameMapWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobStatusWork;
 import edu.uci.ics.hyracks.control.cc.work.GetNodeControllersInfoWork;
+import edu.uci.ics.hyracks.control.cc.work.GetRecordDescriptorWork;
 import edu.uci.ics.hyracks.control.cc.work.GetResultPartitionLocationsWork;
 import edu.uci.ics.hyracks.control.cc.work.JobStartWork;
 import edu.uci.ics.hyracks.control.cc.work.JobletCleanupNotificationWork;
@@ -343,6 +344,13 @@ public class ClusterControllerService extends AbstractRemoteService {
                     HyracksClientInterfaceFunctions.GetDatasetDirectoryServiceInfoFunction gddsf = (HyracksClientInterfaceFunctions.GetDatasetDirectoryServiceInfoFunction) fn;
                     workQueue.schedule(new GetDatasetDirectoryServiceInfoWork(ClusterControllerService.this, gddsf
                             .getJobId(), new IPCResponder<NetworkAddress>(handle, mid)));
+                    return;
+                }
+
+                case GET_DATASET_RECORD_DESCRIPTOR: {
+                    HyracksClientInterfaceFunctions.GetDatasetRecordDescriptorFunction gdrdf = (HyracksClientInterfaceFunctions.GetDatasetRecordDescriptorFunction) fn;
+                    workQueue.schedule(new GetRecordDescriptorWork(ClusterControllerService.this, gdrdf.getJobId(),
+                            gdrdf.getResultSetId(), new IPCResponder<byte[]>(handle, mid)));
                     return;
                 }
 
