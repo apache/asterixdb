@@ -152,6 +152,7 @@ public class DatasetPartitionWriter implements IFrameWriter, IPartition {
                         }
                     } finally {
                         channel.close();
+                        ctx.getIOManager().close(handle);
                     }
                 } catch (HyracksDataException e) {
                     throw new RuntimeException(e);
