@@ -24,9 +24,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.JSONArray;
+
+import twitter4j.internal.org.json.JSONObject;
+
 import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
 import edu.uci.ics.asterix.api.common.SessionConfig;
 import edu.uci.ics.asterix.aql.base.Statement;
+import edu.uci.ics.asterix.aql.base.Statement.Kind;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
@@ -38,6 +43,8 @@ public class QueryAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private static final String HYRACKS_CONNECTION_ATTR = "edu.uci.ics.asterix.HYRACKS_CONNECTION";
+
+    private static final Kind QUERY_STMT = Kind.QUERY;
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -64,6 +71,15 @@ public class QueryAPIServlet extends HttpServlet {
             }
             AQLParser parser = new AQLParser(new StringReader(query));
             List<Statement> aqlStatements = parser.Statement();
+            for (Statement st : aqlStatements) {
+                if (st.getKind() != QUERY_STMT) {
+                    JSONObject errorResp = new JSONObject();
+                    JSONArray errorArray = new JSONArray();
+                    errorArray.put("1");
+                    errorArray.put("Invalid stament: Non-query statement to the query API." + st.getKind());
+                    errorResp.put("error-code", errorArray);
+                }
+            }
             SessionConfig sessionConfig = new SessionConfig(port, true, false, false, false, false, false, true, false);
 
             MetadataManager.INSTANCE.init();
