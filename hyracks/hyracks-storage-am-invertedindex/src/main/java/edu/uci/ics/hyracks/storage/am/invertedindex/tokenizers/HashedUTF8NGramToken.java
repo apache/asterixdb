@@ -19,10 +19,10 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
+import edu.uci.ics.hyracks.data.std.util.GrowableArray;
 
 public class HashedUTF8NGramToken extends UTF8NGramToken {
     public HashedUTF8NGramToken(byte tokenTypeTag, byte countTypeTag) {
@@ -30,8 +30,8 @@ public class HashedUTF8NGramToken extends UTF8NGramToken {
     }
 
     @Override
-    public void serializeToken(DataOutput dos) throws IOException {
-        handleTokenTypeTag(dos);
+    public void serializeToken(GrowableArray out) throws IOException {
+        handleTokenTypeTag(out.getDataOutput());
 
         int hash = GOLDEN_RATIO_32;
 
@@ -59,6 +59,6 @@ public class HashedUTF8NGramToken extends UTF8NGramToken {
         // token count
         hash += tokenCount;
 
-        dos.writeInt(hash);
+        out.getDataOutput().writeInt(hash);
     }
 }

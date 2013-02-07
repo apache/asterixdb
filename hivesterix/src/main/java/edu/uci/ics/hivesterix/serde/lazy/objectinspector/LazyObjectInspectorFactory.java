@@ -20,65 +20,74 @@ import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 
 public final class LazyObjectInspectorFactory {
 
-    static ConcurrentHashMap<ArrayList<Object>, LazyColumnarObjectInspector> cachedLazyColumnarObjectInspector = new ConcurrentHashMap<ArrayList<Object>, LazyColumnarObjectInspector>();
+	static ConcurrentHashMap<ArrayList<Object>, LazyColumnarObjectInspector> cachedLazyColumnarObjectInspector = new ConcurrentHashMap<ArrayList<Object>, LazyColumnarObjectInspector>();
 
-    static ConcurrentHashMap<ArrayList<Object>, LazyStructObjectInspector> cachedLazyStructObjectInspector = new ConcurrentHashMap<ArrayList<Object>, LazyStructObjectInspector>();
+	static ConcurrentHashMap<ArrayList<Object>, LazyStructObjectInspector> cachedLazyStructObjectInspector = new ConcurrentHashMap<ArrayList<Object>, LazyStructObjectInspector>();
 
-    static ConcurrentHashMap<ArrayList<Object>, LazyListObjectInspector> cachedLazyListObjectInspector = new ConcurrentHashMap<ArrayList<Object>, LazyListObjectInspector>();
+	static ConcurrentHashMap<ArrayList<Object>, LazyListObjectInspector> cachedLazyListObjectInspector = new ConcurrentHashMap<ArrayList<Object>, LazyListObjectInspector>();
 
-    static ConcurrentHashMap<ArrayList<Object>, LazyMapObjectInspector> cachedLazyMapObjectInspector = new ConcurrentHashMap<ArrayList<Object>, LazyMapObjectInspector>();
+	static ConcurrentHashMap<ArrayList<Object>, LazyMapObjectInspector> cachedLazyMapObjectInspector = new ConcurrentHashMap<ArrayList<Object>, LazyMapObjectInspector>();
 
-    public static LazyColumnarObjectInspector getLazyColumnarObjectInspector(List<String> structFieldNames,
-            List<ObjectInspector> structFieldObjectInspectors) {
-        ArrayList<Object> signature = new ArrayList<Object>();
-        signature.add(structFieldNames);
-        signature.add(structFieldObjectInspectors);
-        LazyColumnarObjectInspector result = cachedLazyColumnarObjectInspector.get(signature);
-        if (result == null) {
-            result = new LazyColumnarObjectInspector(structFieldNames, structFieldObjectInspectors);
-            cachedLazyColumnarObjectInspector.put(signature, result);
-        }
-        return result;
-    }
+	public static LazyColumnarObjectInspector getLazyColumnarObjectInspector(
+			List<String> structFieldNames,
+			List<ObjectInspector> structFieldObjectInspectors) {
+		ArrayList<Object> signature = new ArrayList<Object>();
+		signature.add(structFieldNames);
+		signature.add(structFieldObjectInspectors);
+		LazyColumnarObjectInspector result = cachedLazyColumnarObjectInspector
+				.get(signature);
+		if (result == null) {
+			result = new LazyColumnarObjectInspector(structFieldNames,
+					structFieldObjectInspectors);
+			cachedLazyColumnarObjectInspector.put(signature, result);
+		}
+		return result;
+	}
 
-    public static LazyStructObjectInspector getLazyStructObjectInspector(List<String> structFieldNames,
-            List<ObjectInspector> structFieldObjectInspectors) {
-        ArrayList<Object> signature = new ArrayList<Object>();
-        signature.add(structFieldNames);
-        signature.add(structFieldObjectInspectors);
-        LazyStructObjectInspector result = cachedLazyStructObjectInspector.get(signature);
-        if (result == null) {
-            result = new LazyStructObjectInspector(structFieldNames, structFieldObjectInspectors);
-            cachedLazyStructObjectInspector.put(signature, result);
-        }
-        return result;
-    }
+	public static LazyStructObjectInspector getLazyStructObjectInspector(
+			List<String> structFieldNames,
+			List<ObjectInspector> structFieldObjectInspectors) {
+		ArrayList<Object> signature = new ArrayList<Object>();
+		signature.add(structFieldNames);
+		signature.add(structFieldObjectInspectors);
+		LazyStructObjectInspector result = cachedLazyStructObjectInspector
+				.get(signature);
+		if (result == null) {
+			result = new LazyStructObjectInspector(structFieldNames,
+					structFieldObjectInspectors);
+			cachedLazyStructObjectInspector.put(signature, result);
+		}
+		return result;
+	}
 
-    public static LazyListObjectInspector getLazyListObjectInspector(ObjectInspector listElementInspector) {
-        ArrayList<Object> signature = new ArrayList<Object>();
-        signature.add(listElementInspector);
-        LazyListObjectInspector result = cachedLazyListObjectInspector.get(signature);
-        if (result == null) {
-            result = new LazyListObjectInspector(listElementInspector);
-            cachedLazyListObjectInspector.put(signature, result);
-        }
-        return result;
-    }
+	public static LazyListObjectInspector getLazyListObjectInspector(
+			ObjectInspector listElementInspector) {
+		ArrayList<Object> signature = new ArrayList<Object>();
+		signature.add(listElementInspector);
+		LazyListObjectInspector result = cachedLazyListObjectInspector
+				.get(signature);
+		if (result == null) {
+			result = new LazyListObjectInspector(listElementInspector);
+			cachedLazyListObjectInspector.put(signature, result);
+		}
+		return result;
+	}
 
-    public static LazyMapObjectInspector getLazyMapObjectInspector(ObjectInspector keyInspector,
-            ObjectInspector valueInspector) {
-        ArrayList<Object> signature = new ArrayList<Object>();
-        signature.add(keyInspector);
-        signature.add(valueInspector);
-        LazyMapObjectInspector result = cachedLazyMapObjectInspector.get(signature);
-        if (result == null) {
-            result = new LazyMapObjectInspector(keyInspector, valueInspector);
-            cachedLazyMapObjectInspector.put(signature, result);
-        }
-        return result;
-    }
+	public static LazyMapObjectInspector getLazyMapObjectInspector(
+			ObjectInspector keyInspector, ObjectInspector valueInspector) {
+		ArrayList<Object> signature = new ArrayList<Object>();
+		signature.add(keyInspector);
+		signature.add(valueInspector);
+		LazyMapObjectInspector result = cachedLazyMapObjectInspector
+				.get(signature);
+		if (result == null) {
+			result = new LazyMapObjectInspector(keyInspector, valueInspector);
+			cachedLazyMapObjectInspector.put(signature, result);
+		}
+		return result;
+	}
 
-    private LazyObjectInspectorFactory() {
-        // prevent instantiation
-    }
+	private LazyObjectInspectorFactory() {
+		// prevent instantiation
+	}
 }

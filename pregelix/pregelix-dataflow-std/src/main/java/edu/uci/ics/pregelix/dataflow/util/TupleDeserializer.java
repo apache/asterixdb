@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -42,7 +43,7 @@ public class TupleDeserializer {
     }
 
     public Object[] deserializeRecord(ITupleReference tupleRef) throws HyracksDataException {
-        for (int i = 0; i < record.length; ++i) {
+        for (int i = 0; i < tupleRef.getFieldCount(); ++i) {
             byte[] data = tupleRef.getFieldData(i);
             int offset = tupleRef.getFieldStart(i);
             bbis.setByteArray(data, offset);
@@ -65,11 +66,65 @@ public class TupleDeserializer {
         return record;
     }
 
-    public Object[] deserializeRecord(ArrayTupleBuilder tb) throws HyracksDataException {
+    public Object[] deserializeRecord(IFrameTupleAccessor left, int tIndex, ITupleReference right)
+            throws HyracksDataException {
+        byte[] data = left.getBuffer().array();
+        int tStart = left.getTupleStartOffset(tIndex) + left.getFieldSlotsLength();
+        int leftFieldCount = left.getFieldCount();
+        int fStart = tStart;
+        for (int i = 0; i < leftFieldCount; ++i) {
+            /**
+             * reset the input
+             */
+            fStart = tStart + left.getFieldStartOffset(tIndex, i);
+            bbis.setByteArray(data, fStart);
+
+            /**
+             * do deserialization
+             */
+            Object instance = recordDescriptor.getFields()[i].deserialize(di);
+            if (LOGGER.isLoggable(Level.FINEST)) {
+                LOGGER.finest(i + " " + instance);
+            }
+            record[i] = instance;
+            if (FrameConstants.DEBUG_FRAME_IO) {
+                try {
+                    if (di.readInt() != FrameConstants.FRAME_FIELD_MAGIC) {
+                        throw new HyracksDataException("Field magic mismatch");
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        for (int i = leftFieldCount; i < record.length; ++i) {
+            byte[] rightData = right.getFieldData(i - leftFieldCount);
+            int rightOffset = right.getFieldStart(i - leftFieldCount);
+            bbis.setByteArray(rightData, rightOffset);
+
+            Object instance = recordDescriptor.getFields()[i].deserialize(di);
+            if (LOGGER.isLoggable(Level.FINEST)) {
+                LOGGER.finest(i + " " + instance);
+            }
+            record[i] = instance;
+            if (FrameConstants.DEBUG_FRAME_IO) {
+                try {
+                    if (di.readInt() != FrameConstants.FRAME_FIELD_MAGIC) {
+                        throw new HyracksDataException("Field magic mismatch");
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return record;
+    }
+
+    public Object[] deserializeRecord(ArrayTupleBuilder tb, ITupleReference right) throws HyracksDataException {
         byte[] data = tb.getByteArray();
         int[] offset = tb.getFieldEndOffsets();
         int start = 0;
-        for (int i = 0; i < record.length; ++i) {
+        for (int i = 0; i < offset.length; ++i) {
             /**
              * reset the input
              */
@@ -79,6 +134,26 @@ public class TupleDeserializer {
             /**
              * do deserialization
              */
+            Object instance = recordDescriptor.getFields()[i].deserialize(di);
+            if (LOGGER.isLoggable(Level.FINEST)) {
+                LOGGER.finest(i + " " + instance);
+            }
+            record[i] = instance;
+            if (FrameConstants.DEBUG_FRAME_IO) {
+                try {
+                    if (di.readInt() != FrameConstants.FRAME_FIELD_MAGIC) {
+                        throw new HyracksDataException("Field magic mismatch");
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        for (int i = offset.length; i < record.length; ++i) {
+            byte[] rightData = right.getFieldData(i - offset.length);
+            int rightOffset = right.getFieldStart(i - offset.length);
+            bbis.setByteArray(rightData, rightOffset);
+
             Object instance = recordDescriptor.getFields()[i].deserialize(di);
             if (LOGGER.isLoggable(Level.FINEST)) {
                 LOGGER.finest(i + " " + instance);

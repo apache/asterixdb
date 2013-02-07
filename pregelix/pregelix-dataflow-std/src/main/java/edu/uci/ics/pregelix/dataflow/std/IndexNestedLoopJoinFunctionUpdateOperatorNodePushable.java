@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.pregelix.dataflow.std;
 
-import java.io.DataOutput;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
@@ -44,6 +43,7 @@ import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHookFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IUpdateFunctionFactory;
 import edu.uci.ics.pregelix.dataflow.util.FunctionProxy;
+import edu.uci.ics.pregelix.dataflow.util.UpdateBuffer;
 
 public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends AbstractUnaryInputOperatorNodePushable {
     private TreeIndexDataflowHelper treeIndexOpHelper;
@@ -51,9 +51,6 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
 
     private ByteBuffer writeBuffer;
     private FrameTupleAppender appender;
-    private ArrayTupleBuilder tb;
-    private DataOutput dos;
-
     private BTree btree;
     private PermutingFrameTupleReference lowKey;
     private PermutingFrameTupleReference highKey;
@@ -67,17 +64,16 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
     protected ITreeIndexAccessor indexAccessor;
 
     private RecordDescriptor recDesc;
-    private final RecordDescriptor inputRecDesc;
-
     private final IFrameWriter[] writers;
     private final FunctionProxy functionProxy;
+    private ArrayTupleBuilder cloneUpdateTb;
+    private final UpdateBuffer updateBuffer;
 
     public IndexNestedLoopJoinFunctionUpdateOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward,
             int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
             IUpdateFunctionFactory functionFactory, IRuntimeHookFactory preHookFactory,
             IRuntimeHookFactory postHookFactory, IRecordDescriptorFactory inputRdFactory, int outputArity) {
-        inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         treeIndexOpHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
                 opDesc, ctx, partition);
         this.lowKeyInclusive = lowKeyInclusive;
@@ -95,6 +91,7 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
         this.writers = new IFrameWriter[outputArity];
         this.functionProxy = new FunctionProxy(ctx, functionFactory, preHookFactory, postHookFactory, inputRdFactory,
                 writers);
+        this.updateBuffer = new UpdateBuffer(ctx, 2);
     }
 
     protected void setCursor() {
@@ -144,12 +141,12 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
             rangePred = new RangePredicate(null, null, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
                     highKeySearchCmp);
             writeBuffer = treeIndexOpHelper.getHyracksTaskContext().allocateFrame();
-            tb = new ArrayTupleBuilder(inputRecDesc.getFields().length + btree.getFieldCount());
-            dos = tb.getDataOutput();
             appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksTaskContext().getFrameSize());
             appender.reset(writeBuffer, true);
 
             indexAccessor = btree.createAccessor();
+            cloneUpdateTb = new ArrayTupleBuilder(btree.getFieldCount());
+            updateBuffer.setFieldCount(btree.getFieldCount());
         } catch (Exception e) {
             treeIndexOpHelper.deinit();
             throw new HyracksDataException(e);
@@ -158,27 +155,29 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
 
     private void writeSearchResults(IFrameTupleAccessor leftAccessor, int tIndex) throws Exception {
         while (cursor.hasNext()) {
-            tb.reset();
             cursor.next();
-
             ITupleReference tupleRef = cursor.getTuple();
-            for (int i = 0; i < inputRecDesc.getFields().length; i++) {
-                int tupleStart = leftAccessor.getTupleStartOffset(tIndex);
-                int fieldStart = leftAccessor.getFieldStartOffset(tIndex, i);
-                int offset = leftAccessor.getFieldSlotsLength() + tupleStart + fieldStart;
-                int len = leftAccessor.getFieldEndOffset(tIndex, i) - fieldStart;
-                dos.write(leftAccessor.getBuffer().array(), offset, len);
-                tb.addFieldEndOffset();
-            }
-            for (int i = 0; i < tupleRef.getFieldCount(); i++) {
-                dos.write(tupleRef.getFieldData(i), tupleRef.getFieldStart(i), tupleRef.getFieldLength(i));
-                tb.addFieldEndOffset();
-            }
 
             /**
              * call the update function
              */
-            functionProxy.functionCall(tb, tupleRef);
+            functionProxy.functionCall(leftAccessor, tIndex, tupleRef, cloneUpdateTb);
+
+            if (cloneUpdateTb.getSize() > 0) {
+                if (!updateBuffer.appendTuple(cloneUpdateTb)) {
+                    //release the cursor/latch
+                    cursor.close();
+                    //batch update
+                    updateBuffer.updateBTree(indexAccessor);
+
+                    //search again
+                    cursor.reset();
+                    rangePred.setLowKey(tupleRef, true);
+                    rangePred.setHighKey(highKey, highKeyInclusive);
+                    indexAccessor.search(cursor, rangePred);
+                }
+            }
+            cloneUpdateTb.reset();
         }
     }
 
@@ -210,6 +209,8 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
         try {
             try {
                 cursor.close();
+                //batch update
+                updateBuffer.updateBTree(indexAccessor);
             } catch (Exception e) {
                 throw new HyracksDataException(e);
             }

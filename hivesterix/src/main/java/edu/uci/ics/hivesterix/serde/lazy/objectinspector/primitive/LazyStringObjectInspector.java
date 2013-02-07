@@ -26,39 +26,41 @@ import edu.uci.ics.hivesterix.serde.lazy.LazyString;
 /**
  * A WritableStringObjectInspector inspects a Text Object.
  */
-public class LazyStringObjectInspector extends AbstractPrimitiveLazyObjectInspector<Text> implements
-        StringObjectInspector {
+public class LazyStringObjectInspector extends
+		AbstractPrimitiveLazyObjectInspector<Text> implements
+		StringObjectInspector {
 
-    boolean escaped;
-    byte escapeChar;
+	boolean escaped;
+	byte escapeChar;
 
-    LazyStringObjectInspector(boolean escaped, byte escapeChar) {
-        super(PrimitiveObjectInspectorUtils.stringTypeEntry);
-        this.escaped = escaped;
-        this.escapeChar = escapeChar;
-    }
+	LazyStringObjectInspector(boolean escaped, byte escapeChar) {
+		super(PrimitiveObjectInspectorUtils.stringTypeEntry);
+		this.escaped = escaped;
+		this.escapeChar = escapeChar;
+	}
 
-    @Override
-    public Object copyObject(Object o) {
-        return o == null ? null : new LazyString((LazyString) o);
-    }
+	@Override
+	public Object copyObject(Object o) {
+		return o == null ? null : new LazyString((LazyString) o);
+	}
 
-    @Override
-    public Text getPrimitiveWritableObject(Object o) {
-        return o == null ? null : ((LazyString) o).getWritableObject();
-    }
+	@Override
+	public Text getPrimitiveWritableObject(Object o) {
+		return o == null ? null : ((LazyString) o).getWritableObject();
+	}
 
-    @Override
-    public String getPrimitiveJavaObject(Object o) {
-        return o == null ? null : ((LazyString) o).getWritableObject().toString();
-    }
+	@Override
+	public String getPrimitiveJavaObject(Object o) {
+		return o == null ? null : ((LazyString) o).getWritableObject()
+				.toString();
+	}
 
-    public boolean isEscaped() {
-        return escaped;
-    }
+	public boolean isEscaped() {
+		return escaped;
+	}
 
-    public byte getEscapeChar() {
-        return escapeChar;
-    }
+	public byte getEscapeChar() {
+		return escapeChar;
+	}
 
 }

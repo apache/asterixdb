@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
@@ -58,6 +59,8 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             private final ArrayTupleBuilder tbAlive = new ArrayTupleBuilder(2);
             private final ArrayTupleBuilder tbTerminate = new ArrayTupleBuilder(1);
             private final ArrayTupleBuilder tbGlobalAggregate = new ArrayTupleBuilder(1);
+            private final ArrayTupleBuilder tbInsert = new ArrayTupleBuilder(2);
+            private final ArrayTupleBuilder tbDelete = new ArrayTupleBuilder(1);
 
             // for writing out to message channel
             private IFrameWriter writerMsg;
@@ -82,6 +85,16 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             private ByteBuffer bufferTerminate;
             private boolean terminate = true;
 
+            // for writing out to insert vertex channel
+            private IFrameWriter writerInsert;
+            private FrameTupleAppender appenderInsert;
+            private ByteBuffer bufferInsert;
+
+            // for writing out to delete vertex channel
+            private IFrameWriter writerDelete;
+            private FrameTupleAppender appenderDelete;
+            private ByteBuffer bufferDelete;
+
             // dummy empty msgList
             private MsgList msgList = new MsgList();
             private ArrayIterator msgIterator = new ArrayIterator();
@@ -93,11 +106,13 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             private final List<IFrameWriter> writers = new ArrayList<IFrameWriter>();
             private final List<FrameTupleAppender> appenders = new ArrayList<FrameTupleAppender>();
             private final List<ArrayTupleBuilder> tbs = new ArrayList<ArrayTupleBuilder>();
+            private Configuration conf;
 
             @Override
             public void open(IHyracksTaskContext ctx, RecordDescriptor rd, IFrameWriter... writers)
                     throws HyracksDataException {
-                this.aggregator = BspUtils.createGlobalAggregator(confFactory.createConfiguration());
+                this.conf = confFactory.createConfiguration();
+                this.aggregator = BspUtils.createGlobalAggregator(conf);
                 this.aggregator.init();
 
                 this.writerMsg = writers[0];
@@ -117,8 +132,22 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 this.appenderGlobalAggregate = new FrameTupleAppender(ctx.getFrameSize());
                 this.appenderGlobalAggregate.reset(bufferGlobalAggregate, true);
 
-                if (writers.length > 3) {
-                    this.writerAlive = writers[3];
+                this.writerInsert = writers[3];
+                this.bufferInsert = ctx.allocateFrame();
+                this.appenderInsert = new FrameTupleAppender(ctx.getFrameSize());
+                this.appenderInsert.reset(bufferInsert, true);
+                this.writers.add(writerInsert);
+                this.appenders.add(appenderInsert);
+
+                this.writerDelete = writers[4];
+                this.bufferDelete = ctx.allocateFrame();
+                this.appenderDelete = new FrameTupleAppender(ctx.getFrameSize());
+                this.appenderDelete.reset(bufferDelete, true);
+                this.writers.add(writerDelete);
+                this.appenders.add(appenderDelete);
+
+                if (writers.length > 5) {
+                    this.writerAlive = writers[5];
                     this.bufferAlive = ctx.allocateFrame();
                     this.appenderAlive = new FrameTupleAppender(ctx.getFrameSize());
                     this.appenderAlive.reset(bufferAlive, true);
@@ -129,6 +158,8 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 msgList.reset(msgIterator);
 
                 tbs.add(tbMsg);
+                tbs.add(tbInsert);
+                tbs.add(tbDelete);
                 tbs.add(tbAlive);
             }
 
@@ -168,13 +199,16 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             @Override
             public void close() throws HyracksDataException {
                 FrameTupleUtils.flushTuplesFinal(appenderMsg, writerMsg);
+                FrameTupleUtils.flushTuplesFinal(appenderInsert, writerInsert);
+                FrameTupleUtils.flushTuplesFinal(appenderDelete, writerDelete);
+
                 if (pushAlive)
                     FrameTupleUtils.flushTuplesFinal(appenderAlive, writerAlive);
                 if (!terminate) {
                     writeOutTerminationState();
                 }
-                
-                /**write out global aggregate value*/
+
+                /** write out global aggregate value */
                 writeOutGlobalAggregate();
             }
 
@@ -207,15 +241,27 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             }
 
             @Override
-            public void update(ITupleReference tupleRef) throws HyracksDataException {
+            public void update(ITupleReference tupleRef, ArrayTupleBuilder cloneUpdateTb) throws HyracksDataException {
                 try {
                     if (vertex != null && vertex.hasUpdate()) {
-                        int fieldCount = tupleRef.getFieldCount();
-                        for (int i = 1; i < fieldCount; i++) {
-                            byte[] data = tupleRef.getFieldData(i);
-                            int offset = tupleRef.getFieldStart(i);
-                            bbos.setByteArray(data, offset);
-                            vertex.write(output);
+                        if (!BspUtils.getDynamicVertexValueSize(conf)) {
+                            //in-place update
+                            int fieldCount = tupleRef.getFieldCount();
+                            for (int i = 1; i < fieldCount; i++) {
+                                byte[] data = tupleRef.getFieldData(i);
+                                int offset = tupleRef.getFieldStart(i);
+                                bbos.setByteArray(data, offset);
+                                vertex.write(output);
+                            }
+                        } else {
+                            //write the vertex id
+                            DataOutput tbOutput = cloneUpdateTb.getDataOutput();
+                            vertex.getVertexId().write(tbOutput);
+                            cloneUpdateTb.addFieldEndOffset();
+
+                            //write the vertex value
+                            vertex.write(tbOutput);
+                            cloneUpdateTb.addFieldEndOffset();
                         }
                     }
                 } catch (IOException e) {
@@ -224,5 +270,4 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             }
         };
     }
-
 }

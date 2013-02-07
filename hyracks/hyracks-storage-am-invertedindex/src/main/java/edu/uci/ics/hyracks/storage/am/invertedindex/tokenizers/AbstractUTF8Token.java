@@ -22,6 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
+import edu.uci.ics.hyracks.data.std.util.GrowableArray;
 
 public abstract class AbstractUTF8Token implements IToken {
     public static final int GOLDEN_RATIO_32 = 0x09e3779b9;
@@ -97,8 +98,8 @@ public abstract class AbstractUTF8Token implements IToken {
     }
 
     @Override
-    public void serializeTokenCount(DataOutput dos) throws IOException {
-        handleCountTypeTag(dos);
-        dos.writeInt(tokenCount);
+    public void serializeTokenCount(GrowableArray out) throws IOException {
+        handleCountTypeTag(out.getDataOutput());
+        out.getDataOutput().writeInt(tokenCount);
     }
 }

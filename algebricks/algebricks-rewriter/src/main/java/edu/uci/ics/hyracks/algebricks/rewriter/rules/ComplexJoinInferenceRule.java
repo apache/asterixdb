@@ -69,7 +69,7 @@ public class ComplexJoinInferenceRule implements IAlgebraicRewriteRule {
         VariableUtilities.getUsedVariables(op, varsUsedInUnnest);
 
         HashSet<LogicalVariable> producedInSubplan = new HashSet<LogicalVariable>();
-        VariableUtilities.getLiveVariables(subplan, producedInSubplan);
+        VariableUtilities.getProducedVariables(subplan, producedInSubplan);
 
         if (!producedInSubplan.containsAll(varsUsedInUnnest)) {
             return false;

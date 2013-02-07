@@ -9,8 +9,8 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 
 public class NullExpressionEvaluator extends AbstractExpressionEvaluator {
 
-    public NullExpressionEvaluator(ExprNodeNullDesc expr, ObjectInspector oi, IDataOutputProvider output)
-            throws AlgebricksException {
-        super(new ExprNodeNullEvaluator(expr), oi, output);
-    }
+	public NullExpressionEvaluator(ExprNodeNullDesc expr, ObjectInspector oi,
+			IDataOutputProvider output) throws AlgebricksException {
+		super(new ExprNodeNullEvaluator(expr), oi, output);
+	}
 }

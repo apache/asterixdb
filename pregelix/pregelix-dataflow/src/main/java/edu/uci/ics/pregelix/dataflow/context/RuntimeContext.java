@@ -119,23 +119,23 @@ public class RuntimeContext implements IWorkspaceFileFactory {
             Vertex.setNumEdges(numEdges);
             giraphJobIdToSuperStep.put(giraphJobId, superStep);
             giraphJobIdToMove.put(giraphJobId, false);
-            LOGGER.info("start iteration " + Vertex.getCurrentSuperstep());
+            LOGGER.info("start iteration " + Vertex.getSuperstep());
         }
         System.gc();
     }
 
     public synchronized void endSuperStep(String giraphJobId) {
         giraphJobIdToMove.put(giraphJobId, true);
-        LOGGER.info("end iteration " + Vertex.getCurrentSuperstep());
+        LOGGER.info("end iteration " + Vertex.getSuperstep());
     }
 
     @Override
     public FileReference createManagedWorkspaceFile(String prefix) throws HyracksDataException {
         final FileReference fRef = ioManager.createWorkspaceFile(prefix);
-        List<FileReference> files = iterationToFiles.get(Vertex.getCurrentSuperstep());
+        List<FileReference> files = iterationToFiles.get(Vertex.getSuperstep());
         if (files == null) {
             files = new ArrayList<FileReference>();
-            iterationToFiles.put(Vertex.getCurrentSuperstep(), files);
+            iterationToFiles.put(Vertex.getSuperstep(), files);
         }
         files.add(fRef);
         return fRef;

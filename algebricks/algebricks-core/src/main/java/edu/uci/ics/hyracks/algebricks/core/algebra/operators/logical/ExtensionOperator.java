@@ -51,7 +51,7 @@ public class ExtensionOperator extends AbstractLogicalOperator {
 
     @Override
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform transform) throws AlgebricksException {
-        return false;
+        return delegate.acceptExpressionTransform(transform);
     }
 
     @Override
@@ -106,6 +106,15 @@ public class ExtensionOperator extends AbstractLogicalOperator {
     @Override
     public IVariableTypeEnvironment computeInputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
         return this.createPropagatingAllInputsTypeEnvironment(ctx);
+    }
+
+    @Override
+    public String toString() {
+        return delegate.toString();
+    }
+    
+    public IOperatorExtension getDelegate() {
+        return delegate;
     }
 
 }

@@ -41,173 +41,193 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
 public class ExpressionTranslator {
 
-    public static Object getHiveExpression(ILogicalExpression expr, IVariableTypeEnvironment env) throws Exception {
-        if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-            /**
-             * function expression
-             */
-            AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-            IFunctionInfo funcInfo = funcExpr.getFunctionInfo();
-            FunctionIdentifier fid = funcInfo.getFunctionIdentifier();
+	public static Object getHiveExpression(ILogicalExpression expr,
+			IVariableTypeEnvironment env) throws Exception {
+		if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+			/**
+			 * function expression
+			 */
+			AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
+			IFunctionInfo funcInfo = funcExpr.getFunctionInfo();
+			FunctionIdentifier fid = funcInfo.getFunctionIdentifier();
 
-            if (fid.getName().equals(ExpressionConstant.FIELDACCESS)) {
-                Object info = ((HiveFunctionInfo) funcInfo).getInfo();
-                ExprNodeFieldDesc desc = (ExprNodeFieldDesc) info;
-                return new ExprNodeFieldDesc(desc.getTypeInfo(), desc.getDesc(), desc.getFieldName(), desc.getIsList());
-            }
+			if (fid.getName().equals(ExpressionConstant.FIELDACCESS)) {
+				Object info = ((HiveFunctionInfo) funcInfo).getInfo();
+				ExprNodeFieldDesc desc = (ExprNodeFieldDesc) info;
+				return new ExprNodeFieldDesc(desc.getTypeInfo(),
+						desc.getDesc(), desc.getFieldName(), desc.getIsList());
+			}
 
-            if (fid.getName().equals(ExpressionConstant.NULL)) {
-                return new ExprNodeNullDesc();
-            }
+			if (fid.getName().equals(ExpressionConstant.NULL)) {
+				return new ExprNodeNullDesc();
+			}
 
-            /**
-             * argument expressions: translate argument expressions recursively
-             * first, this logic is shared in scalar, aggregation and unnesting
-             * function
-             */
-            List<Mutable<ILogicalExpression>> arguments = funcExpr.getArguments();
-            List<ExprNodeDesc> parameters = new ArrayList<ExprNodeDesc>();
-            for (Mutable<ILogicalExpression> argument : arguments) {
-                /**
-                 * parameters could not be aggregate function desc
-                 */
-                ExprNodeDesc parameter = (ExprNodeDesc) getHiveExpression(argument.getValue(), env);
-                parameters.add(parameter);
-            }
+			/**
+			 * argument expressions: translate argument expressions recursively
+			 * first, this logic is shared in scalar, aggregation and unnesting
+			 * function
+			 */
+			List<Mutable<ILogicalExpression>> arguments = funcExpr
+					.getArguments();
+			List<ExprNodeDesc> parameters = new ArrayList<ExprNodeDesc>();
+			for (Mutable<ILogicalExpression> argument : arguments) {
+				/**
+				 * parameters could not be aggregate function desc
+				 */
+				ExprNodeDesc parameter = (ExprNodeDesc) getHiveExpression(
+						argument.getValue(), env);
+				parameters.add(parameter);
+			}
 
-            /**
-             * get expression
-             */
-            if (funcExpr instanceof ScalarFunctionCallExpression) {
-                String udfName = HiveAlgebricksBuiltInFunctionMap.INSTANCE.getHiveFunctionName(fid);
-                GenericUDF udf;
-                if (udfName != null) {
-                    /**
-                     * get corresponding function info for built-in functions
-                     */
-                    FunctionInfo fInfo = FunctionRegistry.getFunctionInfo(udfName);
-                    udf = fInfo.getGenericUDF();
+			/**
+			 * get expression
+			 */
+			if (funcExpr instanceof ScalarFunctionCallExpression) {
+				String udfName = HiveAlgebricksBuiltInFunctionMap.INSTANCE
+						.getHiveFunctionName(fid);
+				GenericUDF udf;
+				if (udfName != null) {
+					/**
+					 * get corresponding function info for built-in functions
+					 */
+					FunctionInfo fInfo = FunctionRegistry
+							.getFunctionInfo(udfName);
+					udf = fInfo.getGenericUDF();
 
-                    int inputSize = parameters.size();
-                    List<ExprNodeDesc> currentDescs = new ArrayList<ExprNodeDesc>();
+					int inputSize = parameters.size();
+					List<ExprNodeDesc> currentDescs = new ArrayList<ExprNodeDesc>();
 
-                    // generate expression tree if necessary
-                    while (inputSize > 2) {
-                        int pairs = inputSize / 2;
-                        for (int i = 0; i < pairs; i++) {
-                            List<ExprNodeDesc> descs = new ArrayList<ExprNodeDesc>();
-                            descs.add(parameters.get(2 * i));
-                            descs.add(parameters.get(2 * i + 1));
-                            ExprNodeDesc desc = ExprNodeGenericFuncDesc.newInstance(udf, descs);
-                            currentDescs.add(desc);
-                        }
+					// generate expression tree if necessary
+					while (inputSize > 2) {
+						int pairs = inputSize / 2;
+						for (int i = 0; i < pairs; i++) {
+							List<ExprNodeDesc> descs = new ArrayList<ExprNodeDesc>();
+							descs.add(parameters.get(2 * i));
+							descs.add(parameters.get(2 * i + 1));
+							ExprNodeDesc desc = ExprNodeGenericFuncDesc
+									.newInstance(udf, descs);
+							currentDescs.add(desc);
+						}
 
-                        if (inputSize % 2 != 0) {
-                            // List<ExprNodeDesc> descs = new
-                            // ArrayList<ExprNodeDesc>();
-                            // ExprNodeDesc lastExpr =
-                            // currentDescs.remove(currentDescs.size() - 1);
-                            // descs.add(lastExpr);
-                            currentDescs.add(parameters.get(inputSize - 1));
-                            // ExprNodeDesc desc =
-                            // ExprNodeGenericFuncDesc.newInstance(udf, descs);
-                            // currentDescs.add(desc);
-                        }
-                        inputSize = currentDescs.size();
-                        parameters.clear();
-                        parameters.addAll(currentDescs);
-                        currentDescs.clear();
-                    }
+						if (inputSize % 2 != 0) {
+							// List<ExprNodeDesc> descs = new
+							// ArrayList<ExprNodeDesc>();
+							// ExprNodeDesc lastExpr =
+							// currentDescs.remove(currentDescs.size() - 1);
+							// descs.add(lastExpr);
+							currentDescs.add(parameters.get(inputSize - 1));
+							// ExprNodeDesc desc =
+							// ExprNodeGenericFuncDesc.newInstance(udf, descs);
+							// currentDescs.add(desc);
+						}
+						inputSize = currentDescs.size();
+						parameters.clear();
+						parameters.addAll(currentDescs);
+						currentDescs.clear();
+					}
 
-                } else {
-                    Object secondInfo = ((HiveFunctionInfo) funcInfo).getInfo();
-                    if (secondInfo != null) {
+				} else {
+					Object secondInfo = ((HiveFunctionInfo) funcInfo).getInfo();
+					if (secondInfo != null) {
 
-                        /**
-                         * for GenericUDFBridge: we should not call get type of
-                         * this hive expression, because parameters may have
-                         * been changed!
-                         */
-                        ExprNodeGenericFuncDesc hiveExpr = (ExprNodeGenericFuncDesc) ((HiveFunctionInfo) funcInfo)
-                                .getInfo();
-                        udf = hiveExpr.getGenericUDF();
-                    } else {
-                        /**
-                         * for other generic UDF
-                         */
-                        Class<?> udfClass;
-                        try {
-                            udfClass = Class.forName(fid.getName());
-                            udf = (GenericUDF) udfClass.newInstance();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            throw new AlgebricksException(e.getMessage());
-                        }
-                    }
-                }
-                /**
-                 * get hive generic function expression
-                 */
-                ExprNodeDesc desc = ExprNodeGenericFuncDesc.newInstance(udf, parameters);
-                return desc;
-            } else if (funcExpr instanceof AggregateFunctionCallExpression) {
-                /**
-                 * hive aggregation info
-                 */
-                AggregationDesc aggregateDesc = (AggregationDesc) ((HiveFunctionInfo) funcExpr.getFunctionInfo())
-                        .getInfo();
-                /**
-                 * set parameters
-                 */
-                aggregateDesc.setParameters((ArrayList<ExprNodeDesc>) parameters);
+						/**
+						 * for GenericUDFBridge: we should not call get type of
+						 * this hive expression, because parameters may have
+						 * been changed!
+						 */
+						ExprNodeGenericFuncDesc hiveExpr = (ExprNodeGenericFuncDesc) ((HiveFunctionInfo) funcInfo)
+								.getInfo();
+						udf = hiveExpr.getGenericUDF();
+					} else {
+						/**
+						 * for other generic UDF
+						 */
+						Class<?> udfClass;
+						try {
+							udfClass = Class.forName(fid.getName());
+							udf = (GenericUDF) udfClass.newInstance();
+						} catch (Exception e) {
+							e.printStackTrace();
+							throw new AlgebricksException(e.getMessage());
+						}
+					}
+				}
+				/**
+				 * get hive generic function expression
+				 */
+				ExprNodeDesc desc = ExprNodeGenericFuncDesc.newInstance(udf,
+						parameters);
+				return desc;
+			} else if (funcExpr instanceof AggregateFunctionCallExpression) {
+				/**
+				 * hive aggregation info
+				 */
+				AggregationDesc aggregateDesc = (AggregationDesc) ((HiveFunctionInfo) funcExpr
+						.getFunctionInfo()).getInfo();
+				/**
+				 * set parameters
+				 */
+				aggregateDesc
+						.setParameters((ArrayList<ExprNodeDesc>) parameters);
 
-                List<TypeInfo> originalParameterTypeInfos = new ArrayList<TypeInfo>();
-                for (ExprNodeDesc parameter : parameters) {
-                    if (parameter.getTypeInfo() instanceof StructTypeInfo) {
-                        originalParameterTypeInfos.add(TypeInfoFactory.doubleTypeInfo);
-                    } else
-                        originalParameterTypeInfos.add(parameter.getTypeInfo());
-                }
+				List<TypeInfo> originalParameterTypeInfos = new ArrayList<TypeInfo>();
+				for (ExprNodeDesc parameter : parameters) {
+					if (parameter.getTypeInfo() instanceof StructTypeInfo) {
+						originalParameterTypeInfos
+								.add(TypeInfoFactory.doubleTypeInfo);
+					} else
+						originalParameterTypeInfos.add(parameter.getTypeInfo());
+				}
 
-                GenericUDAFEvaluator eval = FunctionRegistry.getGenericUDAFEvaluator(
-                        aggregateDesc.getGenericUDAFName(), originalParameterTypeInfos, aggregateDesc.getDistinct(),
-                        false);
+				GenericUDAFEvaluator eval = FunctionRegistry
+						.getGenericUDAFEvaluator(
+								aggregateDesc.getGenericUDAFName(),
+								originalParameterTypeInfos,
+								aggregateDesc.getDistinct(), false);
 
-                AggregationDesc newAggregateDesc = new AggregationDesc(aggregateDesc.getGenericUDAFName(), eval,
-                        aggregateDesc.getParameters(), aggregateDesc.getDistinct(), aggregateDesc.getMode());
-                return newAggregateDesc;
-            } else if (funcExpr instanceof UnnestingFunctionCallExpression) {
-                /**
-                 * type inference for UDTF function
-                 */
-                UDTFDesc hiveDesc = (UDTFDesc) ((HiveFunctionInfo) funcExpr.getFunctionInfo()).getInfo();
-                String funcName = hiveDesc.getUDTFName();
-                FunctionInfo fi = FunctionRegistry.getFunctionInfo(funcName);
-                GenericUDTF udtf = fi.getGenericUDTF();
-                UDTFDesc desc = new UDTFDesc(udtf);
-                return desc;
-            } else {
-                throw new IllegalStateException("unrecognized function expression " + expr.getClass().getName());
-            }
-        } else if ((expr.getExpressionTag() == LogicalExpressionTag.VARIABLE)) {
-            /**
-             * get type for variable in the environment
-             */
-            VariableReferenceExpression varExpr = (VariableReferenceExpression) expr;
-            LogicalVariable var = varExpr.getVariableReference();
-            TypeInfo typeInfo = (TypeInfo) env.getVarType(var);
-            ExprNodeDesc desc = new ExprNodeColumnDesc(typeInfo, var.toString(), "", false);
-            return desc;
-        } else if ((expr.getExpressionTag() == LogicalExpressionTag.CONSTANT)) {
-            /**
-             * get expression for constant in the environment
-             */
-            ConstantExpression varExpr = (ConstantExpression) expr;
-            Object value = ((HivesterixConstantValue) varExpr.getValue()).getObject();
-            ExprNodeDesc desc = new ExprNodeConstantDesc(value);
-            return desc;
-        } else {
-            throw new IllegalStateException("illegal expressions " + expr.getClass().getName());
-        }
-    }
+				AggregationDesc newAggregateDesc = new AggregationDesc(
+						aggregateDesc.getGenericUDAFName(), eval,
+						aggregateDesc.getParameters(),
+						aggregateDesc.getDistinct(), aggregateDesc.getMode());
+				return newAggregateDesc;
+			} else if (funcExpr instanceof UnnestingFunctionCallExpression) {
+				/**
+				 * type inference for UDTF function
+				 */
+				UDTFDesc hiveDesc = (UDTFDesc) ((HiveFunctionInfo) funcExpr
+						.getFunctionInfo()).getInfo();
+				String funcName = hiveDesc.getUDTFName();
+				FunctionInfo fi = FunctionRegistry.getFunctionInfo(funcName);
+				GenericUDTF udtf = fi.getGenericUDTF();
+				UDTFDesc desc = new UDTFDesc(udtf);
+				return desc;
+			} else {
+				throw new IllegalStateException(
+						"unrecognized function expression "
+								+ expr.getClass().getName());
+			}
+		} else if ((expr.getExpressionTag() == LogicalExpressionTag.VARIABLE)) {
+			/**
+			 * get type for variable in the environment
+			 */
+			VariableReferenceExpression varExpr = (VariableReferenceExpression) expr;
+			LogicalVariable var = varExpr.getVariableReference();
+			TypeInfo typeInfo = (TypeInfo) env.getVarType(var);
+			ExprNodeDesc desc = new ExprNodeColumnDesc(typeInfo,
+					var.toString(), "", false);
+			return desc;
+		} else if ((expr.getExpressionTag() == LogicalExpressionTag.CONSTANT)) {
+			/**
+			 * get expression for constant in the environment
+			 */
+			ConstantExpression varExpr = (ConstantExpression) expr;
+			Object value = ((HivesterixConstantValue) varExpr.getValue())
+					.getObject();
+			ExprNodeDesc desc = new ExprNodeConstantDesc(value);
+			return desc;
+		} else {
+			throw new IllegalStateException("illegal expressions "
+					+ expr.getClass().getName());
+		}
+	}
 }

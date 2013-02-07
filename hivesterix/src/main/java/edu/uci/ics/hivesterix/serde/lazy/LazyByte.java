@@ -34,28 +34,29 @@ import edu.uci.ics.hivesterix.serde.lazy.objectinspector.primitive.LazyByteObjec
  * </p>
  * 
  */
-public class LazyByte extends LazyPrimitive<LazyByteObjectInspector, ByteWritable> {
+public class LazyByte extends
+		LazyPrimitive<LazyByteObjectInspector, ByteWritable> {
 
-    public LazyByte(LazyByteObjectInspector oi) {
-        super(oi);
-        data = new ByteWritable();
-    }
+	public LazyByte(LazyByteObjectInspector oi) {
+		super(oi);
+		data = new ByteWritable();
+	}
 
-    public LazyByte(LazyByte copy) {
-        super(copy);
-        data = new ByteWritable(copy.data.get());
-    }
+	public LazyByte(LazyByte copy) {
+		super(copy);
+		data = new ByteWritable(copy.data.get());
+	}
 
-    @Override
-    public void init(byte[] bytes, int start, int length) {
-        if (length == 0) {
-            isNull = true;
-            return;
-        } else
-            isNull = false;
-        
-        assert (1 == length);
-        data.set(bytes[start]);
-    }
+	@Override
+	public void init(byte[] bytes, int start, int length) {
+		if (length == 0) {
+			isNull = true;
+			return;
+		} else
+			isNull = false;
+
+		assert (1 == length);
+		data.set(bytes[start]);
+	}
 
 }

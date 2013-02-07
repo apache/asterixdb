@@ -26,25 +26,26 @@ import edu.uci.ics.hivesterix.serde.lazy.LazyDouble;
 /**
  * A WritableDoubleObjectInspector inspects a DoubleWritable Object.
  */
-public class LazyDoubleObjectInspector extends AbstractPrimitiveLazyObjectInspector<DoubleWritable> implements
-        DoubleObjectInspector {
+public class LazyDoubleObjectInspector extends
+		AbstractPrimitiveLazyObjectInspector<DoubleWritable> implements
+		DoubleObjectInspector {
 
-    LazyDoubleObjectInspector() {
-        super(PrimitiveObjectInspectorUtils.doubleTypeEntry);
-    }
+	LazyDoubleObjectInspector() {
+		super(PrimitiveObjectInspectorUtils.doubleTypeEntry);
+	}
 
-    @Override
-    public double get(Object o) {
-        return getPrimitiveWritableObject(o).get();
-    }
+	@Override
+	public double get(Object o) {
+		return getPrimitiveWritableObject(o).get();
+	}
 
-    @Override
-    public Object copyObject(Object o) {
-        return o == null ? null : new LazyDouble((LazyDouble) o);
-    }
+	@Override
+	public Object copyObject(Object o) {
+		return o == null ? null : new LazyDouble((LazyDouble) o);
+	}
 
-    @Override
-    public Object getPrimitiveJavaObject(Object o) {
-        return o == null ? null : Double.valueOf(get(o));
-    }
+	@Override
+	public Object getPrimitiveJavaObject(Object o) {
+		return o == null ? null : Double.valueOf(get(o));
+	}
 }

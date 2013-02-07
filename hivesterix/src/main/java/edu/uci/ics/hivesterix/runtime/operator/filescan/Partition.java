@@ -6,28 +6,30 @@ import java.io.Serializable;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 
+@SuppressWarnings("deprecation")
 public class Partition implements Serializable {
+	private static final long serialVersionUID = 1L;
 
-    private String uri;
-    private long offset;
-    private long length;
-    private String[] locations;
+	private String uri;
+	private long offset;
+	private long length;
+	private String[] locations;
 
-    public Partition() {
-    }
+	public Partition() {
+	}
 
-    public Partition(FileSplit file) {
-        uri = file.getPath().toUri().toString();
-        offset = file.getStart();
-        length = file.getLength();
-        try {
-            locations = file.getLocations();
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
+	public Partition(FileSplit file) {
+		uri = file.getPath().toUri().toString();
+		offset = file.getStart();
+		length = file.getLength();
+		try {
+			locations = file.getLocations();
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
+	}
 
-    public FileSplit toFileSplit() {
-        return new FileSplit(new Path(uri), offset, length, locations);
-    }
+	public FileSplit toFileSplit() {
+		return new FileSplit(new Path(uri), offset, length, locations);
+	}
 }

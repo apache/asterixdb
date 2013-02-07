@@ -85,7 +85,13 @@ public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void
 
     @Override
     public Void visitDistinctOperator(DistinctOperator op, Void arg) throws AlgebricksException {
-        standardLayout(op);
+        for (Mutable<ILogicalExpression> exprRef : op.getExpressions()) {
+            ILogicalExpression expr = exprRef.getValue();
+            if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                VariableReferenceExpression varRefExpr = (VariableReferenceExpression) expr;
+                schemaVariables.add(varRefExpr.getVariableReference());
+            }
+        }
         return null;
     }
 

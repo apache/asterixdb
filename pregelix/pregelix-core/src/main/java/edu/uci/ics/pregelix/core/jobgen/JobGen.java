@@ -76,8 +76,8 @@ import edu.uci.ics.pregelix.core.util.DataflowUtils;
 import edu.uci.ics.pregelix.core.util.DatatypeHelper;
 import edu.uci.ics.pregelix.dataflow.HDFSFileWriteOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.VertexFileScanOperatorDescriptor;
+import edu.uci.ics.pregelix.dataflow.VertexWriteOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
-import edu.uci.ics.pregelix.dataflow.std.FileWriteOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHookFactory;
 import edu.uci.ics.pregelix.runtime.bootstrap.StorageManagerInterface;
@@ -89,8 +89,6 @@ public abstract class JobGen implements IJobGen {
     private static final Logger LOGGER = Logger.getLogger(JobGen.class.getName());
     protected static final int MB = 1048576;
     protected static final float DEFAULT_BTREE_FILL_FACTOR = 1.00f;
-    protected static final int frameSize = ClusterConfig.getFrameSize();
-    protected static final int maxFrameSize = (int) (((long) 32 * MB) / frameSize);
     protected static final int tableSize = 10485767;
     protected static final String PRIMARY_INDEX = "primary";
     protected final Configuration conf;
@@ -98,6 +96,8 @@ public abstract class JobGen implements IJobGen {
     protected IIndexRegistryProvider<IIndex> treeRegistryProvider = TreeIndexRegistryProvider.INSTANCE;
     protected IStorageManagerInterface storageManagerInterface = StorageManagerInterface.INSTANCE;
     protected String jobId = new UUID(System.currentTimeMillis(), System.nanoTime()).toString();
+    protected int frameSize = ClusterConfig.getFrameSize();
+    protected int maxFrameNumber = (int) (((long) 32 * MB) / frameSize);
 
     protected static final String SECONDARY_INDEX_ODD = "secondary1";
     protected static final String SECONDARY_INDEX_EVEN = "secondary2";
@@ -107,6 +107,17 @@ public abstract class JobGen implements IJobGen {
         this.giraphJob = job;
         this.initJobConfiguration();
         job.setJobId(jobId);
+
+        // set the frame size to be the one user specified if the user did
+        // specify.
+        int specifiedFrameSize = BspUtils.getFrameSize(job.getConfiguration());
+        if (specifiedFrameSize > 0) {
+            frameSize = specifiedFrameSize;
+            maxFrameNumber = (int) (((long) 32 * MB) / frameSize);
+        }
+        if (maxFrameNumber <= 0) {
+            maxFrameNumber = 1;
+        }
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -189,9 +200,10 @@ public abstract class JobGen implements IJobGen {
         RecordDescriptor recordDescriptor = DataflowUtils.getRecordDescriptorFromKeyValueClasses(
                 vertexIdClass.getName(), vertexClass.getName());
         IConfigurationFactory confFactory = new ConfigurationFactory(conf);
+        String[] readSchedule = ClusterConfig.getHdfsScheduler().getLocationConstraints(splits);
         VertexFileScanOperatorDescriptor scanner = new VertexFileScanOperatorDescriptor(spec, recordDescriptor, splits,
-                confFactory);
-        ClusterConfig.setLocationConstraint(spec, scanner, splits);
+                readSchedule, confFactory);
+        ClusterConfig.setLocationConstraint(spec, scanner);
 
         /**
          * construct sort operator
@@ -203,7 +215,7 @@ public abstract class JobGen implements IJobGen {
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
         comparatorFactories[0] = new WritableComparingBinaryComparatorFactory(WritableComparator.get(vertexIdClass)
                 .getClass());
-        ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, maxFrameSize, sortFields,
+        ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, maxFrameNumber, sortFields,
                 nkmFactory, comparatorFactories, recordDescriptor);
         ClusterConfig.setLocationConstraint(spec, sorter);
 
@@ -264,9 +276,10 @@ public abstract class JobGen implements IJobGen {
         RecordDescriptor recordDescriptor = DataflowUtils.getRecordDescriptorFromKeyValueClasses(
                 vertexIdClass.getName(), vertexClass.getName());
         IConfigurationFactory confFactory = new ConfigurationFactory(conf);
+        String[] readSchedule = ClusterConfig.getHdfsScheduler().getLocationConstraints(splits);
         VertexFileScanOperatorDescriptor scanner = new VertexFileScanOperatorDescriptor(spec, recordDescriptor, splits,
-                confFactory);
-        PartitionConstraintHelper.addPartitionCountConstraint(spec, scanner, splits.size());
+                readSchedule, confFactory);
+        ClusterConfig.setLocationConstraint(spec, scanner);
 
         /**
          * construct sort operator
@@ -280,7 +293,7 @@ public abstract class JobGen implements IJobGen {
                 .getClass());
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, maxFrameLimit, sortFields,
                 nkmFactory, comparatorFactories, recordDescriptor);
-        PartitionConstraintHelper.addPartitionCountConstraint(spec, sorter, splits.size());
+        ClusterConfig.setLocationConstraint(spec, sorter);
 
         /**
          * construct write file operator
@@ -292,7 +305,7 @@ public abstract class JobGen implements IJobGen {
         IRuntimeHookFactory preHookFactory = new RuntimeHookFactory(confFactory);
         IRecordDescriptorFactory inputRdFactory = DataflowUtils.getWritableRecordDescriptorFactoryFromWritableClasses(
                 vertexIdClass.getName(), vertexClass.getName());
-        FileWriteOperatorDescriptor writer = new FileWriteOperatorDescriptor(spec, inputRdFactory,
+        VertexWriteOperatorDescriptor writer = new VertexWriteOperatorDescriptor(spec, inputRdFactory,
                 resultFileSplitProvider, preHookFactory, null);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, writer, new String[] { "nc1" });
         PartitionConstraintHelper.addPartitionCountConstraint(spec, writer, 1);
@@ -357,7 +370,7 @@ public abstract class JobGen implements IJobGen {
         IRuntimeHookFactory preHookFactory = new RuntimeHookFactory(confFactory);
         IRecordDescriptorFactory inputRdFactory = DataflowUtils.getWritableRecordDescriptorFactoryFromWritableClasses(
                 vertexIdClass.getName(), vertexClass.getName());
-        FileWriteOperatorDescriptor writer = new FileWriteOperatorDescriptor(spec, inputRdFactory,
+        VertexWriteOperatorDescriptor writer = new VertexWriteOperatorDescriptor(spec, inputRdFactory,
                 resultFileSplitProvider, preHookFactory, null);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, writer, new String[] { "nc1" });
         PartitionConstraintHelper.addPartitionCountConstraint(spec, writer, 1);

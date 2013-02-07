@@ -27,8 +27,7 @@ public class IntegerNormalizedKeyComputerFactory implements INormalizedKeyComput
             @Override
             public int normalize(byte[] bytes, int start, int length) {
                 int value = IntegerSerializerDeserializer.getInt(bytes, start);
-                long unsignedValue = (long) value;
-                return (int) ((unsignedValue - ((long) Integer.MIN_VALUE)) & 0xffffffffL);
+                return value ^Integer.MIN_VALUE;
             }
         };
     }
