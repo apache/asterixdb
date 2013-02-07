@@ -42,14 +42,15 @@ public class QueryResultAPIServlet extends HttpServlet {
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String strHandle = request.getParameter("handle");
-        String strIP = "127.0.0.1";
-        String strPort = "1098";
-        int port = Integer.parseInt(strPort);
         PrintWriter out = response.getWriter();
         response.setContentType("text/html");
         ServletContext context = getServletContext();
         IHyracksClientConnection hcc;
         try {
+            HyracksProperties hp = new HyracksProperties();
+            String strIP = hp.getHyracksIPAddress();
+            int port = hp.getHyracksPort();
+
             synchronized (context) {
                 hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
                 if (hcc == null) {
