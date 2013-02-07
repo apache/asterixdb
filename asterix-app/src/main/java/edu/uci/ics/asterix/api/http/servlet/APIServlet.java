@@ -20,6 +20,7 @@ import edu.uci.ics.asterix.aql.parser.ParseException;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.aql.translator.QueryResult;
 import edu.uci.ics.asterix.metadata.MetadataManager;
+import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 
@@ -46,6 +47,7 @@ public class APIServlet extends HttpServlet {
         printInHtml(out, query);
         ServletContext context = getServletContext();
         IHyracksClientConnection hcc;
+        ResultReader resultReader;
         try {
             synchronized (context) {
                 hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
@@ -53,6 +55,8 @@ public class APIServlet extends HttpServlet {
                     hcc = new HyracksConnection(strIP, port);
                     context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
                 }
+                resultReader = new ResultReader(hcc, out);
+                new Thread(resultReader).start();
             }
             AQLParser parser = new AQLParser(query);
             List<Statement> aqlStatements = parser.Statement();
@@ -64,30 +68,10 @@ public class APIServlet extends HttpServlet {
             List<QueryResult> executionResults = null;
             double duration = 0;
             long startTime = System.currentTimeMillis();
-            executionResults = aqlTranslator.compileAndExecute(hcc);
+            executionResults = aqlTranslator.compileAndExecute(hcc, resultReader);
             long endTime = System.currentTimeMillis();
             duration = (endTime - startTime) / 1000.00;
             out.println("<PRE>Duration of all jobs: " + duration + "</PRE>");
-
-            int queryCount = 1;
-            out.println("<H1>Result:</H1>");
-            out.println("<PRE>");
-            for (QueryResult result : executionResults) {
-                out.println("Query:" + queryCount++ + ":" + " " + result.getResultPath());
-            }
-            out.println("Duration: " + duration);
-            out.println("</PRE>");
-
-            queryCount = 1;
-            if (isSet(strDisplayResult)) {
-                out.println("<PRE>");
-                for (QueryResult result : executionResults) {
-                    out.println("Query:" + queryCount++ + ":" + " " + result.getResultPath());
-                    displayFile(new File(result.getResultPath()), out);
-                    out.println();
-                }
-                out.println("</PRE>");
-            }
         } catch (ParseException pe) {
             String message = pe.getMessage();
             message = message.replace("<", "&lt");
