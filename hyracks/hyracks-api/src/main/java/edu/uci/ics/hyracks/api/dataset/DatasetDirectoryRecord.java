@@ -19,15 +19,25 @@ import java.io.Serializable;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 
 public class DatasetDirectoryRecord implements Serializable {
+    public enum Status {
+        IDLE,
+        RUNNING,
+        SUCCESS,
+        FAILED
+    }
+
     private static final long serialVersionUID = 1L;
 
     private NetworkAddress address;
 
-    private boolean eos;
+    private boolean readEOS;
+
+    private Status status;
 
     public DatasetDirectoryRecord() {
         this.address = null;
-        this.eos = false;
+        this.readEOS = false;
+        this.status = Status.IDLE;
     }
 
     public void setNetworkAddress(NetworkAddress address) {
@@ -38,12 +48,28 @@ public class DatasetDirectoryRecord implements Serializable {
         return address;
     }
 
-    public void setEOS(boolean eos) {
-        this.eos = eos;
+    public void readEOS() {
+        this.readEOS = true;
     }
 
-    public boolean getEOS() {
-        return eos;
+    public boolean hasReachedReadEOS() {
+        return readEOS;
+    }
+
+    public void start() {
+        status = Status.RUNNING;
+    }
+
+    public void writeEOS() {
+        status = Status.SUCCESS;
+    }
+
+    public void fail() {
+        status = Status.FAILED;
+    }
+
+    public Status getStatus() {
+        return status;
     }
 
     @Override
