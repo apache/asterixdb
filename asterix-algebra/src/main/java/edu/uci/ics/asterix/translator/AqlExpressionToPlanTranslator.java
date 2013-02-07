@@ -83,8 +83,8 @@ import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
-import edu.uci.ics.asterix.metadata.declared.FileSplitDataSink;
-import edu.uci.ics.asterix.metadata.declared.FileSplitSinkId;
+import edu.uci.ics.asterix.metadata.declared.ResultSetDataSink;
+import edu.uci.ics.asterix.metadata.declared.ResultSetSinkId;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
@@ -197,10 +197,12 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
                 outputFileSplit = getDefaultOutputFileLocation();
             }
             metadataProvider.setOutputFile(outputFileSplit);
+            String resultNodeName = outputFileSplit.getNodeName();
+
             List<Mutable<ILogicalExpression>> writeExprList = new ArrayList<Mutable<ILogicalExpression>>(1);
             writeExprList.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(resVar)));
-            FileSplitSinkId fssi = new FileSplitSinkId(outputFileSplit);
-            FileSplitDataSink sink = new FileSplitDataSink(fssi, null);
+            ResultSetSinkId rssId = new ResultSetSinkId(metadataProvider.getResultSetId(), resultNodeName);
+            ResultSetDataSink sink = new ResultSetDataSink(rssId, null);
             topOp = new WriteOperator(writeExprList, sink);
             topOp.getInputs().add(new MutableObject<ILogicalOperator>(project));
         } else {
