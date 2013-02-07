@@ -58,12 +58,12 @@ public class DatasetPartitionWriter implements IFrameWriter, IPartition {
 
     private long size;
 
-    private boolean failed;
-
-    public DatasetPartitionWriter(IHyracksTaskContext ctx, IDatasetPartitionManager manager, int partition,
-            Executor executor) {
+    public DatasetPartitionWriter(IHyracksTaskContext ctx, IDatasetPartitionManager manager, JobId jobId,
+            ResultSetId rsId, int partition, Executor executor) {
         this.ctx = ctx;
         this.manager = manager;
+        this.jobId = jobId;
+        this.resultSetId = rsId;
         this.partition = partition;
         this.executor = executor;
         eos = new AtomicBoolean(false);
