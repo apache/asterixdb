@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.visitors.IOMVisitor;
@@ -27,7 +31,7 @@ public class AUnionType extends AbstractComplexType {
     }
 
     public boolean isNullableType() {
-    	return unionList.size() == 2 && unionList.get(0).equals(BuiltinType.ANULL);
+        return unionList.size() == 2 && unionList.get(0).equals(BuiltinType.ANULL);
     }
 
     @Override
@@ -100,4 +104,23 @@ public class AUnionType extends AbstractComplexType {
         return h;
     }
 
+    @Override
+    public JSONObject toJSON() throws JSONException {
+        JSONObject type = new JSONObject();
+        type.put("type", "UNION");
+
+        JSONArray fields = new JSONArray();
+
+        Iterator<IAType> iter = unionList.iterator();
+        if (iter.hasNext()) {
+            IAType t0 = iter.next();
+            fields.put(t0.toJSON());
+            while (iter.hasNext()) {
+                fields.put(iter.next().toJSON());
+            }
+        }
+
+        type.put("fields", fields);
+        return type;
+    }
 }

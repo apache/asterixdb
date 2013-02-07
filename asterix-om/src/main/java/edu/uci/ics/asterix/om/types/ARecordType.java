@@ -6,6 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.ics.asterix.common.annotations.IRecordTypeAnnotation;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.base.IAObject;
@@ -123,4 +127,23 @@ public class ARecordType extends AbstractComplexType {
         return h;
     }
 
+    @Override
+    public JSONObject toJSON() throws JSONException {
+        JSONObject type = new JSONObject();
+        if (isOpen) {
+            type.put("open", true);
+        } else {
+            type.put("open", false);
+        }
+
+        JSONArray fields = new JSONArray();
+        for (int i = 0; i < fieldNames.length; i++) {
+            JSONObject field = new JSONObject();
+            field.put(fieldNames[i], fieldTypes[i].toJSON());
+            fields.put(field);
+        }
+
+        type.put("fields", fields);
+        return type;
+    }
 }
