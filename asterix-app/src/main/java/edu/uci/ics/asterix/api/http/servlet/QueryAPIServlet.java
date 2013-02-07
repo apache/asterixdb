@@ -17,15 +17,25 @@ package edu.uci.ics.asterix.api.http.servlet;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.base.Statement.Kind;
 
 public class QueryAPIServlet extends RESTAPIServlet {
     private static final long serialVersionUID = 1L;
 
+    protected String getQueryParameter(HttpServletRequest request) {
+        return request.getParameter("query");
+    }
+
     protected List<Statement.Kind> getAllowedStatements() {
         Kind[] statementsArray = { Kind.DATAVERSE_DECL, Kind.QUERY, Kind.SET, Kind.WRITE, Kind.BEGIN_FEED,
-            Kind.CONTROL_FEED };
+                Kind.CONTROL_FEED };
         return Arrays.asList(statementsArray);
+    }
+
+    protected String getErrorMessage() {
+        return "Invalid statement: Non-query statement %s to the query API.";
     }
 }

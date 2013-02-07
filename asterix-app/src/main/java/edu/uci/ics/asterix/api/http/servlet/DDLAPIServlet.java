@@ -17,16 +17,26 @@ package edu.uci.ics.asterix.api.http.servlet;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.base.Statement.Kind;
 
 public class DDLAPIServlet extends RESTAPIServlet {
     private static final long serialVersionUID = 1L;
 
+    protected String getQueryParameter(HttpServletRequest request) {
+        return request.getParameter("ddl");
+    }
+
     protected List<Statement.Kind> getAllowedStatements() {
         Kind[] statementsArray = { Kind.DATAVERSE_DECL, Kind.DATAVERSE_DROP, Kind.FUNCTION_DECL, Kind.NODEGROUP_DECL,
                 Kind.NODEGROUP_DROP, Kind.TYPE_DECL, Kind.TYPE_DROP, Kind.CREATE_INDEX, Kind.INDEX_DECL,
                 Kind.CREATE_DATAVERSE, Kind.INDEX_DROP, Kind.CREATE_FUNCTION, Kind.FUNCTION_DROP };
         return Arrays.asList(statementsArray);
+    }
+
+    protected String getErrorMessage() {
+        return "Invalid statement: Non-DDL statement %s to the DDL API.";
     }
 }

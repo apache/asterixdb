@@ -17,15 +17,25 @@ package edu.uci.ics.asterix.api.http.servlet;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.base.Statement.Kind;
 
 public class UpdateAPIServlet extends RESTAPIServlet {
     private static final long serialVersionUID = 1L;
 
+    protected String getQueryParameter(HttpServletRequest request) {
+        return request.getParameter("statements");
+    }
+
     protected List<Statement.Kind> getAllowedStatements() {
         Kind[] statementsArray = { Kind.DATAVERSE_DECL, Kind.DATASET_DECL, Kind.DATASET_DROP, Kind.DELETE, Kind.INSERT,
                 Kind.UPDATE, Kind.DML_CMD_LIST, Kind.LOAD_FROM_FILE, Kind.WRITE_FROM_QUERY_RESULT };
         return Arrays.asList(statementsArray);
+    }
+
+    protected String getErrorMessage() {
+        return "Invalid statement: Non-Update statement %s to the Update API.";
     }
 }

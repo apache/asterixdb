@@ -47,16 +47,12 @@ abstract class RESTAPIServlet extends HttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         PrintWriter out = response.getWriter();
 
-        String query = request.getParameter("query");
-        String mode = request.getParameter("mode");
-        response.setContentType("text/html");
+        String query = getQueryParameter(request);
+        boolean asyncResults = isAsync(request);
+
+        response.setContentType("application/json");
         ServletContext context = getServletContext();
         IHyracksClientConnection hcc;
-
-        boolean asyncResults = false;
-        if (mode != null && mode.equals("asynchronous")) {
-            asyncResults = true;
-        }
 
         try {
             HyracksProperties hp = new HyracksProperties();
@@ -109,8 +105,7 @@ abstract class RESTAPIServlet extends HttpServlet {
     private boolean checkForbiddenStatements(List<Statement> aqlStatements, PrintWriter out) {
         for (Statement st : aqlStatements) {
             if (!getAllowedStatements().contains(st.getKind())) {
-                JSONObject errorResp = ResultUtils.getErrorResponse(1,
-                        "Invalid stament: Non-query statement " + st.getKind() + " to the query API.");
+                JSONObject errorResp = ResultUtils.getErrorResponse(1, String.format(getErrorMessage(), st.getKind()));
                 out.write(errorResp.toString());
                 return true;
             }
@@ -118,5 +113,18 @@ abstract class RESTAPIServlet extends HttpServlet {
         return false;
     }
 
+    protected boolean isAsync(HttpServletRequest request) {
+        String mode = request.getParameter("mode");
+        boolean asyncResults = false;
+        if (mode != null && mode.equals("asynchronous")) {
+            asyncResults = true;
+        }
+        return asyncResults;
+    }
+
+    protected abstract String getQueryParameter(HttpServletRequest request);
+
     protected abstract List<Kind> getAllowedStatements();
+
+    protected abstract String getErrorMessage();
 }
