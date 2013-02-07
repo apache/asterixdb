@@ -14,6 +14,9 @@
  */
 package edu.uci.ics.asterix.om.base;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.types.BuiltinType;
@@ -81,5 +84,14 @@ public class ADate implements IAObject {
 
     public int getChrononTimeInDays() {
         return chrononTimeInDay;
+    }
+
+    @Override
+    public JSONObject toJSON() throws JSONException {
+        JSONObject json = new JSONObject();
+
+        json.put("ADate", chrononTimeInDay);
+
+        return json;
     }
 }

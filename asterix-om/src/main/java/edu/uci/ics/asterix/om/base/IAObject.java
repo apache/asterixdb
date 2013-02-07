@@ -14,6 +14,9 @@
  */
 package edu.uci.ics.asterix.om.base;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.visitors.IOMVisitor;
@@ -29,4 +32,6 @@ public interface IAObject {
     public boolean deepEqual(IAObject obj);
 
     public int hash();
+
+    public JSONObject toJSON() throws JSONException;
 }

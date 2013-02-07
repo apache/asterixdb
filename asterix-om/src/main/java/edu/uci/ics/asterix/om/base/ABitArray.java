@@ -14,6 +14,10 @@
  */
 package edu.uci.ics.asterix.om.base;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -128,5 +132,18 @@ public final class ABitArray implements IAObject {
         }
         sb.append(" ]");
         return sb.toString();
+    }
+
+    @Override
+    public JSONObject toJSON() throws JSONException {
+        JSONObject json = new JSONObject();
+
+        JSONArray bitArray = new JSONArray();
+        for (int i = 0; i < intArray.length; i++) {
+            bitArray.put(intArray[i]);
+        }
+        json.put("ABitArray", bitArray);
+
+        return json;
     }
 }
