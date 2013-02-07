@@ -102,6 +102,11 @@ public class TestTaskContext implements IHyracksTaskContext {
     }
 
     @Override
+    public IDatasetPartitionManager getDatasetPartitionManager() {
+        return null;
+    }
+
+    @Override
     public void sendApplicationMessageToCC(byte[] message, String nodeId) throws Exception {
         // TODO Auto-generated method stub
 
