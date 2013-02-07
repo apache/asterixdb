@@ -133,8 +133,8 @@ public abstract class AbstractIntegrationTest {
         IHyracksDataset hyracksDataset = new HyracksDataset(hcc, datasetClientCtx, nReaders);
 
         hyracksDataset.open(jobId, spec.getResultSetIds().get(0));
-        RecordDescriptor recordDescriptor = hyracksDataset.getRecordDescriptor();
-        FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(datasetClientCtx.getFrameSize(),
+        byte[] serializedRecordDescriptor = hyracksDataset.getSerializedRecordDescriptor();
+/*        FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(datasetClientCtx.getFrameSize(),
                 recordDescriptor);
 
         ByteBuffer readBuffer = datasetClientCtx.allocateFrame();
@@ -170,7 +170,7 @@ public abstract class AbstractIntegrationTest {
             }
         }
         // End of my code
-
+*/
         hcc.waitForCompletion(jobId);
         dumpOutputFiles();
     }
