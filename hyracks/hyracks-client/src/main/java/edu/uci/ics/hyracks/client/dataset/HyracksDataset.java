@@ -124,16 +124,6 @@ public class HyracksDataset implements IHyracksDataset {
             }
         }
 
-        while (lastMonitor.getNFramesAvailable() < 0 && !lastMonitor.eosReached()) {
-            synchronized (lastMonitor) {
-                try {
-                    lastMonitor.wait();
-                } catch (InterruptedException e) {
-                    //
-                }
-            }
-        }
-
         while (readSize <= 0 && !((lastReadPartition == knownRecords.length - 1) && (lastMonitor.eosReached()))) {
             while (lastMonitor.getNFramesAvailable() <= 0 && !lastMonitor.eosReached()) {
                 synchronized (lastMonitor) {
