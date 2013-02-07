@@ -19,6 +19,8 @@ public class GlobalConfig {
 
     public static final String WEB_SERVER_PORT_PROPERTY = "AsterixWebServerPort";
 
+    public static final String JSON_API_SERVER_PORT_PROPERTY = "AsterixJSONAPIServerPort";
+
     public static final String BUFFER_CACHE_PAGE_SIZE_PROPERTY = "BufferCachePageSize";
 
     public static final String BUFFER_CACHE_NUM_PAGES_PROPERTY = "BufferCacheNumPages";
