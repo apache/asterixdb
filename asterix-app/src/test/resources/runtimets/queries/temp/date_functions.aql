@@ -1,0 +1,24 @@
+/*
+ * Description      :   Check temporal functions for date type
+ * Expected Result  :   Success
+ * Date             :   24th Sep, 2012
+ */
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/temp_date_functions.adm";
+
+let $d1 := date-from-unix-time-in-days(15600)
+let $dt1 := datetime("1327-12-02T23:35:49.938Z")
+let $d2 := date-from-datetime($dt1)
+let $dt2 := datetime("2012-10-11T02:30:23+03:00")
+let $d3 := date-from-datetime($dt2)
+let $dr1 := duration("-P2Y1M90DT30H")
+let $d4 := add-date-duration($d1, $dr1)
+let $dr2 := duration("P300Y900MT360000M")
+let $d5 := add-date-duration($d2, $dr2)
+let $dr3 := subtract-date($d5, $d2)
+let $dr4 := subtract-date($d4, $d1)
+
+return { "date1" : $d1, "date2" : $d2, "date3" : $d3, "date4" : $d4, "date5" : $d5, "duration1" : $dr3, "duration2" : $dr4  }

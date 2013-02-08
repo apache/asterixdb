@@ -47,6 +47,7 @@
 { "DataverseName": "Metadata", "DatatypeName": "int32", "Derived": null, "Timestamp": "Mon Dec 24 14:01:42 PST 2012" }
 { "DataverseName": "Metadata", "DatatypeName": "int64", "Derived": null, "Timestamp": "Mon Dec 24 14:01:42 PST 2012" }
 { "DataverseName": "Metadata", "DatatypeName": "int8", "Derived": null, "Timestamp": "Mon Dec 24 14:01:42 PST 2012" }
+{ "DataverseName": "Metadata", "DatatypeName": "interval", "Derived": null, "Timestamp": "Thu Jan 31 23:28:54 PST 2013" }
 { "DataverseName": "Metadata", "DatatypeName": "line", "Derived": null, "Timestamp": "Mon Dec 24 14:01:42 PST 2012" }
 { "DataverseName": "Metadata", "DatatypeName": "null", "Derived": null, "Timestamp": "Mon Dec 24 14:01:42 PST 2012" }
 { "DataverseName": "Metadata", "DatatypeName": "point", "Derived": null, "Timestamp": "Mon Dec 24 14:01:42 PST 2012" }

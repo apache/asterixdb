@@ -6,6 +6,11 @@
 	<version>0.0.4-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
+    <properties>
+    	<algebricks.version>0.2.3-SNAPSHOT</algebricks.version>
+    	<hyracks.version>0.2.3-SNAPSHOT</hyracks.version>
+    </properties>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -19,11 +24,6 @@
 			</plugin>
 		</plugins>
 	</build>
-
-    <properties>
-    	<algebricks.version>0.2.3-SNAPSHOT</algebricks.version>
-    	<hyracks.version>0.2.3-SNAPSHOT</hyracks.version>
-    </properties>
 
 	<scm>
 		<connection>scm:svn:https://grape.ics.uci.edu/svn/asterix/trunk/asterix</connection>
@@ -142,7 +142,7 @@
             <optional>true</optional>
         </dependency>
     </dependencies>
-    <dependencyManagement>
+        <dependencyManagement>
     	<dependencies>
     		<dependency>
     			<groupId>edu.uci.ics.hyracks</groupId>

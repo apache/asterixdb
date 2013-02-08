@@ -14,9 +14,45 @@
  */
 package edu.uci.ics.asterix.om.base.temporal;
 
-import edu.uci.ics.asterix.om.base.AMutableDuration;
+import java.io.DataOutput;
+import java.io.IOException;
 
-public class ADurationParser {
+import edu.uci.ics.asterix.om.base.AMutableDuration;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParser;
+import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
+
+public class ADurationParserFactory implements IValueParserFactory {
+
+    public static final IValueParserFactory INSTANCE = new ADurationParserFactory();
+
+    private static final long serialVersionUID = 1L;
+
+    private static final String durationErrorMessage = "Wrong Input Format for a Duration Value";
+
+    private ADurationParserFactory() {
+
+    }
+
+    @Override
+    public IValueParser createValueParser() {
+        final CharArrayCharSequenceAccessor charArrayAccessor = new CharArrayCharSequenceAccessor();
+        final AMutableDuration aMutableDuration = new AMutableDuration(0, 0);
+        return new IValueParser() {
+
+            @Override
+            public void parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
+                charArrayAccessor.reset(buffer, start, length);
+                parseDuration(charArrayAccessor, aMutableDuration);
+                try {
+                    out.writeInt(aMutableDuration.getMonths());
+                    out.writeLong(aMutableDuration.getMilliseconds());
+                } catch (IOException ex) {
+                    throw new HyracksDataException(ex);
+                }
+            }
+        };
+    }
 
     private enum State {
         NOTHING_READ,
@@ -30,9 +66,8 @@ public class ADurationParser {
         SEC;
     };
 
-    private static final String errorMessage = "This can not be an instance of duration";
-
-    public static <T> void parse(ICharSequenceAccessor<T> charAccessor, AMutableDuration aDuration) throws Exception {
+    public static <T> void parseDuration(ICharSequenceAccessor<T> charAccessor, AMutableDuration aDuration)
+            throws HyracksDataException {
 
         boolean positive = true;
         int offset = 0;
@@ -45,7 +80,7 @@ public class ADurationParser {
         }
 
         if (charAccessor.getCharAt(offset++) != 'P') {
-            throw new Exception(errorMessage);
+            throw new HyracksDataException(durationErrorMessage + ": Missing leading 'P'.");
         }
 
         for (; offset < charAccessor.getLength(); offset++) {
@@ -59,7 +94,7 @@ public class ADurationParser {
                             year = value;
                             state = State.YEAR;
                         } else {
-                            throw new Exception(errorMessage);
+                            throw new HyracksDataException(durationErrorMessage + ": wrong YEAR feild.");
                         }
                         break;
                     case 'M':
@@ -68,13 +103,13 @@ public class ADurationParser {
                                 month = value;
                                 state = State.MONTH;
                             } else {
-                                throw new Exception(errorMessage);
+                                throw new HyracksDataException(durationErrorMessage + ": wrong MONTH field.");
                             }
                         } else if (state.compareTo(State.MIN) < 0) {
                             minute = value;
                             state = State.MIN;
                         } else {
-                            throw new Exception(errorMessage);
+                            throw new HyracksDataException(durationErrorMessage + ": wrong MIN field.");
                         }
                         break;
                     case 'D':
@@ -82,14 +117,14 @@ public class ADurationParser {
                             day = value;
                             state = State.DAY;
                         } else {
-                            throw new Exception(errorMessage);
+                            throw new HyracksDataException(durationErrorMessage + ": wrong DAY field");
                         }
                         break;
                     case 'T':
                         if (state.compareTo(State.TIME) < 0) {
                             state = State.TIME;
                         } else {
-                            throw new Exception(errorMessage);
+                            throw new HyracksDataException(durationErrorMessage + ": wrong TIME field.");
                         }
                         break;
 
@@ -98,7 +133,7 @@ public class ADurationParser {
                             hour = value;
                             state = State.HOUR;
                         } else {
-                            throw new Exception(errorMessage);
+                            throw new HyracksDataException(durationErrorMessage + ": wrong HOUR field.");
                         }
                         break;
                     case '.':
@@ -110,7 +145,8 @@ public class ADurationParser {
                                     if (i < 4) {
                                         millisecond = millisecond * 10 + (charAccessor.getCharAt(offset + i) - '0');
                                     } else {
-                                        throw new Exception(errorMessage);
+                                        throw new HyracksDataException(durationErrorMessage
+                                                + ": wrong MILLISECOND field.");
                                     }
                                 } else {
                                     break;
@@ -119,18 +155,18 @@ public class ADurationParser {
                             offset += i;
                             state = State.MILLISEC;
                         } else {
-                            throw new Exception(errorMessage);
+                            throw new HyracksDataException(durationErrorMessage + ": wrong MILLISECOND field.");
                         }
                     case 'S':
                         if (state.compareTo(State.SEC) < 0) {
                             second = value;
                             state = State.SEC;
                         } else {
-                            throw new Exception(errorMessage);
+                            throw new HyracksDataException(durationErrorMessage + ": wrong SECOND field.");
                         }
                         break;
                     default:
-                        throw new Exception(errorMessage);
+                        throw new HyracksDataException(durationErrorMessage + ": wrong format for duration.");
 
                 }
                 value = 0;
@@ -138,7 +174,7 @@ public class ADurationParser {
         }
 
         if (state.compareTo(State.TIME) == 0) {
-            throw new Exception(errorMessage);
+            throw new HyracksDataException(durationErrorMessage + ": no time fields after time separator.");
         }
 
         short temp = 1;

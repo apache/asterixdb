@@ -1,0 +1,20 @@
+/*
+ * Description      :   Check temporal functions for datetime
+ * Expected Result  :   Success
+ * Date             :   24th Sep, 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/temp_datetime_functions.adm";
+
+let $dt1 := datetime-from-unix-time-in-ms(956007429)
+let $d1 := date("1327-12-02")
+let $t1 := time("23:35:49.938Z")
+let $dt2 := datetime-from-date-time($d1, $t1)
+let $dr1 := subtract-datetime($dt2, $dt1)
+let $dt3 := add-datetime-duration($dt1, $dr1)
+
+return { "datetime1" : $dt1, "datetime2" : $dt2, "datetime3" : $dt3, "duration1" : $dr1 }

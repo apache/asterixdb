@@ -6,6 +6,7 @@
 		<version>0.0.4-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-metadata</artifactId>
+
 	<build>
 		<plugins>
 			<plugin>

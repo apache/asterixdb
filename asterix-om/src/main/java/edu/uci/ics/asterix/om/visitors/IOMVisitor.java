@@ -14,6 +14,7 @@ import edu.uci.ics.asterix.om.base.AInt16;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AInt64;
 import edu.uci.ics.asterix.om.base.AInt8;
+import edu.uci.ics.asterix.om.base.AInterval;
 import edu.uci.ics.asterix.om.base.ALine;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.AOrderedList;
@@ -45,6 +46,8 @@ public interface IOMVisitor {
     public void visitAString(AString obj) throws AsterixException;
 
     public void visitADuration(ADuration obj) throws AsterixException;
+
+    public void visitAInterval(AInterval obj) throws AsterixException;
 
     public void visitADate(ADate obj) throws AsterixException;
 

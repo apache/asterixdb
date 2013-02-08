@@ -1,0 +1,22 @@
+/*
+ * Description      :   Check temporal accessors for different types
+ * Expected Result  :   Success
+ * Date             :   31st Aug, 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/temp_accessors.adm";
+
+let $c1 := date("2010-10-30")
+let $c2 := datetime("1987-11-19T23:49:23.938")
+let $c3 := date("-1987-11-19")
+let $c4 := date("09280329")
+let $c5 := datetime("19371229T20030628")
+let $c6 := time("12:23:34.930+07:00")
+let $c7 := string("-0003-01-09T23:12:12.39-07:00")
+let $c8 := duration("P3Y73M632DT49H743M3948.94S")
+
+return {"year1": year($c1), "year2": year($c2), "year3": year($c3), "year4": year($c4), "year5": year($c5), "year6": year($c7), "year7": year($c8), "month1": month($c1), "month2": month($c2), "month3": month($c3), "month4": month($c4), "month5": month($c5), "month6": month($c8), "day1": day($c1), "day2": day($c2), "day3": day($c3), "day4": day($c4), "day5": day($c5), "day6": day($c8), "hour1": hour($c2), "hour2": hour($c5), "hour3": hour($c6), "hour4": hour($c8), "min1": minute($c2), "min2": minute($c5), "min3": minute($c6), "min4": minute($c8), "second1": second($c2), "second2": second($c5), "second3": second($c6), "second4": second($c8), "ms1": millisecond($c2), "ms2": millisecond($c5), "ms3": millisecond($c6), "ms4": millisecond($c8)}

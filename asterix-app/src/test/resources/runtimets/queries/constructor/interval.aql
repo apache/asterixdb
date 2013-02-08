@@ -1,0 +1,15 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/constructor_interval.adm";
+
+let $itv1 := interval-from-date("2010-10-30", "2012-10-21")
+let $itv2 := interval-from-time("03:04:05.678", "232425267")
+let $itv3 := interval-from-datetime("-1987-11-19T02:43:57.938", "1999-11-12T12:49:35.948")
+let $itv4 := interval-start-from-date("0001-12-27", "P3Y394DT48H398.483S")
+let $itv5 := interval-start-from-time("20:03:20.948", "PT48M389.938S")
+let $itv6 := interval-start-from-datetime("-2043-11-19T15:32:39.293", "P439Y3M20DT20H39M58.949S")
+
+return {"interval1": $itv1, "interval2": $itv2, "interval3": $itv3, "interval4": $itv4, "interval5": $itv5, "interval6": $itv6}
+

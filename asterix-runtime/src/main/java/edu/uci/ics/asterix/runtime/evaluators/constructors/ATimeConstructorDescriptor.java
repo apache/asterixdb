@@ -21,8 +21,9 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AMutableTime;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.ATime;
-import edu.uci.ics.asterix.om.base.temporal.ADateAndTimeParser;
+import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
+import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -82,8 +83,15 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
-                                charAccessor.reset(serString, 3, 0);
-                                int chrononTimeInMs = ADateAndTimeParser.parseTimePart(charAccessor);
+
+                                int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
+
+                                charAccessor.reset(serString, 3, stringLength);
+                                int chrononTimeInMs = ATimeParserFactory.parseTimePart(charAccessor);
+
+                                if (chrononTimeInMs < 0) {
+                                    chrononTimeInMs += GregorianCalendarSystem.CHRONON_OF_DAY;
+                                }
 
                                 aTime.setValue(chrononTimeInMs);
                                 timeSerde.serialize(aTime, out);

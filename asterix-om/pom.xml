@@ -6,6 +6,7 @@
 		<version>0.0.4-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-om</artifactId>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -44,6 +45,6 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-storage-am-rtree</artifactId>
-			</dependency>
+		</dependency>
 	</dependencies>
 </project>
