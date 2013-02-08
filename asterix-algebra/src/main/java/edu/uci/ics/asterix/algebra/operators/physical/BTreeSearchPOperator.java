@@ -45,12 +45,14 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
 
     private final List<LogicalVariable> lowKeyVarList;
     private final List<LogicalVariable> highKeyVarList;
-    private boolean isPrimaryIndex;
+    private final boolean isPrimaryIndex;
+    private final boolean isEqCondition;
 
     public BTreeSearchPOperator(IDataSourceIndex<String, AqlSourceId> idx, boolean requiresBroadcast,
-            boolean isPrimaryIndex, List<LogicalVariable> lowKeyVarList, List<LogicalVariable> highKeyVarList) {
+            boolean isPrimaryIndex, boolean isEqCondition, List<LogicalVariable> lowKeyVarList, List<LogicalVariable> highKeyVarList) {
         super(idx, requiresBroadcast);
         this.isPrimaryIndex = isPrimaryIndex;
+        this.isEqCondition = isEqCondition;
         this.lowKeyVarList = lowKeyVarList;
         this.highKeyVarList = highKeyVarList;
     }
@@ -100,13 +102,13 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent) {
         if (requiresBroadcast) {
-            if (isPrimaryIndex) {
-                // For primary indexes, we require re-partitioning on the primary key, and not a broadcast.
-                // Also, add a local sorting property to enforce a sort before the primary-index operator.
+            // For primary indexes optimizing an equality condition we can reduce the broadcast requirement to hash partitioning.
+            if (isPrimaryIndex && isEqCondition) {
                 StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
                 ListSet<LogicalVariable> searchKeyVars = new ListSet<LogicalVariable>();
                 searchKeyVars.addAll(lowKeyVarList);
                 searchKeyVars.addAll(highKeyVarList);
+                // Also, add a local sorting property to enforce a sort before the primary-index operator.
                 List<ILocalStructuralProperty> propsLocal = new ArrayList<ILocalStructuralProperty>();
                 for (LogicalVariable orderVar : searchKeyVars) {
                     propsLocal.add(new LocalOrderProperty(new OrderColumn(orderVar, OrderKind.ASC)));
