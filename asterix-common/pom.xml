@@ -25,13 +25,11 @@
 	<dependencies>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-algebricks-compiler</artifactId>
-			<version>0.2.2-SNAPSHOT</version>
+			<artifactId>algebricks-compiler</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-dataflow-std</artifactId>
-			<version>0.2.2-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>

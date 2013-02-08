@@ -5,9 +5,7 @@
 		<groupId>edu.uci.ics.asterix</groupId>
 		<version>0.0.4-SNAPSHOT</version>
 	</parent>
-	<groupId>edu.uci.ics.asterix</groupId>
 	<artifactId>asterix-algebra</artifactId>
-	<version>0.0.4-SNAPSHOT</version>
 
 	<build>
 		<plugins>
@@ -60,8 +58,7 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-algebricks-compiler</artifactId>
-			<version>0.2.2-SNAPSHOT</version>
+			<artifactId>algebricks-compiler</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.json</groupId>

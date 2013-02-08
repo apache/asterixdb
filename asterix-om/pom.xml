@@ -5,9 +5,7 @@
 		<groupId>edu.uci.ics.asterix</groupId>
 		<version>0.0.4-SNAPSHOT</version>
 	</parent>
-	<groupId>edu.uci.ics.asterix</groupId>
 	<artifactId>asterix-om</artifactId>
-	<version>0.0.4-SNAPSHOT</version>
 
 	<build>
 		<plugins>
@@ -33,7 +31,6 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-storage-am-invertedindex</artifactId>
-			<version>0.2.2-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
@@ -43,13 +40,11 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-algebricks-compiler</artifactId>
-			<version>0.2.2-SNAPSHOT</version>
+			<artifactId>algebricks-compiler</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-storage-am-rtree</artifactId>
-			<version>0.2.2-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 </project>

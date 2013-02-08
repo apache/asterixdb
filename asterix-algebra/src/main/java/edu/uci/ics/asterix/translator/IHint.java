@@ -33,7 +33,9 @@ public interface IHint {
      * 
      * @param value
      *            the value associated with the hint.
-     * @return
+     * @return a Pair with
+     *         first element as a boolean that represents the validation result.
+     *         second element as the error message if the validation result is false
      */
     public Pair<Boolean, String> validateValue(String value);
 

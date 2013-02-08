@@ -53,35 +53,35 @@ public class DatasetHints {
         hints.add(new DatasetCardinalityHint());
         return hints;
     }
-}
 
-/**
- * Hint representing the expected number of tuples in the dataset.
- */
-class DatasetCardinalityHint implements IHint {
-    private static final String name = "CARDINALITY";
+    /**
+     * Hint representing the expected number of tuples in the dataset.
+     */
+    public static class DatasetCardinalityHint implements IHint {
+        public static final String NAME = "CARDINALITY";
 
-    public static final long DEFAULT = 1000000L;
+        public static final long DEFAULT = 1000000L;
 
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public Pair<Boolean, String> validateValue(String value) {
-        boolean valid = true;
-        long longValue;
-        try {
-            longValue = Long.parseLong(value);
-            if (longValue < 0) {
-                return new Pair<Boolean, String>(false, "Value must be >= 0");
-            }
-        } catch (NumberFormatException nfe) {
-            valid = false;
-            return new Pair<Boolean, String>(valid, "Inappropriate value");
+        @Override
+        public String getName() {
+            return NAME;
         }
-        return new Pair<Boolean, String>(true, null);
-    }
 
+        @Override
+        public Pair<Boolean, String> validateValue(String value) {
+            boolean valid = true;
+            long longValue;
+            try {
+                longValue = Long.parseLong(value);
+                if (longValue < 0) {
+                    return new Pair<Boolean, String>(false, "Value must be >= 0");
+                }
+            } catch (NumberFormatException nfe) {
+                valid = false;
+                return new Pair<Boolean, String>(valid, "Inappropriate value");
+            }
+            return new Pair<Boolean, String>(true, null);
+        }
+
+    }
 }

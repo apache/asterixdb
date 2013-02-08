@@ -28,6 +28,7 @@ import edu.uci.ics.asterix.om.base.AInt16;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AInt64;
 import edu.uci.ics.asterix.om.base.AInt8;
+import edu.uci.ics.asterix.om.base.AInterval;
 import edu.uci.ics.asterix.om.base.ALine;
 import edu.uci.ics.asterix.om.base.APoint;
 import edu.uci.ics.asterix.om.base.APoint3D;
@@ -225,6 +226,19 @@ public class ADMCursor implements IADMCursor {
         IAObject o = getObjectByField(field);
         checkTypeTag(o, ATypeTag.DURATION);
         return (ADuration) o;
+    }
+
+    @Override
+    public AInterval getInterval() throws AQLJException {
+        checkTypeTag(currentObject, ATypeTag.INTERVAL);
+        return ((AInterval) currentObject);
+    }
+
+    @Override
+    public AInterval getInterval(String field) throws AQLJException {
+        IAObject o = getObjectByField(field);
+        checkTypeTag(o, ATypeTag.INTERVAL);
+        return (AInterval) o;
     }
 
     @Override

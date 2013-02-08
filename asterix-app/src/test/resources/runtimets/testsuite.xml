@@ -2399,6 +2399,11 @@
         <output-file compare="Text">query-issue208.adm</output-file>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue236">
+       <output-file compare="Text">query-issue236.adm</output-file>
+      </compilation-unit>
+    </test-case>
     <!--
     <test-case FilePath="open-closed">
       <compilation-unit name="open-closed-15">
@@ -3450,6 +3455,11 @@
     <test-case FilePath="tpch">
       <compilation-unit name="q10_returned_item">
         <output-file compare="Text">q10_returned_item.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q10_returned_item_int64">
+	<output-file compare="Text">q10_returned_item_int64.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">

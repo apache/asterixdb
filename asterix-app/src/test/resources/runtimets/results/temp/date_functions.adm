@@ -1,0 +1,1 @@
+{ "date1": date("2012-09-17"), "date2": date("1327-12-02"), "date3": date("2012-10-10"), "date4": date("2010-05-17"), "date5": date("1703-08-09"), "duration1": duration("P137216D"), "duration2": duration("-P854D") }

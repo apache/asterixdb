@@ -28,6 +28,7 @@ import edu.uci.ics.asterix.om.base.AInt16;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AInt64;
 import edu.uci.ics.asterix.om.base.AInt8;
+import edu.uci.ics.asterix.om.base.AInterval;
 import edu.uci.ics.asterix.om.base.ALine;
 import edu.uci.ics.asterix.om.base.APoint;
 import edu.uci.ics.asterix.om.base.APoint3D;
@@ -78,6 +79,10 @@ public interface IADMCursor {
     public ADuration getDuration() throws AQLJException;
 
     public ADuration getDuration(String field) throws AQLJException;
+
+    public AInterval getInterval() throws AQLJException;
+
+    public AInterval getInterval(String field) throws AQLJException;
 
     public AFloat getFloat() throws AQLJException;
 

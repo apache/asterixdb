@@ -12,9 +12,11 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
+import edu.uci.ics.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
+import edu.uci.ics.hyracks.storage.common.buffercache.IPageCleanerPolicy;
 import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -22,7 +24,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 public class AsterixAppRuntimeContext {
     private static final int DEFAULT_BUFFER_CACHE_PAGE_SIZE = 32768;
     private final INCApplicationContext ncApplicationContext;
-    
+
     private IndexRegistry<IIndex> indexRegistry;
     private IFileMapManager fileMapManager;
     private IBufferCache bufferCache;
@@ -43,7 +45,8 @@ public class AsterixAppRuntimeContext {
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
         IIOManager ioMgr = ncApplicationContext.getRootContext().getIOManager();
-        bufferCache = new BufferCache(ioMgr, allocator, prs, fileMapManager, pageSize, numPages, Integer.MAX_VALUE);
+        IPageCleanerPolicy pcp = new DelayPageCleanerPolicy(600000);
+        bufferCache = new BufferCache(ioMgr, allocator, prs, pcp, fileMapManager, pageSize, numPages, Integer.MAX_VALUE);
 
         // Initialize the index registry
         indexRegistry = new IndexRegistry<IIndex>();

@@ -1,0 +1,17 @@
+/*
+ * Description      :   Check the adjust-timezone functions
+ * Expected Result  :   Success
+ * Date             :   15th Oct, 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/temp_adjust_timezone.adm";
+
+let $t1 := time("20:15:10.327")
+let $dt1 := datetime("2010-10-23T01:12:13.329Z")
+let $s1 := adjust-time-for-timezone($t1, "+0800")
+let $s2 := adjust-datetime-for-timezone($dt1, "-0615")
+return { "string1" : $s1, "string2" : $s2 }
