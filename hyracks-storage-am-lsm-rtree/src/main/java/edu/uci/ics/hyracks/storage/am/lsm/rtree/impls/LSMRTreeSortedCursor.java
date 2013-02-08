@@ -44,7 +44,7 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
             for (int i = 0; i < numberOfTrees; i++) {
                 rtreeCursors[i].reset();
                 try {
-                    diskRTreeAccessors[i].search(rtreeCursors[i], rtreeSearchPredicate);
+                    rTreeAccessors[i].search(rtreeCursors[i], rtreeSearchPredicate);
                 } catch (IndexException e) {
                     throw new HyracksDataException(e);
                 }
@@ -103,7 +103,7 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
                     btreeCursors[i].reset();
                     btreeRangePredicate.setHighKey(frameTuple, true);
                     btreeRangePredicate.setLowKey(frameTuple, true);
-                    diskBTreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
+                    bTreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
                 } catch (IndexException e) {
                     throw new HyracksDataException(e);
                 }
@@ -138,7 +138,7 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
         for (int i = 0; i < numberOfTrees; i++) {
             rtreeCursors[i].reset();
             try {
-                diskRTreeAccessors[i].search(rtreeCursors[i], rtreeSearchPredicate);
+                rTreeAccessors[i].search(rtreeCursors[i], rtreeSearchPredicate);
             } catch (IndexException e) {
                 throw new HyracksDataException(e);
             }

@@ -29,8 +29,8 @@ public abstract class LSMRTreeAbstractCursor implements ITreeIndexCursor {
     protected RTreeSearchCursor[] rtreeCursors;
     protected boolean open = false;
     protected ITreeIndexCursor[] btreeCursors;
-    protected ITreeIndexAccessor[] diskRTreeAccessors;
-    protected ITreeIndexAccessor[] diskBTreeAccessors;
+    protected ITreeIndexAccessor[] rTreeAccessors;
+    protected ITreeIndexAccessor[] bTreeAccessors;
     private MultiComparator btreeCmp;
     protected int numberOfTrees;
     protected SearchPredicate rtreeSearchPredicate;
@@ -61,8 +61,8 @@ public abstract class LSMRTreeAbstractCursor implements ITreeIndexCursor {
         operationalComponents = lsmInitialState.getOperationalComponents();
         lsmHarness = lsmInitialState.getLSMHarness();
         numberOfTrees = lsmInitialState.getNumberOfTrees();
-        diskRTreeAccessors = lsmInitialState.getRTreeAccessors();
-        diskBTreeAccessors = lsmInitialState.getBTreeAccessors();
+        rTreeAccessors = lsmInitialState.getRTreeAccessors();
+        bTreeAccessors = lsmInitialState.getBTreeAccessors();
 
         rtreeCursors = new RTreeSearchCursor[numberOfTrees];
         btreeCursors = new ITreeIndexCursor[numberOfTrees];

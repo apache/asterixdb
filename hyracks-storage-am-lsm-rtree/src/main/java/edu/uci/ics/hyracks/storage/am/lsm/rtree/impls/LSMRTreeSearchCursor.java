@@ -24,11 +24,17 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 
 public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
 
-    private int currentCursror;
+    private int currentCursor;
 
     public LSMRTreeSearchCursor(ILSMIndexOperationContext opCtx) {
         super(opCtx);
-        currentCursror = 0;
+        currentCursor = 0;
+    }
+
+    @Override
+    public void close() throws HyracksDataException {
+        super.close();
+        currentCursor = 0;
     }
 
     @Override
@@ -37,7 +43,7 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
             return;
         }
 
-        currentCursror = 0;
+        currentCursor = 0;
         foundNext = false;
         try {
             for (int i = 0; i < numberOfTrees; i++) {
@@ -52,10 +58,10 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
     }
 
     private void searchNextCursor() throws HyracksDataException {
-        if (currentCursror < numberOfTrees) {
-            rtreeCursors[currentCursror].reset();
+        if (currentCursor < numberOfTrees) {
+            rtreeCursors[currentCursor].reset();
             try {
-                diskRTreeAccessors[currentCursror].search(rtreeCursors[currentCursror], rtreeSearchPredicate);
+                rTreeAccessors[currentCursor].search(rtreeCursors[currentCursor], rtreeSearchPredicate);
             } catch (IndexException e) {
                 throw new HyracksDataException(e);
             }
@@ -67,18 +73,18 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
         if (foundNext) {
             return true;
         }
-        while (currentCursror < numberOfTrees) {
-            while (rtreeCursors[currentCursror].hasNext()) {
-                rtreeCursors[currentCursror].next();
-                ITupleReference currentTuple = rtreeCursors[currentCursror].getTuple();
+        while (currentCursor < numberOfTrees) {
+            while (rtreeCursors[currentCursor].hasNext()) {
+                rtreeCursors[currentCursor].next();
+                ITupleReference currentTuple = rtreeCursors[currentCursor].getTuple();
 
                 boolean killerTupleFound = false;
-                for (int i = 0; i <= currentCursror; i++) {
+                for (int i = 0; i <= currentCursor; i++) {
                     try {
                         btreeCursors[i].reset();
                         btreeRangePredicate.setHighKey(currentTuple, true);
                         btreeRangePredicate.setLowKey(currentTuple, true);
-                        diskBTreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
+                        bTreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
                     } catch (IndexException e) {
                         throw new HyracksDataException(e);
                     }
@@ -97,8 +103,8 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
                     return true;
                 }
             }
-            rtreeCursors[currentCursror].close();
-            currentCursror++;
+            rtreeCursors[currentCursor].close();
+            currentCursor++;
             searchNextCursor();
         }
         return false;
