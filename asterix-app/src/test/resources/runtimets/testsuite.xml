@@ -3845,6 +3845,23 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="hints">
+    <test-case FilePath="hints">
+      <compilation-unit name="issue_251_dataset_hint_5">
+        <output-file compare="Text">issue_251_dataset_hint_5.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="hints">
+      <compilation-unit name="issue_251_dataset_hint_6">
+        <output-file compare="Text">issue_251_dataset_hint_6.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="hints">
+      <compilation-unit name="issue_251_dataset_hint_7">
+        <output-file compare="Text">issue_251_dataset_hint_7.adm</output-file>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="feeds">
     <test-case FilePath="feeds">
       <compilation-unit name="feeds_01">

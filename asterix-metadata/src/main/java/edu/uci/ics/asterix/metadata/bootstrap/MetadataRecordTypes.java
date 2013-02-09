@@ -34,6 +34,7 @@ public final class MetadataRecordTypes {
     public static ARecordType INTERNAL_DETAILS_RECORDTYPE;
     public static ARecordType EXTERNAL_DETAILS_RECORDTYPE;
     public static ARecordType FEED_DETAILS_RECORDTYPE;
+    public static ARecordType DATASET_HINTS_RECORDTYPE;
     public static ARecordType DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE;
     public static ARecordType FIELD_RECORDTYPE;
     public static ARecordType RECORD_RECORDTYPE;
@@ -52,11 +53,11 @@ public final class MetadataRecordTypes {
         // Attention: The order of these calls is important because some types
         // depend on other types being created first.
         // These calls are one "dependency chain".
-        DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE = createDatasourceAdapterPropertiesRecordType();
+        DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE = createPropertiesRecordType();
         INTERNAL_DETAILS_RECORDTYPE = createInternalDetailsRecordType();
         EXTERNAL_DETAILS_RECORDTYPE = createExternalDetailsRecordType();
         FEED_DETAILS_RECORDTYPE = createFeedDetailsRecordType();
-
+        DATASET_HINTS_RECORDTYPE = createPropertiesRecordType();
         DATASET_RECORDTYPE = createDatasetRecordType();
 
         // Starting another dependency chain.
@@ -87,11 +88,12 @@ public final class MetadataRecordTypes {
     }
 
     // Helper constants for accessing fields in an ARecord of anonymous type
-    // external properties.
-    public static final int DATASOURCE_ADAPTER_PROPERTIES_ARECORD_NAME_FIELD_INDEX = 0;
-    public static final int DATASOURCE_ADAPTER_PROPERTIES_ARECORD_VALUE_FIELD_INDEX = 1;
+    // dataset properties.
+    // Used for dataset hints or dataset adapter properties.
+    public static final int DATASOURCE_PROPERTIES_NAME_FIELD_INDEX = 0;
+    public static final int DATASOURCE_PROPERTIES_VALUE_FIELD_INDEX = 1;
 
-    private static final ARecordType createDatasourceAdapterPropertiesRecordType() {
+    private static final ARecordType createPropertiesRecordType() {
         String[] fieldNames = { "Name", "Value" };
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING };
         return new ARecordType(null, fieldNames, fieldTypes, true);
@@ -163,11 +165,12 @@ public final class MetadataRecordTypes {
     public static final int DATASET_ARECORD_INTERNALDETAILS_FIELD_INDEX = 4;
     public static final int DATASET_ARECORD_EXTERNALDETAILS_FIELD_INDEX = 5;
     public static final int DATASET_ARECORD_FEEDDETAILS_FIELD_INDEX = 6;
-    public static final int DATASET_ARECORD_TIMESTAMP_FIELD_INDEX = 7;
+    public static final int DATASET_ARECORD_HINTS_FIELD_INDEX = 7;
+    public static final int DATASET_ARECORD_TIMESTAMP_FIELD_INDEX = 8;
 
     private static final ARecordType createDatasetRecordType() {
         String[] fieldNames = { "DataverseName", "DatasetName", "DataTypeName", "DatasetType", "InternalDetails",
-                "ExternalDetails", "FeedDetails", "Timestamp" };
+                "ExternalDetails", "FeedDetails", "Hints", "Timestamp" };
 
         List<IAType> internalRecordUnionList = new ArrayList<IAType>();
         internalRecordUnionList.add(BuiltinType.ANULL);
@@ -184,8 +187,11 @@ public final class MetadataRecordTypes {
         feedRecordUnionList.add(FEED_DETAILS_RECORDTYPE);
         AUnionType feedRecordUnion = new AUnionType(feedRecordUnionList, null);
 
+        AUnorderedListType unorderedListOfHintsType = new AUnorderedListType(DATASET_HINTS_RECORDTYPE, null);
+
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
-                internalRecordUnion, externalRecordUnion, feedRecordUnion, BuiltinType.ASTRING };
+                internalRecordUnion, externalRecordUnion, feedRecordUnion, unorderedListOfHintsType,
+                BuiltinType.ASTRING };
         return new ARecordType("DatasetRecordType", fieldNames, fieldTypes, true);
     }
 
