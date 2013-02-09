@@ -34,7 +34,7 @@ public class NCBootstrapImpl implements INCBootstrap {
 
     @Override
     public void stop() throws Exception {
-        LOGGER.info("Stopping Giraph NC Bootstrap");
+        LOGGER.info("Stopping NC Bootstrap");
         RuntimeContext rCtx = (RuntimeContext) appCtx.getApplicationObject();
         rCtx.close();
     }
