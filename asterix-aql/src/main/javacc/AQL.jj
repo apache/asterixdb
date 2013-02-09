@@ -962,7 +962,7 @@ void initProperties(Map<String,String> properties)  throws ParseException :
             )
           )
         {
-          properties.put(key, value);
+          properties.put(key.toUpperCase(), value);
         }
        ( 
         "," 
@@ -990,7 +990,7 @@ void initProperties(Map<String,String> properties)  throws ParseException :
           ) 
         )
         {
-          properties.put(key, value);
+          properties.put(key.toUpperCase(), value);
         }
         
        )*
