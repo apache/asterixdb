@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
 import java.io.File;
 import java.util.List;
-import java.util.ListIterator;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -44,7 +43,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
@@ -270,7 +268,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     private boolean insert(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException, IndexException {
         MultiComparator comparator = MultiComparator.createIgnoreFieldLength(mutableComponent.getBTree()
                 .getComparatorFactories());
-        LSMBTreeRangeSearchCursor searchCursor = new LSMBTreeRangeSearchCursor(ctx);
+        LSMBTreePointSearchCursor searchCursor = new LSMBTreePointSearchCursor(ctx);
         IIndexCursor memCursor = new BTreeRangeSearchCursor(ctx.memBTreeOpCtx.leafFrame, false);
         RangePredicate predicate = new RangePredicate(tuple, tuple, true, true, comparator, comparator);
 
@@ -311,57 +309,15 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     public void search(ILSMIndexOperationContext ictx, IIndexCursor cursor, ISearchPredicate pred)
             throws HyracksDataException, IndexException {
         LSMBTreeOpContext ctx = (LSMBTreeOpContext) ictx;
-        LSMBTreeRangeSearchCursor lsmTreeCursor = (LSMBTreeRangeSearchCursor) cursor;
         List<ILSMComponent> operationalComponents = ctx.getComponentHolder();
         int numBTrees = operationalComponents.size();
         assert numBTrees > 0;
 
-        boolean isPointSearch = false;
-        RangePredicate btreePred = (RangePredicate) pred;
-        if (btreePred.getLowKey() != null && btreePred.getHighKey() != null) {
-            if (btreePred.isLowKeyInclusive() && btreePred.isHighKeyInclusive()) {
-                if (btreePred.getLowKeyComparator().getKeyFieldCount() == btreePred.getHighKeyComparator()
-                        .getKeyFieldCount()) {
-                    if (btreePred.getLowKeyComparator().getKeyFieldCount() == componentFactory
-                            .getBloomFilterKeyFields().length) {
-                        if (ctx.bloomFilterCmps.compare(btreePred.getLowKey(), btreePred.getHighKey()) == 0) {
-                            isPointSearch = true;
-                        }
-                    }
-                }
-            }
-        }
         boolean includeMutableComponent = operationalComponents.get(0) == mutableComponent;
         LSMBTreeCursorInitialState initialState = new LSMBTreeCursorInitialState(numBTrees, insertLeafFrameFactory,
-                ctx.cmp, includeMutableComponent, isPointSearch, lsmHarness, ctx.memBTreeAccessor, pred,
+                ctx.cmp, ctx.bloomFilterCmp, includeMutableComponent, lsmHarness, ctx.memBTreeAccessor, pred,
                 ctx.searchCallback, operationalComponents);
-        lsmTreeCursor.open(initialState, pred);
-
-        int cursorIx;
-        ListIterator<ILSMComponent> diskBTreesIter = operationalComponents.listIterator();
-        if (includeMutableComponent) {
-            // Open cursor of in-memory BTree at index 0.
-            ctx.memBTreeAccessor.search(lsmTreeCursor.getCursor(0), pred);
-            // Skip 0 because it is the in-memory BTree.
-            cursorIx = 1;
-            diskBTreesIter.next();
-        } else {
-            cursorIx = 0;
-        }
-
-        // Open cursors of on-disk BTrees.
-        int numDiskComponents = includeMutableComponent ? numBTrees - 1 : numBTrees;
-        ITreeIndexAccessor[] diskBTreeAccessors = new ITreeIndexAccessor[numDiskComponents];
-        int diskBTreeIx = 0;
-        while (diskBTreesIter.hasNext()) {
-            BTree diskBTree = (BTree) ((LSMBTreeImmutableComponent) diskBTreesIter.next()).getBTree();
-            diskBTreeAccessors[diskBTreeIx] = diskBTree.createAccessor(NoOpOperationCallback.INSTANCE,
-                    NoOpOperationCallback.INSTANCE);
-            diskBTreeAccessors[diskBTreeIx].search(lsmTreeCursor.getCursor(cursorIx), pred);
-            cursorIx++;
-            diskBTreeIx++;
-        }
-        lsmTreeCursor.initPriorityQueue();
+        cursor.open(initialState, pred);
     }
 
     @Override
@@ -611,7 +567,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
         @Override
         public IIndexCursor createSearchCursor() {
-            return new LSMBTreeRangeSearchCursor(ctx);
+            return new LSMBTreeSearchCursor(ctx);
         }
 
         public MultiComparator getMultiComparator() {

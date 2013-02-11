@@ -42,7 +42,7 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
     public BTreeOpContext memBTreeOpCtx;
     public IndexOperation op;
     public final MultiComparator cmp;
-    public final MultiComparator bloomFilterCmps;
+    public final MultiComparator bloomFilterCmp;
     public final IModificationOperationCallback modificationCallback;
     public final ISearchOperationCallback searchCallback;
     private final List<ILSMComponent> componentHolder;
@@ -57,7 +57,7 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
             this.cmp = null;
         }
 
-        bloomFilterCmps = MultiComparator.createIgnoreFieldLength(memBTree.getComparatorFactories(), 0,
+        bloomFilterCmp = MultiComparator.createIgnoreFieldLength(memBTree.getComparatorFactories(), 0,
                 numBloomFilterKeyFields);
 
         this.memBTree = memBTree;
