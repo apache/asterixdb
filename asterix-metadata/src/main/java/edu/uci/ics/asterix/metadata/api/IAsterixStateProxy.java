@@ -32,8 +32,4 @@ public interface IAsterixStateProxy extends Remote, Serializable {
     public IMetadataNode getMetadataNode() throws RemoteException;
 
     public AsterixProperties getAsterixProperties() throws RemoteException;
-
-    public Object getAsterixNodeState(String nodeName) throws RemoteException;
-
-    public void setAsterixNodeState(String nodeName, Object ns) throws RemoteException;
 }
