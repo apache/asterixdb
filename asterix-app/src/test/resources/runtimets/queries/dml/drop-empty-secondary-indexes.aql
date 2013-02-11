@@ -18,7 +18,7 @@ zip : string
 
 write output to nc1:"rttest/dml_drop-empty-secondary-indexes.adm";
 
-create dataset t1(TestType) partitioned by key id;
+create dataset t1(TestType) primary key id;
 
 create index rtree_index_point on t1(locn) type rtree;
 

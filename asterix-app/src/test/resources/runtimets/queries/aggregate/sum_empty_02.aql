@@ -13,7 +13,7 @@ create type TestType as closed {
   val: double
 }
 
-create dataset Test(TestType) partitioned by key id;
+create dataset Test(TestType) primary key id;
 
 write output to nc1:"rttest/aggregate_sum_empty_02.adm";
 

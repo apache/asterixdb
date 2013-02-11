@@ -11,7 +11,7 @@ declare type CSXType as open {
 declare nodegroup group1 on nc1, nc2;
 
 declare dataset CSX(CSXType) 
-  partitioned by key id on group1;
+  primary key id on group1;
 
 load dataset CSX 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

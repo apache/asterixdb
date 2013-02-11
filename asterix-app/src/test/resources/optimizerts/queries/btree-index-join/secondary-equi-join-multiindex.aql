@@ -39,10 +39,10 @@ create type FacebookMessageType as closed {
 } 
 
 create dataset FacebookUsers(FacebookUserType)
-partitioned by key id;
+primary key id;
 
 create dataset FacebookMessages(FacebookMessageType)
-partitioned by key message-id;
+primary key message-id;
 
 create index fbmIdxAutId if not exists on FacebookMessages(author-id-copy);
 

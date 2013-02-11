@@ -12,7 +12,7 @@ create type SpatialType as open {
 }
 
 create dataset Spatial2(SpatialType) 
-	partitioned by key id;
+	primary key id;
 
 load dataset Spatial2 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

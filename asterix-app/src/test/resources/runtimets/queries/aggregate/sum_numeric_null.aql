@@ -15,7 +15,7 @@ id:int32,
 sal:int32?
 }
 
-create dataset tdst(TestType) partitioned by key id;
+create dataset tdst(TestType) primary key id;
 
 // In AQL
 // sum(numeric + null) => null

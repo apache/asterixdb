@@ -2,7 +2,7 @@ use dataverse custord;
 
 // Creating this dataset should succeed.
 create dataset NewDataset(CustomerType)
-  partitioned by key cid, name on group1;
+  primary key cid, name on group1;
 
 
 // Creating this duplicate type should fail, and rollback should remove the new dataverse.

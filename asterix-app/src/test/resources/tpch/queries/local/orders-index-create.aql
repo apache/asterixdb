@@ -17,6 +17,6 @@ declare type OrderType as closed {
 declare nodegroup group1 on nc1, nc2;
 
 declare dataset Orders(OrderType)
-  partitioned by key o_orderkey on group1;
+  primary key o_orderkey on group1;
 
 create index idx_Orders_Custkey on Orders(o_custkey);

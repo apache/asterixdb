@@ -46,11 +46,11 @@ declare nodegroup group1 on asterix-001, asterix-002, asterix-003, asterix-004,
       asterix-005, asterix-006, asterix-007, asterix-008, asterix-009, asterix-010;
 
 declare dataset LineItems(LineItemType)
-  partitioned by key l_orderkey, l_linenumber on group1;
+  primary key l_orderkey, l_linenumber on group1;
 declare dataset Orders(OrderType)
-  partitioned by key o_orderkey on group1;
+  primary key o_orderkey on group1;
 declare dataset Customers(CustomerType) 
-  partitioned by key c_custkey on group1;
+  primary key c_custkey on group1;
 
 write output to asterix-001:"/tmp/inlined_q18_large_volume_customer.adm";
 

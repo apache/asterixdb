@@ -24,7 +24,7 @@ declare nodegroup group1 on nc1, nc2;
 set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
 declare dataset LineItems(LineItemType)
-  partitioned by key l_orderkey, l_linenumber on group1;
+  primary key l_orderkey, l_linenumber on group1;
 
 write output to nc1:"/home/yasser/Dropbox/Research/data/results/result_tpch_closed_1.adm";
  

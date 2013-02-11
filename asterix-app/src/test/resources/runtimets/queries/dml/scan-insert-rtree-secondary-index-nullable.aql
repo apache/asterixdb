@@ -26,14 +26,14 @@ create type MyMiniRecord as closed {
 }
 
 create dataset MyData(MyRecord)
-  partitioned by key id;
+  primary key id;
 
 load dataset MyData 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/spatial/spatialDataNulls.json"),("format"="adm")) pre-sorted;
 
 create dataset MyMiniData(MyMiniRecord)
-  partitioned by key id;
+  primary key id;
 
 create index rtree_index_point on MyMiniData(point) type rtree;
 

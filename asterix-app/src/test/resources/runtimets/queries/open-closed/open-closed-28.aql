@@ -20,9 +20,9 @@ id : string,
 name : string
 }
 
-create dataset testds01(testtype01) partitioned by key id;
+create dataset testds01(testtype01) primary key id;
 
-create dataset testds02(testtype02) partitioned by key id;
+create dataset testds02(testtype02) primary key id;
 
 insert into dataset testds02 (
 { "id": "001", "name": "Person One", "hobbies": {{"scuba", "music"}}}

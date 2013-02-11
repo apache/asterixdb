@@ -21,10 +21,10 @@ create type VisitorType as open {
 create nodegroup group1 if not exists on nc1, nc2;
 
 create dataset Users(UserType) 
-  partitioned by key uid on group1;
+  primary key uid on group1;
 
 create dataset Visitors(VisitorType) 
-  partitioned by key vid on group1;
+  primary key vid on group1;
 
 
 write output to nc1:"/tmp/pull-select-above-eq-join.adm";

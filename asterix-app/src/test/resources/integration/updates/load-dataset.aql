@@ -15,7 +15,7 @@ declare type AddressType as closed {
 declare nodegroup group1 on nc1, nc2;
 
 declare dataset Customers(CustomerType) 
-  partitioned by key cid on group1;
+  primary key cid on group1;
 
 load dataset Customers 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

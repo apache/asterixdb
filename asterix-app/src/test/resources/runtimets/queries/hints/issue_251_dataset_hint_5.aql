@@ -20,7 +20,7 @@ create type DBLPType as closed {
 }
 
 create dataset DBLPadm(DBLPType) 
-partitioned by key id
+primary key id
 hints(cardinality=200);
 
 // drop dataset DBLPadm;

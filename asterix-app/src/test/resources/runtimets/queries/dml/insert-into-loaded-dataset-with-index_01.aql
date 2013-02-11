@@ -9,7 +9,7 @@ create type LineIDType as closed {
 }
 
 create dataset LineID(LineIDType)
-  partitioned by key l_orderkey, l_linenumber;
+  primary key l_orderkey, l_linenumber;
 
 load dataset LineID 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

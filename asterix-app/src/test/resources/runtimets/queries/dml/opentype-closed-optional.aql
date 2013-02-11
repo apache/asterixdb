@@ -13,7 +13,7 @@ create type testtype as closed {
   id: string
 }
 
-create dataset testds(testtype) partitioned by key id;
+create dataset testds(testtype) primary key id;
 
 insert into dataset testds (
 { "id": "001", "name": "Person One"}

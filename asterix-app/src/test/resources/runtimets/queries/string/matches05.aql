@@ -16,7 +16,7 @@ lname:string,
 id:int32
 }
 
-create dataset testds1(TestType1) partitioned by key id;
+create dataset testds1(TestType1) primary key id;
 
 insert into dataset testds1({"fname":"Test","lname":"Test","id":123});
 insert into dataset testds1({"fname":"Testa","lname":"Test","id":124});

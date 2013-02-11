@@ -14,7 +14,7 @@ name : string
 
 write output to nc1:"rttest/cross-dataverse_insert_from_source_dataset.adm";
 
-create dataset test.t1(testtype) partitioned by key id;
+create dataset test.t1(testtype) primary key id;
 
 insert into dataset test.t1({"id":456,"name":"Roger"});
 insert into dataset test.t1({"id":351,"name":"Bob"});
@@ -22,7 +22,7 @@ insert into dataset test.t1({"id":257,"name":"Sammy"});
 insert into dataset test.t1({"id":926,"name":"Richard"});
 insert into dataset test.t1({"id":482,"name":"Kevin"});
 
-create dataset test.t2(testtype) partitioned by key id;
+create dataset test.t2(testtype) primary key id;
 
 insert into dataset test.t2({"id":438,"name":"Ravi"});
 insert into dataset test.t2({"id":321,"name":"Bobby"});

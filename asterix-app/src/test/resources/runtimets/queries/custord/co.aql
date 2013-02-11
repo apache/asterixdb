@@ -37,11 +37,11 @@ create type CustomerOrdersType as open {
 }
 
 create dataset Customers3(CustomerType) 
-  partitioned by key cid;
+  primary key cid;
 create dataset Orders3(OrderType)
-  partitioned by key oid;
+  primary key oid;
 create dataset CustomerOrders3(CustomerOrdersType)
-  partitioned by key cid;
+  primary key cid;
 
 write output to nc1:"rttest/custord_co.adm";
 

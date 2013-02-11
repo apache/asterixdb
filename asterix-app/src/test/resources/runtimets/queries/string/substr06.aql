@@ -14,7 +14,7 @@ create type TestType as open {
 name : string
 }
 
-create dataset testdst(TestType) partitioned by key name;
+create dataset testdst(TestType) primary key name;
 
 insert into dataset testdst({"name":"UC Berkeley"});
 insert into dataset testdst({"name":"UC Irvine"});

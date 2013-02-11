@@ -16,7 +16,7 @@ create type LineIDType as closed {
 }
 
 create dataset LineID(LineIDType)
-  partitioned by key l_orderkey, l_linenumber;
+  primary key l_orderkey, l_linenumber;
 
 insert into dataset LineID (
 let $x:=1
