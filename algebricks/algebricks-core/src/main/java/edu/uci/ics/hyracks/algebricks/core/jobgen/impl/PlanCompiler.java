@@ -54,6 +54,8 @@ public class PlanCompiler {
         operatorVisitedToParents.clear();
         builder.buildSpec(rootOps);
         spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+        // Do not do activity cluster planning because it is slow on large clusters
+        spec.setUseConnectorPolicyForScheduling(false);
         return spec;
     }
 
