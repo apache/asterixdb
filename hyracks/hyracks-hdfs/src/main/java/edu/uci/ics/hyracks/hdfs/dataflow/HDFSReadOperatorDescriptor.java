@@ -97,7 +97,9 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
             @SuppressWarnings("unchecked")
             @Override
             public void initialize() throws HyracksDataException {
+                ClassLoader ctxCL = Thread.currentThread().getContextClassLoader();
                 try {
+                    Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
                     IKeyValueParser parser = tupleParserFactory.createKeyValueParser(ctx);
                     writer.open();
                     InputFormat inputFormat = conf.getInputFormat();
@@ -133,6 +135,8 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                     writer.close();
                 } catch (Exception e) {
                     throw new HyracksDataException(e);
+                } finally {
+                    Thread.currentThread().setContextClassLoader(ctxCL);
                 }
             }
         };
