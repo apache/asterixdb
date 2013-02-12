@@ -116,10 +116,10 @@ public class ReachabilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
 
     @Override
     public void compute(Iterator<ByteWritable> msgIterator) {
+        if (sourceId < 0) {
+            sourceId = getContext().getConfiguration().getLong(SOURCE_ID, SOURCE_ID_DEFAULT);
+        }
         if (getSuperstep() == 1) {
-            if (sourceId < 0) {
-                sourceId = getContext().getConfiguration().getLong(SOURCE_ID, SOURCE_ID_DEFAULT);
-            }
             boolean isSource = isSource(getVertexId());
             if (isSource) {
                 tmpVertexValue.set((byte) 1);

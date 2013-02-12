@@ -89,10 +89,10 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
             IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
             throws HyracksDataException {
         final InputSplit[] inputSplits = splitsFactory.getSplits();
-        final JobConf conf = confFactory.getConf();
 
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
             private String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
+            private JobConf conf = confFactory.getConf();
 
             @SuppressWarnings("unchecked")
             @Override
