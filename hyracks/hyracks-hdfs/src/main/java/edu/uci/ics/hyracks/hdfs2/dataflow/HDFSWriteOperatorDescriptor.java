@@ -72,21 +72,25 @@ public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             final IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
             throws HyracksDataException {
-        final Job conf = confFactory.getConf();
-        final String outputPath = FileOutputFormat.getOutputPath(new JobContext(conf.getConfiguration(), new JobID()))
-                .toString();
 
         return new AbstractUnaryInputSinkOperatorNodePushable() {
 
-            private String fileName = outputPath + File.separator + "part-" + partition;
             private FSDataOutputStream dos;
             private RecordDescriptor inputRd = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);;
             private FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), inputRd);
             private FrameTupleReference tuple = new FrameTupleReference();
             private ITupleWriter tupleWriter;
+            private ClassLoader ctxCL;
 
             @Override
             public void open() throws HyracksDataException {
+                ctxCL = Thread.currentThread().getContextClassLoader();
+                Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+                Job conf = confFactory.getConf();
+                String outputPath = FileOutputFormat
+                        .getOutputPath(new JobContext(conf.getConfiguration(), new JobID())).toString();
+                String fileName = outputPath + File.separator + "part-" + partition;
+
                 tupleWriter = tupleWriterFactory.getTupleWriter();
                 try {
                     FileSystem dfs = FileSystem.get(conf.getConfiguration());
@@ -117,6 +121,8 @@ public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
                     dos.close();
                 } catch (Exception e) {
                     throw new HyracksDataException(e);
+                } finally {
+                    Thread.currentThread().setContextClassLoader(ctxCL);
                 }
             }
 
