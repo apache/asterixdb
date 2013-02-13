@@ -101,7 +101,6 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
 
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
             private String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
-            private Job conf = confFactory.getConf();
 
             @SuppressWarnings("unchecked")
             @Override
@@ -109,6 +108,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                 ClassLoader ctxCL = Thread.currentThread().getContextClassLoader();
                 try {
                     Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+                    Job conf = confFactory.getConf();
                     IKeyValueParser parser = tupleParserFactory.createKeyValueParser(ctx);
                     writer.open();
                     InputFormat inputFormat = ReflectionUtils.newInstance(conf.getInputFormatClass(),
