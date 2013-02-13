@@ -623,7 +623,7 @@ LoadFromFileStatement LoadStatement() throws ParseException:
   Identifier dataverseName = null;
   Identifier datasetName = null;
   boolean alreadySorted = false;
-  String adapterClassname;
+  String adapterName;
   Map<String,String> properties;
   Pair<Identifier,Identifier> nameComponents = null;
 }
@@ -636,12 +636,11 @@ LoadFromFileStatement LoadStatement() throws ParseException:
    }
    
    "using"
-
-    <STRING_LITERAL>
+  
     {
-      adapterClassname = removeQuotesAndEscapes(token.image);
+    	adapterName = getAdapterName();
     }
-
+   
     {
       properties = getConfiguration();
     }
@@ -652,10 +651,30 @@ LoadFromFileStatement LoadStatement() throws ParseException:
         
   ";"
   {
-     return new LoadFromFileStatement(dataverseName, datasetName, adapterClassname, properties, alreadySorted);
+     return new LoadFromFileStatement(dataverseName, datasetName, adapterName, properties, alreadySorted);
   }   
 }
 
+
+String getAdapterName() throws ParseException :
+{
+	String adapterName = null;
+}
+{
+    ( 
+      <IDENTIFIER> {
+     	adapterName = (new Identifier(token.image)).getValue();; 
+      }
+      | 
+      <STRING_LITERAL>
+      {
+        adapterName = removeQuotesAndEscapes(token.image);
+      }
+    )
+    {
+	return adapterName;
+	}
+}
 
 
 DatasetDecl DatasetDeclaration(DatasetType datasetType) throws ParseException :
@@ -721,21 +740,16 @@ DatasetDecl DatasetDeclaration(DatasetType datasetType) throws ParseException :
 InternalDetailsDecl InternalDatasetDeclaration() throws ParseException :
 {
     InternalDetailsDecl idd = null;
-    List<String> partitioningExprs = new ArrayList<String>();
+    List<String> primaryKeyFields = new ArrayList<String>();
     Identifier nodeGroupName=null;
 }
 {
-  "partitioned" "by" "key"
-  < IDENTIFIER >
-  {
-         partitioningExprs.add(token.image); 
-  }
   (
-    "," < IDENTIFIER >
     {
-         partitioningExprs.add(token.image); 
+  	  primaryKeyFields = getPrimaryKeyFields();
     }
-  )*
+  )
+  
   (
   "on" < IDENTIFIER >
     {
@@ -744,7 +758,7 @@ InternalDetailsDecl InternalDatasetDeclaration() throws ParseException :
   )?
   
   {
-    idd = new InternalDetailsDecl(nodeGroupName, partitioningExprs);
+    idd = new InternalDetailsDecl(nodeGroupName, primaryKeyFields);
     return idd;
   }
 }
@@ -752,7 +766,7 @@ InternalDetailsDecl InternalDatasetDeclaration() throws ParseException :
 ExternalDetailsDecl ExternalDatasetDeclaration() throws ParseException :
 {
   ExternalDetailsDecl edd = null;
-  String adapterClassname = null;
+  String adapterName = null;
   Map < String, String > properties;
 }
 {
@@ -761,10 +775,8 @@ ExternalDetailsDecl ExternalDatasetDeclaration() throws ParseException :
   }
  
     "using"
-    
-     <STRING_LITERAL>
     {
-      adapterClassname = removeQuotesAndEscapes(token.image);
+    	adapterName = getAdapterName();
     }
 
     {
@@ -773,7 +785,7 @@ ExternalDetailsDecl ExternalDatasetDeclaration() throws ParseException :
 
     {
     	  edd = new ExternalDetailsDecl();
-		  edd.setAdapter(adapterClassname);
+		  edd.setAdapter(adapterName);
    		  edd.setProperties(properties);
     } 
  
@@ -785,10 +797,10 @@ ExternalDetailsDecl ExternalDatasetDeclaration() throws ParseException :
 FeedDetailsDecl FeedDatasetDeclaration() throws ParseException :
 {
     FeedDetailsDecl fdd = null;
-    String adapterFactoryClassname = null;
+    String adapterName = null;
     Map < String, String > properties;
 	Pair<Identifier,Identifier> nameComponents;
-	List<String> partitioningExprs = new ArrayList<String>();
+	List<String> primaryKeyFields = new ArrayList<String>();
     Identifier nodeGroupName=null;
     FunctionSignature appliedFunction=null;
 	String dataverse;
@@ -797,10 +809,8 @@ FeedDetailsDecl FeedDatasetDeclaration() throws ParseException :
 }
 {
    "using"
-   
-    <STRING_LITERAL>
     {
-      adapterFactoryClassname = removeQuotesAndEscapes(token.image);
+    	adapterName = getAdapterName();
     }
 
     {
@@ -824,17 +834,12 @@ FeedDetailsDecl FeedDatasetDeclaration() throws ParseException :
   }   
   )?
   
-  "partitioned" "by" "key"
-  < IDENTIFIER >
-  {
-    	 partitioningExprs.add(token.image);
-  }
   (
-    "," < IDENTIFIER >
     {
-    	 partitioningExprs.add(token.image);
+  	  primaryKeyFields  = getPrimaryKeyFields();
     }
-  )*
+  )
+  
   (
   "on" < IDENTIFIER >
   {
@@ -843,10 +848,37 @@ FeedDetailsDecl FeedDatasetDeclaration() throws ParseException :
   )?
   
   {
-    fdd = new FeedDetailsDecl(adapterFactoryClassname, properties, appliedFunction, nodeGroupName, partitioningExprs);
+    fdd = new FeedDetailsDecl(adapterName, properties, appliedFunction, nodeGroupName, primaryKeyFields);
     return fdd;
   }
 }
+
+List<String> getPrimaryKeyFields()  throws ParseException :
+{
+	List<String> primaryKeyFields = new ArrayList<String>();
+}
+{
+
+  "primary" "key"
+  < IDENTIFIER >
+  {
+    	 primaryKeyFields.add(token.image);
+  }
+  (
+    "," < IDENTIFIER >
+    {
+    	 primaryKeyFields.add(token.image);
+    }
+  )*
+  {
+   	return primaryKeyFields;
+  }
+  
+}
+
+
+
+
 
 ControlFeedStatement ControlFeedDeclaration(ControlFeedStatement.OperationType operationType) throws ParseException :
 {

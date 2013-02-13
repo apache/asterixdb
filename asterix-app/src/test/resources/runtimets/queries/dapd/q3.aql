@@ -24,7 +24,7 @@ create type UserType as open{
 }
 
 create dataset User(UserType)
- partitioned by key name;
+ primary key name;
 
 load dataset User 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

@@ -20,7 +20,7 @@ create type MyRecord as closed {
   rec: rectangle
 }
 
-create dataset MyData(MyRecord) partitioned by key id;
+create dataset MyData(MyRecord) primary key id;
 
 create index rtree_index on MyData(point) type rtree;
 

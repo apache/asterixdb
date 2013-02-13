@@ -66,9 +66,9 @@ create nodegroup group1 if not exists on nc1, nc2;
 write output to nc1:"/tmp/join-super-key_01.adm";
 
 create dataset LineItems(LineItemType)
-  partitioned by key l_partkey, l_linenumber on group1;
+  primary key l_partkey, l_linenumber on group1;
 create dataset PartSupp(PartSuppType)
-  partitioned by key ps_partkey, ps_suppkey on group1;  
+  primary key ps_partkey, ps_suppkey on group1;  
 
 
 for $li in dataset('LineItems')

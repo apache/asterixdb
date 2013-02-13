@@ -26,7 +26,7 @@ send-time-copy: datetime
 }
 
 create dataset TweetMessages(TweetMessageType)
-partitioned by key tweetid;
+primary key tweetid;
 
 load dataset TweetMessages
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

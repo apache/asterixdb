@@ -28,7 +28,7 @@ stringu2:  string,
 string4:  string
 }
 
-create dataset t1(Schema) partitioned by key unique2;
+create dataset t1(Schema) primary key unique2;
 
 // Load data
 load dataset t1

@@ -24,7 +24,7 @@ create type LineItemType as closed {
 create nodegroup group1 if not exists on nc1, nc2;
 
 create dataset LineItems_q1(LineItemType)
-  partitioned by key l_orderkey, l_linenumber on group1;
+  primary key l_orderkey, l_linenumber on group1;
 
 write output to nc1:"rttest/tpch_q1_pricing_summary_report_nt.adm";
  

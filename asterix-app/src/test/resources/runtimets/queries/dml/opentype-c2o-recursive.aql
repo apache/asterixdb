@@ -30,9 +30,9 @@ create type testtype2 as open {
   id: string
 }
 
-create dataset testds(testtype) partitioned by key id;
+create dataset testds(testtype) primary key id;
 
-create dataset testds2(testtype2) partitioned by key id;
+create dataset testds2(testtype2) primary key id;
 
 insert into dataset testds (
 { "id": "001", "name": "Person One", "address": {"street": "3019 DBH",  "city": "Irvine", "zip": 92697}, "department": {{ {"name":"CS", "id":299, "review":5}, {"name":"EE", "id":399} }} }

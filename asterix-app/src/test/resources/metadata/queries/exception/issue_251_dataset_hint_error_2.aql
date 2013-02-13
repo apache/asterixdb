@@ -16,7 +16,7 @@ create type LineType as open {
 }
 
 create dataset Book(LineType)
-partitioned by key id
+primary key id
 hints(cardinality="-20jh0",size=45);
 
 for $x in dataset('Metadata.Dataset')

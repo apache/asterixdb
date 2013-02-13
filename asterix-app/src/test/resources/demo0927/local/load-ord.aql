@@ -12,7 +12,7 @@ declare type OrderType as closed {
 declare nodegroup group1 on nc1, nc2;
 
 declare dataset Orders(OrderType)
-  partitioned by key oid on group1;
+  primary key oid on group1;
 
 load dataset Orders from nc1:"/tmp/orderData.json";
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

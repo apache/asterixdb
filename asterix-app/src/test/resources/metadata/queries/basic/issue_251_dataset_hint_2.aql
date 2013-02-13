@@ -17,7 +17,7 @@ create type LineType as open {
 write output to nc1:"mdtest/basic_issue_251_dataset_hint_2.adm";
 
 create dataset Book(LineType)
-partitioned by key id
+primary key id
 hints(cardinality=2000);
 
 for $x in dataset('Metadata.Dataset')

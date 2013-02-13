@@ -13,7 +13,7 @@ create type LineType as closed {
 };
 
 create external dataset TextDataset(LineType)
-using "hdfs"
+using hdfs
 (("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/textFileS"),("input-format"="sequence-input-format"),("format"="delimited-text"),("delimiter"="."));
 
 write output to nc1:"rttest/hdfs_hdfs_02.adm";

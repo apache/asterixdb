@@ -23,7 +23,7 @@ declare nodegroup group1 on asterix-001, asterix-002, asterix-003, asterix-004,
       asterix-005, asterix-006, asterix-007, asterix-008, asterix-009, asterix-010;
 
 declare dataset LineItems(LineItemType)
-  partitioned by key l_orderkey, l_linenumber on group1;
+  primary key l_orderkey, l_linenumber on group1;
 
 write output to asterix-001:"/home/onose/hyracks-asterix/results/q1_pricing_summary_report.adm";
  

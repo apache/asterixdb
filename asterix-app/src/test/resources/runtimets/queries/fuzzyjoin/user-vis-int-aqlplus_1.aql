@@ -18,8 +18,8 @@ create type VisitorType as open {
   interests: {{string}}
 }
 
-create dataset Users(UserType) partitioned by key uid;
-create dataset Visitors(VisitorType) partitioned by key vid;
+create dataset Users(UserType) primary key uid;
+create dataset Visitors(VisitorType) primary key vid;
 
 load dataset Users 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

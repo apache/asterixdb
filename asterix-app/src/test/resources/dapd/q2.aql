@@ -37,7 +37,7 @@ declare dataset Event(EventType)
 
 drop dataset Event;
 declare dataset Event(EventType) 
-  partitioned by key event_id on group1;
+  primary key event_id on group1;
 
 load dataset Event 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

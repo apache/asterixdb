@@ -29,9 +29,9 @@ declare type OrderType as open {
 declare nodegroup group1 on rainbow-01, rainbow-02, rainbow-03, rainbow-04, rainbow-05;
 
 declare dataset Customers(CustomerType) 
-  partitioned by key cid on group1;
+  primary key cid on group1;
 declare dataset Orders(OrderType)
-  partitioned by key oid on group1;
+  primary key oid on group1;
 
 write output to rainbow-01:"/home/onose/hyracks-rainbow/results/06-count-custord.adm";
 

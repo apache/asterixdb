@@ -15,5 +15,5 @@ create type LineType as open {
 }
 
 create dataset Book(LineType)
-partitioned by key id
+primary key id
 hints(size=2000,tuple_size=100);

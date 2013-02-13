@@ -16,7 +16,7 @@ id:int32,
 sal:int32?
 }
 
-create dataset tdst(TestType) partitioned by key id;
+create dataset tdst(TestType) primary key id;
 
 insert into dataset tdst({"id":123,"sal":1000});
 insert into dataset tdst({"id":113,"sal":2000});

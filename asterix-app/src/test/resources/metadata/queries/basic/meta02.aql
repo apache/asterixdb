@@ -13,7 +13,7 @@ create type testdv.testtype as open {
 id : int32
 }
 
-create dataset testdv.dst01(testtype) partitioned by key id;
+create dataset testdv.dst01(testtype) primary key id;
 
 for $l in dataset('Metadata.Dataset')
 where $l.DataverseName = 'testdv' and $l.DatasetName = 'dst01'

@@ -13,7 +13,7 @@ create type DBLPType as closed {
 }
 
 create dataset DBLPadm(DBLPType) 
-  partitioned by key id;
+  primary key id;
 
 // drop dataset DBLPadm;
 load dataset DBLPadm 
