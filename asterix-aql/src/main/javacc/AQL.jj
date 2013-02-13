@@ -740,13 +740,13 @@ DatasetDecl DatasetDeclaration(DatasetType datasetType) throws ParseException :
 InternalDetailsDecl InternalDatasetDeclaration() throws ParseException :
 {
     InternalDetailsDecl idd = null;
-    List<String> primaryKey = new ArrayList<String>();
+    List<String> primaryKeyFields = new ArrayList<String>();
     Identifier nodeGroupName=null;
 }
 {
   (
     {
-  	  primaryKey = getPrimaryKey();
+  	  primaryKeyFields = getPrimaryKeyFields();
     }
   )
   
@@ -758,7 +758,7 @@ InternalDetailsDecl InternalDatasetDeclaration() throws ParseException :
   )?
   
   {
-    idd = new InternalDetailsDecl(nodeGroupName, primaryKey);
+    idd = new InternalDetailsDecl(nodeGroupName, primaryKeyFields);
     return idd;
   }
 }
@@ -800,7 +800,7 @@ FeedDetailsDecl FeedDatasetDeclaration() throws ParseException :
     String adapterName = null;
     Map < String, String > properties;
 	Pair<Identifier,Identifier> nameComponents;
-	List<String> primaryKey = new ArrayList<String>();
+	List<String> primaryKeyFields = new ArrayList<String>();
     Identifier nodeGroupName=null;
     FunctionSignature appliedFunction=null;
 	String dataverse;
@@ -836,7 +836,7 @@ FeedDetailsDecl FeedDatasetDeclaration() throws ParseException :
   
   (
     {
-  	  primaryKey  = getPrimaryKey();
+  	  primaryKeyFields  = getPrimaryKeyFields();
     }
   )
   
@@ -848,30 +848,30 @@ FeedDetailsDecl FeedDatasetDeclaration() throws ParseException :
   )?
   
   {
-    fdd = new FeedDetailsDecl(adapterName, properties, appliedFunction, nodeGroupName, primaryKey);
+    fdd = new FeedDetailsDecl(adapterName, properties, appliedFunction, nodeGroupName, primaryKeyFields);
     return fdd;
   }
 }
 
-List<String> getPrimaryKey()  throws ParseException :
+List<String> getPrimaryKeyFields()  throws ParseException :
 {
-	List<String> primaryKey = new ArrayList<String>();
+	List<String> primaryKeyFields = new ArrayList<String>();
 }
 {
 
   "primary" "key"
   < IDENTIFIER >
   {
-    	 primaryKey.add(token.image);
+    	 primaryKeyFields.add(token.image);
   }
   (
     "," < IDENTIFIER >
     {
-    	 primaryKey.add(token.image);
+    	 primaryKeyFields.add(token.image);
     }
   )*
   {
-   	return primaryKey;
+   	return primaryKeyFields;
   }
   
 }
