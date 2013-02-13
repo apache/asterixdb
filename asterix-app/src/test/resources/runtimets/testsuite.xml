@@ -759,6 +759,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="create-drop-cltype">
+        <output-file compare="Text">create-drop-cltype.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="create-drop-opntype">
+        <output-file compare="Text">create-drop-opntype.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="empty-load-with-index">
         <output-file compare="Text">empty-load-with-index.adm</output-file>
       </compilation-unit>
