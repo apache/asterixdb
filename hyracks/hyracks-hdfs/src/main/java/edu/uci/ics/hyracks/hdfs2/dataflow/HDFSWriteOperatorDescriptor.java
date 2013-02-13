@@ -22,8 +22,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.JobContext;
-import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -87,8 +85,7 @@ public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
                 ctxCL = Thread.currentThread().getContextClassLoader();
                 Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
                 Job conf = confFactory.getConf();
-                String outputPath = FileOutputFormat
-                        .getOutputPath(new JobContext(conf.getConfiguration(), new JobID())).toString();
+                String outputPath = FileOutputFormat.getOutputPath(conf).toString();
                 String fileName = outputPath + File.separator + "part-" + partition;
 
                 tupleWriter = tupleWriterFactory.getTupleWriter();

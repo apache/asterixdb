@@ -22,8 +22,9 @@ import java.util.List;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.RecordReader;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.util.ReflectionUtils;
@@ -108,11 +109,11 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                 ClassLoader ctxCL = Thread.currentThread().getContextClassLoader();
                 try {
                     Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
-                    Job conf = confFactory.getConf();
+                    Job job = confFactory.getConf();
                     IKeyValueParser parser = tupleParserFactory.createKeyValueParser(ctx);
                     writer.open();
-                    InputFormat inputFormat = ReflectionUtils.newInstance(conf.getInputFormatClass(),
-                            conf.getConfiguration());
+                    InputFormat inputFormat = ReflectionUtils.newInstance(job.getInputFormatClass(),
+                            job.getConfiguration());
                     int size = inputSplits.size();
                     for (int i = 0; i < size; i++) {
                         /**
@@ -134,8 +135,8 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                             /**
                              * read the split
                              */
-                            TaskAttemptContext context = new TaskAttemptContext(conf.getConfiguration(),
-                                    new TaskAttemptID());
+                            Context context = new Mapper().new Context(job.getConfiguration(), new TaskAttemptID(),
+                                    null, null, null, null, inputSplits.get(i));
                             RecordReader reader = inputFormat.createRecordReader(inputSplits.get(i), context);
                             reader.initialize(inputSplits.get(i), context);
                             while (reader.nextKeyValue() == true) {
