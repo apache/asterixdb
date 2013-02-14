@@ -244,12 +244,9 @@
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-data-std</artifactId>
 			<version>0.2.3-SNAPSHOT</version>
+			<type>jar</type>
+			<scope>compile</scope>
 		</dependency>
-		<dependency>
-                        <groupId>edu.uci.ics.hyracks</groupId>
-                        <artifactId>hyracks-hdfs</artifactId>
-                        <version>0.2.3-SNAPSHOT</version>
-                </dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-storage-am-common</artifactId>
