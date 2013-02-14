@@ -17,6 +17,7 @@ import java.util.Stack;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import edu.uci.ics.asterix.aql.literal.FloatLiteral;
 import edu.uci.ics.asterix.aql.literal.DoubleLiteral;
 import edu.uci.ics.asterix.aql.literal.FalseLiteral;
@@ -914,7 +915,7 @@ ControlFeedStatement AlterFeedDeclaration() throws ParseException :
 
 Map<String,String> getConfiguration()  throws ParseException :
 {
-	Map<String,String> configuration = new HashMap<String,String>();
+	Map<String,String> configuration = new LinkedHashMap<String,String>();
 	String key;
 	String value;
 }
