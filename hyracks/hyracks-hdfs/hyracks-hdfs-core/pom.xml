@@ -4,7 +4,7 @@
 	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>hyracks-hdfs-core</artifactId>
-  	<name>hyracks-hdfs-core</name>
+	<name>hyracks-hdfs-core</name>
 	<parent>
 		<artifactId>hyracks-hdfs</artifactId>
 		<groupId>edu.uci.ics.hyracks</groupId>
@@ -63,16 +63,9 @@
 			</activation>
 			<dependencies>
 				<dependency>
-					<groupId>org.apache.hadoop</groupId>
-					<artifactId>hadoop-core</artifactId>
-					<version>0.20.2</version>
-					<type>jar</type>
-					<scope>compile</scope>
-				</dependency>
-				<dependency>
-					<groupId>org.apache.hadoop</groupId>
-					<artifactId>hadoop-test</artifactId>
-					<version>0.20.2</version>
+					<groupId>edu.uci.ics.hyracks</groupId>
+					<artifactId>hyracks-hdfs-0.20.2</artifactId>
+					<version>0.2.3-SNAPSHOT</version>
 					<type>jar</type>
 					<scope>compile</scope>
 				</dependency>
@@ -85,30 +78,9 @@
 			<id>hadoop-0.22.0</id>
 			<dependencies>
 				<dependency>
-					<groupId>org.apache.hadoop</groupId>
-					<artifactId>hadoop-common</artifactId>
-					<version>0.22.0</version>
-					<type>jar</type>
-					<scope>compile</scope>
-				</dependency>
-				<dependency>
-					<groupId>org.apache.hadoop</groupId>
-					<artifactId>hadoop-mapred</artifactId>
-					<version>0.22.0</version>
-					<type>jar</type>
-					<scope>compile</scope>
-				</dependency>
-				<dependency>
-					<groupId>org.apache.hadoop</groupId>
-					<artifactId>hadoop-hdfs</artifactId>
-					<version>0.22.0</version>
-					<type>jar</type>
-					<scope>compile</scope>
-				</dependency>
-				<dependency>
-					<groupId>org.apache.hadoop</groupId>
-					<artifactId>hadoop-hdfs-test</artifactId>
-					<version>0.22.0</version>
+					<groupId>edu.uci.ics.hyracks</groupId>
+					<artifactId>hyracks-hdfs-0.23.1</artifactId>
+					<version>0.2.3-SNAPSHOT</version>
 					<type>jar</type>
 					<scope>compile</scope>
 				</dependency>

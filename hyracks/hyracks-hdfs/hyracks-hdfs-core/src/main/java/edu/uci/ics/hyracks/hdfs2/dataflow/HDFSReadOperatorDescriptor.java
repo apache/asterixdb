@@ -22,10 +22,8 @@ import java.util.List;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.RecordReader;
-import org.apache.hadoop.mapreduce.TaskAttemptID;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.util.ReflectionUtils;
 
@@ -38,12 +36,13 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import edu.uci.ics.hyracks.hdfs.ContextFactory;
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParser;
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParserFactory;
 
 /**
- * The HDFS file read operator using the Hadoop new API.
- * To use this operator, a user need to provide an IKeyValueParserFactory implementation which convert
+ * The HDFS file read operator using the Hadoop new API. To use this operator, a
+ * user need to provide an IKeyValueParserFactory implementation which convert
  * key-value pairs into tuples.
  */
 @SuppressWarnings("rawtypes")
@@ -64,12 +63,16 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
      * @param rd
      *            the output record descriptor
      * @param conf
-     *            the Hadoop JobConf object, which contains the input format and the input paths
+     *            the Hadoop JobConf object, which contains the input format and
+     *            the input paths
      * @param splits
      *            the array of FileSplits (HDFS chunks).
      * @param scheduledLocations
-     *            the node controller names to scan the FileSplits, which is an one-to-one mapping. The String array
-     *            is obtained from the edu.cui.ics.hyracks.hdfs.scheduler.Scheduler.getLocationConstraints(InputSplits[]).
+     *            the node controller names to scan the FileSplits, which is an
+     *            one-to-one mapping. The String array is obtained from the
+     *            edu.cui
+     *            .ics.hyracks.hdfs.scheduler.Scheduler.getLocationConstraints
+     *            (InputSplits[]).
      * @param tupleParserFactory
      *            the ITupleParserFactory implementation instance.
      * @throws HyracksException
@@ -102,6 +105,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
 
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
             private String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
+            private ContextFactory ctxFactory = new ContextFactory();
 
             @SuppressWarnings("unchecked")
             @Override
@@ -121,8 +125,8 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                          */
                         if (scheduledLocations[i].equals(nodeName)) {
                             /**
-                             * pick an unread split to read
-                             * synchronize among simultaneous partitions in the same machine
+                             * pick an unread split to read synchronize among
+                             * simultaneous partitions in the same machine
                              */
                             synchronized (executed) {
                                 if (executed[i] == false) {
@@ -135,8 +139,8 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                             /**
                              * read the split
                              */
-                            Context context = new Mapper().new Context(job.getConfiguration(), new TaskAttemptID(),
-                                    null, null, null, null, inputSplits.get(i));
+                            TaskAttemptContext context = ctxFactory.createContext(job.getConfiguration(),
+                                    inputSplits.get(i));
                             RecordReader reader = inputFormat.createRecordReader(inputSplits.get(i), context);
                             reader.initialize(inputSplits.get(i), context);
                             while (reader.nextKeyValue() == true) {
