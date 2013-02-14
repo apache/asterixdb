@@ -55,8 +55,8 @@ public class LSMBTreeSearchCursor implements ITreeIndexCursor {
                 if (btreePred.getLowKeyComparator().getKeyFieldCount() == btreePred.getHighKeyComparator()
                         .getKeyFieldCount()) {
                     if (btreePred.getLowKeyComparator().getKeyFieldCount() == lsmInitialState
-                            .getBloomFilterComparator().getKeyFieldCount()) {
-                        if (lsmInitialState.getBloomFilterComparator().compare(btreePred.getLowKey(),
+                            .getOriginalKeyComparator().getKeyFieldCount()) {
+                        if (lsmInitialState.getOriginalKeyComparator().compare(btreePred.getLowKey(),
                                 btreePred.getHighKey()) == 0) {
                             searchType = LSMBTreeSearchType.POINT;
                         }
@@ -89,7 +89,9 @@ public class LSMBTreeSearchCursor implements ITreeIndexCursor {
 
     @Override
     public void close() throws HyracksDataException {
-        currentCursor.close();
+        if (currentCursor != null) {
+            currentCursor.close();
+        }
     }
 
     @Override
