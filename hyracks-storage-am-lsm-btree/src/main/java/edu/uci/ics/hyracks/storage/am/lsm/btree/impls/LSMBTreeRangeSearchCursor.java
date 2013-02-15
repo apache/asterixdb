@@ -104,11 +104,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                             }
                             // retraverse
                             reusablePred.setLowKey(copyTuple, true);
-                            try {
-                                memBTreeAccessor.search(rangeCursors[0], reusablePred);
-                            } catch (IndexException e) {
-                                throw new HyracksDataException(e);
-                            }
+                            memBTreeAccessor.search(rangeCursors[0], reusablePred);
                             pushIntoPriorityQueue(inMemElement);
                             if (cmp.compare(copyTuple, inMemElement.getTuple()) != 0) {
                                 searchCallback.cancel(copyTuple);
