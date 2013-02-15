@@ -151,50 +151,7 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
         return ((ILSMTreeTupleReference) checkElement.getTuple()).isAntimatter();
     }
 
-    protected void checkPriorityQueue() throws HyracksDataException, IndexException {
-        while (!outputPriorityQueue.isEmpty() || needPush == true) {
-            if (!outputPriorityQueue.isEmpty()) {
-                PriorityQueueElement checkElement = outputPriorityQueue.peek();
-                // If there is no previous tuple or the previous tuple can be ignored
-                if (outputElement == null) {
-                    if (isDeleted(checkElement)) {
-                        // If the key has been deleted then pop it and set needPush to true.
-                        // We cannot push immediately because the tuple may be
-                        // modified if hasNext() is called
-                        outputElement = outputPriorityQueue.poll();
-                        needPush = true;
-                    } else {
-                        break;
-                    }
-                } else {
-                    // Compare the previous tuple and the head tuple in the PQ
-                    if (compare(cmp, outputElement.getTuple(), checkElement.getTuple()) == 0) {
-                        // If the previous tuple and the head tuple are
-                        // identical
-                        // then pop the head tuple and push the next tuple from
-                        // the tree of head tuple
-
-                        // the head element of PQ is useless now
-                        PriorityQueueElement e = outputPriorityQueue.poll();
-                        pushIntoPriorityQueue(e);
-                    } else {
-                        // If the previous tuple and the head tuple are different
-                        // the info of previous tuple is useless
-                        if (needPush == true) {
-                            pushIntoPriorityQueue(outputElement);
-                            needPush = false;
-                        }
-                        outputElement = null;
-                    }
-                }
-            } else {
-                // the priority queue is empty and needPush
-                pushIntoPriorityQueue(outputElement);
-                needPush = false;
-                outputElement = null;
-            }
-        }
-    }
+    abstract protected void checkPriorityQueue() throws HyracksDataException, IndexException;
 
     @Override
     public boolean exclusiveLatchNodes() {

@@ -92,6 +92,7 @@ public class LSMBTreeSearchCursor implements ITreeIndexCursor {
         if (currentCursor != null) {
             currentCursor.close();
         }
+        currentCursor = null;
     }
 
     @Override
@@ -99,6 +100,7 @@ public class LSMBTreeSearchCursor implements ITreeIndexCursor {
         if (currentCursor != null) {
             currentCursor.reset();
         }
+        currentCursor = null;
     }
 
     @Override

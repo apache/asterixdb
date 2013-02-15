@@ -75,6 +75,7 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
                 if (reconciled || searchCallback.proceed(predicate.getLowKey())) {
                     // if proceed is successful, then there's no need for doing the "unlatch dance"
                     if (((ILSMTreeTupleReference) rangeCursors[i].getTuple()).isAntimatter()) {
+                        searchCallback.cancel(predicate.getLowKey());
                         return false;
                     } else {
                         frameTuple = rangeCursors[i].getTuple();
@@ -97,6 +98,7 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
                     if (rangeCursors[i].hasNext()) {
                         rangeCursors[i].next();
                         if (((ILSMTreeTupleReference) rangeCursors[i].getTuple()).isAntimatter()) {
+                            searchCallback.cancel(predicate.getLowKey());
                             return false;
                         } else {
                             frameTuple = rangeCursors[i].getTuple();

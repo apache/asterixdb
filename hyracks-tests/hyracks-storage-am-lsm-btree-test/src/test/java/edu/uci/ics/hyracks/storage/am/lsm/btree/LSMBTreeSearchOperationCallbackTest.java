@@ -140,13 +140,11 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
 
             @Override
             public boolean proceed(ITupleReference tuple) {
-                Assert.assertEquals(0, cmp.compare(SearchTask.this.tuple, tuple));
                 return false;
             }
 
             @Override
             public void reconcile(ITupleReference tuple) {
-                Assert.assertEquals(0, cmp.compare(SearchTask.this.tuple, tuple));
                 if (blockOnHigh) {
                     try {
                         TupleUtils.createIntegerTuple(builder, SearchTask.this.tuple, expectedAfterBlock);

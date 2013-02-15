@@ -46,6 +46,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     private RangePredicate predicate;
     private IIndexAccessor memBTreeAccessor;
     private ArrayTupleBuilder tupleBuilder;
+    private boolean proceed = true;
 
     public LSMBTreeRangeSearchCursor(ILSMIndexOperationContext opCtx) {
         super(opCtx);
@@ -54,82 +55,116 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException, IndexException {
-        checkPriorityQueue();
-        PriorityQueueElement pqHead = outputPriorityQueue.peek();
-        if (pqHead == null) {
-            // PQ is empty
-            return false;
-        }
+    public void reset() throws HyracksDataException, IndexException {
+        super.reset();
+        proceed = true;
+    }
 
-        assert outputElement == null;
+    @Override
+    public void next() throws HyracksDataException {
+        outputElement = outputPriorityQueue.poll();
+        needPush = true;
+        proceed = false;
+    }
 
-        if (searchCallback.proceed(pqHead.getTuple())) {
-            // if proceed is successful, then there's no need for doing the "unlatch dance"
-            return true;
-        }
+    protected void checkPriorityQueue() throws HyracksDataException, IndexException {
+        while (!outputPriorityQueue.isEmpty() || needPush == true) {
+            if (!outputPriorityQueue.isEmpty()) {
+                PriorityQueueElement checkElement = outputPriorityQueue.peek();
+                if (proceed && !searchCallback.proceed(checkElement.getTuple())) {
+                    if (includeMemComponent) {
+                        PriorityQueueElement inMemElement = null;
+                        boolean inMemElementFound = false;
+                        // scan the PQ for the in-memory component's element
+                        Iterator<PriorityQueueElement> it = outputPriorityQueue.iterator();
+                        while (it.hasNext()) {
+                            inMemElement = it.next();
+                            if (inMemElement.getCursorIndex() == 0) {
+                                inMemElementFound = true;
+                                it.remove();
+                                break;
+                            }
+                        }
+                        if (inMemElementFound) {
+                            // copy the in-mem tuple
+                            if (tupleBuilder == null) {
+                                tupleBuilder = new ArrayTupleBuilder(cmp.getKeyFieldCount());
+                            }
+                            TupleUtils.copyTuple(tupleBuilder, inMemElement.getTuple(), cmp.getKeyFieldCount());
+                            copyTuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
 
-        if (includeMemComponent) {
-            PriorityQueueElement inMemElement = null;
-            boolean inMemElementFound = false;
+                            // unlatch/unpin
+                            rangeCursors[0].reset();
 
-            // scan the PQ for the in-memory component's element
-            Iterator<PriorityQueueElement> it = outputPriorityQueue.iterator();
-            while (it.hasNext()) {
-                inMemElement = it.next();
-                if (inMemElement.getCursorIndex() == 0) {
-                    inMemElementFound = true;
-                    it.remove();
-                    break;
+                            // reconcile
+                            if (checkElement.getCursorIndex() == 0) {
+                                searchCallback.reconcile(copyTuple);
+                            } else {
+                                searchCallback.reconcile(checkElement.getTuple());
+                            }
+                            // retraverse
+                            reusablePred.setLowKey(copyTuple, true);
+                            try {
+                                memBTreeAccessor.search(rangeCursors[0], reusablePred);
+                            } catch (IndexException e) {
+                                throw new HyracksDataException(e);
+                            }
+                            pushIntoPriorityQueue(inMemElement);
+                            if (cmp.compare(copyTuple, inMemElement.getTuple()) != 0) {
+                                searchCallback.cancel(copyTuple);
+                                continue;
+                            }
+                        } else {
+                            // the in-memory cursor is exhausted
+                            searchCallback.reconcile(checkElement.getTuple());
+                        }
+                    } else {
+                        searchCallback.reconcile(checkElement.getTuple());
+                    }
                 }
-            }
+                // If there is no previous tuple or the previous tuple can be ignored
+                if (outputElement == null) {
+                    if (isDeleted(checkElement)) {
+                        // If the key has been deleted then pop it and set needPush to true.
+                        // We cannot push immediately because the tuple may be
+                        // modified if hasNext() is called
+                        outputElement = outputPriorityQueue.poll();
+                        searchCallback.cancel(checkElement.getTuple());
+                        needPush = true;
+                        proceed = false;
+                    } else {
+                        break;
+                    }
+                } else {
+                    // Compare the previous tuple and the head tuple in the PQ
+                    if (compare(cmp, outputElement.getTuple(), checkElement.getTuple()) == 0) {
+                        // If the previous tuple and the head tuple are
+                        // identical
+                        // then pop the head tuple and push the next tuple from
+                        // the tree of head tuple
 
-            if (!inMemElementFound) {
-                // the in-memory cursor is exhausted
-                searchCallback.reconcile(pqHead.getTuple());
-                return true;
-            }
-
-            // copy the in-mem tuple
-            if (tupleBuilder == null) {
-                tupleBuilder = new ArrayTupleBuilder(cmp.getKeyFieldCount());
-            }
-            TupleUtils.copyTuple(tupleBuilder, inMemElement.getTuple(), cmp.getKeyFieldCount());
-            copyTuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
-
-            // unlatch/unpin
-            rangeCursors[0].reset();
-
-            // reconcile
-            if (pqHead.getCursorIndex() == 0) {
-                searchCallback.reconcile(copyTuple);
+                        // the head element of PQ is useless now
+                        PriorityQueueElement e = outputPriorityQueue.poll();
+                        pushIntoPriorityQueue(e);
+                    } else {
+                        // If the previous tuple and the head tuple are different
+                        // the info of previous tuple is useless
+                        if (needPush == true) {
+                            pushIntoPriorityQueue(outputElement);
+                            needPush = false;
+                        }
+                        proceed = true;
+                        outputElement = null;
+                    }
+                }
             } else {
-                searchCallback.reconcile(pqHead.getTuple());
+                // the priority queue is empty and needPush
+                pushIntoPriorityQueue(outputElement);
+                needPush = false;
+                outputElement = null;
+                proceed = true;
             }
-
-            // retraverse
-            reusablePred.setLowKey(copyTuple, true);
-            try {
-                memBTreeAccessor.search(rangeCursors[0], reusablePred);
-            } catch (IndexException e) {
-                throw new HyracksDataException(e);
-            }
-
-            if (!pushIntoPriorityQueue(inMemElement)) {
-                return !outputPriorityQueue.isEmpty();
-            }
-
-            if (pqHead.getCursorIndex() == 0) {
-                if (cmp.compare(copyTuple, inMemElement.getTuple()) != 0) {
-                    searchCallback.cancel(copyTuple);
-                }
-            }
-            checkPriorityQueue();
-        } else {
-            searchCallback.reconcile(pqHead.getTuple());
         }
-
-        return true;
     }
 
     @Override
@@ -178,5 +213,6 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
             diskBTreeIx++;
         }
         initPriorityQueue();
+        proceed = true;
     }
 }
