@@ -76,6 +76,7 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
                     // if proceed is successful, then there's no need for doing the "unlatch dance"
                     if (((ILSMTreeTupleReference) rangeCursors[i].getTuple()).isAntimatter()) {
                         searchCallback.cancel(predicate.getLowKey());
+                        rangeCursors[i].close();
                         return false;
                     } else {
                         frameTuple = rangeCursors[i].getTuple();
@@ -90,21 +91,20 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
                     reconciled = true;
 
                     // retraverse
-                    try {
-                        memBTreeAccessor.search(rangeCursors[i], predicate);
-                    } catch (IndexException e) {
-                        throw new HyracksDataException(e);
-                    }
+                    memBTreeAccessor.search(rangeCursors[i], predicate);
                     if (rangeCursors[i].hasNext()) {
                         rangeCursors[i].next();
                         if (((ILSMTreeTupleReference) rangeCursors[i].getTuple()).isAntimatter()) {
                             searchCallback.cancel(predicate.getLowKey());
+                            rangeCursors[i].close();
                             return false;
                         } else {
                             frameTuple = rangeCursors[i].getTuple();
                             foundTuple = true;
                             return true;
                         }
+                    } else {
+                        rangeCursors[i].close();
                     }
                 } else {
                     frameTuple = rangeCursors[i].getTuple();
@@ -112,6 +112,8 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
                     foundTuple = true;
                     return true;
                 }
+            } else {
+                rangeCursors[i].close();
             }
         }
         return false;
