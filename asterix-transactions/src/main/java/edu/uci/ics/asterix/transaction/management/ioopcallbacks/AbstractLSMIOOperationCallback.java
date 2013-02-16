@@ -30,7 +30,6 @@ import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
 public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationCallback {
 
-    // Object on which blocked LSMIndex operations are waiting.
     protected final IndexOperationTracker opTracker;
 
     public AbstractLSMIOOperationCallback(IndexOperationTracker opTracker) {
@@ -43,8 +42,8 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     }
 
     @Override
-    public synchronized void afterFinalize(ILSMIOOperation operation, ILSMComponent newComponent) {
-        // Do nothing.
+    public void afterFinalize(ILSMIOOperation operation, ILSMComponent newComponent) {
+        opTracker.resetLSNs();
     }
 
     protected abstract long getComponentLSN(List<ILSMComponent> oldComponents) throws HyracksDataException;
