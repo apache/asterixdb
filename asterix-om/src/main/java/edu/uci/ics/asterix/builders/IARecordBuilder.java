@@ -18,7 +18,9 @@ package edu.uci.ics.asterix.builders;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IValueReference;
 
 /**
@@ -59,8 +61,9 @@ public interface IARecordBuilder {
      *            Whether to write a typetag as part of the record's serialized
      *            representation.
      * @throws IOException
+     * @throws AsterixException
      */
-    public void write(DataOutput out, boolean writeTypeTag) throws IOException;
+    public void write(DataOutput out, boolean writeTypeTag) throws IOException, HyracksDataException;
 
     public int getFieldId(String fieldName);
 
