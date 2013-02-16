@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
+import java.util.List;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -40,4 +42,6 @@ public interface ILSMIndex extends IIndex {
     public ILSMOperationTracker getOperationTracker();
 
     public ILSMIOOperationScheduler getIOScheduler();
+
+    public List<ILSMComponent> getImmutableComponents();
 }

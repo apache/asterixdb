@@ -1,7 +1,9 @@
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -164,5 +166,16 @@ public class IndexLifecycleManager implements IIndexLifecycleManager {
             return "{index: " + index + ", isOpen: " + isOpen + ", refCount: " + referenceCount + ", lastAccess: "
                     + lastAccess + "}";
         }
+    }
+
+    @Override
+    public List<IIndex> getOpenIndexes() {
+        List<IIndex> openIndexes = new ArrayList<IIndex>();
+        for (IndexInfo i : indexInfos.values()) {
+            if (i.isOpen) {
+                openIndexes.add(i.index);
+            }
+        }
+        return openIndexes;
     }
 }
