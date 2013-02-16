@@ -1,5 +1,6 @@
 package edu.uci.ics.asterix.optimizer.rules.am;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;
@@ -205,7 +206,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                 if (optFuncExpr.getNumLogicalVars() > 1) {
                     // If we are optimizing a join, the matching field may be the second field name.
                     keyPos = indexOf(optFuncExpr.getFieldName(1), chosenIndex.getKeyFieldNames());
-                }                
+                }
             }
             if (keyPos < 0) {
                 throw new AlgebricksException(
@@ -238,7 +239,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                     // If high and low keys are set, we exit for now.
                     if (setLowKeys.cardinality() == numSecondaryKeys && setHighKeys.cardinality() == numSecondaryKeys) {
                         doneWithExprs = true;
-                    }                    
+                    }
                     break;
                 }
                 case HIGH_EXCLUSIVE: {
@@ -390,7 +391,11 @@ public class BTreeAccessMethod implements IAccessMethod {
                     secondaryIndexUnnestOp, context, true, retainInput, false);
         } else {
             List<Object> primaryIndexOutputTypes = new ArrayList<Object>();
-            AccessMethodUtils.appendPrimaryIndexTypes(dataset, recordType, primaryIndexOutputTypes);
+            try {
+                AccessMethodUtils.appendPrimaryIndexTypes(dataset, recordType, primaryIndexOutputTypes);
+            } catch (IOException e) {
+                throw new AlgebricksException(e);
+            }
             primaryIndexUnnestOp = new UnnestMapOperator(dataSourceScan.getVariables(),
                     secondaryIndexUnnestOp.getExpressionRef(), primaryIndexOutputTypes, retainInput);
             primaryIndexUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
@@ -521,7 +526,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             return (optFuncExpr.getOperatorSubTree(0) == null || optFuncExpr.getOperatorSubTree(0) == probeSubTree);
         }
     }
-    
+
     private ILogicalExpression createSelectCondition(List<Mutable<ILogicalExpression>> predList) {
         if (predList.size() > 1) {
             IFunctionInfo finfo = AsterixBuiltinFunctions.getAsterixFunctionInfo(AlgebricksBuiltinFunctions.AND);

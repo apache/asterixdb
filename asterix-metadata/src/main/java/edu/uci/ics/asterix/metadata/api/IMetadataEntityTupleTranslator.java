@@ -50,5 +50,5 @@ public interface IMetadataEntityTupleTranslator<T> {
      *            Metadata entity to be written into a tuple.
      * @throws IOException
      */
-    public ITupleReference getTupleFromMetadataEntity(T metadataEntity) throws IOException;
+    public ITupleReference getTupleFromMetadataEntity(T metadataEntity) throws MetadataException, IOException;
 }

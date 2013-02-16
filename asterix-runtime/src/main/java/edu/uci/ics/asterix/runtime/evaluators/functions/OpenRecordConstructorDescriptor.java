@@ -4,6 +4,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.builders.RecordBuilder;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -86,8 +87,8 @@ public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynam
                                 }
                             }
                             recBuilder.write(out, true);
-                        } catch (IOException ioe) {
-                            throw new AlgebricksException(ioe);
+                        } catch (IOException | AsterixException e) {
+                            throw new AlgebricksException(e);
                         }
                     }
                 };

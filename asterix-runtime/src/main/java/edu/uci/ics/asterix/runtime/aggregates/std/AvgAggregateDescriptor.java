@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -64,8 +65,15 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
         List<IAType> unionList = new ArrayList<IAType>();
         unionList.add(BuiltinType.ANULL);
         unionList.add(BuiltinType.ADOUBLE);
-        final ARecordType recType = new ARecordType(null, new String[] { "sum", "count" }, new IAType[] {
-                new AUnionType(unionList, "OptionalDouble"), BuiltinType.AINT32 }, true);
+        ARecordType _recType;
+        try {
+            _recType = new ARecordType(null, new String[] { "sum", "count" }, new IAType[] {
+                    new AUnionType(unionList, "OptionalDouble"), BuiltinType.AINT32 }, true);
+        } catch (AsterixException e) {
+            throw new AlgebricksException(e);
+        }
+
+        final ARecordType recType = _recType;
 
         return new ICopyAggregateFunctionFactory() {
             private static final long serialVersionUID = 1L;
@@ -78,7 +86,7 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
 
                     private DataOutput out = provider.getDataOutput();
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(inputVal);                    
+                    private ICopyEvaluator eval = args[0].createEvaluator(inputVal);
                     private double sum;
                     private int count;
                     private ATypeTag aggType;
@@ -115,13 +123,13 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
                     @Override
                     public void step(IFrameTupleReference tuple) throws AlgebricksException {
                         inputVal.reset();
-                        eval.evaluate(tuple);                        
+                        eval.evaluate(tuple);
                         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                                 .deserialize(inputVal.getByteArray()[0]);
                         if (typeTag == ATypeTag.NULL || aggType == ATypeTag.NULL) {
                             aggType = ATypeTag.NULL;
                             return;
-                        } else if (aggType == ATypeTag.SYSTEM_NULL) {                           
+                        } else if (aggType == ATypeTag.SYSTEM_NULL) {
                             aggType = typeTag;
                         } else if (typeTag != ATypeTag.SYSTEM_NULL && typeTag != aggType) {
                             throw new AlgebricksException("Unexpected type " + typeTag
@@ -129,7 +137,7 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
                         }
                         if (typeTag != ATypeTag.SYSTEM_NULL) {
                             ++count;
-                        }                        
+                        }
                         switch (typeTag) {
                             case INT8: {
                                 byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);

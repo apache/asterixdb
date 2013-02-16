@@ -1,6 +1,7 @@
 package edu.uci.ics.asterix.file;
 
 import java.io.DataOutput;
+import java.io.IOException;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
@@ -137,13 +138,12 @@ public abstract class SecondaryIndexCreator {
         numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
         numSecondaryKeys = createIndexStmt.getKeyFields().size();
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint = metadataProvider
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
-                        dataverseName, datasetName, datasetName);
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataverseName, datasetName, datasetName);
         primaryFileSplitProvider = primarySplitsAndConstraint.first;
         primaryPartitionConstraint = primarySplitsAndConstraint.second;
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadataProvider
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
-                        dataverseName, datasetName, secondaryIndexName);
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataverseName, datasetName,
+                        secondaryIndexName);
         secondaryFileSplitProvider = secondarySplitsAndConstraint.first;
         secondaryPartitionConstraint = secondarySplitsAndConstraint.second;
         // Must be called in this order.
@@ -159,7 +159,12 @@ public abstract class SecondaryIndexCreator {
         primaryComparatorFactories = new IBinaryComparatorFactory[numPrimaryKeys];
         ISerializerDeserializerProvider serdeProvider = metadataProvider.getFormat().getSerdeProvider();
         for (int i = 0; i < numPrimaryKeys; i++) {
-            IAType keyType = itemType.getFieldType(partitioningKeys.get(i));
+            IAType keyType;
+            try {
+                keyType = itemType.getFieldType(partitioningKeys.get(i));
+            } catch (IOException e) {
+                throw new AlgebricksException(e);
+            }
             primaryRecFields[i] = serdeProvider.getSerializerDeserializer(keyType);
             primaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(
                     keyType, true);
@@ -286,8 +291,8 @@ public abstract class SecondaryIndexCreator {
             fieldPermutation[i] = i;
         }
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadataProvider
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
-                        dataverseName, datasetName, secondaryIndexName);
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataverseName, datasetName,
+                        secondaryIndexName);
         TreeIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp = new TreeIndexBulkLoadOperatorDescriptor(spec,
                 AsterixStorageManagerInterface.INSTANCE, AsterixIndexRegistryProvider.INSTANCE,
                 secondarySplitsAndConstraint.first, secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories,

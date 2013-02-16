@@ -16,6 +16,7 @@
 package edu.uci.ics.asterix.optimizer.rules;
 
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -188,7 +189,12 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 ARecordType rt = (ARecordType) _emptyTypeEnv.getType(expr.getArguments().get(0).getValue());
                 String str = ((AString) ((AsterixConstantValue) ((ConstantExpression) expr.getArguments().get(1)
                         .getValue()).getValue()).getObject()).getStringValue();
-                int k = rt.findFieldPosition(str);
+                int k;
+                try {
+                    k = rt.findFieldPosition(str);
+                } catch (IOException e) {
+                    throw new AlgebricksException(e);
+                }
                 if (k >= 0) {
                     // wait for the ByNameToByIndex rule to apply
                     return new Pair<Boolean, ILogicalExpression>(changed, expr);

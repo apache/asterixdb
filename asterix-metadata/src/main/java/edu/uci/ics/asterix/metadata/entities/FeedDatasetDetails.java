@@ -23,6 +23,7 @@ import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -160,8 +161,8 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
 
         try {
             feedRecordBuilder.write(out, true);
-        } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
+        } catch (IOException | AsterixException e) {
+            throw new HyracksDataException(e);
         }
 
     }
@@ -188,8 +189,8 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
 
         try {
             propertyRecordBuilder.write(out, true);
-        } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
+        } catch (IOException | AsterixException e) {
+            throw new HyracksDataException(e);
         }
     }
 

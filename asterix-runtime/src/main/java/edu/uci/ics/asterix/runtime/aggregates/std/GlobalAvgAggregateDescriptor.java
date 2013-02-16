@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
@@ -61,8 +61,15 @@ public class GlobalAvgAggregateDescriptor extends AbstractAggregateFunctionDynam
         List<IAType> unionList = new ArrayList<IAType>();
         unionList.add(BuiltinType.ANULL);
         unionList.add(BuiltinType.ADOUBLE);
-        final ARecordType recType = new ARecordType(null, new String[] { "sum", "count" }, new IAType[] {
-                new AUnionType(unionList, "OptionalDouble"), BuiltinType.AINT32 }, false);
+        ARecordType _recType;
+        try {
+            _recType = new ARecordType(null, new String[] { "sum", "count" }, new IAType[] {
+                    new AUnionType(unionList, "OptionalDouble"), BuiltinType.AINT32 }, false);
+        } catch (AsterixException e) {
+            throw new AlgebricksException(e);
+        }
+
+        final ARecordType recType = _recType;
 
         return new ICopyAggregateFunctionFactory() {
             private static final long serialVersionUID = 1L;
@@ -114,7 +121,7 @@ public class GlobalAvgAggregateDescriptor extends AbstractAggregateFunctionDynam
                         inputVal.reset();
                         eval.evaluate(tuple);
                         byte[] serBytes = inputVal.getByteArray();
-                        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serBytes[0]);                        
+                        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serBytes[0]);
                         switch (typeTag) {
                             case NULL: {
                                 metNull = true;

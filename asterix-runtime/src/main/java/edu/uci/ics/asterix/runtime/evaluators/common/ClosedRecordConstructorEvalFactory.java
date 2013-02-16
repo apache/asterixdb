@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -72,8 +73,8 @@ public class ClosedRecordConstructorEvalFactory implements ICopyEvaluatorFactory
                     }
                 }
                 recBuilder.write(out, true);
-            } catch (IOException ioe) {
-                throw new AlgebricksException(ioe);
+            } catch (IOException | AsterixException e) {
+                throw new AlgebricksException(e);
             }
         }
     }

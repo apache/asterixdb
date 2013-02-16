@@ -17,7 +17,9 @@ package edu.uci.ics.asterix.metadata.entitytupletranslators;
 
 import java.io.IOException;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataRecordTypes;
 import edu.uci.ics.asterix.metadata.entities.Node;
@@ -80,7 +82,7 @@ public class NodeTupleTranslator extends AbstractTupleTranslator<Node> {
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(Node instance) throws IOException {
+    public ITupleReference getTupleFromMetadataEntity(Node instance) throws IOException, MetadataException {
         // write the key in the first field of the tuple
         tupleBuilder.reset();
         aString.setValue(instance.getNodeName());
@@ -121,7 +123,11 @@ public class NodeTupleTranslator extends AbstractTupleTranslator<Node> {
         // listBuilder.write(fieldValue.getDataOutput());
         // recordBuilder.addField(3, fieldValue);
 
-        recordBuilder.write(tupleBuilder.getDataOutput(), true);
+        try {
+            recordBuilder.write(tupleBuilder.getDataOutput(), true);
+        } catch (AsterixException e) {
+            throw new MetadataException(e);
+        }
         tupleBuilder.addFieldEndOffset();
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
         return tuple;

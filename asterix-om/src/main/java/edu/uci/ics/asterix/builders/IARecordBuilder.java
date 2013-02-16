@@ -20,7 +20,6 @@ import java.io.IOException;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IValueReference;
 
 /**
@@ -51,8 +50,9 @@ public interface IARecordBuilder {
      *            The field name.
      * @param out
      *            The field value.
+     * @throws AsterixException
      */
-    public void addField(IValueReference name, IValueReference value);
+    public void addField(IValueReference name, IValueReference value) throws AsterixException;
 
     /**
      * @param out
@@ -63,7 +63,7 @@ public interface IARecordBuilder {
      * @throws IOException
      * @throws AsterixException
      */
-    public void write(DataOutput out, boolean writeTypeTag) throws IOException, HyracksDataException;
+    public void write(DataOutput out, boolean writeTypeTag) throws IOException, AsterixException;
 
     public int getFieldId(String fieldName);
 

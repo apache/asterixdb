@@ -22,6 +22,7 @@ import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -146,8 +147,8 @@ public class InternalDatasetDetails implements IDatasetDetails {
 
         try {
             internalRecordBuilder.write(out, true);
-        } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
+        } catch (IOException | AsterixException e) {
+            throw new HyracksDataException(e);
         }
     }
 

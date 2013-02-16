@@ -16,6 +16,7 @@
 package edu.uci.ics.asterix.metadata.declared;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -851,7 +852,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     splitsAndConstraint.first, typeTraits, comparatorFactories, fieldPermutation, indexOp,
                     new BTreeDataflowHelperFactory(), filterFactory, NoOpOperationCallbackProvider.INSTANCE, jobTxnId);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeInsert, splitsAndConstraint.second);
-        } catch (MetadataException e) {
+        } catch (MetadataException | IOException e) {
             throw new AlgebricksException(e);
         }
     }
@@ -918,8 +919,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     new RTreeDataflowHelperFactory(valueProviderFactories), filterFactory,
                     NoOpOperationCallbackProvider.INSTANCE, jobTxnId);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(rtreeUpdate, splitsAndConstraint.second);
-        } catch (MetadataException me) {
-            throw new AlgebricksException(me);
+        } catch (MetadataException | IOException e) {
+            throw new AlgebricksException(e);
         }
     }
 

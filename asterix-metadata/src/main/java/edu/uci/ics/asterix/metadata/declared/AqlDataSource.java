@@ -15,6 +15,7 @@
 
 package edu.uci.ics.asterix.metadata.declared;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -63,46 +64,54 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
         this.id = id;
         this.dataset = dataset;
         this.datasourceType = datasourceType;
-        switch (datasourceType) {
-            case FEED:
-                initFeedDataset(itemType, dataset);
-            case INTERNAL: {
-                initInternalDataset(itemType);
-                break;
+        try {
+            switch (datasourceType) {
+                case FEED:
+                    initFeedDataset(itemType, dataset);
+                case INTERNAL: {
+                    initInternalDataset(itemType);
+                    break;
+                }
+                case EXTERNAL_FEED:
+                case EXTERNAL: {
+                    initExternalDataset(itemType);
+                    break;
+                }
+                default: {
+                    throw new IllegalArgumentException();
+                }
             }
-            case EXTERNAL_FEED:
-            case EXTERNAL: {
-                initExternalDataset(itemType);
-                break;
-            }
-            default: {
-                throw new IllegalArgumentException();
-            }
+        } catch (IOException e) {
+            throw new AlgebricksException(e);
         }
     }
 
     public AqlDataSource(AqlSourceId id, Dataset dataset, IAType itemType) throws AlgebricksException {
         this.id = id;
         this.dataset = dataset;
-        switch (dataset.getDatasetType()) {
-            case FEED:
-                initFeedDataset(itemType, dataset);
-                break;
-            case INTERNAL:
-                initInternalDataset(itemType);
-                break;
-            case EXTERNAL: {
-                initExternalDataset(itemType);
-                break;
+        try {
+            switch (dataset.getDatasetType()) {
+                case FEED:
+                    initFeedDataset(itemType, dataset);
+                    break;
+                case INTERNAL:
+                    initInternalDataset(itemType);
+                    break;
+                case EXTERNAL: {
+                    initExternalDataset(itemType);
+                    break;
+                }
+                default: {
+                    throw new IllegalArgumentException();
+                }
             }
-            default: {
-                throw new IllegalArgumentException();
-            }
+        } catch (IOException e) {
+            throw new AlgebricksException(e);
         }
     }
 
     // TODO: Seems like initFeedDataset() could simply call this method.
-    private void initInternalDataset(IAType itemType) {
+    private void initInternalDataset(IAType itemType) throws IOException {
         List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
         ARecordType recordType = (ARecordType) itemType;
         int n = partitioningKeys.size();
@@ -114,7 +123,7 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
         domain = new AsterixNodeGroupDomain(DatasetUtils.getNodegroupName(dataset));
     }
 
-    private void initFeedDataset(IAType itemType, Dataset dataset) {
+    private void initFeedDataset(IAType itemType, Dataset dataset) throws IOException {
         if (dataset.getDatasetDetails() instanceof ExternalDatasetDetails) {
             initExternalDataset(itemType);
         } else {

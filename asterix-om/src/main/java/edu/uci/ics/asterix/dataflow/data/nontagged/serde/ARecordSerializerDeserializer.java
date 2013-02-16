@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryHashFunctionFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -149,7 +150,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             } else {
                 return new ARecord(this.recordType, closedFields);
             }
-        } catch (IOException e) {
+        } catch (IOException | AsterixException e) {
             throw new HyracksDataException(e);
         }
     }
@@ -166,7 +167,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         return fields;
     }
 
-    private ARecordType mergeRecordTypes(ARecordType recType1, ARecordType recType2) {
+    private ARecordType mergeRecordTypes(ARecordType recType1, ARecordType recType2) throws AsterixException {
 
         String[] fieldNames = new String[recType1.getFieldNames().length + recType2.getFieldNames().length];
         IAType[] fieldTypes = new IAType[recType1.getFieldTypes().length + recType2.getFieldTypes().length];
@@ -199,7 +200,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             }
             try {
                 recordBuilder.write(out, false);
-            } catch (IOException e) {
+            } catch (IOException | AsterixException e) {
                 throw new HyracksDataException(e);
             }
         } else {

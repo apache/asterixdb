@@ -7,13 +7,13 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.data.std.api.IValueReference;
@@ -141,13 +141,21 @@ public class RecordBuilder implements IARecordBuilder {
     }
 
     @Override
-    public void addField(IValueReference name, IValueReference value) {
+    public void addField(IValueReference name, IValueReference value) throws AsterixException {
         if (numberOfOpenFields == openPartOffsets.length) {
             openPartOffsets = Arrays.copyOf(openPartOffsets, openPartOffsets.length + DEFAULT_NUM_OPEN_FIELDS);
             openFieldNameLengths = Arrays.copyOf(openFieldNameLengths, openFieldNameLengths.length
                     + DEFAULT_NUM_OPEN_FIELDS);
         }
         int fieldNameHashCode = utf8HashFunction.hash(name.getByteArray(), name.getStartOffset() + 1, name.getLength());
+        if (recType != null) {
+            int cFieldPos = recType.findFieldPosition(name.getByteArray(), name.getStartOffset() + 1,
+                    name.getLength() - 1);
+            if (cFieldPos > 0) {
+                throw new AsterixException("Open field has the same field name as closed field " + cFieldPos + " \""
+                        + recType.getFieldNames()[cFieldPos] + "\"");
+            }
+        }
         openPartOffsets[this.numberOfOpenFields] = fieldNameHashCode;
         openPartOffsets[this.numberOfOpenFields] = (openPartOffsets[numberOfOpenFields] << 32);
         openPartOffsets[numberOfOpenFields] += openPartOutputStream.size();
@@ -157,7 +165,7 @@ public class RecordBuilder implements IARecordBuilder {
     }
 
     @Override
-    public void write(DataOutput out, boolean writeTypeTag) throws HyracksDataException, IOException {
+    public void write(DataOutput out, boolean writeTypeTag) throws IOException, AsterixException {
         int h = headerSize;
         int recordLength;
         // prepare the open part
@@ -177,7 +185,7 @@ public class RecordBuilder implements IARecordBuilder {
                         String field = UTF8StringSerializerDeserializer.INSTANCE
                                 .deserialize(new DataInputStream(new ByteArrayInputStream(openBytes,
                                         (int) openPartOffsets[i], openFieldNameLengths[i])));
-                        throw new HyracksDataException("Open fields " + (i - 1) + " and " + i
+                        throw new AsterixException("Open fields " + (i - 1) + " and " + i
                                 + " have the same field name \"" + field + "\"");
                     }
                 }
