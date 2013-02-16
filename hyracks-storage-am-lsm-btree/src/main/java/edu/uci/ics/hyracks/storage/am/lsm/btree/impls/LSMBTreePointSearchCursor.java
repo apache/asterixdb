@@ -16,7 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
 import java.util.ListIterator;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -50,7 +49,6 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
     private boolean includeMemComponent;
     private int numBTrees;
     private IIndexAccessor[] bTreeAccessors;
-    private AtomicInteger searcherRefCount;
     private ILSMHarness lsmHarness;
     private boolean nextHasBeenCalled;
     private boolean foundTuple;
@@ -72,6 +70,7 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
             bTreeAccessors[i].search(rangeCursors[i], predicate);
             if (rangeCursors[i].hasNext()) {
                 rangeCursors[i].next();
+                // We use the predicate's to lock the key instead of the tuple that we get from cursor to avoid copying the tuple when we do the "unlatch dance"
                 if (reconciled || searchCallback.proceed(predicate.getLowKey())) {
                     // if proceed is successful, then there's no need for doing the "unlatch dance"
                     if (((ILSMTreeTupleReference) rangeCursors[i].getTuple()).isAntimatter()) {
@@ -129,9 +128,6 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
         rangeCursors = null;
         nextHasBeenCalled = false;
         foundTuple = false;
-        if (searcherRefCount != null) {
-            lsmHarness.endSearch(opCtx);
-        }
     }
 
     @Override

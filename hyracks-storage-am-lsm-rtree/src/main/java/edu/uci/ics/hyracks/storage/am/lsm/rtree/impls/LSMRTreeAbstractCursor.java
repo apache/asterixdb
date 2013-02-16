@@ -1,7 +1,6 @@
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -36,7 +35,6 @@ public abstract class LSMRTreeAbstractCursor implements ITreeIndexCursor {
     protected SearchPredicate rtreeSearchPredicate;
     protected RangePredicate btreeRangePredicate;
     protected ITupleReference frameTuple;
-    protected AtomicInteger searcherRefCount;
     protected boolean includeMemRTree;
     protected ILSMHarness lsmHarness;
     protected boolean foundNext;

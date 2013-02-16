@@ -18,7 +18,6 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -41,7 +40,6 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
     protected MultiComparator cmp;
     protected boolean needPush;
     protected boolean includeMemComponent;
-    protected AtomicInteger searcherRefCount;
     protected ILSMHarness lsmHarness;
     protected final ILSMIndexOperationContext opCtx;
 
@@ -81,10 +79,6 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
             }
         }
         rangeCursors = null;
-
-        if (searcherRefCount != null) {
-            lsmHarness.endSearch(opCtx);
-        }
     }
 
     @Override
