@@ -151,9 +151,9 @@ public class RecordBuilder implements IARecordBuilder {
         if (recType != null) {
             int cFieldPos = recType.findFieldPosition(name.getByteArray(), name.getStartOffset() + 1,
                     name.getLength() - 1);
-            if (cFieldPos > 0) {
-                throw new AsterixException("Open field has the same field name as closed field " + cFieldPos + " \""
-                        + recType.getFieldNames()[cFieldPos] + "\"");
+            if (cFieldPos >= 0) {
+                throw new AsterixException("Open field \"" + recType.getFieldNames()[cFieldPos]
+                        + "\" has the same field name as closed field at index " + cFieldPos);
             }
         }
         openPartOffsets[this.numberOfOpenFields] = fieldNameHashCode;
