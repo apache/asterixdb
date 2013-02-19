@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.asterix.om.types;
 
 import java.io.DataOutputStream;
@@ -33,6 +48,18 @@ public class ARecordType extends AbstractComplexType {
     private final int serializedFieldNameOffsets[];
     private final long hashCodeIndexPairs[];
 
+    /**
+     * @param typeName
+     *            the name of the type
+     * @param fieldNames
+     *            the names of the closed fields
+     * @param fieldTypes
+     *            the types of the closed fields
+     * @param isOpen
+     *            whether the record is open
+     * @throws AsterixException
+     *             if there are duplicate field names or if there is an error serializing the field names
+     */
     public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen)
             throws AsterixException {
         super(typeName);
@@ -55,7 +82,7 @@ public class ARecordType extends AbstractComplexType {
             try {
                 dos.writeUTF(fieldNames[i]);
             } catch (IOException e) {
-                //                throw new HyracksDataException(e);
+                throw new AsterixException(e);
             }
             length = baaos.size() - serializedFieldNameOffsets[i];
             hashCodeIndexPairs[i] = fieldNameHashFunction.hash(baaos.getByteArray(), serializedFieldNameOffsets[i],
@@ -85,6 +112,17 @@ public class ARecordType extends AbstractComplexType {
                 .createBinaryHashFunction();
     }
 
+    /**
+     * Returns the position of the field in the closed schema or -1 if the field does not exist.
+     * 
+     * @param bytes
+     *            the serialized bytes of the field name
+     * @param start
+     *            the starting offset of the field name in bytes
+     * @param length
+     *            the length of the field name in bytes
+     * @return the position of the field in the closed schema or -1 if the field does not exist.
+     */
     public int findFieldPosition(byte[] bytes, int start, int length) {
         if (hashCodeIndexPairs.length == 0) {
             return -1;
@@ -152,6 +190,13 @@ public class ARecordType extends AbstractComplexType {
         return isOpen;
     }
 
+    /**
+     * Returns the position of the field in the closed schema or -1 if the field does not exist.
+     * 
+     * @param fieldName
+     *            the name of the field whose position is sought
+     * @return the position of the field in the closed schema or -1 if the field does not exist.
+     */
     public int findFieldPosition(String fieldName) throws IOException {
         ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
         DataOutputStream dos = new DataOutputStream(baaos);
