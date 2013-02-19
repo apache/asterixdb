@@ -57,4 +57,4 @@ for $c in dataset('test1.Customers')
 for $o in dataset('test2.Orders')
 where $c.cid = $o.cid
 order by $c.name, $o.total
-return {"cust_name":$c.name, "cust_age": $c.age, "order_total":$o.total, "orderList":[$o.oid, $o.cid], "orderList":{{$o.oid, $o.cid}}}
+return {"cust_name":$c.name, "cust_age": $c.age, "order_total":$o.total, "orderList":[$o.oid, $o.cid]}

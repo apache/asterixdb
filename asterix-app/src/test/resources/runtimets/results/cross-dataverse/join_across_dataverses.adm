@@ -1,3 +1,3 @@
-{ "cust_name": "Jodi Alex", "cust_age": 19, "order_total": 7.206f, "orderList": [ 10, 5 ], "orderList": {{ 10, 5 }} }
-{ "cust_name": "Jodi Rotruck", "cust_age": null, "order_total": 14.2326f, "orderList": [ 10, 775 ], "orderList": {{ 10, 775 }} }
-{ "cust_name": "Jodi Rotruck", "cust_age": null, "order_total": 97.20656f, "orderList": [ 1000, 775 ], "orderList": {{ 1000, 775 }} }
+{ "cust_name": "Jodi Alex", "cust_age": 19, "order_total": 7.206f, "orderList": [ 10, 5 ] }
+{ "cust_name": "Jodi Rotruck", "cust_age": null, "order_total": 14.2326f, "orderList": [ 10, 775 ] }
+{ "cust_name": "Jodi Rotruck", "cust_age": null, "order_total": 97.20656f, "orderList": [ 1000, 775 ] }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -30,9 +30,11 @@ import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.builders.UnorderedListBuilder;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
+import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataRecordTypes;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
@@ -212,7 +214,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(Dataset dataset) throws IOException {
+    public ITupleReference getTupleFromMetadataEntity(Dataset dataset) throws IOException, MetadataException {
         // write the key in the first 2 fields of the tuple
         tupleBuilder.reset();
         aString.setValue(dataset.getDataverseName());
@@ -277,7 +279,11 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
 
         // write record
-        recordBuilder.write(tupleBuilder.getDataOutput(), true);
+        try {
+            recordBuilder.write(tupleBuilder.getDataOutput(), true);
+        } catch (AsterixException e) {
+            throw new MetadataException(e);
+        }
         tupleBuilder.addFieldEndOffset();
 
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
@@ -342,7 +348,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
         try {
             propertyRecordBuilder.write(out, true);
-        } catch (IOException ioe) {
+        } catch (IOException | AsterixException ioe) {
             throw new HyracksDataException(ioe);
         }
     }

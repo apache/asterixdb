@@ -1,15 +1,38 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.asterix.om.types;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import edu.uci.ics.asterix.common.annotations.IRecordTypeAnnotation;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.visitors.IOMVisitor;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
+import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 
 public class ARecordType extends AbstractComplexType {
 
@@ -18,16 +41,110 @@ public class ARecordType extends AbstractComplexType {
     private IAType[] fieldTypes;
     private boolean isOpen;
     private final List<IRecordTypeAnnotation> annotations = new ArrayList<IRecordTypeAnnotation>();
-    private final Map<String, Integer> typeMap = new HashMap<String, Integer>();
 
-    public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen) {
+    private transient IBinaryHashFunction fieldNameHashFunction;
+    private transient IBinaryComparator fieldNameComparator;
+    private final byte serializedFieldNames[];
+    private final int serializedFieldNameOffsets[];
+    private final long hashCodeIndexPairs[];
+
+    /**
+     * @param typeName
+     *            the name of the type
+     * @param fieldNames
+     *            the names of the closed fields
+     * @param fieldTypes
+     *            the types of the closed fields
+     * @param isOpen
+     *            whether the record is open
+     * @throws AsterixException
+     *             if there are duplicate field names or if there is an error serializing the field names
+     */
+    public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen)
+            throws AsterixException {
         super(typeName);
         this.fieldNames = fieldNames;
         this.fieldTypes = fieldTypes;
         this.isOpen = isOpen;
+
+        fieldNameComparator = new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY)
+                .createBinaryComparator();
+        fieldNameHashFunction = new PointableBinaryHashFunctionFactory(UTF8StringPointable.FACTORY)
+                .createBinaryHashFunction();
+        ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
+        DataOutputStream dos = new DataOutputStream(baaos);
+        serializedFieldNameOffsets = new int[fieldNames.length];
+        hashCodeIndexPairs = new long[fieldNames.length];
+
+        int length = 0;
         for (int i = 0; i < fieldNames.length; i++) {
-            typeMap.put(fieldNames[i], i);
+            serializedFieldNameOffsets[i] = baaos.size();
+            try {
+                dos.writeUTF(fieldNames[i]);
+            } catch (IOException e) {
+                throw new AsterixException(e);
+            }
+            length = baaos.size() - serializedFieldNameOffsets[i];
+            hashCodeIndexPairs[i] = fieldNameHashFunction.hash(baaos.getByteArray(), serializedFieldNameOffsets[i],
+                    length);
+            hashCodeIndexPairs[i] = hashCodeIndexPairs[i] << 32;
+            hashCodeIndexPairs[i] = hashCodeIndexPairs[i] | i;
         }
+        serializedFieldNames = baaos.getByteArray();
+
+        Arrays.sort(hashCodeIndexPairs);
+        int j;
+        for (int i = 0; i < fieldNames.length; i++) {
+            j = findFieldPosition(serializedFieldNames, serializedFieldNameOffsets[i],
+                    UTF8StringPointable.getStringLength(serializedFieldNames, serializedFieldNameOffsets[i]));
+            if (j != i) {
+                throw new AsterixException("Closed fields " + j + " and " + i + " have the same field name \""
+                        + fieldNames[i] + "\"");
+            }
+        }
+    }
+
+    private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+        ois.defaultReadObject();
+        fieldNameComparator = new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY)
+                .createBinaryComparator();
+        fieldNameHashFunction = new PointableBinaryHashFunctionFactory(UTF8StringPointable.FACTORY)
+                .createBinaryHashFunction();
+    }
+
+    /**
+     * Returns the position of the field in the closed schema or -1 if the field does not exist.
+     * 
+     * @param bytes
+     *            the serialized bytes of the field name
+     * @param start
+     *            the starting offset of the field name in bytes
+     * @param length
+     *            the length of the field name in bytes
+     * @return the position of the field in the closed schema or -1 if the field does not exist.
+     */
+    public int findFieldPosition(byte[] bytes, int start, int length) {
+        if (hashCodeIndexPairs.length == 0) {
+            return -1;
+        }
+
+        int fIndex;
+        int probeFieldHash = fieldNameHashFunction.hash(bytes, start, length);
+        int i = Arrays.binarySearch(hashCodeIndexPairs, ((long) probeFieldHash) << 32);
+        i = (i < 0) ? (i = -1 * (i + 1)) : i;
+
+        while (i < hashCodeIndexPairs.length && (int) (hashCodeIndexPairs[i] >>> 32) == probeFieldHash) {
+            fIndex = (int) hashCodeIndexPairs[i];
+            int cFieldLength = UTF8StringPointable.getStringLength(serializedFieldNames,
+                    serializedFieldNameOffsets[fIndex]);
+            if (fieldNameComparator.compare(serializedFieldNames, serializedFieldNameOffsets[fIndex], cFieldLength,
+                    bytes, start, length) == 0) {
+                return fIndex;
+            }
+            i++;
+        }
+
+        return -1;
     }
 
     public final String[] getFieldNames() {
@@ -73,17 +190,22 @@ public class ARecordType extends AbstractComplexType {
         return isOpen;
     }
 
-    public int findFieldPosition(String fldName) {
-        for (int i = 0; i < fieldNames.length; i++) {
-            if (fieldNames[i].equals(fldName)) {
-                return i;
-            }
-        }
-        return -1;
+    /**
+     * Returns the position of the field in the closed schema or -1 if the field does not exist.
+     * 
+     * @param fieldName
+     *            the name of the field whose position is sought
+     * @return the position of the field in the closed schema or -1 if the field does not exist.
+     */
+    public int findFieldPosition(String fieldName) throws IOException {
+        ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
+        DataOutputStream dos = new DataOutputStream(baaos);
+        UTF8StringSerializerDeserializer.INSTANCE.serialize(fieldName, dos);
+        return findFieldPosition(baaos.getByteArray(), 0, baaos.getByteArray().length);
     }
 
-    public IAType getFieldType(String fieldName) {
-        return fieldTypes[typeMap.get(fieldName)];
+    public IAType getFieldType(String fieldName) throws IOException {
+        return fieldTypes[findFieldPosition(fieldName)];
     }
 
     @Override
@@ -115,12 +237,11 @@ public class ARecordType extends AbstractComplexType {
     public int hash() {
         int h = 0;
         for (int i = 0; i < fieldNames.length; i++) {
-            h += 31 * h + fieldNames[i].hashCode();
+            h += 31 * h + (int) (hashCodeIndexPairs[i] >> 32);
         }
         for (int i = 0; i < fieldTypes.length; i++) {
             h += 31 * h + fieldTypes[i].hashCode();
         }
         return h;
     }
-
 }

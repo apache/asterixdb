@@ -2626,6 +2626,24 @@
         <output-file compare="Text">open-record-constructor_02.adm</output-file>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="records">
+      <compilation-unit name="closed-closed-fieldname-conflict_issue173">
+        <output-file compare="Text">closed-closed-fieldname-conflict_issue173.adm</output-file>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+  <test-case FilePath="records">
+      <compilation-unit name="open-closed-fieldname-conflict_issue173">
+        <output-file compare="Text">open-closed-fieldname-conflict_issue173.adm</output-file>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="records">
+      <compilation-unit name="open-open-fieldname-conflict_issue173">
+        <output-file compare="Text">open-open-fieldname-conflict_issue173.adm</output-file>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="scan">
     <test-case FilePath="scan">
