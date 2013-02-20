@@ -67,9 +67,12 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
         private final RangePredicate predicate;
         private final ArrayTupleBuilder builder;
         private final ArrayTupleReference tuple;
+        private final ArrayTupleBuilder expectedTupleToBeLockedBuilder;
+        private final ArrayTupleReference expectedTupleToBeLocked;
 
         private boolean blockOnHigh;
         private int expectedAfterBlock;
+        private int expectedTupleToBeLockedValue;
 
         public SearchTask() {
             this.cb = new SynchronizingSearchOperationCallback();
@@ -78,9 +81,12 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
             this.predicate = new RangePredicate();
             this.builder = new ArrayTupleBuilder(NUM_KEY_FIELDS);
             this.tuple = new ArrayTupleReference();
+            this.expectedTupleToBeLockedBuilder = new ArrayTupleBuilder(NUM_KEY_FIELDS);
+            this.expectedTupleToBeLocked = new ArrayTupleReference();
 
             this.blockOnHigh = false;
             this.expectedAfterBlock = -1;
+            this.expectedTupleToBeLockedValue = -1;
         }
 
         @Override
@@ -96,6 +102,8 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 predicate.setLowKey(tuple, true);
                 predicate.setHighKey(null, true);
                 accessor.search(cursor, predicate);
+                expectedTupleToBeLockedValue = 50;
+                TupleUtils.createIntegerTuple(builder, expectedTupleToBeLocked, expectedTupleToBeLockedValue);
                 consumeIntTupleRange(50, 75, true, 76);
 
                 // consume tuples [77, 150], blocking on 151
@@ -128,10 +136,6 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                     Assert.fail("Failed to consume entire tuple range since cursor is exhausted.");
                 }
                 cursor.next();
-
-                if (this.blockOnHigh) {
-                    TupleUtils.createIntegerTuple(builder, tuple, expectedAfterBlock);
-                }
                 Assert.assertEquals(0, cmp.compare(tuple, cursor.getTuple()));
             }
         }
@@ -140,11 +144,13 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
 
             @Override
             public boolean proceed(ITupleReference tuple) {
+                Assert.assertEquals(0, cmp.compare(SearchTask.this.expectedTupleToBeLocked, tuple));
                 return false;
             }
 
             @Override
             public void reconcile(ITupleReference tuple) {
+                Assert.assertEquals(0, cmp.compare(SearchTask.this.expectedTupleToBeLocked, tuple));
                 if (blockOnHigh) {
                     try {
                         TupleUtils.createIntegerTuple(builder, SearchTask.this.tuple, expectedAfterBlock);
@@ -155,6 +161,14 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                     condition.awaitUninterruptibly();
                     blockOnHigh = false;
                 }
+                try {
+                    expectedTupleToBeLockedValue++;
+                    TupleUtils.createIntegerTuple(expectedTupleToBeLockedBuilder, expectedTupleToBeLocked,
+                            expectedTupleToBeLockedValue);
+                } catch (HyracksDataException e) {
+                    e.printStackTrace();
+                }
+
             }
 
             @Override

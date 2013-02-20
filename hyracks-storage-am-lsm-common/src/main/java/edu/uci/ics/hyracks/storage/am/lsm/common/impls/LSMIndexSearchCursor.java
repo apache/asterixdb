@@ -57,7 +57,6 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
         for (int i = 0; i < rangeCursors.length; i++) {
             pushIntoPriorityQueue(new PriorityQueueElement(i));
         }
-        checkPriorityQueue();
     }
 
     public IIndexCursor getCursor(int cursorIndex) {

@@ -15,8 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
-import java.util.PriorityQueue;
-
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
@@ -47,15 +45,6 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
 
     public LSMRTreeWithAntiMatterTuplesSearchCursor(ILSMIndexOperationContext opCtx) {
         super(opCtx);
-    }
-
-    public void initPriorityQueue() throws HyracksDataException, IndexException {
-        int pqInitSize = (rangeCursors.length > 0) ? rangeCursors.length : 1;
-        outputPriorityQueue = new PriorityQueue<PriorityQueueElement>(pqInitSize, pqCmp);
-        for (int i = 0; i < rangeCursors.length; i++) {
-            pushIntoPriorityQueue(new PriorityQueueElement(i));
-        }
-        checkPriorityQueue();
     }
 
     @Override
