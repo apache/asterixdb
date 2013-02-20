@@ -1,0 +1,25 @@
+<cluster xmlns="cluster">
+  <name>local</name>
+  <ram>1024m</ram>
+  <java_home>$JAVA_HOME</java_home>
+  <workingDir>
+     <dir>/Users/ramangrover29/asterix/working</dir>
+     <NFS>true</NFS>
+  </workingDir>
+  <logdir>/Users/ramangrover29/asterix/logs</logdir>
+  <store>/Users/ramangrover29/asterix/storage</store>
+  <master-node>
+     <id>master</id>
+     <ip>127.0.0.1</ip>
+     <cluster-ip>127.0.0.1</cluster-ip>
+     <ram>512m</ram>
+  </master-node>
+  <node>
+     <id>node1</id>
+     <ip>127.0.0.1</ip>
+  </node>
+  <node>
+     <id>node2</id>
+     <ip>127.0.0.1</ip>
+  </node>
+</cluster>

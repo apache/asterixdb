@@ -22,7 +22,6 @@ import java.util.logging.Logger;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
-import edu.uci.ics.asterix.event.driver.EventDriver;
 import edu.uci.ics.asterix.event.schema.event.Events;
 import edu.uci.ics.asterix.installer.command.CommandHandler;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
@@ -33,20 +32,23 @@ import edu.uci.ics.asterix.installer.service.ServiceProvider;
 public class ManagixDriver {
 
     public static final String MANAGIX_INTERNAL_DIR = ".managix";
+    public static final String MANAGIX_EVENT_DIR = MANAGIX_INTERNAL_DIR + File.separator + "eventrix";
+    public static final String MANAGIX_EVENT_SCRIPTS_DIR = MANAGIX_INTERNAL_DIR + File.separator + "eventrix"
+            + File.separator + "scripts";
+
     public static final String ASTERIX_DIR = "asterix";
     public static final String EVENTS_DIR = "events";
 
     private static final Logger LOGGER = Logger.getLogger(ManagixDriver.class.getName());
     private static final String ENV_MANAGIX_HOME = "MANAGIX_HOME";
     private static final String MANAGIX_CONF_XML = "conf" + File.separator + "managix-conf.xml";
-    private static final String MANAGIX_EVENTS_XML = MANAGIX_INTERNAL_DIR + File.separator + EVENTS_DIR
-            + File.separator + "events.pkg" + File.separator + "events.xml";
 
     private static Configuration conf;
     private static String managixHome;
     private static String hyracksServerZip;
     private static String hyracksClientZip;
     private static String asterixZip;
+    private static Events events;
 
     public static String getHyrackServerZip() {
         return hyracksServerZip;
@@ -74,13 +76,6 @@ public class ManagixDriver {
         JAXBContext configCtx = JAXBContext.newInstance(Configuration.class);
         Unmarshaller unmarshaller = configCtx.createUnmarshaller();
         conf = (Configuration) unmarshaller.unmarshal(configFile);
-
-        File managixEventFile = new File(managixHome + File.separator + MANAGIX_EVENTS_XML);
-        JAXBContext eventCtx = JAXBContext.newInstance(Events.class);
-        unmarshaller = eventCtx.createUnmarshaller();
-        Events events = (Events) unmarshaller.unmarshal(managixEventFile);
-        EventDriver.setHomeDir(managixHome + File.separator + MANAGIX_INTERNAL_DIR + File.separator + EVENTS_DIR);
-        EventDriver.setEvents(events);
 
         hyracksServerZip = initBinary("hyracks-server");
         hyracksClientZip = initBinary("hyracks-cli");
@@ -123,6 +118,10 @@ public class ManagixDriver {
         return managixHome + File.separator + ASTERIX_DIR;
     }
 
+    public static Events getEvents() {
+        return events;
+    }
+
     public static void main(String args[]) {
         try {
             if (args.length != 0) {
@@ -136,6 +135,7 @@ public class ManagixDriver {
             LOGGER.log(Level.SEVERE, "Unknown command");
             printUsage();
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.log(Level.SEVERE, e.getMessage());
         }
     }

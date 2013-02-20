@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -41,143 +40,134 @@ import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 
 public class EventDriver {
 
-    public static final String CLIENT_NODE_ID = "client_node";
-    public static final Node CLIENT_NODE = new Node(CLIENT_NODE_ID, "127.0.0.1", null, null, null);
+	public static final String CLIENT_NODE_ID = "client_node";
+	public static final Node CLIENT_NODE = new Node(CLIENT_NODE_ID,
+			"127.0.0.1", null, null, null);
 
-    private static final Logger LOGGER = Logger.getLogger(EventDriver.class.getName());
+	private static String eventsDir;
+	private static Events events;
+	private static Map<String, String> env = new HashMap<String, String>();
+	private static String scriptDirSuffix;
 
-    private static String homeDir;
-    private static Events events;
-    private static Map<String, String> env = new HashMap<String, String>();
-    private static String scriptDirSuffix;
+	public static String getEventsDir() {
+		return eventsDir;
+	}
 
-    public static String getHomeDir() {
-        return homeDir;
-    }
+	public static Events getEvents() {
+		return events;
+	}
 
-    public static void setHomeDir(String homeDir) {
-        EventDriver.homeDir = homeDir;
-    }
+	public static Map<String, String> getEnvironment() {
+		return env;
+	}
 
-    public static Events getEvents() {
-        return events;
-    }
+	public static String getStringifiedEnv(Cluster cluster) {
+		StringBuffer buffer = new StringBuffer();
+		for (Property p : cluster.getEnv().getProperty()) {
+			buffer.append(p.getKey() + "=" + p.getValue() + " ");
+		}
+		return buffer.toString();
+	}
 
-    public static void setEvents(Events events) {
-        EventDriver.events = events;
-    }
+	public static Cluster initializeCluster(String path) throws JAXBException,
+			IOException {
+		File file = new File(path);
+		JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
+		Unmarshaller unmarshaller = ctx.createUnmarshaller();
+		Cluster cluster = (Cluster) unmarshaller.unmarshal(file);
+		for (Property p : cluster.getEnv().getProperty()) {
+			env.put(p.getKey(), p.getValue());
+		}
+		return cluster;
+	}
 
-    public static Map<String, String> getEnvironment() {
-        return env;
-    }
+	public static Patterns initializePatterns(String path)
+			throws JAXBException, IOException {
+		File file = new File(path);
+		JAXBContext ctx = JAXBContext.newInstance(Patterns.class);
+		Unmarshaller unmarshaller = ctx.createUnmarshaller();
+		return (Patterns) unmarshaller.unmarshal(file);
+	}
 
-    public static String getStringifiedEnv(Cluster cluster) {
-        StringBuffer buffer = new StringBuffer();
-        for (Property p : cluster.getEnv().getProperty()) {
-            buffer.append(p.getKey() + "=" + p.getValue() + " ");
-        }
-        return buffer.toString();
-    }
+	private static void initialize(EventConfig eventConfig) throws IOException,
+			JAXBException {
 
-    public static void initializeEvents(String path) throws IOException {
-        try {
-            File eventsFile = new File(path);
-            JAXBContext ctx = JAXBContext.newInstance(Events.class);
-            Unmarshaller unmarshaller = ctx.createUnmarshaller();
-            events = (Events) unmarshaller.unmarshal(eventsFile);
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        }
-    }
+	}
 
-    public static Cluster initializeCluster(String path) throws JAXBException, IOException {
-        File file = new File(path);
-        JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
-        Unmarshaller unmarshaller = ctx.createUnmarshaller();
-        Cluster cluster = (Cluster) unmarshaller.unmarshal(file);
-        for (Property p : cluster.getEnv().getProperty()) {
-            env.put(p.getKey(), p.getValue());
-        }
-        return cluster;
-    }
+	public static EventrixClient getClient(String eventsDir, Cluster cluster,
+			boolean dryRun) throws Exception {
+		return new EventrixClient(eventsDir, cluster, dryRun,
+				new DefaultOutputHandler());
+	}
 
-    public static Patterns initializePatterns(String path) throws JAXBException, IOException {
-        File file = new File(path);
-        JAXBContext ctx = JAXBContext.newInstance(Patterns.class);
-        Unmarshaller unmarshaller = ctx.createUnmarshaller();
-        return (Patterns) unmarshaller.unmarshal(file);
-    }
+	public static EventrixClient getClient(String eventsDir, Cluster cluster,
+			boolean dryRun, IOutputHandler outputHandler) throws Exception {
+		return new EventrixClient(eventsDir, cluster, dryRun, outputHandler);
+	}
 
-    private static void initialize(EventConfig eventConfig) throws IOException, JAXBException {
-        homeDir = System.getenv("EVENT_HOME");
-        if (homeDir == null) {
-            throw new IllegalStateException("EVENT_HOME is not set");
-        }
-        initializeEvents(homeDir + "/" + EventUtil.EVENTS_DIR + "/" + "events.xml");
-    }
+	public static void main(String[] args) throws Exception {
+		String eventsHome = System.getenv("EVENT_HOME");
+		if (eventsHome == null) {
+			throw new IllegalStateException("EVENT_HOME is not set");
+		}
+		eventsDir = eventsHome + File.separator + EventUtil.EVENTS_DIR;
+		EventConfig eventConfig = new EventConfig();
+		CmdLineParser parser = new CmdLineParser(eventConfig);
+		try {
+			parser.parseArgument(args);
+			if (eventConfig.help) {
+				parser.printUsage(System.out);
+			}
+			if (eventConfig.seed > 0) {
+				Randomizer.getInstance(eventConfig.seed);
+			}
+			Cluster cluster = initializeCluster(eventConfig.clusterPath);
+			Patterns patterns = initializePatterns(eventConfig.patternPath);
+			initialize(eventConfig);
 
-    public static EventrixClient getClient(Cluster cluster, boolean dryRun) throws Exception {
-        return new EventrixClient(cluster, dryRun, new DefaultOutputHandler());
-    }
+			if (!eventConfig.dryRun) {
+				prepare(cluster);
+			}
+			EventrixClient client = new EventrixClient(eventsDir, cluster,
+					eventConfig.dryRun, new DefaultOutputHandler());
+			client.submit(patterns);
+			if (!eventConfig.dryRun) {
+				cleanup(cluster);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			parser.printUsage(System.err);
+		}
+	}
 
-    public static EventrixClient getClient(Cluster cluster, boolean dryRun, IOutputHandler outputHandler)
-            throws Exception {
-        return new EventrixClient(cluster, dryRun, outputHandler);
-    }
+	private static void prepare(Cluster cluster) throws IOException,
+			InterruptedException {
 
-    public static void main(String[] args) throws Exception {
-        EventConfig eventConfig = new EventConfig();
-        CmdLineParser parser = new CmdLineParser(eventConfig);
-        try {
-            parser.parseArgument(args);
-            if (eventConfig.help) {
-                parser.printUsage(System.out);
-            }
-            if (eventConfig.seed > 0) {
-                Randomizer.getInstance(eventConfig.seed);
-            }
-            Cluster cluster = initializeCluster(eventConfig.clusterPath);
-            Patterns patterns = initializePatterns(eventConfig.patternPath);
+		scriptDirSuffix = "" + System.nanoTime();
+		List<String> args = new ArrayList<String>();
+		args.add(scriptDirSuffix);
+		Node clientNode = new Node();
+		clientNode.setId("client");
+		clientNode.setIp("127.0.0.1");
+		for (Node node : cluster.getNode()) {
+			args.add(node.getIp());
+		}
+		EventUtil.executeLocalScript(clientNode, eventsDir + "/" + "events"
+				+ "/" + "prepare.sh", args);
+	}
 
-            initialize(eventConfig);
-            if (!eventConfig.dryRun) {
-                prepare(cluster);
-            }
-            EventrixClient client = new EventrixClient(cluster, eventConfig.dryRun, new DefaultOutputHandler());
-            client.submit(patterns);
-            if (!eventConfig.dryRun) {
-                cleanup(cluster);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            parser.printUsage(System.err);
-        }
-    }
-
-    private static void prepare(Cluster cluster) throws IOException, InterruptedException {
-
-        scriptDirSuffix = "" + System.nanoTime();
-        List<String> args = new ArrayList<String>();
-        args.add(scriptDirSuffix);
-        Node clientNode = new Node();
-        clientNode.setId("client");
-        clientNode.setIp("127.0.0.1");
-        for (Node node : cluster.getNode()) {
-            args.add(node.getIp());
-        }
-        EventUtil.executeLocalScript(clientNode, homeDir + "/" + "events" + "/" + "prepare.sh", args);
-    }
-
-    private static void cleanup(Cluster cluster) throws IOException, InterruptedException {
-        List<String> args = new ArrayList<String>();
-        args.add(scriptDirSuffix);
-        Node clientNode = new Node();
-        clientNode.setId("client");
-        clientNode.setIp("127.0.0.1");
-        for (Node node : cluster.getNode()) {
-            args.add(node.getIp());
-        }
-        EventUtil.executeLocalScript(clientNode, homeDir + "/" + "events" + "/" + "cleanup.sh", args);
-    }
+	private static void cleanup(Cluster cluster) throws IOException,
+			InterruptedException {
+		List<String> args = new ArrayList<String>();
+		args.add(scriptDirSuffix);
+		Node clientNode = new Node();
+		clientNode.setId("client");
+		clientNode.setIp("127.0.0.1");
+		for (Node node : cluster.getNode()) {
+			args.add(node.getIp());
+		}
+		EventUtil.executeLocalScript(clientNode, eventsDir + "/" + "events"
+				+ "/" + "cleanup.sh", args);
+	}
 
 }

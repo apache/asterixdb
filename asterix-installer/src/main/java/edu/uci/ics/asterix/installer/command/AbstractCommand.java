@@ -23,6 +23,8 @@ public abstract class AbstractCommand implements ICommand {
     protected static final Logger LOGGER = Logger.getLogger(AbstractCommand.class.getName());
 
     protected CommandConfig config;
+    
+    protected String usageDescription;
 
     public void execute(String[] args) throws Exception {
         String[] cmdArgs = new String[args.length - 1];
@@ -34,6 +36,8 @@ public abstract class AbstractCommand implements ICommand {
     }
 
     abstract protected void execCommand() throws Exception;
+
+    abstract protected String getUsageDescription();
 
     abstract protected CommandConfig getCommandConfig();
 }

@@ -19,14 +19,12 @@ import java.util.List;
 
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.asterix.event.driver.EventDriver;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 import edu.uci.ics.asterix.installer.driver.ManagixUtil;
-import edu.uci.ics.asterix.installer.error.OutputHandler;
 import edu.uci.ics.asterix.installer.events.PatternCreator;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.BackupInfo;
 import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
+import edu.uci.ics.asterix.installer.model.BackupInfo;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class BackupCommand extends AbstractCommand {
@@ -38,7 +36,7 @@ public class BackupCommand extends AbstractCommand {
         List<BackupInfo> backupInfo = instance.getBackupInfo();
         PatternCreator pc = new PatternCreator();
         Patterns patterns = pc.getBackUpAsterixPattern(instance, ((BackupConfig) config).localPath);
-        EventDriver.getClient(instance.getCluster(), false, OutputHandler.INSTANCE).submit(patterns);
+        ManagixUtil.getEventrixClient(instance.getCluster()).submit(patterns);
         int backupId = backupInfo.size();
         BackupInfo binfo = new BackupInfo(backupId, new Date());
         backupInfo.add(binfo);
@@ -49,6 +47,12 @@ public class BackupCommand extends AbstractCommand {
     @Override
     protected CommandConfig getCommandConfig() {
         return new BackupConfig();
+    }
+
+    @Override
+    protected String getUsageDescription() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

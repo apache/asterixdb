@@ -40,9 +40,11 @@ import java.util.zip.ZipOutputStream;
 import org.apache.commons.io.IOUtils;
 
 import edu.uci.ics.asterix.event.driver.EventDriver;
+import edu.uci.ics.asterix.event.management.EventrixClient;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.installer.error.ManagixException;
+import edu.uci.ics.asterix.installer.error.OutputHandler;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
 import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
@@ -121,13 +123,12 @@ public class ManagixUtil {
             if (nodeDataStore.length() == 0) {
                 throw new IllegalStateException(" Store not defined for node " + node.getId());
             }
-            conf.append(asterixInstanceName + "_" + node.getId() + ".stores" + "=" + nodeDataStore
-                    + "\n");
+            conf.append(asterixInstanceName + "_" + node.getId() + ".stores" + "=" + nodeDataStore + "\n");
 
         }
         Properties asterixConfProp = asterixInstance.getConfiguration();
-        String outpuDir = asterixConfProp.getProperty("output_dir");
-        conf.append("OutputDir=" + outpuDir);
+        String outputDir = asterixConfProp.getProperty("output_dir");
+        conf.append("OutputDir=" + outputDir);
         File asterixConfDir = new File(ManagixDriver.getAsterixDir() + File.separator + asterixInstanceName);
         asterixConfDir.mkdirs();
         dumpToFile(ManagixDriver.getAsterixDir() + File.separator + asterixInstanceName + File.separator
@@ -295,6 +296,11 @@ public class ManagixUtil {
         StringWriter writer = new StringWriter();
         IOUtils.copy(bis, writer, "UTF-8");
         return writer.toString();
+    }
+
+    public static EventrixClient getEventrixClient(Cluster cluster) throws Exception {
+        return new EventrixClient(ManagixDriver.getManagixHome() + File.separator + ManagixDriver.MANAGIX_EVENT_DIR,
+                cluster, false, OutputHandler.INSTANCE);
     }
 
 }

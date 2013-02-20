@@ -18,10 +18,8 @@ import java.util.logging.Level;
 
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.asterix.event.driver.EventDriver;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 import edu.uci.ics.asterix.installer.driver.ManagixUtil;
-import edu.uci.ics.asterix.installer.error.OutputHandler;
 import edu.uci.ics.asterix.installer.events.PatternCreator;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
 import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
@@ -35,7 +33,7 @@ public class DeleteCommand extends AbstractCommand {
         AsterixInstance instance = ManagixUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
         PatternCreator pc = new PatternCreator();
         Patterns patterns = pc.createDeleteInstancePattern(instance);
-        EventDriver.getClient(instance.getCluster(), false, OutputHandler.INSTANCE).submit(patterns);
+        ManagixUtil.getEventrixClient(instance.getCluster()).submit(patterns);
         ServiceProvider.INSTANCE.getLookupService().removeAsterixInstance(asterixInstanceName);
         LOGGER.log(Level.INFO, " Asterix instance: " + asterixInstanceName + " deleted");
     }
@@ -43,6 +41,12 @@ public class DeleteCommand extends AbstractCommand {
     @Override
     protected CommandConfig getCommandConfig() {
         return new DeleteConfig();
+    }
+
+    @Override
+    protected String getUsageDescription() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

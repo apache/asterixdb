@@ -45,6 +45,12 @@ public class AlterCommand extends AbstractCommand {
         return new AlterConfig();
     }
 
+    @Override
+    protected String getUsageDescription() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }
 
 class AlterConfig implements CommandConfig {

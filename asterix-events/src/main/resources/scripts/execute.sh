@@ -1,16 +1,22 @@
-#!/bin/bash
-val=0
-line=""
-for x in $@
-do
- if [[ $val == 0 ]]
- then
-    line="$x="
-    val=1
- else
-    msg="$line$x"
-    echo $line >> envr
-    val=0
- fi
-done
-cat ./envr
+USERNAME=$1
+if [ $DAEMON == "false" ]; then 
+  if [ -z $USERNAME ]
+  then
+    cmd_output=$(ssh $IP_LOCATION "$ENV $SCRIPT $ARGS" 2>&1 >/dev/null) 
+    echo "ssh $IP_LOCATION $ENV $SCRIPT $ARGS" >> ./execute.log
+    echo "$cmd_output"
+  else
+    echo "ssh -l $USERNAME $IP_LOCATION $ENV $SCRIPT $ARGS" >> ./execute.log
+    cmd_output=$(ssh -l $USERNAME $IP_LOCATION "$ENV $SCRIPT $ARGS" 2>&1 >/dev/null) 
+    echo "$cmd_output"
+  fi  
+else 
+  if [ -z $USERNAME ];
+  then
+     echo "ssh $IP_LOCATION $ENV $SCRIPT $ARGS &" >> ./execute.log
+     ssh $IP_LOCATION "$ENV $SCRIPT $ARGS" &
+  else
+     echo "ssh -l $USERNAME $IP_LOCATION $ENV $SCRIPT $ARGS &" >> ./execute.log
+     ssh -l $USERNAME $IP_LOCATION "$ENV $SCRIPT $ARGS" &
+  fi   
+fi

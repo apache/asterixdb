@@ -22,8 +22,8 @@ import edu.uci.ics.asterix.installer.driver.ManagixUtil;
 import edu.uci.ics.asterix.installer.error.ManagixException;
 import edu.uci.ics.asterix.installer.error.VerificationUtil;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.AsterixRuntimeState;
 import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
+import edu.uci.ics.asterix.installer.model.AsterixRuntimeState;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class DescribeCommand extends AbstractCommand {
@@ -68,6 +68,12 @@ public class DescribeCommand extends AbstractCommand {
     @Override
     protected CommandConfig getCommandConfig() {
         return new DescribeConfig();
+    }
+
+    @Override
+    protected String getUsageDescription() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

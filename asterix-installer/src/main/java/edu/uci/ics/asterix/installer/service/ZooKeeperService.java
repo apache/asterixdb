@@ -49,13 +49,12 @@ public class ZooKeeperService implements ILookupService {
     private static final int ZOOKEEPER_SESSION_TIME_OUT = 40 * 1000; //milliseconds
     private static final String ZOOKEEPER_HOME = ManagixDriver.getManagixHome() + File.separator
             + ManagixDriver.MANAGIX_INTERNAL_DIR + File.separator + "zookeeper";
-    private static final String ZOO_KEEPER_CONFIG = ZOOKEEPER_HOME + File.separator + "zk.pkg" + File.separator
-            + "zk.cfg";
+    private static final String ZOO_KEEPER_CONFIG = ZOOKEEPER_HOME + File.separator + "zk.cfg";
 
     private boolean isRunning = false;
     private ZooKeeper zk;
     private String zkConnectionString;
-    private static final String ASTERIX_INSTANCE_BASE_PATH = "/asterix";
+    private static final String ASTERIX_INSTANCE_BASE_PATH = "/Asterix";
     private static final int DEFAULT_NODE_VERSION = -1;
     private LinkedBlockingQueue<String> msgQ = new LinkedBlockingQueue<String>();
     private ZooKeeperWatcher watcher = new ZooKeeperWatcher(msgQ);
@@ -94,7 +93,7 @@ public class ZooKeeperService implements ILookupService {
         LOGGER.info("Starting ZooKeeper at " + zkConnectionString);
         ZookeeperUtil.writeConfiguration(ZOO_KEEPER_CONFIG, conf, ZOOKEEPER_LEADER_CONN_PORT,
                 ZOOKEEPER_LEADER_ELEC_PORT);
-        String initScript = ZOOKEEPER_HOME + File.separator + "zk.init";
+        String initScript = ZOOKEEPER_HOME + File.separator + "bin" + File.separator + "zk.init";
         StringBuffer cmdBuffer = new StringBuffer();
         cmdBuffer.append(initScript + " ");
         cmdBuffer.append(conf.getZookeeper().getHomeDir() + " ");

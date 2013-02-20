@@ -23,14 +23,12 @@ import javax.xml.bind.Unmarshaller;
 
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.asterix.event.driver.EventDriver;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Env;
 import edu.uci.ics.asterix.event.schema.cluster.Property;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 import edu.uci.ics.asterix.installer.driver.ManagixDriver;
 import edu.uci.ics.asterix.installer.driver.ManagixUtil;
-import edu.uci.ics.asterix.installer.error.OutputHandler;
 import edu.uci.ics.asterix.installer.error.VerificationUtil;
 import edu.uci.ics.asterix.installer.events.PatternCreator;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
@@ -65,7 +63,7 @@ public class CreateCommand extends AbstractCommand {
 
         PatternCreator pc = new PatternCreator();
         Patterns patterns = pc.getStartAsterixPattern(asterixInstanceName, cluster);
-        EventDriver.getClient(cluster, false, OutputHandler.INSTANCE).submit(patterns);
+        ManagixUtil.getEventrixClient(cluster).submit(patterns);
 
         AsterixRuntimeState runtimeState = VerificationUtil.getAsterixRuntimeState(asterixInstance);
         VerificationUtil.updateInstanceWithRuntimeDescription(asterixInstance, runtimeState, true);
@@ -87,6 +85,12 @@ public class CreateCommand extends AbstractCommand {
 
     public String getAsterixInstanceName() {
         return asterixInstanceName;
+    }
+
+    @Override
+    protected String getUsageDescription() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
 

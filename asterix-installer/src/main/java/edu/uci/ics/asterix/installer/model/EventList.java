@@ -24,6 +24,8 @@ public class EventList {
         ASTERIX_DEPLOY,
         BACKUP,
         RESTORE,
-        FILE_TRANSFER
+        FILE_DELETE,
+        FILE_TRANSFER,
+        DIRECTORY_TRANSFER
     }
 }

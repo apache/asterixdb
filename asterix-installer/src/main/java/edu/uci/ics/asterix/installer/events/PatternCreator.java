@@ -21,7 +21,6 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.event.driver.EventDriver;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
-import edu.uci.ics.asterix.event.schema.cluster.MasterNode;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.event.schema.pattern.Delay;
 import edu.uci.ics.asterix.event.schema.pattern.Event;
@@ -69,12 +68,12 @@ public class PatternCreator {
             }
             Pattern createNC = createNCStartPattern(cluster.getMasterNode().getIp(), node.getId(), asterixInstanceName
                     + "_" + node.getId());
-            addInitialDelay(createNC, 3, "sec");
+            addInitialDelay(createNC, 4, "sec");
             ps.add(createNC);
         }
 
         Pattern asterixDeploy = createAsterixDeployPattern(asterixInstanceName, cluster);
-        addInitialDelay(asterixDeploy, 4, "sec");
+        addInitialDelay(asterixDeploy, 6, "sec");
         ps.add(asterixDeploy);
 
         Patterns patterns = new Patterns(ps);
@@ -151,17 +150,17 @@ public class PatternCreator {
         List<Pattern> patternList = new ArrayList<Pattern>();
         String workingDir = cluster.getWorkingDir().getDir();
         String hadoopVersion = ManagixDriver.getConfiguration().getBackup().getHdfs().getVersion();
-        File hadoopTar = new File(ManagixDriver.getManagixHome() + File.separator + ManagixDriver.MANAGIX_INTERNAL_DIR
-                + File.separator + "hadoop" + File.separator + "hadoop-" + hadoopVersion + ".tar");
-        if (!hadoopTar.exists()) {
+        File hadoopDir = new File(ManagixDriver.getManagixHome() + File.separator + ManagixDriver.MANAGIX_INTERNAL_DIR
+                + File.separator + "hadoop-" + hadoopVersion);
+        if (!hadoopDir.exists()) {
             throw new IllegalStateException("Hadoop version :" + hadoopVersion + " not supported");
         }
 
         Nodeid nodeid = new Nodeid(new Value(null, EventDriver.CLIENT_NODE.getId()));
         String username = cluster.getUsername() != null ? cluster.getUsername() : System.getProperty("user.name");
-        String pargs = username + " " + hadoopTar.getAbsolutePath() + " " + cluster.getMasterNode().getIp() + " "
-                + workingDir + " " + "unpack";
-        Event event = new Event("file_transfer", nodeid, pargs);
+        String pargs = username + " " + hadoopDir.getAbsolutePath() + " " + cluster.getMasterNode().getIp() + " "
+                + workingDir;
+        Event event = new Event("directory_transfer", nodeid, pargs);
         Pattern p = new Pattern(null, 1, null, event);
         addInitialDelay(p, 2, "sec");
         patternList.add(p);
@@ -170,9 +169,9 @@ public class PatternCreator {
         if (copyToNC) {
             for (Node node : cluster.getNode()) {
                 nodeid = new Nodeid(new Value(null, node.getId()));
-                pargs = cluster.getUsername() + " " + hadoopTar.getAbsolutePath() + " " + node.getIp() + " "
-                        + workingDir + " " + "unpack";
-                event = new Event("file_transfer", nodeid, pargs);
+                pargs = cluster.getUsername() + " " + hadoopDir.getAbsolutePath() + " " + node.getIp() + " "
+                        + workingDir;
+                event = new Event("directory_transfer", nodeid, pargs);
                 p = new Pattern(null, 1, null, event);
                 addInitialDelay(p, 2, "sec");
                 patternList.add(p);
@@ -212,19 +211,24 @@ public class PatternCreator {
     private Patterns createRemoveAsterixStoragePattern(AsterixInstance instance) throws Exception {
         List<Pattern> patternList = new ArrayList<Pattern>();
         Cluster cluster = instance.getCluster();
-        String clusterStore = cluster.getStore();
-        String nodeStore;
-        String pargs;
+        String pargs = null;
 
         for (Node node : cluster.getNode()) {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
-            nodeStore = node.getStore() == null ? clusterStore + File.separator + node.getId() : node.getStore();
-            String[] nodeStores = nodeStore.split(",");
-            for (String ns : nodeStores) {
-                pargs = ns + File.separator + node.getId() + instance.getName();
-                Event event = new Event("file_delete", nodeid, pargs);
-                patternList.add(new Pattern(null, 1, null, event));
+            String[] nodeStores;
+            if (node.getStore() != null) {
+                nodeStores = node.getStore().trim().split(",");
+                for (String ns : nodeStores) {
+                    pargs = ns + File.separator + instance.getName();
+                }
+            } else {
+                nodeStores = cluster.getStore().trim().split(",");
+                for (String ns : nodeStores) {
+                    pargs = ns + File.separator + node.getId() + File.separator + instance.getName();
+                }
             }
+            Event event = new Event("file_delete", nodeid, pargs);
+            patternList.add(new Pattern(null, 1, null, event));
         }
         Patterns patterns = new Patterns(patternList);
         return patterns;

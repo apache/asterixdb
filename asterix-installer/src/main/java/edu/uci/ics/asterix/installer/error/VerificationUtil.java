@@ -23,9 +23,9 @@ import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.installer.driver.ManagixDriver;
 import edu.uci.ics.asterix.installer.driver.ManagixUtil;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
+import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
 import edu.uci.ics.asterix.installer.model.AsterixRuntimeState;
 import edu.uci.ics.asterix.installer.model.ProcessInfo;
-import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
 
 public class VerificationUtil {
 

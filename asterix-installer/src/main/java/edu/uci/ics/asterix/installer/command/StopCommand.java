@@ -20,13 +20,11 @@ import java.util.List;
 
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.asterix.event.driver.EventDriver;
 import edu.uci.ics.asterix.event.management.EventrixClient;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.event.schema.pattern.Pattern;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 import edu.uci.ics.asterix.installer.driver.ManagixUtil;
-import edu.uci.ics.asterix.installer.error.OutputHandler;
 import edu.uci.ics.asterix.installer.events.PatternCreator;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
 import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
@@ -46,7 +44,7 @@ public class StopCommand extends AbstractCommand {
         for (Node node : asterixInstance.getCluster().getNode()) {
             patternsToExecute.add(pc.createNCStopPattern(node.getId(), asterixInstanceName + "_" + node.getId()));
         }
-        EventrixClient client = EventDriver.getClient(asterixInstance.getCluster(), false, OutputHandler.INSTANCE);
+        EventrixClient client = ManagixUtil.getEventrixClient(asterixInstance.getCluster());
         try {
             client.submit(new Patterns(patternsToExecute));
         } catch (Exception e) {
@@ -64,6 +62,12 @@ public class StopCommand extends AbstractCommand {
 
     public String getAsterixInstanceName() {
         return ((StopConfig) config).name;
+    }
+
+    @Override
+    protected String getUsageDescription() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

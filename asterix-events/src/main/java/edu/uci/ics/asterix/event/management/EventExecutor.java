@@ -39,16 +39,16 @@ public class EventExecutor {
     private static final String DAEMON = "DAEMON";
 
     public void executeEvent(Node node, String script, List<String> args, boolean isDaemon, Cluster cluster,
-            Pattern pattern, IOutputHandler outputHandler) throws IOException {
+            Pattern pattern, IOutputHandler outputHandler, EventrixClient client) throws IOException {
         List<String> pargs = new ArrayList<String>();
         pargs.add("/bin/bash");
-        pargs.add(EventDriver.getHomeDir() + File.separator + "events.pkg" + File.separator + EXECUTE_SCRIPT);
-        StringBuffer argBuffer = new StringBuffer();
+        pargs.add(client.getEventsDir() + File.separator + "scripts" + File.separator + EXECUTE_SCRIPT);
         StringBuffer envBuffer = new StringBuffer(IP_LOCATION + "=" + node.getIp());
         if (!node.getId().equals(EventDriver.CLIENT_NODE_ID)) {
             envBuffer.append(" " + EventDriver.getStringifiedEnv(cluster));
             pargs.add(cluster.getUsername() == null ? System.getProperty("user.name") : cluster.getUsername());
         }
+        StringBuffer argBuffer = new StringBuffer();
         if (args != null && args.size() > 0) {
             for (String arg : args) {
                 argBuffer.append(arg + " ");

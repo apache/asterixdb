@@ -18,16 +18,14 @@ import java.io.File;
 
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.asterix.event.driver.EventDriver;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 import edu.uci.ics.asterix.installer.driver.ManagixDriver;
 import edu.uci.ics.asterix.installer.driver.ManagixUtil;
-import edu.uci.ics.asterix.installer.error.OutputHandler;
 import edu.uci.ics.asterix.installer.error.VerificationUtil;
 import edu.uci.ics.asterix.installer.events.PatternCreator;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.AsterixRuntimeState;
 import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
+import edu.uci.ics.asterix.installer.model.AsterixRuntimeState;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class StartCommand extends AbstractCommand {
@@ -39,9 +37,9 @@ public class StartCommand extends AbstractCommand {
         ManagixUtil.createAsterixZip(instance, false);
         PatternCreator pc = new PatternCreator();
         Patterns patterns = pc.getStartAsterixPattern(asterixInstanceName, instance.getCluster());
-        EventDriver.getClient(instance.getCluster(), false, OutputHandler.INSTANCE).submit(patterns);
-        ManagixUtil.deleteDirectory(ManagixDriver.getManagixHome() + File.separator + ManagixDriver.ASTERIX_DIR
-                + File.separator + asterixInstanceName);
+        ManagixUtil.getEventrixClient(instance.getCluster()).submit(patterns);
+       // ManagixUtil.deleteDirectory(ManagixDriver.getManagixHome() + File.separator + ManagixDriver.ASTERIX_DIR
+         //       + File.separator + asterixInstanceName);
         AsterixRuntimeState runtimeState = VerificationUtil.getAsterixRuntimeState(instance);
         VerificationUtil.updateInstanceWithRuntimeDescription(instance, runtimeState, true);
         System.out.println(instance.getDescription(false));
@@ -51,6 +49,12 @@ public class StartCommand extends AbstractCommand {
     @Override
     protected CommandConfig getCommandConfig() {
         return new StartConfig();
+    }
+
+    @Override
+    protected String getUsageDescription() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }
