@@ -184,6 +184,7 @@ public class RecoveryManager implements IRecoveryManager {
                     break;
 
                 case LogType.COMMIT:
+                case LogType.ENTITY_COMMIT:
                     tempKeyTxnId.setTxnId(logRecordHelper.getJobId(currentLogLocator),
                             logRecordHelper.getDatasetId(currentLogLocator),
                             logRecordHelper.getPKHashValue(currentLogLocator));
@@ -218,6 +219,7 @@ public class RecoveryManager implements IRecoveryManager {
         IIndex index = null;
         LocalResource localResource = null;
         ILocalResourceMetadata localResourceMetadata = null;
+        List<Long> resourceIdList = new ArrayList<Long>();
 
         //#. get indexLifeCycleManager 
         IAsterixAppRuntimeContextProvider appRuntimeContext = txnSubsystem.getAsterixAppRuntimeContextProvider();
@@ -272,6 +274,8 @@ public class RecoveryManager implements IRecoveryManager {
                             index = localResourceMetadata.createIndexInstance(appRuntimeContext,
                                     localResource.getResourceName(), localResource.getPartition());
                             indexLifecycleManager.register(resourceId, index);
+                            indexLifecycleManager.open(resourceId);
+                            resourceIdList.add(resourceId);
                         }
 
                         /***************************************************/
@@ -300,12 +304,18 @@ public class RecoveryManager implements IRecoveryManager {
                     break;
 
                 case LogType.COMMIT:
+                case LogType.ENTITY_COMMIT:
                     //do nothing
                     break;
 
                 default:
                     throw new ACIDException("Unsupported LogType: " + logType);
             }
+        }
+        
+        //close all indexes
+        for (long r : resourceIdList) {
+            indexLifecycleManager.close(r);
         }
         
         JobIdFactory.initJobId(maxJobId);
@@ -539,6 +549,7 @@ public class RecoveryManager implements IRecoveryManager {
                     break;
 
                 case LogType.COMMIT:
+                case LogType.ENTITY_COMMIT:
                     undoLSNSet = loserTxnTable.get(tempKeyTxnId);
                     if (undoLSNSet != null) {
                         loserTxnTable.remove(tempKeyTxnId);

@@ -75,6 +75,7 @@ public class FileBasedBuffer extends Buffer implements IFileBasedBuffer {
         buffer.position(0);
         buffer.limit(size);
         fileChannel.write(buffer);
+        fileChannel.force(false);
         erase();
     }
 

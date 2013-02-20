@@ -567,7 +567,7 @@ public class LockManager implements ILockManager {
             if (commitFlag) {
                 if (txnContext.getTransactionType().equals(TransactionContext.TransactionType.READ_WRITE)) {
                     try {
-                        txnSubsystem.getLogManager().log(LogType.COMMIT, txnContext, datasetId.getId(),
+                        txnSubsystem.getLogManager().log(LogType.ENTITY_COMMIT, txnContext, datasetId.getId(),
                                 entityHashValue, -1, (byte) 0, 0, null, null, logicalLogLocator);
                     } catch (ACIDException e) {
                         try {

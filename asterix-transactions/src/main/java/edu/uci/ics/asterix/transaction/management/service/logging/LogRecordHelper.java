@@ -152,6 +152,9 @@ public class LogRecordHelper implements ILogRecordHelper {
             case LogType.UPDATE:
                 logTypeDisplay = "UPDATE";
                 break;
+            case LogType.ENTITY_COMMIT:
+                logTypeDisplay = "ENTITY_COMMIT";
+                break;
         }
         builder.append(" LSN : ").append(logicalLogLocator.getLsn());
         builder.append(" Log Type : ").append(logTypeDisplay);

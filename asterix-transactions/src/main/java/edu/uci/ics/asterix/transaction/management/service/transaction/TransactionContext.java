@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.opcallbacks.AbstractOperationCallback;
@@ -169,5 +170,14 @@ public class TransactionContext implements Serializable {
             closeable.close(this);
         }
     }
+    
+    @Override
+    public int hashCode() {
+        return jobId.getId();
+    }
 
+    @Override
+    public boolean equals(Object o) {
+        return (o == this);
+    }
 }

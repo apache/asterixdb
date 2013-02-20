@@ -95,9 +95,10 @@ public class ExecutionTest {
             File testFile = tcCtx.getTestFile(cUnit);
 
             /*************** to avoid run failure cases ****************
-            if (!testFile.getAbsolutePath().contains("index-selection/")) {
+            if (!testFile.getAbsolutePath().contains("query-issue205.aql")) {
                 continue;
             }
+            System.out.println(testFile.getAbsolutePath());
             ************************************************************/
             
             File expectedResultFile = tcCtx.getExpectedResultFile(cUnit);

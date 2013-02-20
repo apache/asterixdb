@@ -103,12 +103,14 @@ public class TransactionManager implements ITransactionManager {
             //for entity-level commit
             if (PKHashVal != -1) {
                 transactionProvider.getLockManager().unlock(datasetId, PKHashVal, txnContext, true);
+                /*****************************
                 try {
                     //decrease the transaction reference count on index
                     txnContext.decreaseActiveTransactionCountOnIndexes();
                 } catch (HyracksDataException e) {
                     throw new ACIDException("failed to complete index operation", e);
                 }
+                *****************************/
                 return;
             }
 
