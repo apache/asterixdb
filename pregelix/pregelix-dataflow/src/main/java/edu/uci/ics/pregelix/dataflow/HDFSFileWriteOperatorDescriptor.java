@@ -64,17 +64,20 @@ public class HDFSFileWriteOperatorDescriptor extends AbstractSingleActivityOpera
         return new AbstractUnaryInputSinkOperatorNodePushable() {
             private RecordDescriptor rd0;
             private FrameDeserializer frameDeserializer;
-            private Configuration conf = confFactory.createConfiguration();
+            private Configuration conf;
             private VertexWriter vertexWriter;
             private TaskAttemptContext context;
             private String TEMP_DIR = "_temporary";
+            private ClassLoader ctxCL;
 
             @Override
             public void open() throws HyracksDataException {
                 rd0 = inputRdFactory == null ? recordDescProvider.getInputRecordDescriptor(getActivityId(), 0)
                         : inputRdFactory.createRecordDescriptor();
                 frameDeserializer = new FrameDeserializer(ctx.getFrameSize(), rd0);
+                ctxCL = Thread.currentThread().getContextClassLoader();
                 Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+                conf = confFactory.createConfiguration();
 
                 VertexOutputFormat outputFormat = BspUtils.createVertexOutputFormat(conf);
                 TaskAttemptID tid = new TaskAttemptID("", 0, true, partition, 0);
@@ -107,7 +110,7 @@ public class HDFSFileWriteOperatorDescriptor extends AbstractSingleActivityOpera
 
             @Override
             public void fail() throws HyracksDataException {
-
+                Thread.currentThread().setContextClassLoader(ctxCL);
             }
 
             @Override
@@ -151,6 +154,8 @@ public class HDFSFileWriteOperatorDescriptor extends AbstractSingleActivityOpera
                     dfs.rename(srcFile, filePath);
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
+                } finally {
+                    Thread.currentThread().setContextClassLoader(ctxCL);
                 }
             }
 

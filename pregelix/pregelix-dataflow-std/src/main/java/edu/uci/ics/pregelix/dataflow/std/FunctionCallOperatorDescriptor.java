@@ -61,22 +61,21 @@ public class FunctionCallOperatorDescriptor extends AbstractSingleActivityOperat
             private FrameDeserializer frameDeserializer;
             private final IFrameWriter[] writers = new IFrameWriter[outputArity];
             private final IFunction function = functionFactory.createFunction();
+            private ClassLoader ctxCL = Thread.currentThread().getContextClassLoader();
 
             @Override
-            public void close() throws HyracksDataException {
-                if (postHookFactory != null)
-                    postHookFactory.createRuntimeHook().configure(ctx);
-                function.close();
+            public void open() throws HyracksDataException {
+                rd0 = inputRdFactory == null ? recordDescProvider.getInputRecordDescriptor(getActivityId(), 0)
+                        : inputRdFactory.createRecordDescriptor();
+                frameDeserializer = new FrameDeserializer(ctx.getFrameSize(), rd0);
+                ctxCL = Thread.currentThread().getContextClassLoader();
+                Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
                 for (IFrameWriter writer : writers) {
-                    writer.close();
+                    writer.open();
                 }
-            }
-
-            @Override
-            public void fail() throws HyracksDataException {
-                for (IFrameWriter writer : writers) {
-                    writer.fail();
-                }
+                if (preHookFactory != null)
+                    preHookFactory.createRuntimeHook().configure(ctx);
+                function.open(ctx, rd0, writers);
             }
 
             @Override
@@ -89,17 +88,21 @@ public class FunctionCallOperatorDescriptor extends AbstractSingleActivityOperat
             }
 
             @Override
-            public void open() throws HyracksDataException {
-                rd0 = inputRdFactory == null ? recordDescProvider.getInputRecordDescriptor(getActivityId(), 0)
-                        : inputRdFactory.createRecordDescriptor();
-                frameDeserializer = new FrameDeserializer(ctx.getFrameSize(), rd0);
-                Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+            public void close() throws HyracksDataException {
+                if (postHookFactory != null)
+                    postHookFactory.createRuntimeHook().configure(ctx);
+                function.close();
                 for (IFrameWriter writer : writers) {
-                    writer.open();
+                    writer.close();
                 }
-                if (preHookFactory != null)
-                    preHookFactory.createRuntimeHook().configure(ctx);
-                function.open(ctx, rd0, writers);
+                Thread.currentThread().setContextClassLoader(ctxCL);
+            }
+
+            @Override
+            public void fail() throws HyracksDataException {
+                for (IFrameWriter writer : writers) {
+                    writer.fail();
+                }
             }
 
             @Override

@@ -79,7 +79,7 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             private ByteBuffer bufferGlobalAggregate;
             private GlobalAggregator aggregator;
 
-            //for writing out the global aggregate
+            // for writing out the global aggregate
             private IFrameWriter writerTerminate;
             private FrameTupleAppender appenderTerminate;
             private ByteBuffer bufferTerminate;
@@ -107,11 +107,13 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             private final List<FrameTupleAppender> appenders = new ArrayList<FrameTupleAppender>();
             private final List<ArrayTupleBuilder> tbs = new ArrayList<ArrayTupleBuilder>();
             private Configuration conf;
+            private boolean dynamicStateLength;
 
             @Override
             public void open(IHyracksTaskContext ctx, RecordDescriptor rd, IFrameWriter... writers)
                     throws HyracksDataException {
                 this.conf = confFactory.createConfiguration();
+                this.dynamicStateLength = BspUtils.getDynamicVertexValueSize(conf);
                 this.aggregator = BspUtils.createGlobalAggregator(conf);
                 this.aggregator.init();
 
@@ -215,7 +217,8 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             private void writeOutGlobalAggregate() throws HyracksDataException {
                 try {
                     /**
-                     * get partial aggregate result and flush to the final aggregator
+                     * get partial aggregate result and flush to the final
+                     * aggregator
                      */
                     Writable agg = aggregator.finishPartial();
                     agg.write(tbGlobalAggregate.getDataOutput());
@@ -244,8 +247,8 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             public void update(ITupleReference tupleRef, ArrayTupleBuilder cloneUpdateTb) throws HyracksDataException {
                 try {
                     if (vertex != null && vertex.hasUpdate()) {
-                        if (!BspUtils.getDynamicVertexValueSize(conf)) {
-                            //in-place update
+                        if (!dynamicStateLength) {
+                            // in-place update
                             int fieldCount = tupleRef.getFieldCount();
                             for (int i = 1; i < fieldCount; i++) {
                                 byte[] data = tupleRef.getFieldData(i);
@@ -254,12 +257,12 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                                 vertex.write(output);
                             }
                         } else {
-                            //write the vertex id
+                            // write the vertex id
                             DataOutput tbOutput = cloneUpdateTb.getDataOutput();
                             vertex.getVertexId().write(tbOutput);
                             cloneUpdateTb.addFieldEndOffset();
 
-                            //write the vertex value
+                            // write the vertex value
                             vertex.write(tbOutput);
                             cloneUpdateTb.addFieldEndOffset();
                         }

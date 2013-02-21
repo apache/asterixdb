@@ -38,7 +38,6 @@ public class IntroduceGroupByCombinerRule extends AbstractIntroduceCombinerRule 
         if (context.checkIfInDontApplySet(this, op)) {
             return false;
         }
-        context.addToDontApplySet(this, op);
         if (op.getOperatorTag() != LogicalOperatorTag.GROUP) {
             return false;
         }
@@ -86,6 +85,7 @@ public class IntroduceGroupByCombinerRule extends AbstractIntroduceCombinerRule 
         opRef3.setValue(newGbyOp);
         typeGby(newGbyOp, context);
         typeGby(gbyOp, context);
+    	context.addToDontApplySet(this, op);
         return true;
     }
 

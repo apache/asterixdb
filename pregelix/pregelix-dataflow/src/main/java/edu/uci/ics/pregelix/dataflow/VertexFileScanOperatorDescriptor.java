@@ -25,8 +25,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
@@ -43,6 +41,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import edu.uci.ics.hyracks.hdfs.ContextFactory;
 import edu.uci.ics.hyracks.hdfs2.dataflow.FileSplitsFactory;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
@@ -83,12 +82,15 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
         final List<FileSplit> splits = splitsFactory.getSplits();
 
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
-            private Configuration conf = confFactory.createConfiguration();
+            private ClassLoader ctxCL;
+            private ContextFactory ctxFactory = new ContextFactory();
 
             @Override
             public void initialize() throws HyracksDataException {
+                ctxCL = Thread.currentThread().getContextClassLoader();
                 try {
                     Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+                    Configuration conf = confFactory.createConfiguration();
                     writer.open();
                     for (int i = 0; i < scheduledLocations.length; i++) {
                         if (scheduledLocations[i].equals(ctx.getJobletContext().getApplicationContext().getNodeId())) {
@@ -102,12 +104,14 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
                                     continue;
                                 }
                             }
-                            loadVertices(ctx, i);
+                            loadVertices(ctx, conf, i);
                         }
                     }
                     writer.close();
                 } catch (Exception e) {
                     throw new HyracksDataException(e);
+                } finally {
+                    Thread.currentThread().setContextClassLoader(ctxCL);
                 }
             }
 
@@ -122,8 +126,9 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
              * @throws InterruptedException
              */
             @SuppressWarnings("unchecked")
-            private void loadVertices(final IHyracksTaskContext ctx, int splitId) throws IOException,
-                    ClassNotFoundException, InterruptedException, InstantiationException, IllegalAccessException {
+            private void loadVertices(final IHyracksTaskContext ctx, Configuration conf, int splitId)
+                    throws IOException, ClassNotFoundException, InterruptedException, InstantiationException,
+                    IllegalAccessException {
                 ByteBuffer frame = ctx.allocateFrame();
                 FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
                 appender.reset(frame, true);
@@ -141,8 +146,7 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
                 /**
                  * set context
                  */
-                Context mapperContext = new Mapper().new Context(conf, new TaskAttemptID(), null, null, null, null,
-                        splits.get(splitId));
+                TaskAttemptContext mapperContext = ctxFactory.createContext(conf, splits.get(splitId));
                 Vertex.setContext(mapperContext);
 
                 /**

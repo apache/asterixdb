@@ -77,11 +77,11 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-core</artifactId>
-			<version>0.20.2</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
+                        <groupId>edu.uci.ics.hyracks</groupId>
+                        <artifactId>hyracks-hdfs-core</artifactId>
+                        <version>0.2.3-SNAPSHOT</version>
+                        <type>jar</type>
+                        <scope>compile</scope>
+                </dependency>
 	</dependencies>
 </project>

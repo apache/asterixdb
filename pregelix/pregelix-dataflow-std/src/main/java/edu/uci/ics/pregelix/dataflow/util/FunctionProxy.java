@@ -37,6 +37,7 @@ public class FunctionProxy {
     private final IFrameWriter[] writers;
     private TupleDeserializer tupleDe;
     private RecordDescriptor inputRd;
+    private ClassLoader ctxCL;
 
     public FunctionProxy(IHyracksTaskContext ctx, IUpdateFunctionFactory functionFactory,
             IRuntimeHookFactory preHookFactory, IRuntimeHookFactory postHookFactory,
@@ -57,6 +58,7 @@ public class FunctionProxy {
     public void functionOpen() throws HyracksDataException {
         inputRd = inputRdFactory.createRecordDescriptor();
         tupleDe = new TupleDeserializer(inputRd);
+        ctxCL = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
         for (IFrameWriter writer : writers) {
             writer.open();
@@ -124,5 +126,6 @@ public class FunctionProxy {
         for (IFrameWriter writer : writers) {
             writer.close();
         }
+        Thread.currentThread().setContextClassLoader(ctxCL);
     }
 }
