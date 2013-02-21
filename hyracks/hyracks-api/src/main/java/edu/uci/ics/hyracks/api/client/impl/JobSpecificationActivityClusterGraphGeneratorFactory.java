@@ -17,11 +17,13 @@ import edu.uci.ics.hyracks.api.job.JobActivityGraph;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.rewriter.ActivityClusterGraphRewriter;
 
 public class JobSpecificationActivityClusterGraphGeneratorFactory implements IActivityClusterGraphGeneratorFactory {
     private static final long serialVersionUID = 1L;
 
     private final JobSpecification spec;
+    private final ActivityClusterGraphRewriter rewriter = new ActivityClusterGraphRewriter();
 
     public JobSpecificationActivityClusterGraphGeneratorFactory(JobSpecification jobSpec) {
         this.spec = jobSpec;
@@ -78,6 +80,7 @@ public class JobSpecificationActivityClusterGraphGeneratorFactory implements IAc
         return new IActivityClusterGraphGenerator() {
             @Override
             public ActivityClusterGraph initialize() {
+                rewriter.rewrite(acg);
                 return acg;
             }
 
