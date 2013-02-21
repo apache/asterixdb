@@ -25,6 +25,7 @@ public class EventList {
         BACKUP,
         RESTORE,
         FILE_DELETE,
+        HDFS_DELETE,
         FILE_TRANSFER,
         DIRECTORY_TRANSFER
     }

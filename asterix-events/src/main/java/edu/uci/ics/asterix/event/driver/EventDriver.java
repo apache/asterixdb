@@ -42,7 +42,7 @@ public class EventDriver {
 
 	public static final String CLIENT_NODE_ID = "client_node";
 	public static final Node CLIENT_NODE = new Node(CLIENT_NODE_ID,
-			"127.0.0.1", null, null, null);
+			"127.0.0.1", null, null, null, null);
 
 	private static String eventsDir;
 	private static Events events;

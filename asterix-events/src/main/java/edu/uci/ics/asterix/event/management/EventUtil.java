@@ -81,18 +81,18 @@ public class EventUtil {
 		return val * vmult;
 
 	}
-	
-	 public static  Event getEvent(Pattern pattern, Events events) {
-			for (Event event : events.getEvent()) {
-				if (event.getType().equals(pattern.getEvent().getType())) {
-					return event;
-				}
+
+	public static Event getEvent(Pattern pattern, Events events) {
+		for (Event event : events.getEvent()) {
+			if (event.getType().equals(pattern.getEvent().getType())) {
+				return event;
 			}
-			throw new IllegalArgumentException(" Unknown event type"
-					+ pattern.getEvent().getType());
-     }
-	
-	 public static Node getEventLocation(Pattern pattern,
+		}
+		throw new IllegalArgumentException(" Unknown event type"
+				+ pattern.getEvent().getType());
+	}
+
+	public static Node getEventLocation(Pattern pattern,
 			List<Node> candidateLocations, Cluster cluster) {
 		ValueType value = new ValueType(pattern.getEvent().getNodeid()
 				.getValue());
@@ -180,8 +180,14 @@ public class EventUtil {
 		}
 
 		if (nodeid.equals(cluster.getMasterNode().getId())) {
+			String ram = cluster.getMasterNode().getRam() == null ? cluster
+					.getRam() : cluster.getMasterNode().getRam();
+			String logDir = cluster.getMasterNode().getLogdir() == null ? cluster
+					.getLogdir() : cluster.getMasterNode().getLogdir();
+			String javaHome = cluster.getMasterNode().getJavaHome() == null ? cluster
+					.getJavaHome() : cluster.getMasterNode().getJavaHome();
 			return new Node(cluster.getMasterNode().getId(), cluster
-					.getMasterNode().getIp(), null, null, null);
+					.getMasterNode().getIp(), ram, javaHome, logDir, null);
 		}
 
 		List<Node> nodeList = cluster.getNode();
