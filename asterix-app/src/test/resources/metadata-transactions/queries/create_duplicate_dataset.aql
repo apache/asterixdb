@@ -1,4 +1,4 @@
 use dataverse custord;
 
 create dataset Customers(CustomerType)
-  partitioned by key cid, name on group1;
+  primary key cid, name on group1;

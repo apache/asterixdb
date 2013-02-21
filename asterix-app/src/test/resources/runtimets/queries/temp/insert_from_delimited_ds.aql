@@ -1,0 +1,26 @@
+/*
+ * Test case name: date-insert.aql
+ * Description: verify insertion operation for date type
+ * Expected result: success
+ */
+ 
+drop dataverse testdvt if exists;
+create dataverse testdvt;
+use dataverse testdvt;
+
+create type testtype as closed {
+  id: string,
+  dateField: date,
+  timeField: time,
+  datetimeField: datetime,
+  durationField: duration
+}
+
+write output to nc1:"rttest/temp_insert_from_delimited_ds.adm";
+
+create external dataset testds(testtype)
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/temporal/temporalData.txt"),("format"="delimited-text"),("delimiter"="|"));
+
+for $r in dataset("testds") 
+return {"date": $r.dateField, "time": $r.timeField, "datetime": $r.datetimeField, "duration": $r.durationField }

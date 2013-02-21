@@ -25,7 +25,7 @@ create type test1.CustomerType as closed {
 };
 
 create dataset test1.Customers(CustomerType)
-partitioned by key cid;
+primary key cid;
 
 
 create type test2.OrderType as open {
@@ -39,7 +39,7 @@ create type test2.OrderType as open {
 }
 
 create dataset test2.Orders(OrderType)
-partitioned by key oid;
+primary key oid;
 
 
 load dataset test1.Customers
@@ -57,4 +57,4 @@ for $c in dataset('test1.Customers')
 for $o in dataset('test2.Orders')
 where $c.cid = $o.cid
 order by $c.name, $o.total
-return {"cust_name":$c.name, "cust_age": $c.age, "order_total":$o.total, "orderList":[$o.oid, $o.cid], "orderList":{{$o.oid, $o.cid}}}
+return {"cust_name":$c.name, "cust_age": $c.age, "order_total":$o.total, "orderList":[$o.oid, $o.cid]}

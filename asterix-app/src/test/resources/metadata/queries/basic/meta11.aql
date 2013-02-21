@@ -13,7 +13,7 @@ create type test.testtype as open {
 id : int32
 }
 
-create dataset test.dst01(testtype) partitioned by key id;
+create dataset test.dst01(testtype) primary key id;
 
 drop dataset test.dst01;
 

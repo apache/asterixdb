@@ -33,17 +33,17 @@ create type test1.Tweet as open {
   text: string
 }
 
-create dataset test1.t1(testtype) partitioned by key id;
+create dataset test1.t1(testtype) primary key id;
 
-create dataset test2.t2(testtype) partitioned by key id;
+create dataset test2.t2(testtype) primary key id;
 
-create dataset test2.t3(testtype) partitioned by key id;
+create dataset test2.t3(testtype) primary key id;
 
-create dataset test1.t2(testtype) partitioned by key id;
+create dataset test1.t2(testtype) primary key id;
 
-create dataset test1.t3(testtype) partitioned by key id;
+create dataset test1.t3(testtype) primary key id;
 
-create dataset test2.t4(testtype) partitioned by key id;
+create dataset test2.t4(testtype) primary key id;
 
 create external dataset test1.TwitterData(Tweet)
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

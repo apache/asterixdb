@@ -14,10 +14,10 @@ name: string
 }
 
 create dataset onektup(Schema) 
-partitioned by key id;
+primary key id;
 
 load dataset onektup 
-using "localfs"(("path"="nc1:///tmp/one.adm"));
+using localfs(("path"="nc1:///tmp/one.adm"));
 
 write output to nc1:"/tmp/foo.adm";
 

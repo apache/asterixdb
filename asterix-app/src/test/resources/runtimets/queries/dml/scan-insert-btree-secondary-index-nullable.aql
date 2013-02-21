@@ -24,8 +24,8 @@ create type CustomerType as closed {
   children: [ { name: string, age: int32? } ]
 }
 
-create dataset Customers(CustomerType) partitioned by key cid;
-create dataset CustomersMini(CustomerType) partitioned by key cid;
+create dataset Customers(CustomerType) primary key cid;
+create dataset CustomersMini(CustomerType) primary key cid;
 
 load dataset Customers 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

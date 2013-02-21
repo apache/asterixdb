@@ -2,6 +2,7 @@ package edu.uci.ics.asterix.formats.nontagged;
 
 import java.io.Serializable;
 
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ADateOrTimeAscBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ADateTimeAscBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AObjectDescBinaryComparatorFactory;
@@ -120,7 +121,9 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
                 return addOffset(RectangleBinaryComparatorFactory.INSTANCE, ascending);
             }
             case DATE:
-            case TIME:
+            case TIME: {
+                return addOffset(ADateOrTimeAscBinaryComparatorFactory.INSTANCE, ascending);
+            }
             case DATETIME: {
                 return addOffset(ADateTimeAscBinaryComparatorFactory.INSTANCE, ascending);
             }

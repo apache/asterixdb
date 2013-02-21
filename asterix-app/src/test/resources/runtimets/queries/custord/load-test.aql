@@ -21,9 +21,9 @@ create type CustomerType as open {
 }
 
 create dataset c1(CustomerType) 
-  partitioned by key cid;
+  primary key cid;
 create dataset c2(CustomerType) 
-  partitioned by key cid;  
+  primary key cid;  
   
 load dataset c1 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

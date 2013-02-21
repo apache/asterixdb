@@ -14,7 +14,7 @@ id : int32,
 name : string
 }
 
-create dataset testdv.t1(testtype) partitioned by key id;
+create dataset testdv.t1(testtype) primary key id;
 
 create index idx1 on testdv.t1(name);
 

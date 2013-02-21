@@ -25,9 +25,9 @@ create type CSXType as closed {
   misc: string
 }
 
-create dataset DBLP(DBLPType) partitioned by key id;
+create dataset DBLP(DBLPType) primary key id;
 
-create dataset CSX(CSXType) partitioned by key id;
+create dataset CSX(CSXType) primary key id;
 
 create index title_index on DBLP(title);
 

@@ -18,7 +18,7 @@ create type TestType as open {
     lname : string
 }
 
-create dataset testdst(TestType) partitioned by key id;
+create dataset testdst(TestType) primary key id;
 
 create index sec_Idx on testdst(fname,lname);
 

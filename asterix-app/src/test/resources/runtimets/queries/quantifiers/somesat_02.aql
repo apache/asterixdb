@@ -30,9 +30,9 @@ create type OrderType as open {
 }
 
 create dataset CustomerSomeSat02(CustomerType)
-  partitioned by key cid;
+  primary key cid;
 create dataset OrdersSomeSat02(OrderType)
-  partitioned by key oid;
+  primary key oid;
 
 load dataset CustomerSomeSat02 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 

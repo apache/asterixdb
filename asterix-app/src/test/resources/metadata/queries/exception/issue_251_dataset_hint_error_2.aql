@@ -1,0 +1,24 @@
+/*
+ * Description  : create a dataset providingi an invalid value for a hint and an unknown hint
+ * Expected Res : Failure
+ * Date         : 29 Jan 2013
+ * Issue        : 251
+ */
+
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type LineType as open {
+  id:int32,
+  text: string
+}
+
+create dataset Book(LineType)
+primary key id
+hints(cardinality="-20jh0",size=45);
+
+for $x in dataset('Metadata.Dataset')
+where $x.DataverseName='test'
+return $x

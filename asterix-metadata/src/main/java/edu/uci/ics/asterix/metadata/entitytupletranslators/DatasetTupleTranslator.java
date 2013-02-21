@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -27,10 +27,14 @@ import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.asterix.builders.IARecordBuilder;
+import edu.uci.ics.asterix.builders.RecordBuilder;
+import edu.uci.ics.asterix.builders.UnorderedListBuilder;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
+import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataRecordTypes;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
@@ -39,13 +43,18 @@ import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
+import edu.uci.ics.asterix.om.base.AMutableString;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.AOrderedList;
 import edu.uci.ics.asterix.om.base.ARecord;
 import edu.uci.ics.asterix.om.base.AString;
+import edu.uci.ics.asterix.om.base.AUnorderedList;
 import edu.uci.ics.asterix.om.base.IACursor;
+import edu.uci.ics.asterix.om.types.AUnorderedListType;
+import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 /**
@@ -117,11 +126,9 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 String value;
                 while (cursor.next()) {
                     ARecord field = (ARecord) cursor.get();
-                    key = ((AString) field
-                            .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_ARECORD_NAME_FIELD_INDEX))
+                    key = ((AString) field.getValueByPos(MetadataRecordTypes.DATASOURCE_PROPERTIES_NAME_FIELD_INDEX))
                             .getStringValue();
-                    value = ((AString) field
-                            .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_ARECORD_VALUE_FIELD_INDEX))
+                    value = ((AString) field.getValueByPos(MetadataRecordTypes.DATASOURCE_PROPERTIES_VALUE_FIELD_INDEX))
                             .getStringValue();
                     properties.put(key, value);
                 }
@@ -194,21 +201,20 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 String value;
                 while (cursor.next()) {
                     ARecord field = (ARecord) cursor.get();
-                    key = ((AString) field
-                            .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_ARECORD_NAME_FIELD_INDEX))
+                    key = ((AString) field.getValueByPos(MetadataRecordTypes.DATASOURCE_PROPERTIES_NAME_FIELD_INDEX))
                             .getStringValue();
-                    value = ((AString) field
-                            .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_ARECORD_VALUE_FIELD_INDEX))
+                    value = ((AString) field.getValueByPos(MetadataRecordTypes.DATASOURCE_PROPERTIES_VALUE_FIELD_INDEX))
                             .getStringValue();
                     properties.put(key, value);
                 }
                 datasetDetails = new ExternalDatasetDetails(adapter, properties);
         }
-        return new Dataset(dataverseName, datasetName, typeName, datasetDetails, datasetType);
+        Map<String, String> hints = getDatasetHints(datasetRecord);
+        return new Dataset(dataverseName, datasetName, typeName, datasetDetails, hints, datasetType);
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(Dataset dataset) throws IOException {
+    public ITupleReference getTupleFromMetadataEntity(Dataset dataset) throws IOException, MetadataException {
         // write the key in the first 2 fields of the tuple
         tupleBuilder.reset();
         aString.setValue(dataset.getDataverseName());
@@ -251,13 +257,33 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         writeDatasetDetailsRecordType(recordBuilder, dataset, fieldValue.getDataOutput());
 
         // write field 7
+        UnorderedListBuilder listBuilder = new UnorderedListBuilder();
+        listBuilder
+                .reset((AUnorderedListType) MetadataRecordTypes.DATASET_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.DATASET_ARECORD_HINTS_FIELD_INDEX]);
+        ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
+        for (Map.Entry<String, String> property : dataset.getHints().entrySet()) {
+            String name = property.getKey();
+            String value = property.getValue();
+            itemValue.reset();
+            writeDatasetHintRecord(name, value, itemValue.getDataOutput());
+            listBuilder.addItem(itemValue);
+        }
+        fieldValue.reset();
+        listBuilder.write(fieldValue.getDataOutput(), true);
+        recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_HINTS_FIELD_INDEX, fieldValue);
+
+        // write field 8
         fieldValue.reset();
         aString.setValue(Calendar.getInstance().getTime().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
 
         // write record
-        recordBuilder.write(tupleBuilder.getDataOutput(), true);
+        try {
+            recordBuilder.write(tupleBuilder.getDataOutput(), true);
+        } catch (AsterixException e) {
+            throw new MetadataException(e);
+        }
         tupleBuilder.addFieldEndOffset();
 
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
@@ -280,6 +306,51 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 break;
         }
 
+    }
+
+    private Map<String, String> getDatasetHints(ARecord datasetRecord) {
+        Map<String, String> hints = new HashMap<String, String>();
+        String key;
+        String value;
+        AUnorderedList list = (AUnorderedList) datasetRecord
+                .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_HINTS_FIELD_INDEX);
+        IACursor cursor = list.getCursor();
+        while (cursor.next()) {
+            ARecord field = (ARecord) cursor.get();
+            key = ((AString) field.getValueByPos(MetadataRecordTypes.DATASOURCE_PROPERTIES_NAME_FIELD_INDEX))
+                    .getStringValue();
+            value = ((AString) field.getValueByPos(MetadataRecordTypes.DATASOURCE_PROPERTIES_VALUE_FIELD_INDEX))
+                    .getStringValue();
+            hints.put(key, value);
+        }
+        return hints;
+    }
+
+    private void writeDatasetHintRecord(String name, String value, DataOutput out) throws HyracksDataException {
+        IARecordBuilder propertyRecordBuilder = new RecordBuilder();
+        ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
+        propertyRecordBuilder.reset(MetadataRecordTypes.DATASET_HINTS_RECORDTYPE);
+        AMutableString aString = new AMutableString("");
+        ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+                .getSerializerDeserializer(BuiltinType.ASTRING);
+
+        // write field 0
+        fieldValue.reset();
+        aString.setValue(name);
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        propertyRecordBuilder.addField(0, fieldValue);
+
+        // write field 1
+        fieldValue.reset();
+        aString.setValue(value);
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        propertyRecordBuilder.addField(1, fieldValue);
+
+        try {
+            propertyRecordBuilder.write(out, true);
+        } catch (IOException | AsterixException ioe) {
+            throw new HyracksDataException(ioe);
+        }
     }
 
 }

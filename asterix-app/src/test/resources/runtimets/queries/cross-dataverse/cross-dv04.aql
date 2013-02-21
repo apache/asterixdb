@@ -33,20 +33,20 @@ sex : string,
 dept : string
 }
 
-create dataset student.ugdstd(stdType) partitioned by key id;
-create dataset student.gdstd(stdType) partitioned by key id;
-create dataset teacher.prof(tchrType) partitioned by key id;
-create dataset teacher.pstdoc(tchrType) partitioned by key id;
+create dataset student.ugdstd(stdType) primary key id;
+create dataset student.gdstd(stdType) primary key id;
+create dataset teacher.prof(tchrType) primary key id;
+create dataset teacher.pstdoc(tchrType) primary key id;
 
 drop dataset student.ugdstd;
 drop dataset student.gdstd;
 drop dataset teacher.prof;
 drop dataset teacher.pstdoc;
 
-create dataset student.ugdstd(stdType) partitioned by key id;
-create dataset student.gdstd(stdType) partitioned by key id;
-create dataset teacher.prof(tchrType) partitioned by key id;
-create dataset teacher.pstdoc(tchrType) partitioned by key id;
+create dataset student.ugdstd(stdType) primary key id;
+create dataset student.gdstd(stdType) primary key id;
+create dataset teacher.prof(tchrType) primary key id;
+create dataset teacher.pstdoc(tchrType) primary key id;
 
 for $l in dataset('Metadata.Dataset')
 where $l.DataverseName='student' or $l.DataverseName='teacher'

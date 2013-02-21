@@ -1,6 +1,5 @@
 package edu.uci.ics.asterix.formats.nontagged;
 
-
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ABooleanPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ACirclePrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ADatePrinterFactory;
@@ -12,6 +11,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AInt16PrinterFactory
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AInt32PrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AInt64PrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AInt8PrinterFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AIntervalPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ALinePrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ANullPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ANullableFieldPrinterFactory;
@@ -49,8 +49,8 @@ public class AqlPrinterFactoryProvider implements IPrinterFactoryProvider {
 
         if (aqlType != null) {
             switch (aqlType.getTypeTag()) {
-                // case ANYTYPE:
-                // return AAnyTypePrinterFactory.INSTANCE;
+            // case ANYTYPE:
+            // return AAnyTypePrinterFactory.INSTANCE;
                 case INT8:
                     return AInt8PrinterFactory.INSTANCE;
                 case INT16:
@@ -75,6 +75,8 @@ public class AqlPrinterFactoryProvider implements IPrinterFactoryProvider {
                     return ADateTimePrinterFactory.INSTANCE;
                 case DURATION:
                     return ADurationPrinterFactory.INSTANCE;
+                case INTERVAL:
+                    return AIntervalPrinterFactory.INSTANCE;
                 case POINT:
                     return APointPrinterFactory.INSTANCE;
                 case POINT3D:

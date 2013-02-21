@@ -2,6 +2,7 @@ package edu.uci.ics.asterix.runtime.evaluators.comparisons;
 
 import java.io.DataOutput;
 
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ADateOrTimeAscBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ADateTimeAscBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
@@ -49,6 +50,8 @@ public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
     protected IBinaryComparator strBinaryComp = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
             .createBinaryComparator();
     protected IBinaryComparator dateTimeBinaryComp = ADateTimeAscBinaryComparatorFactory.INSTANCE
+            .createBinaryComparator();
+    protected IBinaryComparator dateOrTimeBinaryComp = ADateOrTimeAscBinaryComparatorFactory.INSTANCE
             .createBinaryComparator();
 
     public AbstractComparisonEvaluator(DataOutput out, ICopyEvaluatorFactory evalLeftFactory,
@@ -119,11 +122,31 @@ public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
             case DATETIME: {
                 return compareDateTimeWithArg(typeTag2);
             }
+            case DATE:
+            case TIME: {
+                return compareDateOrTimeWithArg(typeTag2);
+            }
             default: {
                 throw new AlgebricksException("Comparison is undefined between types " + typeTag1 + " and " + typeTag2
                         + " .");
             }
         }
+    }
+
+    private ComparisonResult compareDateOrTimeWithArg(ATypeTag typeTag2) throws AlgebricksException {
+        if (typeTag2 == ATypeTag.NULL) {
+            return ComparisonResult.GREATER_THAN;
+        } else if (typeTag2 == ATypeTag.DATETIME) {
+            int result = dateOrTimeBinaryComp.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1,
+                    outRight.getByteArray(), 1, outRight.getLength() - 1);
+            if (result == 0)
+                return ComparisonResult.EQUAL;
+            else if (result < 0)
+                return ComparisonResult.LESS_THAN;
+            else
+                return ComparisonResult.GREATER_THAN;
+        }
+        throw new AlgebricksException("Comparison is undefined between types ADateTime and " + typeTag2 + " .");
     }
 
     private ComparisonResult compareDateTimeWithArg(ATypeTag typeTag2) throws AlgebricksException {
@@ -153,8 +176,8 @@ public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
 
     private ComparisonResult compareStringWithArg(ATypeTag typeTag2) throws AlgebricksException {
         if (typeTag2 == ATypeTag.STRING) {
-            int result = strBinaryComp.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1, outRight.getByteArray(), 1,
-                    outRight.getLength() - 1);
+            int result = strBinaryComp.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1,
+                    outRight.getByteArray(), 1, outRight.getLength() - 1);
             if (result == 0)
                 return ComparisonResult.EQUAL;
             else if (result < 0)

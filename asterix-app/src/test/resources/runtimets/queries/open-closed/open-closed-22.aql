@@ -20,7 +20,7 @@ sex:string,
 dob:date?
 }
 
-create dataset employee(Emp) partitioned by key id;
+create dataset employee(Emp) primary key id;
 
 //date("YYYY-MM-DD")
 insert into dataset employee({"id":201,"name":"John Doe","age":37,"dept":"HR","sex":"M","dob":date("1975-11-02")});

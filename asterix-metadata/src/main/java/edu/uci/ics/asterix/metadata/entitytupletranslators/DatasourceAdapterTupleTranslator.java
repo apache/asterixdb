@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package edu.uci.ics.asterix.metadata.entitytupletranslators;
 
 import java.io.ByteArrayInputStream;
@@ -20,6 +21,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Calendar;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.external.dataset.adapter.AdapterIdentifier;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.MetadataException;
@@ -64,7 +66,8 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
 
     private DatasourceAdapter createAdapterFromARecord(ARecord adapterRecord) {
         String dataverseName = ((AString) adapterRecord
-                .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_DATAVERSENAME_FIELD_INDEX)).getStringValue();
+                .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_DATAVERSENAME_FIELD_INDEX))
+                .getStringValue();
         String adapterName = ((AString) adapterRecord
                 .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_NAME_FIELD_INDEX)).getStringValue();
         String classname = ((AString) adapterRecord
@@ -76,7 +79,7 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(DatasourceAdapter adapter) throws IOException {
+    public ITupleReference getTupleFromMetadataEntity(DatasourceAdapter adapter) throws IOException, MetadataException {
         // write the key in the first 2 fields of the tuple
         tupleBuilder.reset();
         aString.setValue(adapter.getAdapterIdentifier().getNamespace());
@@ -121,7 +124,11 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
         recordBuilder.addField(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
 
         // write record
-        recordBuilder.write(tupleBuilder.getDataOutput(), true);
+        try {
+            recordBuilder.write(tupleBuilder.getDataOutput(), true);
+        } catch (AsterixException e) {
+            throw new MetadataException(e);
+        }
         tupleBuilder.addFieldEndOffset();
 
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());

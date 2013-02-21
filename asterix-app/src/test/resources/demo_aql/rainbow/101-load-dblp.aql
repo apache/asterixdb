@@ -12,7 +12,7 @@ declare type DBLPType as open {
 declare nodegroup group1 on rainbow-01, rainbow-02, rainbow-03, rainbow-04, rainbow-05;
 
 declare dataset DBLP(DBLPType)
- partitioned by key id on group1;
+ primary key id on group1;
 
 load dataset DBLP from
   rainbow-01:"/home/onose/demo-data/dblp-id.txt" delimited by ":";

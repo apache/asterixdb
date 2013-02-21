@@ -431,6 +431,27 @@ public abstract class BuiltinType implements IAType {
         }
     };
 
+    public final static BuiltinType AINTERVAL = new LowerCaseConstructorType() {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public String getDisplayName() {
+            return "AInterval";
+        }
+
+        @Override
+        public ATypeTag getTypeTag() {
+            return ATypeTag.INTERVAL;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "interval";
+        }
+
+    };
+
     public final static BuiltinType APOINT = new LowerCaseConstructorType() {
 
         private static final long serialVersionUID = 1L;

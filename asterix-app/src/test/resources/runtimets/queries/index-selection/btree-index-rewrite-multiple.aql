@@ -22,7 +22,7 @@ create type OrderType as open {
   o_comment: string
 }
 
-create dataset Orders(OrderType) partitioned by key o_orderkey;
+create dataset Orders(OrderType) primary key o_orderkey;
 
 load dataset Orders 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

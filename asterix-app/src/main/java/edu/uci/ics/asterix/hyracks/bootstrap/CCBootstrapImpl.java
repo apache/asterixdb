@@ -14,11 +14,6 @@
  */
 package edu.uci.ics.asterix.hyracks.bootstrap;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,8 +21,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
-import edu.uci.ics.asterix.api.aqlj.server.APIClientThreadFactory;
-import edu.uci.ics.asterix.api.aqlj.server.ThreadedServer;
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
 import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
 import edu.uci.ics.asterix.api.http.servlet.DDLAPIServlet;
@@ -44,8 +37,8 @@ import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.application.ICCBootstrap;
 
 /**
- * The bootstrap class of the application that will manage its
- * life cycle at the Cluster Controller.
+ * The bootstrap class of the application that will manage its life cycle at the
+ * Cluster Controller.
  */
 public class CCBootstrapImpl implements ICCBootstrap {
     private static final Logger LOGGER = Logger.getLogger(CCBootstrapImpl.class.getName());
@@ -54,14 +47,10 @@ public class CCBootstrapImpl implements ICCBootstrap {
 
     private static final int DEFAULT_JSON_API_SERVER_PORT = 19101;
 
-    public static final int DEFAULT_API_SERVER_PORT = 14600;
-    private static final int DEFAULT_API_NODEDATA_SERVER_PORT = 14601;
-
     private Server webServer;
     private Server jsonAPIServer;
     private static IAsterixStateProxy proxy;
     private ICCApplicationContext appCtx;
-    private ThreadedServer apiServer;
 
     @Override
     public void start() throws Exception {
@@ -69,15 +58,12 @@ public class CCBootstrapImpl implements ICCBootstrap {
             LOGGER.info("Starting Asterix cluster controller");
         }
 
-        // Set the AsterixStateProxy to be the distributed object
         proxy = AsterixStateProxy.registerRemoteObject();
         proxy.setAsterixProperties(AsterixProperties.INSTANCE);
         appCtx.setDistributedState(proxy);
 
-        // Create the metadata manager
         MetadataManager.INSTANCE = new MetadataManager(proxy);
 
-        // Setup and start the web interface
         setupWebServer();
         webServer.start();
 
@@ -85,11 +71,6 @@ public class CCBootstrapImpl implements ICCBootstrap {
         setupJSONAPIServer();
         jsonAPIServer.start();
 
-        // Setup and start the API server
-        setupAPIServer();
-        apiServer.start();
-
-        //Initialize AsterixAppContext
         AsterixAppContextInfoImpl.initialize(appCtx);
     }
 
@@ -101,7 +82,6 @@ public class CCBootstrapImpl implements ICCBootstrap {
         AsterixStateProxy.unregisterRemoteObject();
 
         webServer.stop();
-        apiServer.shutdown();
     }
 
     @Override
@@ -139,32 +119,5 @@ public class CCBootstrapImpl implements ICCBootstrap {
         context.addServlet(new ServletHolder(new QueryResultAPIServlet()), "/query/result");
         context.addServlet(new ServletHolder(new UpdateAPIServlet()), "/update");
         context.addServlet(new ServletHolder(new DDLAPIServlet()), "/ddl");
-    }
-
-    private void setupAPIServer() throws Exception {
-        // set the APINodeDataServer ports
-        int startPort = DEFAULT_API_NODEDATA_SERVER_PORT;
-        Map<String, Set<String>> nodeNameMap = new HashMap<String, Set<String>>();
-        getIPAddressNodeMap(nodeNameMap);
-
-        for (Map.Entry<String, Set<String>> entry : nodeNameMap.entrySet()) {
-            Set<String> nodeNames = entry.getValue();
-            Iterator<String> it = nodeNames.iterator();
-            while (it.hasNext()) {
-                AsterixNodeState ns = new AsterixNodeState();
-                ns.setAPINodeDataServerPort(startPort++);
-                proxy.setAsterixNodeState(it.next(), ns);
-            }
-        }
-        apiServer = new ThreadedServer(DEFAULT_API_SERVER_PORT, new APIClientThreadFactory(appCtx));
-    }
-
-    private void getIPAddressNodeMap(Map<String, Set<String>> nodeNameMap) throws IOException {
-        nodeNameMap.clear();
-        try {
-            appCtx.getCCContext().getIPAddressNodeMap(nodeNameMap);
-        } catch (Exception e) {
-            throw new IOException("Unable to obtain IP address node map", e);
-        }
     }
 }

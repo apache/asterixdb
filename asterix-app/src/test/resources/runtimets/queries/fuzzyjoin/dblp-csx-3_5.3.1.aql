@@ -20,8 +20,8 @@ create type CSXType as open {
   misc: string
 }
 
-create dataset DBLP(DBLPType) partitioned by key id;
-create dataset CSX(CSXType) partitioned by key id;
+create dataset DBLP(DBLPType) primary key id;
+create dataset CSX(CSXType) primary key id;
 
 load dataset DBLP
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

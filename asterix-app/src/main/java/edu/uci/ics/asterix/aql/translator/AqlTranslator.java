@@ -280,7 +280,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
                 throw new AlgebricksException(e);
             }
-            // Following jobs are run under a separate transaction, that is committed/aborted by the JobEventListener
+            // Following jobs are run under a separate transaction, that is
+            // committed/aborted by the JobEventListener
             for (JobSpecification jobspec : jobsToExecute) {
                 JobId jobId = runJob(hcc, jobspec);
                 if (stmt.getKind() == Kind.QUERY) {
@@ -419,7 +420,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
         }
         MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), new Dataset(dataverseName,
-                datasetName, itemTypeName, datasetDetails, dsType));
+                datasetName, itemTypeName, datasetDetails, dd.getHints(), dsType));
         if (dd.getDatasetType() == DatasetType.INTERNAL || dd.getDatasetType() == DatasetType.FEED) {
             Dataverse dataverse = MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(),
                     dataverseName);
@@ -740,7 +741,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
         Pair<Query, Integer> reWrittenQuery = APIFramework.reWriteQuery(declaredFunctions, metadataProvider, query,
                 sessionConfig, out, pdf);
 
-        // Query Compilation (happens under the same ongoing metadata transaction)
+        // Query Compilation (happens under the same ongoing metadata
+        // transaction)
         if (metadataProvider.isWriteTransaction()) {
             metadataProvider.setJobTxnId(TransactionIDFactory.generateTransactionId());
         }
@@ -760,9 +762,9 @@ public class AqlTranslator extends AbstractAqlTranslator {
         CompiledBeginFeedStatement cbfs = new CompiledBeginFeedStatement(dataverseName,
                 bfs.getDatasetName().getValue(), bfs.getQuery(), bfs.getVarCounter());
 
-        Dataset dataset = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(), dataverseName, bfs
-                .getDatasetName().getValue());
-        if(dataset == null) {
+        Dataset dataset = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
+                bfs.getDatasetName().getValue());
+        if (dataset == null) {
             throw new AsterixException("Unknown dataset :" + bfs.getDatasetName().getValue());
         }
         IDatasetDetails datasetDetails = dataset.getDatasetDetails();

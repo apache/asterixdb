@@ -21,7 +21,7 @@ create type EmployeeType as closed {
 }
 
 create dataset Employees(EmployeeType)
-  partitioned by key id;
+  primary key id;
 
 insert into dataset Employees({"id":"1234", "stat":{ "age":50, "salary":120000}, "deptCode":32 });
 insert into dataset Employees({"id":"5678", "stat":{ "age":40, "salary":100000}, "deptCode":16 });

@@ -32,10 +32,10 @@ sex : string,
 dept : string
 }
 
-create dataset student.ugdstd(stdType) partitioned by key id;
-create dataset student.gdstd(stdType) partitioned by key id;
-create dataset teacher.prof(tchrType) partitioned by key id;
-create dataset teacher.pstdoc(tchrType) partitioned by key id;
+create dataset student.ugdstd(stdType) primary key id;
+create dataset student.gdstd(stdType) primary key id;
+create dataset teacher.prof(tchrType) primary key id;
+create dataset teacher.pstdoc(tchrType) primary key id;
 
 drop dataset student.ugdstd;
 drop dataset student.gdstd;

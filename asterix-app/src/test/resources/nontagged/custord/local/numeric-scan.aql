@@ -15,7 +15,7 @@ declare nodegroup group1 on nc1, nc2;
 set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
 declare dataset Numeric(ExampleType)
-  partitioned by key id on group1;
+  primary key id on group1;
   
 write output to nc1:"/home/yasser/Dropbox/Research/data/results/result_numeric_3.adm";
 

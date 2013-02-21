@@ -21,8 +21,8 @@ create type MyRecord as closed {
   circle: circle
 }
 
-create dataset MyData1(MyRecord) partitioned by key id;
-create dataset MyData2(MyRecord) partitioned by key id;
+create dataset MyData1(MyRecord) primary key id;
+create dataset MyData2(MyRecord) primary key id;
 
 load dataset MyData1
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

@@ -13,7 +13,7 @@ create type TestType as open {
   name : string
 }
 
-create dataset testds(TestType) partitioned by key id;
+create dataset testds(TestType) primary key id;
 
 insert into dataset testds({"id": 123, "name": "John Doe", "address": { "zip": 92617} });
 

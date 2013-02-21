@@ -17,6 +17,7 @@ import java.util.Stack;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import edu.uci.ics.asterix.aql.literal.FloatLiteral;
 import edu.uci.ics.asterix.aql.literal.DoubleLiteral;
 import edu.uci.ics.asterix.aql.literal.FalseLiteral;
@@ -623,7 +624,7 @@ LoadFromFileStatement LoadStatement() throws ParseException:
   Identifier dataverseName = null;
   Identifier datasetName = null;
   boolean alreadySorted = false;
-  String adapterClassname;
+  String adapterName;
   Map<String,String> properties;
   Pair<Identifier,Identifier> nameComponents = null;
 }
@@ -636,12 +637,11 @@ LoadFromFileStatement LoadStatement() throws ParseException:
    }
    
    "using"
-
-    <STRING_LITERAL>
+  
     {
-      adapterClassname = removeQuotesAndEscapes(token.image);
+    	adapterName = getAdapterName();
     }
-
+   
     {
       properties = getConfiguration();
     }
@@ -652,10 +652,30 @@ LoadFromFileStatement LoadStatement() throws ParseException:
         
   ";"
   {
-     return new LoadFromFileStatement(dataverseName, datasetName, adapterClassname, properties, alreadySorted);
+     return new LoadFromFileStatement(dataverseName, datasetName, adapterName, properties, alreadySorted);
   }   
 }
 
+
+String getAdapterName() throws ParseException :
+{
+	String adapterName = null;
+}
+{
+    ( 
+      <IDENTIFIER> {
+     	adapterName = (new Identifier(token.image)).getValue();; 
+      }
+      | 
+      <STRING_LITERAL>
+      {
+        adapterName = removeQuotesAndEscapes(token.image);
+      }
+    )
+    {
+	return adapterName;
+	}
+}
 
 
 DatasetDecl DatasetDeclaration(DatasetType datasetType) throws ParseException :
@@ -669,7 +689,8 @@ DatasetDecl DatasetDeclaration(DatasetType datasetType) throws ParseException :
   String nameComponentSecond = null;
   boolean ifNotExists = false;
   IDatasetDetailsDecl datasetDetails = null;
-  Pair<Identifier,Identifier> nameComponents = null;	
+  Pair<Identifier,Identifier> nameComponents = null;
+  Map<String,String> hints = new HashMap<String,String>();	
 }
 {
   {
@@ -701,41 +722,44 @@ DatasetDecl DatasetDeclaration(DatasetType datasetType) throws ParseException :
       else if(datasetType == DatasetType.FEED) {
       	datasetDetails = FeedDatasetDeclaration();
       }
-      dd = new DatasetDecl(dataverseName, datasetName, itemTypeName, datasetType, datasetDetails,ifNotExists);
-      
   }
+  
+  (
+  "hints"
   {
-    return dd;
+      initProperties(hints);
+  }
+  )?
+   ";"
+ 
+  {
+   dd = new DatasetDecl(dataverseName, datasetName, itemTypeName, hints, datasetType, datasetDetails,ifNotExists);
+   return dd;
   }
 }
 
 InternalDetailsDecl InternalDatasetDeclaration() throws ParseException :
 {
     InternalDetailsDecl idd = null;
-    List<String> partitioningExprs = new ArrayList<String>();
+    List<String> primaryKeyFields = new ArrayList<String>();
     Identifier nodeGroupName=null;
 }
 {
-  "partitioned" "by" "key"
-  < IDENTIFIER >
-  {
-         partitioningExprs.add(token.image); 
-  }
   (
-    "," < IDENTIFIER >
     {
-         partitioningExprs.add(token.image); 
+  	  primaryKeyFields = getPrimaryKeyFields();
     }
-  )*
+  )
+  
   (
   "on" < IDENTIFIER >
     {
         nodeGroupName = new Identifier(token.image);
     }
   )?
-  ";"
+  
   {
-    idd = new InternalDetailsDecl(nodeGroupName, partitioningExprs);
+    idd = new InternalDetailsDecl(nodeGroupName, primaryKeyFields);
     return idd;
   }
 }
@@ -743,7 +767,7 @@ InternalDetailsDecl InternalDatasetDeclaration() throws ParseException :
 ExternalDetailsDecl ExternalDatasetDeclaration() throws ParseException :
 {
   ExternalDetailsDecl edd = null;
-  String adapterClassname = null;
+  String adapterName = null;
   Map < String, String > properties;
 }
 {
@@ -752,10 +776,8 @@ ExternalDetailsDecl ExternalDatasetDeclaration() throws ParseException :
   }
  
     "using"
-    
-     <STRING_LITERAL>
     {
-      adapterClassname = removeQuotesAndEscapes(token.image);
+    	adapterName = getAdapterName();
     }
 
     {
@@ -764,10 +786,9 @@ ExternalDetailsDecl ExternalDatasetDeclaration() throws ParseException :
 
     {
     	  edd = new ExternalDetailsDecl();
-		  edd.setAdapter(adapterClassname);
+		  edd.setAdapter(adapterName);
    		  edd.setProperties(properties);
     } 
-  ";"
  
   {
     return edd;
@@ -777,10 +798,10 @@ ExternalDetailsDecl ExternalDatasetDeclaration() throws ParseException :
 FeedDetailsDecl FeedDatasetDeclaration() throws ParseException :
 {
     FeedDetailsDecl fdd = null;
-    String adapterFactoryClassname = null;
+    String adapterName = null;
     Map < String, String > properties;
 	Pair<Identifier,Identifier> nameComponents;
-	List<String> partitioningExprs = new ArrayList<String>();
+	List<String> primaryKeyFields = new ArrayList<String>();
     Identifier nodeGroupName=null;
     FunctionSignature appliedFunction=null;
 	String dataverse;
@@ -789,10 +810,8 @@ FeedDetailsDecl FeedDatasetDeclaration() throws ParseException :
 }
 {
    "using"
-   
-    <STRING_LITERAL>
     {
-      adapterFactoryClassname = removeQuotesAndEscapes(token.image);
+    	adapterName = getAdapterName();
     }
 
     {
@@ -816,29 +835,51 @@ FeedDetailsDecl FeedDatasetDeclaration() throws ParseException :
   }   
   )?
   
-  "partitioned" "by" "key"
-  < IDENTIFIER >
-  {
-    	 partitioningExprs.add(token.image);
-  }
   (
-    "," < IDENTIFIER >
     {
-    	 partitioningExprs.add(token.image);
+  	  primaryKeyFields  = getPrimaryKeyFields();
     }
-  )*
+  )
+  
   (
   "on" < IDENTIFIER >
   {
     	nodeGroupName = new Identifier(token.image);
   }
   )?
-  ";"
+  
   {
-    fdd = new FeedDetailsDecl(adapterFactoryClassname, properties, appliedFunction, nodeGroupName, partitioningExprs);
+    fdd = new FeedDetailsDecl(adapterName, properties, appliedFunction, nodeGroupName, primaryKeyFields);
     return fdd;
   }
 }
+
+List<String> getPrimaryKeyFields()  throws ParseException :
+{
+	List<String> primaryKeyFields = new ArrayList<String>();
+}
+{
+
+  "primary" "key"
+  < IDENTIFIER >
+  {
+    	 primaryKeyFields.add(token.image);
+  }
+  (
+    "," < IDENTIFIER >
+    {
+    	 primaryKeyFields.add(token.image);
+    }
+  )*
+  {
+   	return primaryKeyFields;
+  }
+  
+}
+
+
+
+
 
 ControlFeedStatement ControlFeedDeclaration(ControlFeedStatement.OperationType operationType) throws ParseException :
 {
@@ -874,7 +915,7 @@ ControlFeedStatement AlterFeedDeclaration() throws ParseException :
 
 Map<String,String> getConfiguration()  throws ParseException :
 {
-	Map<String,String> configuration = new HashMap<String,String>();
+	Map<String,String> configuration = new LinkedHashMap<String,String>();
 	String key;
 	String value;
 }
@@ -922,6 +963,75 @@ Map<String,String> getConfiguration()  throws ParseException :
      	return configuration;
      }
 }
+
+void initProperties(Map<String,String> properties)  throws ParseException :
+{
+	String key;
+	String value;
+}
+{
+    (
+      <LEFTPAREN>
+        (
+          <IDENTIFIER>
+          {
+            key = (new Identifier(token.image)).getValue();
+          }
+          "=" 
+          (
+            (<STRING_LITERAL>
+             {
+              value = removeQuotesAndEscapes(token.image);
+             }
+            ) |
+            (<INTEGER_LITERAL>
+             {
+             try{
+              value = "" + Long.valueOf(token.image);
+              } catch (NumberFormatException nfe){
+                  throw new ParseException("inapproriate value: " + token.image); 
+              }
+             } 
+            )
+          )
+        {
+          properties.put(key.toUpperCase(), value);
+        }
+       ( 
+        "," 
+        (
+          <IDENTIFIER>
+          {
+            key = (new Identifier(token.image)).getValue();
+          }
+          "=" 
+          (
+           (<STRING_LITERAL>
+            {
+              value = removeQuotesAndEscapes(token.image);
+            }
+           ) |
+           (<INTEGER_LITERAL>
+            {
+              try{
+                value = "" + Long.valueOf(token.image);
+              } catch (NumberFormatException nfe){
+              	throw new ParseException("inapproriate value: " + token.image); 
+              }
+            } 
+           )
+          ) 
+        )
+        {
+          properties.put(key.toUpperCase(), value);
+        }
+        
+       )*
+      )
+       <RIGHTPAREN>
+    )?
+}
+
 
 
 NodegroupDecl NodegroupDeclaration() throws ParseException :

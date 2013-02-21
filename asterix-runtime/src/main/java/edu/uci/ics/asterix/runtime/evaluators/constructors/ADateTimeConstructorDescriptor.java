@@ -21,7 +21,8 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADateTime;
 import edu.uci.ics.asterix.om.base.AMutableDateTime;
 import edu.uci.ics.asterix.om.base.ANull;
-import edu.uci.ics.asterix.om.base.temporal.ADateAndTimeParser;
+import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
+import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
@@ -71,7 +72,6 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
-
                     private ByteArrayCharSequenceAccessor charAccessor = new ByteArrayCharSequenceAccessor();
 
                     @Override
@@ -82,7 +82,10 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
-                                charAccessor.reset(serString, 3, 0);
+
+                                int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
+
+                                charAccessor.reset(serString, 3, stringLength);
 
                                 // +1 if it is negative (-)
                                 short timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
@@ -96,11 +99,11 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                                 timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11)
                                         : (short) (9);
 
-                                long chrononTimeInMs = ADateAndTimeParser.parseDatePart(charAccessor, false);
+                                long chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor, false);
 
-                                charAccessor.reset(serString, 3, timeOffset);
+                                charAccessor.reset(serString, 3 + timeOffset, stringLength - timeOffset);
 
-                                chrononTimeInMs += ADateAndTimeParser.parseTimePart(charAccessor);
+                                chrononTimeInMs += ATimeParserFactory.parseTimePart(charAccessor);
 
                                 aDateTime.setValue(chrononTimeInMs);
                                 datetimeSerde.serialize(aDateTime, out);

@@ -16,7 +16,7 @@ id:int32,
 cpt:[int32]
 }
 
-create dataset testds(TestType) partitioned by key id;
+create dataset testds(TestType) primary key id;
 
 // insert codepoint data into internal dataset testds here into the cpt attribute
 

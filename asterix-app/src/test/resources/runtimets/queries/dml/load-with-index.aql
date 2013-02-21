@@ -22,7 +22,7 @@ create type LineItemType as closed {
 }
 
 create dataset LineItem(LineItemType)
-  partitioned by key l_orderkey, l_linenumber;
+  primary key l_orderkey, l_linenumber;
 
 create index idx_partkey on LineItem(l_partkey);
 

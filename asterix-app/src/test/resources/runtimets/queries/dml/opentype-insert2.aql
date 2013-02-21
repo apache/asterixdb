@@ -13,7 +13,7 @@ create type TestType as open {
 	id:int32
 }
 
-create dataset testds(TestType) partitioned by key id;
+create dataset testds(TestType) primary key id;
 
 insert into dataset testds( for $i in range(1,10) return { "id":$i,"name":"John Doe" });
 

@@ -1,0 +1,56 @@
+/*
+ * Description      :   Check temporal functions for interval
+ * Expected Result  :   Success
+ * Date             :   2nd Nov, 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/temp_interval_functions.adm";
+
+let $itv1 := interval-from-date("2010-10-30", "2010-12-21")
+let $itv2 := interval-from-date("2011-10-30", "2012-10-21")
+let $itv3 := interval-from-date("2010-06-30", "2013-01-01")
+let $blnBefore1 := interval-before($itv1, $itv2)
+let $blnAfter1 := interval-after($itv2, $itv1)
+let $blnBefore2 := interval-before($itv1, $itv3)
+let $blnAfter2 := interval-after($itv3, $itv1)
+
+let $itv4 := interval-from-datetime("2012-06-26T01:01:01.111", "2012-07-27T02:02:02.222")
+let $itv5 := interval-from-datetime("20120727T020202222", "2013-08-08T03:03:03.333")
+let $itv6 := interval-from-datetime("19000707T020202222", "2013-08-07T03:03:03.333")
+let $blnMeet1 := interval-meets($itv4, $itv5)
+let $blnMetBy1 := interval-met-by($itv5, $itv4)
+let $blnMeet2 := interval-meets($itv6, $itv4)
+let $blnMetBy2 := interval-met-by($itv6, $itv4)
+
+let $itv7 := interval-from-time("12:32:38", "20:29:20")
+let $itv8 := interval-from-time("17:48:19", "22:19:49")
+let $itv9 := interval-from-time("01:32:49", "12:33:00")
+let $blnOverlaps1 := interval-overlaps($itv7, $itv8)
+let $blnOverlapped1 := interval-overlapped-by($itv8, $itv7)
+let $blnOverlaps2 := interval-overlaps($itv8, $itv7)
+let $blnOverlapped2 := interval-overlapped-by($itv7, $itv8)
+let $blnOverlap1 := overlap($itv9, $itv7)
+let $blnOverlap2 := overlap($itv9, $itv8)
+
+let $itv10 := interval-from-date("2010-10-30", "2010-11-30")
+let $blnStarts1 := interval-starts($itv10, $itv1)
+let $blnStarts2 := interval-starts($itv10, $itv2)
+let $blnStartedBy1 := interval-started-by($itv1, $itv10)
+let $blnStartedBy2 := interval-started-by($itv10, $itv2)
+
+let $blnCovers1 := interval-covers($itv6, $itv4)
+let $blnCovers2 := interval-covers($itv6, $itv5)
+let $blnCoveredBy1 := interval-covered-by($itv4, $itv6)
+let $blnCoveredBy2 := interval-covered-by($itv5, $itv6)
+
+let $itv11 := interval-from-time("19:00:00.009", "20:29:20.000")
+let $blnEnds1 := interval-ends($itv11, $itv7)
+let $blnEnds2 := interval-ends($itv11, $itv8)
+let $blnEndedBy1 := interval-ended-by($itv7, $itv11)
+let $blnEndedBy2 := interval-ended-by($itv8, $itv11)
+
+return { "before1" : $blnBefore1, "before2" : $blnBefore2, "after1" : $blnAfter1, "after2" : $blnAfter2, "meet1" : $blnMeet1, "meet2" : $blnMeet2, "metby1" : $blnMetBy1, "metby2" : $blnMetBy2, "overlaps1" : $blnOverlaps1, "overlaps2" : $blnOverlaps2, "overlapped1" : $blnOverlapped1, "overlapped2" : $blnOverlapped2, "overlap1" : $blnOverlap1, "overlap2" : $blnOverlap2, "starts1" : $blnStarts1, "starts2" : $blnStarts2, "startedby1" : $blnStartedBy1, "startedby2" : $blnStartedBy2, "covers1" : $blnCovers1, "covers2" : $blnCovers2, "coveredby1" : $blnCoveredBy1, "coveredby2" : $blnCoveredBy2, "ends1" : $blnEnds1, "ends2" : $blnEnds2, "endedby1" : $blnEndedBy1, "endedby2" : $blnEndedBy2 }

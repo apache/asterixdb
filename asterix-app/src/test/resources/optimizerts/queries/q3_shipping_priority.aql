@@ -49,11 +49,11 @@ create type CustomerType as closed {
 create nodegroup group1 if not exists on nc1, nc2;
 
 create dataset LineItems(LineItemType)
-  partitioned by key l_orderkey, l_linenumber on group1;
+  primary key l_orderkey, l_linenumber on group1;
 create dataset Orders(OrderType)
-  partitioned by key o_orderkey on group1;
+  primary key o_orderkey on group1;
 create dataset Customers(CustomerType) 
-  partitioned by key c_custkey on group1;
+  primary key c_custkey on group1;
 
 write output to nc1:"/tmp/q3_shipping_priority.adm";
 

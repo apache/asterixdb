@@ -12,7 +12,7 @@ create type MyRecord as closed {
 }
 
 create dataset MyData(MyRecord)
-  partitioned by key id;
+  primary key id;
 
 load dataset MyData 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

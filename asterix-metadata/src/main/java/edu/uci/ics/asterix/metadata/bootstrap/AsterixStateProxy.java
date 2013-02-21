@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.metadata.bootstrap;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.HashMap;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
@@ -33,7 +32,6 @@ public class AsterixStateProxy implements IAsterixStateProxy {
     private IMetadataNode metadataNode;
     private AsterixProperties asterixProperties;
     private static final IAsterixStateProxy cc = new AsterixStateProxy();
-    private final HashMap<String, Object> nodeStateMap = new HashMap<String, Object>();
 
     public static IAsterixStateProxy registerRemoteObject() throws RemoteException {
         IAsterixStateProxy stub = (IAsterixStateProxy) UnicastRemoteObject.exportObject(cc, 0);
@@ -64,15 +62,5 @@ public class AsterixStateProxy implements IAsterixStateProxy {
     @Override
     public AsterixProperties getAsterixProperties() throws RemoteException {
         return this.asterixProperties;
-    }
-
-    @Override
-    synchronized public Object getAsterixNodeState(String nodeName) throws RemoteException {
-        return nodeStateMap.get(nodeName);
-    }
-
-    @Override
-    synchronized public void setAsterixNodeState(String nodeName, Object ns) throws RemoteException {
-        nodeStateMap.put(nodeName, ns);
     }
 }

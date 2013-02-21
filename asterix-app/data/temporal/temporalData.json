@@ -1,0 +1,3 @@
+{"id": "001", "dateField": date("-2012-12-12"), "dateFieldPlus": date("0990-01-01"), "timeField": time("23:49:12.39Z"), "timeFieldPlus": time("03:23:12.2"), "datetimeField": datetime("2012-12-12T00:00:00.001"), "datetimeFieldPlus": datetime("-00130810T221015398"), "durationField": duration("P20Y19DT3H74M23.34S"), "durationFieldPlus": duration("-P2MT4M300.68S"), "intervalField": dtinterval("2012-12-12T00:00:00.001,20130810T221015398") }
+{"id": "002", "datetimeField": datetime("19201220T232918478") }
+{"id": "003", "intervalPlus": tinterval("19:23:32.328Z,23:20:20") }

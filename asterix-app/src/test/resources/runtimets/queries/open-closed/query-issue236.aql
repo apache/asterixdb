@@ -31,7 +31,7 @@ message-text: string
 }
 
 create dataset TweetMessages(TweetMessageType)
-partitioned by key tweetid;
+primary key tweetid;
 
 
 insert into dataset TweetMessages(

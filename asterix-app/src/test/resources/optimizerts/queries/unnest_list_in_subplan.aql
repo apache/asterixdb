@@ -17,8 +17,8 @@ create type TOKENSRANKEDADMType as closed {
 
 create nodegroup group1 if not exists on nc1, nc2;
 
-create dataset DBLP(DBLPType) partitioned by key id on group1;
-create dataset TOKENSRANKEDADM(TOKENSRANKEDADMType) partitioned by key rank on group1;
+create dataset DBLP(DBLPType) primary key id on group1;
+create dataset TOKENSRANKEDADM(TOKENSRANKEDADMType) primary key rank on group1;
 
 write output to nc1:'rttest/unnest_list_in_subplan.adm';
 
