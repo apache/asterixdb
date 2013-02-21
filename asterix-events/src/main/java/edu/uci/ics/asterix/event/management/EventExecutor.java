@@ -70,7 +70,7 @@ public class EventExecutor {
             String result = writer.getBuffer().toString();
             OutputAnalysis analysis = outputHandler.reportEventOutput(pattern.getEvent(), result);
             if (!analysis.isExpected()) {
-                throw new IOException(analysis.getErrorMessage());
+                throw new IOException(analysis.getErrorMessage() + result);
             }
         }
     }

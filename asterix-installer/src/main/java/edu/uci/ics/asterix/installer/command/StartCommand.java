@@ -38,8 +38,8 @@ public class StartCommand extends AbstractCommand {
         PatternCreator pc = new PatternCreator();
         Patterns patterns = pc.getStartAsterixPattern(asterixInstanceName, instance.getCluster());
         ManagixUtil.getEventrixClient(instance.getCluster()).submit(patterns);
-       // ManagixUtil.deleteDirectory(ManagixDriver.getManagixHome() + File.separator + ManagixDriver.ASTERIX_DIR
-         //       + File.separator + asterixInstanceName);
+        ManagixUtil.deleteDirectory(ManagixDriver.getManagixHome() + File.separator + ManagixDriver.ASTERIX_DIR
+                + File.separator + asterixInstanceName);
         AsterixRuntimeState runtimeState = VerificationUtil.getAsterixRuntimeState(instance);
         VerificationUtil.updateInstanceWithRuntimeDescription(instance, runtimeState, true);
         System.out.println(instance.getDescription(false));
