@@ -217,7 +217,7 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
 
     @Override
     public String getDisplayName() {
-        return "Meta Activity";
+        return "Super Activity " + parent.getActivityMap().values().toString();
     }
 
 }

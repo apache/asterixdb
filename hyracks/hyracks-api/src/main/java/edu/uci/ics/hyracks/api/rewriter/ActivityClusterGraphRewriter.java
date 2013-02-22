@@ -39,6 +39,7 @@ import edu.uci.ics.hyracks.api.rewriter.runtime.SuperActivity;
 
 public class ActivityClusterGraphRewriter implements Serializable {
     private static final long serialVersionUID = 1L;
+    private static String ONE_TO_ONE_CONNECTOR = "OneToOneConnectorDescriptor";
 
     public void rewrite(ActivityClusterGraph acg) {
         acg.getActivityMap().clear();
@@ -170,16 +171,13 @@ public class ActivityClusterGraphRewriter implements Serializable {
                                 .get(outputConn.getConnectorId());
                         IActivity newActivity = endPoints.getRight().getLeft();
                         SuperActivity existingSuperActivity = invertedActivitySuperActivityMap.get(newActivity);
-                        if (outputConn.getClass().getName().contains("OneToOneConnectorDescriptor")) {
+                        if (outputConn.getClass().getName().contains(ONE_TO_ONE_CONNECTOR)) {
                             /**
                              * expend the super activity cluster on an one-to-one out-bound connection
                              */
                             if (existingSuperActivity == null) {
                                 superActivity.addActivity(newActivity);
                                 toBeExpended.add(newActivity);
-                                if (newActivity.getClass().getName().contains("SortActivity")) {
-                                    System.out.println(newActivity);
-                                }
                                 invertedActivitySuperActivityMap.put(newActivity, superActivity);
                             } else {
                                 /**
@@ -248,7 +246,7 @@ public class ActivityClusterGraphRewriter implements Serializable {
             int consumerPort = endPoints.getRight().getRight();
             RecordDescriptor recordDescriptor = connRecordDesc.get(connectorId);
             IConnectorDescriptor conn = connMap.get(connectorId);
-            if (conn.getClass().getName().contains("OneToOneConnectorDescriptor")) {
+            if (conn.getClass().getName().contains(ONE_TO_ONE_CONNECTOR)) {
                 /**
                  * connection edge between inner activities
                  */

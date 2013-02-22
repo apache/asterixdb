@@ -122,6 +122,6 @@ public class SuperActivity extends OneToOneConnectedActivityCluster implements I
     
     @Override
     public String toString(){
-        return getActivityMap().toString();
+        return getActivityMap().values().toString();
     }
 }
