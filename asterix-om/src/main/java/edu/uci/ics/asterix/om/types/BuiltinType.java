@@ -450,6 +450,10 @@ public abstract class BuiltinType implements IAType {
             return "interval";
         }
 
+        @Override
+        public JSONObject toJSON() throws JSONException {
+            return null;
+        }
     };
 
     public final static BuiltinType APOINT = new LowerCaseConstructorType() {
