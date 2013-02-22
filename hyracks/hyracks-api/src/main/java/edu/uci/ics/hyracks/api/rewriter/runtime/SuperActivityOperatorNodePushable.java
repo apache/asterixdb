@@ -106,7 +106,9 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
              */
             if (outputConnectors != null && outputConnectors.size() > 0) {
                 for (IConnectorDescriptor conn : outputConnectors) {
-                    childQueue.add(parent.getConnectorActivityMap().get(conn.getConnectorId()));
+                    if (conn != null) {
+                        childQueue.add(parent.getConnectorActivityMap().get(conn.getConnectorId()));
+                    }
                 }
             }
 
