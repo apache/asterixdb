@@ -1,5 +1,6 @@
 package edu.uci.ics.hyracks.storage.am.lsm.btree;
 
+import java.util.HashSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
@@ -25,9 +26,11 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpOperationTrackerFacto
 
 public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperationCallbackTest {
     private final LSMBTreeTestHarness harness;
+    private final HashSet<Integer> deleteSet;
 
     public LSMBTreeSearchOperationCallbackTest() {
         harness = new LSMBTreeTestHarness();
+        deleteSet = new HashSet<Integer>();
     }
 
     @Override
@@ -69,6 +72,8 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
         private final ArrayTupleReference tuple;
         private final ArrayTupleBuilder expectedTupleToBeLockedBuilder;
         private final ArrayTupleReference expectedTupleToBeLocked;
+        private final ArrayTupleBuilder expectedTupleToBeCanceledBuilder;
+        private final ArrayTupleReference expectedTupleToBeCanceled;
 
         private boolean blockOnHigh;
         private int expectedAfterBlock;
@@ -83,6 +88,8 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
             this.tuple = new ArrayTupleReference();
             this.expectedTupleToBeLockedBuilder = new ArrayTupleBuilder(NUM_KEY_FIELDS);
             this.expectedTupleToBeLocked = new ArrayTupleReference();
+            this.expectedTupleToBeCanceledBuilder = new ArrayTupleBuilder(NUM_KEY_FIELDS);
+            this.expectedTupleToBeCanceled = new ArrayTupleReference();
 
             this.blockOnHigh = false;
             this.expectedAfterBlock = -1;
@@ -149,31 +156,31 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
             }
 
             @Override
-            public void reconcile(ITupleReference tuple) {
+            public void reconcile(ITupleReference tuple) throws HyracksDataException {
                 Assert.assertEquals(0, cmp.compare(SearchTask.this.expectedTupleToBeLocked, tuple));
                 if (blockOnHigh) {
-                    try {
-                        TupleUtils.createIntegerTuple(builder, SearchTask.this.tuple, expectedAfterBlock);
-                    } catch (HyracksDataException e) {
-                        e.printStackTrace();
-                    }
+                    TupleUtils.createIntegerTuple(builder, SearchTask.this.tuple, expectedAfterBlock);
                     condition.signal();
                     condition.awaitUninterruptibly();
                     blockOnHigh = false;
                 }
-                try {
-                    expectedTupleToBeLockedValue++;
-                    TupleUtils.createIntegerTuple(expectedTupleToBeLockedBuilder, expectedTupleToBeLocked,
-                            expectedTupleToBeLockedValue);
-                } catch (HyracksDataException e) {
-                    e.printStackTrace();
-                }
+                expectedTupleToBeLockedValue++;
+                TupleUtils.createIntegerTuple(expectedTupleToBeLockedBuilder, expectedTupleToBeLocked,
+                        expectedTupleToBeLockedValue);
 
             }
 
             @Override
-            public void cancel(ITupleReference tuple) {
-                // Do nothing.
+            public void cancel(ITupleReference tuple) throws HyracksDataException {
+                boolean found = false;
+                for (int i : deleteSet) {
+                    TupleUtils.createIntegerTuple(expectedTupleToBeCanceledBuilder, expectedTupleToBeCanceled, i);
+                    if (cmp.compare(SearchTask.this.expectedTupleToBeCanceled, tuple) == 0) {
+                        found = true;
+                        break;
+                    }
+                }
+                Assert.assertTrue(found);
             }
 
         }
@@ -203,13 +210,17 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 bulkloadIntTupleRange(151, 200);
                 insertIntTupleRange(50, 100);
                 insertIntTupleRange(301, 350);
-                TupleUtils.createIntegerTuple(builder, tuple, 151);
+                int tupleTobeDeletedValue = 151;
+                deleteSet.add(tupleTobeDeletedValue);
+                TupleUtils.createIntegerTuple(builder, tuple, tupleTobeDeletedValue);
                 accessor.delete(tuple);
                 condition.signal();
                 condition.await();
 
                 // delete tuple 75
-                TupleUtils.createIntegerTuple(builder, tuple, 75);
+                tupleTobeDeletedValue = 75;
+                deleteSet.add(tupleTobeDeletedValue);
+                TupleUtils.createIntegerTuple(builder, tuple, tupleTobeDeletedValue);
                 accessor.delete(tuple);
                 condition.signal();
                 condition.await();
