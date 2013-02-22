@@ -347,6 +347,8 @@ public class ActivityClusterGraphRewriter implements Serializable {
         }
         Queue<IActivity> tbeQueue = toBeExpendedMap.get(superActivityId);
         Queue<IActivity> existingTbeQueque = toBeExpendedMap.remove(existingSuperActivityId);
-        tbeQueue.addAll(existingTbeQueque);
+        if (existingTbeQueque != null) {
+            tbeQueue.addAll(existingTbeQueque);
+        }
     }
 }
