@@ -22,4 +22,6 @@ public interface IDatasetInputChannelMonitor extends IInputChannelMonitor {
     public boolean failed();
 
     public int getNFramesAvailable();
+
+    public void notifyFrameRead();
 }

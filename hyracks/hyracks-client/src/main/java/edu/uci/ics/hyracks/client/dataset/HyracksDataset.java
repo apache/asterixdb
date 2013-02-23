@@ -135,7 +135,7 @@ public class HyracksDataset implements IHyracksDataset {
                 }
             }
 
-            if (lastMonitor.eosReached()) {
+            if (lastMonitor.getNFramesAvailable() <= 0 && lastMonitor.eosReached()) {
                 if ((lastReadPartition == knownRecords.length - 1)) {
                     break;
                 } else {
@@ -164,6 +164,7 @@ public class HyracksDataset implements IHyracksDataset {
                 }
             } else {
                 readBuffer = resultChannel.getNextBuffer();
+                lastMonitor.notifyFrameRead();
                 if (readBuffer != null) {
                     buffer.put(readBuffer);
                     buffer.flip();
@@ -251,5 +252,11 @@ public class HyracksDataset implements IHyracksDataset {
         public synchronized int getNFramesAvailable() {
             return nAvailableFrames.get();
         }
+
+        @Override
+        public synchronized void notifyFrameRead() {
+            nAvailableFrames.decrementAndGet();
+        }
+
     }
 }
