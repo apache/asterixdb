@@ -304,6 +304,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         JSONArray results = new JSONArray();
                         while (resultReader.read(buffer) > 0) {
                             results.put(ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor()));
+                            buffer.clear();
                         }
                         response.put("results", results);
                     }
