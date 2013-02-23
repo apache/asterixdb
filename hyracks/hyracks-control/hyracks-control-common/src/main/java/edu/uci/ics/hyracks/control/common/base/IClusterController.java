@@ -48,9 +48,8 @@ public interface IClusterController {
 
     public void registerPartitionRequest(PartitionRequest partitionRequest) throws Exception;
 
-    public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult,
-            byte[] serializedRecordDescriptor, int partition, int nPartitions, NetworkAddress networkAddress)
-            throws Exception;
+    public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult, int partition,
+            int nPartitions, NetworkAddress networkAddress) throws Exception;
 
     public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws Exception;
 

@@ -26,7 +26,5 @@ public interface IHyracksDataset {
 
     public Status getResultStatus();
 
-    public byte[] getSerializedRecordDescriptor();
-
     public int read(ByteBuffer buffer) throws HyracksDataException;
 }

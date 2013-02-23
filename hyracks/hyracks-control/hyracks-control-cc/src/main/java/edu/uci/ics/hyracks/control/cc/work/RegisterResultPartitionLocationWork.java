@@ -29,8 +29,6 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
 
     private final boolean orderedResult;
 
-    private final byte[] serializedRecordDescriptor;
-
     private final int partition;
 
     private final int nPartitions;
@@ -38,13 +36,11 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
     private final NetworkAddress networkAddress;
 
     public RegisterResultPartitionLocationWork(ClusterControllerService ccs, JobId jobId, ResultSetId rsId,
-            boolean orderedResult, byte[] serializedRecordDescriptor, int partition, int nPartitions,
-            NetworkAddress networkAddress) {
+            boolean orderedResult, int partition, int nPartitions, NetworkAddress networkAddress) {
         this.ccs = ccs;
         this.jobId = jobId;
         this.rsId = rsId;
         this.orderedResult = orderedResult;
-        this.serializedRecordDescriptor = serializedRecordDescriptor;
         this.partition = partition;
         this.nPartitions = nPartitions;
         this.networkAddress = networkAddress;
@@ -52,8 +48,8 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
 
     @Override
     public void run() {
-        ccs.getDatasetDirectoryService().registerResultPartitionLocation(jobId, rsId, orderedResult,
-                serializedRecordDescriptor, partition, nPartitions, networkAddress);
+        ccs.getDatasetDirectoryService().registerResultPartitionLocation(jobId, rsId, orderedResult, partition,
+                nPartitions, networkAddress);
     }
 
     @Override

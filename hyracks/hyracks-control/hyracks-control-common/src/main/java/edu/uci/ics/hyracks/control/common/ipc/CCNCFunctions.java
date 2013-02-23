@@ -451,8 +451,6 @@ public class CCNCFunctions {
 
         private final boolean orderedResult;
 
-        private final byte[] serializedRecordDescriptor;
-
         private final int partition;
 
         private final int nPartitions;
@@ -460,11 +458,10 @@ public class CCNCFunctions {
         private NetworkAddress networkAddress;
 
         public RegisterResultPartitionLocationFunction(JobId jobId, ResultSetId rsId, boolean orderedResult,
-                byte[] serializedRecordDescriptor, int partition, int nPartitions, NetworkAddress networkAddress) {
+                int partition, int nPartitions, NetworkAddress networkAddress) {
             this.jobId = jobId;
             this.rsId = rsId;
             this.orderedResult = orderedResult;
-            this.serializedRecordDescriptor = serializedRecordDescriptor;
             this.partition = partition;
             this.nPartitions = nPartitions;
             this.networkAddress = networkAddress;
@@ -481,10 +478,6 @@ public class CCNCFunctions {
 
         public ResultSetId getResultSetId() {
             return rsId;
-        }
-
-        public byte[] getSerializedRecordDescriptor() {
-            return serializedRecordDescriptor;
         }
 
         public boolean getOrderedResult() {

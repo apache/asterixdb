@@ -51,13 +51,12 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
     @Override
     public IFrameWriter createDatasetPartitionWriter(IHyracksTaskContext ctx, ResultSetId rsId, boolean orderedResult,
-            byte[] serializedRecordDescriptor, int partition, int nPartitions) throws HyracksException {
+            int partition, int nPartitions) throws HyracksException {
         DatasetPartitionWriter dpw = null;
         JobId jobId = ctx.getJobletContext().getJobId();
         try {
-            ncs.getClusterController().registerResultPartitionLocation(jobId, rsId, orderedResult,
-                    serializedRecordDescriptor, partition, nPartitions,
-                    ncs.getDatasetNetworkManager().getNetworkAddress());
+            ncs.getClusterController().registerResultPartitionLocation(jobId, rsId, orderedResult, partition,
+                    nPartitions, ncs.getDatasetNetworkManager().getNetworkAddress());
             dpw = new DatasetPartitionWriter(ctx, this, jobId, rsId, partition, executor);
 
             DatasetPartitionWriter[] writers = partitionDatasetWriterMap.get(jobId);

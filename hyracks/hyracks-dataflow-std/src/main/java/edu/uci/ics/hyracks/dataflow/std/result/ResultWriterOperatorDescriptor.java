@@ -47,17 +47,14 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
 
     private final IResultSerializedAppenderFactory resultSerializedAppenderFactory;
 
-    private final byte[] serializedRecordDescriptor;
 
     public ResultWriterOperatorDescriptor(IOperatorDescriptorRegistry spec, ResultSetId rsId, boolean ordered,
-            RecordDescriptor recordDescriptor, IResultSerializedAppenderFactory resultSerializedAppenderFactory)
-            throws IOException {
+            RecordDescriptor recordDescriptor, IResultSerializerFactory resultSerializerFactory) throws IOException {
         super(spec, 1, 0);
         this.rsId = rsId;
         this.ordered = ordered;
         this.recordDescriptor = recordDescriptor;
         this.resultSerializedAppenderFactory = resultSerializedAppenderFactory;
-        this.serializedRecordDescriptor = JavaSerializationUtils.serialize(recordDescriptor);
     }
 
     @Override
@@ -84,8 +81,7 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
             @Override
             public void open() throws HyracksDataException {
                 try {
-                    datasetPartitionWriter = dpm.createDatasetPartitionWriter(ctx, rsId, ordered,
-                            serializedRecordDescriptor, partition, nPartitions);
+                    datasetPartitionWriter = dpm.createDatasetPartitionWriter(ctx, rsId, ordered, partition, nPartitions);
                     datasetPartitionWriter.open();
                 } catch (HyracksException e) {
                     throw new HyracksDataException(e);

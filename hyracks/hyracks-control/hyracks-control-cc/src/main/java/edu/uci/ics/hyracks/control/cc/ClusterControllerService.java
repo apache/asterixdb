@@ -57,7 +57,6 @@ import edu.uci.ics.hyracks.control.cc.work.GetDatasetDirectoryServiceInfoWork;
 import edu.uci.ics.hyracks.control.cc.work.GetIpAddressNodeNameMapWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobStatusWork;
 import edu.uci.ics.hyracks.control.cc.work.GetNodeControllersInfoWork;
-import edu.uci.ics.hyracks.control.cc.work.GetRecordDescriptorWork;
 import edu.uci.ics.hyracks.control.cc.work.GetResultPartitionLocationsWork;
 import edu.uci.ics.hyracks.control.cc.work.GetResultStatusWork;
 import edu.uci.ics.hyracks.control.cc.work.JobStartWork;
@@ -357,13 +356,6 @@ public class ClusterControllerService extends AbstractRemoteService {
                     return;
                 }
 
-                case GET_DATASET_RECORD_DESCRIPTOR: {
-                    HyracksClientInterfaceFunctions.GetDatasetRecordDescriptorFunction gdrdf = (HyracksClientInterfaceFunctions.GetDatasetRecordDescriptorFunction) fn;
-                    workQueue.schedule(new GetRecordDescriptorWork(ClusterControllerService.this, gdrdf.getJobId(),
-                            gdrdf.getResultSetId(), new IPCResponder<byte[]>(handle, mid)));
-                    return;
-                }
-
                 case GET_DATASET_RESULT_LOCATIONS: {
                     HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction gdrlf = (HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction) fn;
                     workQueue.schedule(new GetResultPartitionLocationsWork(ClusterControllerService.this, gdrlf
@@ -470,9 +462,8 @@ public class ClusterControllerService extends AbstractRemoteService {
                 case REGISTER_RESULT_PARTITION_LOCATION: {
                     CCNCFunctions.RegisterResultPartitionLocationFunction rrplf = (CCNCFunctions.RegisterResultPartitionLocationFunction) fn;
                     workQueue.schedule(new RegisterResultPartitionLocationWork(ClusterControllerService.this, rrplf
-                            .getJobId(), rrplf.getResultSetId(), rrplf.getOrderedResult(), rrplf
-                            .getSerializedRecordDescriptor(), rrplf.getPartition(), rrplf.getNPartitions(), rrplf
-                            .getNetworkAddress()));
+                            .getJobId(), rrplf.getResultSetId(), rrplf.getOrderedResult(), rrplf.getPartition(), rrplf
+                            .getNPartitions(), rrplf.getNetworkAddress()));
                     return;
                 }
 

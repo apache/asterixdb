@@ -98,18 +98,6 @@ public class HyracksDataset implements IHyracksDataset {
     }
 
     @Override
-    public byte[] getSerializedRecordDescriptor() {
-        byte[] serializedRecordDescriptor = null;
-        try {
-            serializedRecordDescriptor = datasetDirectoryServiceConnection.getDatasetSerializedRecordDescriptor(jobId,
-                    resultSetId);
-        } catch (Exception e) {
-            // TODO(madhusudancs): Decide what to do in case of error
-        }
-        return serializedRecordDescriptor;
-    }
-
-    @Override
     public int read(ByteBuffer buffer) throws HyracksDataException {
         ByteBuffer readBuffer;
         int readSize = 0;

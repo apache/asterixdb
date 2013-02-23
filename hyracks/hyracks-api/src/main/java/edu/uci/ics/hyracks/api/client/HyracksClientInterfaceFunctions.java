@@ -197,32 +197,6 @@ public class HyracksClientInterfaceFunctions {
         }
     }
 
-    public static class GetDatasetRecordDescriptorFunction extends Function {
-        private static final long serialVersionUID = 1L;
-
-        private final JobId jobId;
-
-        private final ResultSetId rsId;
-
-        public GetDatasetRecordDescriptorFunction(JobId jobId, ResultSetId rsId) {
-            this.jobId = jobId;
-            this.rsId = rsId;
-        }
-
-        @Override
-        public FunctionId getFunctionId() {
-            return FunctionId.GET_DATASET_RECORD_DESCRIPTOR;
-        }
-
-        public JobId getJobId() {
-            return jobId;
-        }
-
-        public ResultSetId getResultSetId() {
-            return rsId;
-        }
-    }
-
     public static class GetDatasetResultLocationsFunction extends Function {
         private static final long serialVersionUID = 1L;
 

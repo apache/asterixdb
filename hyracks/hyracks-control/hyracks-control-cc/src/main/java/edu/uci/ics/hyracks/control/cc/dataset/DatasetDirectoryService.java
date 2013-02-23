@@ -43,7 +43,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
 
     @Override
     public synchronized void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult,
-            byte[] serializedRecordDescriptor, int partition, int nPartitions, NetworkAddress networkAddress) {
+            int partition, int nPartitions, NetworkAddress networkAddress) {
         Map<ResultSetId, ResultSetMetaData> rsMap = jobResultLocationsMap.get(jobId);
         if (rsMap == null) {
             rsMap = new HashMap<ResultSetId, ResultSetMetaData>();
@@ -52,8 +52,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
 
         ResultSetMetaData resultSetMetaData = rsMap.get(rsId);
         if (resultSetMetaData == null) {
-            resultSetMetaData = new ResultSetMetaData(orderedResult, new DatasetDirectoryRecord[nPartitions],
-                    serializedRecordDescriptor);
+            resultSetMetaData = new ResultSetMetaData(orderedResult, new DatasetDirectoryRecord[nPartitions]);
             rsMap.put(rsId, resultSetMetaData);
         }
 
@@ -121,25 +120,6 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
             }
         }
         return status;
-    }
-
-    @Override
-    public synchronized byte[] getRecordDescriptor(JobId jobId, ResultSetId rsId) throws HyracksDataException {
-        Map<ResultSetId, ResultSetMetaData> rsMap;
-        while ((rsMap = jobResultLocationsMap.get(jobId)) == null) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                throw new HyracksDataException(e);
-            }
-        }
-
-        ResultSetMetaData resultSetMetaData = rsMap.get(rsId);
-        if (resultSetMetaData == null || resultSetMetaData.getRecords() == null) {
-            throw new HyracksDataException("ResultSet locations uninitialized when it is expected to be initialized.");
-        }
-
-        return resultSetMetaData.getSerializedRecordDescriptor();
     }
 
     @Override
@@ -245,12 +225,9 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
 
         private final DatasetDirectoryRecord[] records;
 
-        private final byte[] serializedRecordDescriptor;
-
-        public ResultSetMetaData(boolean ordered, DatasetDirectoryRecord[] records, byte[] serializedRecordDescriptor) {
+        public ResultSetMetaData(boolean ordered, DatasetDirectoryRecord[] records) {
             this.ordered = ordered;
             this.records = records;
-            this.serializedRecordDescriptor = serializedRecordDescriptor;
         }
 
         public boolean getOrderedResult() {
@@ -259,10 +236,6 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
 
         public DatasetDirectoryRecord[] getRecords() {
             return records;
-        }
-
-        public byte[] getSerializedRecordDescriptor() {
-            return serializedRecordDescriptor;
         }
     }
 }
