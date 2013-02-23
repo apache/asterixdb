@@ -26,7 +26,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import edu.uci.ics.asterix.result.ResultReader;
-import edu.uci.ics.asterix.runtime.formats.FormatUtils;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
@@ -64,7 +63,7 @@ public class QueryStatusAPIServlet extends HttpServlet {
             /* TODO(madhusudancs): We need to find a way to JSON serialize default format obtained from
              * metadataProvider in the AQLTranslator and store it as part of the result handle.
              */
-            ResultReader resultReader = new ResultReader(hcc, FormatUtils.getDefaultFormat());
+            ResultReader resultReader = new ResultReader(hcc);
             resultReader.open(jobId, rsId);
 
             JSONObject jsonResponse = new JSONObject();

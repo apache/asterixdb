@@ -14,41 +14,38 @@
  */
 package edu.uci.ics.asterix.result;
 
-import java.io.DataInputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.uci.ics.asterix.om.base.IAObject;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
 public class ResultUtils {
-    public static JSONArray getJSONFromBuffer(ByteBuffer buffer, FrameTupleAccessor fta,
-            RecordDescriptor recordDescriptor) throws HyracksDataException {
+    public static JSONArray getJSONFromBuffer(ByteBuffer buffer, IFrameTupleAccessor fta) throws HyracksDataException {
         JSONArray resultRecords = new JSONArray();
         ByteBufferInputStream bbis = new ByteBufferInputStream();
-        DataInputStream di = new DataInputStream(bbis);
 
         try {
             fta.reset(buffer);
             for (int tIndex = 0; tIndex < fta.getTupleCount(); tIndex++) {
-                int start = fta.getTupleStartOffset(tIndex) + fta.getFieldSlotsLength();
+                int start = fta.getTupleStartOffset(tIndex);
+                int length = fta.getTupleEndOffset(tIndex) - start;
                 bbis.setByteBuffer(buffer, start);
-                Object[] record = new Object[recordDescriptor.getFieldCount()];
-                JSONArray resultRecord = new JSONArray();
-                for (int i = 0; i < record.length; ++i) {
-                    IAObject instance = (IAObject) recordDescriptor.getFields()[i].deserialize(di);
-                    resultRecord.put(instance.toJSON());
-                }
-                resultRecords.put(resultRecord);
+                byte[] recordBytes = new byte[length];
+                bbis.read(recordBytes, 0, length);
+                resultRecords.put(new String(recordBytes, 0, length));
             }
-        } catch (JSONException e) {
-            throw new HyracksDataException(e);
+        } finally {
+            try {
+                bbis.close();
+            } catch (IOException e) {
+                throw new HyracksDataException(e);
+            }
         }
         return resultRecords;
     }

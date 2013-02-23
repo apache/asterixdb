@@ -83,11 +83,13 @@ import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import edu.uci.ics.hyracks.algebricks.data.IAWriterFactory;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
+import edu.uci.ics.hyracks.algebricks.data.IResultSerializerFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.SinkWriterRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IResultSerializerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -123,6 +125,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private IAWriterFactory writerFactory;
     private FileSplit outputFile;
     private ResultSetId resultSetId;
+    private IResultSerializerFactoryProvider resultSerializerFactoryProvider;
     private long jobTxnId;
 
     private final Dataverse defaultDataverse;
@@ -193,6 +196,14 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     public void setResultSetId(ResultSetId resultSetId) {
         this.resultSetId = resultSetId;
+    }
+
+    public void setResultSerializerFactoryProvider(IResultSerializerFactoryProvider rafp) {
+        this.resultSerializerFactoryProvider = rafp;
+    }
+
+    public IResultSerializerFactoryProvider getResultSerializerFactoryProvider() {
+        return resultSerializerFactoryProvider;
     }
 
     @Override
@@ -554,7 +565,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getResultHandleRuntime(IDataSink sink,
-            RecordDescriptor recordDescriptor, boolean ordered, JobSpecification spec) throws AlgebricksException {
+            int[] printColumns, IPrinterFactory[] printerFactories, RecordDescriptor inputDesc, boolean ordered,
+            JobSpecification spec) throws AlgebricksException {
         ResultSetDataSink rsds = (ResultSetDataSink) sink;
         ResultSetSinkId rssId = (ResultSetSinkId) rsds.getId();
         ResultSetId rsId = rssId.getResultSetId();
@@ -562,7 +574,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
         ResultWriterOperatorDescriptor resultWriter = null;
         try {
-            resultWriter = new ResultWriterOperatorDescriptor(spec, rsId, ordered, recordDescriptor);
+            IResultSerializerFactory resultSerializedAppenderFactory = resultSerializerFactoryProvider
+                    .getAqlResultSerializerFactoryProvider(printColumns, printerFactories, getWriterFactory(), inputDesc);
+            resultWriter = new ResultWriterOperatorDescriptor(spec, rsId, ordered, inputDesc,
+                    resultSerializedAppenderFactory);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }

@@ -68,6 +68,7 @@ import edu.uci.ics.asterix.file.DatasetOperations;
 import edu.uci.ics.asterix.file.FeedOperations;
 import edu.uci.ics.asterix.file.IndexOperations;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
+import edu.uci.ics.asterix.formats.nontagged.AqlResultSerializerFactoryProvider;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
@@ -105,6 +106,7 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import edu.uci.ics.hyracks.algebricks.data.IAWriterFactory;
+import edu.uci.ics.hyracks.algebricks.data.IResultSerializerFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
@@ -159,6 +161,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         List<QueryResult> executionResult = new ArrayList<QueryResult>();
         FileSplit outputFile = null;
         IAWriterFactory writerFactory = PrinterBasedWriterFactory.INSTANCE;
+        IResultSerializerFactoryProvider resultSerializerFactoryProvider = AqlResultSerializerFactoryProvider.INSTANCE;
         Map<String, String> config = new HashMap<String, String>();
         List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
 
@@ -167,6 +170,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             AqlMetadataProvider metadataProvider = new AqlMetadataProvider(mdTxnCtx, activeDefaultDataverse);
             metadataProvider.setWriterFactory(writerFactory);
+            metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);
             metadataProvider.setOutputFile(outputFile);
             metadataProvider.setConfig(config);
             jobsToExecute.clear();
@@ -294,13 +298,12 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         response.put("handle", handle);
                     } else {
                         ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
-                        ResultReader resultReader = new ResultReader(hcc, metadataProvider.getFormat());
+                        ResultReader resultReader = new ResultReader(hcc);
                         resultReader.open(jobId, metadataProvider.getResultSetId());
                         buffer.clear();
                         JSONArray results = new JSONArray();
                         while (resultReader.read(buffer) > 0) {
-                            results.put(ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor(),
-                                    resultReader.getRecordDescriptor()));
+                            results.put(ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor()));
                         }
                         response.put("results", results);
                     }

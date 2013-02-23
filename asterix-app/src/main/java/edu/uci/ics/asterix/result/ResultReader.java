@@ -17,29 +17,22 @@ package edu.uci.ics.asterix.result;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord.Status;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 import edu.uci.ics.hyracks.client.dataset.DatasetClientContext;
 import edu.uci.ics.hyracks.client.dataset.HyracksDataset;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 public class ResultReader {
     private final DatasetClientContext datasetClientCtx;
 
     private final IHyracksDataset hyracksDataset;
 
-    private final IDataFormat format;
-
-    private RecordDescriptor recordDescriptor;
-
-    private FrameTupleAccessor frameTupleAccessor;
+    private IFrameTupleAccessor frameTupleAccessor;
 
     // Number of parallel result reader buffers
     private static final int NUM_READERS = 1;
@@ -47,21 +40,15 @@ public class ResultReader {
     // 32K buffer size;
     public static final int FRAME_SIZE = 32768;
 
-    public ResultReader(IHyracksClientConnection hcc, IDataFormat format) throws Exception {
-        this.format = format;
-
+    public ResultReader(IHyracksClientConnection hcc) throws Exception {
         datasetClientCtx = new DatasetClientContext(FRAME_SIZE);
         hyracksDataset = new HyracksDataset(hcc, datasetClientCtx, NUM_READERS);
     }
 
     public void open(JobId jobId, ResultSetId resultSetId) throws IOException, ClassNotFoundException {
         hyracksDataset.open(jobId, resultSetId);
-        byte[] serializedRecordDescriptor = hyracksDataset.getSerializedRecordDescriptor();
 
-        recordDescriptor = (RecordDescriptor) JavaSerializationUtils.deserialize(serializedRecordDescriptor, format
-                .getSerdeProvider().getClass().getClassLoader());
-
-        frameTupleAccessor = new FrameTupleAccessor(datasetClientCtx.getFrameSize(), recordDescriptor);
+        frameTupleAccessor = new ResultFrameTupleAccessor(datasetClientCtx.getFrameSize());
     }
 
     public Status getStatus() {
@@ -72,11 +59,7 @@ public class ResultReader {
         return hyracksDataset.read(buffer);
     }
 
-    public FrameTupleAccessor getFrameTupleAccessor() {
+    public IFrameTupleAccessor getFrameTupleAccessor() {
         return frameTupleAccessor;
-    }
-
-    public RecordDescriptor getRecordDescriptor() {
-        return recordDescriptor;
     }
 }
