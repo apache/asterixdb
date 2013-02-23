@@ -23,7 +23,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
 public interface IResultSerializerFactoryProvider extends Serializable {
     /**
-     * Creates a result serialized appender
+     * Returns a result serializer factory
      * 
      * @param fields
      *            - A position of the fields in the order it should be written in the output.
@@ -35,6 +35,6 @@ public interface IResultSerializerFactoryProvider extends Serializable {
      *            - The record descriptor describing the input frame to be serialized.
      * @return A new instance of result serialized appender.
      */
-    public IResultSerializerFactory getAqlResultAppenderFactoryProvider(int[] fields,
+    public IResultSerializerFactory getAqlResultSerializerFactoryProvider(int[] fields,
             IPrinterFactory[] printerFactories, IAWriterFactory writerFactory, RecordDescriptor inputRecordDesc);
 }

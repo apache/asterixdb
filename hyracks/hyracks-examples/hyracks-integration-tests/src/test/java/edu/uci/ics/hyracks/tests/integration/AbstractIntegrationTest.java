@@ -16,7 +16,7 @@ package edu.uci.ics.hyracks.tests.integration;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -132,7 +132,6 @@ public abstract class AbstractIntegrationTest {
         IHyracksDataset hyracksDataset = new HyracksDataset(hcc, datasetClientCtx, nReaders);
 
         hyracksDataset.open(jobId, spec.getResultSetIds().get(0));
-        byte[] serializedRecordDescriptor = hyracksDataset.getSerializedRecordDescriptor();
         /*        FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(datasetClientCtx.getFrameSize(),
                         recordDescriptor);
 
@@ -205,7 +204,7 @@ public abstract class AbstractIntegrationTest {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IResultSerializer createResultSerializer(final OutputStream frameOutputStream) {
+            public IResultSerializer createResultSerializer(final PrintStream printStream) {
                 return new IResultSerializer() {
                     private static final long serialVersionUID = 1L;
 
