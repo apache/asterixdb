@@ -18,10 +18,10 @@ import java.io.Serializable;
 
 import edu.uci.ics.hyracks.algebricks.data.IAWriterFactory;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.IResultSerializedAppenderFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IResultSerializerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
-public interface IResultSerializedAppenderFactoryProvider extends Serializable {
+public interface IResultSerializerFactoryProvider extends Serializable {
     /**
      * Creates a result serialized appender
      * 
@@ -35,6 +35,6 @@ public interface IResultSerializedAppenderFactoryProvider extends Serializable {
      *            - The record descriptor describing the input frame to be serialized.
      * @return A new instance of result serialized appender.
      */
-    public IResultSerializedAppenderFactory getAqlResultAppenderFactoryProvider(int[] fields,
+    public IResultSerializerFactory getAqlResultAppenderFactoryProvider(int[] fields,
             IPrinterFactory[] printerFactories, IAWriterFactory writerFactory, RecordDescriptor inputRecordDesc);
 }

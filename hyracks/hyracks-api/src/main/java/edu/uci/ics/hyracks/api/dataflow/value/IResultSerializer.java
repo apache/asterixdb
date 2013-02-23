@@ -14,16 +14,20 @@
  */
 package edu.uci.ics.hyracks.api.dataflow.value;
 
-import java.io.OutputStream;
 import java.io.Serializable;
 
-public interface IResultSerializedAppenderFactory extends Serializable {
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+
+public interface IResultSerializer extends Serializable {
     /**
-     * Creates a result serialized appender
+     * Method to serialize the result and append it to the provided output stream
      * 
-     * @param outputStream
-     *            - An output stream object to which the serialized results will be appended.
-     * @return A new instance of result serialized appender.
+     * @param tAccess
+     *            - A frame tuple accessor object that contains the original data to be serialized
+     * @param tIdx
+     *            - Index of the tuple that should be serialized.
+     * @return true if the tuple was appended successfully, else false.
      */
-    public IResultSerializedAppender createResultSerializer(OutputStream outputStream);
+    public boolean appendTuple(IFrameTupleAccessor tAccess, int tIdx) throws HyracksDataException;
 }
