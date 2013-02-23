@@ -32,8 +32,8 @@ import org.junit.rules.TemporaryFolder;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.dataflow.value.IResultSerializedAppender;
-import edu.uci.ics.hyracks.api.dataflow.value.IResultSerializedAppenderFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IResultSerializer;
+import edu.uci.ics.hyracks.api.dataflow.value.IResultSerializerFactory;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
@@ -200,13 +200,13 @@ public abstract class AbstractIntegrationTest {
         return tempFile;
     }
 
-    protected IResultSerializedAppenderFactory getResultSerializedAppenderFactory() {
-        return new IResultSerializedAppenderFactory() {
+    protected IResultSerializerFactory getResultSerializedAppenderFactory() {
+        return new IResultSerializerFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IResultSerializedAppender createResultSerializer(final OutputStream frameOutputStream) {
-                return new IResultSerializedAppender() {
+            public IResultSerializer createResultSerializer(final OutputStream frameOutputStream) {
+                return new IResultSerializer() {
                     private static final long serialVersionUID = 1L;
 
                     @Override
