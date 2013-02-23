@@ -14,10 +14,9 @@
  */
 package edu.uci.ics.hyracks.tests.integration;
 
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -32,7 +31,9 @@ import org.junit.rules.TemporaryFolder;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.dataflow.value.IResultSerializedAppender;
+import edu.uci.ics.hyracks.api.dataflow.value.IResultSerializedAppenderFactory;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
@@ -44,8 +45,6 @@ import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
 public abstract class AbstractIntegrationTest {
     private static final Logger LOGGER = Logger.getLogger(AbstractIntegrationTest.class.getName());
@@ -134,43 +133,43 @@ public abstract class AbstractIntegrationTest {
 
         hyracksDataset.open(jobId, spec.getResultSetIds().get(0));
         byte[] serializedRecordDescriptor = hyracksDataset.getSerializedRecordDescriptor();
-/*        FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(datasetClientCtx.getFrameSize(),
-                recordDescriptor);
+        /*        FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(datasetClientCtx.getFrameSize(),
+                        recordDescriptor);
 
-        ByteBuffer readBuffer = datasetClientCtx.allocateFrame();
-        ByteBufferInputStream bbis = new ByteBufferInputStream();
-        DataInputStream di = new DataInputStream(bbis);
+                ByteBuffer readBuffer = datasetClientCtx.allocateFrame();
+                ByteBufferInputStream bbis = new ByteBufferInputStream();
+                DataInputStream di = new DataInputStream(bbis);
 
-        while (true) {
-            readBuffer.clear();
-            int size = hyracksDataset.read(readBuffer);
-            if (size <= 0) {
-                break;
-            }
-            try {
-                frameTupleAccessor.reset(readBuffer);
-                System.out.println("Tuple count: " + recordDescriptor);
-                for (int tIndex = 0; tIndex < frameTupleAccessor.getTupleCount(); tIndex++) {
-                    int start = frameTupleAccessor.getTupleStartOffset(tIndex)
-                            + frameTupleAccessor.getFieldSlotsLength();
-                    bbis.setByteBuffer(readBuffer, start);
-                    Object[] record = new Object[recordDescriptor.getFieldCount()];
-                    for (int i = 0; i < record.length; ++i) {
-                        Object instance = recordDescriptor.getFields()[i].deserialize(di);
-                        if (i == 0) {
-                            System.out.print(String.valueOf(instance));
-                        } else {
-                            System.out.print(", " + String.valueOf(instance));
-                        }
+                while (true) {
+                    readBuffer.clear();
+                    int size = hyracksDataset.read(readBuffer);
+                    if (size <= 0) {
+                        break;
                     }
-                    System.out.println();
+                    try {
+                        frameTupleAccessor.reset(readBuffer);
+                        System.out.println("Tuple count: " + recordDescriptor);
+                        for (int tIndex = 0; tIndex < frameTupleAccessor.getTupleCount(); tIndex++) {
+                            int start = frameTupleAccessor.getTupleStartOffset(tIndex)
+                                    + frameTupleAccessor.getFieldSlotsLength();
+                            bbis.setByteBuffer(readBuffer, start);
+                            Object[] record = new Object[recordDescriptor.getFieldCount()];
+                            for (int i = 0; i < record.length; ++i) {
+                                Object instance = recordDescriptor.getFields()[i].deserialize(di);
+                                if (i == 0) {
+                                    System.out.print(String.valueOf(instance));
+                                } else {
+                                    System.out.print(", " + String.valueOf(instance));
+                                }
+                            }
+                            System.out.println();
+                        }
+                    } catch (IOException e) {
+                        throw new HyracksDataException(e);
+                    }
                 }
-            } catch (IOException e) {
-                throw new HyracksDataException(e);
-            }
-        }
-        // End of my code
-*/
+                // End of my code
+        */
         hcc.waitForCompletion(jobId);
         dumpOutputFiles();
     }
@@ -199,5 +198,23 @@ public abstract class AbstractIntegrationTest {
         }
         outputFiles.add(tempFile);
         return tempFile;
+    }
+
+    protected IResultSerializedAppenderFactory getResultSerializedAppenderFactory() {
+        return new IResultSerializedAppenderFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public IResultSerializedAppender createResultSerializer(final OutputStream frameOutputStream) {
+                return new IResultSerializedAppender() {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public boolean appendTuple(IFrameTupleAccessor tAccess, int tIdx) throws HyracksDataException {
+                        return true;
+                    }
+                };
+            }
+        };
     }
 }

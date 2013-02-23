@@ -137,8 +137,8 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
 
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getResultHandleRuntime(IDataSink sink,
-            RecordDescriptor recordDescriptor, boolean ordered, JobSpecification spec)
-            throws AlgebricksException {
+            int[] printColumns, IPrinterFactory[] printerFactories, RecordDescriptor inputDesc, boolean ordered,
+            JobSpecification spec) throws AlgebricksException {
         return null;
     }
 

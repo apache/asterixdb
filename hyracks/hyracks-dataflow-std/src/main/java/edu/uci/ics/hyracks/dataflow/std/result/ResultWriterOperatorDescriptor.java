@@ -21,6 +21,8 @@ import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import edu.uci.ics.hyracks.api.dataflow.value.IResultSerializedAppender;
+import edu.uci.ics.hyracks.api.dataflow.value.IResultSerializedAppenderFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
@@ -28,6 +30,9 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameOutputStream;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 
@@ -38,13 +43,20 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
 
     private final boolean ordered;
 
+    private final RecordDescriptor recordDescriptor;
+
+    private final IResultSerializedAppenderFactory resultSerializedAppenderFactory;
+
     private final byte[] serializedRecordDescriptor;
 
     public ResultWriterOperatorDescriptor(IOperatorDescriptorRegistry spec, ResultSetId rsId, boolean ordered,
-            RecordDescriptor recordDescriptor) throws IOException {
+            RecordDescriptor recordDescriptor, IResultSerializedAppenderFactory resultSerializedAppenderFactory)
+            throws IOException {
         super(spec, 1, 0);
         this.rsId = rsId;
         this.ordered = ordered;
+        this.recordDescriptor = recordDescriptor;
+        this.resultSerializedAppenderFactory = resultSerializedAppenderFactory;
         this.serializedRecordDescriptor = JavaSerializationUtils.serialize(recordDescriptor);
     }
 
@@ -52,6 +64,19 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions) {
         final IDatasetPartitionManager dpm = ctx.getDatasetPartitionManager();
+
+        final ByteBuffer tempBuffer = ctx.allocateFrame();
+        tempBuffer.clear();
+
+        final FrameTupleAppender frameTupleAppender = new FrameTupleAppender(ctx.getFrameSize());
+        frameTupleAppender.reset(tempBuffer, true);
+
+        final FrameOutputStream frameOutputStream = new FrameOutputStream(frameTupleAppender);
+
+        final IResultSerializedAppender resultSerializedAppender = resultSerializedAppenderFactory
+                .createResultSerializer(frameOutputStream);
+
+        final FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(ctx.getFrameSize(), recordDescriptor);
 
         return new AbstractUnaryInputSinkOperatorNodePushable() {
             IFrameWriter datasetPartitionWriter;
@@ -69,7 +94,18 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
 
             @Override
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                datasetPartitionWriter.nextFrame(buffer);
+                frameTupleAccessor.reset(buffer);
+                for (int tIndex = 0; tIndex < frameTupleAccessor.getTupleCount(); tIndex++) {
+                    if (!resultSerializedAppender.appendTuple(frameTupleAccessor, tIndex)) {
+                        datasetPartitionWriter.nextFrame(tempBuffer);
+                        frameTupleAppender.reset(tempBuffer, true);
+
+                        /* TODO(madhusudancs): This works under the assumption that no single JSON-ified record is
+                         * longer than the buffer size.
+                         */
+                        resultSerializedAppender.appendTuple(frameTupleAccessor, tIndex);
+                    }
+                }
             }
 
             @Override
@@ -79,6 +115,10 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
 
             @Override
             public void close() throws HyracksDataException {
+                if (frameTupleAppender.getTupleCount() > 0) {
+                    datasetPartitionWriter.nextFrame(tempBuffer);
+                    frameTupleAppender.reset(tempBuffer, true);
+                }
                 datasetPartitionWriter.close();
             }
         };
