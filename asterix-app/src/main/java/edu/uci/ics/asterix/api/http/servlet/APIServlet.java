@@ -306,6 +306,13 @@ public class APIServlet extends HttpServlet {
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        DisplayFormat format = DisplayFormat.HTML;
+        if (request.getContentType().equals("application/json")) {
+            format = DisplayFormat.JSON;
+        } else if (request.getContentType().equals("text/plain")) {
+            format = DisplayFormat.TEXT;
+        }
+
         String query = request.getParameter("query");
         String printExprParam = request.getParameter("print-expr-tree");
         String printRewrittenExprParam = request.getParameter("print-rewritten-expr-tree");
@@ -336,7 +343,7 @@ public class APIServlet extends HttpServlet {
                     isSet(printRewrittenExprParam), isSet(printLogicalPlanParam),
                     isSet(printOptimizedLogicalPlanParam), false, true, isSet(printJob));
             MetadataManager.INSTANCE.init();
-            AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, DisplayFormat.HTML);
+            AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, format);
             double duration = 0;
             long startTime = System.currentTimeMillis();
             aqlTranslator.compileAndExecute(hcc, false);

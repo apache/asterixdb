@@ -19,6 +19,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryHashFunctionFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryHashFunctionFamilyProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryIntegerInspector;
+import edu.uci.ics.asterix.formats.nontagged.AqlJSONPrinterFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlNormalizedKeyComputerFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlPrinterFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -315,6 +316,8 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(AndDescriptor.FACTORY);
         temp.add(OrDescriptor.FACTORY);
         temp.add(LikeDescriptor.FACTORY);
+
+        temp.add(YearDescriptor.FACTORY);
         temp.add(ScanCollectionDescriptor.FACTORY);
         temp.add(AnyCollectionMemberDescriptor.FACTORY);
         temp.add(ClosedRecordConstructorDescriptor.FACTORY);
@@ -784,6 +787,11 @@ public class NonTaggedDataFormat implements IDataFormat {
 		return AqlPrinterFactoryProvider.INSTANCE;
 	}
 
+    @Override
+    public IPrinterFactoryProvider getJSONPrinterFactoryProvider() {
+        return AqlJSONPrinterFactoryProvider.INSTANCE;
+    }
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public ICopyEvaluatorFactory getConstantEvalFactory(
@@ -938,5 +946,4 @@ public class NonTaggedDataFormat implements IDataFormat {
 	public IBinaryHashFunctionFamilyProvider getBinaryHashFunctionFamilyProvider() {
 		return AqlBinaryHashFunctionFamilyProvider.INSTANCE;
 	}
-
 }

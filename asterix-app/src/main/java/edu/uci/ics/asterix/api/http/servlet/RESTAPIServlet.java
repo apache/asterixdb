@@ -47,6 +47,13 @@ abstract class RESTAPIServlet extends HttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         PrintWriter out = response.getWriter();
 
+        DisplayFormat format = DisplayFormat.HTML;
+        if (request.getContentType().equals("application/json")) {
+            format = DisplayFormat.JSON;
+        } else if (request.getContentType().equals("text/plain")) {
+            format = DisplayFormat.TEXT;
+        }
+
         String query = getQueryParameter(request);
         boolean asyncResults = isAsync(request);
 
@@ -75,7 +82,7 @@ abstract class RESTAPIServlet extends HttpServlet {
 
             MetadataManager.INSTANCE.init();
 
-            AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, DisplayFormat.JSON);
+            AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, format);
 
             aqlTranslator.compileAndExecute(hcc, asyncResults);
 
