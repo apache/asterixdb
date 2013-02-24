@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -60,7 +61,7 @@ public class NCFileSystemAdapter extends FileSystemBasedAdapter {
         return AdapterType.READ;
     }
 
-    private void configureFileSplits(String[] splits) {
+    private void configureFileSplits(String[] splits)  {
         if (fileSplits == null) {
             fileSplits = new FileSplit[splits.length];
             String nodeName;
@@ -77,10 +78,12 @@ public class NCFileSystemAdapter extends FileSystemBasedAdapter {
         }
     }
 
-    private void configurePartitionConstraint() {
+    private void configurePartitionConstraint() throws AsterixException {
         String[] locs = new String[fileSplits.length];
+        String location;
         for (int i = 0; i < fileSplits.length; i++) {
-            locs[i] = fileSplits[i].getNodeName();
+            location = getNodeResolver().resolveNode(fileSplits[i].getNodeName());
+            locs[i] = location;
         }
         partitionConstraint = new AlgebricksAbsolutePartitionConstraint(locs);
     }
