@@ -16,27 +16,84 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.0.2</version>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>1.7</source>
+					<target>1.7</target>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>javacc-maven-plugin</artifactId>
-				<version>2.6</version>
-				<executions>
-					<execution>
-						<id>javacc</id>
-						<goals>
-							<goal>javacc</goal>
-						</goals>
-						<configuration>
-							<isStatic>false</isStatic>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
+	      	<plugin>
+	        	<groupId>edu.uci.ics.asterix</groupId>
+	        	<artifactId>lexer-generator-maven-plugin</artifactId>
+	        	<version>0.1</version>
+	        	<configuration>
+	        	  	<grammarFile>src/main/resources/adm.grammar</grammarFile>
+	        	  	<outputDir>${project.build.directory}/generated-sources/edu/uci/ics/asterix/runtime/operators/file/adm</outputDir>
+	        	</configuration>
+	        	<executions>
+		          	<execution>
+		          		<id>generate-lexer</id>
+            			<phase>generate-sources</phase>
+			            <goals>
+	              			<goal>generate-lexer</goal>
+	            		</goals>
+	          		</execution>
+	        	</executions>
+	      	</plugin>
+	      	 <plugin>
+			    <groupId>org.codehaus.mojo</groupId>
+			    <artifactId>build-helper-maven-plugin</artifactId>
+			    <executions>
+			        <execution>
+			            <id>add-source</id>
+			            <phase>generate-sources</phase>
+			            <goals>
+			                <goal>add-source</goal>
+			            </goals>
+			            <configuration>
+			                <sources>
+			                    <source>${project.build.directory}/generated-sources/</source>
+			                </sources>
+			            </configuration>
+			        </execution>
+			    </executions>
+ 			</plugin>
+	    </plugins>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											edu.uci.ics.asterix
+										</groupId>
+										<artifactId>
+											lexer-generator-maven-plugin
+										</artifactId>
+										<versionRange>
+											[0.1,)
+										</versionRange>
+										<goals>
+											<goal>generate-lexer</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<execute>
+											<runOnIncremental>false</runOnIncremental>
+										</execute>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 
 	<dependencies>

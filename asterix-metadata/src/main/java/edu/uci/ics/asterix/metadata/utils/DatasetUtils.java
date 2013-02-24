@@ -1,5 +1,21 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.asterix.metadata.utils;
 
+import java.io.IOException;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
@@ -25,7 +41,12 @@ public class DatasetUtils {
         List<String> partitioningKeys = getPartitioningKeys(dataset);
         IBinaryComparatorFactory[] bcfs = new IBinaryComparatorFactory[partitioningKeys.size()];
         for (int i = 0; i < partitioningKeys.size(); i++) {
-            IAType keyType = itemType.getFieldType(partitioningKeys.get(i));
+            IAType keyType;
+            try {
+                keyType = itemType.getFieldType(partitioningKeys.get(i));
+            } catch (IOException e) {
+                throw new AlgebricksException(e);
+            }
             bcfs[i] = comparatorFactoryProvider.getBinaryComparatorFactory(keyType, true);
         }
         return bcfs;
@@ -39,7 +60,12 @@ public class DatasetUtils {
         List<String> partitioningKeys = getPartitioningKeys(dataset);
         IBinaryHashFunctionFactory[] bhffs = new IBinaryHashFunctionFactory[partitioningKeys.size()];
         for (int i = 0; i < partitioningKeys.size(); i++) {
-            IAType keyType = itemType.getFieldType(partitioningKeys.get(i));
+            IAType keyType;
+            try {
+                keyType = itemType.getFieldType(partitioningKeys.get(i));
+            } catch (IOException e) {
+                throw new AlgebricksException(e);
+            }
             bhffs[i] = hashFunProvider.getBinaryHashFunctionFactory(keyType);
         }
         return bhffs;
@@ -54,7 +80,12 @@ public class DatasetUtils {
         int numKeys = partitioningKeys.size();
         ITypeTraits[] typeTraits = new ITypeTraits[numKeys + 1];
         for (int i = 0; i < numKeys; i++) {
-            IAType keyType = itemType.getFieldType(partitioningKeys.get(i));
+            IAType keyType;
+            try {
+                keyType = itemType.getFieldType(partitioningKeys.get(i));
+            } catch (IOException e) {
+                throw new AlgebricksException(e);
+            }
             typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
         }
         typeTraits[numKeys] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(itemType);

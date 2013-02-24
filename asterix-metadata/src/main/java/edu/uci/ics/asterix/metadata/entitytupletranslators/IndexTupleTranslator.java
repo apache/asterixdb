@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -25,7 +25,9 @@ import java.util.List;
 
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataRecordTypes;
 import edu.uci.ics.asterix.metadata.entities.Index;
@@ -106,7 +108,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(Index instance) throws IOException {
+    public ITupleReference getTupleFromMetadataEntity(Index instance) throws IOException, MetadataException {
         // write the key in the first 3 fields of the tuple
         tupleBuilder.reset();
         aString.setValue(instance.getDataverseName());
@@ -181,11 +183,19 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             aString.setValue(GRAM_LENGTH_FIELD_NAME);
             stringSerde.serialize(aString, nameValue.getDataOutput());
             intSerde.serialize(new AInt32(instance.getGramLength()), fieldValue.getDataOutput());
-            recordBuilder.addField(nameValue, fieldValue);
+            try {
+                recordBuilder.addField(nameValue, fieldValue);
+            } catch (AsterixException e) {
+                throw new MetadataException(e);
+            }
         }
 
         // write record
-        recordBuilder.write(tupleBuilder.getDataOutput(), true);
+        try {
+            recordBuilder.write(tupleBuilder.getDataOutput(), true);
+        } catch (AsterixException e) {
+            throw new MetadataException(e);
+        }
         tupleBuilder.addFieldEndOffset();
 
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());

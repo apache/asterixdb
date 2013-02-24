@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package edu.uci.ics.asterix.metadata.entities;
 
 import java.io.DataOutput;
@@ -22,6 +23,7 @@ import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -146,8 +148,8 @@ public class InternalDatasetDetails implements IDatasetDetails {
 
         try {
             internalRecordBuilder.write(out, true);
-        } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
+        } catch (IOException | AsterixException e) {
+            throw new HyracksDataException(e);
         }
     }
 

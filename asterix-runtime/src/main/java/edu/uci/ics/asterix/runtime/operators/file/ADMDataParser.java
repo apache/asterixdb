@@ -22,10 +22,8 @@ import java.util.BitSet;
 import java.util.List;
 import java.util.Queue;
 
-import edu.uci.ics.asterix.adm.parser.nontagged.AdmLexer;
-import edu.uci.ics.asterix.adm.parser.nontagged.AdmLexerConstants;
-import edu.uci.ics.asterix.adm.parser.nontagged.ParseException;
-import edu.uci.ics.asterix.adm.parser.nontagged.Token;
+import edu.uci.ics.asterix.runtime.operators.file.adm.AdmLexer;
+import edu.uci.ics.asterix.runtime.operators.file.adm.AdmLexerException;
 import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.IAsterixListBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
@@ -36,6 +34,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeseri
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ALineSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APoint3DSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
@@ -55,7 +54,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 
 /**
- * Parser for ADM formatted data. 
+ * Parser for ADM formatted data.
  */
 public class ADMDataParser extends AbstractDataParser implements IDataParser {
 
@@ -82,21 +81,25 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
     }
 
     @Override
-    public void initialize(InputStream in, ARecordType recordType, boolean datasetRec) {
-        admLexer = new AdmLexer(in);
+    public void initialize(InputStream in, ARecordType recordType, boolean datasetRec) throws AsterixException {
         this.recordType = recordType;
         this.datasetRec = datasetRec;
+        try {
+            admLexer = new AdmLexer(new java.io.InputStreamReader(in));
+        } catch (IOException e) {
+            throw new AsterixException(e);
+        }
     }
 
     protected boolean parseAdmInstance(IAType objectType, boolean datasetRec, DataOutput out) throws AsterixException,
             IOException {
-        Token token;
+        int token;
         try {
             token = admLexer.next();
-        } catch (ParseException pe) {
-            throw new AsterixException(pe);
+        } catch (AdmLexerException e) {
+            throw new AsterixException(e);
         }
-        if (token.kind == AdmLexerConstants.EOF) {
+        if (token == AdmLexer.TOKEN_EOF) {
             return false;
         } else {
             admFromLexerStream(token, objectType, out, datasetRec);
@@ -104,157 +107,212 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         }
     }
 
-    private void admFromLexerStream(Token token, IAType objectType, DataOutput out, Boolean datasetRec)
+    private void admFromLexerStream(int token, IAType objectType, DataOutput out, Boolean datasetRec)
             throws AsterixException, IOException {
 
-        switch (token.kind) {
-            case AdmLexerConstants.NULL_LITERAL: {
+        switch (token) {
+            case AdmLexer.TOKEN_NULL_LITERAL: {
                 if (checkType(ATypeTag.NULL, objectType, out)) {
                     nullSerde.serialize(ANull.NULL, out);
                 } else
                     throw new AsterixException(" This field can not be null ");
                 break;
             }
-            case AdmLexerConstants.TRUE_LITERAL: {
+            case AdmLexer.TOKEN_TRUE_LITERAL: {
                 if (checkType(ATypeTag.BOOLEAN, objectType, out)) {
                     booleanSerde.serialize(ABoolean.TRUE, out);
                 } else
                     throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
                 break;
             }
-            case AdmLexerConstants.BOOLEAN_CONS: {
+            case AdmLexer.TOKEN_BOOLEAN_CONS: {
                 parseConstructor(ATypeTag.BOOLEAN, objectType, out);
                 break;
             }
-            case AdmLexerConstants.FALSE_LITERAL: {
+            case AdmLexer.TOKEN_FALSE_LITERAL: {
                 if (checkType(ATypeTag.BOOLEAN, objectType, out)) {
                     booleanSerde.serialize(ABoolean.FALSE, out);
                 } else
                     throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
                 break;
             }
-            case AdmLexerConstants.DOUBLE_LITERAL: {
+            case AdmLexer.TOKEN_DOUBLE_LITERAL: {
                 if (checkType(ATypeTag.DOUBLE, objectType, out)) {
-                    aDouble.setValue(Double.parseDouble(token.image));
+                    aDouble.setValue(Double.parseDouble(admLexer.getLastTokenImage()));
                     doubleSerde.serialize(aDouble, out);
                 } else
                     throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
                 break;
             }
-            case AdmLexerConstants.DOUBLE_CONS: {
+            case AdmLexer.TOKEN_DOUBLE_CONS: {
                 parseConstructor(ATypeTag.DOUBLE, objectType, out);
                 break;
             }
-            case AdmLexerConstants.FLOAT_LITERAL: {
+            case AdmLexer.TOKEN_FLOAT_LITERAL: {
                 if (checkType(ATypeTag.FLOAT, objectType, out)) {
-                    aFloat.setValue(Float.parseFloat(token.image));
+                    aFloat.setValue(Float.parseFloat(admLexer.getLastTokenImage()));
                     floatSerde.serialize(aFloat, out);
                 } else
                     throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
                 break;
             }
-            case AdmLexerConstants.FLOAT_CONS: {
+            case AdmLexer.TOKEN_FLOAT_CONS: {
                 parseConstructor(ATypeTag.FLOAT, objectType, out);
                 break;
             }
-            case AdmLexerConstants.INT8_LITERAL: {
+            case AdmLexer.TOKEN_INT8_LITERAL: {
                 if (checkType(ATypeTag.INT8, objectType, out)) {
-                    parseInt8(token.image, out);
+                    parseInt8(admLexer.getLastTokenImage(), out);
                 } else
                     throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
                 break;
             }
-            case AdmLexerConstants.INT8_CONS: {
+            case AdmLexer.TOKEN_INT8_CONS: {
                 parseConstructor(ATypeTag.INT8, objectType, out);
                 break;
             }
-            case AdmLexerConstants.INT16_LITERAL: {
+            case AdmLexer.TOKEN_INT16_LITERAL: {
                 if (checkType(ATypeTag.INT16, objectType, out)) {
-                    parseInt16(token.image, out);
+                    parseInt16(admLexer.getLastTokenImage(), out);
                 } else
                     throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
                 break;
             }
-            case AdmLexerConstants.INT16_CONS: {
+            case AdmLexer.TOKEN_INT16_CONS: {
                 parseConstructor(ATypeTag.INT16, objectType, out);
                 break;
             }
-            case AdmLexerConstants.INT_LITERAL:
-            case AdmLexerConstants.INT32_LITERAL: {
+            case AdmLexer.TOKEN_INT_LITERAL:
+            case AdmLexer.TOKEN_INT32_LITERAL: {
                 if (checkType(ATypeTag.INT32, objectType, out)) {
-                    parseInt32(token.image, out);
+                    parseInt32(admLexer.getLastTokenImage(), out);
                 } else
                     throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
                 break;
             }
-            case AdmLexerConstants.INT32_CONS: {
+            case AdmLexer.TOKEN_INT32_CONS: {
                 parseConstructor(ATypeTag.INT32, objectType, out);
                 break;
             }
-            case AdmLexerConstants.INT64_LITERAL: {
+            case AdmLexer.TOKEN_INT64_LITERAL: {
                 if (checkType(ATypeTag.INT64, objectType, out)) {
-                    parseInt64(token.image, out);
+                    parseInt64(admLexer.getLastTokenImage(), out);
                 } else
                     throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
                 break;
             }
-            case AdmLexerConstants.INT64_CONS: {
+            case AdmLexer.TOKEN_INT64_CONS: {
                 parseConstructor(ATypeTag.INT64, objectType, out);
                 break;
             }
-            case AdmLexerConstants.STRING_LITERAL: {
+            case AdmLexer.TOKEN_STRING_LITERAL: {
                 if (checkType(ATypeTag.STRING, objectType, out)) {
-                    aString.setValue(token.image.substring(1, token.image.length() - 1));
+                    aString.setValue(admLexer.getLastTokenImage().substring(1,
+                            admLexer.getLastTokenImage().length() - 1));
                     stringSerde.serialize(aString, out);
                 } else
                     throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
                 break;
             }
-            case AdmLexerConstants.STRING_CONS: {
+            case AdmLexer.TOKEN_STRING_CONS: {
                 parseConstructor(ATypeTag.STRING, objectType, out);
                 break;
             }
-            case AdmLexerConstants.DATE_CONS: {
+            case AdmLexer.TOKEN_DATE_CONS: {
                 parseConstructor(ATypeTag.DATE, objectType, out);
                 break;
             }
-            case AdmLexerConstants.TIME_CONS: {
+            case AdmLexer.TOKEN_TIME_CONS: {
                 parseConstructor(ATypeTag.TIME, objectType, out);
                 break;
             }
-            case AdmLexerConstants.DATETIME_CONS: {
+            case AdmLexer.TOKEN_DATETIME_CONS: {
                 parseConstructor(ATypeTag.DATETIME, objectType, out);
                 break;
             }
-            case AdmLexerConstants.DURATION_CONS: {
+            case AdmLexer.TOKEN_INTERVAL_DATE_CONS: {
+                try {
+                    if (checkType(ATypeTag.INTERVAL, objectType, out)) {
+                        if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
+                            if (admLexer.next() == AdmLexer.TOKEN_STRING_CONS) {
+                                AIntervalSerializerDeserializer.parseDate(admLexer.getLastTokenImage(), out);
+
+                                if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } catch (AdmLexerException ex) {
+                    throw new AsterixException(ex);
+                }
+                throw new AsterixException("Wrong interval data parsing for date interval.");
+            }
+            case AdmLexer.TOKEN_INTERVAL_TIME_CONS: {
+                try {
+                    if (checkType(ATypeTag.INTERVAL, objectType, out)) {
+                        if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
+                            if (admLexer.next() == AdmLexer.TOKEN_STRING_CONS) {
+                                AIntervalSerializerDeserializer.parseTime(admLexer.getLastTokenImage(), out);
+
+                                if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } catch (AdmLexerException ex) {
+                    throw new AsterixException(ex);
+                }
+                throw new AsterixException("Wrong interval data parsing for time interval.");
+            }
+            case AdmLexer.TOKEN_INTERVAL_DATETIME_CONS: {
+                try {
+                    if (checkType(ATypeTag.INTERVAL, objectType, out)) {
+                        if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
+                            if (admLexer.next() == AdmLexer.TOKEN_STRING_CONS) {
+                                AIntervalSerializerDeserializer.parseDatetime(admLexer.getLastTokenImage(), out);
+
+                                if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } catch (AdmLexerException ex) {
+                    throw new AsterixException(ex);
+                }
+                throw new AsterixException("Wrong interval data parsing for datetime interval.");
+            }
+            case AdmLexer.TOKEN_DURATION_CONS: {
                 parseConstructor(ATypeTag.DURATION, objectType, out);
                 break;
             }
-            case AdmLexerConstants.POINT_CONS: {
+            case AdmLexer.TOKEN_POINT_CONS: {
                 parseConstructor(ATypeTag.POINT, objectType, out);
                 break;
             }
-            case AdmLexerConstants.POINT3D_CONS: {
+            case AdmLexer.TOKEN_POINT3D_CONS: {
                 parseConstructor(ATypeTag.POINT3D, objectType, out);
                 break;
             }
-            case AdmLexerConstants.CIRCLE_CONS: {
+            case AdmLexer.TOKEN_CIRCLE_CONS: {
                 parseConstructor(ATypeTag.CIRCLE, objectType, out);
                 break;
             }
-            case AdmLexerConstants.RECTANGLE_CONS: {
+            case AdmLexer.TOKEN_RECTANGLE_CONS: {
                 parseConstructor(ATypeTag.RECTANGLE, objectType, out);
                 break;
             }
-            case AdmLexerConstants.LINE_CONS: {
+            case AdmLexer.TOKEN_LINE_CONS: {
                 parseConstructor(ATypeTag.LINE, objectType, out);
                 break;
             }
-            case AdmLexerConstants.POLYGON_CONS: {
+            case AdmLexer.TOKEN_POLYGON_CONS: {
                 parseConstructor(ATypeTag.POLYGON, objectType, out);
                 break;
             }
-            case AdmLexerConstants.START_UNORDERED_LIST: {
+            case AdmLexer.TOKEN_START_UNORDERED_LIST: {
                 if (checkType(ATypeTag.UNORDEREDLIST, objectType, out)) {
                     objectType = getComplexType(objectType, ATypeTag.UNORDEREDLIST);
                     parseUnorderedList((AUnorderedListType) objectType, out);
@@ -263,7 +321,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
 
-            case AdmLexerConstants.START_ORDERED_LIST: {
+            case AdmLexer.TOKEN_START_ORDERED_LIST: {
                 if (checkType(ATypeTag.ORDEREDLIST, objectType, out)) {
                     objectType = getComplexType(objectType, ATypeTag.ORDEREDLIST);
                     parseOrderedList((AOrderedListType) objectType, out);
@@ -271,7 +329,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                     throw new AsterixException(mismatchErrorMessage + objectType.getTypeTag());
                 break;
             }
-            case AdmLexerConstants.START_RECORD: {
+            case AdmLexer.TOKEN_START_RECORD: {
                 if (checkType(ATypeTag.RECORD, objectType, out)) {
                     objectType = getComplexType(objectType, ATypeTag.RECORD);
                     parseRecord((ARecordType) objectType, out, datasetRec);
@@ -279,11 +337,11 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                     throw new AsterixException(mismatchErrorMessage + objectType.getTypeTag());
                 break;
             }
-            case AdmLexerConstants.EOF: {
+            case AdmLexer.TOKEN_EOF: {
                 break;
             }
             default: {
-                throw new AsterixException("Unexpected ADM token kind: " + admLexer.tokenKindToString(token.kind) + ".");
+                throw new AsterixException("Unexpected ADM token kind: " + AdmLexer.tokenKindToString(token) + ".");
             }
         }
     }
@@ -365,7 +423,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             recBuilder.reset(null);
 
         recBuilder.init();
-        Token token = null;
+        int token;
         boolean inRecord = true;
         boolean expectingRecordField = false;
         boolean first = true;
@@ -375,15 +433,15 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         IAType fieldType = null;
         do {
             token = nextToken();
-            switch (token.kind) {
-                case AdmLexerConstants.END_RECORD: {
+            switch (token) {
+                case AdmLexer.TOKEN_END_RECORD: {
                     if (expectingRecordField) {
                         throw new AsterixException("Found END_RECORD while expecting a record field.");
                     }
                     inRecord = false;
                     break;
                 }
-                case AdmLexerConstants.STRING_LITERAL: {
+                case AdmLexer.TOKEN_STRING_LITERAL: {
                     // we've read the name of the field
                     // now read the content
                     fieldNameBuffer.reset();
@@ -391,12 +449,14 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                     expectingRecordField = false;
 
                     if (recType != null) {
-                        String fldName = token.image.substring(1, token.image.length() - 1);
+                        String fldName = admLexer.getLastTokenImage().substring(1,
+                                admLexer.getLastTokenImage().length() - 1);
                         fieldId = recBuilder.getFieldId(fldName);
                         if (fieldId < 0 && !recType.isOpen()) {
                             throw new AsterixException("This record is closed, you can not add extra fields !!");
                         } else if (fieldId < 0 && recType.isOpen()) {
-                            aStringFieldName.setValue(token.image.substring(1, token.image.length() - 1));
+                            aStringFieldName.setValue(admLexer.getLastTokenImage().substring(1,
+                                    admLexer.getLastTokenImage().length() - 1));
                             stringSerde.serialize(aStringFieldName, fieldNameBuffer.getDataOutput());
                             openRecordField = true;
                             fieldType = null;
@@ -407,16 +467,17 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                             openRecordField = false;
                         }
                     } else {
-                        aStringFieldName.setValue(token.image.substring(1, token.image.length() - 1));
+                        aStringFieldName.setValue(admLexer.getLastTokenImage().substring(1,
+                                admLexer.getLastTokenImage().length() - 1));
                         stringSerde.serialize(aStringFieldName, fieldNameBuffer.getDataOutput());
                         openRecordField = true;
                         fieldType = null;
                     }
 
                     token = nextToken();
-                    if (token.kind != AdmLexerConstants.COLON) {
-                        throw new AsterixException("Unexpected ADM token kind: "
-                                + admLexer.tokenKindToString(token.kind) + " while expecting \":\".");
+                    if (token != AdmLexer.TOKEN_COLON) {
+                        throw new AsterixException("Unexpected ADM token kind: " + AdmLexer.tokenKindToString(token)
+                                + " while expecting \":\".");
                     }
 
                     token = nextToken();
@@ -436,7 +497,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
 
                     break;
                 }
-                case AdmLexerConstants.COMMA: {
+                case AdmLexer.TOKEN_COMMA: {
                     if (first) {
                         throw new AsterixException("Found COMMA before any record field.");
                     }
@@ -447,7 +508,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                     break;
                 }
                 default: {
-                    throw new AsterixException("Unexpected ADM token kind: " + admLexer.tokenKindToString(token.kind)
+                    throw new AsterixException("Unexpected ADM token kind: " + AdmLexer.tokenKindToString(token)
                             + " while parsing record fields.");
                 }
             }
@@ -498,18 +559,18 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             itemType = oltype.getItemType();
         orderedListBuilder.reset(oltype);
 
-        Token token = null;
+        int token;
         boolean inList = true;
         boolean expectingListItem = false;
         boolean first = true;
         do {
             token = nextToken();
-            if (token.kind == AdmLexerConstants.END_ORDERED_LIST) {
+            if (token == AdmLexer.TOKEN_END_ORDERED_LIST) {
                 if (expectingListItem) {
                     throw new AsterixException("Found END_COLLECTION while expecting a list item.");
                 }
                 inList = false;
-            } else if (token.kind == AdmLexerConstants.COMMA) {
+            } else if (token == AdmLexer.TOKEN_COMMA) {
                 if (first) {
                     throw new AsterixException("Found COMMA before any list item.");
                 }
@@ -542,18 +603,18 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             itemType = uoltype.getItemType();
         unorderedListBuilder.reset(uoltype);
 
-        Token token = null;
+        int token;
         boolean inList = true;
         boolean expectingListItem = false;
         boolean first = true;
         do {
             token = nextToken();
-            if (token.kind == AdmLexerConstants.END_UNORDERED_LIST) {
+            if (token == AdmLexer.TOKEN_END_UNORDERED_LIST) {
                 if (expectingListItem) {
                     throw new AsterixException("Found END_COLLECTION while expecting a list item.");
                 }
                 inList = false;
-            } else if (token.kind == AdmLexerConstants.COMMA) {
+            } else if (token == AdmLexer.TOKEN_COMMA) {
                 if (first) {
                     throw new AsterixException("Found COMMA before any list item.");
                 }
@@ -574,11 +635,13 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         returnTempBuffer(itemBuffer);
     }
 
-    private Token nextToken() throws AsterixException {
+    private int nextToken() throws AsterixException {
         try {
             return admLexer.next();
-        } catch (ParseException pe) {
-            throw new AsterixException(pe);
+        } catch (AdmLexerException e) {
+            throw new AsterixException(e);
+        } catch (IOException e) {
+            throw new AsterixException(e);
         }
     }
 
@@ -633,73 +696,109 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
 
     private void parseConstructor(ATypeTag typeTag, IAType objectType, DataOutput out) throws AsterixException {
         try {
-            Token token = admLexer.next();
-            if (token.kind == AdmLexerConstants.CONSTRUCTOR_OPEN) {
+            int token = admLexer.next();
+            if (token == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
                 if (checkType(typeTag, objectType, out)) {
                     token = admLexer.next();
-                    if (token.kind == AdmLexerConstants.STRING_LITERAL) {
+                    if (token == AdmLexer.TOKEN_STRING_LITERAL) {
                         switch (typeTag) {
                             case BOOLEAN:
-                                parseBoolean(token.image.substring(1, token.image.length() - 1), out);
+                                parseBoolean(
+                                        admLexer.getLastTokenImage().substring(1,
+                                                admLexer.getLastTokenImage().length() - 1), out);
                                 break;
                             case INT8:
-                                parseInt8(token.image.substring(1, token.image.length() - 1), out);
+                                parseInt8(
+                                        admLexer.getLastTokenImage().substring(1,
+                                                admLexer.getLastTokenImage().length() - 1), out);
                                 break;
                             case INT16:
-                                parseInt16(token.image.substring(1, token.image.length() - 1), out);
+                                parseInt16(
+                                        admLexer.getLastTokenImage().substring(1,
+                                                admLexer.getLastTokenImage().length() - 1), out);
                                 break;
                             case INT32:
-                                parseInt32(token.image.substring(1, token.image.length() - 1), out);
+                                parseInt32(
+                                        admLexer.getLastTokenImage().substring(1,
+                                                admLexer.getLastTokenImage().length() - 1), out);
                                 break;
                             case INT64:
-                                parseInt64(token.image.substring(1, token.image.length() - 1), out);
+                                parseInt64(
+                                        admLexer.getLastTokenImage().substring(1,
+                                                admLexer.getLastTokenImage().length() - 1), out);
                                 break;
                             case FLOAT:
-                                aFloat.setValue(Float.parseFloat(token.image.substring(1, token.image.length() - 1)));
+                                aFloat.setValue(Float.parseFloat(admLexer.getLastTokenImage().substring(1,
+                                        admLexer.getLastTokenImage().length() - 1)));
                                 floatSerde.serialize(aFloat, out);
                                 break;
                             case DOUBLE:
-                                aDouble.setValue(Double.parseDouble(token.image.substring(1, token.image.length() - 1)));
+                                aDouble.setValue(Double.parseDouble(admLexer.getLastTokenImage().substring(1,
+                                        admLexer.getLastTokenImage().length() - 1)));
                                 doubleSerde.serialize(aDouble, out);
                                 break;
                             case STRING:
-                                aString.setValue(token.image.substring(1, token.image.length() - 1));
+                                aString.setValue(admLexer.getLastTokenImage().substring(1,
+                                        admLexer.getLastTokenImage().length() - 1));
                                 stringSerde.serialize(aString, out);
                                 break;
                             case TIME:
-                                parseTime(token.image.substring(1, token.image.length() - 1), out);
+                                parseTime(
+                                        admLexer.getLastTokenImage().substring(1,
+                                                admLexer.getLastTokenImage().length() - 1), out);
                                 break;
                             case DATE:
-                                parseDate(token.image.substring(1, token.image.length() - 1), out);
+                                parseDate(
+                                        admLexer.getLastTokenImage().substring(1,
+                                                admLexer.getLastTokenImage().length() - 1), out);
                                 break;
                             case DATETIME:
-                                parseDatetime(token.image.substring(1, token.image.length() - 1), out);
+                                parseDatetime(
+                                        admLexer.getLastTokenImage().substring(1,
+                                                admLexer.getLastTokenImage().length() - 1), out);
                                 break;
                             case DURATION:
-                                parseDuration(token.image.substring(1, token.image.length() - 1), out);
+                                parseDuration(
+                                        admLexer.getLastTokenImage().substring(1,
+                                                admLexer.getLastTokenImage().length() - 1), out);
                                 break;
                             case POINT:
-                                parsePoint(token.image.substring(1, token.image.length() - 1), out);
+                                parsePoint(
+                                        admLexer.getLastTokenImage().substring(1,
+                                                admLexer.getLastTokenImage().length() - 1), out);
                                 break;
                             case POINT3D:
-                                parsePoint3d(token.image.substring(1, token.image.length() - 1), out);
+                                parsePoint3d(
+                                        admLexer.getLastTokenImage().substring(1,
+                                                admLexer.getLastTokenImage().length() - 1), out);
                                 break;
                             case CIRCLE:
-                                parseCircle(token.image.substring(1, token.image.length() - 1), out);
+                                parseCircle(
+                                        admLexer.getLastTokenImage().substring(1,
+                                                admLexer.getLastTokenImage().length() - 1), out);
                                 break;
                             case RECTANGLE:
-                                parseRectangle(token.image.substring(1, token.image.length() - 1), out);
+                                parseRectangle(
+                                        admLexer.getLastTokenImage().substring(1,
+                                                admLexer.getLastTokenImage().length() - 1), out);
                                 break;
                             case LINE:
-                                parseLine(token.image.substring(1, token.image.length() - 1), out);
+                                parseLine(
+                                        admLexer.getLastTokenImage().substring(1,
+                                                admLexer.getLastTokenImage().length() - 1), out);
                                 break;
                             case POLYGON:
-                                parsePolygon(token.image.substring(1, token.image.length() - 1), out);
+                                parsePolygon(
+                                        admLexer.getLastTokenImage().substring(1,
+                                                admLexer.getLastTokenImage().length() - 1), out);
                                 break;
+                            default:
+                                throw new AsterixException("Missing deserializer method for constructor: "
+                                        + AdmLexer.tokenKindToString(token) + ".");
 
                         }
                         token = admLexer.next();
-                        if (token.kind == AdmLexerConstants.CONSTRUCTOR_CLOSE)
+                        if (token == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE)
                             return;
                     }
                 }
