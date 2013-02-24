@@ -46,7 +46,6 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
     private final int partition;
     private final int nPartitions;
     private int inputArity = 0;
-    private boolean initialized = false;
 
     public SuperActivityOperatorNodePushable(SuperActivity parent, Map<ActivityId, IActivity> startActivities,
             IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
@@ -56,11 +55,19 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
         this.recordDescProvider = recordDescProvider;
         this.partition = partition;
         this.nPartitions = nPartitions;
+
+        /**
+         * initialize the writer-relationship for the internal DAG of operator node pushables
+         */
+        try {
+            init();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override
     public synchronized void initialize() throws HyracksDataException {
-        init();
         /**
          * initialize operator node pushables in the BFS order
          */
@@ -71,10 +78,6 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
     }
 
     public void init() throws HyracksDataException {
-        if (initialized) {
-            return;
-        }
-
         Map<ActivityId, IOperatorNodePushable> startOperatorNodePushables = new HashMap<ActivityId, IOperatorNodePushable>();
         Queue<Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>> childQueue = new LinkedList<Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>>();
         List<IConnectorDescriptor> outputConnectors = null;
@@ -140,8 +143,6 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
              */
             outputConnectors = parent.getActivityOutputMap().get(destId);
         }
-
-        initialized = true;
     }
 
     @Override
@@ -162,11 +163,6 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
     @Override
     public synchronized void setOutputFrameWriter(int clusterOutputIndex, IFrameWriter writer,
             RecordDescriptor recordDesc) {
-        try {
-            init();
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
         /**
          * set the right output frame writer
          */
@@ -177,12 +173,6 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
 
     @Override
     public synchronized IFrameWriter getInputFrameWriter(final int index) {
-        try {
-            init();
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-
         /**
          * get the right IFrameWriter from the cluster input index
          */

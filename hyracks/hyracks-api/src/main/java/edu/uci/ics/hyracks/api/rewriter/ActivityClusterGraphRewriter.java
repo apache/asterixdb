@@ -37,10 +37,27 @@ import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
 import edu.uci.ics.hyracks.api.job.ActivityClusterId;
 import edu.uci.ics.hyracks.api.rewriter.runtime.SuperActivity;
 
+/**
+ * This class rewrite the AcivityClusterGraph to eliminate
+ * all one-to-one connections and merge one-to-one connected
+ * DAGs into super activities.
+ * </p>
+ * Each super activity internally maintains a DAG and execute it at the runtime.
+ * 
+ * @author yingyib
+ */
 public class ActivityClusterGraphRewriter implements Serializable {
     private static final long serialVersionUID = 1L;
     private static String ONE_TO_ONE_CONNECTOR = "OneToOneConnectorDescriptor";
 
+    /**
+     * rewrite an activity cluster graph to eliminate
+     * all one-to-one connections and merge one-to-one connected
+     * DAGs into super activities.
+     * 
+     * @param acg
+     *            the activity cluster graph
+     */
     public void rewrite(ActivityClusterGraph acg) {
         acg.getActivityMap().clear();
         acg.getConnectorMap().clear();
@@ -102,7 +119,6 @@ public class ActivityClusterGraphRewriter implements Serializable {
      * rewrite an activity cluster internally
      * 
      * @param ac
-     *            the activity cluster to be rewritten
      *            the activity cluster to be rewritten
      */
     private void rewriteIntraActivityCluster(ActivityCluster ac,
