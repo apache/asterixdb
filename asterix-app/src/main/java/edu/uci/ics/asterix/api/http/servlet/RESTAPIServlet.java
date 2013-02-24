@@ -76,7 +76,8 @@ abstract class RESTAPIServlet extends HttpServlet {
                     context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
                 }
             }
-            AQLParser parser = new AQLParser(new StringReader(query));
+
+            AQLParser parser = new AQLParser(query);
             List<Statement> aqlStatements = parser.Statement();
             if (checkForbiddenStatements(aqlStatements, out)) {
                 return;
