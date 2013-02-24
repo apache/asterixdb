@@ -56,7 +56,7 @@ public class EventExecutor {
 							: node.getJavaHome();
 					envBuffer.append(p.getKey() + "=" + val + " ");
 				} else if (p.getKey().equals("JAVA_OPTS")) {
-					String val = "-Xmx" + (node.getRam() == null ? p.getValue()
+					String val = "-Xmx" + (node.getRam() == null ? cluster.getRam()
 							: node.getRam());
 					envBuffer.append(p.getKey() + "=" + val + " ");
 				} else {

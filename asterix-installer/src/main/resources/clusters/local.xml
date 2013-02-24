@@ -1,18 +1,17 @@
 <cluster xmlns="cluster">
   <name>local</name>
-  <ram>1024m</ram>
-  <java_home>$JAVA_HOME</java_home>
   <workingDir>
-     <dir>/Users/ramangrover29/asterix/working</dir>
-     <NFS>true</NFS>
+     <dir>/tmp/asterix/installer</dir> <!-- a working directory with write permissions>
+     <NFS>true</NFS> <!--true if the directory is on NFS and readable by all nodes in the cluster>
   </workingDir>
-  <logdir>/Users/ramangrover29/asterix/logs</logdir>
-  <store>/Users/ramangrover29/asterix/storage</store>
+  <logdir>/tmp/asterix/logs</logdir><!-- directory that will house the logs writtern by Asterix processes (CC/NC)-->
+  <store>/tmp/asterix/storage</store><!-- storage directory (on each node) that will house the Asterix datasets-->
+  <java_home>/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home</java_home>
+  <ram>1024m</ram>
   <master-node>
      <id>master</id>
      <ip>127.0.0.1</ip>
      <cluster-ip>127.0.0.1</cluster-ip>
-     <ram>512m</ram>
   </master-node>
   <node>
      <id>node1</id>

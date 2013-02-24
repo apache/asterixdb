@@ -45,7 +45,7 @@ public class AsterixAppRuntimeContext {
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
         IIOManager ioMgr = ncApplicationContext.getRootContext().getIOManager();
-        IPageCleanerPolicy pcp = new DelayPageCleanerPolicy(600000);
+        IPageCleanerPolicy pcp = new DelayPageCleanerPolicy(1000);
         bufferCache = new BufferCache(ioMgr, allocator, prs, pcp, fileMapManager, pageSize, numPages, Integer.MAX_VALUE);
 
         // Initialize the index registry
