@@ -1,0 +1,63 @@
+# LEXER GENERATOR configuration file
+# ---------------------------------------
+# Place *first* the generic configuration
+# then list your grammar.
+
+PACKAGE:          edu.uci.ics.asterix.runtime.operators.file.adm
+LEXER_NAME:       AdmLexer
+
+TOKENS:
+
+BOOLEAN_CONS   = string(boolean)
+INT8_CONS      = string(int8)
+INT16_CONS     = string(int16)
+INT32_CONS     = string(int32)
+INT64_CONS     = string(int64)
+FLOAT_CONS     = string(float)
+DOUBLE_CONS    = string(double)
+DATE_CONS      = string(date)
+DATETIME_CONS  = string(datetime)
+DURATION_CONS  = string(duration)
+STRING_CONS    = string(string)
+POINT_CONS     = string(point)
+POINT3D_CONS   = string(point3d)
+LINE_CONS      = string(line)
+POLYGON_CONS   = string(polygon)
+RECTANGLE_CONS = string(rectangle)
+CIRCLE_CONS    = string(circle)
+TIME_CONS      = string(time)
+INTERVAL_TIME_CONS      = string(interval_time)
+INTERVAL_DATE_CONS      = string(interval_date)
+INTERVAL_DATETIME_CONS  = string(interval_datetime)
+
+NULL_LITERAL   = string(null)
+TRUE_LITERAL   = string(true)
+FALSE_LITERAL  = string(false)
+
+CONSTRUCTOR_OPEN     = char(()
+CONSTRUCTOR_CLOSE    = char())
+START_RECORD         = char({)
+END_RECORD           = char(})
+COMMA                = char(\,)
+COLON                = char(:)
+START_ORDERED_LIST   = char([)
+END_ORDERED_LIST     = char(])
+START_UNORDERED_LIST = string({{)
+END_UNORDERED_LIST   = string(}})
+
+STRING_LITERAL       = char("), anythingUntil(")
+
+INT_LITERAL          = signOrNothing(), digitSequence()
+INT8_LITERAL         = token(INT_LITERAL), string(i8)
+INT16_LITERAL        = token(INT_LITERAL), string(i16)
+INT32_LITERAL        = token(INT_LITERAL), string(i32)
+INT64_LITERAL        = token(INT_LITERAL), string(i64)
+
+@EXPONENT            = caseInsensitiveChar(e), signOrNothing(), digitSequence()
+
+DOUBLE_LITERAL		 = signOrNothing(), char(.), digitSequence()
+DOUBLE_LITERAL		 = signOrNothing(), digitSequence(), char(.), digitSequence()
+DOUBLE_LITERAL		 = signOrNothing(), digitSequence(), char(.), digitSequence(), token(@EXPONENT)
+DOUBLE_LITERAL		 = signOrNothing(), digitSequence(), token(@EXPONENT)
+
+FLOAT_LITERAL		 = token(DOUBLE_LITERAL), caseInsensitiveChar(f)

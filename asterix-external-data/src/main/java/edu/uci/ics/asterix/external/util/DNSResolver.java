@@ -35,7 +35,7 @@ public class DNSResolver implements INodeResolver {
             if (nodeControllers == null || nodeControllers.isEmpty()) {
                 throw new AsterixException(" No node controllers found at the address: " + value);
             }
-            String chosenNCId = nodeControllers.toArray(new String[nodeControllers.size()])[random
+            String chosenNCId = nodeControllers.toArray(new String[]{})[random
                     .nextInt(nodeControllers.size())];
             return chosenNCId;
         } catch (AsterixException ae) {

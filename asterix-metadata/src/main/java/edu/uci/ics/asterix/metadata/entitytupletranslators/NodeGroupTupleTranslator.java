@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -24,7 +24,9 @@ import java.util.Calendar;
 import java.util.List;
 
 import edu.uci.ics.asterix.builders.UnorderedListBuilder;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataRecordTypes;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
@@ -79,7 +81,7 @@ public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup>
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(NodeGroup instance) throws IOException {
+    public ITupleReference getTupleFromMetadataEntity(NodeGroup instance) throws IOException, MetadataException {
         // write the key in the first field of the tuple
         tupleBuilder.reset();
         aString.setValue(instance.getNodeGroupName());
@@ -114,7 +116,11 @@ public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup>
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.NODEGROUP_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
 
-        recordBuilder.write(tupleBuilder.getDataOutput(), true);
+        try {
+            recordBuilder.write(tupleBuilder.getDataOutput(), true);
+        } catch (AsterixException e) {
+            throw new MetadataException(e);
+        }
         tupleBuilder.addFieldEndOffset();
 
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());

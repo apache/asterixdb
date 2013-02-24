@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -15,6 +15,8 @@
 
 package edu.uci.ics.asterix.om.pointables.base;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.exceptions.AsterixRuntimeException;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -27,13 +29,19 @@ import edu.uci.ics.asterix.om.types.IAType;
  * fields in the open part, e.g., a "record" (nested) field in the open part is
  * always a fully open one, and a "list" field in the open part is always a list
  * of "ANY".
- * 
  */
 public class DefaultOpenFieldType {
 
     // nested open field rec type
-    public static ARecordType NESTED_OPEN_RECORD_TYPE = new ARecordType("nested-open", new String[] {},
-            new IAType[] {}, true);
+    public static ARecordType NESTED_OPEN_RECORD_TYPE;
+
+    static {
+        try {
+            NESTED_OPEN_RECORD_TYPE = new ARecordType("nested-open", new String[] {}, new IAType[] {}, true);
+        } catch (AsterixException e) {
+            throw new AsterixRuntimeException();
+        }
+    }
 
     // nested open list type
     public static AOrderedListType NESTED_OPEN_AORDERED_LIST_TYPE = new AOrderedListType(BuiltinType.ANY,

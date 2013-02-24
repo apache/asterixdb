@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -18,6 +18,8 @@ package edu.uci.ics.asterix.metadata.bootstrap;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.AUnionType;
@@ -49,31 +51,34 @@ public final class MetadataRecordTypes {
     /**
      * Create all metadata record types.
      */
-    public static void init() {
+    public static void init() throws MetadataException {
         // Attention: The order of these calls is important because some types
         // depend on other types being created first.
         // These calls are one "dependency chain".
-        DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE = createPropertiesRecordType();
-        INTERNAL_DETAILS_RECORDTYPE = createInternalDetailsRecordType();
-        EXTERNAL_DETAILS_RECORDTYPE = createExternalDetailsRecordType();
-        FEED_DETAILS_RECORDTYPE = createFeedDetailsRecordType();
-        DATASET_HINTS_RECORDTYPE = createPropertiesRecordType();
-        DATASET_RECORDTYPE = createDatasetRecordType();
+        try {
+            DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE = createPropertiesRecordType();
+            INTERNAL_DETAILS_RECORDTYPE = createInternalDetailsRecordType();
+            EXTERNAL_DETAILS_RECORDTYPE = createExternalDetailsRecordType();
+            FEED_DETAILS_RECORDTYPE = createFeedDetailsRecordType();
+            DATASET_HINTS_RECORDTYPE = createPropertiesRecordType();
+            DATASET_RECORDTYPE = createDatasetRecordType();
 
-        // Starting another dependency chain.
-        FIELD_RECORDTYPE = createFieldRecordType();
-        RECORD_RECORDTYPE = createRecordTypeRecordType();
-        DERIVEDTYPE_RECORDTYPE = createDerivedTypeRecordType();
-        DATATYPE_RECORDTYPE = createDatatypeRecordType();
+            // Starting another dependency chain.
+            FIELD_RECORDTYPE = createFieldRecordType();
+            RECORD_RECORDTYPE = createRecordTypeRecordType();
+            DERIVEDTYPE_RECORDTYPE = createDerivedTypeRecordType();
+            DATATYPE_RECORDTYPE = createDatatypeRecordType();
 
-        // Independent of any other types.
-        DATAVERSE_RECORDTYPE = createDataverseRecordType();
-        INDEX_RECORDTYPE = createIndexRecordType();
-        NODE_RECORDTYPE = createNodeRecordType();
-        NODEGROUP_RECORDTYPE = createNodeGroupRecordType();
-        FUNCTION_RECORDTYPE = createFunctionRecordType();
-        DATASOURCE_ADAPTER_RECORDTYPE = createDatasourceAdapterRecordType();
-
+            // Independent of any other types.
+            DATAVERSE_RECORDTYPE = createDataverseRecordType();
+            INDEX_RECORDTYPE = createIndexRecordType();
+            NODE_RECORDTYPE = createNodeRecordType();
+            NODEGROUP_RECORDTYPE = createNodeGroupRecordType();
+            FUNCTION_RECORDTYPE = createFunctionRecordType();
+            DATASOURCE_ADAPTER_RECORDTYPE = createDatasourceAdapterRecordType();
+        } catch (AsterixException e) {
+            throw new MetadataException(e);
+        }
     }
 
     // Helper constants for accessing fields in an ARecord of type
@@ -82,7 +87,7 @@ public final class MetadataRecordTypes {
     public static final int DATAVERSE_ARECORD_FORMAT_FIELD_INDEX = 1;
     public static final int DATAVERSE_ARECORD_TIMESTAMP_FIELD_INDEX = 2;
 
-    private static final ARecordType createDataverseRecordType() {
+    private static final ARecordType createDataverseRecordType() throws AsterixException {
         return new ARecordType("DataverseRecordType", new String[] { "DataverseName", "DataFormat", "Timestamp" },
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING }, true);
     }
@@ -93,7 +98,7 @@ public final class MetadataRecordTypes {
     public static final int DATASOURCE_PROPERTIES_NAME_FIELD_INDEX = 0;
     public static final int DATASOURCE_PROPERTIES_VALUE_FIELD_INDEX = 1;
 
-    private static final ARecordType createPropertiesRecordType() {
+    private static final ARecordType createPropertiesRecordType() throws AsterixException {
         String[] fieldNames = { "Name", "Value" };
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING };
         return new ARecordType(null, fieldNames, fieldTypes, true);
@@ -107,7 +112,7 @@ public final class MetadataRecordTypes {
     public static final int INTERNAL_DETAILS_ARECORD_PRIMARYKEY_FIELD_INDEX = 3;
     public static final int INTERNAL_DETAILS_ARECORD_GROUPNAME_FIELD_INDEX = 4;
 
-    private static final ARecordType createInternalDetailsRecordType() {
+    private static final ARecordType createInternalDetailsRecordType() throws AsterixException {
         AOrderedListType olType = new AOrderedListType(BuiltinType.ASTRING, null);
         String[] fieldNames = { "FileStructure", "PartitioningStrategy", "PartitioningKey", "PrimaryKey", "GroupName" };
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, olType, olType, BuiltinType.ASTRING };
@@ -119,7 +124,7 @@ public final class MetadataRecordTypes {
     public static final int EXTERNAL_DETAILS_ARECORD_DATASOURCE_ADAPTER_FIELD_INDEX = 0;
     public static final int EXTERNAL_DETAILS_ARECORD_PROPERTIES_FIELD_INDEX = 1;
 
-    private static final ARecordType createExternalDetailsRecordType() {
+    private static final ARecordType createExternalDetailsRecordType() throws AsterixException {
 
         AOrderedListType orderedPropertyListType = new AOrderedListType(DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE, null);
         String[] fieldNames = { "DatasourceAdapter", "Properties" };
@@ -137,7 +142,7 @@ public final class MetadataRecordTypes {
     public static final int FEED_DETAILS_ARECORD_FUNCTION_FIELD_INDEX = 7;
     public static final int FEED_DETAILS_ARECORD_STATE_FIELD_INDEX = 8;
 
-    private static final ARecordType createFeedDetailsRecordType() {
+    private static final ARecordType createFeedDetailsRecordType() throws AsterixException {
         AOrderedListType orderedListType = new AOrderedListType(BuiltinType.ASTRING, null);
         AOrderedListType orderedListOfPropertiesType = new AOrderedListType(DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE,
                 null);
@@ -168,7 +173,7 @@ public final class MetadataRecordTypes {
     public static final int DATASET_ARECORD_HINTS_FIELD_INDEX = 7;
     public static final int DATASET_ARECORD_TIMESTAMP_FIELD_INDEX = 8;
 
-    private static final ARecordType createDatasetRecordType() {
+    private static final ARecordType createDatasetRecordType() throws AsterixException {
         String[] fieldNames = { "DataverseName", "DatasetName", "DataTypeName", "DatasetType", "InternalDetails",
                 "ExternalDetails", "FeedDetails", "Hints", "Timestamp" };
 
@@ -200,7 +205,7 @@ public final class MetadataRecordTypes {
     public static final int FIELD_ARECORD_FIELDNAME_FIELD_INDEX = 0;
     public static final int FIELD_ARECORD_FIELDTYPE_FIELD_INDEX = 1;
 
-    private static final ARecordType createFieldRecordType() {
+    private static final ARecordType createFieldRecordType() throws AsterixException {
         String[] fieldNames = { "FieldName", "FieldType" };
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING };
         return new ARecordType(null, fieldNames, fieldTypes, true);
@@ -211,7 +216,7 @@ public final class MetadataRecordTypes {
     public static final int RECORDTYPE_ARECORD_ISOPEN_FIELD_INDEX = 0;
     public static final int RECORDTYPE_ARECORD_FIELDS_FIELD_INDEX = 1;
 
-    private static final ARecordType createRecordTypeRecordType() {
+    private static final ARecordType createRecordTypeRecordType() throws AsterixException {
         AOrderedListType olType = new AOrderedListType(FIELD_RECORDTYPE, null);
         String[] fieldNames = { "IsOpen", "Fields" };
         IAType[] fieldTypes = { BuiltinType.ABOOLEAN, olType };
@@ -228,7 +233,7 @@ public final class MetadataRecordTypes {
     public static final int DERIVEDTYPE_ARECORD_UNORDEREDLIST_FIELD_INDEX = 5;
     public static final int DERIVEDTYPE_ARECORD_ORDEREDLIST_FIELD_INDEX = 6;
 
-    private static final ARecordType createDerivedTypeRecordType() {
+    private static final ARecordType createDerivedTypeRecordType() throws AsterixException {
         String[] fieldNames = { "Tag", "IsAnonymous", "EnumValues", "Record", "Union", "UnorderedList", "OrderedList" };
         List<IAType> recordUnionList = new ArrayList<IAType>();
         recordUnionList.add(BuiltinType.ANULL);
@@ -257,7 +262,7 @@ public final class MetadataRecordTypes {
     public static final int DATATYPE_ARECORD_DERIVED_FIELD_INDEX = 2;
     public static final int DATATYPE_ARECORD_TIMESTAMP_FIELD_INDEX = 3;
 
-    private static final ARecordType createDatatypeRecordType() {
+    private static final ARecordType createDatatypeRecordType() throws AsterixException {
         String[] fieldNames = { "DataverseName", "DatatypeName", "Derived", "Timestamp" };
         List<IAType> recordUnionList = new ArrayList<IAType>();
         recordUnionList.add(BuiltinType.ANULL);
@@ -277,7 +282,7 @@ public final class MetadataRecordTypes {
     public static final int INDEX_ARECORD_ISPRIMARY_FIELD_INDEX = 5;
     public static final int INDEX_ARECORD_TIMESTAMP_FIELD_INDEX = 6;
 
-    private static final ARecordType createIndexRecordType() {
+    private static final ARecordType createIndexRecordType() throws AsterixException {
         AOrderedListType olType = new AOrderedListType(BuiltinType.ASTRING, null);
         String[] fieldNames = { "DataverseName", "DatasetName", "IndexName", "IndexStructure", "SearchKey",
                 "IsPrimary", "Timestamp" };
@@ -292,7 +297,7 @@ public final class MetadataRecordTypes {
     public static final int NODE_ARECORD_NUMBEROFCORES_FIELD_INDEX = 1;
     public static final int NODE_ARECORD_WORKINGMEMORYSIZE_FIELD_INDEX = 2;
 
-    private static final ARecordType createNodeRecordType() {
+    private static final ARecordType createNodeRecordType() throws AsterixException {
         String[] fieldNames = { "NodeName", "NumberOfCores", "WorkingMemorySize" };
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.AINT32, BuiltinType.AINT32 };
         return new ARecordType("NodeRecordType", fieldNames, fieldTypes, true);
@@ -304,7 +309,7 @@ public final class MetadataRecordTypes {
     public static final int NODEGROUP_ARECORD_NODENAMES_FIELD_INDEX = 1;
     public static final int NODEGROUP_ARECORD_TIMESTAMP_FIELD_INDEX = 2;
 
-    private static final ARecordType createNodeGroupRecordType() {
+    private static final ARecordType createNodeGroupRecordType() throws AsterixException {
         AUnorderedListType ulType = new AUnorderedListType(BuiltinType.ASTRING, null);
         String[] fieldNames = { "GroupName", "NodeNames", "Timestamp" };
         IAType[] fieldTypes = { BuiltinType.ASTRING, ulType, BuiltinType.ASTRING };
@@ -326,7 +331,7 @@ public final class MetadataRecordTypes {
     public static final int FUNCTION_ARECORD_FUNCTION_LANGUAGE_FIELD_INDEX = 6;
     public static final int FUNCTION_ARECORD_FUNCTION_KIND_FIELD_INDEX = 7;
 
-    private static final ARecordType createFunctionRecordType() {
+    private static final ARecordType createFunctionRecordType() throws AsterixException {
 
         String[] fieldNames = { "DataverseName", "Name", "Arity", "Params", "ReturnType", "Definition", "Language",
                 "Kind" };
@@ -342,7 +347,7 @@ public final class MetadataRecordTypes {
     public static final int DATASOURCE_ADAPTER_ARECORD_TYPE_FIELD_INDEX = 3;
     public static final int DATASOURCE_ADAPTER_ARECORD_TIMESTAMP_FIELD_INDEX = 4;
 
-    private static ARecordType createDatasourceAdapterRecordType() {
+    private static ARecordType createDatasourceAdapterRecordType() throws AsterixException {
         String[] fieldNames = { "DataverseName", "Name", "Classname", "Type", "Timestamp" };
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
                 BuiltinType.ASTRING };

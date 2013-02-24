@@ -61,7 +61,7 @@ public class NCFileSystemAdapter extends FileSystemBasedAdapter {
         return AdapterType.READ;
     }
 
-    private void configureFileSplits(String[] splits) throws AsterixException {
+    private void configureFileSplits(String[] splits)  {
         if (fileSplits == null) {
             fileSplits = new FileSplit[splits.length];
             String nodeName;

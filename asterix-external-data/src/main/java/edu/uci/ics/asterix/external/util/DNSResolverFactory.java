@@ -19,7 +19,7 @@ package edu.uci.ics.asterix.external.util;
  */
 public class DNSResolverFactory implements INodeResolverFactory {
 
-    private static INodeResolver INSTANCE = new DNSResolver();
+    private static final INodeResolver INSTANCE = new DNSResolver();
 
     @Override
     public INodeResolver createNodeResolver() {

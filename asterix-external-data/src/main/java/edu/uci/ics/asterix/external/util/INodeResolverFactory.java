@@ -14,6 +14,11 @@
  */
 package edu.uci.ics.asterix.external.util;
 
+/**
+ * Factory for creating an instance of INodeResolver
+ * 
+ *  @see INodeResolver
+ */
 public interface INodeResolverFactory {
 
     /**
