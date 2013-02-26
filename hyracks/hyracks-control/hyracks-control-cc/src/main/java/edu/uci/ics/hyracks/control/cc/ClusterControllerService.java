@@ -197,7 +197,7 @@ public class ClusterControllerService extends AbstractRemoteService {
             ICCApplicationEntryPoint aep = (ICCApplicationEntryPoint) c.newInstance();
             String[] args = ccConfig.appArgs == null ? null : ccConfig.appArgs.toArray(new String[ccConfig.appArgs
                     .size()]);
-            aep.appMain(appCtx, args);
+            aep.start(appCtx, args);
         }
     }
 

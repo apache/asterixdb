@@ -115,6 +115,8 @@ public class NodeControllerService extends AbstractRemoteService {
 
     private NCApplicationContext appCtx;
 
+    private INCApplicationEntryPoint ncAppEntryPoint;
+
     private final MemoryMXBean memoryMXBean;
 
     private final List<GarbageCollectorMXBean> gcMXBeans;
@@ -245,6 +247,9 @@ public class NodeControllerService extends AbstractRemoteService {
         }
 
         LOGGER.log(Level.INFO, "Started NodeControllerService");
+        if (ncAppEntryPoint != null) {
+            ncAppEntryPoint.notifyStartupComplete();
+        }
     }
 
     private void startApplication() throws Exception {
@@ -252,10 +257,10 @@ public class NodeControllerService extends AbstractRemoteService {
         String className = ncConfig.appNCMainClass;
         if (className != null) {
             Class<?> c = Class.forName(className);
-            INCApplicationEntryPoint aep = (INCApplicationEntryPoint) c.newInstance();
+            ncAppEntryPoint = (INCApplicationEntryPoint) c.newInstance();
             String[] args = ncConfig.appArgs == null ? new String[0] : ncConfig.appArgs
                     .toArray(new String[ncConfig.appArgs.size()]);
-            aep.appMain(appCtx, args);
+            ncAppEntryPoint.start(appCtx, args);
         }
     }
 
