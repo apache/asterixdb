@@ -233,6 +233,7 @@ public class NodeControllerService extends AbstractRemoteService {
         if (registrationException != null) {
             throw registrationException;
         }
+        appCtx.setDistributedState(nodeParameters.getDistributedState());
 
         queue.start();
 
