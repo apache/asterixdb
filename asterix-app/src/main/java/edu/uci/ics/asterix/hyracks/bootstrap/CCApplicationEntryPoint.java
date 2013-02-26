@@ -1,17 +1,3 @@
-/*
- * Copyright 2009-2011 by The Regents of the University of California
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * you may obtain a copy of the License from
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package edu.uci.ics.asterix.hyracks.bootstrap;
 
 import java.util.logging.Level;
@@ -29,14 +15,10 @@ import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixStateProxy;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
-import edu.uci.ics.hyracks.api.application.ICCBootstrap;
+import edu.uci.ics.hyracks.api.application.ICCApplicationEntryPoint;
 
-/**
- * The bootstrap class of the application that will manage its life cycle at the
- * Cluster Controller.
- */
-public class CCBootstrapImpl implements ICCBootstrap {
-    private static final Logger LOGGER = Logger.getLogger(CCBootstrapImpl.class.getName());
+public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
+    private static final Logger LOGGER = Logger.getLogger(CCApplicationEntryPoint.class.getName());
 
     private static final int DEFAULT_WEB_SERVER_PORT = 19001;
 
@@ -45,7 +27,8 @@ public class CCBootstrapImpl implements ICCBootstrap {
     private ICCApplicationContext appCtx;
 
     @Override
-    public void start() throws Exception {
+    public void start(ICCApplicationContext ccAppCtx, String[] args) throws Exception {
+        this.appCtx = ccAppCtx;
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting Asterix cluster controller");
         }
@@ -70,11 +53,6 @@ public class CCBootstrapImpl implements ICCBootstrap {
         AsterixStateProxy.unregisterRemoteObject();
 
         webServer.stop();
-    }
-
-    @Override
-    public void setApplicationContext(ICCApplicationContext appCtx) {
-        this.appCtx = appCtx;
     }
 
     private void setupWebServer() throws Exception {
