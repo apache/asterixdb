@@ -1963,6 +1963,12 @@
     </test-case>
   </test-group>
   <test-group name="misc">
+  <test-case FilePath="misc">
+      <compilation-unit name="partition-by-nonexistent-field">
+        <output-file compare="Text">partition-by-nonexistent-field.adm</output-file>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="misc">
       <compilation-unit name="float_01">
         <output-file compare="Text">float_01.adm</output-file>
@@ -2624,6 +2630,24 @@
     <test-case FilePath="records">
       <compilation-unit name="open-record-constructor_02">
         <output-file compare="Text">open-record-constructor_02.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="records">
+      <compilation-unit name="closed-closed-fieldname-conflict_issue173">
+        <output-file compare="Text">closed-closed-fieldname-conflict_issue173.adm</output-file>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+  <test-case FilePath="records">
+      <compilation-unit name="open-closed-fieldname-conflict_issue173">
+        <output-file compare="Text">open-closed-fieldname-conflict_issue173.adm</output-file>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="records">
+      <compilation-unit name="open-open-fieldname-conflict_issue173">
+        <output-file compare="Text">open-open-fieldname-conflict_issue173.adm</output-file>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

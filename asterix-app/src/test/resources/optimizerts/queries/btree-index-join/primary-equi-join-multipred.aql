@@ -37,8 +37,8 @@ create type OrderType as closed {
   total: float
 }
 
-create dataset Customers(CustomerType) partitioned by key cid;
-create dataset Orders(OrderType) partitioned by key oid;
+create dataset Customers(CustomerType) primary key cid;
+create dataset Orders(OrderType) primary key oid;
 
 write output to nc1:"rttest/btree-index-join_primary-equi-join-multipred.adm";
 

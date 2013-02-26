@@ -10,7 +10,7 @@ create type RegionType as closed {
 }
 
 create dataset Regions_group_no_agg(RegionType) 
-  partitioned by key r_regionkey;
+  primary key r_regionkey;
 
 write output to nc1:"rttest/tpch_group_no_agg.adm";
 

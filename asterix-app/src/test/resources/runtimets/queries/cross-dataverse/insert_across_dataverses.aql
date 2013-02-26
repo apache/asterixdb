@@ -42,10 +42,10 @@ create type test2.CustomerType as closed {
 };
 
 create dataset test1.Customers(CustomerType)
-partitioned by key cid;
+primary key cid;
 
 create dataset test2.Customers(CustomerType)
-partitioned by key cid;
+primary key cid;
 
 load dataset test1.Customers
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

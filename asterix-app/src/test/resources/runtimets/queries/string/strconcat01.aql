@@ -17,7 +17,7 @@ fname:string,
 lname:string
 }
 
-create dataset testds(TestType) partitioned by key id;
+create dataset testds(TestType) primary key id;
 
 // insert string data into internal dataset testds into the name attribute
 

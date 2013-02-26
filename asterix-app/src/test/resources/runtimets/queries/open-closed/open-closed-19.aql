@@ -15,7 +15,7 @@ create type TestType as open {
 id:int32
 }
 
-create dataset dtst01(TestType) partitioned by key id;
+create dataset dtst01(TestType) primary key id;
 
 insert into dtst01({"id":137});
 insert into dtst01({"id":117});
@@ -30,7 +30,7 @@ sex:string,
 dob:date
 }
 
-create dataset employee(Emp) partitioned by key id;
+create dataset employee(Emp) primary key id;
 
 insert into dataset employee({"id":201,"name":"John Doe","age":32,"sex":"M","dob":"1-1-82"});
 insert into dataset employee({"id":202,"name":"John Smith","age":30,"sex":"M","dob":"1-1-82"});

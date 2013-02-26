@@ -21,8 +21,8 @@ create type fest.testtype as open {
 id : int32
 }
 
-create dataset test.t1(testtype) partitioned by key id;
-create dataset fest.t1(testtype) partitioned by key id;
+create dataset test.t1(testtype) primary key id;
+create dataset fest.t1(testtype) primary key id;
 
 insert into dataset test.t1({"id":24});
 insert into dataset test.t1({"id":23});

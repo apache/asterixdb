@@ -16,7 +16,7 @@ create type LineIDType as closed {
 }
 
 create dataset LineID(LineIDType)
-  partitioned by key l_orderkey, l_linenumber;
+  primary key l_orderkey, l_linenumber;
 
 create index idx_LineID_partkey on LineID(l_linenumber);
 create index idx_LineID_suppkey on LineID(l_suppkey);

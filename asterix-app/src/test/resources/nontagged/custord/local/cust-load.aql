@@ -17,7 +17,7 @@ DataverseInfo : {
 declare nodegroup group1 on nc1;
 
 declare dataset Dataverse(DataverseType)
-  partitioned by key dataverseName on group1;        
+  primary key dataverseName on group1;        
       
 for $c in dataset('Dataverse')
 return $c

@@ -22,7 +22,7 @@ name:string,
 batters:[[BatterType]]
 }
 
-create dataset T1(TestType) partitioned by key id;
+create dataset T1(TestType) primary key id;
 
 insert into dataset T1({
 "id":1234,

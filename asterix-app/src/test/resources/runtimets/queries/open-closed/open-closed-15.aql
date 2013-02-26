@@ -26,7 +26,7 @@ dt_tm: datetime,
 lat_lon: point
 }
 
-create dataset tdtst(Schema) partitioned by key id_32; 
+create dataset tdtst(Schema) primary key id_32; 
 
 insert into dataset tdtst(
 let $f1:=time("10:50:56:200+05:00")

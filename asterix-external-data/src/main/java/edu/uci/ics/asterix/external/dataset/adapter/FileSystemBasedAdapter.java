@@ -17,8 +17,13 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.external.util.DNSResolverFactory;
+import edu.uci.ics.asterix.external.util.INodeResolver;
+import edu.uci.ics.asterix.external.util.INodeResolverFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -36,11 +41,16 @@ public abstract class FileSystemBasedAdapter extends AbstractDatasourceAdapter {
 
     private static final long serialVersionUID = 1L;
 
-    protected ITupleParserFactory parserFactory;
-    protected ITupleParser parser;
-
+    public static final String NODE_RESOLVER_FACTORY_PROPERTY = "node.Resolver";
     public static final String KEY_DELIMITER = "delimiter";
     public static final String KEY_PATH = "path";
+
+    protected ITupleParserFactory parserFactory;
+    protected ITupleParser parser;
+    protected static INodeResolver nodeResolver;
+
+    private static final INodeResolver DEFAULT_NODE_RESOLVER = new DNSResolverFactory().createNodeResolver();
+    private static final Logger LOGGER = Logger.getLogger(FileSystemBasedAdapter.class.getName());
 
     public abstract InputStream getInputStream(int partition) throws IOException;
 
@@ -117,5 +127,33 @@ public abstract class FileSystemBasedAdapter extends AbstractDatasourceAdapter {
             throw new AsterixException(e);
         }
 
+    }
+
+    protected INodeResolver getNodeResolver() {
+        if (nodeResolver == null) {
+            nodeResolver = initNodeResolver();
+        }
+        return nodeResolver;
+    }
+
+    private static INodeResolver initNodeResolver() {
+        INodeResolver nodeResolver = null;
+        String configuredNodeResolverFactory = System.getProperty(NODE_RESOLVER_FACTORY_PROPERTY);
+        if (configuredNodeResolverFactory != null) {
+            try {
+                nodeResolver = ((INodeResolverFactory) (Class.forName(configuredNodeResolverFactory).newInstance()))
+                        .createNodeResolver();
+
+            } catch (Exception e) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.log(Level.WARNING, "Unable to create node resolver from the configured classname "
+                            + configuredNodeResolverFactory + "\n" + e.getMessage());
+                }
+                nodeResolver = DEFAULT_NODE_RESOLVER;
+            }
+        } else {
+            nodeResolver = DEFAULT_NODE_RESOLVER;
+        }
+        return nodeResolver;
     }
 }

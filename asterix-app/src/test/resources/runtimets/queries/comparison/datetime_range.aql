@@ -11,7 +11,7 @@ create type Tweet as closed {
 }
 
 create dataset TwitterData(Tweet)
-  partitioned by key id;
+  primary key id;
 
 load dataset TwitterData 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

@@ -26,7 +26,7 @@ create type CustomerType as closed {
   }
 }
 
-create dataset Customers(CustomerType) partitioned by key cid;
+create dataset Customers(CustomerType) primary key cid;
 
 write output to nc1:"rttest/btree-index-join_primary-equi-join_06.adm";
 

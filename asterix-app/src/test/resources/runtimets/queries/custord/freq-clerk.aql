@@ -28,7 +28,7 @@ create type OrderType as open {
 }
 
 create dataset CustomerOrders(CustomerOrderType) 
-  partitioned by key cid;
+  primary key cid;
 
 
 load dataset CustomerOrders

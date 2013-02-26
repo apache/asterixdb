@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.asterix.runtime.aggregates.serializable.std;
 
 import java.io.DataOutput;
@@ -6,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -63,8 +79,15 @@ public class SerializableLocalAvgAggregateDescriptor extends AbstractSerializabl
         List<IAType> unionList = new ArrayList<IAType>();
         unionList.add(BuiltinType.ANULL);
         unionList.add(BuiltinType.ADOUBLE);
-        final ARecordType recType = new ARecordType(null, new String[] { "sum", "count" }, new IAType[] {
-                new AUnionType(unionList, "OptionalDouble"), BuiltinType.AINT64 }, true);
+        ARecordType tmpRecType;
+        try {
+            tmpRecType = new ARecordType(null, new String[] { "sum", "count" }, new IAType[] {
+                    new AUnionType(unionList, "OptionalDouble"), BuiltinType.AINT64 }, true);
+        } catch (AsterixException e) {
+            throw new AlgebricksException(e);
+        }
+
+        final ARecordType recType = tmpRecType;
 
         return new ICopySerializableAggregateFunctionFactory() {
             private static final long serialVersionUID = 1L;

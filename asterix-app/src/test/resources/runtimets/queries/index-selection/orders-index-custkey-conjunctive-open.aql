@@ -15,7 +15,7 @@ create type OrderType as closed {
 }
 
 create dataset Orders(OrderType)
-  partitioned by key o_orderkey;
+  primary key o_orderkey;
 
 load dataset Orders 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 

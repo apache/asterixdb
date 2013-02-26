@@ -20,7 +20,7 @@ create type OrderType as open {
 create nodegroup group1 if not exists on nc1, nc2;
 
 create dataset Orders(OrderType)
-  partitioned by key o_orderkey on group1;
+  primary key o_orderkey on group1;
 
 create index idx_Orders_Custkey on Orders(o_custkey);
 

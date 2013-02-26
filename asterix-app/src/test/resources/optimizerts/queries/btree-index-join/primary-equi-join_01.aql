@@ -15,8 +15,8 @@ create type test1.TestType as open {
           lname : string
 }
 
-create dataset test1.DsOne(TestType) partitioned by key key1;
-create dataset test1.DsTwo(TestType) partitioned by key key1;
+create dataset test1.DsOne(TestType) primary key key1;
+create dataset test1.DsTwo(TestType) primary key key1;
 
 // Please note content enclosed in the comment in the predicate is a HINT to the optimizer
 

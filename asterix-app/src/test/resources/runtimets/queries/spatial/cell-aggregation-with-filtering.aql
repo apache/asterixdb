@@ -13,7 +13,7 @@ create type Tweet as closed {
 create nodegroup group1 if not exists on nc1, nc2;
 
 create dataset TwitterData(Tweet)
-  partitioned by key id on group1;
+  primary key id on group1;
 
 
 load dataset TwitterData 

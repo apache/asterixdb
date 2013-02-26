@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -28,6 +28,7 @@ import java.util.List;
 import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataNode;
@@ -140,8 +141,12 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                         fieldTypes[fieldId] = getTypeFromTypeName(dataverseName, fieldTypeName);
                         fieldId++;
                     }
-                    return new Datatype(dataverseName, datatypeName, new ARecordType(datatypeName, fieldNames,
-                            fieldTypes, isOpen), isAnonymous);
+                    try {
+                        return new Datatype(dataverseName, datatypeName, new ARecordType(datatypeName, fieldNames,
+                                fieldTypes, isOpen), isAnonymous);
+                    } catch (AsterixException e) {
+                        throw new MetadataException(e);
+                    }
                 }
                 case UNION: {
                     IACursor cursor = ((AOrderedList) derivedTypeRecord
@@ -189,7 +194,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(Datatype dataType) throws IOException {
+    public ITupleReference getTupleFromMetadataEntity(Datatype dataType) throws IOException, MetadataException {
         // write the key in the first two fields of the tuple
         tupleBuilder.reset();
         aString.setValue(dataType.getDataverseName());
@@ -218,7 +223,11 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         ATypeTag tag = dataType.getDatatype().getTypeTag();
         if (isDerivedType(tag)) {
             fieldValue.reset();
-            writeDerivedTypeRecord(dataType, fieldValue.getDataOutput());
+            try {
+                writeDerivedTypeRecord(dataType, fieldValue.getDataOutput());
+            } catch (AsterixException e) {
+                throw new MetadataException(e);
+            }
             recordBuilder.addField(MetadataRecordTypes.DATATYPE_ARECORD_DERIVED_FIELD_INDEX, fieldValue);
         }
 
@@ -229,14 +238,18 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         recordBuilder.addField(MetadataRecordTypes.DATATYPE_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
 
         // write record
-        recordBuilder.write(tupleBuilder.getDataOutput(), true);
+        try {
+            recordBuilder.write(tupleBuilder.getDataOutput(), true);
+        } catch (AsterixException e) {
+            throw new MetadataException(e);
+        }
         tupleBuilder.addFieldEndOffset();
 
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
         return tuple;
     }
 
-    public void writeDerivedTypeRecord(Datatype type, DataOutput out) throws IOException {
+    private void writeDerivedTypeRecord(Datatype type, DataOutput out) throws IOException, AsterixException {
         DerivedTypeTag tag;
         IARecordBuilder derivedRecordBuilder = new RecordBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
@@ -348,7 +361,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         listBuilder.write(dataOutput, true);
     }
 
-    public void writeRecordType(Datatype instance, DataOutput out) throws IOException {
+    private void writeRecordType(Datatype instance, DataOutput out) throws IOException, AsterixException {
 
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();

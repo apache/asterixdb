@@ -17,7 +17,7 @@ create type DBLPType as closed {
   misc: string
 }
 
-create dataset DBLP(DBLPType) partitioned by key id;
+create dataset DBLP(DBLPType) primary key id;
 
 write output to nc1:"rttest/similarity_edit-distance-to-edit-distance-check_04.adm";
 

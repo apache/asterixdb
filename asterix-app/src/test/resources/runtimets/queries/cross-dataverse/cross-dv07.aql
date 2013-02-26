@@ -18,7 +18,7 @@ age:int32,
 dept:string
 }
 
-create dataset test.employee(Emp) partitioned by key id;
+create dataset test.employee(Emp) primary key id;
 
 load dataset test.employee
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
