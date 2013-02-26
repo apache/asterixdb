@@ -17,6 +17,8 @@ import org.junit.runners.Parameterized.Parameters;
 
 import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.external.dataset.adapter.FileSystemBasedAdapter;
+import edu.uci.ics.asterix.external.util.IdentitiyResolverFactory;
 import edu.uci.ics.asterix.test.aql.TestsUtils;
 import edu.uci.ics.asterix.testframework.context.TestCaseContext;
 import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
@@ -51,8 +53,14 @@ public class ExecutionTest {
 
         AsterixHyracksIntegrationUtil.init();
 
-        // TODO: Uncomment when hadoop version is upgraded and adapters are ported
+        // TODO: Uncomment when hadoop version is upgraded and adapters are
+        // ported. 
         HDFSCluster.getInstance().setup();
+
+        // Set the node resolver to be the identity resolver that expects node names 
+        // to be node controller ids; a valid assumption in test environment. 
+        System.setProperty(FileSystemBasedAdapter.NODE_RESOLVER_FACTORY_PROPERTY,
+                IdentitiyResolverFactory.class.getName());
     }
 
     @AfterClass

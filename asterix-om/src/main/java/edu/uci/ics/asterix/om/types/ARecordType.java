@@ -208,8 +208,34 @@ public class ARecordType extends AbstractComplexType {
         return findFieldPosition(baaos.getByteArray(), 0, baaos.getByteArray().length);
     }
 
+    /**
+     * Returns the field type of the field name if it exists, otherwise null.
+     * 
+     * @param fieldName
+     *            the fieldName whose type is sought
+     * @return the field type of the field name if it exists, otherwise null
+     * @throws IOException
+     *             if an error occurs while serializing the field name
+     */
     public IAType getFieldType(String fieldName) throws IOException {
-        return fieldTypes[findFieldPosition(fieldName)];
+        int fieldPos = findFieldPosition(fieldName);
+        if (fieldPos < 0 || fieldPos >= fieldTypes.length) {
+            return null;
+        }
+        return fieldTypes[fieldPos];
+    }
+
+    /**
+     * Returns true or false indicating whether or not a field is closed.
+     * 
+     * @param fieldName
+     *            the name of the field to check
+     * @return true if fieldName is a closed field, otherwise false
+     * @throws IOException
+     *             if an error occurs while serializing fieldName
+     */
+    public boolean isClosedField(String fieldName) throws IOException {
+        return findFieldPosition(fieldName) != -1;
     }
 
     @Override

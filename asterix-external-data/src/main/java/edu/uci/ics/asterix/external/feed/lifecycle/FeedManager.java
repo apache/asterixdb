@@ -43,9 +43,7 @@ public class FeedManager implements IFeedManager {
                 for (LinkedBlockingQueue<IFeedMessage> queue : operatorQueues) {
                     queue.put(feedMessage);
                 }
-            } else {
-                throw new AsterixException("Unable to deliver message. Unknown feed :" + feedId);
-            }
+            } 
         } catch (Exception e) {
             throw new AsterixException(e);
         }
