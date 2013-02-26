@@ -26,7 +26,7 @@ import java.util.Map;
 
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
-import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -66,7 +66,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     /** List of incoming messages from the previous superstep */
     private final List<M> msgList = new ArrayList<M>();
     /** map context */
-    private static Mapper.Context context = null;
+    private static TaskAttemptContext context = null;
     /** a delegate for hyracks stuff */
     private VertexDelegate<I, V, E, M> delegate = new VertexDelegate<I, V, E, M>(this);
     /** this vertex is updated or not */
@@ -444,8 +444,10 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     /**
      * Add a new vertex into the graph
      * 
-     * @param vertexId the vertex id
-     * @param vertex the vertex
+     * @param vertexId
+     *            the vertex id
+     * @param vertex
+     *            the vertex
      */
     public final void addVertex(I vertexId, V vertex) {
         delegate.addVertex(vertexId, vertex);
@@ -454,7 +456,8 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     /**
      * Delete a vertex from id
      * 
-     * @param vertexId  the vertex id
+     * @param vertexId
+     *            the vertex id
      */
     public final void deleteVertex(I vertexId) {
         delegate.deleteVertex(vertexId);
@@ -528,7 +531,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     /**
      * Pregelix internal use only
      */
-    public static final Mapper<?, ?, ?, ?>.Context getContext() {
+    public static final TaskAttemptContext getContext() {
         return context;
     }
 
@@ -537,7 +540,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
      * 
      * @param context
      */
-    public static final void setContext(Mapper<?, ?, ?, ?>.Context context) {
+    public static final void setContext(TaskAttemptContext context) {
         Vertex.context = context;
     }
 

@@ -62,7 +62,7 @@ public class RunJobTestSuite extends TestSuite {
     private static final String DATA_PATH3 = "data/clique/clique.txt";
     private static final String HDFS_PATH3 = "/clique/";
 
-    private static final String HYRACKS_APP_NAME = "giraph";
+    private static final String HYRACKS_APP_NAME = "pregelix";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private MiniDFSCluster dfsCluster;
 

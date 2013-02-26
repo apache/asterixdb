@@ -38,7 +38,7 @@ import edu.uci.ics.pregelix.example.util.TestUtils;
 
 public class RunJobTestCase extends TestCase {
     private static final String NC1 = "nc1";
-    private static final String HYRACKS_APP_NAME = "giraph";
+    private static final String HYRACKS_APP_NAME = "pregelix";
     private static String HDFS_INPUTPATH = "/webmap";
     private static String HDFS_OUTPUTPAH = "/result";
 

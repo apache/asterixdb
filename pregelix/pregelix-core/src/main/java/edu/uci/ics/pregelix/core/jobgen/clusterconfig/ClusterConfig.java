@@ -40,6 +40,7 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.hdfs2.scheduler.Scheduler;
 
 public class ClusterConfig {
 
@@ -49,6 +50,7 @@ public class ClusterConfig {
     private static Properties clusterProperties = new Properties();
     private static Map<String, List<String>> ipToNcMapping;
     private static String[] stores;
+    private static Scheduler hdfsScheduler;
 
     /**
      * let tests set config path to be whatever
@@ -211,11 +213,17 @@ public class ClusterConfig {
                 NCs[i] = entry.getKey();
                 i++;
             }
+
+            hdfsScheduler = new Scheduler(ipAddress, port);
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
 
         loadClusterProperties();
         loadStores();
+    }
+
+    public static Scheduler getHdfsScheduler() {
+        return hdfsScheduler;
     }
 }
