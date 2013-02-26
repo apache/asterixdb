@@ -85,6 +85,7 @@
                 <module>asterix-dist</module>
                 <module>asterix-test-framework</module>
         <module>asterix-maven-plugins</module>
+        <module>asterix-server</module>
         </modules>
 
 	<repositories>
