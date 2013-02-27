@@ -1,0 +1,24 @@
+<cluster xmlns="cluster">
+  <name>local</name>
+  <workingDir>
+     <dir>/tmp/asterix-installer</dir>
+     <NFS>true</NFS> 
+  </workingDir>
+  <logdir>/tmp/asterix/logs</logdir>
+  <store>/tmp/asterix/storage</store>
+  <java_home></java_home>
+  <ram>1024m</ram>
+  <master-node>
+     <id>master</id>
+     <ip>127.0.0.1</ip>
+     <cluster-ip>127.0.0.1</cluster-ip>
+  </master-node>
+  <node>
+     <id>node1</id>
+     <ip>127.0.0.1</ip>
+  </node>
+  <node>
+     <id>node2</id>
+     <ip>127.0.0.1</ip>
+  </node>
+</cluster>
