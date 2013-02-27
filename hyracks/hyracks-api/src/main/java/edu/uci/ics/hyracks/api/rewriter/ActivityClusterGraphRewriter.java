@@ -15,7 +15,6 @@
 
 package edu.uci.ics.hyracks.api.rewriter;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -46,8 +45,7 @@ import edu.uci.ics.hyracks.api.rewriter.runtime.SuperActivity;
  * 
  * @author yingyib
  */
-public class ActivityClusterGraphRewriter implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class ActivityClusterGraphRewriter {
     private static String ONE_TO_ONE_CONNECTOR = "OneToOneConnectorDescriptor";
 
     /**

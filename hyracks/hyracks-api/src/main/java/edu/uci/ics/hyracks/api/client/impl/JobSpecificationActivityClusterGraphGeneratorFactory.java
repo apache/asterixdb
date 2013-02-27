@@ -23,7 +23,6 @@ public class JobSpecificationActivityClusterGraphGeneratorFactory implements IAc
     private static final long serialVersionUID = 1L;
 
     private final JobSpecification spec;
-    private final ActivityClusterGraphRewriter rewriter = new ActivityClusterGraphRewriter();
 
     public JobSpecificationActivityClusterGraphGeneratorFactory(JobSpecification jobSpec) {
         this.spec = jobSpec;
@@ -80,6 +79,7 @@ public class JobSpecificationActivityClusterGraphGeneratorFactory implements IAc
         return new IActivityClusterGraphGenerator() {
             @Override
             public ActivityClusterGraph initialize() {
+                ActivityClusterGraphRewriter rewriter = new ActivityClusterGraphRewriter();
                 rewriter.rewrite(acg);
                 return acg;
             }
