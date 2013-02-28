@@ -22,7 +22,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -37,12 +36,12 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     }
 
     @Override
-    public void beforeOperation(ILSMIOOperation operation) {
+    public void beforeOperation() {
         // Do nothing.
     }
 
     @Override
-    public void afterFinalize(ILSMIOOperation operation, ILSMComponent newComponent) {
+    public void afterFinalize(ILSMComponent newComponent) {
         opTracker.resetLSNs();
     }
 

@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -61,9 +62,12 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTreeImmutableComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexImmutableComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeImmutableComponent;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
@@ -129,10 +133,6 @@ public class RecoveryManager implements IRecoveryManager {
             state = SystemState.CORRUPTED;
             return state;
         }
-    }
-
-    private PhysicalLogLocator getBeginRecoveryLSN() throws ACIDException {
-        return new PhysicalLogLocator(0, txnSubsystem.getLogManager());
     }
 
     public void startRecovery(boolean synchronous) throws IOException, ACIDException {
@@ -382,7 +382,7 @@ public class RecoveryManager implements IRecoveryManager {
     }
 
     @Override
-    public void checkpoint() throws ACIDException {
+    public void checkpoint(boolean isSharpCheckpoint) throws ACIDException {
 
         LogManager logMgr = (LogManager) txnSubsystem.getLogManager();
         TransactionManager txnMgr = (TransactionManager) txnSubsystem.getTransactionManager();
@@ -392,20 +392,53 @@ public class RecoveryManager implements IRecoveryManager {
         //   right after the new checkpoint file is written.
         File[] prevCheckpointFiles = getPreviousCheckpointFiles();
 
-        //#. create and store the checkpointObject into the new checkpoint file
-        long minMCTFirstLSM = Long.MAX_VALUE;
-
-        //#. get indexLifeCycleManager
         IIndexLifecycleManager indexLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
                 .getIndexLifecycleManager();
         List<IIndex> openIndexList = indexLifecycleManager.getOpenIndexes();
+        List<BlockingIOOperationCallbackWrapper> callbackList = new LinkedList<BlockingIOOperationCallbackWrapper>();
+
+        //#. flush all in-memory components if it is the sharp checkpoint
+        if (isSharpCheckpoint) {
+            for (IIndex index : openIndexList) {
+                ILSMIndex lsmIndex = (ILSMIndex) index;
+                ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE,
+                        NoOpOperationCallback.INSTANCE);
+                IndexOperationTracker indexOpTracker = (IndexOperationTracker) lsmIndex.getOperationTracker();
+                BlockingIOOperationCallbackWrapper cb = new BlockingIOOperationCallbackWrapper(
+                        indexOpTracker.getIOOperationCallback());
+                callbackList.add(cb);
+                try {
+                    indexAccessor.scheduleFlush(cb);
+                } catch (HyracksDataException e) {
+                    throw new ACIDException(e);
+                }
+            }
+
+            for (BlockingIOOperationCallbackWrapper cb : callbackList) {
+                try {
+                    cb.waitForIO();
+                } catch (InterruptedException e) {
+                    throw new ACIDException(e);
+                }
+            }
+        }
+        
+        //TODO
+        //think about discarding all existing logs. 
+
+        //#. create and store the checkpointObject into the new checkpoint file
+        long minMCTFirstLSN = Long.MAX_VALUE;
         long firstLSN;
-        for (IIndex index : openIndexList) {
-            firstLSN = ((IndexOperationTracker) ((ILSMIndex) index).getOperationTracker()).getFirstLSN();
-            minMCTFirstLSM = Math.min(minMCTFirstLSM, firstLSN);
+        if (openIndexList.size() > 0) {
+            for (IIndex index : openIndexList) {
+                firstLSN = ((IndexOperationTracker) ((ILSMIndex) index).getOperationTracker()).getFirstLSN();
+                minMCTFirstLSN = Math.min(minMCTFirstLSN, firstLSN);
+            }
+        } else {
+            minMCTFirstLSN = -1;
         }
 
-        CheckpointObject checkpointObject = new CheckpointObject(logMgr.getCurrentLsn().get(), minMCTFirstLSM,
+        CheckpointObject checkpointObject = new CheckpointObject(logMgr.getCurrentLsn().get(), minMCTFirstLSN,
                 txnMgr.getMaxJobId(), System.currentTimeMillis());
 
         FileOutputStream fos = null;

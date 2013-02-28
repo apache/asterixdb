@@ -68,5 +68,5 @@ public interface IRecoveryManager {
      */
     public void rollbackTransaction(TransactionContext txnContext) throws ACIDException;
 
-    public void checkpoint() throws ACIDException;
+    public void checkpoint(boolean isSharpCheckpoint) throws ACIDException;
 }

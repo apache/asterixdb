@@ -22,7 +22,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTreeImmutableComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 
 public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback {
 
@@ -31,7 +30,7 @@ public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
     }
 
     @Override
-    public void afterOperation(ILSMIOOperation operation, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
+    public void afterOperation(List<ILSMComponent> oldComponents, ILSMComponent newComponent)
             throws HyracksDataException {
         LSMBTreeImmutableComponent btreeComponent = (LSMBTreeImmutableComponent) newComponent;
         putLSNIntoMetadata(btreeComponent.getBTree(), oldComponents);
