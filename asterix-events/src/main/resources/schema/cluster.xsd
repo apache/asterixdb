@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cl="cluster" targetNamespace="cluster" elementFormDefault="qualified">
+
+<!-- definition of simple types --> 
+<xs:element name="name" type="xs:string"/>
+<xs:element name="ram" type="xs:string"/>
+<xs:element name="logdir" type="xs:string"/>
+<xs:element name="id" type="xs:string"/>
+<xs:element name="ip" type="xs:string"/>
+<xs:element name="cluster-ip" type="xs:string"/>
+<xs:element name="key" type="xs:string"/>
+<xs:element name="value" type="xs:string"/>
+<xs:element name="dir" type="xs:string"/>
+<xs:element name="NFS" type="xs:boolean"/>
+<xs:element name="store" type="xs:string"/>
+<xs:element name="java_home" type="xs:string"/>
+<xs:element name="username" type="xs:string"/>
+
+<!-- definition of complex elements -->
+<xs:element name="workingDir">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="cl:dir"/>
+      <xs:element ref="cl:NFS"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="master-node">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="cl:id"/>
+      <xs:element ref="cl:ip"/>
+      <xs:element ref="cl:cluster-ip"/>
+      <xs:element ref="cl:java_home" minOccurs="0"/>
+      <xs:element ref="cl:ram" minOccurs="0"/>
+      <xs:element ref="cl:logdir" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="property">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="cl:key"/>
+      <xs:element ref="cl:value"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="env">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="cl:property" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="node">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="cl:id"/>
+      <xs:element ref="cl:ip"/>
+      <xs:element ref="cl:ram" minOccurs="0"/>
+      <xs:element ref="cl:java_home" minOccurs="0"/>
+      <xs:element ref="cl:logdir" minOccurs="0"/>
+      <xs:element ref="cl:store" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="cluster">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="cl:name"/>
+      <xs:element ref="cl:username"/>
+      <xs:element ref="cl:env" minOccurs="0"/>
+      <xs:element ref="cl:ram" minOccurs="0"/>
+      <xs:element ref="cl:java_home" minOccurs="0"/>
+      <xs:element ref="cl:logdir" minOccurs="0"/>
+      <xs:element ref="cl:store" minOccurs="0"/>
+      <xs:element ref="cl:workingDir"/>
+      <xs:element ref="cl:master-node"/>
+      <xs:element ref="cl:node" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+</xs:schema>     

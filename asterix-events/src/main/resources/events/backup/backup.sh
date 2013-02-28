@@ -1,0 +1,19 @@
+WORKING_DIR=$1
+ASTERIX_INSTANCE_NAME=$2
+ASTERIX_DATA_DIR=$3
+BACKUP_ID=$4
+HDFS_URL=$5
+HADOOP_VERSION=$6
+HDFS_BACKUP_DIR=$7
+NODE_ID=$8
+
+export HADOOP_HOME=$WORKING_DIR/hadoop-$HADOOP_VERSION
+
+nodeStores=$(echo $ASTERIX_DATA_DIR | tr "," "\n")
+for nodeStore in $nodeStores
+do
+  NODE_BACKUP_DIR=$HDFS_BACKUP_DIR/$ASTERIX_INSTANCE_NAME/$BACKUP_ID/$NODE_ID/$nodeStore
+  $HADOOP_HOME/bin/hadoop fs -mkdir $HDFS_URL/$NODE_BACKUP_DIR
+  echo "$HADOOP_HOME/bin/hadoop fs -copyFromLocal $nodeStore/$NODE_ID $HDFS_URL/$NODE_BACKUP_DIR" >> ~/backup.log
+  $HADOOP_HOME/bin/hadoop fs -copyFromLocal $nodeStore/$NODE_ID/$ASTERIX_INSTANCE_NAME/* $HDFS_URL/$NODE_BACKUP_DIR/
+done
