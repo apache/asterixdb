@@ -42,15 +42,6 @@ public class NCConfig implements Serializable {
     @Option(name = "-iodevices", usage = "Comma separated list of IO Device mount points (default: One device in default temp folder)", required = false)
     public String ioDevices = System.getProperty("java.io.tmpdir");
 
-    @Option(name = "-dcache-client-servers", usage = "Sets the list of DCache servers in the format host1:port1,host2:port2,... (default localhost:54583)")
-    public String dcacheClientServers = "localhost:54583";
-
-    @Option(name = "-dcache-client-server-local", usage = "Sets the local DCache server, if one is available, in the format host:port (default not set)")
-    public String dcacheClientServerLocal;
-
-    @Option(name = "-dcache-client-path", usage = "Sets the path to store the files retrieved from the DCache server (default /tmp/dcache-client)")
-    public String dcacheClientPath = "/tmp/dcache-client";
-
     @Option(name = "-net-thread-count", usage = "Number of threads to use for Network I/O (default: 1)")
     public int nNetThreads = 1;
 
@@ -77,14 +68,6 @@ public class NCConfig implements Serializable {
         cList.add(dataIPAddress);
         cList.add("-iodevices");
         cList.add(ioDevices);
-        cList.add("-dcache-client-servers");
-        cList.add(dcacheClientServers);
-        if (dcacheClientServerLocal != null) {
-            cList.add("-dcache-client-server-local");
-            cList.add(dcacheClientServerLocal);
-        }
-        cList.add("-dcache-client-path");
-        cList.add(dcacheClientPath);
         cList.add("-net-thread-count");
         cList.add(String.valueOf(nNetThreads));
         cList.add("-max-memory");
