@@ -175,11 +175,11 @@ public class LSMHarness implements ILSMHarness {
     @Override
     public void flush(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException,
             IndexException {
-        operation.getCallback().beforeOperation(operation);
+        operation.getCallback().beforeOperation();
         ILSMComponent newComponent = lsmIndex.flush(operation);
-        operation.getCallback().afterOperation(operation, null, newComponent);
+        operation.getCallback().afterOperation(null, newComponent);
         lsmIndex.markAsValid(newComponent);
-        operation.getCallback().afterFinalize(operation, newComponent);
+        operation.getCallback().afterFinalize(newComponent);
 
         lsmIndex.addComponent(newComponent);
         int numComponents = lsmIndex.getImmutableComponents().size();
@@ -206,12 +206,12 @@ public class LSMHarness implements ILSMHarness {
     public void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException,
             IndexException {
         List<ILSMComponent> mergedComponents = new ArrayList<ILSMComponent>();
-        operation.getCallback().beforeOperation(operation);
+        operation.getCallback().beforeOperation();
         ILSMComponent newComponent = lsmIndex.merge(mergedComponents, operation);
         ctx.getComponentHolder().addAll(mergedComponents);
-        operation.getCallback().afterOperation(operation, mergedComponents, newComponent);
+        operation.getCallback().afterOperation(mergedComponents, newComponent);
         lsmIndex.markAsValid(newComponent);
-        operation.getCallback().afterFinalize(operation, newComponent);
+        operation.getCallback().afterFinalize(newComponent);
         lsmIndex.subsumeMergedComponents(newComponent, mergedComponents);
         exitComponents(ctx, LSMOperationType.MERGE, false);
     }

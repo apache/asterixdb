@@ -4,7 +4,6 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 
 public class BlockingIOOperationCallbackWrapper implements ILSMIOOperationCallback {
@@ -25,20 +24,19 @@ public class BlockingIOOperationCallbackWrapper implements ILSMIOOperationCallba
     }
 
     @Override
-    public void beforeOperation(ILSMIOOperation operation) throws HyracksDataException {
-        wrappedCallback.beforeOperation(operation);
+    public void beforeOperation() throws HyracksDataException {
+        wrappedCallback.beforeOperation();
     }
 
     @Override
-    public void afterOperation(ILSMIOOperation operation, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
+    public void afterOperation(List<ILSMComponent> oldComponents, ILSMComponent newComponent)
             throws HyracksDataException {
-        wrappedCallback.afterOperation(operation, oldComponents, newComponent);
+        wrappedCallback.afterOperation(oldComponents, newComponent);
     }
 
     @Override
-    public synchronized void afterFinalize(ILSMIOOperation operation, ILSMComponent newComponent)
-            throws HyracksDataException {
-        wrappedCallback.afterFinalize(operation, newComponent);
+    public synchronized void afterFinalize(ILSMComponent newComponent) throws HyracksDataException {
+        wrappedCallback.afterFinalize(newComponent);
         this.notifyAll();
         notified = true;
     }
