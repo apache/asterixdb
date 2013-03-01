@@ -21,6 +21,7 @@ import edu.uci.ics.asterix.transaction.management.service.locking.LockManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.ILogManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.IndexLoggerRepository;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
+import edu.uci.ics.asterix.transaction.management.service.recovery.CheckpointThread;
 import edu.uci.ics.asterix.transaction.management.service.recovery.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager;
 import edu.uci.ics.asterix.transaction.management.service.recovery.RecoveryManager;
@@ -38,6 +39,7 @@ public class TransactionSubsystem {
     private final TransactionalResourceManagerRepository resourceRepository;
     private final IndexLoggerRepository loggerRepository;
     private final IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider;
+    private final CheckpointThread checkpointThread;
 
     public TransactionSubsystem(String id, IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider)
             throws ACIDException {
@@ -49,6 +51,8 @@ public class TransactionSubsystem {
         this.loggerRepository = new IndexLoggerRepository(this);
         this.resourceRepository = new TransactionalResourceManagerRepository();
         this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
+        this.checkpointThread = new CheckpointThread(recoveryManager,
+                asterixAppRuntimeContextProvider.getIndexLifecycleManager(), 0);
     }
 
     public ILogManager getLogManager() {

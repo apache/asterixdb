@@ -87,7 +87,7 @@ public class RecoveryManager implements IRecoveryManager {
 
     public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(RecoveryManager.class.getName());
-    private TransactionSubsystem txnSubsystem;
+    private final TransactionSubsystem txnSubsystem;
 
     /**
      * A file at a known location that contains the LSN of the last log record
@@ -382,7 +382,7 @@ public class RecoveryManager implements IRecoveryManager {
     }
 
     @Override
-    public void checkpoint(boolean isSharpCheckpoint) throws ACIDException {
+    public synchronized void checkpoint(boolean isSharpCheckpoint) throws ACIDException {
 
         LogManager logMgr = (LogManager) txnSubsystem.getLogManager();
         TransactionManager txnMgr = (TransactionManager) txnSubsystem.getTransactionManager();
@@ -471,7 +471,7 @@ public class RecoveryManager implements IRecoveryManager {
                 file.delete();
             }
         }
-        
+
         if (isSharpCheckpoint) {
             logMgr.renewLogFiles();
         }
