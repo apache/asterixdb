@@ -2,7 +2,7 @@ package edu.uci.ics.asterix.dataflow.data.nontagged.printers.json;
 
 import java.io.PrintStream;
 
-import edu.uci.ics.asterix.formats.nontagged.AqlPrinterFactoryProvider;
+import edu.uci.ics.asterix.formats.nontagged.AqlJSONPrinterFactoryProvider;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
@@ -28,9 +28,10 @@ public class ANullableFieldPrinterFactory implements IPrinterFactory {
 
             @Override
             public void init() throws AlgebricksException {
-                nullPrinter = (AqlPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.ANULL)).createPrinter();
-                fieldPrinter = (AqlPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getUnionList().get(1)))
+                nullPrinter = (AqlJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.ANULL))
                         .createPrinter();
+                fieldPrinter = (AqlJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getUnionList()
+                        .get(1))).createPrinter();
             }
 
             @Override
