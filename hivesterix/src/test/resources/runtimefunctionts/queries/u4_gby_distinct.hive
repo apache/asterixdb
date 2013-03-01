@@ -1,0 +1,19 @@
+DROP TABLE IF EXISTS lineitem;
+DROP TABLE IF EXISTS u4_gby_distinct;
+
+-- create the tables and load the data
+create external table lineitem (L_ORDERKEY INT, L_PARTKEY INT, L_SUPPKEY INT, L_LINENUMBER INT, L_QUANTITY DOUBLE, L_EXTENDEDPRICE DOUBLE, L_DISCOUNT DOUBLE, L_TAX DOUBLE, L_RETURNFLAG STRING, L_LINESTATUS STRING, L_SHIPDATE STRING, L_COMMITDATE STRING, L_RECEIPTDATE STRING, L_SHIPINSTRUCT STRING, L_SHIPMODE STRING, L_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/lineitem';
+
+-- create the result tables
+create table u4_gby_distinct(l_partkey int, t_sum_quantity double);
+
+-- the query
+insert overwrite table u4_gby_distinct
+select 
+  l_orderkey, avg(distinct L_QUANTITY) as t_sum_quantity
+from 
+  lineitem
+group by l_orderkey
+order by l_orderkey desc
+limit 10;
+

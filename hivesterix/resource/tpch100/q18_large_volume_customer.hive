@@ -1,0 +1,42 @@
+-- create the tables and load the data
+create external table lineitem (L_ORDERKEY INT, L_PARTKEY INT, L_SUPPKEY INT, L_LINENUMBER INT, L_QUANTITY DOUBLE, L_EXTENDEDPRICE DOUBLE, L_DISCOUNT DOUBLE, L_TAX DOUBLE, L_RETURNFLAG STRING, L_LINESTATUS STRING, L_SHIPDATE STRING, L_COMMITDATE STRING, L_RECEIPTDATE STRING, L_SHIPINSTRUCT STRING, L_SHIPMODE STRING, L_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/100/lineitem';
+create external table orders (O_ORDERKEY INT, O_CUSTKEY INT, O_ORDERSTATUS STRING, O_TOTALPRICE DOUBLE, O_ORDERDATE STRING, O_ORDERPRIORITY STRING, O_CLERK STRING, O_SHIPPRIORITY INT, O_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/100/orders';
+create external table customer (C_CUSTKEY INT, C_NAME STRING, C_ADDRESS STRING, C_NATIONKEY INT, C_PHONE STRING, C_ACCTBAL DOUBLE, C_MKTSEGMENT STRING, C_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/100/customer';
+
+-- create the result tables
+create table q18_tmp(l_orderkey int, t_sum_quantity double);
+create table q18_large_volume_customer(c_name string, c_custkey int, o_orderkey int, o_orderdate string, o_totalprice double, sum_quantity double);
+
+set mapred.min.split.size=268435456;
+set hive.exec.reducers.bytes.per.reducer=1164000000;
+
+-- the query
+insert overwrite table q18_tmp
+select 
+  l_orderkey, sum(l_quantity) as t_sum_quantity
+from 
+  lineitem
+group by l_orderkey;
+
+insert overwrite table q18_large_volume_customer
+select 
+  c_name,c_custkey,o_orderkey,o_orderdate,o_totalprice,sum(l_quantity)
+from 
+  customer c join orders o 
+  on 
+    c.c_custkey = o.o_custkey
+  join q18_tmp t 
+  on 
+    o.o_orderkey = t.l_orderkey and t.t_sum_quantity > 300
+  join lineitem l 
+  on 
+    o.o_orderkey = l.l_orderkey
+group by c_name,c_custkey,o_orderkey,o_orderdate,o_totalprice
+order by o_totalprice desc,o_orderdate
+limit 100;
+
+DROP TABLE lineitem;
+DROP TABLE orders;
+DROP TABLE customer;
+DROP TABLE q18_tmp;
+DROP TABLE q18_large_volume_customer;

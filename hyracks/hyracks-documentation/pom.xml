@@ -1,0 +1,49 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>edu.uci.ics.hyracks</groupId>
+  <artifactId>hyracks-documentation</artifactId>
+  <version>0.2.3-SNAPSHOT</version>
+  <name>hyracks-documentation</name>
+
+  <parent>
+    <groupId>edu.uci.ics.hyracks</groupId>
+    <artifactId>hyracks</artifactId>
+    <version>0.2.3-SNAPSHOT</version>
+  </parent>
+
+  <build>
+    <plugins>
+    	<plugin>
+    		<groupId>org.apache.maven.doxia</groupId>
+    		<artifactId>doxia-maven-plugin</artifactId>
+    		<version>1.1.3</version>
+    		<executions>
+    		  <execution>
+    		    <phase>package</phase>
+    		    <goals>
+    		      <goal>render-books</goal>
+    		    </goals>
+    		  </execution>
+    		</executions>
+    		<configuration>
+    		  <books>
+    		    <book>
+    		      <directory>src/books/user-guide</directory>
+    		      <descriptor>src/books/user-guide/doxia-descriptor.xml</descriptor>
+    		      <formats>
+    		        <format>
+    		          <id>pdf</id>
+    		        </format>
+    		        <format>
+    		          <id>xhtml</id>
+    		        </format>
+    		      </formats>
+    		    </book>
+    		  </books>
+    		</configuration>
+    	</plugin>
+    </plugins>
+  </build>
+  <dependencies>
+  </dependencies>
+</project>

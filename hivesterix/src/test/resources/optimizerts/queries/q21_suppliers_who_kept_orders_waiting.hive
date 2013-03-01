@@ -1,0 +1,74 @@
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS lineitem;
+DROP TABLE IF EXISTS supplier;
+DROP TABLE IF EXISTS nation;
+DROP TABLE IF EXISTS q21_tmp1;
+DROP TABLE IF EXISTS q21_tmp2;
+DROP TABLE IF EXISTS q21_suppliers_who_kept_orders_waiting;
+
+-- create tables and load data
+create external table lineitem (L_ORDERKEY INT, L_PARTKEY INT, L_SUPPKEY INT, L_LINENUMBER INT, L_QUANTITY DOUBLE, L_EXTENDEDPRICE DOUBLE, L_DISCOUNT DOUBLE, L_TAX DOUBLE, L_RETURNFLAG STRING, L_LINESTATUS STRING, L_SHIPDATE STRING, L_COMMITDATE STRING, L_RECEIPTDATE STRING, L_SHIPINSTRUCT STRING, L_SHIPMODE STRING, L_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/lineitem';
+create external table orders (O_ORDERKEY INT, O_CUSTKEY INT, O_ORDERSTATUS STRING, O_TOTALPRICE DOUBLE, O_ORDERDATE STRING, O_ORDERPRIORITY STRING, O_CLERK STRING, O_SHIPPRIORITY INT, O_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/orders';
+create external table supplier (S_SUPPKEY INT, S_NAME STRING, S_ADDRESS STRING, S_NATIONKEY INT, S_PHONE STRING, S_ACCTBAL DOUBLE, S_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/supplier';
+create external table nation (N_NATIONKEY INT, N_NAME STRING, N_REGIONKEY INT, N_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/nation';
+
+-- create target tables
+create table q21_tmp1(l_orderkey int, count_suppkey int, max_suppkey int);
+create table q21_tmp2(l_orderkey int, count_suppkey int, max_suppkey int);
+create table q21_suppliers_who_kept_orders_waiting(s_name string, numwait int);
+
+-- the query
+insert overwrite table q21_tmp1
+select
+  l_orderkey, count(distinct l_suppkey), max(l_suppkey) as max_suppkey
+from
+  lineitem
+group by l_orderkey;
+
+insert overwrite table q21_tmp2
+select
+  l_orderkey, count(distinct l_suppkey), max(l_suppkey) as max_suppkey
+from
+  lineitem
+where
+  l_receiptdate > l_commitdate
+group by l_orderkey;
+
+insert overwrite table q21_suppliers_who_kept_orders_waiting
+select
+  s_name, count(1) as numwait
+from
+  (select s_name from
+(select s_name, t2.l_orderkey, l_suppkey, count_suppkey, max_suppkey 
+ from q21_tmp2 t2 right outer join
+      (select s_name, l_orderkey, l_suppkey from
+         (select s_name, t1.l_orderkey, l_suppkey, count_suppkey, max_suppkey
+          from
+            q21_tmp1 t1 join
+            (select s_name, l_orderkey, l_suppkey
+             from 
+               orders o join
+               (select s_name, l_orderkey, l_suppkey
+                from
+                  nation n join supplier s
+                  on
+                    s.s_nationkey = n.n_nationkey
+                    and n.n_name = 'SAUDI ARABIA'
+                  join lineitem l
+                  on
+                    s.s_suppkey = l.l_suppkey
+                where
+                  l.l_receiptdate > l.l_commitdate
+                ) l1 on o.o_orderkey = l1.l_orderkey and o.o_orderstatus = 'F'
+             ) l2 on l2.l_orderkey = t1.l_orderkey
+          ) a
+          where
+           (count_suppkey > 1) or ((count_suppkey=1) and (l_suppkey <> max_suppkey))
+       ) l3 on l3.l_orderkey = t2.l_orderkey
+    ) b
+    where
+     (count_suppkey is null) or ((count_suppkey=1) and (l_suppkey = max_suppkey))
+  )c
+group by s_name
+order by numwait desc, s_name
+limit 100;

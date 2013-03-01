@@ -1,0 +1,10 @@
+-- union case: both subqueries are map jobs on same input, followed by filesink
+DROP TABLE IF EXISTS src;
+
+CREATE TABLE src(key int, value int);
+CREATE TABLE src1(key int, value int);
+CREATE TABLE src2(key int);
+
+FROM src
+INSERT overwrite table src1 select * where key < 5
+INSERT overwrite table src2 select key where key > 10;
