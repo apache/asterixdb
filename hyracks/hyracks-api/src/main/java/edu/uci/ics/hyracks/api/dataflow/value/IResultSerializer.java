@@ -21,6 +21,11 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public interface IResultSerializer extends Serializable {
     /**
+     * Initializes the serializer.
+     */
+    public void init() throws HyracksDataException;
+
+    /**
      * Method to serialize the result and append it to the provided output stream
      * 
      * @param tAccess

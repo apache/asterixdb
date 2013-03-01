@@ -78,6 +78,7 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
                 try {
                     datasetPartitionWriter = dpm.createDatasetPartitionWriter(ctx, rsId, ordered, partition, nPartitions);
                     datasetPartitionWriter.open();
+                    resultSerializer.init();
                 } catch (HyracksException e) {
                     throw new HyracksDataException(e);
                 }
