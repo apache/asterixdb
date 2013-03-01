@@ -211,13 +211,8 @@ public class LogManager implements ILogManager {
         /*
          * place the log anchor at the end of the last log record written.
          */
-        PhysicalLogLocator nextPhysicalLsn = LogUtil.initializeLogAnchor(this);
-        startingLsn = nextPhysicalLsn.getLsn();
-        lastFlushedLsn.set(startingLsn - 1);
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info(" Starting lsn is : " + startingLsn);
-        }
-        lsn.set(startingLsn);
+        PhysicalLogLocator nextPhysicalLsn = initLSN();
+
         /*
          * initialize meta data for each log page.
          */
@@ -651,6 +646,28 @@ public class LogManager implements ILogManager {
         readDiskLog(lsnValue, logicalLogLocator);
     }
 
+    public void renewLogFiles() throws ACIDException {
+        List<String> logFileNames = LogUtil.getLogFiles(logManagerProperties);
+        for (String name : logFileNames) {
+            File file = new File(LogUtil.getLogFilePath(logManagerProperties, Long.parseLong(name)));
+            if (!file.delete()) {
+                throw new ACIDException("Failed to delete a file: " + name);
+            }
+        }
+        initLSN();
+    }
+
+    private PhysicalLogLocator initLSN() throws ACIDException {
+        PhysicalLogLocator nextPhysicalLsn = LogUtil.initializeLogAnchor(this);
+        startingLsn = nextPhysicalLsn.getLsn();
+        lastFlushedLsn.set(startingLsn - 1);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info(" Starting lsn is : " + startingLsn);
+        }
+        lsn.set(startingLsn);
+        return nextPhysicalLsn;
+    }
+
     @Override
     public ILogRecordHelper getLogRecordHelper() {
         return logRecordHelper;
@@ -899,7 +916,7 @@ class LogPageFlushThread extends Thread {
                 throw new Error(" exception in flushing log page", ioe);
             } catch (InterruptedException e) {
                 e.printStackTrace();
-                break; 
+                break;
             }
         }
     }

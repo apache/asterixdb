@@ -422,9 +422,6 @@ public class RecoveryManager implements IRecoveryManager {
                 }
             }
         }
-        
-        //TODO
-        //think about discarding all existing logs. 
 
         //#. create and store the checkpointObject into the new checkpoint file
         long minMCTFirstLSN = Long.MAX_VALUE;
@@ -473,6 +470,10 @@ public class RecoveryManager implements IRecoveryManager {
             for (File file : prevCheckpointFiles) {
                 file.delete();
             }
+        }
+        
+        if (isSharpCheckpoint) {
+            logMgr.renewLogFiles();
         }
     }
 

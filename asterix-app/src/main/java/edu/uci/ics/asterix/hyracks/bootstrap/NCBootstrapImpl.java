@@ -75,7 +75,7 @@ public class NCBootstrapImpl implements INCBootstrap {
                 recoveryMgr.startRecovery(true);
             }
         }
-        recoveryMgr.checkpoint(false);
+        recoveryMgr.checkpoint(true);
         
         if (isMetadataNode) {
             //#. clean-up incomplete DDL operations, which is DDLRecovery
