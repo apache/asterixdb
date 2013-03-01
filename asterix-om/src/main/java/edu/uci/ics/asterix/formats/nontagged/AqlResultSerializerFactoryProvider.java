@@ -52,6 +52,15 @@ public class AqlResultSerializerFactoryProvider implements IResultSerializerFact
                     private static final long serialVersionUID = 1L;
 
                     @Override
+                    public void init() throws HyracksDataException {
+                        try {
+                            writer.init();
+                        } catch (AlgebricksException e) {
+                            throw new HyracksDataException(e);
+                        }
+                    }
+
+                    @Override
                     public boolean appendTuple(IFrameTupleAccessor tAccess, int tIdx) throws HyracksDataException {
                         try {
                             writer.printTuple(tAccess, tIdx);
