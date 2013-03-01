@@ -39,7 +39,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.client.dataset.DatasetClientContext;
 import edu.uci.ics.hyracks.client.dataset.HyracksDataset;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
@@ -207,6 +206,11 @@ public abstract class AbstractIntegrationTest {
             public IResultSerializer createResultSerializer(final PrintStream printStream) {
                 return new IResultSerializer() {
                     private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public void init() throws HyracksDataException {
+
+                    }
 
                     @Override
                     public boolean appendTuple(IFrameTupleAccessor tAccess, int tIdx) throws HyracksDataException {
