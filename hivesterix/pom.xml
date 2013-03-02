@@ -310,6 +310,8 @@
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>
+					<encoding>UTF-8</encoding>
+					<fork>true</fork>
 				</configuration>
 			</plugin>
 			<plugin>
