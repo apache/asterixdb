@@ -14,6 +14,9 @@
  */
 package edu.uci.ics.asterix.om.base;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -73,5 +76,14 @@ public class ABinary implements IAObject {
     @Override
     public String toString() {
         return "ABinary";
+    }
+
+    @Override
+    public JSONObject toJSON() throws JSONException {
+        JSONObject json = new JSONObject();
+
+        json.put("ABinary", bytes);
+
+        return json;
     }
 }

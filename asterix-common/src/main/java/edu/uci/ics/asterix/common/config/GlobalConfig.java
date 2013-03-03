@@ -4,9 +4,9 @@ import java.util.logging.Logger;
 
 public class GlobalConfig {
     public static final boolean DEBUG = true;
-    
+
     public static final String ASTERIX_LOGGER_NAME = "edu.uci.ics.asterix";
-    
+
     public static final Logger ASTERIX_LOGGER = Logger.getLogger(ASTERIX_LOGGER_NAME);
 
     public static final String ASTERIX_LOGFILE_PATTERN = "%t/asterix.log";
@@ -18,6 +18,8 @@ public class GlobalConfig {
     public static final String CONFIG_FILE_PROPERTY = "AsterixConfigFileName";
 
     public static final String WEB_SERVER_PORT_PROPERTY = "AsterixWebServerPort";
+
+    public static final String JSON_API_SERVER_PORT_PROPERTY = "AsterixJSONAPIServerPort";
 
     public static final String BUFFER_CACHE_PAGE_SIZE_PROPERTY = "BufferCachePageSize";
 
@@ -32,6 +34,6 @@ public class GlobalConfig {
     public static final String FRAME_SIZE_PROPERTY = "FrameSize";
 
     public static final float DEFAULT_BTREE_FILL_FACTOR = 1.00f;
-    
+
     public static int DEFAULT_INPUT_DATA_COLUMN = 0;
 }

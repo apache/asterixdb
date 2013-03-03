@@ -14,6 +14,9 @@
  */
 package edu.uci.ics.asterix.om.base;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.types.BuiltinType;
@@ -109,4 +112,15 @@ public class ADuration implements IAObject {
         return sbder.toString();
     }
 
+    @Override
+    public JSONObject toJSON() throws JSONException {
+        JSONObject json = new JSONObject();
+
+        JSONObject duration = new JSONObject();
+        duration.put("months", chrononInMonth);
+        duration.put("milliseconds", chrononInMillisecond);
+        json.put("ADuration", duration);
+
+        return json;
+    }
 }

@@ -14,6 +14,9 @@
  */
 package edu.uci.ics.asterix.om.base;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -72,5 +75,17 @@ public class ACircle implements IAObject {
     @Override
     public String toString() {
         return "ACircle: { center: " + center + ", radius: " + radius + "}";
+    }
+
+    @Override
+    public JSONObject toJSON() throws JSONException {
+        JSONObject json = new JSONObject();
+
+        JSONObject circle = new JSONObject();
+        circle.put("center", center);
+        circle.put("radius", radius);
+        json.put("ACircle", circle);
+
+        return json;
     }
 }

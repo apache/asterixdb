@@ -17,11 +17,12 @@ package edu.uci.ics.asterix.om.base;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.visitors.IOMVisitor;
+import edu.uci.ics.hyracks.api.dataflow.value.JSONSerializable;
 
 /**
  * Represents an object in Asterix.
  */
-public interface IAObject {
+public interface IAObject extends JSONSerializable {
     public IAType getType();
 
     public void accept(IOMVisitor visitor) throws AsterixException;
