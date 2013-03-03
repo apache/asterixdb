@@ -33,6 +33,7 @@ import edu.uci.ics.hyracks.api.job.ActivityClusterId;
 public class OneToOneConnectedActivityCluster extends ActivityCluster {
 
     private static final long serialVersionUID = 1L;
+
     protected final Map<Integer, Pair<ActivityId, Integer>> clusterInputIndexMap = new HashMap<Integer, Pair<ActivityId, Integer>>();
     protected final Map<Integer, Pair<ActivityId, Integer>> clusterOutputIndexMap = new HashMap<Integer, Pair<ActivityId, Integer>>();
     protected final Map<Pair<ActivityId, Integer>, Integer> invertedClusterOutputIndexMap = new HashMap<Pair<ActivityId, Integer>, Integer>();
@@ -42,30 +43,80 @@ public class OneToOneConnectedActivityCluster extends ActivityCluster {
         super(acg, id);
     }
 
+    /**
+     * Set up the mapping of the cluster's output channel to an internal activity and its output channel
+     * 
+     * @param clusterOutputIndex
+     *            the output channel index for the cluster
+     * @param activityId
+     *            the id of the internal activity which produces the corresponding output
+     * @param activityOutputIndex
+     *            the output channel index of the internal activity which corresponds to the output channel of the cluster of activities
+     */
     public void setClusterOutputIndex(int clusterOutputIndex, ActivityId activityId, int activityOutputIndex) {
         clusterOutputIndexMap.put(clusterOutputIndex, Pair.of(activityId, activityOutputIndex));
         invertedClusterOutputIndexMap.put(Pair.of(activityId, activityOutputIndex), clusterOutputIndex);
     }
 
+    /**
+     * get the an internal activity and its output channel of a cluster output channel
+     * 
+     * @param clusterOutputIndex
+     *            the output channel index for the cluster
+     * @return a pair containing the activity id of the corresponding internal activity and the output channel index
+     */
     public Pair<ActivityId, Integer> getActivityIdOutputIndex(int clusterOutputIndex) {
         return clusterOutputIndexMap.get(clusterOutputIndex);
     }
 
+    /**
+     * Set up the mapping of the cluster's input channel to an internal activity and input output channel
+     * 
+     * @param clusterInputIndex
+     *            the input channel index for the cluster
+     * @param activityId
+     *            the id of the internal activity which consumes the corresponding input
+     * @param activityInputIndex
+     *            the output channel index of the internal activity which corresponds to the input channel of the cluster of activities
+     */
     public void setClusterInputIndex(int clusterInputIndex, ActivityId activityId, int activityInputIndex) {
         clusterInputIndexMap.put(clusterInputIndex, Pair.of(activityId, activityInputIndex));
         invertedClusterInputIndexMap.put(Pair.of(activityId, activityInputIndex), clusterInputIndex);
     }
 
+    /**
+     * get the an internal activity and its input channel of a cluster input channel
+     * 
+     * @param clusterOutputIndex
+     *            the output channel index for the cluster
+     * @return a pair containing the activity id of the corresponding internal activity and the output channel index
+     */
     public Pair<ActivityId, Integer> getActivityIdInputIndex(int clusterInputIndex) {
         return clusterInputIndexMap.get(clusterInputIndex);
     }
 
+    /**
+     * Get the cluster input channel of an input-boundary activity and its input channel
+     * 
+     * @param activityInputChannel
+     *            the input-boundary activity and its input channel
+     * @return the cluster input channel
+     */
     public int getClusterInputIndex(Pair<ActivityId, Integer> activityInputChannel) {
-        return invertedClusterInputIndexMap.get(activityInputChannel);
+        Integer channel = invertedClusterInputIndexMap.get(activityInputChannel);
+        return channel == null ? -1 : channel;
     }
 
+    /**
+     * Get the cluster output channel of an input-boundary activity and its output channel
+     * 
+     * @param activityOutputChannel
+     *            the output-boundary activity and its output channel
+     * @return the cluster output channel
+     */
     public int getClusterOutputIndex(Pair<ActivityId, Integer> activityOutputChannel) {
-        return invertedClusterOutputIndexMap.get(activityOutputChannel);
+        Integer channel = invertedClusterOutputIndexMap.get(activityOutputChannel);
+        return channel == null ? -1 : channel;
     }
 
 }

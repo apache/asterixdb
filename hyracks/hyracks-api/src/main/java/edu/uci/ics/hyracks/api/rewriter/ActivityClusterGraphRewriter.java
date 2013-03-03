@@ -148,9 +148,9 @@ public class ActivityClusterGraphRewriter {
         }
 
         /**
-         * expend one-to-one connected activity cluster by the BFS order
+         * expend one-to-one connected activity cluster by the BFS order.
          * after the while-loop, the original activities are partitioned
-         * into equivalent classes, one-per-super-activity
+         * into equivalent classes, one-per-super-activity.
          */
         Map<ActivityId, SuperActivity> clonedSuperActivities = new HashMap<ActivityId, SuperActivity>();
         while (toBeExpendedMap.size() > 0) {
@@ -275,6 +275,7 @@ public class ActivityClusterGraphRewriter {
                 SuperActivity consumerSuperActivity = invertedActivitySuperActivityMap.get(consumerActivity);
                 int producerSAPort = superActivityProducerPort.get(producerSuperActivity);
                 int consumerSAPort = superActivityConsumerPort.get(consumerSuperActivity);
+                newActivityCluster.addConnector(conn);
                 newActivityCluster.connect(conn, producerSuperActivity, producerSAPort, consumerSuperActivity,
                         consumerSAPort, recordDescriptor);
 
@@ -320,11 +321,17 @@ public class ActivityClusterGraphRewriter {
      * Create a new super activity
      * 
      * @param acg
+     *            the activity cluster
      * @param superActivities
+     *            the map from activity id to current super activities
      * @param toBeExpendedMap
+     *            the map from an existing super activity to its BFS expansion queue of the original activities
      * @param invertedActivitySuperActivityMap
+     *            the map from the original activities to their hosted super activities
      * @param activityId
+     *            the activity id for the new super activity, which is the first added acitivty's id in the super activity
      * @param activity
+     *            the first activity added to the new super activity
      */
     private void createNewSuperActivity(ActivityCluster acg, Map<ActivityId, SuperActivity> superActivities,
             Map<ActivityId, Queue<IActivity>> toBeExpendedMap,
@@ -339,14 +346,20 @@ public class ActivityClusterGraphRewriter {
     }
 
     /**
-     * One super activity swallows another existing super activity
+     * One super activity swallows another existing super activity.
      * 
      * @param superActivities
+     *            the map from activity id to current super activities
      * @param toBeExpendedMap
+     *            the map from an existing super activity to its BFS expansion queue of the original activities
      * @param invertedActivitySuperActivityMap
+     *            the map from the original activities to their hosted super activities
      * @param superActivity
+     *            the "swallowing" super activity
      * @param superActivityId
+     *            the activity id for the "swallowing" super activity, which is also the first added acitivty's id in the super activity
      * @param existingSuperActivity
+     *            an existing super activity which is to be swallowed by the "swallowing" super activity
      */
     private void swallowExistingSuperActivity(Map<ActivityId, SuperActivity> superActivities,
             Map<ActivityId, Queue<IActivity>> toBeExpendedMap,

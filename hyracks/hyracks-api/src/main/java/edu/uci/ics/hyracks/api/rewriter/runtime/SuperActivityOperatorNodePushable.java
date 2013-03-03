@@ -36,6 +36,12 @@ import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
+/**
+ * The runtime of a SuperActivity, which internally executes a DAG of one-to-one connected
+ * activities in a single thread.
+ * 
+ * @author yingyib
+ */
 public class SuperActivityOperatorNodePushable implements IOperatorNodePushable {
     private final Map<ActivityId, IOperatorNodePushable> operatorNodePushables = new HashMap<ActivityId, IOperatorNodePushable>();
     private final List<IOperatorNodePushable> operatprNodePushablesBFSOrder = new ArrayList<IOperatorNodePushable>();
@@ -74,7 +80,6 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
         for (IOperatorNodePushable op : operatprNodePushablesBFSOrder) {
             op.initialize();
         }
-
     }
 
     public void init() throws HyracksDataException {

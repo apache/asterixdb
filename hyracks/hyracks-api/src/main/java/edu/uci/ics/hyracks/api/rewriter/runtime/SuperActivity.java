@@ -66,48 +66,98 @@ public class SuperActivity extends OneToOneConnectedActivityCluster implements I
             }
         }
 
+        /**
+         * wrap a RecordDescriptorProvider for the super activity
+         */
         IRecordDescriptorProvider wrappedRecDescProvider = new IRecordDescriptorProvider() {
 
             @Override
             public RecordDescriptor getInputRecordDescriptor(ActivityId aid, int inputIndex) {
                 if (startActivities.get(aid) != null) {
+                    /**
+                     * if the activity is a start (input boundary) activity
+                     */
                     int superActivityInputChannel = SuperActivity.this.getClusterInputIndex(Pair.of(aid, inputIndex));
-                    return recordDescProvider.getInputRecordDescriptor(activityId, superActivityInputChannel);
-                } else if (SuperActivity.this.getActivityMap().get(aid) != null) {
+                    if (superActivityInputChannel >= 0) {
+                        return recordDescProvider.getInputRecordDescriptor(activityId, superActivityInputChannel);
+                    }
+                }
+                if (SuperActivity.this.getActivityMap().get(aid) != null) {
+                    /**
+                     * if the activity is an internal activity of the super activity
+                     */
                     IConnectorDescriptor conn = getActivityInputMap().get(aid).get(inputIndex);
                     return getConnectorRecordDescriptorMap().get(conn.getConnectorId());
-                } else {
-                    ActivityClusterGraph acg = SuperActivity.this.getActivityClusterGraph();
-                    for (Entry<ActivityClusterId, ActivityCluster> entry : acg.getActivityClusterMap().entrySet()) {
-                        ActivityCluster ac = entry.getValue();
-                        for (Entry<ActivityId, IActivity> saEntry : ac.getActivityMap().entrySet()) {
-                            SuperActivity sa = (SuperActivity) saEntry.getValue();
-                            if (sa.getActivityMap().get(aid) != null) {
-                                List<IConnectorDescriptor> conns = sa.getActivityInputMap().get(aid);
-                                if (conns != null && conns.size() >= inputIndex) {
-                                    IConnectorDescriptor conn = conns.get(inputIndex);
-                                    return sa.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
-                                } else {
-                                    int superActivityInputChannel = sa.getClusterInputIndex(Pair.of(aid, inputIndex));
+                }
+
+                /**
+                 * the following is for the case where the activity is in other SuperActivities
+                 */
+                ActivityClusterGraph acg = SuperActivity.this.getActivityClusterGraph();
+                for (Entry<ActivityClusterId, ActivityCluster> entry : acg.getActivityClusterMap().entrySet()) {
+                    ActivityCluster ac = entry.getValue();
+                    for (Entry<ActivityId, IActivity> saEntry : ac.getActivityMap().entrySet()) {
+                        SuperActivity sa = (SuperActivity) saEntry.getValue();
+                        if (sa.getActivityMap().get(aid) != null) {
+                            List<IConnectorDescriptor> conns = sa.getActivityInputMap().get(aid);
+                            if (conns != null && conns.size() >= inputIndex) {
+                                IConnectorDescriptor conn = conns.get(inputIndex);
+                                return sa.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
+                            } else {
+                                int superActivityInputChannel = sa.getClusterInputIndex(Pair.of(aid, inputIndex));
+                                if (superActivityInputChannel >= 0) {
                                     return recordDescProvider.getInputRecordDescriptor(sa.getActivityId(),
                                             superActivityInputChannel);
                                 }
                             }
                         }
                     }
-                    return null;
                 }
+                return null;
             }
 
             @Override
             public RecordDescriptor getOutputRecordDescriptor(ActivityId aid, int outputIndex) {
-                RecordDescriptor providedDesc = recordDescProvider.getOutputRecordDescriptor(aid, outputIndex);
-                if (providedDesc != null) {
-                    return providedDesc;
-                } else {
+                /**
+                 * if the activity is an output-boundary activity
+                 */
+                int superActivityOutputChannel = SuperActivity.this.getClusterOutputIndex(Pair.of(aid, outputIndex));
+                if (superActivityOutputChannel >= 0) {
+                    return recordDescProvider.getOutputRecordDescriptor(activityId, superActivityOutputChannel);
+                }
+
+                if (SuperActivity.this.getActivityMap().get(aid) != null) {
+                    /**
+                     * if the activity is an internal activity of the super activity
+                     */
                     IConnectorDescriptor conn = getActivityOutputMap().get(aid).get(outputIndex);
                     return getConnectorRecordDescriptorMap().get(conn.getConnectorId());
                 }
+
+                /**
+                 * the following is for the case where the activity is in other SuperActivities
+                 */
+                ActivityClusterGraph acg = SuperActivity.this.getActivityClusterGraph();
+                for (Entry<ActivityClusterId, ActivityCluster> entry : acg.getActivityClusterMap().entrySet()) {
+                    ActivityCluster ac = entry.getValue();
+                    for (Entry<ActivityId, IActivity> saEntry : ac.getActivityMap().entrySet()) {
+                        SuperActivity sa = (SuperActivity) saEntry.getValue();
+                        if (sa.getActivityMap().get(aid) != null) {
+                            List<IConnectorDescriptor> conns = sa.getActivityOutputMap().get(aid);
+                            if (conns != null && conns.size() >= outputIndex) {
+                                IConnectorDescriptor conn = conns.get(outputIndex);
+                                return sa.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
+                            } else {
+                                superActivityOutputChannel = sa.getClusterOutputIndex(Pair.of(aid, outputIndex));
+                                if (superActivityOutputChannel >= 0) {
+                                    return recordDescProvider.getOutputRecordDescriptor(sa.getActivityId(),
+                                            superActivityOutputChannel);
+                                }
+                            }
+                        }
+                    }
+                }
+                return null;
             }
 
         };
@@ -119,9 +169,9 @@ public class SuperActivity extends OneToOneConnectedActivityCluster implements I
     public ActivityId getActivityId() {
         return activityId;
     }
-    
+
     @Override
-    public String toString(){
+    public String toString() {
         return getActivityMap().values().toString();
     }
 }
