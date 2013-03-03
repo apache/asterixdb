@@ -121,6 +121,13 @@ public class HiveMetaDataProvider<S, T> implements IMetadataProvider<S, T> {
 	}
 
 	@Override
+	public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getResultHandleRuntime(IDataSink sink,
+			int[] printColumns, IPrinterFactory[] printerFactories, RecordDescriptor inputDesc, boolean ordered,
+			JobSpecification spec) throws AlgebricksException {
+		return null;
+	}
+
+	@Override
 	public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexInsertRuntime(
 			IDataSourceIndex<T, S> dataSource,
 			IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas,

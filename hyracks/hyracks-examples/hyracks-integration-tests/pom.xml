@@ -31,6 +31,13 @@
   		<scope>test</scope>
   	</dependency>
   	<dependency>
+        <groupId>edu.uci.ics.hyracks</groupId>
+        <artifactId>hyracks-client</artifactId>
+        <version>0.2.3-SNAPSHOT</version>
+        <type>jar</type>
+        <scope>compile</scope>
+    </dependency>
+  	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-dataflow-std</artifactId>
   		<version>0.2.3-SNAPSHOT</version>

@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.tests.integration;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -30,9 +31,15 @@ import org.junit.rules.TemporaryFolder;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.dataflow.value.IResultSerializer;
+import edu.uci.ics.hyracks.api.dataflow.value.IResultSerializerFactory;
+import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.client.dataset.HyracksDataset;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
@@ -80,6 +87,7 @@ public abstract class AbstractIntegrationTest {
         ncConfig1.ccPort = 39001;
         ncConfig1.clusterNetIPAddress = "127.0.0.1";
         ncConfig1.dataIPAddress = "127.0.0.1";
+        ncConfig1.datasetIPAddress = "127.0.0.1";
         ncConfig1.nodeId = NC1_ID;
         nc1 = new NodeControllerService(ncConfig1);
         nc1.start();
@@ -89,6 +97,7 @@ public abstract class AbstractIntegrationTest {
         ncConfig2.ccPort = 39001;
         ncConfig2.clusterNetIPAddress = "127.0.0.1";
         ncConfig2.dataIPAddress = "127.0.0.1";
+        ncConfig2.datasetIPAddress = "127.0.0.1";
         ncConfig2.nodeId = NC2_ID;
         nc2 = new NodeControllerService(ncConfig2);
         nc2.start();
@@ -115,6 +124,50 @@ public abstract class AbstractIntegrationTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(jobId.toString());
         }
+
+        // My code
+        int nReaders = 5;
+        DatasetClientContext datasetClientCtx = new DatasetClientContext(spec.getFrameSize());
+        IHyracksDataset hyracksDataset = new HyracksDataset(hcc, datasetClientCtx, nReaders);
+
+        hyracksDataset.open(jobId, spec.getResultSetIds().get(0));
+        /*        FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(datasetClientCtx.getFrameSize(),
+                        recordDescriptor);
+
+                ByteBuffer readBuffer = datasetClientCtx.allocateFrame();
+                ByteBufferInputStream bbis = new ByteBufferInputStream();
+                DataInputStream di = new DataInputStream(bbis);
+
+                while (true) {
+                    readBuffer.clear();
+                    int size = hyracksDataset.read(readBuffer);
+                    if (size <= 0) {
+                        break;
+                    }
+                    try {
+                        frameTupleAccessor.reset(readBuffer);
+                        System.out.println("Tuple count: " + recordDescriptor);
+                        for (int tIndex = 0; tIndex < frameTupleAccessor.getTupleCount(); tIndex++) {
+                            int start = frameTupleAccessor.getTupleStartOffset(tIndex)
+                                    + frameTupleAccessor.getFieldSlotsLength();
+                            bbis.setByteBuffer(readBuffer, start);
+                            Object[] record = new Object[recordDescriptor.getFieldCount()];
+                            for (int i = 0; i < record.length; ++i) {
+                                Object instance = recordDescriptor.getFields()[i].deserialize(di);
+                                if (i == 0) {
+                                    System.out.print(String.valueOf(instance));
+                                } else {
+                                    System.out.print(", " + String.valueOf(instance));
+                                }
+                            }
+                            System.out.println();
+                        }
+                    } catch (IOException e) {
+                        throw new HyracksDataException(e);
+                    }
+                }
+                // End of my code
+        */
         hcc.waitForCompletion(jobId);
         dumpOutputFiles();
     }
@@ -143,5 +196,28 @@ public abstract class AbstractIntegrationTest {
         }
         outputFiles.add(tempFile);
         return tempFile;
+    }
+
+    protected IResultSerializerFactory getResultSerializedAppenderFactory() {
+        return new IResultSerializerFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public IResultSerializer createResultSerializer(final PrintStream printStream) {
+                return new IResultSerializer() {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public void init() throws HyracksDataException {
+
+                    }
+
+                    @Override
+                    public boolean appendTuple(IFrameTupleAccessor tAccess, int tIdx) throws HyracksDataException {
+                        return true;
+                    }
+                };
+            }
+        };
     }
 }

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.nc.net;
+package edu.uci.ics.hyracks.comm.channels;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
@@ -87,7 +87,7 @@ public class NetworkOutputChannel implements IFrameWriter {
         ccb.getWriteInterface().getFullBufferAcceptor().close();
     }
 
-    void abort() {
+    public void abort() {
         ccb.getWriteInterface().getFullBufferAcceptor().error(1);
         synchronized (NetworkOutputChannel.this) {
             aborted = true;
