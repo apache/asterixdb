@@ -52,7 +52,7 @@ public class FieldHashPartitionComputerFamily implements ITuplePartitionComputer
                     h += fh;
                 }
                 if (h < 0) {
-                    h = -h;
+                    h = -(h+1);
                 }
                 return h % nParts;
             }
