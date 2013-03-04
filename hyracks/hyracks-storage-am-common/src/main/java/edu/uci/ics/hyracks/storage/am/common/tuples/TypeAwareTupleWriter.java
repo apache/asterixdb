@@ -87,8 +87,7 @@ public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
     }
 
     @Override
-    public int writeTupleFields(ITupleReference tuple, int startField, int numFields, byte[] targetBuf,
-            int targetOff) {
+    public int writeTupleFields(ITupleReference tuple, int startField, int numFields, byte[] targetBuf, int targetOff) {
         int runner = targetOff;
         int nullFlagsBytes = getNullFlagsBytes(numFields);
         // write null indicator bits
@@ -106,8 +105,7 @@ public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
         runner = encDec.getPos();
 
         for (int i = startField; i < startField + numFields; i++) {
-            System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), targetBuf, runner,
-                    tuple.getFieldLength(i));
+            System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), targetBuf, runner, tuple.getFieldLength(i));
             runner += tuple.getFieldLength(i);
         }
 
@@ -148,5 +146,10 @@ public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
 
     public void setTypeTraits(ITypeTraits[] typeTraits) {
         this.typeTraits = typeTraits;
+    }
+
+    @Override
+    public int getCopySpaceRequired(ITupleReference tuple) {
+        return bytesRequired(tuple);
     }
 }

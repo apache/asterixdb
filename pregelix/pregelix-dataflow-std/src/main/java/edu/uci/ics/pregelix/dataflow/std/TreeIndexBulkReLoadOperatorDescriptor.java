@@ -22,12 +22,12 @@ import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
+import edu.uci.ics.hyracks.storage.common.file.TransientLocalResourceFactoryProvider;
 
 public class TreeIndexBulkReLoadOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
 
@@ -35,20 +35,21 @@ public class TreeIndexBulkReLoadOperatorDescriptor extends AbstractTreeIndexOper
 
     private final int[] fieldPermutation;
     private final IStorageManagerInterface storageManager;
-    private final IIndexRegistryProvider<IIndex> treeIndexRegistryProvider;
+    private final IIndexLifecycleManagerProvider lcManagerProvider;
     private final IFileSplitProvider fileSplitProvider;
     private final float fillFactor;
 
     public TreeIndexBulkReLoadOperatorDescriptor(JobSpecification spec, IStorageManagerInterface storageManager,
-            IIndexRegistryProvider<IIndex> treeIndexRegistryProvider, IFileSplitProvider fileSplitProvider,
+            IIndexLifecycleManagerProvider lcManagerProvider, IFileSplitProvider fileSplitProvider,
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation,
             float fillFactor, IIndexDataflowHelperFactory opHelperFactory) {
-        super(spec, 1, 0, null, storageManager, treeIndexRegistryProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, opHelperFactory, null, false, NoOpOperationCallbackProvider.INSTANCE);
+        super(spec, 1, 0, null, storageManager, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories,
+                fieldPermutation, opHelperFactory, null, false, new TransientLocalResourceFactoryProvider(),
+                NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE);
         this.fieldPermutation = fieldPermutation;
 
         this.storageManager = storageManager;
-        this.treeIndexRegistryProvider = treeIndexRegistryProvider;
+        this.lcManagerProvider = lcManagerProvider;
         this.fileSplitProvider = fileSplitProvider;
         this.fillFactor = fillFactor;
     }
@@ -57,6 +58,6 @@ public class TreeIndexBulkReLoadOperatorDescriptor extends AbstractTreeIndexOper
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
         return new TreeIndexBulkReLoadOperatorNodePushable(this, ctx, partition, fieldPermutation, fillFactor,
-                recordDescProvider, storageManager, treeIndexRegistryProvider, fileSplitProvider);
+                recordDescProvider, storageManager, lcManagerProvider, fileSplitProvider);
     }
 }

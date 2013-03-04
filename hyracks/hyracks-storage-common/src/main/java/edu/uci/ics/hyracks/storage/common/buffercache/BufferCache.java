@@ -137,19 +137,11 @@ public class BufferCache implements IBufferCacheInternal {
         pinSanityCheck(dpid);
         CachedPage cPage = findPage(dpid, newPage);
         if (!newPage) {
-            if (!cPage.valid) {
-                /*
-                 * We got a buffer and we have pinned it. But its invalid. If its a new page, we just mark it as valid
-                 * and return. Or else, while we hold the page lock, we get a write latch on the data and start a read.
-                 */
-                cPage.acquireWriteLatch(false);
-                try {
-                    if (!cPage.valid) {
-                        read(cPage);
-                    }
+            // Resolve race of multiple threads trying to read the page from disk.
+            synchronized (cPage) {
+                if (!cPage.valid) {
+                    read(cPage);
                     cPage.valid = true;
-                } finally {
-                    cPage.releaseWriteLatch();
                 }
             }
         } else {
@@ -774,9 +766,11 @@ public class BufferCache implements IBufferCacheInternal {
                 if (fInfo != null) {
                     // Mark the fInfo as deleted, 
                     // such that when its pages are reclaimed in openFile(),
-                    // the pages are not flushed to disk but only invalidates.
-                    ioManager.close(fInfo.getFileHandle());
-                    fInfo.markAsDeleted();
+                    // the pages are not flushed to disk but only invalidated.
+                    if (!fInfo.fileHasBeenDeleted()) {
+                        ioManager.close(fInfo.getFileHandle());
+                        fInfo.markAsDeleted();
+                    }
                 }
             }
         }

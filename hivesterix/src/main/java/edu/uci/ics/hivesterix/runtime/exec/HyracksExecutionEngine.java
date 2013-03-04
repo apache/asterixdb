@@ -238,7 +238,7 @@ public class HyracksExecutionEngine implements IExecutionEngine {
         builder.setTypeTraitProvider(HiveTypeTraitProvider.INSTANCE);
         builder.setHashFunctionFamilyProvider(HiveBinaryHashFunctionFamilyProvider.INSTANCE);
 
-        jobSpec = compiler.createJob(null);
+        jobSpec = compiler.createJob(null, null);
 
         // set the policy
         String policyStr = conf.get("hive.hyracks.connectorpolicy");

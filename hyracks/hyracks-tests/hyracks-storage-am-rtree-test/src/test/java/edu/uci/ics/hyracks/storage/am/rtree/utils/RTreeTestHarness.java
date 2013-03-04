@@ -23,6 +23,7 @@ import java.util.Random;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
@@ -31,10 +32,6 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 public class RTreeTestHarness {
 
     private static final long RANDOM_SEED = 50;
-    private static final int DEFAULT_PAGE_SIZE = 256;
-    private static final int DEFAULT_NUM_PAGES = 1000;
-    private static final int DEFAULT_MAX_OPEN_FILES = 10;
-    private static final int DEFAULT_HYRACKS_FRAME_SIZE = 128;
 
     protected final int pageSize;
     protected final int numPages;
@@ -43,6 +40,7 @@ public class RTreeTestHarness {
 
     protected IHyracksTaskContext ctx;
     protected IBufferCache bufferCache;
+    protected IFileMapProvider fileMapProvider;
     protected int treeFileId;
 
     protected final Random rnd = new Random();
@@ -50,12 +48,13 @@ public class RTreeTestHarness {
     protected final String tmpDir = System.getProperty("java.io.tmpdir");
     protected final String sep = System.getProperty("file.separator");
     protected String fileName;
+    protected FileReference file;
 
     public RTreeTestHarness() {
-        this.pageSize = DEFAULT_PAGE_SIZE;
-        this.numPages = DEFAULT_NUM_PAGES;
-        this.maxOpenFiles = DEFAULT_MAX_OPEN_FILES;
-        this.hyracksFrameSize = DEFAULT_HYRACKS_FRAME_SIZE;
+        this.pageSize = AccessMethodTestsConfig.RTREE_PAGE_SIZE;
+        this.numPages = AccessMethodTestsConfig.RTREE_NUM_PAGES;
+        this.maxOpenFiles = AccessMethodTestsConfig.RTREE_MAX_OPEN_FILES;
+        this.hyracksFrameSize = AccessMethodTestsConfig.RTREE_HYRACKS_FRAME_SIZE;
     }
 
     public RTreeTestHarness(int pageSize, int numPages, int maxOpenFiles, int hyracksFrameSize) {
@@ -67,19 +66,15 @@ public class RTreeTestHarness {
 
     public void setUp() throws HyracksDataException {
         fileName = tmpDir + sep + simpleDateFormat.format(new Date());
+        file = new FileReference(new File(fileName));
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(pageSize, numPages, maxOpenFiles);
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        FileReference file = new FileReference(new File(fileName));
-        bufferCache.createFile(file);
-        treeFileId = fmp.lookupFileId(file);
-        bufferCache.openFile(treeFileId);
+        fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
         rnd.setSeed(RANDOM_SEED);
     }
 
     public void tearDown() throws HyracksDataException {
-        bufferCache.closeFile(treeFileId);
         bufferCache.close();
         File f = new File(fileName);
         f.deleteOnExit();
@@ -93,8 +88,8 @@ public class RTreeTestHarness {
         return bufferCache;
     }
 
-    public int getTreeFileId() {
-        return treeFileId;
+    public IFileMapProvider getFileMapProvider() {
+        return fileMapProvider;
     }
 
     public String getFileName() {
@@ -119,5 +114,9 @@ public class RTreeTestHarness {
 
     public int getMaxOpenFiles() {
         return maxOpenFiles;
+    }
+
+    public FileReference getFileReference() {
+        return file;
     }
 }

@@ -15,105 +15,132 @@
 
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
+import java.io.IOException;
+
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
-import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactory;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
+import edu.uci.ics.hyracks.storage.common.file.LocalResource;
+import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 
-public abstract class IndexDataflowHelper {
-    protected IIndex index;
-    protected int indexFileId = -1;
+public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
 
-    protected final int partition;
     protected final IIndexOperatorDescriptor opDesc;
     protected final IHyracksTaskContext ctx;
+    protected final IIndexLifecycleManager lcManager;
+    protected final ILocalResourceRepository localResourceRepository;
+    protected final ResourceIdFactory resourceIdFactory;
+    protected final FileReference file;
+    protected final int partition;
+
+    protected IIndex index;
 
     public IndexDataflowHelper(IIndexOperatorDescriptor opDesc, final IHyracksTaskContext ctx, int partition) {
         this.opDesc = opDesc;
         this.ctx = ctx;
+        this.lcManager = opDesc.getLifecycleManagerProvider().getLifecycleManager(ctx);
+        this.localResourceRepository = opDesc.getStorageManager().getLocalResourceRepository(ctx);
+        this.resourceIdFactory = opDesc.getStorageManager().getResourceIdFactory(ctx);
         this.partition = partition;
+        this.file = opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile();
     }
 
-    public void init(boolean forceCreate) throws HyracksDataException {
-        IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
-        IFileMapProvider fileMapProvider = opDesc.getStorageManager().getFileMapProvider(ctx);
-        IndexRegistry<IIndex> indexRegistry = opDesc.getIndexRegistryProvider().getRegistry(ctx);
-        FileReference fileRef = getFilereference();
-        int fileId = -1;
-        boolean fileIsMapped = false;
-        synchronized (fileMapProvider) {
-            fileIsMapped = fileMapProvider.isMapped(fileRef);
-            if (!fileIsMapped) {
-                bufferCache.createFile(fileRef);
-            }
-            fileId = fileMapProvider.lookupFileId(fileRef);
-            try {
-                // Also creates the file if it doesn't exist yet.
-                bufferCache.openFile(fileId);
-            } catch (HyracksDataException e) {
-                // Revert state of buffer cache since file failed to open.
-                if (!fileIsMapped) {
-                    bufferCache.deleteFile(fileId, false);
-                }
-                throw e;
-            }
-        }
-        // Only set indexFileId member after openFile() succeeds.
-        indexFileId = fileId;
-        // Create new index instance and register it.
-        synchronized (indexRegistry) {
-            // Check if the index has already been registered.
-            boolean register = false;
-            index = indexRegistry.get(indexFileId);
-            if (index == null) {
-                index = createIndexInstance();
-                register = true;
-            }
-            if (forceCreate) {
-                index.create(indexFileId);
-            }
-            index.open(indexFileId);
-            if (register) {
-                indexRegistry.register(indexFileId, index);
-            }
-        }
-    }
+    protected abstract IIndex createIndexInstance() throws HyracksDataException;
 
-    public abstract IIndex createIndexInstance() throws HyracksDataException;
-
-    public FileReference getFilereference() {
-        IFileSplitProvider fileSplitProvider = opDesc.getFileSplitProvider();
-        return fileSplitProvider.getFileSplits()[partition].getLocalFile();
-    }
-
-    public void deinit() throws HyracksDataException {
-        if (indexFileId != -1) {
-            IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
-            bufferCache.closeFile(indexFileId);
-            indexFileId = -1;
-        }
-    }
-
-    public IIndex getIndex() {
+    public IIndex getIndexInstance() {
         return index;
     }
 
-    public IHyracksTaskContext getHyracksTaskContext() {
+    public void create() throws HyracksDataException {
+        synchronized (lcManager) {
+            long resourceID = getResourceID();
+            index = lcManager.getIndex(resourceID);
+            if (index != null) {
+                lcManager.unregister(resourceID);
+            } else {
+                index = createIndexInstance();
+            }
+
+            // The previous resource ID needs to be removed since calling IIndex.create() may possibly destroy 
+            // any physical artifact that the LocalResourceRepository is managing (e.g. a file containing the resource ID). 
+            // Once the index has been created, a new resource ID can be generated.
+            if (resourceID != -1) {
+                localResourceRepository.deleteResourceByName(file.getFile().getPath());
+            }
+            index.create();
+            try {
+                //TODO Create LocalResource through LocalResourceFactory interface
+                resourceID = resourceIdFactory.createId();
+                ILocalResourceFactory localResourceFactory = opDesc.getLocalResourceFactoryProvider()
+                        .getLocalResourceFactory();
+                localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, file.getFile()
+                        .getPath(), partition));
+            } catch (IOException e) {
+                throw new HyracksDataException(e);
+            }
+            lcManager.register(resourceID, index);
+        }
+    }
+
+    public void open() throws HyracksDataException {
+        synchronized (lcManager) {
+            long resourceID = getResourceID();
+
+            if (resourceID == -1) {
+                throw new HyracksDataException("Index does not have a valid resource ID. Has it been created yet?");
+            }
+
+            index = lcManager.getIndex(resourceID);
+            if (index == null) {
+                index = createIndexInstance();
+                lcManager.register(resourceID, index);
+            }
+            lcManager.open(resourceID);
+        }
+    }
+
+    public void close() throws HyracksDataException {
+        synchronized (lcManager) {
+            lcManager.close(getResourceID());
+        }
+    }
+
+    public void destroy() throws HyracksDataException {
+        synchronized (lcManager) {
+            long resourceID = getResourceID();
+            index = lcManager.getIndex(resourceID);
+            if (index != null) {
+                lcManager.unregister(resourceID);
+            } else {
+                index = createIndexInstance();
+            }
+
+            if (resourceID != -1) {
+                localResourceRepository.deleteResourceByName(file.getFile().getPath());
+            }
+            index.destroy();
+        }
+    }
+
+    public FileReference getFileReference() {
+        return file;
+    }
+
+    public long getResourceID() throws HyracksDataException {
+        LocalResource localResource = localResourceRepository.getResourceByName(file.getFile().getPath());
+        if (localResource == null) {
+            return -1;
+        } else {
+            return localResource.getResourceId();
+        }
+    }
+
+    public IHyracksTaskContext getTaskContext() {
         return ctx;
-    }
-
-    public IIndexOperatorDescriptor getOperatorDescriptor() {
-        return opDesc;
-    }
-
-    public int getIndexFileId() {
-        return indexFileId;
-    }
-
-    public IOperationCallbackProvider getOpCallbackProvider() {
-        return opDesc.getOpCallbackProvider();
     }
 }

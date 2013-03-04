@@ -41,13 +41,14 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.rtree.RTreeCheckTuple;
-import edu.uci.ics.hyracks.storage.am.rtree.RTreeTestUtils;
+import edu.uci.ics.hyracks.storage.am.common.util.HashMultiSet;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
@@ -78,7 +79,6 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
         }
 
         IBufferCache bufferCache = harness.getBufferCache();
-        int rtreeFileId = harness.getTreeFileId();
 
         // Declare fields.
         int fieldCount = 5;
@@ -109,22 +109,23 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
 
         ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(tupleWriterFactory,
-                valueProviderFactories);
+                valueProviderFactories, RTreePolicyType.RTREE);
         ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(tupleWriterFactory,
-                valueProviderFactories);
+                valueProviderFactories, RTreePolicyType.RTREE);
 
         IRTreeInteriorFrame interiorFrame = (IRTreeInteriorFrame) interiorFrameFactory.createFrame();
         IRTreeLeafFrame leafFrame = (IRTreeLeafFrame) leafFrameFactory.createFrame();
         IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
 
-        RTree rtree = new RTree(bufferCache, fieldCount, cmpFactories, freePageManager, interiorFrameFactory,
-                leafFrameFactory);
-        rtree.create(rtreeFileId);
-        rtree.open(rtreeFileId);
+        RTree rtree = new RTree(bufferCache, harness.getFileMapProvider(), freePageManager, interiorFrameFactory,
+                leafFrameFactory, cmpFactories, fieldCount, harness.getFileReference());
+        rtree.create();
+        rtree.activate();
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = rtree.createAccessor();
+        ITreeIndexAccessor indexAccessor = rtree.createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
         int numInserts = 10000;
         ArrayList<RTreeCheckTuple> checkTuples = new ArrayList<RTreeCheckTuple>();
         for (int i = 0; i < numInserts; i++) {
@@ -142,11 +143,11 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
             } catch (TreeIndexException e) {
             }
             RTreeCheckTuple checkTuple = new RTreeCheckTuple(fieldCount, keyFieldCount);
-            checkTuple.add(Math.min(p1x, p2x));
-            checkTuple.add(Math.min(p1y, p2y));
-            checkTuple.add(Math.max(p1x, p2x));
-            checkTuple.add(Math.max(p1y, p2y));
-            checkTuple.add(pk);
+            checkTuple.appendField(Math.min(p1x, p2x));
+            checkTuple.appendField(Math.min(p1y, p2y));
+            checkTuple.appendField(Math.max(p1x, p2x));
+            checkTuple.appendField(Math.max(p1y, p2y));
+            checkTuple.appendField(pk);
 
             checkTuples.add(checkTuple);
         }
@@ -162,14 +163,16 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
 
         RTreeCheckTuple keyCheck = (RTreeCheckTuple) rTreeTestUtils.createCheckTupleFromTuple(key, fieldSerdes,
                 keyFieldCount);
-        ArrayList<RTreeCheckTuple> expectedResult = rTreeTestUtils.getRangeSearchExpectedResults(checkTuples, keyCheck);
+        HashMultiSet<RTreeCheckTuple> expectedResult = rTreeTestUtils.getRangeSearchExpectedResults(checkTuples,
+                keyCheck);
 
         rTreeTestUtils.getRangeSearchExpectedResults(checkTuples, keyCheck);
         indexAccessor.search(searchCursor, searchPredicate);
 
         rTreeTestUtils.checkExpectedResults(searchCursor, expectedResult, fieldSerdes, keyFieldCount, null);
 
-        rtree.close();
+        rtree.deactivate();
+        rtree.destroy();
     }
 
 }

@@ -36,6 +36,7 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
 	protected static final int levelOff = maxPageOff + 12; //20
 	protected static final int nextPageOff = levelOff + 1; // 21
 	protected static final int validOff = nextPageOff + 4; // 25
+	protected static final int lsnOff = validOff + 4; // 29
 
 	protected ICachedPage page = null;
 	protected ByteBuffer buf = null;
@@ -101,7 +102,7 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
 	@Override
 	public void initBuffer(byte level) {
 		buf.putInt(tupleCountOff, 0);
-		buf.putInt(freeSpaceOff, validOff + 4);
+		buf.putInt(freeSpaceOff, lsnOff + 4);
 		//buf.putInt(maxPageOff, -1);
 		buf.put(levelOff, level);
 		buf.putInt(nextPageOff, -1);
@@ -130,5 +131,15 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
         } else {
             buf.putInt(validOff, 0);
         }
+    }
+
+    @Override
+    public long getLSN() {
+        return buf.getLong(lsnOff);
+    }
+
+    @Override
+    public void setLSN(long lsn) {
+        buf.putLong(lsnOff, lsn);
     }
 }

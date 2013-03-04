@@ -38,6 +38,8 @@ public abstract class OrderedIndexBulkLoadTest extends OrderedIndexTestDriver {
             ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey)
             throws Exception {
         OrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys, leafType);
+        ctx.getIndex().create();
+        ctx.getIndex().activate();
         for (int i = 0; i < bulkLoadRounds; i++) {
             // We assume all fieldSerdes are of the same type. Check the first
             // one
@@ -55,9 +57,12 @@ public abstract class OrderedIndexBulkLoadTest extends OrderedIndexTestDriver {
                 orderedIndexTestUtils.checkRangeSearch(ctx, prefixLowKey, prefixHighKey, true, true);
             }
         }
-        ctx.getIndex().close();
-    }
 
+        ctx.getIndex().validate();
+        ctx.getIndex().deactivate();
+        ctx.getIndex().destroy();
+    }
+    
     @Override
     protected String getTestOpName() {
         return "BulkLoad";

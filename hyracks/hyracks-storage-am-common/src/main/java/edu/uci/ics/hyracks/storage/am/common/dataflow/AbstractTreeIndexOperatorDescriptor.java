@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -19,104 +19,57 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 
-public abstract class AbstractTreeIndexOperatorDescriptor extends
-		AbstractSingleActivityOperatorDescriptor implements
-		ITreeIndexOperatorDescriptor {
+public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractIndexOperatorDescriptor {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	protected final IFileSplitProvider fileSplitProvider;
+    protected final ITypeTraits[] typeTraits;
+    protected final IBinaryComparatorFactory[] comparatorFactories;
+    protected final int[] bloomFilterKeyFields;
 
-	protected final IBinaryComparatorFactory[] comparatorFactories;
+    public AbstractTreeIndexOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity,
+            RecordDescriptor recDesc, IStorageManagerInterface storageManager,
+            IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
+            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields,
+            IIndexDataflowHelperFactory dataflowHelperFactory, ITupleFilterFactory tupleFilterFactory,
+            boolean retainInput, ILocalResourceFactoryProvider localResourceFactoryProvider,
+            ISearchOperationCallbackFactory searchOpCallbackFactory,
+            IModificationOperationCallbackFactory modificationOpCallbackFactory) {
+        super(spec, inputArity, outputArity, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider,
+                dataflowHelperFactory, tupleFilterFactory, retainInput, localResourceFactoryProvider,
+                searchOpCallbackFactory, modificationOpCallbackFactory);
+        this.typeTraits = typeTraits;
+        this.comparatorFactories = comparatorFactories;
+        this.bloomFilterKeyFields = bloomFilterKeyFields;
+    }
 
-	protected final IStorageManagerInterface storageManager;
-	protected final IIndexRegistryProvider<IIndex> indexRegistryProvider;
+    public IBinaryComparatorFactory[] getTreeIndexComparatorFactories() {
+        return comparatorFactories;
+    }
 
-	protected final ITypeTraits[] typeTraits;
-	protected final IIndexDataflowHelperFactory dataflowHelperFactory;
-	protected final ITupleFilterFactory tupleFilterFactory;
-	
-	protected final boolean retainInput;
-    protected final IOperationCallbackProvider opCallbackProvider;
+    public ITypeTraits[] getTreeIndexTypeTraits() {
+        return typeTraits;
+    }
 
-	public AbstractTreeIndexOperatorDescriptor(IOperatorDescriptorRegistry spec,
-			int inputArity, int outputArity, RecordDescriptor recDesc,
-			IStorageManagerInterface storageManager,
-			IIndexRegistryProvider<IIndex> indexRegistryProvider,
-			IFileSplitProvider fileSplitProvider,
-			ITypeTraits[] typeTraits,
-			IBinaryComparatorFactory[] comparatorFactories,
-			IIndexDataflowHelperFactory dataflowHelperFactory,
-			ITupleFilterFactory tupleFilterFactory,
-			boolean retainInput, IOperationCallbackProvider opCallbackProvider) {
-		super(spec, inputArity, outputArity);
-		this.fileSplitProvider = fileSplitProvider;
-		this.storageManager = storageManager;
-		this.indexRegistryProvider = indexRegistryProvider;
-		this.typeTraits = typeTraits;
-		this.comparatorFactories = comparatorFactories;
-		this.dataflowHelperFactory = dataflowHelperFactory;
-		this.retainInput = retainInput;
-		this.tupleFilterFactory = tupleFilterFactory;
-        this.opCallbackProvider = opCallbackProvider;
-		if (outputArity > 0) {
-			recordDescriptors[0] = recDesc;
-		}
-	}
+    public int[] getTreeIndexBloomFilterKeyFields() {
+        return bloomFilterKeyFields;
+    }
 
-	@Override
-	public IFileSplitProvider getFileSplitProvider() {
-		return fileSplitProvider;
-	}
+    @Override
+    public boolean getRetainInput() {
+        return retainInput;
+    }
 
-	@Override
-	public IBinaryComparatorFactory[] getTreeIndexComparatorFactories() {
-		return comparatorFactories;
-	}
-
-	@Override
-	public ITypeTraits[] getTreeIndexTypeTraits() {
-		return typeTraits;
-	}
-
-	@Override
-	public IStorageManagerInterface getStorageManager() {
-		return storageManager;
-	}
-
-	@Override
-	public IIndexRegistryProvider<IIndex> getIndexRegistryProvider() {
-		return indexRegistryProvider;
-	}
-
-	@Override
-	public RecordDescriptor getRecordDescriptor() {
-		return recordDescriptors[0];
-	}
-
-	@Override
-	public IIndexDataflowHelperFactory getIndexDataflowHelperFactory() {
-		return dataflowHelperFactory;
-	}
-	
-	@Override
-	public boolean getRetainInput() {
-		return retainInput;
-	}
-	
-	@Override
-	public IOperationCallbackProvider getOpCallbackProvider() {
-	    return opCallbackProvider;
-	}
-	
-	@Override
-	public ITupleFilterFactory getTupleFilterFactory() {
-		return tupleFilterFactory;
-	}
+    @Override
+    public ITupleFilterFactory getTupleFilterFactory() {
+        return tupleFilterFactory;
+    }
 }

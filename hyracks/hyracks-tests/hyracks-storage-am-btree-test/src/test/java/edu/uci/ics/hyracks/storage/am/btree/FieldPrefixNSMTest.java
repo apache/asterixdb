@@ -48,19 +48,19 @@ import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
-@SuppressWarnings("rawtypes")
 public class FieldPrefixNSMTest extends AbstractBTreeTest {
 
-    private static final int PAGE_SIZE = 32768; // 32K
+    private static final int PAGE_SIZE = 32768;
     private static final int NUM_PAGES = 40;
     private static final int MAX_OPEN_FILES = 10;
     private static final int HYRACKS_FRAME_SIZE = 128;
 
-    public FieldPrefixNSMTest() {        
+    public FieldPrefixNSMTest() {
         super(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES, HYRACKS_FRAME_SIZE);
     }
-    
+
     private ITupleReference createTuple(IHyracksTaskContext ctx, int f0, int f1, int f2, boolean print)
             throws HyracksDataException {
         if (print) {
@@ -73,7 +73,8 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
         FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
         ArrayTupleBuilder tb = new ArrayTupleBuilder(3);
         DataOutput dos = tb.getDataOutput();
-        
+
+        @SuppressWarnings("rawtypes")
         ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
@@ -98,8 +99,8 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
     }
 
     @Test
-    public void test01() throws Exception {        
-        
+    public void test01() throws Exception {
+
         // declare fields
         int fieldCount = 3;
         ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
@@ -116,6 +117,7 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
         MultiComparator cmp = new MultiComparator(cmps);
 
         // just for printing
+        @SuppressWarnings("rawtypes")
         ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
 
@@ -123,7 +125,10 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
         rnd.setSeed(50);
 
         IBufferCache bufferCache = harness.getBufferCache();
-        int btreeFileId = harness.getBTreeFileId();
+        IFileMapProvider fileMapProvider = harness.getFileMapProvider();
+        bufferCache.createFile(harness.getFileReference());
+        int btreeFileId = fileMapProvider.lookupFileId(harness.getFileReference());
+        bufferCache.openFile(btreeFileId);
         IHyracksTaskContext ctx = harness.getHyracksTaskContext();
         ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(btreeFileId, 0), false);
         try {
@@ -220,6 +225,8 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
 
         } finally {
             bufferCache.unpin(page);
+            bufferCache.closeFile(btreeFileId);
+            bufferCache.close();
         }
     }
 }

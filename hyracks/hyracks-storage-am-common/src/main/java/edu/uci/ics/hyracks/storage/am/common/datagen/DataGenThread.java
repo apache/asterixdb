@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2012 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.hyracks.storage.am.common.datagen;
 
 import java.io.IOException;
@@ -23,7 +38,8 @@ public class DataGenThread extends Thread {
     private TupleBatch[] tupleBatches;
     private int ringPos;
     
-    public DataGenThread(int numConsumers, int maxNumBatches, int batchSize, ISerializerDeserializer[] fieldSerdes, int payloadSize, int rndSeed, int maxOutstandingBatches, boolean sorted) {
+    public DataGenThread(int numConsumers, int maxNumBatches, int batchSize, ISerializerDeserializer[] fieldSerdes,
+            int payloadSize, int rndSeed, int maxOutstandingBatches, boolean sorted) {
         this.maxNumBatches = maxNumBatches;
         this.maxOutstandingBatches = maxOutstandingBatches;
         rnd = new Random(rndSeed);
@@ -31,6 +47,19 @@ public class DataGenThread extends Thread {
         IFieldValueGenerator[] fieldGens = DataGenUtils.getFieldGensFromSerdes(fieldSerdes, rnd, sorted);
         for (int i = 0; i < maxOutstandingBatches; i++) {
             tupleBatches[i] = new TupleBatch(batchSize, fieldGens, fieldSerdes, payloadSize);
+        }
+        tupleBatchQueue = new LinkedBlockingQueue<TupleBatch>(maxOutstandingBatches);
+        ringPos = 0;
+    }
+    
+    public DataGenThread(int numConsumers, int maxNumBatches, int batchSize, ISerializerDeserializer[] fieldSerdes,
+            IFieldValueGenerator[] fieldGens, int rndSeed, int maxOutstandingBatches) {
+        this.maxNumBatches = maxNumBatches;
+        this.maxOutstandingBatches = maxOutstandingBatches;
+        rnd = new Random(rndSeed);
+        tupleBatches = new TupleBatch[maxOutstandingBatches];
+        for (int i = 0; i < maxOutstandingBatches; i++) {
+            tupleBatches[i] = new TupleBatch(batchSize, fieldGens, fieldSerdes, 0);
         }
         tupleBatchQueue = new LinkedBlockingQueue<TupleBatch>(maxOutstandingBatches);
         ringPos = 0;

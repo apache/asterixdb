@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -15,9 +15,19 @@
 
 package edu.uci.ics.hyracks.storage.am.common.api;
 
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ICursorInitialState {
-	public ICachedPage getPage();
-	public void setPage(ICachedPage page);
+    public ICachedPage getPage();
+
+    public void setPage(ICachedPage page);
+
+    public ISearchOperationCallback getSearchOperationCallback();
+
+    public void setSearchOperationCallback(ISearchOperationCallback searchCallback);
+
+    public MultiComparator getOriginalKeyComparator();
+
+    public void setOriginialKeyComparator(MultiComparator originalCmp);
 }

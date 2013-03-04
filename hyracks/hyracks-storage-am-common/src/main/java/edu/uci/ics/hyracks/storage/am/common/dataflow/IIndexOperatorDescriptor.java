@@ -18,21 +18,31 @@ package edu.uci.ics.hyracks.storage.am.common.dataflow;
 import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 
 public interface IIndexOperatorDescriptor extends IActivity {
     public IFileSplitProvider getFileSplitProvider();
 
     public IStorageManagerInterface getStorageManager();
 
-    public IIndexRegistryProvider<IIndex> getIndexRegistryProvider();    
-    
+    public IIndexLifecycleManagerProvider getLifecycleManagerProvider();
+
     public RecordDescriptor getRecordDescriptor();
-    
+
     public IIndexDataflowHelperFactory getIndexDataflowHelperFactory();
-    
+
     public boolean getRetainInput();
+
+    public ISearchOperationCallbackFactory getSearchOpCallbackFactory();
     
-    public IOperationCallbackProvider getOpCallbackProvider();
+    public IModificationOperationCallbackFactory getModificationOpCallbackFactory();
+    
+    public ITupleFilterFactory getTupleFilterFactory();
+    
+    public ILocalResourceFactoryProvider getLocalResourceFactoryProvider();
 }

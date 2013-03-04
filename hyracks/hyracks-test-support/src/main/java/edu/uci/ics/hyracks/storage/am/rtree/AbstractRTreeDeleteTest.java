@@ -20,23 +20,29 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 @SuppressWarnings("rawtypes")
 public abstract class AbstractRTreeDeleteTest extends AbstractRTreeTestDriver {
 
     private final RTreeTestUtils rTreeTestUtils;
 
-    private static final int numInsertRounds = 2;
-    private static final int numDeleteRounds = 2;
+    private static final int numInsertRounds = AccessMethodTestsConfig.RTREE_NUM_INSERT_ROUNDS;
+    private static final int numDeleteRounds = AccessMethodTestsConfig.RTREE_NUM_DELETE_ROUNDS;
 
-    public AbstractRTreeDeleteTest() {
+    public AbstractRTreeDeleteTest(boolean testRstarPolicy) {
+    	super(testRstarPolicy);
         this.rTreeTestUtils = new RTreeTestUtils();
     }
 
     @Override
     protected void runTest(ISerializerDeserializer[] fieldSerdes,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, ITupleReference key) throws Exception {
-        AbstractRTreeTestContext ctx = createTestContext(fieldSerdes, valueProviderFactories, numKeys);
+            IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, ITupleReference key,
+            RTreePolicyType rtreePolicyType) throws Exception {
+        AbstractRTreeTestContext ctx = createTestContext(fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType);
+        ctx.getIndex().create();
+        ctx.getIndex().activate();
         for (int i = 0; i < numInsertRounds; i++) {
             // We assume all fieldSerdes are of the same type. Check the first
             // one to determine which field types to generate.
@@ -54,7 +60,8 @@ public abstract class AbstractRTreeDeleteTest extends AbstractRTreeTestDriver {
                 rTreeTestUtils.checkRangeSearch(ctx, key);
             }
         }
-        ctx.getIndex().close();
+        ctx.getIndex().deactivate();
+        ctx.getIndex().destroy();
     }
 
     @Override

@@ -23,24 +23,25 @@ import org.junit.Before;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractBTreeTest {
-	protected final Logger LOGGER = Logger.getLogger(BTreeTestHarness.class.getName());
-	protected final BTreeTestHarness harness;
-	
-	public AbstractBTreeTest() {
-		harness = new BTreeTestHarness();
+    protected final Logger LOGGER = Logger.getLogger(BTreeTestHarness.class.getName());
+
+    protected final BTreeTestHarness harness;
+
+    public AbstractBTreeTest() {
+        harness = new BTreeTestHarness();
     }
-    
+
     public AbstractBTreeTest(int pageSize, int numPages, int maxOpenFiles, int hyracksFrameSize) {
-    	harness = new BTreeTestHarness(pageSize, numPages, maxOpenFiles, hyracksFrameSize);
+        harness = new BTreeTestHarness(pageSize, numPages, maxOpenFiles, hyracksFrameSize);
     }
-	
-	@Before
-	public void setUp() throws HyracksDataException {
-		harness.setUp();
+
+    @Before
+    public void setUp() throws HyracksDataException {
+        harness.setUp();
     }
-	
-	@After
+
+    @After
     public void tearDown() throws HyracksDataException {
-		harness.tearDown();
+        harness.tearDown();
     }
 }

@@ -34,9 +34,10 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.PermutingFrameTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 
 public class IndexNestedLoopJoinOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
     private TreeIndexDataflowHelper treeIndexOpHelper;
@@ -86,11 +87,11 @@ public class IndexNestedLoopJoinOperatorNodePushable extends AbstractUnaryInputU
 
     @Override
     public void open() throws HyracksDataException {
-        accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksTaskContext().getFrameSize(), recDesc);
+        accessor = new FrameTupleAccessor(treeIndexOpHelper.getTaskContext().getFrameSize(), recDesc);
 
         try {
-            treeIndexOpHelper.init(false);
-            btree = (BTree) treeIndexOpHelper.getIndex();
+            treeIndexOpHelper.open();
+            btree = (BTree) treeIndexOpHelper.getIndexInstance();
             writer.open();
 
             int lowKeySearchFields = btree.getComparatorFactories().length;
@@ -118,15 +119,15 @@ public class IndexNestedLoopJoinOperatorNodePushable extends AbstractUnaryInputU
 
             rangePred = new RangePredicate(null, null, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
                     highKeySearchCmp);
-            writeBuffer = treeIndexOpHelper.getHyracksTaskContext().allocateFrame();
+            writeBuffer = treeIndexOpHelper.getTaskContext().allocateFrame();
             tb = new ArrayTupleBuilder(inputRecDesc.getFields().length + btree.getFieldCount());
             dos = tb.getDataOutput();
-            appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksTaskContext().getFrameSize());
+            appender = new FrameTupleAppender(treeIndexOpHelper.getTaskContext().getFrameSize());
             appender.reset(writeBuffer, true);
-            indexAccessor = btree.createAccessor();
+            indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             setCursor();
         } catch (Exception e) {
-            treeIndexOpHelper.deinit();
+            treeIndexOpHelper.close();
             throw new HyracksDataException(e);
         }
     }
@@ -196,7 +197,7 @@ public class IndexNestedLoopJoinOperatorNodePushable extends AbstractUnaryInputU
                 throw new HyracksDataException(e);
             }
         } finally {
-            treeIndexOpHelper.deinit();
+            treeIndexOpHelper.close();
         }
     }
 
