@@ -16,9 +16,7 @@ package edu.uci.ics.hyracks.control.common.ipc;
 
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
-import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.common.application.ApplicationStatus;
 import edu.uci.ics.hyracks.control.common.base.IClusterController;
@@ -93,28 +91,6 @@ public class ClusterControllerRemoteProxy implements IClusterController {
     public void registerPartitionRequest(PartitionRequest partitionRequest) throws Exception {
         CCNCFunctions.RegisterPartitionRequestFunction fn = new CCNCFunctions.RegisterPartitionRequestFunction(
                 partitionRequest);
-        ipcHandle.send(-1, fn, null);
-    }
-
-    @Override
-    public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult, int partition,
-            int nPartitions, NetworkAddress networkAddress) throws Exception {
-        CCNCFunctions.RegisterResultPartitionLocationFunction fn = new CCNCFunctions.RegisterResultPartitionLocationFunction(
-                jobId, rsId, orderedResult, partition, nPartitions, networkAddress);
-        ipcHandle.send(-1, fn, null);
-    }
-
-    @Override
-    public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws Exception {
-        CCNCFunctions.ReportResultPartitionWriteCompletionFunction fn = new CCNCFunctions.ReportResultPartitionWriteCompletionFunction(
-                jobId, rsId, partition);
-        ipcHandle.send(-1, fn, null);
-    }
-
-    @Override
-    public void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition) throws Exception {
-        CCNCFunctions.ReportResultPartitionFailureFunction fn = new CCNCFunctions.ReportResultPartitionFailureFunction(
-                jobId, rsId, partition);
         ipcHandle.send(-1, fn, null);
     }
 

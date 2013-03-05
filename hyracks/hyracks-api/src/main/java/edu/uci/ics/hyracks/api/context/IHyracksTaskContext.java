@@ -15,7 +15,6 @@
 package edu.uci.ics.hyracks.api.context;
 
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
-import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.IOperatorEnvironment;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
@@ -28,8 +27,6 @@ public interface IHyracksTaskContext extends IHyracksCommonContext, IWorkspaceFi
     public TaskAttemptId getTaskAttemptId();
 
     public ICounterContext getCounterContext();
-
-    public IDatasetPartitionManager getDatasetPartitionManager();
 
     public void sendApplicationMessageToCC(byte[] message, String nodeId) throws Exception;
 }

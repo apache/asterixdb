@@ -27,14 +27,10 @@ public class NodeControllerInfo implements Serializable {
 
     private final NetworkAddress netAddress;
 
-    private final NetworkAddress datasetNetworkAddress;
-
-    public NodeControllerInfo(String nodeId, NodeStatus status, NetworkAddress netAddress,
-            NetworkAddress datasetNetworkAddress) {
+    public NodeControllerInfo(String nodeId, NodeStatus status, NetworkAddress netAddress) {
         this.nodeId = nodeId;
         this.status = status;
         this.netAddress = netAddress;
-        this.datasetNetworkAddress = datasetNetworkAddress;
     }
 
     public String getNodeId() {
@@ -47,9 +43,5 @@ public class NodeControllerInfo implements Serializable {
 
     public NetworkAddress getNetworkAddress() {
         return netAddress;
-    }
-
-    public NetworkAddress getDatasetNetworkAddress() {
-        return datasetNetworkAddress;
     }
 }

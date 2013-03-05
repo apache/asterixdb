@@ -7,7 +7,6 @@ public enum PhysicalOperatorTag {
     BTREE_SEARCH,
     STATS,
     DATASOURCE_SCAN,
-    DISTRIBUTE_RESULT,
     EMPTY_TUPLE_SOURCE,
     EXTERNAL_GROUP_BY,
     IN_MEMORY_HASH_JOIN,

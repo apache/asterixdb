@@ -34,7 +34,6 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
-import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -346,11 +345,6 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     @Override
     public IStateObject getStateObject(Object id) {
         return opEnv.getStateObject(id);
-    }
-
-    @Override
-    public IDatasetPartitionManager getDatasetPartitionManager() {
-        return ncs.getDatasetPartitionManager();
     }
 
     @Override

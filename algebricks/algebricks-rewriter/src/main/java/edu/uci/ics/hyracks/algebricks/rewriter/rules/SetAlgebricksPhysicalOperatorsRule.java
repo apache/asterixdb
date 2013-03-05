@@ -38,7 +38,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteResult
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.AggregatePOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.AssignPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.DataSourceScanPOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.DistributeResultPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.EmptyTupleSourcePOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.ExternalGroupByPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.InMemoryStableSortPOperator;
@@ -51,6 +50,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.Precluster
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.ReplicatePOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.RunningAggregatePOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.SinkPOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.SinkWritePOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.StableSortPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.StreamDiePOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.StreamLimitPOperator;
@@ -242,7 +242,7 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     break;
                 }
                 case WRITE: {
-                    op.setPhysicalOperator(new DistributeResultPOperator());
+                    op.setPhysicalOperator(new SinkWritePOperator());
                     break;
                 }
                 case WRITE_RESULT: {
@@ -267,8 +267,8 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     List<LogicalVariable> secondaryKeys = new ArrayList<LogicalVariable>();
                     getKeys(opInsDel.getPrimaryKeyExpressions(), primaryKeys);
                     getKeys(opInsDel.getSecondaryKeyExpressions(), secondaryKeys);
-                    op.setPhysicalOperator(new IndexInsertDeletePOperator(primaryKeys, secondaryKeys, opInsDel
-                            .getFilterExpression(), opInsDel.getDataSourceIndex()));
+                    op.setPhysicalOperator(new IndexInsertDeletePOperator(primaryKeys, secondaryKeys, 
+                    		opInsDel.getFilterExpression(), opInsDel.getDataSourceIndex()));
                     break;
                 }
                 case SINK: {

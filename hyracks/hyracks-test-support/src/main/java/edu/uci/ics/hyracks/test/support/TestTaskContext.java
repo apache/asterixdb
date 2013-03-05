@@ -20,7 +20,6 @@ import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
-import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -98,11 +97,6 @@ public class TestTaskContext implements IHyracksTaskContext {
 
     @Override
     public IStateObject getStateObject(Object id) {
-        return null;
-    }
-
-    @Override
-    public IDatasetPartitionManager getDatasetPartitionManager() {
         return null;
     }
 

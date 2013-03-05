@@ -26,7 +26,6 @@ import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import edu.uci.ics.hyracks.api.client.impl.JobSpecificationActivityClusterGraphGeneratorFactory;
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.job.JobFlag;
@@ -117,10 +116,6 @@ public final class HyracksConnection implements IHyracksClientConnection {
     public JobId startJob(String appName, IActivityClusterGraphGeneratorFactory acggf, EnumSet<JobFlag> jobFlags)
             throws Exception {
         return hci.startJob(appName, JavaSerializationUtils.serialize(acggf), jobFlags);
-    }
-
-    public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception {
-        return hci.getDatasetDirectoryServiceInfo();
     }
 
     @Override

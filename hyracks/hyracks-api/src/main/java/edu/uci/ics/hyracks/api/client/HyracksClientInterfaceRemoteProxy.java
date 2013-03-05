@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.api.client;
 import java.util.EnumSet;
 import java.util.Map;
 
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
@@ -74,12 +73,6 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
         HyracksClientInterfaceFunctions.StartJobFunction sjf = new HyracksClientInterfaceFunctions.StartJobFunction(
                 appName, acggfBytes, jobFlags);
         return (JobId) rpci.call(ipcHandle, sjf);
-    }
-
-    @Override
-    public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception {
-        HyracksClientInterfaceFunctions.GetDatasetDirectoryServiceInfoFunction gddsf = new HyracksClientInterfaceFunctions.GetDatasetDirectoryServiceInfoFunction();
-        return (NetworkAddress) rpci.call(ipcHandle, gddsf);
     }
 
     @Override

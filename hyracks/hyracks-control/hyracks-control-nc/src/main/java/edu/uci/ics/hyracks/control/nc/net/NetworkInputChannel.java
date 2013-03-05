@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.comm.channels;
+package edu.uci.ics.hyracks.control.nc.net;
 
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.channels.IInputChannel;
 import edu.uci.ics.hyracks.api.channels.IInputChannelMonitor;
-import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.net.buffers.IBufferAcceptor;
@@ -33,9 +33,7 @@ import edu.uci.ics.hyracks.net.protocols.muxdemux.ChannelControlBlock;
 public class NetworkInputChannel implements IInputChannel {
     private static final Logger LOGGER = Logger.getLogger(NetworkInputChannel.class.getName());
 
-    static final int INITIAL_MESSAGE_SIZE = 20;
-
-    private final IChannelConnectionFactory netManager;
+    private final NetworkManager netManager;
 
     private final SocketAddress remoteAddress;
 
@@ -51,8 +49,8 @@ public class NetworkInputChannel implements IInputChannel {
 
     private Object attachment;
 
-    public NetworkInputChannel(IChannelConnectionFactory netManager, SocketAddress remoteAddress,
-            PartitionId partitionId, int nBuffers) {
+    public NetworkInputChannel(NetworkManager netManager, SocketAddress remoteAddress, PartitionId partitionId,
+            int nBuffers) {
         this.netManager = netManager;
         this.remoteAddress = remoteAddress;
         this.partitionId = partitionId;
@@ -87,7 +85,7 @@ public class NetworkInputChannel implements IInputChannel {
     }
 
     @Override
-    public void open(IHyracksCommonContext ctx) throws HyracksDataException {
+    public void open(IHyracksTaskContext ctx) throws HyracksDataException {
         try {
             ccb = netManager.connect(remoteAddress);
         } catch (Exception e) {
@@ -98,7 +96,7 @@ public class NetworkInputChannel implements IInputChannel {
         for (int i = 0; i < nBuffers; ++i) {
             ccb.getReadInterface().getEmptyBufferAcceptor().accept(ctx.allocateFrame());
         }
-        ByteBuffer writeBuffer = ByteBuffer.allocate(INITIAL_MESSAGE_SIZE);
+        ByteBuffer writeBuffer = ByteBuffer.allocate(NetworkManager.INITIAL_MESSAGE_SIZE);
         writeBuffer.putLong(partitionId.getJobId().getId());
         writeBuffer.putInt(partitionId.getConnectorDescriptorId().getId());
         writeBuffer.putInt(partitionId.getSenderIndex());

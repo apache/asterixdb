@@ -41,8 +41,6 @@ public class NodeControllerState {
 
     private final NetworkAddress dataPort;
 
-    private final NetworkAddress datasetPort;
-
     private final Set<JobId> activeJobIds;
 
     private final String osName;
@@ -109,14 +107,6 @@ public class NodeControllerState {
 
     private final long[] netSignalingBytesWritten;
 
-    private final long[] datasetNetPayloadBytesRead;
-
-    private final long[] datasetNetPayloadBytesWritten;
-
-    private final long[] datasetNetSignalingBytesRead;
-
-    private final long[] datasetNetSignalingBytesWritten;
-
     private final long[] ipcMessagesSent;
 
     private final long[] ipcMessageBytesSent;
@@ -133,7 +123,6 @@ public class NodeControllerState {
         this.nodeController = nodeController;
         ncConfig = reg.getNCConfig();
         dataPort = reg.getDataPort();
-        datasetPort = reg.getDatasetPort();
         activeJobIds = new HashSet<JobId>();
 
         osName = reg.getOSName();
@@ -175,10 +164,6 @@ public class NodeControllerState {
         netPayloadBytesWritten = new long[RRD_SIZE];
         netSignalingBytesRead = new long[RRD_SIZE];
         netSignalingBytesWritten = new long[RRD_SIZE];
-        datasetNetPayloadBytesRead = new long[RRD_SIZE];
-        datasetNetPayloadBytesWritten = new long[RRD_SIZE];
-        datasetNetSignalingBytesRead = new long[RRD_SIZE];
-        datasetNetSignalingBytesWritten = new long[RRD_SIZE];
         ipcMessagesSent = new long[RRD_SIZE];
         ipcMessageBytesSent = new long[RRD_SIZE];
         ipcMessagesReceived = new long[RRD_SIZE];
@@ -211,10 +196,6 @@ public class NodeControllerState {
         netPayloadBytesWritten[rrdPtr] = hbData.netPayloadBytesWritten;
         netSignalingBytesRead[rrdPtr] = hbData.netSignalingBytesRead;
         netSignalingBytesWritten[rrdPtr] = hbData.netSignalingBytesWritten;
-        datasetNetPayloadBytesRead[rrdPtr] = hbData.datasetNetPayloadBytesRead;
-        datasetNetPayloadBytesWritten[rrdPtr] = hbData.datasetNetPayloadBytesWritten;
-        datasetNetSignalingBytesRead[rrdPtr] = hbData.datasetNetSignalingBytesRead;
-        datasetNetSignalingBytesWritten[rrdPtr] = hbData.datasetNetSignalingBytesWritten;
         ipcMessagesSent[rrdPtr] = hbData.ipcMessagesSent;
         ipcMessageBytesSent[rrdPtr] = hbData.ipcMessageBytesSent;
         ipcMessagesReceived[rrdPtr] = hbData.ipcMessagesReceived;
@@ -244,10 +225,6 @@ public class NodeControllerState {
 
     public NetworkAddress getDataPort() {
         return dataPort;
-    }
-
-    public NetworkAddress getDatasetPort() {
-        return datasetPort;
     }
 
     public JSONObject toSummaryJSON() throws JSONException {
@@ -294,10 +271,6 @@ public class NodeControllerState {
         o.put("net-payload-bytes-written", netPayloadBytesWritten);
         o.put("net-signaling-bytes-read", netSignalingBytesRead);
         o.put("net-signaling-bytes-written", netSignalingBytesWritten);
-        o.put("dataset-net-payload-bytes-read", datasetNetPayloadBytesRead);
-        o.put("dataset-net-payload-bytes-written", datasetNetPayloadBytesWritten);
-        o.put("dataset-net-signaling-bytes-read", datasetNetSignalingBytesRead);
-        o.put("dataset-net-signaling-bytes-written", datasetNetSignalingBytesWritten);
         o.put("ipc-messages-sent", ipcMessagesSent);
         o.put("ipc-message-bytes-sent", ipcMessageBytesSent);
         o.put("ipc-messages-received", ipcMessagesReceived);
