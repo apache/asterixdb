@@ -14,9 +14,6 @@
  */
 package edu.uci.ics.asterix.om.base;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -61,14 +58,5 @@ public class AInt16 implements IAObject {
     @Override
     public String toString() {
         return "AInt16: {" + value + "}";
-    }
-
-    @Override
-    public JSONObject toJSON() throws JSONException {
-        JSONObject json = new JSONObject();
-
-        json.put("AInt16", value);
-
-        return json;
     }
 }

@@ -1,8 +1,5 @@
 package edu.uci.ics.asterix.om.types;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.visitors.IOMVisitor;
@@ -44,13 +41,6 @@ public abstract class BuiltinType implements IAType {
         public String getConstructor() {
             return null;
         }
-
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "AsterixType");
-            return type;
-        }
     };
 
     public final static BuiltinType AINT8 = new LowerCaseConstructorType() {
@@ -70,13 +60,6 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "int8";
-        }
-
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "AInt8");
-            return type;
         }
     };
 
@@ -98,13 +81,6 @@ public abstract class BuiltinType implements IAType {
         public String getTypeName() {
             return "int16";
         }
-
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "AInt16");
-            return type;
-        }
     };
 
     public final static BuiltinType AINT32 = new LowerCaseConstructorType() {
@@ -124,13 +100,6 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "int32";
-        }
-
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "AInt32");
-            return type;
         }
     };
 
@@ -153,12 +122,6 @@ public abstract class BuiltinType implements IAType {
             return "int64";
         }
 
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "AInt64");
-            return type;
-        }
     };
 
     public final static BuiltinType ABINARY = new LowerCaseConstructorType() {
@@ -180,12 +143,6 @@ public abstract class BuiltinType implements IAType {
             return "binary";
         }
 
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "ABinary");
-            return type;
-        }
     };
 
     public final static BuiltinType AFLOAT = new LowerCaseConstructorType() {
@@ -207,12 +164,6 @@ public abstract class BuiltinType implements IAType {
             return "float";
         }
 
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "AFloat");
-            return type;
-        }
     };
 
     public final static BuiltinType ADOUBLE = new LowerCaseConstructorType() {
@@ -233,13 +184,6 @@ public abstract class BuiltinType implements IAType {
         public String getTypeName() {
             return "double";
         }
-
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "ADouble");
-            return type;
-        }
     };
 
     public final static BuiltinType ASTRING = new LowerCaseConstructorType() {
@@ -259,13 +203,6 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "string";
-        }
-
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "AString");
-            return type;
         }
     };
 
@@ -288,12 +225,6 @@ public abstract class BuiltinType implements IAType {
             return "null";
         }
 
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "Null");
-            return type;
-        }
     };
 
     public final static BuiltinType ABOOLEAN = new LowerCaseConstructorType() {
@@ -315,12 +246,6 @@ public abstract class BuiltinType implements IAType {
             return "boolean";
         }
 
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "ABoolean");
-            return type;
-        }
     };
 
     public final static BuiltinType ATIME = new LowerCaseConstructorType() {
@@ -340,13 +265,6 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "time";
-        }
-
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "ATime");
-            return type;
         }
     };
 
@@ -368,13 +286,6 @@ public abstract class BuiltinType implements IAType {
         public String getTypeName() {
             return "date";
         }
-
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "ADate");
-            return type;
-        }
     };
 
     public final static BuiltinType ADATETIME = new LowerCaseConstructorType() {
@@ -394,13 +305,6 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "datetime";
-        }
-
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "ADateTime");
-            return type;
         }
     };
 
@@ -423,12 +327,6 @@ public abstract class BuiltinType implements IAType {
             return "duration";
         }
 
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "ADuration");
-            return type;
-        }
     };
 
     public final static BuiltinType AINTERVAL = new LowerCaseConstructorType() {
@@ -450,10 +348,6 @@ public abstract class BuiltinType implements IAType {
             return "interval";
         }
 
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            return null;
-        }
     };
 
     public final static BuiltinType APOINT = new LowerCaseConstructorType() {
@@ -474,13 +368,6 @@ public abstract class BuiltinType implements IAType {
         public String getTypeName() {
             return "point";
         }
-
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "APoint");
-            return type;
-        }
     };
 
     public final static BuiltinType APOINT3D = new LowerCaseConstructorType() {
@@ -500,13 +387,6 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "point3d";
-        }
-
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "APoint3D");
-            return type;
         }
     };
 
@@ -529,12 +409,6 @@ public abstract class BuiltinType implements IAType {
             return "line";
         }
 
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "ALINE");
-            return type;
-        }
     };
 
     public final static BuiltinType APOLYGON = new LowerCaseConstructorType() {
@@ -556,12 +430,6 @@ public abstract class BuiltinType implements IAType {
             return "polygon";
         }
 
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "APOLYGON");
-            return type;
-        }
     };
 
     public final static BuiltinType ACIRCLE = new LowerCaseConstructorType() {
@@ -583,12 +451,6 @@ public abstract class BuiltinType implements IAType {
             return "circle";
         }
 
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "ACIRCLE");
-            return type;
-        }
     };
 
     public final static BuiltinType ARECTANGLE = new LowerCaseConstructorType() {
@@ -610,12 +472,6 @@ public abstract class BuiltinType implements IAType {
             return "rectangle";
         }
 
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "ARECTANGLE");
-            return type;
-        }
     };
 
     public static final IAType ABITARRAY = new LowerCaseConstructorType() {
@@ -635,13 +491,6 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "abitarray";
-        }
-
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "ABitArray");
-            return type;
         }
     };
 
@@ -667,13 +516,6 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getConstructor() {
             return null;
-        }
-
-        @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
-            type.put("type", "ANY");
-            return type;
         }
     };
 

@@ -146,8 +146,7 @@ public class APIFramework {
 
     public enum DisplayFormat {
         TEXT,
-        HTML,
-        JSON
+        HTML
     }
 
     public static Pair<Query, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions,
@@ -321,7 +320,7 @@ public class APIFramework {
         if (!pc.isGenerateJobSpec()) {
             return null;
         }
-
+        
         AlgebricksPartitionConstraint clusterLocs = queryMetadataProvider.getClusterLocations();
         builder.setBinaryBooleanInspectorFactory(format.getBinaryBooleanInspectorFactory());
         builder.setBinaryIntegerInspectorFactory(format.getBinaryIntegerInspectorFactory());
@@ -332,16 +331,7 @@ public class APIFramework {
         builder.setHashFunctionFactoryProvider(format.getBinaryHashFunctionFactoryProvider());
         builder.setHashFunctionFamilyProvider(format.getBinaryHashFunctionFamilyProvider());
         builder.setNullWriterFactory(format.getNullWriterFactory());
-
-        switch (pdf) {
-            case JSON:
-                builder.setPrinterProvider(format.getJSONPrinterFactoryProvider());
-                break;
-            default:
-                builder.setPrinterProvider(format.getPrinterFactoryProvider());
-                break;
-        }
-
+        builder.setPrinterProvider(format.getPrinterFactoryProvider());
         builder.setSerializerDeserializerProvider(format.getSerdeProvider());
         builder.setTypeTraitProvider(format.getTypeTraitProvider());
         builder.setNormalizedKeyComputerFactoryProvider(format.getNormalizedKeyComputerFactoryProvider());

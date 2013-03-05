@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.asterix.om.base;
 
-import org.json.JSONObject;
-
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -143,12 +141,4 @@ public class AInterval implements IAObject {
         return typetag;
     }
 
-    @Override
-    public JSONObject toJSON() {
-        /*
-         * TODO(madhusudancs): Stub implementation of toJSON method, this method should be removed in favor of new JSON
-         * print visitor based serializer.
-         */
-        return null;
-    }
 }

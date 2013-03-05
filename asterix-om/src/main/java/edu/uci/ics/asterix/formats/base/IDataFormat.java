@@ -41,8 +41,6 @@ public interface IDataFormat {
 
     public IPrinterFactoryProvider getPrinterFactoryProvider();
 
-    public IPrinterFactoryProvider getJSONPrinterFactoryProvider();
-
     public INullWriterFactory getNullWriterFactory();
 
     public Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> partitioningEvaluatorFactory(

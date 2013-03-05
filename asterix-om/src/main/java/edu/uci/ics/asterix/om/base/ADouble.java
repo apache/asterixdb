@@ -14,9 +14,6 @@
  */
 package edu.uci.ics.asterix.om.base;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -73,12 +70,4 @@ public class ADouble implements IAObject {
         return hashCode();
     }
 
-    @Override
-    public JSONObject toJSON() throws JSONException {
-        JSONObject json = new JSONObject();
-
-        json.put("ADouble", value);
-
-        return json;
-    }
 }

@@ -14,10 +14,6 @@
  */
 package edu.uci.ics.asterix.om.base;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.visitors.IOMVisitor;
@@ -90,20 +86,5 @@ public class ARecord implements IAObject {
         }
         sb.append(" }");
         return sb.toString();
-    }
-
-    @Override
-    public JSONObject toJSON() throws JSONException {
-        JSONObject json = new JSONObject();
-
-        JSONArray record = new JSONArray();
-        for (int i = 0; i < fields.length; i++) {
-            JSONObject item = new JSONObject();
-            item.put(type.getFieldNames()[i], fields[i]);
-            record.put(item);
-        }
-        json.put("ARecord", record);
-
-        return json;
     }
 }
