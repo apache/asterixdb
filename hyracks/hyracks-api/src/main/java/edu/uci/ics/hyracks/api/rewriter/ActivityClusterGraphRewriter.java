@@ -46,7 +46,7 @@ import edu.uci.ics.hyracks.api.rewriter.runtime.SuperActivity;
  * @author yingyib
  */
 public class ActivityClusterGraphRewriter {
-    private static String ONE_TO_ONE_CONNECTOR = "OneToOneConnectorDescriptor";
+    private static String ONE_TO_ONE_CONNECTOR = "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor";
 
     /**
      * rewrite an activity cluster graph to eliminate
@@ -148,7 +148,7 @@ public class ActivityClusterGraphRewriter {
         }
 
         /**
-         * expend one-to-one connected activity cluster by the BFS order.
+         * expand one-to-one connected activity cluster by the BFS order.
          * after the while-loop, the original activities are partitioned
          * into equivalent classes, one-per-super-activity.
          */

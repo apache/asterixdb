@@ -15,7 +15,6 @@
 
 package edu.uci.ics.hyracks.api.rewriter.runtime;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -183,31 +182,8 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
          */
         Pair<ActivityId, Integer> activityIdInputIndex = parent.getActivityIdInputIndex(index);
         IOperatorNodePushable operatorNodePushable = operatorNodePushables.get(activityIdInputIndex.getLeft());
-        final IFrameWriter writer = operatorNodePushable.getInputFrameWriter(activityIdInputIndex.getRight());
-
-        return new IFrameWriter() {
-
-            @Override
-            public void open() throws HyracksDataException {
-                writer.open();
-            }
-
-            @Override
-            public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                writer.nextFrame(buffer);
-            }
-
-            @Override
-            public void fail() throws HyracksDataException {
-                writer.fail();
-            }
-
-            @Override
-            public void close() throws HyracksDataException {
-                writer.close();
-            }
-
-        };
+        IFrameWriter writer = operatorNodePushable.getInputFrameWriter(activityIdInputIndex.getRight());
+        return writer;
     }
 
     @Override
