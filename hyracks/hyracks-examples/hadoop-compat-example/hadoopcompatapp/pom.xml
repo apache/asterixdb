@@ -2,7 +2,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks.examples.compat</groupId>
   <artifactId>hadoopcompatapp</artifactId>
-  <version>0.2.3-SNAPSHOT</version>
   <name>hadoopcompatapp</name>
 
   <parent>
@@ -149,6 +148,7 @@
         <configuration>
           <source>1.6</source>
           <target>1.6</target>
+          <fork>true</fork>
         </configuration>
       </plugin>
       <plugin>

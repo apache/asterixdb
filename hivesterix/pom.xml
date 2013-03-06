@@ -4,7 +4,7 @@
 	<groupId>edu.uci.ics.hivesterix</groupId>
 	<artifactId>hivesterix</artifactId>
 	<version>0.2.3-SNAPSHOT</version>
- 	<name>hivesterix</name>
+	<name>hivesterix</name>
 	<dependencies>
 		<dependency>
 			<groupId>javax.servlet</groupId>
@@ -308,9 +308,30 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.0.2</version>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>1.7</source>
+					<target>1.7</target>
+					<encoding>UTF-8</encoding>
+					<fork>true</fork>
 				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-jar-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>patch</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<phase>package</phase>
+						<configuration>
+							<classifier>patch</classifier>
+							<finalName>a-hive</finalName>
+							<includes>
+								<include>**/org/apache/**</include>
+							</includes>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -358,8 +379,8 @@
 				<version>2.13</version>
 				<configuration>
 					<forkMode>pertest</forkMode>
-					<argLine>-enableassertions -Xmx2047m -Dfile.encoding=UTF-8 
-                        -Djava.util.logging.config.file=src/test/resources/logging.properties</argLine>
+					<argLine>-enableassertions -Xmx2047m -Dfile.encoding=UTF-8
+						-Djava.util.logging.config.file=src/test/resources/logging.properties</argLine>
 					<includes>
 						<include>**/test/optimizer/*TestSuite.java</include>
 						<include>**/test/optimizer/*Test.java</include>
