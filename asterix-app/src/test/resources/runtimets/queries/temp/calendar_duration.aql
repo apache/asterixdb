@@ -17,12 +17,36 @@ let $dr2 := duration("-PT63H398212M3219.328S")
 let $dr3 := duration("P1Y90M")
 let $dr4 := duration("-P3Y89M4089DT47382.983S")
 let $cdr1 := calendar-duration-from-datetime($t1, $dr1)
+let $dt1 := add-datetime-duration($t1, $dr1)
+let $dtt1 := add-datetime-duration($t1, $cdr1)
+let $c1 := $dt1 = $dtt1
 let $cdr2 := calendar-duration-from-datetime($t1, $dr2)
+let $dt2 := add-datetime-duration($t1, $dr2)
+let $dtt2 := add-datetime-duration($t1, $cdr2)
+let $c2 := $dt2 = $dtt2
 let $cdr3 := calendar-duration-from-datetime($t1, $dr3)
+let $dt3 := add-datetime-duration($t1, $dr3)
+let $dtt3 := add-datetime-duration($t1, $cdr3)
+let $c3 := $dt3 = $dtt3
 let $cdr4 := calendar-duration-from-datetime($t1, $dr4)
+let $dt4 := add-datetime-duration($t1, $dr4)
+let $dtt4 := add-datetime-duration($t1, $cdr4)
+let $c4 := $dt4 = $dtt4
 let $cdr5 := calendar-duration-from-date($t2, $dr1)
+let $dt5 := add-date-duration($t2, $dr1)
+let $dtt5 := add-date-duration($t2, $cdr5)
+let $c5 := $dt5 = $dtt5
 let $cdr6 := calendar-duration-from-date($t2, $dr2)
+let $dt6 := add-date-duration($t2, $dr2)
+let $dtt6 := add-date-duration($t2, $cdr6)
+let $c6 := $dt6 = $dtt6
 let $cdr7 := calendar-duration-from-date($t2, $dr3)
+let $dt7 := add-date-duration($t2, $dr3)
+let $dtt7 := add-date-duration($t2, $cdr7)
+let $c7 := $dt7 = $dtt7
 let $cdr8 := calendar-duration-from-date($t2, $dr4)
+let $dt8 := add-date-duration($t2, $dr4)
+let $dtt8 := add-date-duration($t2, $cdr8)
+let $c8 := $dt8 = $dtt8
 
-return { "cduration1":$cdr1, "cduration2":$cdr2, "cduration3":$cdr3, "cduration4":$cdr4, "cduration5":$cdr5, "cduration6":$cdr6, "cduration7":$cdr7, "cduration8":$cdr8 }
+return { "cduration1":$cdr1, "c1":$c1, "cduration2":$cdr2, "c2":$c2, "cduration3":$cdr3, "c3":$c3, "cduration4":$cdr4, "c4":$c4, "cduration5":$cdr5, "c5":$c5, "cduration6":$cdr6, "c6":$c6, "cduration7":$cdr7, "c7":$c7, "cduration8":$cdr8, "c8":$c8 }

@@ -124,13 +124,13 @@ public class CalendarDurationFromDateTimeDescriptor extends AbstractScalarFuncti
 
                             if (argOut0.getByteArray()[0] != SER_DATETIME_TYPE_TAG) {
                                 throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 0: expecting ADateTime, but got: "
+                                        "Inapplicable input type for parameter 0: expecting Datetime, but got: "
                                                 + argOut0.getByteArray()[0]);
                             }
 
                             if (argOut1.getByteArray()[0] != SER_DURATION_TYPE_TAG) {
                                 throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 1: expecting ADateTime, but got: "
+                                        "Inapplicable input type for parameter 1: expecting Duration, but got: "
                                                 + argOut1.getByteArray()[0]);
                             }
 
@@ -202,9 +202,9 @@ public class CalendarDurationFromDateTimeDescriptor extends AbstractScalarFuncti
                                 }
 
                                 if (day < 0) {
-                                    boolean isLeapYear = calInstanct.isLeapYear(year0);
-                                    day += (isLeapYear) ? (GregorianCalendarSystem.DAYS_OF_MONTH_LEAP[month0 - 1])
-                                            : (GregorianCalendarSystem.DAYS_OF_MONTH_ORDI[month0 - 1]);
+                                    boolean isLeapYear = calInstanct.isLeapYear(year1);
+                                    day += (isLeapYear) ? (GregorianCalendarSystem.DAYS_OF_MONTH_LEAP[month1 - 2])
+                                            : (GregorianCalendarSystem.DAYS_OF_MONTH_ORDI[month1 - 2]);
                                     month -= 1;
                                 }
 
