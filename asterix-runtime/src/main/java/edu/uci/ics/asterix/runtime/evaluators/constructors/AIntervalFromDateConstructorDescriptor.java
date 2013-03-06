@@ -101,15 +101,15 @@ public class AIntervalFromDateConstructorDescriptor extends AbstractScalarFuncti
 
                                 // start date
                                 charAccessor.reset(argOut0.getByteArray(), 3, stringLength);
-                                long intervalStart = ADateParserFactory.parseDatePart(charAccessor, true)
+                                long intervalStart = ADateParserFactory.parseDatePart(charAccessor)
                                         / GregorianCalendarSystem.CHRONON_OF_DAY;
-                                // end date
 
+                                // end date
                                 stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
                                         + (argOut1.getByteArray()[2] & 0xff << 0);
 
                                 charAccessor.reset(argOut1.getByteArray(), 3, stringLength);
-                                long intervalEnd = ADateParserFactory.parseDatePart(charAccessor, true)
+                                long intervalEnd = ADateParserFactory.parseDatePart(charAccessor)
                                         / GregorianCalendarSystem.CHRONON_OF_DAY;
 
                                 if (intervalEnd < intervalStart) {

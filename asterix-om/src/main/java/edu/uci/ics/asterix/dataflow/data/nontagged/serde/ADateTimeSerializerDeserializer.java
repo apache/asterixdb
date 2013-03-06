@@ -67,22 +67,25 @@ public class ADateTimeSerializerDeserializer implements ISerializerDeserializer<
         long chrononTimeInMs = 0;
         try {
             StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
+            
             charAccessor.reset(datetime, 0, datetime.length());
 
             // +1 if it is negative (-)
             short timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
 
-            if (charAccessor.getCharAt(timeOffset + 10) != 'T' && charAccessor.getCharAt(timeOffset + 8) != 'T') {
-                throw new AlgebricksException(errorMessage + ": missing T");
+            timeOffset += 8;
+            
+            if(charAccessor.getCharAt(timeOffset) != 'T'){
+                timeOffset += 2;
+                if(charAccessor.getCharAt(timeOffset) != 'T'){
+                    throw new AlgebricksException(errorMessage + ": missing T");
+                }
             }
 
-            // if extended form 11, else 9
-            timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11) : (short) (9);
+            charAccessor.reset(datetime, 0, timeOffset);
+            chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor);
 
-            chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor, false);
-
-            charAccessor.reset(datetime, timeOffset, datetime.length() - timeOffset);
-
+            charAccessor.reset(datetime, timeOffset + 1, datetime.length() - timeOffset - 1);
             chrononTimeInMs += ATimeParserFactory.parseTimePart(charAccessor);
         } catch (Exception e) {
             throw new HyracksDataException(e);

@@ -85,23 +85,39 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
 
                                 int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
 
-                                charAccessor.reset(serString, 3, stringLength);
+                                int startOffset = 3;
+                                int endOffset = stringLength - 1 + 3;
+
+                                // skip leading space
+                                while (serString[startOffset] == ' ') {
+                                    startOffset++;
+                                }
+
+                                // skip tailing space
+                                while (serString[endOffset] == ' ') {
+                                    endOffset--;
+                                }
+
+                                charAccessor.reset(serString, startOffset, endOffset - startOffset + 1);
 
                                 // +1 if it is negative (-)
                                 short timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
 
-                                if (charAccessor.getCharAt(timeOffset + 10) != 'T'
-                                        && charAccessor.getCharAt(timeOffset + 8) != 'T') {
-                                    throw new AlgebricksException(errorMessage + ": missing T");
+                                timeOffset += 8;
+
+                                if (charAccessor.getCharAt(timeOffset) != 'T') {
+                                    timeOffset += 2;
+                                    if (charAccessor.getCharAt(timeOffset) != 'T') {
+                                        throw new AlgebricksException(errorMessage + ": missing T");
+                                    }
                                 }
 
-                                // if extended form 11, else 9
-                                timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11)
-                                        : (short) (9);
+                                charAccessor.reset(serString, startOffset, timeOffset);
 
-                                long chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor, false);
+                                long chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor);
 
-                                charAccessor.reset(serString, 3 + timeOffset, stringLength - timeOffset);
+                                charAccessor.reset(serString, startOffset + timeOffset + 1, endOffset
+                                        - (startOffset + timeOffset + 1) + 1);
 
                                 chrononTimeInMs += ATimeParserFactory.parseTimePart(charAccessor);
 

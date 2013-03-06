@@ -65,7 +65,7 @@ public class ADateSerializerDeserializer implements ISerializerDeserializer<ADat
         try {
             StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
             charAccessor.reset(date, 0, date.length());
-            chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor, true);
+            chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

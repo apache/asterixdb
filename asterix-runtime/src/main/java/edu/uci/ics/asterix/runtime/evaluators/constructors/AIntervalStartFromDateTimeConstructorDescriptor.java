@@ -108,20 +108,20 @@ public class AIntervalStartFromDateTimeConstructorDescriptor extends AbstractSca
                                 // get offset for time part: +1 if it is negative (-)
                                 short timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
 
-                                if (charAccessor.getCharAt(timeOffset + 10) != 'T'
-                                        && charAccessor.getCharAt(timeOffset + 8) != 'T') {
-                                    throw new AlgebricksException(errorMessage + ": missing T");
+                                timeOffset += 8;
+
+                                if (charAccessor.getCharAt(timeOffset) != 'T') {
+                                    timeOffset += 2;
+                                    if (charAccessor.getCharAt(timeOffset) != 'T') {
+                                        throw new AlgebricksException(errorMessage + ": missing T");
+                                    }
                                 }
 
-                                // if extended form 11, else 9
-                                timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11)
-                                        : (short) (9);
-                                long intervalStart = ADateParserFactory.parseDatePart(charAccessor, false);
-                                charAccessor.reset(argOut0.getByteArray(), 3 + timeOffset, stringLength - timeOffset);
+                                long intervalStart = ADateParserFactory.parseDatePart(charAccessor);
+                                charAccessor.reset(argOut0.getByteArray(), 3 + timeOffset + 1, stringLength - timeOffset - 1);
                                 intervalStart += ATimeParserFactory.parseTimePart(charAccessor);
 
                                 // duration
-
                                 stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
                                         + (argOut1.getByteArray()[2] & 0xff << 0);
 

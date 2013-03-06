@@ -3934,4 +3934,51 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="temp">
+  	<test-case FilePath="temp">
+  		<compilation-unit name="accessors">
+        <output-file compare="Text">accessors.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temp">
+  		<compilation-unit name="adjust_timezone">
+        <output-file compare="Text">adjust_timezone.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temp">
+  		<compilation-unit name="calendar_duration">
+        <output-file compare="Text">calendar_duration.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temp">
+  		<compilation-unit name="date_functions">
+        <output-file compare="Text">date_functions.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temp">
+  		<compilation-unit name="datetime_functions">
+        <output-file compare="Text">datetime_functions.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+<!--   	<test-case FilePath="temp">
+  		<compilation-unit name="insert_from_delimited_ds">
+        <output-file compare="Text">insert_from_delimited_ds.adm</output-file>
+      </compilation-unit>
+  	</test-case> -->
+  	<test-case FilePath="temp">
+  		<compilation-unit name="insert_from_ext_ds">
+        <output-file compare="Text">insert_from_ext_ds.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temp">
+  		<compilation-unit name="interval_functions">
+        <output-file compare="Text">interval_functions.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temp">
+  		<compilation-unit name="time_functions">
+        <output-file compare="Text">time_functions.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  </test-group>
 </test-suite>

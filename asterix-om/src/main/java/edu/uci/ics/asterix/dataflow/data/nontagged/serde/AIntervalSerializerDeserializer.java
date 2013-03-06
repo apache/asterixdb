@@ -95,60 +95,74 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
 
             StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
 
+            // the starting point for parsing (so for the accessor)
+            int startOffset = 0;
+            int endOffset, timeSeperatorOffsetInDatetimeString;
+
             // Get the index for the comma
             int commaIndex = interval.indexOf(',');
-            if (commaIndex < 0) {
+            if (commaIndex < 1) {
                 throw new AlgebricksException("comma is missing for a string of interval");
             }
 
-            int nonSpaceIndex = commaIndex - 1;
-            while (interval.charAt(nonSpaceIndex) == ' ') {
-                nonSpaceIndex--;
+            endOffset = commaIndex - 1;
+
+            while (interval.charAt(endOffset) == ' ') {
+                endOffset--;
             }
 
-            // Interval Start
-            charAccessor.reset(interval, 0, nonSpaceIndex + 1);
+            while (interval.charAt(startOffset) == '"' || interval.charAt(startOffset) == ' ') {
+                startOffset++;
+            }
+
+            charAccessor.reset(interval, startOffset, endOffset - startOffset + 1);
 
             // +1 if it is negative (-)
-            short timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
+            timeSeperatorOffsetInDatetimeString = ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
 
-            if (charAccessor.getCharAt(timeOffset + 10) != 'T' && charAccessor.getCharAt(timeOffset + 8) != 'T') {
-                throw new AlgebricksException(errorMessage + ": missing T");
+            timeSeperatorOffsetInDatetimeString += 8;
+
+            if (charAccessor.getCharAt(timeSeperatorOffsetInDatetimeString) != 'T') {
+                timeSeperatorOffsetInDatetimeString += 2;
+                if (charAccessor.getCharAt(timeSeperatorOffsetInDatetimeString) != 'T') {
+                    throw new AlgebricksException(errorMessage + ": missing T for a datetime value.");
+                }
             }
-
-            // if extended form 11, else 9
-            timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11) : (short) (9);
-
-            chrononTimeInMsStart = ADateParserFactory.parseDatePart(charAccessor, false);
-
-            charAccessor.reset(interval, timeOffset, nonSpaceIndex - timeOffset + 1);
-
+            charAccessor.reset(interval, startOffset, timeSeperatorOffsetInDatetimeString);
+            chrononTimeInMsStart = ADateParserFactory.parseDatePart(charAccessor);
+            charAccessor.reset(interval, startOffset + timeSeperatorOffsetInDatetimeString + 1, endOffset
+                    - (startOffset + timeSeperatorOffsetInDatetimeString + 1) + 1);
             chrononTimeInMsStart += ATimeParserFactory.parseTimePart(charAccessor);
 
             // Interval End
-            nonSpaceIndex = commaIndex + 1;
-            while (interval.charAt(nonSpaceIndex) == ' ') {
-                nonSpaceIndex++;
+            startOffset = commaIndex + 1;
+            endOffset = interval.length() - 1;
+            while (interval.charAt(endOffset) == '"' || interval.charAt(endOffset) == ' ') {
+                endOffset--;
             }
 
-            charAccessor.reset(interval, nonSpaceIndex, interval.length() - nonSpaceIndex);
+            while (interval.charAt(startOffset) == ' ') {
+                startOffset++;
+            }
+
+            charAccessor.reset(interval, startOffset, endOffset - startOffset + 1);
 
             // +1 if it is negative (-)
-            timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
+            timeSeperatorOffsetInDatetimeString = ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
 
-            if (charAccessor.getCharAt(timeOffset + 10) != 'T' && charAccessor.getCharAt(timeOffset + 8) != 'T') {
-                throw new AlgebricksException(errorMessage + ": missing T");
+            timeSeperatorOffsetInDatetimeString += 8;
+
+            if (charAccessor.getCharAt(timeSeperatorOffsetInDatetimeString) != 'T') {
+                timeSeperatorOffsetInDatetimeString += 2;
+                if (charAccessor.getCharAt(timeSeperatorOffsetInDatetimeString) != 'T') {
+                    throw new AlgebricksException(errorMessage + ": missing T for a datetime value.");
+                }
             }
-
-            // if extended form 11, else 9
-            timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11) : (short) (9);
-
-            chrononTimeInMsEnd = ADateParserFactory.parseDatePart(charAccessor, false);
-
-            charAccessor.reset(interval, nonSpaceIndex + timeOffset, interval.length() - nonSpaceIndex - timeOffset);
-
+            charAccessor.reset(interval, startOffset, timeSeperatorOffsetInDatetimeString);
+            chrononTimeInMsEnd = ADateParserFactory.parseDatePart(charAccessor);
+            charAccessor.reset(interval, startOffset + timeSeperatorOffsetInDatetimeString + 1, endOffset
+                    - (startOffset + timeSeperatorOffsetInDatetimeString + 1) + 1);
             chrononTimeInMsEnd += ATimeParserFactory.parseTimePart(charAccessor);
-
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
@@ -167,19 +181,27 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
 
             StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
 
+            int startOffset = 0;
+            int endOffset;
+
             // Get the index for the comma
             int commaIndex = interval.indexOf(',');
             if (commaIndex < 0) {
                 throw new AlgebricksException("comma is missing for a string of interval");
             }
 
-            int nonSpaceIndex = commaIndex - 1;
-            while (interval.charAt(nonSpaceIndex) == ' ') {
-                nonSpaceIndex--;
+            endOffset = commaIndex - 1;
+
+            while (interval.charAt(endOffset) == ' ') {
+                endOffset--;
+            }
+
+            while (interval.charAt(startOffset) == '"' || interval.charAt(startOffset) == ' ') {
+                startOffset++;
             }
 
             // Interval Start
-            charAccessor.reset(interval, 0, nonSpaceIndex + 1);
+            charAccessor.reset(interval, startOffset, endOffset - startOffset + 1);
             chrononTimeInMsStart = ATimeParserFactory.parseTimePart(charAccessor);
 
             if (chrononTimeInMsStart < 0) {
@@ -187,12 +209,18 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
             }
 
             // Interval End
-            nonSpaceIndex = commaIndex + 1;
-            while (interval.charAt(nonSpaceIndex) == ' ') {
-                nonSpaceIndex++;
+            startOffset = commaIndex + 1;
+            while (interval.charAt(startOffset) == ' ') {
+                startOffset++;
             }
 
-            charAccessor.reset(interval, nonSpaceIndex, interval.length() - nonSpaceIndex);
+            endOffset = interval.length() - 1;
+
+            while (interval.charAt(endOffset) == '"' || interval.charAt(endOffset) == ' ') {
+                endOffset--;
+            }
+
+            charAccessor.reset(interval, startOffset, endOffset - startOffset + 1);
             chrononTimeInMsEnd = ATimeParserFactory.parseTimePart(charAccessor);
 
             if (chrononTimeInMsEnd < 0) {
@@ -217,39 +245,42 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
         try {
             StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
 
+            // the starting point for parsing (so for the accessor)
+            int startOffset = 0;
+            int endOffset;
+
             // Get the index for the comma
             int commaIndex = interval.indexOf(',');
-            if (commaIndex < 0) {
+            if (commaIndex < 1) {
                 throw new AlgebricksException("comma is missing for a string of interval");
             }
 
-            int nonSpaceIndex = commaIndex - 1;
-            while (interval.charAt(nonSpaceIndex) == ' ') {
-                nonSpaceIndex--;
+            endOffset = commaIndex - 1;
+
+            while (interval.charAt(endOffset) == ' ') {
+                endOffset--;
             }
 
-            // Interval Start
-            charAccessor.reset(interval, 0, nonSpaceIndex + 1);
-
-            chrononTimeInMsStart = ADateParserFactory.parseDatePart(charAccessor, true);
-
-            if (chrononTimeInMsStart < 0 && chrononTimeInMsStart % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
-                tempStart = 1;
+            while (interval.charAt(startOffset) == '"' || interval.charAt(startOffset) == ' ') {
+                startOffset++;
             }
+
+            charAccessor.reset(interval, startOffset, endOffset - startOffset + 1);
+            chrononTimeInMsStart = ADateParserFactory.parseDatePart(charAccessor);
 
             // Interval End
-            nonSpaceIndex = commaIndex + 1;
-            while (interval.charAt(nonSpaceIndex) == ' ') {
-                nonSpaceIndex++;
+            startOffset = commaIndex + 1;
+            endOffset = interval.length() - 1;
+            while (interval.charAt(startOffset) == '"' || interval.charAt(endOffset) == ' ') {
+                endOffset--;
             }
 
-            charAccessor.reset(interval, nonSpaceIndex, interval.length() - nonSpaceIndex);
-
-            chrononTimeInMsEnd = ADateParserFactory.parseDatePart(charAccessor, true);
-
-            if (chrononTimeInMsEnd < 0 && chrononTimeInMsEnd % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
-                tempEnd = 1;
+            while (interval.charAt(startOffset) == ' ') {
+                startOffset++;
             }
+
+            charAccessor.reset(interval, startOffset, endOffset - startOffset + 1);
+            chrononTimeInMsEnd += ATimeParserFactory.parseTimePart(charAccessor);
 
         } catch (Exception e) {
             throw new HyracksDataException(e);

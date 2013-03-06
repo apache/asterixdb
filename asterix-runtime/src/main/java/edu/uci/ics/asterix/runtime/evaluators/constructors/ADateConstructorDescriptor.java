@@ -86,8 +86,17 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
 
                                 int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
 
-                                charAccessor.reset(serString, 3, stringLength);
-                                long chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor, true);
+                                int startOffset = 3;
+                                while (serString[startOffset] == ' ') {
+                                    startOffset++;
+                                }
+                                int endOffset = stringLength - 1 + 3;
+                                while (serString[endOffset] == ' ') {
+                                    endOffset--;
+                                }
+
+                                charAccessor.reset(serString, startOffset, endOffset - startOffset + 1);
+                                long chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor);
 
                                 short temp = 0;
                                 if (chrononTimeInMs < 0

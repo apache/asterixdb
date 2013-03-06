@@ -48,18 +48,19 @@ public class ADateTimeParserFactory implements IValueParserFactory {
 
                 short timeOffset = (short) ((charArrayAccessor.getCharAt(0) == '-') ? 1 : 0);
 
-                if (charArrayAccessor.getCharAt(timeOffset + 10) != 'T'
-                        && charArrayAccessor.getCharAt(timeOffset + 8) != 'T') {
-                    throw new HyracksDataException(dateTimeErrorMessage + ": missing T");
+                timeOffset += 8;
+
+                if (charArrayAccessor.getCharAt(timeOffset) != 'T') {
+                    timeOffset += 2;
+                    if (charArrayAccessor.getCharAt(timeOffset) != 'T') {
+                        throw new HyracksDataException(dateTimeErrorMessage + ": missing T");
+                    }
                 }
 
-                // if extended form 11, else 9
-                timeOffset += (charArrayAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11) : (short) (9);
-
-                chrononTimeInMs = ADateParserFactory.parseDatePart(charArrayAccessor, false);
+                charArrayAccessor.reset(buffer, start, timeOffset);
+                chrononTimeInMs = ADateParserFactory.parseDatePart(charArrayAccessor);
 
                 charArrayAccessor.reset(buffer, start + timeOffset, length - timeOffset);
-
                 chrononTimeInMs += ATimeParserFactory.parseTimePart(charArrayAccessor);
 
                 try {

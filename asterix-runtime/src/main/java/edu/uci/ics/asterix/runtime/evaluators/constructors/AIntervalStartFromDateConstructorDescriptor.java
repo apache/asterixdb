@@ -99,15 +99,15 @@ public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarF
                                 nullSerde.serialize(ANull.NULL, out);
                             } else if (argOut0.getByteArray()[0] == SER_STRING_TYPE_TAG
                                     && argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
-                                // start date
 
+                                // start date
                                 int stringLength = (argOut0.getByteArray()[1] & 0xff << 8)
                                         + (argOut0.getByteArray()[2] & 0xff << 0);
 
                                 charAccessor.reset(argOut0.getByteArray(), 3, stringLength);
-                                long intervalStart = ADateParserFactory.parseDatePart(charAccessor, true);
-                                // duration
+                                long intervalStart = ADateParserFactory.parseDatePart(charAccessor);
 
+                                // duration
                                 stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
                                         + (argOut1.getByteArray()[2] & 0xff << 0);
 
