@@ -60,7 +60,7 @@ public class ADateTimeParserFactory implements IValueParserFactory {
                 charArrayAccessor.reset(buffer, start, timeOffset);
                 chrononTimeInMs = ADateParserFactory.parseDatePart(charArrayAccessor);
 
-                charArrayAccessor.reset(buffer, start + timeOffset, length - timeOffset);
+                charArrayAccessor.reset(buffer, start + timeOffset + 1, length - timeOffset - 1);
                 chrononTimeInMs += ATimeParserFactory.parseTimePart(charArrayAccessor);
 
                 try {

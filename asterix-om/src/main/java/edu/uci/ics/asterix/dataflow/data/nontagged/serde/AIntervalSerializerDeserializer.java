@@ -271,7 +271,7 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
             // Interval End
             startOffset = commaIndex + 1;
             endOffset = interval.length() - 1;
-            while (interval.charAt(startOffset) == '"' || interval.charAt(endOffset) == ' ') {
+            while (interval.charAt(endOffset) == '"' || interval.charAt(endOffset) == ' ') {
                 endOffset--;
             }
 
@@ -280,7 +280,7 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
             }
 
             charAccessor.reset(interval, startOffset, endOffset - startOffset + 1);
-            chrononTimeInMsEnd += ATimeParserFactory.parseTimePart(charAccessor);
+            chrononTimeInMsEnd = ADateParserFactory.parseDatePart(charAccessor);
 
         } catch (Exception e) {
             throw new HyracksDataException(e);

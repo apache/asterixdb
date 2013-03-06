@@ -117,8 +117,10 @@ public class AIntervalStartFromDateTimeConstructorDescriptor extends AbstractSca
                                     }
                                 }
 
+                                charAccessor.reset(argOut0.getByteArray(), 3, timeOffset);
                                 long intervalStart = ADateParserFactory.parseDatePart(charAccessor);
-                                charAccessor.reset(argOut0.getByteArray(), 3 + timeOffset + 1, stringLength - timeOffset - 1);
+                                charAccessor.reset(argOut0.getByteArray(), 3 + timeOffset + 1, stringLength
+                                        - timeOffset - 1);
                                 intervalStart += ATimeParserFactory.parseTimePart(charAccessor);
 
                                 // duration

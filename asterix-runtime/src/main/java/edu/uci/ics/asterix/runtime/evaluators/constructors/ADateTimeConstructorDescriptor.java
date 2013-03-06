@@ -85,20 +85,7 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
 
                                 int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
 
-                                int startOffset = 3;
-                                int endOffset = stringLength - 1 + 3;
-
-                                // skip leading space
-                                while (serString[startOffset] == ' ') {
-                                    startOffset++;
-                                }
-
-                                // skip tailing space
-                                while (serString[endOffset] == ' ') {
-                                    endOffset--;
-                                }
-
-                                charAccessor.reset(serString, startOffset, endOffset - startOffset + 1);
+                                charAccessor.reset(serString, 3, stringLength);
 
                                 // +1 if it is negative (-)
                                 short timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
@@ -112,12 +99,11 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                                     }
                                 }
 
-                                charAccessor.reset(serString, startOffset, timeOffset);
+                                charAccessor.reset(serString, 3, timeOffset);
 
                                 long chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor);
 
-                                charAccessor.reset(serString, startOffset + timeOffset + 1, endOffset
-                                        - (startOffset + timeOffset + 1) + 1);
+                                charAccessor.reset(serString, 3 + timeOffset + 1, stringLength - timeOffset - 1);
 
                                 chrononTimeInMs += ATimeParserFactory.parseTimePart(charAccessor);
 
