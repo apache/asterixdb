@@ -74,8 +74,6 @@ public class HyracksExecutionEngine implements IExecutionEngine {
 
     private static final Log LOG = LogFactory.getLog(HyracksExecutionEngine.class.getName());
 
-    // private static final String[] locConstraints = {}
-
     private static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> DEFAULT_LOGICAL_REWRITES = new ArrayList<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>();
     private static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> DEFAULT_PHYSICAL_REWRITES = new ArrayList<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>();
     static {
@@ -273,7 +271,6 @@ public class HyracksExecutionEngine implements IExecutionEngine {
              * list of map-reduce tasks
              */
             Task<? extends Serializable> task = rootTasks.get(i);
-            // System.out.println("!" + task.getName());
 
             if (task instanceof MapRedTask) {
                 List<Operator> mapRootOps = articulateMapReduceOperators(task, rootOps, aliasToPath, rootTasks);
