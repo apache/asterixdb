@@ -23,6 +23,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.CreateMode;
@@ -103,6 +104,12 @@ public class ZooKeeperService implements ILookupService {
         }
         Runtime.getRuntime().exec(cmdBuffer.toString());
         zk = new ZooKeeper(zkConnectionString, ZOOKEEPER_SESSION_TIME_OUT, watcher);
+        String head = msgQ.poll(10, TimeUnit.SECONDS);
+        if (head == null) {
+            String msg = "Unable to start Zookeeper Service. Please verify the configuration at "
+                    + InstallerDriver.getManagixHome() + File.separator + InstallerDriver.MANAGIX_CONF_XML;
+            throw new Exception(msg);
+        }
         msgQ.take();
         createRootIfNotExist();
     }

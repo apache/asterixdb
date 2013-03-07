@@ -2,6 +2,7 @@ package edu.uci.ics.asterix.hyracks.bootstrap;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,6 +22,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     private AsterixAppRuntimeContext runtimeContext;
     private String nodeId;
     private boolean isMetadataNode = false;
+    private boolean stopInitiated = false;
 
     @Override
     public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
@@ -33,19 +35,28 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         runtimeContext = new AsterixAppRuntimeContext(ncApplicationContext);
         runtimeContext.initialize();
         ncApplicationContext.setApplicationObject(runtimeContext);
+        JVMShutdownHook sHook = new JVMShutdownHook(this);
+        Runtime.getRuntime().addShutdownHook(sHook);
 
     }
 
     @Override
     public void stop() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Stopping Asterix node controller: " + nodeId);
-        }
+        if (!stopInitiated) {
+            stopInitiated = true;
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Stopping Asterix node controller: " + nodeId);
+            }
 
-        if (isMetadataNode) {
-            MetadataBootstrap.stopUniverse();
+            if (isMetadataNode) {
+                MetadataBootstrap.stopUniverse();
+            }
+            runtimeContext.deinitialize();
+        } else {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Duplicate attempt to stop ignored: " + nodeId);
+            }
         }
-        runtimeContext.deinitialize();
     }
 
     @Override
@@ -74,4 +85,30 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             LOGGER.info("Metadata node bound");
         }
     }
+
+    /**
+     * Shutdown hook that invokes {@link NCApplicationEntryPoint#stop() stop} method.
+     */
+    private static class JVMShutdownHook extends Thread {
+
+        private final NCApplicationEntryPoint ncAppEntryPoint;
+
+        public JVMShutdownHook(NCApplicationEntryPoint ncAppEntryPoint) {
+            this.ncAppEntryPoint = ncAppEntryPoint;
+        }
+
+        public void run() {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Shutdown hook in progress");
+            }
+            try {
+                ncAppEntryPoint.stop();
+            } catch (Exception e) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning("Exception in executing shutdown hook" + e);
+                }
+            }
+        }
+    }
+
 }

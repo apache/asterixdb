@@ -24,6 +24,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import edu.uci.ics.asterix.installer.command.CommandHandler;
+import edu.uci.ics.asterix.installer.command.ICommand.CommandType;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 import edu.uci.ics.asterix.installer.service.ILookupService;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
@@ -38,8 +39,8 @@ public class InstallerDriver {
     public static final String EVENTS_DIR = "events";
 
     private static final Logger LOGGER = Logger.getLogger(InstallerDriver.class.getName());
-    private static final String ENV_MANAGIX_HOME = "MANAGIX_HOME";
-    private static final String MANAGIX_CONF_XML = "conf" + File.separator + "installer-conf.xml";
+    public static final String ENV_MANAGIX_HOME = "MANAGIX_HOME";
+    public static final String MANAGIX_CONF_XML = "conf" + File.separator + "installer-conf.xml";
 
     private static Configuration conf;
     private static String managixHome;
@@ -54,7 +55,6 @@ public class InstallerDriver {
     }
 
     private static void initConfig() throws Exception {
-        managixHome = System.getenv(ENV_MANAGIX_HOME);
         File configFile = new File(managixHome + File.separator + MANAGIX_CONF_XML);
         JAXBContext configCtx = JAXBContext.newInstance(Configuration.class);
         Unmarshaller unmarshaller = configCtx.createUnmarshaller();
@@ -100,7 +100,11 @@ public class InstallerDriver {
     public static void main(String args[]) {
         try {
             if (args.length != 0) {
-                initConfig();
+                managixHome = System.getenv(ENV_MANAGIX_HOME);
+                CommandType cmdType = CommandType.valueOf(args[0].toUpperCase());
+                if (!cmdType.equals(CommandType.VALIDATE)) {
+                    initConfig();
+                }
                 CommandHandler cmdHandler = new CommandHandler();
                 cmdHandler.processCommand(args);
             } else {
@@ -125,6 +129,9 @@ public class InstallerDriver {
         buffer.append("restore  " + ":" + " Restores an asterix instance" + "\n");
         buffer.append("alter    " + ":" + " Alters the configuration for an existing asterix instance" + "\n");
         buffer.append("describe " + ":" + " Describes an existing asterix instance" + "\n");
+        buffer.append("validate " + ":" + " Validates the installer/cluster configuration" + "\n");
+        buffer.append("init     " + ":"
+                + " Initialize the installer/cluster configuration for local psedu-distributed cluster." + "\n");
         LOGGER.info(buffer.toString());
     }
 }

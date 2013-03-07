@@ -42,6 +42,11 @@ public class CreateCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
+        ValidateCommand validateCommand = new ValidateCommand();
+        boolean valid = validateCommand.validateCluster(((CreateConfig) config).clusterPath);
+        if (!valid) {
+            throw new Exception("Cannot create an Asterix instance.");
+        }
         asterixInstanceName = ((CreateConfig) config).name;
         InstallerUtil.validateAsterixInstanceNotExists(asterixInstanceName);
         CreateConfig createConfig = (CreateConfig) config;
