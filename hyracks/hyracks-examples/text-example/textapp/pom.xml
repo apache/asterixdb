@@ -4,7 +4,7 @@
   <name>textapp</name>
 
   <parent>
-    <groupId>edu.uci.ics.hyracks.examples</groupId>
+    <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>text-example</artifactId>
     <version>0.2.3-SNAPSHOT</version>
   </parent>
@@ -163,13 +163,13 @@
   </build>
   <dependencies>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks.examples.text</groupId>
+  		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>texthelper</artifactId>
   		<version>0.2.3-SNAPSHOT</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks.examples.text</groupId>
+  		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>textclient</artifactId>
   		<version>0.2.3-SNAPSHOT</version>
   		<type>jar</type>

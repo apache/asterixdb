@@ -4,7 +4,7 @@
   <name>texthelper</name>
 
   <parent>
-    <groupId>edu.uci.ics.hyracks.examples</groupId>
+    <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>text-example</artifactId>
     <version>0.2.3-SNAPSHOT</version>
   </parent>
