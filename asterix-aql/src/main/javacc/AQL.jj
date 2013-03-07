@@ -260,7 +260,7 @@ InsertStatement InsertStatement() throws ParseException:
     datasetName = nameComponents.second;
    }
     
-    <LEFTPAREN> query = Query() <RIGHTPAREN> ";"
+    (<LEFTPAREN>)? query = Query() (<RIGHTPAREN>)? (";")?
    {return new InsertStatement(dataverseName, datasetName, query,  getVarCounter());}
 }
 
@@ -280,7 +280,7 @@ DeleteStatement DeleteStatement() throws ParseException:
    { 
 	  nameComponents  = getDotSeparatedPair();
    }
-   ("where" condition = Expression())?  (dieClause = DieClause())? ";"
+   ("where" condition = Expression())?  (dieClause = DieClause())? (";")?
    {return new DeleteStatement(var, nameComponents.first, nameComponents.second, condition,  dieClause, getVarCounter()); }
 }
 
@@ -1818,10 +1818,11 @@ Expression PrimaryExpr()throws ParseException:
   Expression expr = null;
 }
 {
-  //Literal | VariableRef | ListConstructor | RecordConstructor | FunctionCallExpr | ParenthesizedExpression
+  //Literal | VariableRef | ListConstructor | RecordConstructor | FunctionCallExpr | DatasetAccessExpression | ParenthesizedExpression
 	(
 	  expr =Literal() 
 	   | expr = FunctionCallExpr()
+	   | expr = DatasetAccessExpression()
 	   | expr =VariableRef() 
 	   
     {
@@ -2046,7 +2047,8 @@ Expression FunctionCallExpr() throws ParseException:
   String id2=null;
 }
 {  
-    ( <IDENTIFIER> { dataverse = defaultDataverse; funcName = token.image;} ("." <IDENTIFIER> { dataverse = funcName; funcName = token.image;})? | <DATASET> {dataverse = MetadataConstants.METADATA_DATAVERSE_NAME; funcName = getToken(0).toString();})
+    
+    <IDENTIFIER> { dataverse = defaultDataverse; funcName = token.image;} ("." <IDENTIFIER> { dataverse = funcName; funcName = token.image;})?
     {
        hint = getHint(token);
     }
@@ -2070,7 +2072,34 @@ Expression FunctionCallExpr() throws ParseException:
      }
 }
 
-
+Expression DatasetAccessExpression() throws ParseException:
+{
+  CallExpr callExpr;
+  List<Expression> argList = new ArrayList<Expression>();
+  String funcName;
+  String dataverse;
+  LiteralExpr ds;
+  LiteralExpr dvds;
+  Expression nameArg;
+  int arity = 0;
+}
+{  
+    <DATASET> {dataverse = MetadataConstants.METADATA_DATAVERSE_NAME; funcName = getToken(0).toString();}
+    (
+    (<IDENTIFIER> {ds = new LiteralExpr(); ds.setValue( new StringLiteral(token.image) ); argList.add(ds); arity ++;} ("." <IDENTIFIER> { dvds = new LiteralExpr(); dvds.setValue(new StringLiteral(ds.getValue()+"."+token.image)); argList.remove(0); argList.add(dvds);})? ) |  
+    (<LEFTPAREN> nameArg = Expression() {argList.add(nameArg); arity ++;} ("," nameArg = Expression() { argList.add(nameArg); arity++; })* <RIGHTPAREN>)
+    )  
+     
+     {
+       FunctionSignature signature = lookupFunctionSignature(dataverse, funcName.toString(), arity);
+       if(signature == null)
+             {
+                signature = new FunctionSignature(dataverse, funcName.toString(), arity);
+             }
+       callExpr = new CallExpr(signature,argList);
+       return callExpr;
+     }
+}
 
 Expression ParenthesizedExpression() throws ParseException:
 {

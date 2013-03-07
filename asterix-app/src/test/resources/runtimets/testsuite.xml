@@ -754,6 +754,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="delete-syntax-change">
+        <output-file compare="Text">delete-syntax-change.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="drop-empty-secondary-indexes">
         <output-file compare="Text">drop-empty-secondary-indexes.adm</output-file>
       </compilation-unit>
@@ -784,8 +789,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
-      <compilation-unit name="insert-into-empty-dataset">
-        <output-file compare="Text">insert-into-empty-dataset.adm</output-file>
+      <compilation-unit name="insert-into-empty-dataset-with-index">
+        <output-file compare="Text">insert-into-empty-dataset-with-index.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-syntax">
+        <output-file compare="Text">insert-syntax.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -2673,6 +2683,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="scan">
+      <compilation-unit name="invalid-scan-syntax">
+        <output-file compare="Text">invalid-scan-syntax.adm</output-file>
+        <expected-error>SyntaxError</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
       <compilation-unit name="30">
         <output-file compare="Text">30.adm</output-file>
       </compilation-unit>
@@ -2680,6 +2696,11 @@
     <test-case FilePath="scan">
       <compilation-unit name="alltypes_01">
         <output-file compare="Text">alltypes_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
+      <compilation-unit name="alltypes_02">
+        <output-file compare="Text">alltypes_02.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="scan">
@@ -3701,6 +3722,11 @@
     <test-case FilePath="cross-dataverse">
       <compilation-unit name="cross-dv19">
         <output-file compare="Text">cross-dv19.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv20">
+        <output-file compare="Text">cross-dv20.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="cross-dataverse">
