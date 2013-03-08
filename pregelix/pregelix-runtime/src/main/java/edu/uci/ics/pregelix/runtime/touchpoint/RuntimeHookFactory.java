@@ -16,6 +16,7 @@ package edu.uci.ics.pregelix.runtime.touchpoint;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.TaskAttemptID;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -45,7 +46,7 @@ public class RuntimeHookFactory implements IRuntimeHookFactory {
             public void configure(IHyracksTaskContext ctx) throws HyracksDataException {
                 Configuration conf = confFactory.createConfiguration();
                 try {
-                    TaskAttemptContext mapperContext = ctxFactory.createContext(conf, null);
+                    TaskAttemptContext mapperContext = ctxFactory.createContext(conf, new TaskAttemptID());
                     Vertex.setContext(mapperContext);
                     BspUtils.setDefaultConfiguration(conf);
                 } catch (Exception e) {

@@ -139,8 +139,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                             /**
                              * read the split
                              */
-                            TaskAttemptContext context = ctxFactory.createContext(job.getConfiguration(),
-                                    inputSplits.get(i));
+                            TaskAttemptContext context = ctxFactory.createContext(job.getConfiguration(), i);
                             RecordReader reader = inputFormat.createRecordReader(inputSplits.get(i), context);
                             reader.initialize(inputSplits.get(i), context);
                             while (reader.nextKeyValue() == true) {
