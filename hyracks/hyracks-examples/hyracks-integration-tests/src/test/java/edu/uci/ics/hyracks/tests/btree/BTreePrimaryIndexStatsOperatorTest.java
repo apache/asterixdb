@@ -82,7 +82,6 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractIntegrationTest 
     private IFileSplitProvider primaryBtreeSplitProvider = new ConstantFileSplitProvider(
             new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(primaryFileName))) });
 
-
     @Before
     public void setup() throws Exception {
         // field, type and key declarations for primary index
@@ -107,7 +106,7 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractIntegrationTest 
         spec.addRoot(primaryCreateOp);
         runTest(spec);
     }
-    
+
     public void loadPrimaryIndexTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
@@ -136,8 +135,9 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractIntegrationTest 
 
         int[] fieldPermutation = { 0, 1, 2, 4, 5, 7 };
         TreeIndexBulkLoadOperatorDescriptor primaryBtreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManager, indexRegistryProvider, primaryBtreeSplitProvider, primaryTypeTraits, primaryComparatorFactories, fieldPermutation, 0.7f,
-                dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+                storageManager, indexRegistryProvider, primaryBtreeSplitProvider, primaryTypeTraits,
+                primaryComparatorFactories, fieldPermutation, 0.7f, dataflowHelperFactory,
+                NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeBulkLoad, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), ordScanner, 0, sorter, 0);

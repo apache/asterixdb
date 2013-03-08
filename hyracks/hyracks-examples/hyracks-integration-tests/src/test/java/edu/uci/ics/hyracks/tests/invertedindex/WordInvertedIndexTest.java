@@ -87,9 +87,12 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     private final static String sep = System.getProperty("file.separator");
     private final static String dateString = simpleDateFormat.format(new Date());
-    private final static String primaryFileName = System.getProperty("java.io.tmpdir") + sep + "primaryBtree" + dateString;
-    private final static String btreeFileName = System.getProperty("java.io.tmpdir") + sep + "invIndexBtree" + dateString;
-    private final static String invListsFileName = System.getProperty("java.io.tmpdir") + sep + "invIndexLists" + dateString;
+    private final static String primaryFileName = System.getProperty("java.io.tmpdir") + sep + "primaryBtree"
+            + dateString;
+    private final static String btreeFileName = System.getProperty("java.io.tmpdir") + sep + "invIndexBtree"
+            + dateString;
+    private final static String invListsFileName = System.getProperty("java.io.tmpdir") + sep + "invIndexLists"
+            + dateString;
 
     private IFileSplitProvider primaryFileSplitProvider = new ConstantFileSplitProvider(
             new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(primaryFileName))) });
@@ -155,7 +158,7 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
         spec.addRoot(primaryCreateOp);
         runTest(spec);
     }
-    
+
     @Test
     public void testConjunctiveSearcher() throws Exception {
         IInvertedIndexSearchModifierFactory conjunctiveSearchModifierFactory = new ConjunctiveSearchModifierFactory();
@@ -180,8 +183,9 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     private IOperatorDescriptor createPrimaryBulkLoadOp(JobSpecification spec) {
         int[] fieldPermutation = { 0, 1 };
         TreeIndexBulkLoadOperatorDescriptor primaryBtreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManager, indexRegistryProvider, primaryFileSplitProvider, primaryTypeTraits, primaryComparatorFactories, fieldPermutation, 0.7f,
-                btreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+                storageManager, indexRegistryProvider, primaryFileSplitProvider, primaryTypeTraits,
+                primaryComparatorFactories, fieldPermutation, 0.7f, btreeDataflowHelperFactory,
+                NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeBulkLoad, NC1_ID);
         return primaryBtreeBulkLoad;
     }
@@ -206,8 +210,9 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
         int[] lowKeyFields = null; // - infinity
         int[] highKeyFields = null; // + infinity
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, indexRegistryProvider, primaryFileSplitProvider, primaryTypeTraits, primaryComparatorFactories, lowKeyFields,
-                highKeyFields, true, true, btreeDataflowHelperFactory, false, NoOpOperationCallbackProvider.INSTANCE);
+                storageManager, indexRegistryProvider, primaryFileSplitProvider, primaryTypeTraits,
+                primaryComparatorFactories, lowKeyFields, highKeyFields, true, true, btreeDataflowHelperFactory, false,
+                NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
         return primaryBtreeSearchOp;
     }
@@ -265,15 +270,14 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
     public void createInvertedIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         InvertedIndexCreateOperatorDescriptor invIndexCreateOp = new InvertedIndexCreateOperatorDescriptor(spec,
-                storageManager, btreeFileSplitProvider, invListsFileSplitProvider,
-                indexRegistryProvider, tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits,
-                invListsComparatorFactories, tokenizerFactory, btreeDataflowHelperFactory,
-                NoOpOperationCallbackProvider.INSTANCE);
+                storageManager, btreeFileSplitProvider, invListsFileSplitProvider, indexRegistryProvider,
+                tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories,
+                tokenizerFactory, btreeDataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, invIndexCreateOp, NC1_ID);
         spec.addRoot(invIndexCreateOp);
         runTest(spec);
     }
-    
+
     public void loadInvertedIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         IOperatorDescriptor keyProviderOp = createScanKeyProviderOp(spec);
@@ -325,20 +329,23 @@ public class WordInvertedIndexTest extends AbstractIntegrationTest {
         JobSpecification spec = new JobSpecification();
         IOperatorDescriptor queryProviderOp = createQueryProviderOp(spec, queryString);
         IOperatorDescriptor invIndexSearchOp = createInvertedIndexSearchOp(spec, searchModifierFactory);
-        IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
-                createTempFile().getAbsolutePath()) });
-        IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");
+
+        ResultSetId rsId = new ResultSetId(1);
+        spec.addResultSetId(rsId);
+
+        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true,
+                ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
         spec.connect(new OneToOneConnectorDescriptor(spec), queryProviderOp, 0, invIndexSearchOp, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), invIndexSearchOp, 0, printer, 0);
         spec.addRoot(printer);
         runTest(spec);
     }
-    
+
     @AfterClass
     public static void cleanup() throws Exception {
-    	File primary = new File(primaryFileName);
-    	File btree = new File(btreeFileName);
-    	File invLists = new File(invListsFileName);
+        File primary = new File(primaryFileName);
+        File btree = new File(btreeFileName);
+        File invLists = new File(invListsFileName);
         primary.deleteOnExit();
         btree.deleteOnExit();
         invLists.deleteOnExit();

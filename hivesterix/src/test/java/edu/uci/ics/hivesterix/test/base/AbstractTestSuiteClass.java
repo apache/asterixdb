@@ -51,7 +51,7 @@ public abstract class AbstractTestSuiteClass extends TestSuite {
 
 	/**
 	 * setup cluster
-	 * 
+	 *
 	 * @throws IOException
 	 */
 	protected void setup() throws Exception {

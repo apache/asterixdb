@@ -15,7 +15,9 @@
 package edu.uci.ics.hyracks.tests.integration;
 
 import java.io.File;
+
 import org.junit.Test;
+
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
