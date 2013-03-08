@@ -98,7 +98,7 @@ public class PartitionManager {
         List<IPartition> pList = partitionMap.get(partitionId);
         if (pList != null && !pList.isEmpty()) {
             IPartition partition = pList.get(0);
-            writer.setTaskContext(partition.getTaskContext());
+            writer.setFrameSize(partition.getTaskContext().getFrameSize());
             partition.writeTo(writer);
             if (!partition.isReusable()) {
                 partitionMap.remove(partitionId);
