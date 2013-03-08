@@ -15,14 +15,13 @@
 package edu.uci.ics.hyracks.control.nc.dataset;
 
 import java.nio.ByteBuffer;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
+import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionWriter;
+import edu.uci.ics.hyracks.api.dataset.Page;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
@@ -30,15 +29,12 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IFileHandle;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.partitions.IPartition;
-import edu.uci.ics.hyracks.comm.channels.NetworkOutputChannel;
+import edu.uci.ics.hyracks.api.partitions.ResultSetPartitionId;
 
-public class DatasetPartitionWriter implements IFrameWriter, IPartition {
+public class DatasetPartitionWriter implements IDatasetPartitionWriter {
     private static final Logger LOGGER = Logger.getLogger(DatasetPartitionWriter.class.getName());
 
     private static final String FILE_PREFIX = "result_";
-
-    private final IHyracksTaskContext ctx;
 
     private final IDatasetPartitionManager manager;
 
@@ -48,25 +44,28 @@ public class DatasetPartitionWriter implements IFrameWriter, IPartition {
 
     private final int partition;
 
-    private final Executor executor;
+    private final DatasetMemoryManager datasetMemoryManager;
 
-    private final AtomicBoolean eos;
+    private final ResultSetPartitionId resultSetPartitionId;
 
-    private FileReference fRef;
+    private final ResultState resultState;
 
-    private IFileHandle handle;
-
-    private long size;
+    private IFileHandle fileHandle;
 
     public DatasetPartitionWriter(IHyracksTaskContext ctx, IDatasetPartitionManager manager, JobId jobId,
-            ResultSetId rsId, int partition, Executor executor) {
-        this.ctx = ctx;
+            ResultSetId rsId, int partition, DatasetMemoryManager datasetMemoryManager) {
         this.manager = manager;
         this.jobId = jobId;
         this.resultSetId = rsId;
         this.partition = partition;
-        this.executor = executor;
-        eos = new AtomicBoolean(false);
+        this.datasetMemoryManager = datasetMemoryManager;
+
+        resultSetPartitionId = new ResultSetPartitionId(jobId, rsId, partition);
+        resultState = new ResultState(resultSetPartitionId, ctx.getIOManager(), ctx.getFrameSize());
+    }
+
+    public ResultState getResultState() {
+        return resultState;
     }
 
     @Override
@@ -74,16 +73,32 @@ public class DatasetPartitionWriter implements IFrameWriter, IPartition {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("open(" + partition + ")");
         }
-        fRef = manager.getFileFactory().createUnmanagedWorkspaceFile(FILE_PREFIX + String.valueOf(partition));
-        handle = ctx.getIOManager().open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
+        String fName = FILE_PREFIX + String.valueOf(partition);
+        FileReference fRef = manager.getFileFactory().createUnmanagedWorkspaceFile(fName);
+        fileHandle = resultState.getIOManager().open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
                 IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
-        size = 0;
+        resultState.init(fRef);
     }
 
     @Override
-    public synchronized void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        size += ctx.getIOManager().syncWrite(handle, size, buffer);
-        notifyAll();
+    public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+        int srcOffset = 0;
+        Page destPage = resultState.getLastPage();
+
+        while (srcOffset < buffer.limit()) {
+            if ((destPage == null) || (destPage.getBuffer().remaining() <= 0)) {
+                destPage = datasetMemoryManager.requestPage(resultSetPartitionId, this);
+                resultState.addPage(destPage);
+            }
+            int srcLength = Math.min(buffer.limit() - srcOffset, destPage.getBuffer().remaining());
+            destPage.getBuffer().put(buffer.array(), srcOffset, srcLength);
+            srcOffset += srcLength;
+            resultState.incrementSize(srcLength);
+        }
+
+        synchronized (resultState) {
+            resultState.notifyAll();
+        }
     }
 
     @Override
@@ -96,14 +111,16 @@ public class DatasetPartitionWriter implements IFrameWriter, IPartition {
     }
 
     @Override
-    public synchronized void close() throws HyracksDataException {
+    public void close() throws HyracksDataException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("close(" + partition + ")");
         }
 
         try {
-            eos.set(true);
-            notifyAll();
+            synchronized (resultState) {
+                resultState.setEOS(true);
+                resultState.notifyAll();
+            }
             manager.reportPartitionWriteCompletion(jobId, resultSetId, partition);
         } catch (HyracksException e) {
             throw new HyracksDataException(e);
@@ -111,63 +128,21 @@ public class DatasetPartitionWriter implements IFrameWriter, IPartition {
     }
 
     @Override
-    public IHyracksTaskContext getTaskContext() {
-        return ctx;
-    }
+    public Page returnPage() throws HyracksDataException {
+        Page page = resultState.removePage(0);
 
-    private synchronized long read(long offset, ByteBuffer buffer) throws HyracksDataException {
-        while (offset >= size && !eos.get()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                throw new HyracksDataException(e);
-            }
+        IIOManager ioManager = resultState.getIOManager();
+
+        // If we do not have any pages to be given back close the write channel since we don't write any more, return null.
+        if (page == null) {
+            ioManager.close(fileHandle);
+            return null;
         }
-        return ctx.getIOManager().syncRead(handle, offset, buffer);
-    }
 
-    @Override
-    public void writeTo(final IFrameWriter writer) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                NetworkOutputChannel channel = (NetworkOutputChannel) writer;
-                channel.setTaskContext(ctx);
-                try {
-                    channel.open();
-                    try {
-                        long offset = 0;
-                        ByteBuffer buffer = ctx.allocateFrame();
-                        while (true) {
-                            buffer.clear();
-                            long size = read(offset, buffer);
-                            if (size < 0) {
-                                break;
-                            } else if (size < buffer.capacity()) {
-                                throw new HyracksDataException("Premature end of file");
-                            }
-                            offset += size;
-                            buffer.flip();
-                            channel.nextFrame(buffer);
-                        }
-                    } finally {
-                        channel.close();
-                        ctx.getIOManager().close(handle);
-                    }
-                } catch (HyracksDataException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-    }
+        page.getBuffer().flip();
 
-    @Override
-    public boolean isReusable() {
-        return true;
-    }
-
-    @Override
-    public void deallocate() {
-
+        long delta = ioManager.syncWrite(fileHandle, resultState.getPersistentSize(), page.getBuffer());
+        resultState.incrementPersistentSize(delta);
+        return page;
     }
 }

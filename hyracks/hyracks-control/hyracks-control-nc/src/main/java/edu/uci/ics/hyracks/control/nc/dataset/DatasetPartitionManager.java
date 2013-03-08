@@ -21,6 +21,7 @@ import java.util.concurrent.Executor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
+import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionReader;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
@@ -35,18 +36,21 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
     private final Executor executor;
 
-    private final Map<JobId, DatasetPartitionWriter[]> partitionDatasetWriterMap;
+    private final Map<JobId, ResultState[]> partitionResultStateMap;
 
     private final DefaultDeallocatableRegistry deallocatableRegistry;
 
     private final IWorkspaceFileFactory fileFactory;
 
+    private final DatasetMemoryManager datasetMemoryManager;
+
     public DatasetPartitionManager(NodeControllerService ncs, Executor executor, int availableMemory) {
         this.ncs = ncs;
         this.executor = executor;
-        partitionDatasetWriterMap = new HashMap<JobId, DatasetPartitionWriter[]>();
+        partitionResultStateMap = new HashMap<JobId, ResultState[]>();
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         fileFactory = new WorkspaceFileFactory(deallocatableRegistry, (IOManager) ncs.getRootContext().getIOManager());
+        datasetMemoryManager = new DatasetMemoryManager(availableMemory);
     }
 
     @Override
@@ -57,14 +61,14 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
         try {
             ncs.getClusterController().registerResultPartitionLocation(jobId, rsId, orderedResult, partition,
                     nPartitions, ncs.getDatasetNetworkManager().getNetworkAddress());
-            dpw = new DatasetPartitionWriter(ctx, this, jobId, rsId, partition, executor);
+            dpw = new DatasetPartitionWriter(ctx, this, jobId, rsId, partition, datasetMemoryManager);
 
-            DatasetPartitionWriter[] writers = partitionDatasetWriterMap.get(jobId);
-            if (writers == null) {
-                writers = new DatasetPartitionWriter[nPartitions];
-                partitionDatasetWriterMap.put(jobId, writers);
+            ResultState[] resultStates = partitionResultStateMap.get(jobId);
+            if (resultStates == null) {
+                resultStates = new ResultState[nPartitions];
+                partitionResultStateMap.put(jobId, resultStates);
             }
-            writers[partition] = dpw;
+            resultStates[partition] = dpw.getResultState();
         } catch (Exception e) {
             throw new HyracksException(e);
         }
@@ -93,17 +97,19 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
     @Override
     public void initializeDatasetPartitionReader(JobId jobId, int partition, IFrameWriter writer)
             throws HyracksException {
-        DatasetPartitionWriter[] writers = partitionDatasetWriterMap.get(jobId);
-        if (writers == null) {
+        ResultState[] resultStates = partitionResultStateMap.get(jobId);
+
+        if (resultStates == null) {
             throw new HyracksException("Unknown JobId " + jobId);
         }
 
-        DatasetPartitionWriter dpw = writers[partition];
-        if (dpw == null) {
+        ResultState resultState = resultStates[partition];
+        if (resultState == null) {
             throw new HyracksException("No DatasetPartitionWriter for partition " + partition);
         }
 
-        dpw.writeTo(writer);
+        IDatasetPartitionReader dpr = new DatasetPartitionReader(datasetMemoryManager, executor, resultState);
+        dpr.writeTo(writer);
     }
 
     @Override
