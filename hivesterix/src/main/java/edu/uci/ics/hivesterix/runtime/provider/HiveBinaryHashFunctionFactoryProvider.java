@@ -11,27 +11,25 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 
-public class HiveBinaryHashFunctionFactoryProvider implements
-		IBinaryHashFunctionFactoryProvider {
+public class HiveBinaryHashFunctionFactoryProvider implements IBinaryHashFunctionFactoryProvider {
 
-	public static final HiveBinaryHashFunctionFactoryProvider INSTANCE = new HiveBinaryHashFunctionFactoryProvider();
+    public static final HiveBinaryHashFunctionFactoryProvider INSTANCE = new HiveBinaryHashFunctionFactoryProvider();
 
-	private HiveBinaryHashFunctionFactoryProvider() {
-	}
+    private HiveBinaryHashFunctionFactoryProvider() {
+    }
 
-	@Override
-	public IBinaryHashFunctionFactory getBinaryHashFunctionFactory(Object type)
-			throws AlgebricksException {
-		if (type.equals(TypeInfoFactory.intTypeInfo)) {
-			return HiveIntegerBinaryHashFunctionFactory.INSTANCE;
-		} else if (type.equals(TypeInfoFactory.longTypeInfo)) {
-			return HiveLongBinaryHashFunctionFactory.INSTANCE;
-		} else if (type.equals(TypeInfoFactory.stringTypeInfo)) {
-			return HiveStingBinaryHashFunctionFactory.INSTANCE;
-		} else if (type.equals(TypeInfoFactory.doubleTypeInfo)) {
-			return HiveDoubleBinaryHashFunctionFactory.INSTANCE;
-		} else {
-			return HiveRawBinaryHashFunctionFactory.INSTANCE;
-		}
-	}
+    @Override
+    public IBinaryHashFunctionFactory getBinaryHashFunctionFactory(Object type) throws AlgebricksException {
+        if (type.equals(TypeInfoFactory.intTypeInfo)) {
+            return HiveIntegerBinaryHashFunctionFactory.INSTANCE;
+        } else if (type.equals(TypeInfoFactory.longTypeInfo)) {
+            return HiveLongBinaryHashFunctionFactory.INSTANCE;
+        } else if (type.equals(TypeInfoFactory.stringTypeInfo)) {
+            return HiveStingBinaryHashFunctionFactory.INSTANCE;
+        } else if (type.equals(TypeInfoFactory.doubleTypeInfo)) {
+            return HiveDoubleBinaryHashFunctionFactory.INSTANCE;
+        } else {
+            return HiveRawBinaryHashFunctionFactory.INSTANCE;
+        }
+    }
 }

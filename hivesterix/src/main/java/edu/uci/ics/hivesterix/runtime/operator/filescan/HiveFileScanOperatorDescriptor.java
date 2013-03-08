@@ -40,134 +40,125 @@ import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 @SuppressWarnings("deprecation")
-public class HiveFileScanOperatorDescriptor extends
-		AbstractSingleActivityOperatorDescriptor {
-	private static final long serialVersionUID = 1L;
+public class HiveFileScanOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * tuple parser factory
-	 */
-	private final ITupleParserFactory tupleParserFactory;
+    /**
+     * tuple parser factory
+     */
+    private final ITupleParserFactory tupleParserFactory;
 
-	/**
-	 * Hive file split
-	 */
-	private Partition[] parts;
+    /**
+     * Hive file split
+     */
+    private Partition[] parts;
 
-	/**
-	 * IFileSplitProvider
-	 */
-	private IFileSplitProvider fileSplitProvider;
+    /**
+     * IFileSplitProvider
+     */
+    private IFileSplitProvider fileSplitProvider;
 
-	/**
-	 * constrains in the form of host DNS names
-	 */
-	private String[] constraintsByHostNames;
+    /**
+     * constrains in the form of host DNS names
+     */
+    private String[] constraintsByHostNames;
 
-	/**
-	 * ip-to-node controller mapping
-	 */
-	private Map<String, List<String>> ncMapping;
+    /**
+     * ip-to-node controller mapping
+     */
+    private Map<String, List<String>> ncMapping;
 
-	/**
-	 * an array of NCs
-	 */
-	private String[] NCs;
+    /**
+     * an array of NCs
+     */
+    private String[] NCs;
 
-	/**
-	 * 
-	 * @param spec
-	 * @param fsProvider
-	 */
-	public HiveFileScanOperatorDescriptor(JobSpecification spec,
-			IFileSplitProvider fsProvider,
-			ITupleParserFactory tupleParserFactory, RecordDescriptor rDesc) {
-		super(spec, 0, 1);
-		this.tupleParserFactory = tupleParserFactory;
-		recordDescriptors[0] = rDesc;
-		fileSplitProvider = fsProvider;
-	}
+    /**
+     * @param spec
+     * @param fsProvider
+     */
+    public HiveFileScanOperatorDescriptor(JobSpecification spec, IFileSplitProvider fsProvider,
+            ITupleParserFactory tupleParserFactory, RecordDescriptor rDesc) {
+        super(spec, 0, 1);
+        this.tupleParserFactory = tupleParserFactory;
+        recordDescriptors[0] = rDesc;
+        fileSplitProvider = fsProvider;
+    }
 
-	/**
-	 * set partition constraint at the first time it is called the number of
-	 * partitions is obtained from HDFS name node
-	 */
-	public AlgebricksAbsolutePartitionConstraint getPartitionConstraint()
-			throws AlgebricksException {
-		FileSplit[] returnedSplits = ((AbstractHiveFileSplitProvider) fileSplitProvider)
-				.getFileSplitArray();
-		Random random = new Random(System.currentTimeMillis());
-		ncMapping = ConfUtil.getNCMapping();
-		NCs = ConfUtil.getNCs();
+    /**
+     * set partition constraint at the first time it is called the number of
+     * partitions is obtained from HDFS name node
+     */
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
+        FileSplit[] returnedSplits = ((AbstractHiveFileSplitProvider) fileSplitProvider).getFileSplitArray();
+        Random random = new Random(System.currentTimeMillis());
+        ncMapping = ConfUtil.getNCMapping();
+        NCs = ConfUtil.getNCs();
 
-		int size = 0;
-		for (FileSplit split : returnedSplits)
-			if (split != null)
-				size++;
+        int size = 0;
+        for (FileSplit split : returnedSplits)
+            if (split != null)
+                size++;
 
-		FileSplit[] splits = new FileSplit[size];
-		for (int i = 0; i < returnedSplits.length; i++)
-			if (returnedSplits[i] != null)
-				splits[i] = returnedSplits[i];
+        FileSplit[] splits = new FileSplit[size];
+        for (int i = 0; i < returnedSplits.length; i++)
+            if (returnedSplits[i] != null)
+                splits[i] = returnedSplits[i];
 
-		System.out.println("number of splits: " + splits.length);
-		constraintsByHostNames = new String[splits.length];
-		for (int i = 0; i < splits.length; i++) {
-			try {
-				String[] loc = splits[i].getLocations();
-				Collections.shuffle(Arrays.asList(loc), random);
-				if (loc.length > 0) {
-					InetAddress[] allIps = InetAddress.getAllByName(loc[0]);
-					for (InetAddress ip : allIps) {
-						if (ncMapping.get(ip.getHostAddress()) != null) {
-							List<String> ncs = ncMapping.get(ip
-									.getHostAddress());
-							int pos = random.nextInt(ncs.size());
-							constraintsByHostNames[i] = ncs.get(pos);
-						} else {
-							int pos = random.nextInt(NCs.length);
-							constraintsByHostNames[i] = NCs[pos];
-						}
-					}
-				} else {
-					int pos = random.nextInt(NCs.length);
-					constraintsByHostNames[i] = NCs[pos];
-					if (splits[i].getLength() > 0)
-						throw new IllegalStateException(
-								"non local scanner non locations!!");
-				}
-			} catch (IOException e) {
-				throw new AlgebricksException(e);
-			}
-		}
+        System.out.println("number of splits: " + splits.length);
+        constraintsByHostNames = new String[splits.length];
+        for (int i = 0; i < splits.length; i++) {
+            try {
+                String[] loc = splits[i].getLocations();
+                Collections.shuffle(Arrays.asList(loc), random);
+                if (loc.length > 0) {
+                    InetAddress[] allIps = InetAddress.getAllByName(loc[0]);
+                    for (InetAddress ip : allIps) {
+                        if (ncMapping.get(ip.getHostAddress()) != null) {
+                            List<String> ncs = ncMapping.get(ip.getHostAddress());
+                            int pos = random.nextInt(ncs.size());
+                            constraintsByHostNames[i] = ncs.get(pos);
+                        } else {
+                            int pos = random.nextInt(NCs.length);
+                            constraintsByHostNames[i] = NCs[pos];
+                        }
+                    }
+                } else {
+                    int pos = random.nextInt(NCs.length);
+                    constraintsByHostNames[i] = NCs[pos];
+                    if (splits[i].getLength() > 0)
+                        throw new IllegalStateException("non local scanner non locations!!");
+                }
+            } catch (IOException e) {
+                throw new AlgebricksException(e);
+            }
+        }
 
-		parts = new Partition[splits.length];
-		for (int i = 0; i < splits.length; i++) {
-			parts[i] = new Partition(splits[i]);
-		}
-		return new AlgebricksAbsolutePartitionConstraint(constraintsByHostNames);
-	}
+        parts = new Partition[splits.length];
+        for (int i = 0; i < splits.length; i++) {
+            parts[i] = new Partition(splits[i]);
+        }
+        return new AlgebricksAbsolutePartitionConstraint(constraintsByHostNames);
+    }
 
-	@Override
-	public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
-			IRecordDescriptorProvider recordDescProvider, int partition,
-			int nPartitions) {
+    @Override
+    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
+            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
 
-		final ITupleParser tp = tupleParserFactory.createTupleParser(ctx);
-		final int partitionId = partition;
+        final ITupleParser tp = tupleParserFactory.createTupleParser(ctx);
+        final int partitionId = partition;
 
-		return new AbstractUnaryOutputSourceOperatorNodePushable() {
+        return new AbstractUnaryOutputSourceOperatorNodePushable() {
 
-			@Override
-			public void initialize() throws HyracksDataException {
-				writer.open();
-				FileSplit split = parts[partitionId].toFileSplit();
-				if (split == null)
-					throw new HyracksDataException("partition " + partitionId
-							+ " is null!");
-				((AbstractHiveTupleParser) tp).parse(split, writer);
-				writer.close();
-			}
-		};
-	}
+            @Override
+            public void initialize() throws HyracksDataException {
+                writer.open();
+                FileSplit split = parts[partitionId].toFileSplit();
+                if (split == null)
+                    throw new HyracksDataException("partition " + partitionId + " is null!");
+                ((AbstractHiveTupleParser) tp).parse(split, writer);
+                writer.close();
+            }
+        };
+    }
 }

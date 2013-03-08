@@ -18,27 +18,24 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpressio
 
 public class LimitVisitor extends DefaultVisitor {
 
-	@Override
-	public Mutable<ILogicalOperator> visit(LimitOperator operator,
-			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t) {
-		Schema currentSchema = t.generateInputSchema(operator
-				.getParentOperators().get(0));
+    @Override
+    public Mutable<ILogicalOperator> visit(LimitOperator operator,
+            Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t) {
+        Schema currentSchema = t.generateInputSchema(operator.getParentOperators().get(0));
 
-		LimitDesc desc = (LimitDesc) operator.getConf();
-		int limit = desc.getLimit();
-		Integer limitValue = new Integer(limit);
+        LimitDesc desc = (LimitDesc) operator.getConf();
+        int limit = desc.getLimit();
+        Integer limitValue = new Integer(limit);
 
-		ILogicalExpression expr = new ConstantExpression(
-				new HivesterixConstantValue(limitValue));
-		ILogicalOperator currentOperator = new edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LimitOperator(
-				expr, true);
-		currentOperator.getInputs().add(AlgebricksParentOperatorRef);
+        ILogicalExpression expr = new ConstantExpression(new HivesterixConstantValue(limitValue));
+        ILogicalOperator currentOperator = new edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LimitOperator(
+                expr, true);
+        currentOperator.getInputs().add(AlgebricksParentOperatorRef);
 
-		operator.setSchema(operator.getParentOperators().get(0).getSchema());
-		List<LogicalVariable> latestOutputSchema = t
-				.getVariablesFromSchema(currentSchema);
-		t.rewriteOperatorOutputSchema(latestOutputSchema, operator);
-		return new MutableObject<ILogicalOperator>(currentOperator);
-	}
+        operator.setSchema(operator.getParentOperators().get(0).getSchema());
+        List<LogicalVariable> latestOutputSchema = t.getVariablesFromSchema(currentSchema);
+        t.rewriteOperatorOutputSchema(latestOutputSchema, operator);
+        return new MutableObject<ILogicalOperator>(currentOperator);
+    }
 
 }

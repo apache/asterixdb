@@ -6,12 +6,11 @@ import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
 
 public class HivePrinterFactoryProvider implements IPrinterFactoryProvider {
 
-	public static IPrinterFactoryProvider INSTANCE = new HivePrinterFactoryProvider();
+    public static IPrinterFactoryProvider INSTANCE = new HivePrinterFactoryProvider();
 
-	@Override
-	public IPrinterFactory getPrinterFactory(Object type)
-			throws AlgebricksException {
-		return null;
-	}
+    @Override
+    public IPrinterFactory getPrinterFactory(Object type) throws AlgebricksException {
+        return null;
+    }
 
 }

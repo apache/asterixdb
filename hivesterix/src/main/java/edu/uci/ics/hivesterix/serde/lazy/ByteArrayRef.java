@@ -19,24 +19,23 @@ package edu.uci.ics.hivesterix.serde.lazy;
 
 /**
  * ByteArrayRef stores a reference to a byte array.
- * 
  * The LazyObject hierarchy uses a reference to a single ByteArrayRef, so that
  * it's much faster to switch to the next row and release the reference to the
  * old row (so that the system can do garbage collection if needed).
  */
 public class ByteArrayRef {
 
-	/**
-	 * Stores the actual data.
-	 */
-	byte[] data;
+    /**
+     * Stores the actual data.
+     */
+    byte[] data;
 
-	public byte[] getData() {
-		return data;
-	}
+    public byte[] getData() {
+        return data;
+    }
 
-	public void setData(byte[] data) {
-		this.data = data;
-	}
+    public void setData(byte[] data) {
+        this.data = data;
+    }
 
 }

@@ -10,30 +10,30 @@ import edu.uci.ics.hivesterix.serde.lazy.LazyUtils;
 
 public class Schema implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private List<String> fieldNames;
+    private List<String> fieldNames;
 
-	private List<TypeInfo> fieldTypes;
+    private List<TypeInfo> fieldTypes;
 
-	public Schema(List<String> fieldNames, List<TypeInfo> fieldTypes) {
-		this.fieldNames = fieldNames;
-		this.fieldTypes = fieldTypes;
-	}
+    public Schema(List<String> fieldNames, List<TypeInfo> fieldTypes) {
+        this.fieldNames = fieldNames;
+        this.fieldTypes = fieldTypes;
+    }
 
-	public ObjectInspector toObjectInspector() {
-		return LazyUtils.getLazyObjectInspector(fieldNames, fieldTypes);
-	}
+    public ObjectInspector toObjectInspector() {
+        return LazyUtils.getLazyObjectInspector(fieldNames, fieldTypes);
+    }
 
-	public List<String> getNames() {
-		return fieldNames;
-	}
+    public List<String> getNames() {
+        return fieldNames;
+    }
 
-	public List<TypeInfo> getTypes() {
-		return fieldTypes;
-	}
+    public List<TypeInfo> getTypes() {
+        return fieldTypes;
+    }
 
-	public Object[] getSchema() {
-		return fieldTypes.toArray();
-	}
+    public Object[] getSchema() {
+        return fieldTypes.toArray();
+    }
 }

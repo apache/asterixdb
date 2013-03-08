@@ -13,16 +13,14 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public class ExtractVisitor extends DefaultVisitor {
 
-	@Override
-	public Mutable<ILogicalOperator> visit(ExtractOperator operator,
-			Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t) {
-		Schema currentSchema = t.generateInputSchema(operator
-				.getParentOperators().get(0));
-		operator.setSchema(operator.getParentOperators().get(0).getSchema());
-		List<LogicalVariable> latestOutputSchema = t
-				.getVariablesFromSchema(currentSchema);
-		t.rewriteOperatorOutputSchema(latestOutputSchema, operator);
-		return null;
-	}
+    @Override
+    public Mutable<ILogicalOperator> visit(ExtractOperator operator,
+            Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t) {
+        Schema currentSchema = t.generateInputSchema(operator.getParentOperators().get(0));
+        operator.setSchema(operator.getParentOperators().get(0).getSchema());
+        List<LogicalVariable> latestOutputSchema = t.getVariablesFromSchema(currentSchema);
+        t.rewriteOperatorOutputSchema(latestOutputSchema, operator);
+        return null;
+    }
 
 }

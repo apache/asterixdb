@@ -11,16 +11,13 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPhysicalPropertie
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 
-public class HiveDataSourcePartitioningProvider implements
-		IDataSourcePropertiesProvider {
+public class HiveDataSourcePartitioningProvider implements IDataSourcePropertiesProvider {
 
-	@Override
-	public IPhysicalPropertiesVector computePropertiesVector(
-			List<LogicalVariable> scanVariables) {
-		IPartitioningProperty property = new RandomPartitioningProperty(
-				new HiveDomain());
-		IPhysicalPropertiesVector vector = new StructuralPropertiesVector(
-				property, new LinkedList<ILocalStructuralProperty>());
-		return vector;
-	}
+    @Override
+    public IPhysicalPropertiesVector computePropertiesVector(List<LogicalVariable> scanVariables) {
+        IPartitioningProperty property = new RandomPartitioningProperty(new HiveDomain());
+        IPhysicalPropertiesVector vector = new StructuralPropertiesVector(property,
+                new LinkedList<ILocalStructuralProperty>());
+        return vector;
+    }
 }

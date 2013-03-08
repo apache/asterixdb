@@ -29,34 +29,34 @@ import edu.uci.ics.hivesterix.serde.lazy.LazyArray;
  */
 public class LazyListObjectInspector extends StandardListObjectInspector {
 
-	protected LazyListObjectInspector(ObjectInspector listElementObjectInspector) {
-		super(listElementObjectInspector);
-	}
+    protected LazyListObjectInspector(ObjectInspector listElementObjectInspector) {
+        super(listElementObjectInspector);
+    }
 
-	@Override
-	public List<?> getList(Object data) {
-		if (data == null) {
-			return null;
-		}
-		LazyArray array = (LazyArray) data;
-		return array.getList();
-	}
+    @Override
+    public List<?> getList(Object data) {
+        if (data == null) {
+            return null;
+        }
+        LazyArray array = (LazyArray) data;
+        return array.getList();
+    }
 
-	@Override
-	public Object getListElement(Object data, int index) {
-		if (data == null) {
-			return null;
-		}
-		LazyArray array = (LazyArray) data;
-		return array.getListElementObject(index);
-	}
+    @Override
+    public Object getListElement(Object data, int index) {
+        if (data == null) {
+            return null;
+        }
+        LazyArray array = (LazyArray) data;
+        return array.getListElementObject(index);
+    }
 
-	@Override
-	public int getListLength(Object data) {
-		if (data == null) {
-			return -1;
-		}
-		LazyArray array = (LazyArray) data;
-		return array.getListLength();
-	}
+    @Override
+    public int getListLength(Object data) {
+        if (data == null) {
+            return -1;
+        }
+        LazyArray array = (LazyArray) data;
+        return array.getListLength();
+    }
 }

@@ -26,26 +26,25 @@ import edu.uci.ics.hivesterix.serde.lazy.LazyByte;
 /**
  * A WritableByteObjectInspector inspects a ByteWritable Object.
  */
-public class LazyByteObjectInspector extends
-		AbstractPrimitiveLazyObjectInspector<ByteWritable> implements
-		ByteObjectInspector {
+public class LazyByteObjectInspector extends AbstractPrimitiveLazyObjectInspector<ByteWritable> implements
+        ByteObjectInspector {
 
-	LazyByteObjectInspector() {
-		super(PrimitiveObjectInspectorUtils.byteTypeEntry);
-	}
+    LazyByteObjectInspector() {
+        super(PrimitiveObjectInspectorUtils.byteTypeEntry);
+    }
 
-	@Override
-	public byte get(Object o) {
-		return getPrimitiveWritableObject(o).get();
-	}
+    @Override
+    public byte get(Object o) {
+        return getPrimitiveWritableObject(o).get();
+    }
 
-	@Override
-	public Object copyObject(Object o) {
-		return o == null ? null : new LazyByte((LazyByte) o);
-	}
+    @Override
+    public Object copyObject(Object o) {
+        return o == null ? null : new LazyByte((LazyByte) o);
+    }
 
-	@Override
-	public Object getPrimitiveJavaObject(Object o) {
-		return o == null ? null : Byte.valueOf(get(o));
-	}
+    @Override
+    public Object getPrimitiveJavaObject(Object o) {
+        return o == null ? null : Byte.valueOf(get(o));
+    }
 }

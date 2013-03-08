@@ -41,254 +41,232 @@ import edu.uci.ics.hivesterix.runtime.evaluator.SerializableBuffer;
 
 /**
  * GenericUDAFSum.
- * 
  */
 @Description(name = "sum", value = "_FUNC_(x) - Returns the sum of a set of numbers")
 public class GenericUDAFSum extends AbstractGenericUDAFResolver {
 
-	static final Log LOG = LogFactory.getLog(GenericUDAFSum.class.getName());
+    static final Log LOG = LogFactory.getLog(GenericUDAFSum.class.getName());
 
-	@Override
-	public GenericUDAFEvaluator getEvaluator(TypeInfo[] parameters)
-			throws SemanticException {
-		if (parameters.length != 1) {
-			throw new UDFArgumentTypeException(parameters.length - 1,
-					"Exactly one argument is expected.");
-		}
+    @Override
+    public GenericUDAFEvaluator getEvaluator(TypeInfo[] parameters) throws SemanticException {
+        if (parameters.length != 1) {
+            throw new UDFArgumentTypeException(parameters.length - 1, "Exactly one argument is expected.");
+        }
 
-		if (parameters[0].getCategory() != ObjectInspector.Category.PRIMITIVE) {
-			throw new UDFArgumentTypeException(0,
-					"Only primitive type arguments are accepted but "
-							+ parameters[0].getTypeName() + " is passed.");
-		}
-		switch (((PrimitiveTypeInfo) parameters[0]).getPrimitiveCategory()) {
-		case BYTE:
-		case SHORT:
-		case INT:
-		case LONG:
-			return new GenericUDAFSumLong();
-		case FLOAT:
-		case DOUBLE:
-		case STRING:
-			return new GenericUDAFSumDouble();
-		case BOOLEAN:
-		default:
-			throw new UDFArgumentTypeException(0,
-					"Only numeric or string type arguments are accepted but "
-							+ parameters[0].getTypeName() + " is passed.");
-		}
-	}
+        if (parameters[0].getCategory() != ObjectInspector.Category.PRIMITIVE) {
+            throw new UDFArgumentTypeException(0, "Only primitive type arguments are accepted but "
+                    + parameters[0].getTypeName() + " is passed.");
+        }
+        switch (((PrimitiveTypeInfo) parameters[0]).getPrimitiveCategory()) {
+            case BYTE:
+            case SHORT:
+            case INT:
+            case LONG:
+                return new GenericUDAFSumLong();
+            case FLOAT:
+            case DOUBLE:
+            case STRING:
+                return new GenericUDAFSumDouble();
+            case BOOLEAN:
+            default:
+                throw new UDFArgumentTypeException(0, "Only numeric or string type arguments are accepted but "
+                        + parameters[0].getTypeName() + " is passed.");
+        }
+    }
 
-	/**
-	 * GenericUDAFSumDouble.
-	 * 
-	 */
-	public static class GenericUDAFSumDouble extends GenericUDAFEvaluator {
-		private PrimitiveObjectInspector inputOI;
-		private DoubleWritable result;
+    /**
+     * GenericUDAFSumDouble.
+     */
+    public static class GenericUDAFSumDouble extends GenericUDAFEvaluator {
+        private PrimitiveObjectInspector inputOI;
+        private DoubleWritable result;
 
-		@Override
-		public ObjectInspector init(Mode m, ObjectInspector[] parameters)
-				throws HiveException {
-			assert (parameters.length == 1);
-			super.init(m, parameters);
-			result = new DoubleWritable(0);
-			inputOI = (PrimitiveObjectInspector) parameters[0];
-			return PrimitiveObjectInspectorFactory.writableDoubleObjectInspector;
-		}
+        @Override
+        public ObjectInspector init(Mode m, ObjectInspector[] parameters) throws HiveException {
+            assert (parameters.length == 1);
+            super.init(m, parameters);
+            result = new DoubleWritable(0);
+            inputOI = (PrimitiveObjectInspector) parameters[0];
+            return PrimitiveObjectInspectorFactory.writableDoubleObjectInspector;
+        }
 
-		/** class for storing double sum value. */
-		static class SumDoubleAgg implements SerializableBuffer {
-			boolean empty;
-			double sum;
+        /** class for storing double sum value. */
+        static class SumDoubleAgg implements SerializableBuffer {
+            boolean empty;
+            double sum;
 
-			@Override
-			public void deSerializeAggBuffer(byte[] data, int start, int len) {
-				empty = BufferSerDeUtil.getBoolean(data, start);
-				start += 1;
-				sum = BufferSerDeUtil.getDouble(data, start);
-			}
+            @Override
+            public void deSerializeAggBuffer(byte[] data, int start, int len) {
+                empty = BufferSerDeUtil.getBoolean(data, start);
+                start += 1;
+                sum = BufferSerDeUtil.getDouble(data, start);
+            }
 
-			@Override
-			public void serializeAggBuffer(byte[] data, int start, int len) {
-				BufferSerDeUtil.writeBoolean(empty, data, start);
-				start += 1;
-				BufferSerDeUtil.writeDouble(sum, data, start);
-			}
+            @Override
+            public void serializeAggBuffer(byte[] data, int start, int len) {
+                BufferSerDeUtil.writeBoolean(empty, data, start);
+                start += 1;
+                BufferSerDeUtil.writeDouble(sum, data, start);
+            }
 
-			@Override
-			public void serializeAggBuffer(DataOutput output)
-					throws IOException {
-				output.writeBoolean(empty);
-				output.writeDouble(sum);
-			}
-		}
+            @Override
+            public void serializeAggBuffer(DataOutput output) throws IOException {
+                output.writeBoolean(empty);
+                output.writeDouble(sum);
+            }
+        }
 
-		@Override
-		public AggregationBuffer getNewAggregationBuffer() throws HiveException {
-			SumDoubleAgg result = new SumDoubleAgg();
-			reset(result);
-			return result;
-		}
+        @Override
+        public AggregationBuffer getNewAggregationBuffer() throws HiveException {
+            SumDoubleAgg result = new SumDoubleAgg();
+            reset(result);
+            return result;
+        }
 
-		@Override
-		public void reset(AggregationBuffer agg) throws HiveException {
-			SumDoubleAgg myagg = (SumDoubleAgg) agg;
-			myagg.empty = true;
-			myagg.sum = 0;
-		}
+        @Override
+        public void reset(AggregationBuffer agg) throws HiveException {
+            SumDoubleAgg myagg = (SumDoubleAgg) agg;
+            myagg.empty = true;
+            myagg.sum = 0;
+        }
 
-		boolean warned = false;
+        boolean warned = false;
 
-		@Override
-		public void iterate(AggregationBuffer agg, Object[] parameters)
-				throws HiveException {
-			assert (parameters.length == 1);
-			try {
-				merge(agg, parameters[0]);
-			} catch (NumberFormatException e) {
-				if (!warned) {
-					warned = true;
-					LOG.warn(getClass().getSimpleName() + " "
-							+ StringUtils.stringifyException(e));
-					LOG.warn(getClass().getSimpleName()
-							+ " ignoring similar exceptions.");
-				}
-			}
-		}
+        @Override
+        public void iterate(AggregationBuffer agg, Object[] parameters) throws HiveException {
+            assert (parameters.length == 1);
+            try {
+                merge(agg, parameters[0]);
+            } catch (NumberFormatException e) {
+                if (!warned) {
+                    warned = true;
+                    LOG.warn(getClass().getSimpleName() + " " + StringUtils.stringifyException(e));
+                    LOG.warn(getClass().getSimpleName() + " ignoring similar exceptions.");
+                }
+            }
+        }
 
-		@Override
-		public Object terminatePartial(AggregationBuffer agg)
-				throws HiveException {
-			return terminate(agg);
-		}
+        @Override
+        public Object terminatePartial(AggregationBuffer agg) throws HiveException {
+            return terminate(agg);
+        }
 
-		@Override
-		public void merge(AggregationBuffer agg, Object partial)
-				throws HiveException {
-			if (partial != null) {
-				SumDoubleAgg myagg = (SumDoubleAgg) agg;
-				myagg.empty = false;
-				myagg.sum += PrimitiveObjectInspectorUtils.getDouble(partial,
-						inputOI);
-			}
-		}
+        @Override
+        public void merge(AggregationBuffer agg, Object partial) throws HiveException {
+            if (partial != null) {
+                SumDoubleAgg myagg = (SumDoubleAgg) agg;
+                myagg.empty = false;
+                myagg.sum += PrimitiveObjectInspectorUtils.getDouble(partial, inputOI);
+            }
+        }
 
-		@Override
-		public Object terminate(AggregationBuffer agg) throws HiveException {
-			SumDoubleAgg myagg = (SumDoubleAgg) agg;
-			if (myagg.empty) {
-				return null;
-			}
-			result.set(myagg.sum);
-			return result;
-		}
+        @Override
+        public Object terminate(AggregationBuffer agg) throws HiveException {
+            SumDoubleAgg myagg = (SumDoubleAgg) agg;
+            if (myagg.empty) {
+                return null;
+            }
+            result.set(myagg.sum);
+            return result;
+        }
 
-	}
+    }
 
-	/**
-	 * GenericUDAFSumLong.
-	 * 
-	 */
-	public static class GenericUDAFSumLong extends GenericUDAFEvaluator {
-		private PrimitiveObjectInspector inputOI;
-		private LongWritable result;
+    /**
+     * GenericUDAFSumLong.
+     */
+    public static class GenericUDAFSumLong extends GenericUDAFEvaluator {
+        private PrimitiveObjectInspector inputOI;
+        private LongWritable result;
 
-		@Override
-		public ObjectInspector init(Mode m, ObjectInspector[] parameters)
-				throws HiveException {
-			assert (parameters.length == 1);
-			super.init(m, parameters);
-			result = new LongWritable(0);
-			inputOI = (PrimitiveObjectInspector) parameters[0];
-			return PrimitiveObjectInspectorFactory.writableLongObjectInspector;
-		}
+        @Override
+        public ObjectInspector init(Mode m, ObjectInspector[] parameters) throws HiveException {
+            assert (parameters.length == 1);
+            super.init(m, parameters);
+            result = new LongWritable(0);
+            inputOI = (PrimitiveObjectInspector) parameters[0];
+            return PrimitiveObjectInspectorFactory.writableLongObjectInspector;
+        }
 
-		/** class for storing double sum value. */
-		static class SumLongAgg implements SerializableBuffer {
-			boolean empty;
-			long sum;
+        /** class for storing double sum value. */
+        static class SumLongAgg implements SerializableBuffer {
+            boolean empty;
+            long sum;
 
-			@Override
-			public void deSerializeAggBuffer(byte[] data, int start, int len) {
-				empty = BufferSerDeUtil.getBoolean(data, start);
-				start += 1;
-				sum = BufferSerDeUtil.getLong(data, start);
-			}
+            @Override
+            public void deSerializeAggBuffer(byte[] data, int start, int len) {
+                empty = BufferSerDeUtil.getBoolean(data, start);
+                start += 1;
+                sum = BufferSerDeUtil.getLong(data, start);
+            }
 
-			@Override
-			public void serializeAggBuffer(byte[] data, int start, int len) {
-				BufferSerDeUtil.writeBoolean(empty, data, start);
-				start += 1;
-				BufferSerDeUtil.writeLong(sum, data, start);
-			}
+            @Override
+            public void serializeAggBuffer(byte[] data, int start, int len) {
+                BufferSerDeUtil.writeBoolean(empty, data, start);
+                start += 1;
+                BufferSerDeUtil.writeLong(sum, data, start);
+            }
 
-			@Override
-			public void serializeAggBuffer(DataOutput output)
-					throws IOException {
-				output.writeBoolean(empty);
-				output.writeLong(sum);
-			}
-		}
+            @Override
+            public void serializeAggBuffer(DataOutput output) throws IOException {
+                output.writeBoolean(empty);
+                output.writeLong(sum);
+            }
+        }
 
-		@Override
-		public AggregationBuffer getNewAggregationBuffer() throws HiveException {
-			SumLongAgg result = new SumLongAgg();
-			reset(result);
-			return result;
-		}
+        @Override
+        public AggregationBuffer getNewAggregationBuffer() throws HiveException {
+            SumLongAgg result = new SumLongAgg();
+            reset(result);
+            return result;
+        }
 
-		@Override
-		public void reset(AggregationBuffer agg) throws HiveException {
-			SumLongAgg myagg = (SumLongAgg) agg;
-			myagg.empty = true;
-			myagg.sum = 0;
-		}
+        @Override
+        public void reset(AggregationBuffer agg) throws HiveException {
+            SumLongAgg myagg = (SumLongAgg) agg;
+            myagg.empty = true;
+            myagg.sum = 0;
+        }
 
-		private boolean warned = false;
+        private boolean warned = false;
 
-		@Override
-		public void iterate(AggregationBuffer agg, Object[] parameters)
-				throws HiveException {
-			assert (parameters.length == 1);
-			try {
-				merge(agg, parameters[0]);
-			} catch (NumberFormatException e) {
-				if (!warned) {
-					warned = true;
-					LOG.warn(getClass().getSimpleName() + " "
-							+ StringUtils.stringifyException(e));
-				}
-			}
-		}
+        @Override
+        public void iterate(AggregationBuffer agg, Object[] parameters) throws HiveException {
+            assert (parameters.length == 1);
+            try {
+                merge(agg, parameters[0]);
+            } catch (NumberFormatException e) {
+                if (!warned) {
+                    warned = true;
+                    LOG.warn(getClass().getSimpleName() + " " + StringUtils.stringifyException(e));
+                }
+            }
+        }
 
-		@Override
-		public Object terminatePartial(AggregationBuffer agg)
-				throws HiveException {
-			return terminate(agg);
-		}
+        @Override
+        public Object terminatePartial(AggregationBuffer agg) throws HiveException {
+            return terminate(agg);
+        }
 
-		@Override
-		public void merge(AggregationBuffer agg, Object partial)
-				throws HiveException {
-			if (partial != null) {
-				SumLongAgg myagg = (SumLongAgg) agg;
-				myagg.sum += PrimitiveObjectInspectorUtils.getLong(partial,
-						inputOI);
-				myagg.empty = false;
-			}
-		}
+        @Override
+        public void merge(AggregationBuffer agg, Object partial) throws HiveException {
+            if (partial != null) {
+                SumLongAgg myagg = (SumLongAgg) agg;
+                myagg.sum += PrimitiveObjectInspectorUtils.getLong(partial, inputOI);
+                myagg.empty = false;
+            }
+        }
 
-		@Override
-		public Object terminate(AggregationBuffer agg) throws HiveException {
-			SumLongAgg myagg = (SumLongAgg) agg;
-			if (myagg.empty) {
-				return null;
-			}
-			result.set(myagg.sum);
-			return result;
-		}
+        @Override
+        public Object terminate(AggregationBuffer agg) throws HiveException {
+            SumLongAgg myagg = (SumLongAgg) agg;
+            if (myagg.empty) {
+                return null;
+            }
+            result.set(myagg.sum);
+            return result;
+        }
 
-	}
+    }
 
 }

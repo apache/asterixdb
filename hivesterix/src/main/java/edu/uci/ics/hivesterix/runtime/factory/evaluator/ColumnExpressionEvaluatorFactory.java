@@ -14,32 +14,28 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 
 public class ColumnExpressionEvaluatorFactory implements ICopyEvaluatorFactory {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private ExprNodeColumnDesc expr;
+    private ExprNodeColumnDesc expr;
 
-	private Schema inputSchema;
+    private Schema inputSchema;
 
-	public ColumnExpressionEvaluatorFactory(ILogicalExpression expression,
-			Schema schema, IVariableTypeEnvironment env)
-			throws AlgebricksException {
-		try {
-			expr = (ExprNodeColumnDesc) ExpressionTranslator.getHiveExpression(
-					expression, env);
-		} catch (Exception e) {
-			throw new AlgebricksException(e.getMessage());
-		}
-		inputSchema = schema;
-	}
+    public ColumnExpressionEvaluatorFactory(ILogicalExpression expression, Schema schema, IVariableTypeEnvironment env)
+            throws AlgebricksException {
+        try {
+            expr = (ExprNodeColumnDesc) ExpressionTranslator.getHiveExpression(expression, env);
+        } catch (Exception e) {
+            throw new AlgebricksException(e.getMessage());
+        }
+        inputSchema = schema;
+    }
 
-	public ICopyEvaluator createEvaluator(IDataOutputProvider output)
-			throws AlgebricksException {
-		return new ColumnExpressionEvaluator(expr,
-				inputSchema.toObjectInspector(), output);
-	}
+    public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
+        return new ColumnExpressionEvaluator(expr, inputSchema.toObjectInspector(), output);
+    }
 
-	public String toString() {
-		return "column expression evaluator factory: " + expr.toString();
-	}
+    public String toString() {
+        return "column expression evaluator factory: " + expr.toString();
+    }
 
 }

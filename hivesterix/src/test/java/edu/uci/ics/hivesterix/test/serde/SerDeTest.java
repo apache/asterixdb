@@ -43,190 +43,175 @@ import edu.uci.ics.hivesterix.serde.lazy.LazySerDe;
 
 /**
  * TestLazySimpleSerDe.
- * 
  */
 @SuppressWarnings({ "deprecation", "rawtypes" })
 public class SerDeTest extends TestCase {
 
-	/**
-	 * Test the LazySimpleSerDe class.
-	 */
-	public void testLazySimpleSerDe() throws Throwable {
-		try {
-			// Create the SerDe
-			LazySimpleSerDe serDe = new LazySimpleSerDe();
-			Configuration conf = new Configuration();
-			Properties tbl = createProperties();
-			serDe.initialize(conf, tbl);
+    /**
+     * Test the LazySimpleSerDe class.
+     */
+    public void testLazySimpleSerDe() throws Throwable {
+        try {
+            // Create the SerDe
+            LazySimpleSerDe serDe = new LazySimpleSerDe();
+            Configuration conf = new Configuration();
+            Properties tbl = createProperties();
+            serDe.initialize(conf, tbl);
 
-			LazySerDe outputSerde = new LazySerDe();
-			outputSerde.initialize(conf, tbl);
+            LazySerDe outputSerde = new LazySerDe();
+            outputSerde.initialize(conf, tbl);
 
-			// Data
-			String s = "123\t456\t789\t1000\t5.3\thive and hadoop\t1\tqf";
+            // Data
+            String s = "123\t456\t789\t1000\t5.3\thive and hadoop\t1\tqf";
 
-			byte[] bytes = s.getBytes();
-			Writable bytesWritable = new BytesWritable(bytes);
+            byte[] bytes = s.getBytes();
+            Writable bytesWritable = new BytesWritable(bytes);
 
-			// Test
-			// deserializeAndSerialize(serDe, t, s, expectedFieldsData);
-			Object row = serDe.deserialize(bytesWritable); // test my serde
-			StructObjectInspector simpleInspector = (StructObjectInspector) serDe
-					.getObjectInspector();
-			List<Object> fields = simpleInspector
-					.getStructFieldsDataAsList(row);
-			List<? extends StructField> fieldRefs = simpleInspector
-					.getAllStructFieldRefs();
+            // Test
+            // deserializeAndSerialize(serDe, t, s, expectedFieldsData);
+            Object row = serDe.deserialize(bytesWritable); // test my serde
+            StructObjectInspector simpleInspector = (StructObjectInspector) serDe.getObjectInspector();
+            List<Object> fields = simpleInspector.getStructFieldsDataAsList(row);
+            List<? extends StructField> fieldRefs = simpleInspector.getAllStructFieldRefs();
 
-			int i = 0;
-			for (Object field : fields) {
-				BytesWritable fieldWritable = (BytesWritable) outputSerde
-						.serialize(field, fieldRefs.get(i)
-								.getFieldObjectInspector());
-				System.out.print(fieldWritable.getSize() + "|");
-				i++;
-			}
+            int i = 0;
+            for (Object field : fields) {
+                BytesWritable fieldWritable = (BytesWritable) outputSerde.serialize(field, fieldRefs.get(i)
+                        .getFieldObjectInspector());
+                System.out.print(fieldWritable.getSize() + "|");
+                i++;
+            }
 
-			// Writable output = outputSerde.serialize(row, serDe
-			// .getObjectInspector());
-			// System.out.println(output);
-			//
-			// Object row2 = outputSerde.deserialize(output);
-			// Writable output2 = serDe.serialize(row2, outputSerde
-			// .getObjectInspector());
-			// System.out.println(output2);
+            // Writable output = outputSerde.serialize(row, serDe
+            // .getObjectInspector());
+            // System.out.println(output);
+            //
+            // Object row2 = outputSerde.deserialize(output);
+            // Writable output2 = serDe.serialize(row2, outputSerde
+            // .getObjectInspector());
+            // System.out.println(output2);
 
-			// System.out.println(output);
-			// deserializeAndSerialize(outputSerde, t, s, expectedFieldsData);
+            // System.out.println(output);
+            // deserializeAndSerialize(outputSerde, t, s, expectedFieldsData);
 
-		} catch (Throwable e) {
-			e.printStackTrace();
-			throw e;
-		}
-	}
+        } catch (Throwable e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
 
-	private void deserializeAndSerialize(SerDe serDe, Text t, String s,
-			Object[] expectedFieldsData) throws SerDeException {
-		// Get the row structure
-		StructObjectInspector oi = (StructObjectInspector) serDe
-				.getObjectInspector();
-		List<? extends StructField> fieldRefs = oi.getAllStructFieldRefs();
-		assertEquals(8, fieldRefs.size());
+    private void deserializeAndSerialize(SerDe serDe, Text t, String s, Object[] expectedFieldsData)
+            throws SerDeException {
+        // Get the row structure
+        StructObjectInspector oi = (StructObjectInspector) serDe.getObjectInspector();
+        List<? extends StructField> fieldRefs = oi.getAllStructFieldRefs();
+        assertEquals(8, fieldRefs.size());
 
-		// Deserialize
-		Object row = serDe.deserialize(t);
-		for (int i = 0; i < fieldRefs.size(); i++) {
-			Object fieldData = oi.getStructFieldData(row, fieldRefs.get(i));
-			if (fieldData != null) {
-				fieldData = ((LazyPrimitive) fieldData).getWritableObject();
-			}
-			assertEquals("Field " + i, expectedFieldsData[i], fieldData);
-		}
-		// Serialize
-		assertEquals(Text.class, serDe.getSerializedClass());
-		Text serializedText = (Text) serDe.serialize(row, oi);
-		assertEquals("Serialized data", s, serializedText.toString());
-	}
+        // Deserialize
+        Object row = serDe.deserialize(t);
+        for (int i = 0; i < fieldRefs.size(); i++) {
+            Object fieldData = oi.getStructFieldData(row, fieldRefs.get(i));
+            if (fieldData != null) {
+                fieldData = ((LazyPrimitive) fieldData).getWritableObject();
+            }
+            assertEquals("Field " + i, expectedFieldsData[i], fieldData);
+        }
+        // Serialize
+        assertEquals(Text.class, serDe.getSerializedClass());
+        Text serializedText = (Text) serDe.serialize(row, oi);
+        assertEquals("Serialized data", s, serializedText.toString());
+    }
 
-	private Properties createProperties() {
-		Properties tbl = new Properties();
+    private Properties createProperties() {
+        Properties tbl = new Properties();
 
-		// Set the configuration parameters
-		tbl.setProperty(Constants.SERIALIZATION_FORMAT, "9");
-		tbl.setProperty("columns",
-				"abyte,ashort,aint,along,adouble,astring,anullint,anullstring");
-		tbl.setProperty("columns.types",
-				"tinyint:smallint:int:bigint:double:string:int:string");
-		tbl.setProperty(Constants.SERIALIZATION_NULL_FORMAT, "NULL");
-		return tbl;
-	}
+        // Set the configuration parameters
+        tbl.setProperty(Constants.SERIALIZATION_FORMAT, "9");
+        tbl.setProperty("columns", "abyte,ashort,aint,along,adouble,astring,anullint,anullstring");
+        tbl.setProperty("columns.types", "tinyint:smallint:int:bigint:double:string:int:string");
+        tbl.setProperty(Constants.SERIALIZATION_NULL_FORMAT, "NULL");
+        return tbl;
+    }
 
-	/**
-	 * Test the LazySimpleSerDe class with LastColumnTakesRest option.
-	 */
-	public void testLazySimpleSerDeLastColumnTakesRest() throws Throwable {
-		try {
-			// Create the SerDe
-			LazySimpleSerDe serDe = new LazySimpleSerDe();
-			Configuration conf = new Configuration();
-			Properties tbl = createProperties();
-			tbl.setProperty(Constants.SERIALIZATION_LAST_COLUMN_TAKES_REST,
-					"true");
-			serDe.initialize(conf, tbl);
+    /**
+     * Test the LazySimpleSerDe class with LastColumnTakesRest option.
+     */
+    public void testLazySimpleSerDeLastColumnTakesRest() throws Throwable {
+        try {
+            // Create the SerDe
+            LazySimpleSerDe serDe = new LazySimpleSerDe();
+            Configuration conf = new Configuration();
+            Properties tbl = createProperties();
+            tbl.setProperty(Constants.SERIALIZATION_LAST_COLUMN_TAKES_REST, "true");
+            serDe.initialize(conf, tbl);
 
-			// Data
-			Text t = new Text(
-					"123\t456\t789\t1000\t5.3\thive and hadoop\t1.\ta\tb\t");
-			String s = "123\t456\t789\t1000\t5.3\thive and hadoop\tNULL\ta\tb\t";
-			Object[] expectedFieldsData = { new ByteWritable((byte) 123),
-					new ShortWritable((short) 456), new IntWritable(789),
-					new LongWritable(1000), new DoubleWritable(5.3),
-					new Text("hive and hadoop"), null, new Text("a\tb\t") };
+            // Data
+            Text t = new Text("123\t456\t789\t1000\t5.3\thive and hadoop\t1.\ta\tb\t");
+            String s = "123\t456\t789\t1000\t5.3\thive and hadoop\tNULL\ta\tb\t";
+            Object[] expectedFieldsData = { new ByteWritable((byte) 123), new ShortWritable((short) 456),
+                    new IntWritable(789), new LongWritable(1000), new DoubleWritable(5.3), new Text("hive and hadoop"),
+                    null, new Text("a\tb\t") };
 
-			// Test
-			deserializeAndSerialize(serDe, t, s, expectedFieldsData);
+            // Test
+            deserializeAndSerialize(serDe, t, s, expectedFieldsData);
 
-		} catch (Throwable e) {
-			e.printStackTrace();
-			throw e;
-		}
-	}
+        } catch (Throwable e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
 
-	/**
-	 * Test the LazySimpleSerDe class with extra columns.
-	 */
-	public void testLazySimpleSerDeExtraColumns() throws Throwable {
-		try {
-			// Create the SerDe
-			LazySimpleSerDe serDe = new LazySimpleSerDe();
-			Configuration conf = new Configuration();
-			Properties tbl = createProperties();
-			serDe.initialize(conf, tbl);
+    /**
+     * Test the LazySimpleSerDe class with extra columns.
+     */
+    public void testLazySimpleSerDeExtraColumns() throws Throwable {
+        try {
+            // Create the SerDe
+            LazySimpleSerDe serDe = new LazySimpleSerDe();
+            Configuration conf = new Configuration();
+            Properties tbl = createProperties();
+            serDe.initialize(conf, tbl);
 
-			// Data
-			Text t = new Text(
-					"123\t456\t789\t1000\t5.3\thive and hadoop\t1.\ta\tb\t");
-			String s = "123\t456\t789\t1000\t5.3\thive and hadoop\tNULL\ta";
-			Object[] expectedFieldsData = { new ByteWritable((byte) 123),
-					new ShortWritable((short) 456), new IntWritable(789),
-					new LongWritable(1000), new DoubleWritable(5.3),
-					new Text("hive and hadoop"), null, new Text("a") };
+            // Data
+            Text t = new Text("123\t456\t789\t1000\t5.3\thive and hadoop\t1.\ta\tb\t");
+            String s = "123\t456\t789\t1000\t5.3\thive and hadoop\tNULL\ta";
+            Object[] expectedFieldsData = { new ByteWritable((byte) 123), new ShortWritable((short) 456),
+                    new IntWritable(789), new LongWritable(1000), new DoubleWritable(5.3), new Text("hive and hadoop"),
+                    null, new Text("a") };
 
-			// Test
-			deserializeAndSerialize(serDe, t, s, expectedFieldsData);
+            // Test
+            deserializeAndSerialize(serDe, t, s, expectedFieldsData);
 
-		} catch (Throwable e) {
-			e.printStackTrace();
-			throw e;
-		}
-	}
+        } catch (Throwable e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
 
-	/**
-	 * Test the LazySimpleSerDe class with missing columns.
-	 */
-	public void testLazySimpleSerDeMissingColumns() throws Throwable {
-		try {
-			// Create the SerDe
-			LazySimpleSerDe serDe = new LazySimpleSerDe();
-			Configuration conf = new Configuration();
-			Properties tbl = createProperties();
-			serDe.initialize(conf, tbl);
+    /**
+     * Test the LazySimpleSerDe class with missing columns.
+     */
+    public void testLazySimpleSerDeMissingColumns() throws Throwable {
+        try {
+            // Create the SerDe
+            LazySimpleSerDe serDe = new LazySimpleSerDe();
+            Configuration conf = new Configuration();
+            Properties tbl = createProperties();
+            serDe.initialize(conf, tbl);
 
-			// Data
-			Text t = new Text("123\t456\t789\t1000\t5.3\t");
-			String s = "123\t456\t789\t1000\t5.3\t\tNULL\tNULL";
-			Object[] expectedFieldsData = { new ByteWritable((byte) 123),
-					new ShortWritable((short) 456), new IntWritable(789),
-					new LongWritable(1000), new DoubleWritable(5.3),
-					new Text(""), null, null };
+            // Data
+            Text t = new Text("123\t456\t789\t1000\t5.3\t");
+            String s = "123\t456\t789\t1000\t5.3\t\tNULL\tNULL";
+            Object[] expectedFieldsData = { new ByteWritable((byte) 123), new ShortWritable((short) 456),
+                    new IntWritable(789), new LongWritable(1000), new DoubleWritable(5.3), new Text(""), null, null };
 
-			// Test
-			deserializeAndSerialize(serDe, t, s, expectedFieldsData);
+            // Test
+            deserializeAndSerialize(serDe, t, s, expectedFieldsData);
 
-		} catch (Throwable e) {
-			e.printStackTrace();
-			throw e;
-		}
-	}
+        } catch (Throwable e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
 
 }

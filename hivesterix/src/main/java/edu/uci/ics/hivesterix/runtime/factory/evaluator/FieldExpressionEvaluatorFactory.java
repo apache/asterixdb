@@ -13,32 +13,28 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 
 public class FieldExpressionEvaluatorFactory implements ICopyEvaluatorFactory {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private ExprNodeFieldDesc expr;
+    private ExprNodeFieldDesc expr;
 
-	private Schema inputSchema;
+    private Schema inputSchema;
 
-	public FieldExpressionEvaluatorFactory(ILogicalExpression expression,
-			Schema schema, IVariableTypeEnvironment env)
-			throws AlgebricksException {
-		try {
-			expr = (ExprNodeFieldDesc) ExpressionTranslator.getHiveExpression(
-					expression, env);
-		} catch (Exception e) {
-			throw new AlgebricksException(e.getMessage());
-		}
-		inputSchema = schema;
-	}
+    public FieldExpressionEvaluatorFactory(ILogicalExpression expression, Schema schema, IVariableTypeEnvironment env)
+            throws AlgebricksException {
+        try {
+            expr = (ExprNodeFieldDesc) ExpressionTranslator.getHiveExpression(expression, env);
+        } catch (Exception e) {
+            throw new AlgebricksException(e.getMessage());
+        }
+        inputSchema = schema;
+    }
 
-	public ICopyEvaluator createEvaluator(IDataOutputProvider output)
-			throws AlgebricksException {
-		return new FieldExpressionEvaluator(expr,
-				inputSchema.toObjectInspector(), output);
-	}
+    public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
+        return new FieldExpressionEvaluator(expr, inputSchema.toObjectInspector(), output);
+    }
 
-	public String toString() {
-		return "field access expression evaluator factory: " + expr.toString();
-	}
+    public String toString() {
+        return "field access expression evaluator factory: " + expr.toString();
+    }
 
 }

@@ -23,31 +23,29 @@ import edu.uci.ics.hivesterix.serde.lazy.objectinspector.primitive.LazyFloatObje
 
 /**
  * LazyObject for storing a value of Double.
- * 
  */
-public class LazyFloat extends
-		LazyPrimitive<LazyFloatObjectInspector, FloatWritable> {
+public class LazyFloat extends LazyPrimitive<LazyFloatObjectInspector, FloatWritable> {
 
-	public LazyFloat(LazyFloatObjectInspector oi) {
-		super(oi);
-		data = new FloatWritable();
-	}
+    public LazyFloat(LazyFloatObjectInspector oi) {
+        super(oi);
+        data = new FloatWritable();
+    }
 
-	public LazyFloat(LazyFloat copy) {
-		super(copy);
-		data = new FloatWritable(copy.data.get());
-	}
+    public LazyFloat(LazyFloat copy) {
+        super(copy);
+        data = new FloatWritable(copy.data.get());
+    }
 
-	@Override
-	public void init(byte[] bytes, int start, int length) {
-		if (length == 0) {
-			isNull = true;
-			return;
-		} else
-			isNull = false;
+    @Override
+    public void init(byte[] bytes, int start, int length) {
+        if (length == 0) {
+            isNull = true;
+            return;
+        } else
+            isNull = false;
 
-		assert (4 == length);
-		data.set(Float.intBitsToFloat(LazyUtils.byteArrayToInt(bytes, start)));
-	}
+        assert (4 == length);
+        data.set(Float.intBitsToFloat(LazyUtils.byteArrayToInt(bytes, start)));
+    }
 
 }

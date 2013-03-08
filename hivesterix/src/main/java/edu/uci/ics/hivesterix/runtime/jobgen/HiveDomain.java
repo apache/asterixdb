@@ -4,14 +4,14 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.INodeDomain;
 
 public class HiveDomain implements INodeDomain {
 
-	@Override
-	public boolean sameAs(INodeDomain domain) {
-		return true;
-	}
+    @Override
+    public boolean sameAs(INodeDomain domain) {
+        return true;
+    }
 
-	@Override
-	public Integer cardinality() {
-		return 0;
-	}
+    @Override
+    public Integer cardinality() {
+        return 0;
+    }
 
 }

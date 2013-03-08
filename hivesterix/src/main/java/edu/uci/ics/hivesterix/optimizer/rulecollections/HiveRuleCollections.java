@@ -37,78 +37,77 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.SetExecutionModeRule;
 
 public final class HiveRuleCollections {
 
-	public final static LinkedList<IAlgebraicRewriteRule> NORMALIZATION = new LinkedList<IAlgebraicRewriteRule>();
-	static {
-		NORMALIZATION.add(new EliminateSubplanRule());
-		NORMALIZATION.add(new IntroduceAggregateCombinerRule());
-		NORMALIZATION.add(new BreakSelectIntoConjunctsRule());
-		NORMALIZATION.add(new IntroduceAggregateCombinerRule());
-		NORMALIZATION.add(new PushSelectIntoJoinRule());
-		NORMALIZATION.add(new ExtractGbyExpressionsRule());
-		NORMALIZATION.add(new RemoveRedundantSelectRule());
-	}
+    public final static LinkedList<IAlgebraicRewriteRule> NORMALIZATION = new LinkedList<IAlgebraicRewriteRule>();
+    static {
+        NORMALIZATION.add(new EliminateSubplanRule());
+        NORMALIZATION.add(new IntroduceAggregateCombinerRule());
+        NORMALIZATION.add(new BreakSelectIntoConjunctsRule());
+        NORMALIZATION.add(new IntroduceAggregateCombinerRule());
+        NORMALIZATION.add(new PushSelectIntoJoinRule());
+        NORMALIZATION.add(new ExtractGbyExpressionsRule());
+        NORMALIZATION.add(new RemoveRedundantSelectRule());
+    }
 
-	public final static LinkedList<IAlgebraicRewriteRule> COND_PUSHDOWN_AND_JOIN_INFERENCE = new LinkedList<IAlgebraicRewriteRule>();
-	static {
-		COND_PUSHDOWN_AND_JOIN_INFERENCE.add(new PushSelectDownRule());
-		COND_PUSHDOWN_AND_JOIN_INFERENCE.add(new InlineVariablesRule());
-		COND_PUSHDOWN_AND_JOIN_INFERENCE
-				.add(new FactorRedundantGroupAndDecorVarsRule());
-		COND_PUSHDOWN_AND_JOIN_INFERENCE.add(new EliminateSubplanRule());
-	}
+    public final static LinkedList<IAlgebraicRewriteRule> COND_PUSHDOWN_AND_JOIN_INFERENCE = new LinkedList<IAlgebraicRewriteRule>();
+    static {
+        COND_PUSHDOWN_AND_JOIN_INFERENCE.add(new PushSelectDownRule());
+        COND_PUSHDOWN_AND_JOIN_INFERENCE.add(new InlineVariablesRule());
+        COND_PUSHDOWN_AND_JOIN_INFERENCE.add(new FactorRedundantGroupAndDecorVarsRule());
+        COND_PUSHDOWN_AND_JOIN_INFERENCE.add(new EliminateSubplanRule());
+    }
 
-	public final static LinkedList<IAlgebraicRewriteRule> LOAD_FIELDS = new LinkedList<IAlgebraicRewriteRule>();
-	static {
-		// should LoadRecordFieldsRule be applied in only one pass over the
-		// plan?
-		LOAD_FIELDS.add(new InlineVariablesRule());
-		// LOAD_FIELDS.add(new RemoveUnusedAssignAndAggregateRule());
-		LOAD_FIELDS.add(new ComplexJoinInferenceRule());
-		LOAD_FIELDS.add(new InferTypesRule());
-	}
+    public final static LinkedList<IAlgebraicRewriteRule> LOAD_FIELDS = new LinkedList<IAlgebraicRewriteRule>();
+    static {
+        // should LoadRecordFieldsRule be applied in only one pass over the
+        // plan?
+        LOAD_FIELDS.add(new InlineVariablesRule());
+        // LOAD_FIELDS.add(new RemoveUnusedAssignAndAggregateRule());
+        LOAD_FIELDS.add(new ComplexJoinInferenceRule());
+        LOAD_FIELDS.add(new InferTypesRule());
+    }
 
-	public final static LinkedList<IAlgebraicRewriteRule> OP_PUSHDOWN = new LinkedList<IAlgebraicRewriteRule>();
-	static {
-		OP_PUSHDOWN.add(new PushProjectDownRule());
-		OP_PUSHDOWN.add(new PushSelectDownRule());
-	}
+    public final static LinkedList<IAlgebraicRewriteRule> OP_PUSHDOWN = new LinkedList<IAlgebraicRewriteRule>();
+    static {
+        OP_PUSHDOWN.add(new PushProjectDownRule());
+        OP_PUSHDOWN.add(new PushSelectDownRule());
+    }
 
-	public final static LinkedList<IAlgebraicRewriteRule> DATA_EXCHANGE = new LinkedList<IAlgebraicRewriteRule>();
-	static {
-		DATA_EXCHANGE.add(new SetExecutionModeRule());
-	}
+    public final static LinkedList<IAlgebraicRewriteRule> DATA_EXCHANGE = new LinkedList<IAlgebraicRewriteRule>();
+    static {
+        DATA_EXCHANGE.add(new SetExecutionModeRule());
+    }
 
-	public final static LinkedList<IAlgebraicRewriteRule> CONSOLIDATION = new LinkedList<IAlgebraicRewriteRule>();
-	static {
-		CONSOLIDATION.add(new RemoveRedundantProjectionRule());
-		CONSOLIDATION.add(new ConsolidateSelectsRule());
-		CONSOLIDATION.add(new IntroduceEarlyProjectRule());
-		CONSOLIDATION.add(new ConsolidateAssignsRule());
-		CONSOLIDATION.add(new IntroduceGroupByCombinerRule());
-		CONSOLIDATION.add(new RemoveUnusedAssignAndAggregateRule());
-	}
+    public final static LinkedList<IAlgebraicRewriteRule> CONSOLIDATION = new LinkedList<IAlgebraicRewriteRule>();
+    static {
+        CONSOLIDATION.add(new RemoveRedundantProjectionRule());
+        CONSOLIDATION.add(new ConsolidateSelectsRule());
+        CONSOLIDATION.add(new IntroduceEarlyProjectRule());
+        CONSOLIDATION.add(new ConsolidateAssignsRule());
+        CONSOLIDATION.add(new IntroduceGroupByCombinerRule());
+        CONSOLIDATION.add(new RemoveUnusedAssignAndAggregateRule());
+    }
 
-	public final static LinkedList<IAlgebraicRewriteRule> PHYSICAL_PLAN_REWRITES = new LinkedList<IAlgebraicRewriteRule>();
-	static {
-		PHYSICAL_PLAN_REWRITES.add(new PullSelectOutOfEqJoin());
-		PHYSICAL_PLAN_REWRITES.add(new SetAlgebricksPhysicalOperatorsRule());
-		PHYSICAL_PLAN_REWRITES.add(new EnforceStructuralPropertiesRule());
-		PHYSICAL_PLAN_REWRITES.add(new PushProjectDownRule());
-		PHYSICAL_PLAN_REWRITES.add(new SetAlgebricksPhysicalOperatorsRule());
-		PHYSICAL_PLAN_REWRITES.add(new PushLimitDownRule());
-		PHYSICAL_PLAN_REWRITES.add(new InsertProjectBeforeWriteRule());
-		PHYSICAL_PLAN_REWRITES.add(new InsertProjectBeforeUnionRule());
-	}
+    public final static LinkedList<IAlgebraicRewriteRule> PHYSICAL_PLAN_REWRITES = new LinkedList<IAlgebraicRewriteRule>();
+    static {
+        PHYSICAL_PLAN_REWRITES.add(new PullSelectOutOfEqJoin());
+        PHYSICAL_PLAN_REWRITES.add(new SetAlgebricksPhysicalOperatorsRule());
+        PHYSICAL_PLAN_REWRITES.add(new EnforceStructuralPropertiesRule());
+        PHYSICAL_PLAN_REWRITES.add(new PushProjectDownRule());
+        PHYSICAL_PLAN_REWRITES.add(new SetAlgebricksPhysicalOperatorsRule());
+        PHYSICAL_PLAN_REWRITES.add(new PushLimitDownRule());
+        PHYSICAL_PLAN_REWRITES.add(new InsertProjectBeforeWriteRule());
+        PHYSICAL_PLAN_REWRITES.add(new InsertProjectBeforeUnionRule());
+    }
 
-	public final static LinkedList<IAlgebraicRewriteRule> prepareJobGenRules = new LinkedList<IAlgebraicRewriteRule>();
-	static {
-		prepareJobGenRules.add(new ReinferAllTypesRule());
-		prepareJobGenRules.add(new IsolateHyracksOperatorsRule(
-				HeuristicOptimizer.hyraxOperatorsBelowWhichJobGenIsDisabled));
-		prepareJobGenRules.add(new ExtractCommonOperatorsRule());
-		prepareJobGenRules.add(new LocalGroupByRule());
-		prepareJobGenRules.add(new PushProjectIntoDataSourceScanRule());
-		prepareJobGenRules.add(new ReinferAllTypesRule());
-	}
+    public final static LinkedList<IAlgebraicRewriteRule> prepareJobGenRules = new LinkedList<IAlgebraicRewriteRule>();
+    static {
+        prepareJobGenRules.add(new ReinferAllTypesRule());
+        prepareJobGenRules.add(new IsolateHyracksOperatorsRule(
+                HeuristicOptimizer.hyraxOperatorsBelowWhichJobGenIsDisabled));
+        prepareJobGenRules.add(new ExtractCommonOperatorsRule());
+        prepareJobGenRules.add(new LocalGroupByRule());
+        prepareJobGenRules.add(new PushProjectIntoDataSourceScanRule());
+        prepareJobGenRules.add(new ReinferAllTypesRule());
+    }
 
 }

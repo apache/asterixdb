@@ -26,26 +26,25 @@ import edu.uci.ics.hivesterix.serde.lazy.LazyBoolean;
 /**
  * A WritableBooleanObjectInspector inspects a BooleanWritable Object.
  */
-public class LazyBooleanObjectInspector extends
-		AbstractPrimitiveLazyObjectInspector<BooleanWritable> implements
-		BooleanObjectInspector {
+public class LazyBooleanObjectInspector extends AbstractPrimitiveLazyObjectInspector<BooleanWritable> implements
+        BooleanObjectInspector {
 
-	LazyBooleanObjectInspector() {
-		super(PrimitiveObjectInspectorUtils.booleanTypeEntry);
-	}
+    LazyBooleanObjectInspector() {
+        super(PrimitiveObjectInspectorUtils.booleanTypeEntry);
+    }
 
-	@Override
-	public boolean get(Object o) {
-		return getPrimitiveWritableObject(o).get();
-	}
+    @Override
+    public boolean get(Object o) {
+        return getPrimitiveWritableObject(o).get();
+    }
 
-	@Override
-	public Object copyObject(Object o) {
-		return o == null ? null : new LazyBoolean((LazyBoolean) o);
-	}
+    @Override
+    public Object copyObject(Object o) {
+        return o == null ? null : new LazyBoolean((LazyBoolean) o);
+    }
 
-	@Override
-	public Object getPrimitiveJavaObject(Object o) {
-		return o == null ? null : Boolean.valueOf(get(o));
-	}
+    @Override
+    public Object getPrimitiveJavaObject(Object o) {
+        return o == null ? null : Boolean.valueOf(get(o));
+    }
 }

@@ -26,26 +26,25 @@ import edu.uci.ics.hivesterix.serde.lazy.LazyInteger;
 /**
  * A WritableIntObjectInspector inspects a IntWritable Object.
  */
-public class LazyIntObjectInspector extends
-		AbstractPrimitiveLazyObjectInspector<IntWritable> implements
-		IntObjectInspector {
+public class LazyIntObjectInspector extends AbstractPrimitiveLazyObjectInspector<IntWritable> implements
+        IntObjectInspector {
 
-	LazyIntObjectInspector() {
-		super(PrimitiveObjectInspectorUtils.intTypeEntry);
-	}
+    LazyIntObjectInspector() {
+        super(PrimitiveObjectInspectorUtils.intTypeEntry);
+    }
 
-	@Override
-	public int get(Object o) {
-		return getPrimitiveWritableObject(o).get();
-	}
+    @Override
+    public int get(Object o) {
+        return getPrimitiveWritableObject(o).get();
+    }
 
-	@Override
-	public Object copyObject(Object o) {
-		return o == null ? null : new LazyInteger((LazyInteger) o);
-	}
+    @Override
+    public Object copyObject(Object o) {
+        return o == null ? null : new LazyInteger((LazyInteger) o);
+    }
 
-	@Override
-	public Object getPrimitiveJavaObject(Object o) {
-		return o == null ? null : Integer.valueOf(get(o));
-	}
+    @Override
+    public Object getPrimitiveJavaObject(Object o) {
+        return o == null ? null : Integer.valueOf(get(o));
+    }
 }

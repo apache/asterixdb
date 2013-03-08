@@ -26,26 +26,25 @@ import edu.uci.ics.hivesterix.serde.lazy.LazyShort;
 /**
  * A WritableShortObjectInspector inspects a ShortWritable Object.
  */
-public class LazyShortObjectInspector extends
-		AbstractPrimitiveLazyObjectInspector<ShortWritable> implements
-		ShortObjectInspector {
+public class LazyShortObjectInspector extends AbstractPrimitiveLazyObjectInspector<ShortWritable> implements
+        ShortObjectInspector {
 
-	LazyShortObjectInspector() {
-		super(PrimitiveObjectInspectorUtils.shortTypeEntry);
-	}
+    LazyShortObjectInspector() {
+        super(PrimitiveObjectInspectorUtils.shortTypeEntry);
+    }
 
-	@Override
-	public short get(Object o) {
-		return getPrimitiveWritableObject(o).get();
-	}
+    @Override
+    public short get(Object o) {
+        return getPrimitiveWritableObject(o).get();
+    }
 
-	@Override
-	public Object copyObject(Object o) {
-		return o == null ? null : new LazyShort((LazyShort) o);
-	}
+    @Override
+    public Object copyObject(Object o) {
+        return o == null ? null : new LazyShort((LazyShort) o);
+    }
 
-	@Override
-	public Object getPrimitiveJavaObject(Object o) {
-		return o == null ? null : Short.valueOf(get(o));
-	}
+    @Override
+    public Object getPrimitiveJavaObject(Object o) {
+        return o == null ? null : Short.valueOf(get(o));
+    }
 }

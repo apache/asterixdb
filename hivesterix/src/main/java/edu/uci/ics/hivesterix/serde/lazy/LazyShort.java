@@ -23,40 +23,32 @@ import edu.uci.ics.hivesterix.serde.lazy.objectinspector.primitive.LazyShortObje
 
 /**
  * LazyObject for storing a value of Short.
- * 
  * <p>
- * Part of the code is adapted from Apache Harmony Project.
- * 
- * As with the specification, this implementation relied on code laid out in <a
- * href="http://www.hackersdelight.org/">Henry S. Warren, Jr.'s Hacker's
- * Delight, (Addison Wesley, 2002)</a> as well as <a
- * href="http://aggregate.org/MAGIC/">The Aggregate's Magic Algorithms</a>.
+ * Part of the code is adapted from Apache Harmony Project. As with the specification, this implementation relied on code laid out in <a href="http://www.hackersdelight.org/">Henry S. Warren, Jr.'s Hacker's Delight, (Addison Wesley, 2002)</a> as well as <a href="http://aggregate.org/MAGIC/">The Aggregate's Magic Algorithms</a>.
  * </p>
- * 
  */
-public class LazyShort extends
-		LazyPrimitive<LazyShortObjectInspector, ShortWritable> {
+public class LazyShort extends LazyPrimitive<LazyShortObjectInspector, ShortWritable> {
 
-	public LazyShort(LazyShortObjectInspector oi) {
-		super(oi);
-		data = new ShortWritable();
-	}
+    public LazyShort(LazyShortObjectInspector oi) {
+        super(oi);
+        data = new ShortWritable();
+    }
 
-	public LazyShort(LazyShort copy) {
-		super(copy);
-		data = new ShortWritable(copy.data.get());
-	}
+    public LazyShort(LazyShort copy) {
+        super(copy);
+        data = new ShortWritable(copy.data.get());
+    }
 
-	@Override
-	public void init(byte[] bytes, int start, int length) {
-		if (length == 0) {
-			isNull = true;
-			return;
-		} else
-			isNull = false;
+    @Override
+    public void init(byte[] bytes, int start, int length) {
+        if (length == 0) {
+            isNull = true;
+            return;
+        } else
+            isNull = false;
 
-		assert (2 == length);
-		data.set(LazyUtils.byteArrayToShort(bytes, start));
-	}
+        assert (2 == length);
+        data.set(LazyUtils.byteArrayToShort(bytes, start));
+    }
 
 }

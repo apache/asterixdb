@@ -22,95 +22,81 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IPartialAggregati
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class HivePartialAggregationTypeComputer implements
-		IPartialAggregationTypeComputer {
+public class HivePartialAggregationTypeComputer implements IPartialAggregationTypeComputer {
 
-	public static IPartialAggregationTypeComputer INSTANCE = new HivePartialAggregationTypeComputer();
+    public static IPartialAggregationTypeComputer INSTANCE = new HivePartialAggregationTypeComputer();
 
-	@Override
-	public Object getType(ILogicalExpression expr,
-			IVariableTypeEnvironment env,
-			IMetadataProvider<?, ?> metadataProvider)
-			throws AlgebricksException {
-		if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-			IExpressionTypeComputer tc = HiveExpressionTypeComputer.INSTANCE;
-			/**
-			 * function expression
-			 */
-			AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
+    @Override
+    public Object getType(ILogicalExpression expr, IVariableTypeEnvironment env,
+            IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
+        if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            IExpressionTypeComputer tc = HiveExpressionTypeComputer.INSTANCE;
+            /**
+             * function expression
+             */
+            AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
 
-			/**
-			 * argument expressions, types, object inspectors
-			 */
-			List<Mutable<ILogicalExpression>> arguments = funcExpr
-					.getArguments();
-			List<TypeInfo> argumentTypes = new ArrayList<TypeInfo>();
+            /**
+             * argument expressions, types, object inspectors
+             */
+            List<Mutable<ILogicalExpression>> arguments = funcExpr.getArguments();
+            List<TypeInfo> argumentTypes = new ArrayList<TypeInfo>();
 
-			/**
-			 * get types of argument
-			 */
-			for (Mutable<ILogicalExpression> argument : arguments) {
-				TypeInfo type = (TypeInfo) tc.getType(argument.getValue(),
-						metadataProvider, env);
-				argumentTypes.add(type);
-			}
+            /**
+             * get types of argument
+             */
+            for (Mutable<ILogicalExpression> argument : arguments) {
+                TypeInfo type = (TypeInfo) tc.getType(argument.getValue(), metadataProvider, env);
+                argumentTypes.add(type);
+            }
 
-			ObjectInspector[] childrenOIs = new ObjectInspector[argumentTypes
-					.size()];
+            ObjectInspector[] childrenOIs = new ObjectInspector[argumentTypes.size()];
 
-			/**
-			 * get object inspector
-			 */
-			for (int i = 0; i < argumentTypes.size(); i++) {
-				childrenOIs[i] = TypeInfoUtils
-						.getStandardWritableObjectInspectorFromTypeInfo(argumentTypes
-								.get(i));
-			}
+            /**
+             * get object inspector
+             */
+            for (int i = 0; i < argumentTypes.size(); i++) {
+                childrenOIs[i] = TypeInfoUtils.getStandardWritableObjectInspectorFromTypeInfo(argumentTypes.get(i));
+            }
 
-			/**
-			 * type inference for scalar function
-			 */
-			if (funcExpr instanceof AggregateFunctionCallExpression) {
-				/**
-				 * hive aggregation info
-				 */
-				AggregationDesc aggregateDesc = (AggregationDesc) ((HiveFunctionInfo) funcExpr
-						.getFunctionInfo()).getInfo();
-				/**
-				 * type inference for aggregation function
-				 */
-				GenericUDAFEvaluator result = aggregateDesc
-						.getGenericUDAFEvaluator();
+            /**
+             * type inference for scalar function
+             */
+            if (funcExpr instanceof AggregateFunctionCallExpression) {
+                /**
+                 * hive aggregation info
+                 */
+                AggregationDesc aggregateDesc = (AggregationDesc) ((HiveFunctionInfo) funcExpr.getFunctionInfo())
+                        .getInfo();
+                /**
+                 * type inference for aggregation function
+                 */
+                GenericUDAFEvaluator result = aggregateDesc.getGenericUDAFEvaluator();
 
-				ObjectInspector returnOI = null;
-				try {
-					returnOI = result.init(
-							getPartialMode(aggregateDesc.getMode()),
-							childrenOIs);
-				} catch (HiveException e) {
-					e.printStackTrace();
-				}
-				TypeInfo exprType = TypeInfoUtils
-						.getTypeInfoFromObjectInspector(returnOI);
-				return exprType;
-			} else {
-				throw new IllegalStateException("illegal expressions "
-						+ expr.getClass().getName());
-			}
-		} else {
-			throw new IllegalStateException("illegal expressions "
-					+ expr.getClass().getName());
-		}
-	}
+                ObjectInspector returnOI = null;
+                try {
+                    returnOI = result.init(getPartialMode(aggregateDesc.getMode()), childrenOIs);
+                } catch (HiveException e) {
+                    e.printStackTrace();
+                }
+                TypeInfo exprType = TypeInfoUtils.getTypeInfoFromObjectInspector(returnOI);
+                return exprType;
+            } else {
+                throw new IllegalStateException("illegal expressions " + expr.getClass().getName());
+            }
+        } else {
+            throw new IllegalStateException("illegal expressions " + expr.getClass().getName());
+        }
+    }
 
-	private Mode getPartialMode(Mode mode) {
-		Mode partialMode;
-		if (mode == Mode.FINAL)
-			partialMode = Mode.PARTIAL2;
-		else if (mode == Mode.COMPLETE)
-			partialMode = Mode.PARTIAL1;
-		else
-			partialMode = mode;
-		return partialMode;
-	}
+    private Mode getPartialMode(Mode mode) {
+        Mode partialMode;
+        if (mode == Mode.FINAL)
+            partialMode = Mode.PARTIAL2;
+        else if (mode == Mode.COMPLETE)
+            partialMode = Mode.PARTIAL1;
+        else
+            partialMode = mode;
+        return partialMode;
+    }
 }

@@ -11,38 +11,37 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.FunctionalDependen
 
 public class HiveDataSource<P> implements IDataSource<P> {
 
-	private P source;
+    private P source;
 
-	private Object[] schema;
+    private Object[] schema;
 
-	public HiveDataSource(P dataSource, Object[] sourceSchema) {
-		source = dataSource;
-		schema = sourceSchema;
-	}
+    public HiveDataSource(P dataSource, Object[] sourceSchema) {
+        source = dataSource;
+        schema = sourceSchema;
+    }
 
-	@Override
-	public P getId() {
-		return source;
-	}
+    @Override
+    public P getId() {
+        return source;
+    }
 
-	@Override
-	public Object[] getSchemaTypes() {
-		return schema;
-	}
+    @Override
+    public Object[] getSchemaTypes() {
+        return schema;
+    }
 
-	@Override
-	public void computeFDs(List<LogicalVariable> scanVariables,
-			List<FunctionalDependency> fdList) {
-	}
+    @Override
+    public void computeFDs(List<LogicalVariable> scanVariables, List<FunctionalDependency> fdList) {
+    }
 
-	@Override
-	public IDataSourcePropertiesProvider getPropertiesProvider() {
-		return new HiveDataSourcePartitioningProvider();
-	}
+    @Override
+    public IDataSourcePropertiesProvider getPropertiesProvider() {
+        return new HiveDataSourcePartitioningProvider();
+    }
 
-	@Override
-	public String toString() {
-		PartitionDesc desc = (PartitionDesc) source;
-		return desc.getTableName();
-	}
+    @Override
+    public String toString() {
+        PartitionDesc desc = (PartitionDesc) source;
+        return desc.getTableName();
+    }
 }

@@ -27,34 +27,33 @@ import edu.uci.ics.hivesterix.serde.lazy.objectinspector.primitive.LazyStringObj
  */
 public class LazyString extends LazyPrimitive<LazyStringObjectInspector, Text> {
 
-	public LazyString(LazyStringObjectInspector oi) {
-		super(oi);
-		data = new Text();
-	}
+    public LazyString(LazyStringObjectInspector oi) {
+        super(oi);
+        data = new Text();
+    }
 
-	public LazyString(LazyString copy) {
-		super(copy);
-		data = new Text(copy.data);
-	}
+    public LazyString(LazyString copy) {
+        super(copy);
+        data = new Text(copy.data);
+    }
 
-	VInt vInt = new LazyUtils.VInt();
+    VInt vInt = new LazyUtils.VInt();
 
-	@Override
-	public void init(byte[] bytes, int start, int length) {
-		if (length == 0) {
-			isNull = true;
-			return;
-		} else
-			isNull = false;
+    @Override
+    public void init(byte[] bytes, int start, int length) {
+        if (length == 0) {
+            isNull = true;
+            return;
+        } else
+            isNull = false;
 
-		// get the byte length of the string
-		LazyUtils.readVInt(bytes, start, vInt);
-		if (vInt.value + vInt.length != length)
-			throw new IllegalStateException(
-					"parse string: length mismatch, expected "
-							+ (vInt.value + vInt.length) + " but get " + length);
-		assert (length - vInt.length > -1);
-		data.set(bytes, start + vInt.length, length - vInt.length);
-	}
+        // get the byte length of the string
+        LazyUtils.readVInt(bytes, start, vInt);
+        if (vInt.value + vInt.length != length)
+            throw new IllegalStateException("parse string: length mismatch, expected " + (vInt.value + vInt.length)
+                    + " but get " + length);
+        assert (length - vInt.length > -1);
+        data.set(bytes, start + vInt.length, length - vInt.length);
+    }
 
 }

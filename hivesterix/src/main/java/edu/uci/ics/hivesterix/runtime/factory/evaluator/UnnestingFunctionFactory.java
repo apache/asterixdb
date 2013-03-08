@@ -14,31 +14,27 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 
 public class UnnestingFunctionFactory implements ICopyUnnestingFunctionFactory {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private UDTFDesc expr;
+    private UDTFDesc expr;
 
-	private Schema inputSchema;
+    private Schema inputSchema;
 
-	private int[] columns;
+    private int[] columns;
 
-	public UnnestingFunctionFactory(ILogicalExpression expression,
-			Schema schema, IVariableTypeEnvironment env)
-			throws AlgebricksException {
-		try {
-			expr = (UDTFDesc) ExpressionTranslator.getHiveExpression(
-					expression, env);
-		} catch (Exception e) {
-			throw new AlgebricksException(e.getMessage());
-		}
-		inputSchema = schema;
-	}
+    public UnnestingFunctionFactory(ILogicalExpression expression, Schema schema, IVariableTypeEnvironment env)
+            throws AlgebricksException {
+        try {
+            expr = (UDTFDesc) ExpressionTranslator.getHiveExpression(expression, env);
+        } catch (Exception e) {
+            throw new AlgebricksException(e.getMessage());
+        }
+        inputSchema = schema;
+    }
 
-	@Override
-	public ICopyUnnestingFunction createUnnestingFunction(
-			IDataOutputProvider provider) throws AlgebricksException {
-		return new UDTFFunctionEvaluator(expr, inputSchema, columns,
-				provider.getDataOutput());
-	}
+    @Override
+    public ICopyUnnestingFunction createUnnestingFunction(IDataOutputProvider provider) throws AlgebricksException {
+        return new UDTFFunctionEvaluator(expr, inputSchema, columns, provider.getDataOutput());
+    }
 
 }

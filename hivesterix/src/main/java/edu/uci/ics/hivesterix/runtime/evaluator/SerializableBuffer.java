@@ -7,10 +7,10 @@ import org.apache.hadoop.hive.ql.udf.generic.GenericUDAFEvaluator.AggregationBuf
 
 public interface SerializableBuffer extends AggregationBuffer {
 
-	public void deSerializeAggBuffer(byte[] data, int start, int len);
+    public void deSerializeAggBuffer(byte[] data, int start, int len);
 
-	public void serializeAggBuffer(byte[] data, int start, int len);
+    public void serializeAggBuffer(byte[] data, int start, int len);
 
-	public void serializeAggBuffer(DataOutput output) throws IOException;
+    public void serializeAggBuffer(DataOutput output) throws IOException;
 
 }

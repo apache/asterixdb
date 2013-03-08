@@ -8,21 +8,21 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class HiveNullWriterFactory implements INullWriterFactory {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public static HiveNullWriterFactory INSTANCE = new HiveNullWriterFactory();
+    public static HiveNullWriterFactory INSTANCE = new HiveNullWriterFactory();
 
-	@Override
-	public INullWriter createNullWriter() {
-		return new HiveNullWriter();
-	}
+    @Override
+    public INullWriter createNullWriter() {
+        return new HiveNullWriter();
+    }
 }
 
 class HiveNullWriter implements INullWriter {
 
-	@Override
-	public void writeNull(DataOutput out) throws HyracksDataException {
-		// do nothing
-	}
+    @Override
+    public void writeNull(DataOutput out) throws HyracksDataException {
+        // do nothing
+    }
 
 }

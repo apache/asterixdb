@@ -24,49 +24,40 @@ import edu.uci.ics.hivesterix.serde.lazy.objectinspector.primitive.LazyIntObject
 
 /**
  * LazyObject for storing a value of Integer.
- * 
  * <p>
- * Part of the code is adapted from Apache Harmony Project.
- * 
- * As with the specification, this implementation relied on code laid out in <a
- * href="http://www.hackersdelight.org/">Henry S. Warren, Jr.'s Hacker's
- * Delight, (Addison Wesley, 2002)</a> as well as <a
- * href="http://aggregate.org/MAGIC/">The Aggregate's Magic Algorithms</a>.
+ * Part of the code is adapted from Apache Harmony Project. As with the specification, this implementation relied on code laid out in <a href="http://www.hackersdelight.org/">Henry S. Warren, Jr.'s Hacker's Delight, (Addison Wesley, 2002)</a> as well as <a href="http://aggregate.org/MAGIC/">The Aggregate's Magic Algorithms</a>.
  * </p>
- * 
  */
-public class LazyInteger extends
-		LazyPrimitive<LazyIntObjectInspector, IntWritable> {
+public class LazyInteger extends LazyPrimitive<LazyIntObjectInspector, IntWritable> {
 
-	public LazyInteger(LazyIntObjectInspector oi) {
-		super(oi);
-		data = new IntWritable();
-	}
+    public LazyInteger(LazyIntObjectInspector oi) {
+        super(oi);
+        data = new IntWritable();
+    }
 
-	public LazyInteger(LazyInteger copy) {
-		super(copy);
-		data = new IntWritable(copy.data.get());
-	}
+    public LazyInteger(LazyInteger copy) {
+        super(copy);
+        data = new IntWritable(copy.data.get());
+    }
 
-	/**
-	 * The reusable vInt for decoding the integer.
-	 */
-	VInt vInt = new LazyUtils.VInt();
+    /**
+     * The reusable vInt for decoding the integer.
+     */
+    VInt vInt = new LazyUtils.VInt();
 
-	@Override
-	public void init(byte[] bytes, int start, int length) {
-		if (length == 0) {
-			isNull = true;
-			return;
-		} else
-			isNull = false;
+    @Override
+    public void init(byte[] bytes, int start, int length) {
+        if (length == 0) {
+            isNull = true;
+            return;
+        } else
+            isNull = false;
 
-		LazyUtils.readVInt(bytes, start, vInt);
-		assert (length == vInt.length);
-		if (length != vInt.length)
-			throw new IllegalStateException(
-					"parse int: length mismatch, expected " + vInt.length
-							+ " but get " + length);
-		data.set(vInt.value);
-	}
+        LazyUtils.readVInt(bytes, start, vInt);
+        assert (length == vInt.length);
+        if (length != vInt.length)
+            throw new IllegalStateException("parse int: length mismatch, expected " + vInt.length + " but get "
+                    + length);
+        data.set(vInt.value);
+    }
 }

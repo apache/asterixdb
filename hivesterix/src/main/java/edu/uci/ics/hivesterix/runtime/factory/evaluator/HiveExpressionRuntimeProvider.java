@@ -34,159 +34,134 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFac
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 
-public class HiveExpressionRuntimeProvider implements
-		IExpressionRuntimeProvider {
+public class HiveExpressionRuntimeProvider implements IExpressionRuntimeProvider {
 
-	public static final IExpressionRuntimeProvider INSTANCE = new HiveExpressionRuntimeProvider();
+    public static final IExpressionRuntimeProvider INSTANCE = new HiveExpressionRuntimeProvider();
 
-	@Override
-	public IAggregateEvaluatorFactory createAggregateFunctionFactory(
-			AggregateFunctionCallExpression expr, IVariableTypeEnvironment env,
-			IOperatorSchema[] inputSchemas, JobGenContext context)
-			throws AlgebricksException {
-		Schema schema = this.getSchema(inputSchemas[0], env);
-		return new AggregateFunctionFactoryAdapter(
-				new AggregationFunctionFactory(expr, schema, env));
-	}
+    @Override
+    public IAggregateEvaluatorFactory createAggregateFunctionFactory(AggregateFunctionCallExpression expr,
+            IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
+            throws AlgebricksException {
+        Schema schema = this.getSchema(inputSchemas[0], env);
+        return new AggregateFunctionFactoryAdapter(new AggregationFunctionFactory(expr, schema, env));
+    }
 
-	@Override
-	public ICopySerializableAggregateFunctionFactory createSerializableAggregateFunctionFactory(
-			AggregateFunctionCallExpression expr, IVariableTypeEnvironment env,
-			IOperatorSchema[] inputSchemas, JobGenContext context)
-			throws AlgebricksException {
-		Schema schema = this.getSchema(inputSchemas[0], env);
-		return new AggregationFunctionSerializableFactory(expr, schema, env);
-	}
+    @Override
+    public ICopySerializableAggregateFunctionFactory createSerializableAggregateFunctionFactory(
+            AggregateFunctionCallExpression expr, IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas,
+            JobGenContext context) throws AlgebricksException {
+        Schema schema = this.getSchema(inputSchemas[0], env);
+        return new AggregationFunctionSerializableFactory(expr, schema, env);
+    }
 
-	@Override
-	public IRunningAggregateEvaluatorFactory createRunningAggregateFunctionFactory(
-			StatefulFunctionCallExpression expr, IVariableTypeEnvironment env,
-			IOperatorSchema[] inputSchemas, JobGenContext context)
-			throws AlgebricksException {
-		return null;
-	}
+    @Override
+    public IRunningAggregateEvaluatorFactory createRunningAggregateFunctionFactory(StatefulFunctionCallExpression expr,
+            IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
+            throws AlgebricksException {
+        return null;
+    }
 
-	@Override
-	public IUnnestingEvaluatorFactory createUnnestingFunctionFactory(
-			UnnestingFunctionCallExpression expr, IVariableTypeEnvironment env,
-			IOperatorSchema[] inputSchemas, JobGenContext context)
-			throws AlgebricksException {
-		Schema schema = this.getSchema(inputSchemas[0], env);
-		return new UnnestingFunctionFactoryAdapter(
-				new UnnestingFunctionFactory(expr, schema, env));
-	}
+    @Override
+    public IUnnestingEvaluatorFactory createUnnestingFunctionFactory(UnnestingFunctionCallExpression expr,
+            IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
+            throws AlgebricksException {
+        Schema schema = this.getSchema(inputSchemas[0], env);
+        return new UnnestingFunctionFactoryAdapter(new UnnestingFunctionFactory(expr, schema, env));
+    }
 
-	public IScalarEvaluatorFactory createEvaluatorFactory(
-			ILogicalExpression expr, IVariableTypeEnvironment env,
-			IOperatorSchema[] inputSchemas, JobGenContext context)
-			throws AlgebricksException {
-		switch (expr.getExpressionTag()) {
-		case VARIABLE: {
-			VariableReferenceExpression v = (VariableReferenceExpression) expr;
-			return new ScalarEvaluatorFactoryAdapter(
-					createVariableEvaluatorFactory(v, env, inputSchemas,
-							context));
-		}
-		case CONSTANT: {
-			ConstantExpression c = (ConstantExpression) expr;
-			return new ScalarEvaluatorFactoryAdapter(
-					createConstantEvaluatorFactory(c, env, inputSchemas,
-							context));
-		}
-		case FUNCTION_CALL: {
-			AbstractFunctionCallExpression fun = (AbstractFunctionCallExpression) expr;
-			FunctionIdentifier fid = fun.getFunctionIdentifier();
+    public IScalarEvaluatorFactory createEvaluatorFactory(ILogicalExpression expr, IVariableTypeEnvironment env,
+            IOperatorSchema[] inputSchemas, JobGenContext context) throws AlgebricksException {
+        switch (expr.getExpressionTag()) {
+            case VARIABLE: {
+                VariableReferenceExpression v = (VariableReferenceExpression) expr;
+                return new ScalarEvaluatorFactoryAdapter(createVariableEvaluatorFactory(v, env, inputSchemas, context));
+            }
+            case CONSTANT: {
+                ConstantExpression c = (ConstantExpression) expr;
+                return new ScalarEvaluatorFactoryAdapter(createConstantEvaluatorFactory(c, env, inputSchemas, context));
+            }
+            case FUNCTION_CALL: {
+                AbstractFunctionCallExpression fun = (AbstractFunctionCallExpression) expr;
+                FunctionIdentifier fid = fun.getFunctionIdentifier();
 
-			if (fid.getName().equals(ExpressionConstant.FIELDACCESS)) {
-				return new ScalarEvaluatorFactoryAdapter(
-						createFieldExpressionEvaluatorFactory(fun, env,
-								inputSchemas, context));
-			}
+                if (fid.getName().equals(ExpressionConstant.FIELDACCESS)) {
+                    return new ScalarEvaluatorFactoryAdapter(createFieldExpressionEvaluatorFactory(fun, env,
+                            inputSchemas, context));
+                }
 
-			if (fid.getName().equals(ExpressionConstant.FIELDACCESS)) {
-				return new ScalarEvaluatorFactoryAdapter(
-						createNullExpressionEvaluatorFactory(fun, env,
-								inputSchemas, context));
-			}
+                if (fid.getName().equals(ExpressionConstant.FIELDACCESS)) {
+                    return new ScalarEvaluatorFactoryAdapter(createNullExpressionEvaluatorFactory(fun, env,
+                            inputSchemas, context));
+                }
 
-			if (fun.getKind() == FunctionKind.SCALAR) {
-				ScalarFunctionCallExpression scalar = (ScalarFunctionCallExpression) fun;
-				return new ScalarEvaluatorFactoryAdapter(
-						createScalarFunctionEvaluatorFactory(scalar, env,
-								inputSchemas, context));
-			} else {
-				throw new AlgebricksException(
-						"Cannot create evaluator for function " + fun
-								+ " of kind " + fun.getKind());
-			}
-		}
-		default: {
-			throw new IllegalStateException();
-		}
-		}
-	}
+                if (fun.getKind() == FunctionKind.SCALAR) {
+                    ScalarFunctionCallExpression scalar = (ScalarFunctionCallExpression) fun;
+                    return new ScalarEvaluatorFactoryAdapter(createScalarFunctionEvaluatorFactory(scalar, env,
+                            inputSchemas, context));
+                } else {
+                    throw new AlgebricksException("Cannot create evaluator for function " + fun + " of kind "
+                            + fun.getKind());
+                }
+            }
+            default: {
+                throw new IllegalStateException();
+            }
+        }
+    }
 
-	private ICopyEvaluatorFactory createVariableEvaluatorFactory(
-			VariableReferenceExpression expr, IVariableTypeEnvironment env,
-			IOperatorSchema[] inputSchemas, JobGenContext context)
-			throws AlgebricksException {
-		Schema schema = this.getSchema(inputSchemas[0], env);
-		return new ColumnExpressionEvaluatorFactory(expr, schema, env);
-	}
+    private ICopyEvaluatorFactory createVariableEvaluatorFactory(VariableReferenceExpression expr,
+            IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
+            throws AlgebricksException {
+        Schema schema = this.getSchema(inputSchemas[0], env);
+        return new ColumnExpressionEvaluatorFactory(expr, schema, env);
+    }
 
-	private ICopyEvaluatorFactory createScalarFunctionEvaluatorFactory(
-			AbstractFunctionCallExpression expr, IVariableTypeEnvironment env,
-			IOperatorSchema[] inputSchemas, JobGenContext context)
-			throws AlgebricksException {
-		List<String> names = new ArrayList<String>();
-		List<TypeInfo> types = new ArrayList<TypeInfo>();
-		for (IOperatorSchema inputSchema : inputSchemas) {
-			Schema schema = this.getSchema(inputSchema, env);
-			names.addAll(schema.getNames());
-			types.addAll(schema.getTypes());
-		}
-		Schema inputSchema = new Schema(names, types);
-		return new ScalarFunctionExpressionEvaluatorFactory(expr, inputSchema,
-				env);
-	}
+    private ICopyEvaluatorFactory createScalarFunctionEvaluatorFactory(AbstractFunctionCallExpression expr,
+            IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
+            throws AlgebricksException {
+        List<String> names = new ArrayList<String>();
+        List<TypeInfo> types = new ArrayList<TypeInfo>();
+        for (IOperatorSchema inputSchema : inputSchemas) {
+            Schema schema = this.getSchema(inputSchema, env);
+            names.addAll(schema.getNames());
+            types.addAll(schema.getTypes());
+        }
+        Schema inputSchema = new Schema(names, types);
+        return new ScalarFunctionExpressionEvaluatorFactory(expr, inputSchema, env);
+    }
 
-	private ICopyEvaluatorFactory createFieldExpressionEvaluatorFactory(
-			AbstractFunctionCallExpression expr, IVariableTypeEnvironment env,
-			IOperatorSchema[] inputSchemas, JobGenContext context)
-			throws AlgebricksException {
-		Schema schema = this.getSchema(inputSchemas[0], env);
-		return new FieldExpressionEvaluatorFactory(expr, schema, env);
-	}
+    private ICopyEvaluatorFactory createFieldExpressionEvaluatorFactory(AbstractFunctionCallExpression expr,
+            IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
+            throws AlgebricksException {
+        Schema schema = this.getSchema(inputSchemas[0], env);
+        return new FieldExpressionEvaluatorFactory(expr, schema, env);
+    }
 
-	private ICopyEvaluatorFactory createNullExpressionEvaluatorFactory(
-			AbstractFunctionCallExpression expr, IVariableTypeEnvironment env,
-			IOperatorSchema[] inputSchemas, JobGenContext context)
-			throws AlgebricksException {
-		Schema schema = this.getSchema(inputSchemas[0], env);
-		return new NullExpressionEvaluatorFactory(expr, schema, env);
-	}
+    private ICopyEvaluatorFactory createNullExpressionEvaluatorFactory(AbstractFunctionCallExpression expr,
+            IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
+            throws AlgebricksException {
+        Schema schema = this.getSchema(inputSchemas[0], env);
+        return new NullExpressionEvaluatorFactory(expr, schema, env);
+    }
 
-	private ICopyEvaluatorFactory createConstantEvaluatorFactory(
-			ConstantExpression expr, IVariableTypeEnvironment env,
-			IOperatorSchema[] inputSchemas, JobGenContext context)
-			throws AlgebricksException {
-		Schema schema = this.getSchema(inputSchemas[0], env);
-		return new ConstantExpressionEvaluatorFactory(expr, schema, env);
-	}
+    private ICopyEvaluatorFactory createConstantEvaluatorFactory(ConstantExpression expr, IVariableTypeEnvironment env,
+            IOperatorSchema[] inputSchemas, JobGenContext context) throws AlgebricksException {
+        Schema schema = this.getSchema(inputSchemas[0], env);
+        return new ConstantExpressionEvaluatorFactory(expr, schema, env);
+    }
 
-	private Schema getSchema(IOperatorSchema inputSchema,
-			IVariableTypeEnvironment env) throws AlgebricksException {
-		List<String> names = new ArrayList<String>();
-		List<TypeInfo> types = new ArrayList<TypeInfo>();
-		Iterator<LogicalVariable> variables = inputSchema.iterator();
-		while (variables.hasNext()) {
-			LogicalVariable var = variables.next();
-			names.add(var.toString());
-			types.add((TypeInfo) env.getVarType(var));
-		}
+    private Schema getSchema(IOperatorSchema inputSchema, IVariableTypeEnvironment env) throws AlgebricksException {
+        List<String> names = new ArrayList<String>();
+        List<TypeInfo> types = new ArrayList<TypeInfo>();
+        Iterator<LogicalVariable> variables = inputSchema.iterator();
+        while (variables.hasNext()) {
+            LogicalVariable var = variables.next();
+            names.add(var.toString());
+            types.add((TypeInfo) env.getVarType(var));
+        }
 
-		Schema schema = new Schema(names, types);
-		return schema;
-	}
+        Schema schema = new Schema(names, types);
+        return schema;
+    }
 
 }

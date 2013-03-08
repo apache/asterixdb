@@ -13,34 +13,32 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class RemoveRedundantSelectRule implements IAlgebraicRewriteRule {
 
-	@Override
-	public boolean rewritePre(Mutable<ILogicalOperator> opRef,
-			IOptimizationContext context) throws AlgebricksException {
-		return false;
-	}
+    @Override
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+        return false;
+    }
 
-	@Override
-	public boolean rewritePost(Mutable<ILogicalOperator> opRef,
-			IOptimizationContext context) throws AlgebricksException {
-		AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-		if (op.getOperatorTag() != LogicalOperatorTag.SELECT) {
-			return false;
-		}
-		AbstractLogicalOperator inputOp = (AbstractLogicalOperator) op
-				.getInputs().get(0).getValue();
-		if (inputOp.getOperatorTag() != LogicalOperatorTag.SELECT) {
-			return false;
-		}
-		SelectOperator selectOp = (SelectOperator) op;
-		SelectOperator inputSelectOp = (SelectOperator) inputOp;
-		ILogicalExpression expr1 = selectOp.getCondition().getValue();
-		ILogicalExpression expr2 = inputSelectOp.getCondition().getValue();
+    @Override
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+        if (op.getOperatorTag() != LogicalOperatorTag.SELECT) {
+            return false;
+        }
+        AbstractLogicalOperator inputOp = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
+        if (inputOp.getOperatorTag() != LogicalOperatorTag.SELECT) {
+            return false;
+        }
+        SelectOperator selectOp = (SelectOperator) op;
+        SelectOperator inputSelectOp = (SelectOperator) inputOp;
+        ILogicalExpression expr1 = selectOp.getCondition().getValue();
+        ILogicalExpression expr2 = inputSelectOp.getCondition().getValue();
 
-		if (expr1.equals(expr2)) {
-			selectOp.getInputs().set(0, inputSelectOp.getInputs().get(0));
-			return true;
-		}
-		return false;
-	}
+        if (expr1.equals(expr2)) {
+            selectOp.getInputs().set(0, inputSelectOp.getInputs().get(0));
+            return true;
+        }
+        return false;
+    }
 
 }

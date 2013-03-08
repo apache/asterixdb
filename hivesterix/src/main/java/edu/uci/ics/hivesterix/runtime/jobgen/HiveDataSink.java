@@ -6,27 +6,27 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.RandomPartitioning
 
 public class HiveDataSink implements IDataSink {
 
-	private Object[] schema;
+    private Object[] schema;
 
-	private Object fsOperator;
+    private Object fsOperator;
 
-	public HiveDataSink(Object sink, Object[] sourceSchema) {
-		schema = sourceSchema;
-		fsOperator = sink;
-	}
+    public HiveDataSink(Object sink, Object[] sourceSchema) {
+        schema = sourceSchema;
+        fsOperator = sink;
+    }
 
-	@Override
-	public Object getId() {
-		return fsOperator;
-	}
+    @Override
+    public Object getId() {
+        return fsOperator;
+    }
 
-	@Override
-	public Object[] getSchemaTypes() {
-		return schema;
-	}
+    @Override
+    public Object[] getSchemaTypes() {
+        return schema;
+    }
 
-	public IPartitioningProperty getPartitioningProperty() {
-		return new RandomPartitioningProperty(new HiveDomain());
-	}
+    public IPartitioningProperty getPartitioningProperty() {
+        return new RandomPartitioningProperty(new HiveDomain());
+    }
 
 }

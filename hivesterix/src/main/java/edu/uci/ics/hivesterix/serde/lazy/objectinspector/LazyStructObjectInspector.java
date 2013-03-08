@@ -32,35 +32,34 @@ import edu.uci.ics.hivesterix.serde.lazy.LazyStruct;
  */
 public class LazyStructObjectInspector extends StandardStructObjectInspector {
 
-	protected LazyStructObjectInspector(List<String> structFieldNames,
-			List<ObjectInspector> structFieldObjectInspectors) {
-		super(structFieldNames, structFieldObjectInspectors);
-	}
+    protected LazyStructObjectInspector(List<String> structFieldNames, List<ObjectInspector> structFieldObjectInspectors) {
+        super(structFieldNames, structFieldObjectInspectors);
+    }
 
-	protected LazyStructObjectInspector(List<StructField> fields) {
-		super(fields);
-	}
+    protected LazyStructObjectInspector(List<StructField> fields) {
+        super(fields);
+    }
 
-	@Override
-	public Object getStructFieldData(Object data, StructField fieldRef) {
-		if (data == null) {
-			return null;
-		}
-		LazyStruct struct = (LazyStruct) data;
-		MyField f = (MyField) fieldRef;
+    @Override
+    public Object getStructFieldData(Object data, StructField fieldRef) {
+        if (data == null) {
+            return null;
+        }
+        LazyStruct struct = (LazyStruct) data;
+        MyField f = (MyField) fieldRef;
 
-		int fieldID = f.getFieldID();
-		assert (fieldID >= 0 && fieldID < fields.size());
+        int fieldID = f.getFieldID();
+        assert (fieldID >= 0 && fieldID < fields.size());
 
-		return struct.getField(fieldID);
-	}
+        return struct.getField(fieldID);
+    }
 
-	@Override
-	public List<Object> getStructFieldsDataAsList(Object data) {
-		if (data == null) {
-			return null;
-		}
-		LazyStruct struct = (LazyStruct) data;
-		return struct.getFieldsAsList();
-	}
+    @Override
+    public List<Object> getStructFieldsDataAsList(Object data) {
+        if (data == null) {
+            return null;
+        }
+        LazyStruct struct = (LazyStruct) data;
+        return struct.getFieldsAsList();
+    }
 }

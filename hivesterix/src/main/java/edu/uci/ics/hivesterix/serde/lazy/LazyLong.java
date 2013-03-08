@@ -24,48 +24,40 @@ import edu.uci.ics.hivesterix.serde.lazy.objectinspector.primitive.LazyLongObjec
 
 /**
  * LazyObject for storing a value of Long.
- * 
  * <p>
- * Part of the code is adapted from Apache Harmony Project.
- * 
- * As with the specification, this implementation relied on code laid out in <a
- * href="http://www.hackersdelight.org/">Henry S. Warren, Jr.'s Hacker's
- * Delight, (Addison Wesley, 2002)</a> as well as <a
- * href="http://aggregate.org/MAGIC/">The Aggregate's Magic Algorithms</a>.
+ * Part of the code is adapted from Apache Harmony Project. As with the specification, this implementation relied on code laid out in <a href="http://www.hackersdelight.org/">Henry S. Warren, Jr.'s Hacker's Delight, (Addison Wesley, 2002)</a> as well as <a href="http://aggregate.org/MAGIC/">The Aggregate's Magic Algorithms</a>.
  * </p>
- * 
  */
-public class LazyLong extends
-		LazyPrimitive<LazyLongObjectInspector, LongWritable> {
+public class LazyLong extends LazyPrimitive<LazyLongObjectInspector, LongWritable> {
 
-	public LazyLong(LazyLongObjectInspector oi) {
-		super(oi);
-		data = new LongWritable();
-	}
+    public LazyLong(LazyLongObjectInspector oi) {
+        super(oi);
+        data = new LongWritable();
+    }
 
-	public LazyLong(LazyLong copy) {
-		super(copy);
-		data = new LongWritable(copy.data.get());
-	}
+    public LazyLong(LazyLong copy) {
+        super(copy);
+        data = new LongWritable(copy.data.get());
+    }
 
-	/**
-	 * The reusable vLong for decoding the long.
-	 */
-	VLong vLong = new LazyUtils.VLong();
+    /**
+     * The reusable vLong for decoding the long.
+     */
+    VLong vLong = new LazyUtils.VLong();
 
-	@Override
-	public void init(byte[] bytes, int start, int length) {
-		if (length == 0) {
-			isNull = true;
-			return;
-		} else
-			isNull = false;
+    @Override
+    public void init(byte[] bytes, int start, int length) {
+        if (length == 0) {
+            isNull = true;
+            return;
+        } else
+            isNull = false;
 
-		LazyUtils.readVLong(bytes, start, vLong);
-		assert (length == vLong.length);
-		if (length != vLong.length)
-			throw new IllegalStateException("parse long: length mismatch");
-		data.set(vLong.value);
-	}
+        LazyUtils.readVLong(bytes, start, vLong);
+        assert (length == vLong.length);
+        if (length != vLong.length)
+            throw new IllegalStateException("parse long: length mismatch");
+        data.set(vLong.value);
+    }
 
 }

@@ -36,62 +36,59 @@ import edu.uci.ics.hivesterix.serde.lazy.objectinspector.primitive.LazyStringObj
 
 /**
  * LazyFactory.
- * 
  */
 public final class LazyFactory {
 
-	/**
-	 * Create a lazy binary primitive class given the type name.
-	 */
-	public static LazyPrimitive<?, ?> createLazyPrimitiveClass(
-			PrimitiveObjectInspector oi) {
-		PrimitiveCategory p = oi.getPrimitiveCategory();
-		switch (p) {
-		case BOOLEAN:
-			return new LazyBoolean((LazyBooleanObjectInspector) oi);
-		case BYTE:
-			return new LazyByte((LazyByteObjectInspector) oi);
-		case SHORT:
-			return new LazyShort((LazyShortObjectInspector) oi);
-		case INT:
-			return new LazyInteger((LazyIntObjectInspector) oi);
-		case LONG:
-			return new LazyLong((LazyLongObjectInspector) oi);
-		case FLOAT:
-			return new LazyFloat((LazyFloatObjectInspector) oi);
-		case DOUBLE:
-			return new LazyDouble((LazyDoubleObjectInspector) oi);
-		case STRING:
-			return new LazyString((LazyStringObjectInspector) oi);
-		default:
-			throw new RuntimeException("Internal error: no LazyObject for " + p);
-		}
-	}
+    /**
+     * Create a lazy binary primitive class given the type name.
+     */
+    public static LazyPrimitive<?, ?> createLazyPrimitiveClass(PrimitiveObjectInspector oi) {
+        PrimitiveCategory p = oi.getPrimitiveCategory();
+        switch (p) {
+            case BOOLEAN:
+                return new LazyBoolean((LazyBooleanObjectInspector) oi);
+            case BYTE:
+                return new LazyByte((LazyByteObjectInspector) oi);
+            case SHORT:
+                return new LazyShort((LazyShortObjectInspector) oi);
+            case INT:
+                return new LazyInteger((LazyIntObjectInspector) oi);
+            case LONG:
+                return new LazyLong((LazyLongObjectInspector) oi);
+            case FLOAT:
+                return new LazyFloat((LazyFloatObjectInspector) oi);
+            case DOUBLE:
+                return new LazyDouble((LazyDoubleObjectInspector) oi);
+            case STRING:
+                return new LazyString((LazyStringObjectInspector) oi);
+            default:
+                throw new RuntimeException("Internal error: no LazyObject for " + p);
+        }
+    }
 
-	/**
-	 * Create a hierarchical LazyObject based on the given typeInfo.
-	 */
-	public static LazyObject<? extends ObjectInspector> createLazyObject(
-			ObjectInspector oi) {
-		ObjectInspector.Category c = oi.getCategory();
-		switch (c) {
-		case PRIMITIVE:
-			return createLazyPrimitiveClass((PrimitiveObjectInspector) oi);
-		case MAP:
-			return new LazyMap((LazyMapObjectInspector) oi);
-		case LIST:
-			return new LazyArray((LazyListObjectInspector) oi);
-		case STRUCT: // check whether it is a top-level struct
-			if (oi instanceof LazyStructObjectInspector)
-				return new LazyStruct((LazyStructObjectInspector) oi);
-			else
-				return new LazyColumnar((LazyColumnarObjectInspector) oi);
-		default:
-			throw new RuntimeException("Hive LazySerDe Internal error.");
-		}
-	}
+    /**
+     * Create a hierarchical LazyObject based on the given typeInfo.
+     */
+    public static LazyObject<? extends ObjectInspector> createLazyObject(ObjectInspector oi) {
+        ObjectInspector.Category c = oi.getCategory();
+        switch (c) {
+            case PRIMITIVE:
+                return createLazyPrimitiveClass((PrimitiveObjectInspector) oi);
+            case MAP:
+                return new LazyMap((LazyMapObjectInspector) oi);
+            case LIST:
+                return new LazyArray((LazyListObjectInspector) oi);
+            case STRUCT: // check whether it is a top-level struct
+                if (oi instanceof LazyStructObjectInspector)
+                    return new LazyStruct((LazyStructObjectInspector) oi);
+                else
+                    return new LazyColumnar((LazyColumnarObjectInspector) oi);
+            default:
+                throw new RuntimeException("Hive LazySerDe Internal error.");
+        }
+    }
 
-	private LazyFactory() {
-		// prevent instantiation
-	}
+    private LazyFactory() {
+        // prevent instantiation
+    }
 }

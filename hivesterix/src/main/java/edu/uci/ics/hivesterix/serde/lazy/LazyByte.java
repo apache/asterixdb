@@ -23,40 +23,32 @@ import edu.uci.ics.hivesterix.serde.lazy.objectinspector.primitive.LazyByteObjec
 
 /**
  * LazyObject for storing a value of Byte.
- * 
  * <p>
- * Part of the code is adapted from Apache Harmony Project.
- * 
- * As with the specification, this implementation relied on code laid out in <a
- * href="http://www.hackersdelight.org/">Henry S. Warren, Jr.'s Hacker's
- * Delight, (Addison Wesley, 2002)</a> as well as <a
- * href="http://aggregate.org/MAGIC/">The Aggregate's Magic Algorithms</a>.
+ * Part of the code is adapted from Apache Harmony Project. As with the specification, this implementation relied on code laid out in <a href="http://www.hackersdelight.org/">Henry S. Warren, Jr.'s Hacker's Delight, (Addison Wesley, 2002)</a> as well as <a href="http://aggregate.org/MAGIC/">The Aggregate's Magic Algorithms</a>.
  * </p>
- * 
  */
-public class LazyByte extends
-		LazyPrimitive<LazyByteObjectInspector, ByteWritable> {
+public class LazyByte extends LazyPrimitive<LazyByteObjectInspector, ByteWritable> {
 
-	public LazyByte(LazyByteObjectInspector oi) {
-		super(oi);
-		data = new ByteWritable();
-	}
+    public LazyByte(LazyByteObjectInspector oi) {
+        super(oi);
+        data = new ByteWritable();
+    }
 
-	public LazyByte(LazyByte copy) {
-		super(copy);
-		data = new ByteWritable(copy.data.get());
-	}
+    public LazyByte(LazyByte copy) {
+        super(copy);
+        data = new ByteWritable(copy.data.get());
+    }
 
-	@Override
-	public void init(byte[] bytes, int start, int length) {
-		if (length == 0) {
-			isNull = true;
-			return;
-		} else
-			isNull = false;
+    @Override
+    public void init(byte[] bytes, int start, int length) {
+        if (length == 0) {
+            isNull = true;
+            return;
+        } else
+            isNull = false;
 
-		assert (1 == length);
-		data.set(bytes[start]);
-	}
+        assert (1 == length);
+        data.set(bytes[start]);
+    }
 
 }

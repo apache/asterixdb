@@ -30,182 +30,178 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 /**
  * LazyObject for storing a struct. The field of a struct can be primitive or
  * non-primitive.
- * 
  * LazyStruct does not deal with the case of a NULL struct. That is handled by
  * the parent LazyObject.
  */
 @SuppressWarnings("rawtypes")
 public class LazyColumnar extends LazyNonPrimitive<LazyColumnarObjectInspector> {
 
-	/**
-	 * IFrameTupleReference: the backend of the struct
-	 */
-	IFrameTupleReference tuple;
+    /**
+     * IFrameTupleReference: the backend of the struct
+     */
+    IFrameTupleReference tuple;
 
-	/**
-	 * Whether the data is already parsed or not.
-	 */
-	boolean reset;
+    /**
+     * Whether the data is already parsed or not.
+     */
+    boolean reset;
 
-	/**
-	 * The fields of the struct.
-	 */
-	LazyObject[] fields;
+    /**
+     * The fields of the struct.
+     */
+    LazyObject[] fields;
 
-	/**
-	 * Whether init() has been called on the field or not.
-	 */
-	boolean[] fieldVisited;
+    /**
+     * Whether init() has been called on the field or not.
+     */
+    boolean[] fieldVisited;
 
-	/**
-	 * whether it is the first time initialization
-	 */
-	boolean start = true;
+    /**
+     * whether it is the first time initialization
+     */
+    boolean start = true;
 
-	/**
-	 * Construct a LazyStruct object with the ObjectInspector.
-	 */
-	public LazyColumnar(LazyColumnarObjectInspector oi) {
-		super(oi);
-	}
+    /**
+     * Construct a LazyStruct object with the ObjectInspector.
+     */
+    public LazyColumnar(LazyColumnarObjectInspector oi) {
+        super(oi);
+    }
 
-	/**
-	 * Set the row data for this LazyStruct.
-	 * 
-	 * @see LazyObject#init(ByteArrayRef, int, int)
-	 */
-	@Override
-	public void init(byte[] bytes, int start, int length) {
-		super.init(bytes, start, length);
-		reset = false;
-	}
+    /**
+     * Set the row data for this LazyStruct.
+     * 
+     * @see LazyObject#init(ByteArrayRef, int, int)
+     */
+    @Override
+    public void init(byte[] bytes, int start, int length) {
+        super.init(bytes, start, length);
+        reset = false;
+    }
 
-	/**
-	 * Parse the byte[] and fill each field.
-	 */
-	private void parse() {
+    /**
+     * Parse the byte[] and fill each field.
+     */
+    private void parse() {
 
-		if (start) {
-			// initialize field array and reusable objects
-			List<? extends StructField> fieldRefs = ((StructObjectInspector) oi)
-					.getAllStructFieldRefs();
+        if (start) {
+            // initialize field array and reusable objects
+            List<? extends StructField> fieldRefs = ((StructObjectInspector) oi).getAllStructFieldRefs();
 
-			fields = new LazyObject[fieldRefs.size()];
-			for (int i = 0; i < fields.length; i++) {
-				fields[i] = LazyFactory.createLazyObject(fieldRefs.get(i)
-						.getFieldObjectInspector());
-			}
-			fieldVisited = new boolean[fields.length];
-			start = false;
-		}
+            fields = new LazyObject[fieldRefs.size()];
+            for (int i = 0; i < fields.length; i++) {
+                fields[i] = LazyFactory.createLazyObject(fieldRefs.get(i).getFieldObjectInspector());
+            }
+            fieldVisited = new boolean[fields.length];
+            start = false;
+        }
 
-		Arrays.fill(fieldVisited, false);
-		reset = true;
-	}
+        Arrays.fill(fieldVisited, false);
+        reset = true;
+    }
 
-	/**
-	 * Get one field out of the struct.
-	 * 
-	 * If the field is a primitive field, return the actual object. Otherwise
-	 * return the LazyObject. This is because PrimitiveObjectInspector does not
-	 * have control over the object used by the user - the user simply directly
-	 * use the Object instead of going through Object
-	 * PrimitiveObjectInspector.get(Object).
-	 * 
-	 * @param fieldID
-	 *            The field ID
-	 * @return The field as a LazyObject
-	 */
-	public Object getField(int fieldID) {
-		if (!reset) {
-			parse();
-		}
-		return uncheckedGetField(fieldID);
-	}
+    /**
+     * Get one field out of the struct.
+     * If the field is a primitive field, return the actual object. Otherwise
+     * return the LazyObject. This is because PrimitiveObjectInspector does not
+     * have control over the object used by the user - the user simply directly
+     * use the Object instead of going through Object
+     * PrimitiveObjectInspector.get(Object).
+     * 
+     * @param fieldID
+     *            The field ID
+     * @return The field as a LazyObject
+     */
+    public Object getField(int fieldID) {
+        if (!reset) {
+            parse();
+        }
+        return uncheckedGetField(fieldID);
+    }
 
-	/**
-	 * Get the field out of the row without checking parsed. This is called by
-	 * both getField and getFieldsAsList.
-	 * 
-	 * @param fieldID
-	 *            The id of the field starting from 0.
-	 * @param nullSequence
-	 *            The sequence representing NULL value.
-	 * @return The value of the field
-	 */
-	private Object uncheckedGetField(int fieldID) {
-		// get the buffer
-		byte[] buffer = tuple.getFieldData(fieldID);
-		// get the offset of the field
-		int s1 = tuple.getFieldStart(fieldID);
-		int l1 = tuple.getFieldLength(fieldID);
+    /**
+     * Get the field out of the row without checking parsed. This is called by
+     * both getField and getFieldsAsList.
+     * 
+     * @param fieldID
+     *            The id of the field starting from 0.
+     * @param nullSequence
+     *            The sequence representing NULL value.
+     * @return The value of the field
+     */
+    private Object uncheckedGetField(int fieldID) {
+        // get the buffer
+        byte[] buffer = tuple.getFieldData(fieldID);
+        // get the offset of the field
+        int s1 = tuple.getFieldStart(fieldID);
+        int l1 = tuple.getFieldLength(fieldID);
 
-		if (!fieldVisited[fieldID]) {
-			fieldVisited[fieldID] = true;
-			fields[fieldID].init(buffer, s1, l1);
-		}
-		// if (fields[fieldID].getObject() == null) {
-		// throw new IllegalStateException("illegal field " + fieldID);
-		// }
-		return fields[fieldID].getObject();
-	}
+        if (!fieldVisited[fieldID]) {
+            fieldVisited[fieldID] = true;
+            fields[fieldID].init(buffer, s1, l1);
+        }
+        // if (fields[fieldID].getObject() == null) {
+        // throw new IllegalStateException("illegal field " + fieldID);
+        // }
+        return fields[fieldID].getObject();
+    }
 
-	ArrayList<Object> cachedList;
+    ArrayList<Object> cachedList;
 
-	/**
-	 * Get the values of the fields as an ArrayList.
-	 * 
-	 * @return The values of the fields as an ArrayList.
-	 */
-	public ArrayList<Object> getFieldsAsList() {
-		if (!reset) {
-			parse();
-		}
-		if (cachedList == null) {
-			cachedList = new ArrayList<Object>();
-		} else {
-			cachedList.clear();
-		}
-		for (int i = 0; i < fields.length; i++) {
-			cachedList.add(uncheckedGetField(i));
-		}
-		return cachedList;
-	}
+    /**
+     * Get the values of the fields as an ArrayList.
+     * 
+     * @return The values of the fields as an ArrayList.
+     */
+    public ArrayList<Object> getFieldsAsList() {
+        if (!reset) {
+            parse();
+        }
+        if (cachedList == null) {
+            cachedList = new ArrayList<Object>();
+        } else {
+            cachedList.clear();
+        }
+        for (int i = 0; i < fields.length; i++) {
+            cachedList.add(uncheckedGetField(i));
+        }
+        return cachedList;
+    }
 
-	@Override
-	public Object getObject() {
-		return this;
-	}
+    @Override
+    public Object getObject() {
+        return this;
+    }
 
-	protected boolean getParsed() {
-		return reset;
-	}
+    protected boolean getParsed() {
+        return reset;
+    }
 
-	protected void setParsed(boolean parsed) {
-		this.reset = parsed;
-	}
+    protected void setParsed(boolean parsed) {
+        this.reset = parsed;
+    }
 
-	protected LazyObject[] getFields() {
-		return fields;
-	}
+    protected LazyObject[] getFields() {
+        return fields;
+    }
 
-	protected void setFields(LazyObject[] fields) {
-		this.fields = fields;
-	}
+    protected void setFields(LazyObject[] fields) {
+        this.fields = fields;
+    }
 
-	protected boolean[] getFieldInited() {
-		return fieldVisited;
-	}
+    protected boolean[] getFieldInited() {
+        return fieldVisited;
+    }
 
-	protected void setFieldInited(boolean[] fieldInited) {
-		this.fieldVisited = fieldInited;
-	}
+    protected void setFieldInited(boolean[] fieldInited) {
+        this.fieldVisited = fieldInited;
+    }
 
-	/**
-	 * rebind a frametuplereference to the struct
-	 */
-	public void init(IFrameTupleReference r) {
-		this.tuple = r;
-		reset = false;
-	}
+    /**
+     * rebind a frametuplereference to the struct
+     */
+    public void init(IFrameTupleReference r) {
+        this.tuple = r;
+        reset = false;
+    }
 }

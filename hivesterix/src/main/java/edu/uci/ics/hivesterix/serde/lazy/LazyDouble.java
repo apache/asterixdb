@@ -23,31 +23,28 @@ import edu.uci.ics.hivesterix.serde.lazy.objectinspector.primitive.LazyDoubleObj
 
 /**
  * LazyObject for storing a value of Double.
- * 
  */
-public class LazyDouble extends
-		LazyPrimitive<LazyDoubleObjectInspector, DoubleWritable> {
+public class LazyDouble extends LazyPrimitive<LazyDoubleObjectInspector, DoubleWritable> {
 
-	public LazyDouble(LazyDoubleObjectInspector oi) {
-		super(oi);
-		data = new DoubleWritable();
-	}
+    public LazyDouble(LazyDoubleObjectInspector oi) {
+        super(oi);
+        data = new DoubleWritable();
+    }
 
-	public LazyDouble(LazyDouble copy) {
-		super(copy);
-		data = new DoubleWritable(copy.data.get());
-	}
+    public LazyDouble(LazyDouble copy) {
+        super(copy);
+        data = new DoubleWritable(copy.data.get());
+    }
 
-	@Override
-	public void init(byte[] bytes, int start, int length) {
-		if (length == 0) {
-			isNull = true;
-			return;
-		} else
-			isNull = false;
-		assert (8 == length);
-		data.set(Double.longBitsToDouble(LazyUtils
-				.byteArrayToLong(bytes, start)));
-	}
+    @Override
+    public void init(byte[] bytes, int start, int length) {
+        if (length == 0) {
+            isNull = true;
+            return;
+        } else
+            isNull = false;
+        assert (8 == length);
+        data.set(Double.longBitsToDouble(LazyUtils.byteArrayToLong(bytes, start)));
+    }
 
 }

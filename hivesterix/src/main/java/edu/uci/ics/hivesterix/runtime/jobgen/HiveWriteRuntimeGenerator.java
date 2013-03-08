@@ -13,28 +13,26 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
 @SuppressWarnings("deprecation")
 public class HiveWriteRuntimeGenerator {
-	private FileSinkOperator fileSink;
+    private FileSinkOperator fileSink;
 
-	private Schema inputSchema;
+    private Schema inputSchema;
 
-	public HiveWriteRuntimeGenerator(FileSinkOperator fsOp, Schema oi) {
-		fileSink = fsOp;
-		inputSchema = oi;
-	}
+    public HiveWriteRuntimeGenerator(FileSinkOperator fsOp, Schema oi) {
+        fileSink = fsOp;
+        inputSchema = oi;
+    }
 
-	/**
-	 * get the write runtime
-	 * 
-	 * @param inputDesc
-	 * @return
-	 */
-	public Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint> getWriterRuntime(
-			RecordDescriptor inputDesc) {
-		JobConf conf = ConfUtil.getJobConf();
-		IPushRuntimeFactory factory = new HivePushRuntimeFactory(inputDesc,
-				conf, fileSink, inputSchema);
-		Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint> pair = new Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint>(
-				factory, null);
-		return pair;
-	}
+    /**
+     * get the write runtime
+     * 
+     * @param inputDesc
+     * @return
+     */
+    public Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint> getWriterRuntime(RecordDescriptor inputDesc) {
+        JobConf conf = ConfUtil.getJobConf();
+        IPushRuntimeFactory factory = new HivePushRuntimeFactory(inputDesc, conf, fileSink, inputSchema);
+        Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint> pair = new Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint>(
+                factory, null);
+        return pair;
+    }
 }
