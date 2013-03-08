@@ -44,6 +44,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.result.ResultWriterOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.sort.InMemorySortOperatorDescriptor;
+import edu.uci.ics.hyracks.tests.util.ResultSerializerFactoryProvider;
 
 public class SortMergeTest extends AbstractIntegrationTest {
     @Test
@@ -75,8 +76,10 @@ public class SortMergeTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter, NC1_ID, NC2_ID);
 
         ResultSetId rsId = new ResultSetId(1);
-        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true, ordersDesc,
-                getResultSerializedAppenderFactory());
+        spec.addResultSetId(rsId);
+
+        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true,
+                ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), ordScanner, 0, sorter, 0);
@@ -87,8 +90,6 @@ public class SortMergeTest extends AbstractIntegrationTest {
                                 .of(UTF8StringPointable.FACTORY) }), new int[] { 1 },
                         new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
                                 .of(UTF8StringPointable.FACTORY) }), sorter, 0, printer, 0);
-
-        spec.addResultSetId(rsId);
 
         runTest(spec);
     }
@@ -122,8 +123,10 @@ public class SortMergeTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter, NC1_ID, NC2_ID);
 
         ResultSetId rsId = new ResultSetId(1);
-        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, false, ordersDesc,
-                getResultSerializedAppenderFactory());
+        spec.addResultSetId(rsId);
+
+        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, false,
+                ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), ordScanner, 0, sorter, 0);
@@ -137,8 +140,6 @@ public class SortMergeTest extends AbstractIntegrationTest {
                                 PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
                                 PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) }), sorter, 0,
                 printer, 0);
-
-        spec.addResultSetId(rsId);
 
         runTest(spec);
     }
