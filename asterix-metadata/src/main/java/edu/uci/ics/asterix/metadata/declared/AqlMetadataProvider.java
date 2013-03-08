@@ -576,9 +576,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         ResultWriterOperatorDescriptor resultWriter = null;
         try {
             IResultSerializerFactory resultSerializedAppenderFactory = resultSerializerFactoryProvider
-                    .getAqlResultSerializerFactoryProvider(printColumns, printerFactories, getWriterFactory(), inputDesc);
-            resultWriter = new ResultWriterOperatorDescriptor(spec, rsId, ordered, inputDesc,
-                    resultSerializedAppenderFactory);
+                    .getAqlResultSerializerFactoryProvider(printColumns, printerFactories, getWriterFactory());
+            resultWriter = new ResultWriterOperatorDescriptor(spec, rsId, ordered, resultSerializedAppenderFactory);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
