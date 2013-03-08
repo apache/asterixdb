@@ -114,6 +114,24 @@ public class ZooKeeperService implements ILookupService {
         createRootIfNotExist();
     }
 
+    public void stopService(Configuration conf) throws Exception {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Stopping ZooKeeper running at " + zkConnectionString);
+        }
+        String stopScript = ZOOKEEPER_HOME + File.separator + "bin" + File.separator + "stop_zk";
+        StringBuffer cmdBuffer = new StringBuffer();
+        cmdBuffer.append(stopScript + " ");
+        cmdBuffer.append(conf.getZookeeper().getHomeDir() + " ");
+        List<String> zkServers = conf.getZookeeper().getServers().getServer();
+        for (String zkServer : zkServers) {
+            cmdBuffer.append(zkServer + " ");
+        }
+        Runtime.getRuntime().exec(cmdBuffer.toString());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Stopped ZooKeeper service at " + zkConnectionString);
+        }
+    }
+
     public void writeAsterixInstance(AsterixInstance asterixInstance) throws Exception {
         String instanceBasePath = ASTERIX_INSTANCE_BASE_PATH + File.separator + asterixInstance.getName();
         ByteArrayOutputStream b = new ByteArrayOutputStream();

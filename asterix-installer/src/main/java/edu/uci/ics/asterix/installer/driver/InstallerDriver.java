@@ -102,7 +102,7 @@ public class InstallerDriver {
             if (args.length != 0) {
                 managixHome = System.getenv(ENV_MANAGIX_HOME);
                 CommandType cmdType = CommandType.valueOf(args[0].toUpperCase());
-                if (!cmdType.equals(CommandType.VALIDATE)) {
+                if (!cmdType.equals(CommandType.VALIDATE) && !cmdType.equals(CommandType.CONFIGURE)) {
                     initConfig();
                 }
                 CommandHandler cmdHandler = new CommandHandler();
@@ -119,7 +119,7 @@ public class InstallerDriver {
     }
 
     private static void printUsage() {
-        StringBuffer buffer = new StringBuffer("managix <command> <args>" + "\n");
+        StringBuffer buffer = new StringBuffer("managix <command> <options>" + "\n");
         buffer.append("Commands" + "\n");
         buffer.append("create   " + ":" + " Creates a new asterix instance" + "\n");
         buffer.append("delete   " + ":" + " Deletes an asterix instance" + "\n");
@@ -130,8 +130,9 @@ public class InstallerDriver {
         buffer.append("alter    " + ":" + " Alters the configuration for an existing asterix instance" + "\n");
         buffer.append("describe " + ":" + " Describes an existing asterix instance" + "\n");
         buffer.append("validate " + ":" + " Validates the installer/cluster configuration" + "\n");
-        buffer.append("init     " + ":"
-                + " Initialize the installer/cluster configuration for local psedu-distributed cluster." + "\n");
+        buffer.append("configure" + ":" + " Auto generate configuration for a local psedu-distributed Asterix instance"
+                + "\n");
+        buffer.append("shutdown " + ":" + " Shutdown the installer service" + "\n");
         LOGGER.info(buffer.toString());
     }
 }

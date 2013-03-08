@@ -101,4 +101,21 @@ public class VerificationUtil {
         instance.setAsterixRuntimeStates(state);
     }
 
+    public static void verifyBackupRestoreConfiguration(String hdfsUrl, String hadoopVersion, String hdfsBackupDir)
+            throws Exception {
+        StringBuffer errorCheck = new StringBuffer();
+        if (hdfsUrl == null || hdfsUrl.length() == 0) {
+            errorCheck.append("\n HDFS Url not configured");
+        }
+        if (hadoopVersion == null || hadoopVersion.length() == 0) {
+            errorCheck.append("\n HDFS version not configured");
+        }
+        if (hdfsBackupDir == null || hdfsBackupDir.length() == 0) {
+            errorCheck.append("\n HDFS backup directory not configured");
+        }
+        if (errorCheck.length() > 0) {
+            throw new Exception("Incomplete hdfs configuration in " + InstallerDriver.getManagixHome() + File.separator
+                    + InstallerDriver.MANAGIX_CONF_XML + errorCheck);
+        }
+    }
 }

@@ -14,36 +14,23 @@
  */
 package edu.uci.ics.asterix.installer.command;
 
-import java.util.Date;
-import java.util.Properties;
-
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.asterix.installer.driver.InstallerUtil;
-import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
+import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.service.ILookupService;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
-public class AlterCommand extends AbstractCommand {
+public class ShutdownCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
-        String instanceName = ((AlterConfig) config).name;
-        InstallerUtil.validateAsterixInstanceExists(instanceName, State.INACTIVE);
         ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();
-        AsterixInstance instance = lookupService.getAsterixInstance(instanceName);
-
-        Properties asterixConfProp = InstallerUtil.getAsterixConfiguration(((AlterConfig) config).confPath);
-        instance.setConfiguration(asterixConfProp);
-        instance.setModifiedTimestamp(new Date());
-        lookupService.updateAsterixInstance(instance);
-        LOGGER.info("Configuration for Asterix instance: " + instanceName + " has been altered");
+        lookupService.stopService(InstallerDriver.getConfiguration());
     }
 
     @Override
     protected CommandConfig getCommandConfig() {
-        return new AlterConfig();
+        return new ShutdownConfig();
     }
 
     @Override
@@ -54,15 +41,9 @@ public class AlterCommand extends AbstractCommand {
 
 }
 
-class AlterConfig implements CommandConfig {
+class ShutdownConfig implements CommandConfig {
 
     @Option(name = "-h", required = false, usage = "Help")
     public boolean help = false;
-
-    @Option(name = "-n", required = true, usage = "Name of Asterix Instance")
-    public String name;
-
-    @Option(name = "-conf", required = false, usage = "Path to instance configuration")
-    public String confPath;
 
 }

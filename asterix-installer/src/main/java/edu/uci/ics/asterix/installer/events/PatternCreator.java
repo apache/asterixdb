@@ -30,6 +30,7 @@ import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 import edu.uci.ics.asterix.event.schema.pattern.Value;
 import edu.uci.ics.asterix.installer.command.StopCommand;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
+import edu.uci.ics.asterix.installer.error.VerificationUtil;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
 import edu.uci.ics.asterix.installer.service.ILookupService;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
@@ -103,6 +104,7 @@ public class PatternCreator {
         String hdfsUrl = InstallerDriver.getConfiguration().getBackup().getHdfs().getUrl();
         String hadoopVersion = InstallerDriver.getConfiguration().getBackup().getHdfs().getVersion();
         String hdfsBackupDir = InstallerDriver.getConfiguration().getBackup().getHdfs().getBackupDir();
+        VerificationUtil.verifyBackupRestoreConfiguration(hdfsUrl, hadoopVersion, hdfsBackupDir);
         String workingDir = cluster.getWorkingDir().getDir();
         String backupId = "" + instance.getBackupInfo().size();
         String nodeStore;
@@ -125,6 +127,7 @@ public class PatternCreator {
         String hdfsUrl = InstallerDriver.getConfiguration().getBackup().getHdfs().getUrl();
         String hadoopVersion = InstallerDriver.getConfiguration().getBackup().getHdfs().getVersion();
         String hdfsBackupDir = InstallerDriver.getConfiguration().getBackup().getHdfs().getBackupDir();
+        VerificationUtil.verifyBackupRestoreConfiguration(hdfsUrl, hadoopVersion, hdfsBackupDir);
         String workingDir = cluster.getWorkingDir().getDir();
         String nodeStore;
         String pargs;

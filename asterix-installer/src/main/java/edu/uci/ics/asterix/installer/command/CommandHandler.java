@@ -49,8 +49,11 @@ public class CommandHandler {
             case VALIDATE:
                 cmd = new ValidateCommand();
                 break;
-            case INIT:
-                cmd = new InitializeCommand();
+            case CONFIGURE:
+                cmd = new ConfigureCommand();
+                break;
+            case SHUTDOWN:
+                cmd = new ShutdownCommand();
                 break;
         }
         cmd.execute(args);

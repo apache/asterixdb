@@ -107,7 +107,7 @@ public class ValidateCommand extends AbstractCommand {
 
             MasterNode masterNode = cluster.getMasterNode();
             Node master = new Node(masterNode.getId(), masterNode.getIp(), masterNode.getRam(),
-                    masterNode.getJavaHome(), masterNode.getLogdir(), null);
+                    masterNode.getJavaHome(), masterNode.getLogdir(), null, masterNode.getDebug());
 
             valid = valid & validateNodeConfiguration(master, cluster);
 

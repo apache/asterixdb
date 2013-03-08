@@ -29,6 +29,8 @@ public interface ILookupService {
 
     public void startService(Configuration conf) throws Exception;
 
+    public void stopService(Configuration conf) throws Exception;
+
     public boolean exists(String name) throws Exception;
 
     public void removeAsterixInstance(String name) throws Exception;

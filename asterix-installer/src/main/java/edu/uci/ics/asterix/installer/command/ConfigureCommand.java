@@ -14,7 +14,7 @@ import edu.uci.ics.asterix.event.schema.cluster.WorkingDir;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 
-public class InitializeCommand extends AbstractCommand {
+public class ConfigureCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
@@ -56,15 +56,12 @@ public class InitializeCommand extends AbstractCommand {
 
     @Override
     protected CommandConfig getCommandConfig() {
-        return new InitializeConfig();
+        return new ConfigureConfig();
     }
 
-    public static void main(String args[]) throws Exception {
-        new InitializeCommand().execCommand();
-    }
 }
 
-class InitializeConfig implements CommandConfig {
+class ConfigureConfig implements CommandConfig {
 
     @Option(name = "-h", required = false, usage = "Help")
     public boolean help = false;
