@@ -118,6 +118,7 @@ public abstract class AbstractTestSuiteClass extends TestSuite {
 			ncConfig.clusterNetIPAddress = ipAddress;
 			ncConfig.ccPort = netPort;
 			ncConfig.dataIPAddress = "127.0.0.1";
+            ncConfig.datasetIPAddress = "127.0.0.1";
 			ncConfig.nodeId = "nc" + i;
 			NodeControllerService nc = new NodeControllerService(ncConfig);
 			nc.start();

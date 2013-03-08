@@ -55,6 +55,7 @@ public class AlgebricksHyracksIntegrationUtil {
         ncConfig1.ccPort = TEST_HYRACKS_CC_CLUSTER_NET_PORT;
         ncConfig1.clusterNetIPAddress = "127.0.0.1";
         ncConfig1.dataIPAddress = "127.0.0.1";
+        ncConfig1.datasetIPAddress = "127.0.0.1";
         ncConfig1.nodeId = NC1_ID;
         nc1 = new NodeControllerService(ncConfig1);
         nc1.start();
@@ -64,6 +65,7 @@ public class AlgebricksHyracksIntegrationUtil {
         ncConfig2.ccPort = TEST_HYRACKS_CC_CLUSTER_NET_PORT;
         ncConfig2.clusterNetIPAddress = "127.0.0.1";
         ncConfig2.dataIPAddress = "127.0.0.1";
+        ncConfig2.datasetIPAddress = "127.0.0.1";
         ncConfig2.nodeId = NC2_ID;
         nc2 = new NodeControllerService(ncConfig2);
         nc2.start();
