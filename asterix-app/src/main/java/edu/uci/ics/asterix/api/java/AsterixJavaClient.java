@@ -68,7 +68,7 @@ public class AsterixJavaClient {
                 generateBinaryRuntime, printJob);
 
         AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, writer, pc, DisplayFormat.TEXT);
-        aqlTranslator.compileAndExecute(hcc, false);
+        aqlTranslator.compileAndExecute(hcc, null, false);
         writer.flush();
     }
 

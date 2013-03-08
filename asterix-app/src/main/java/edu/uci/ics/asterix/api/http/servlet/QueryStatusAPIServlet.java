@@ -28,13 +28,17 @@ import org.json.JSONObject;
 import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.client.dataset.HyracksDataset;
 
 public class QueryStatusAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private static final String HYRACKS_CONNECTION_ATTR = "edu.uci.ics.asterix.HYRACKS_CONNECTION";
+
+    private static final String HYRACKS_DATASET_ATTR = "edu.uci.ics.asterix.HYRACKS_DATASET";
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -43,6 +47,8 @@ public class QueryStatusAPIServlet extends HttpServlet {
         response.setContentType("text/html");
         ServletContext context = getServletContext();
         IHyracksClientConnection hcc;
+        IHyracksDataset hds;
+
         try {
             HyracksProperties hp = new HyracksProperties();
             String strIP = hp.getHyracksIPAddress();
@@ -54,6 +60,12 @@ public class QueryStatusAPIServlet extends HttpServlet {
                     hcc = new HyracksConnection(strIP, port);
                     context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
                 }
+
+                hds = (IHyracksDataset) context.getAttribute(HYRACKS_DATASET_ATTR);
+                if (hds == null) {
+                    hds = new HyracksDataset(hcc, ResultReader.FRAME_SIZE, ResultReader.NUM_READERS);
+                    context.setAttribute(HYRACKS_DATASET_ATTR, hds);
+                }
             }
             JSONObject handleObj = new JSONObject(strHandle);
             JSONArray handle = handleObj.getJSONArray("handle");
@@ -63,7 +75,7 @@ public class QueryStatusAPIServlet extends HttpServlet {
             /* TODO(madhusudancs): We need to find a way to JSON serialize default format obtained from
              * metadataProvider in the AQLTranslator and store it as part of the result handle.
              */
-            ResultReader resultReader = new ResultReader(hcc);
+            ResultReader resultReader = new ResultReader(hcc, hds);
             resultReader.open(jobId, rsId);
 
             JSONObject jsonResponse = new JSONObject();

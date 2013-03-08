@@ -19,13 +19,18 @@ import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.metadata.MetadataManager;
+import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
+import edu.uci.ics.hyracks.client.dataset.HyracksDataset;
 
 public class APIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private static final String HYRACKS_CONNECTION_ATTR = "edu.uci.ics.asterix.HYRACKS_CONNECTION";
+
+    private static final String HYRACKS_DATASET_ATTR = "edu.uci.ics.asterix.HYRACKS_DATASET";
 
     private static final String HTML_HEADER_TEMPLATE = "<!DOCTYPE html>"
             + "<html lang=\"en\">"
@@ -329,12 +334,20 @@ public class APIServlet extends HttpServlet {
         printInHtml(out, query);
         ServletContext context = getServletContext();
         IHyracksClientConnection hcc;
+        IHyracksDataset hds;
+
         try {
             synchronized (context) {
                 hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
                 if (hcc == null) {
                     hcc = new HyracksConnection(strIP, port);
                     context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
+                }
+
+                hds = (IHyracksDataset) context.getAttribute(HYRACKS_DATASET_ATTR);
+                if (hds == null) {
+                    hds = new HyracksDataset(hcc, ResultReader.FRAME_SIZE, ResultReader.NUM_READERS);
+                    context.setAttribute(HYRACKS_DATASET_ATTR, hds);
                 }
             }
             AQLParser parser = new AQLParser(query);
@@ -346,7 +359,7 @@ public class APIServlet extends HttpServlet {
             AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, format);
             double duration = 0;
             long startTime = System.currentTimeMillis();
-            aqlTranslator.compileAndExecute(hcc, false);
+            aqlTranslator.compileAndExecute(hcc, hds, false);
             long endTime = System.currentTimeMillis();
             duration = (endTime - startTime) / 1000.00;
             out.println("<PRE>Duration of all jobs: " + duration + "</PRE>");

@@ -14,49 +14,47 @@
  */
 package edu.uci.ics.asterix.result;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord.Status;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
+import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetReader;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.client.dataset.DatasetClientContext;
-import edu.uci.ics.hyracks.client.dataset.HyracksDataset;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ResultFrameTupleAccessor;
 
 public class ResultReader {
-    private final DatasetClientContext datasetClientCtx;
-
     private final IHyracksDataset hyracksDataset;
+
+    private IHyracksDatasetReader reader;
 
     private IFrameTupleAccessor frameTupleAccessor;
 
     // Number of parallel result reader buffers
-    private static final int NUM_READERS = 1;
+    public static final int NUM_READERS = 1;
 
-    // 32K buffer size;
-    public static final int FRAME_SIZE = 32768;
+    public static final int FRAME_SIZE = GlobalConfig.getFrameSize();
 
-    public ResultReader(IHyracksClientConnection hcc) throws Exception {
-        datasetClientCtx = new DatasetClientContext(FRAME_SIZE);
-        hyracksDataset = new HyracksDataset(hcc, datasetClientCtx, NUM_READERS);
+    public ResultReader(IHyracksClientConnection hcc, IHyracksDataset hdc) throws Exception {
+        hyracksDataset = hdc;
     }
 
-    public void open(JobId jobId, ResultSetId resultSetId) throws IOException, ClassNotFoundException {
-        hyracksDataset.open(jobId, resultSetId);
+    public void open(JobId jobId, ResultSetId resultSetId) throws HyracksDataException {
+        reader = hyracksDataset.createReader(jobId, resultSetId);
 
-        frameTupleAccessor = new ResultFrameTupleAccessor(datasetClientCtx.getFrameSize());
+        frameTupleAccessor = new ResultFrameTupleAccessor(FRAME_SIZE);
     }
 
     public Status getStatus() {
-        return hyracksDataset.getResultStatus();
+        return reader.getResultStatus();
     }
 
     public int read(ByteBuffer buffer) throws HyracksDataException {
-        return hyracksDataset.read(buffer);
+        return reader.read(buffer);
     }
 
     public IFrameTupleAccessor getFrameTupleAccessor() {

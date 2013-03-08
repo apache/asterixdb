@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.api.http.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.StringReader;
 import java.util.List;
 
 import javax.servlet.ServletContext;
@@ -34,14 +33,19 @@ import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.metadata.MetadataManager;
+import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.asterix.result.ResultUtils;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
+import edu.uci.ics.hyracks.client.dataset.HyracksDataset;
 
 abstract class RESTAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private static final String HYRACKS_CONNECTION_ATTR = "edu.uci.ics.asterix.HYRACKS_CONNECTION";
+
+    private static final String HYRACKS_DATASET_ATTR = "edu.uci.ics.asterix.HYRACKS_DATASET";
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -63,6 +67,7 @@ abstract class RESTAPIServlet extends HttpServlet {
         response.setContentType("application/json");
         ServletContext context = getServletContext();
         IHyracksClientConnection hcc;
+        IHyracksDataset hds;
 
         try {
             HyracksProperties hp = new HyracksProperties();
@@ -74,6 +79,12 @@ abstract class RESTAPIServlet extends HttpServlet {
                 if (hcc == null) {
                     hcc = new HyracksConnection(strIP, port);
                     context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
+                }
+
+                hds = (IHyracksDataset) context.getAttribute(HYRACKS_DATASET_ATTR);
+                if (hds == null) {
+                    hds = new HyracksDataset(hcc, ResultReader.FRAME_SIZE, ResultReader.NUM_READERS);
+                    context.setAttribute(HYRACKS_DATASET_ATTR, hds);
                 }
             }
 
@@ -88,7 +99,7 @@ abstract class RESTAPIServlet extends HttpServlet {
 
             AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, format);
 
-            aqlTranslator.compileAndExecute(hcc, asyncResults);
+            aqlTranslator.compileAndExecute(hcc, hds, asyncResults);
 
         } catch (ParseException pe) {
             StringBuilder errorMessage = new StringBuilder();
