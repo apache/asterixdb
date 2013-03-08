@@ -68,7 +68,7 @@ sleep 3
 for ((i=1;i<=$numnc;i++)); do
 	echo "node controller (nc$i) starting..."
 	sh $HYRACKS_SERVER_BIN/hyracksnc -cc-host localhost -cluster-net-ip-address 127.0.0.1 -data-ip-address 127.0.0.1 \
-                -result-ip-address 127.0.0.1 -node-id "nc$i" &> $LOG_DIR/nc$i.log &
+                -result-ip-address 127.0.0.1 -node-id "nc$i" -result-manager-memory 1048576 &> $LOG_DIR/nc$i.log &
 
     # avoid socket error
 	sleep .5
