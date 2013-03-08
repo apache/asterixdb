@@ -41,7 +41,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
     private final IWorkspaceFileFactory fileFactory;
 
-    public DatasetPartitionManager(NodeControllerService ncs, Executor executor) {
+    public DatasetPartitionManager(NodeControllerService ncs, Executor executor, int availableMemory) {
         this.ncs = ncs;
         this.executor = executor;
         partitionDatasetWriterMap = new HashMap<JobId, DatasetPartitionWriter[]>();
