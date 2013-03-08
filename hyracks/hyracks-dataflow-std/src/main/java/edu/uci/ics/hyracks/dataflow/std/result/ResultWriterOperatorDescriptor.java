@@ -42,16 +42,13 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
 
     private final boolean ordered;
 
-    private final RecordDescriptor recordDescriptor;
-
     private final IResultSerializerFactory resultSerializerFactory;
 
     public ResultWriterOperatorDescriptor(IOperatorDescriptorRegistry spec, ResultSetId rsId, boolean ordered,
-            RecordDescriptor recordDescriptor, IResultSerializerFactory resultSerializerFactory) throws IOException {
+            IResultSerializerFactory resultSerializerFactory) throws IOException {
         super(spec, 1, 0);
         this.rsId = rsId;
         this.ordered = ordered;
-        this.recordDescriptor = recordDescriptor;
         this.resultSerializerFactory = resultSerializerFactory;
     }
 
@@ -66,9 +63,11 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
         frameOutputStream.reset(outputBuffer, true);
         PrintStream printStream = new PrintStream(frameOutputStream);
 
-        final IResultSerializer resultSerializer = resultSerializerFactory.createResultSerializer(printStream);
+        final RecordDescriptor outRecordDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
+        final IResultSerializer resultSerializer = resultSerializerFactory.createResultSerializer(outRecordDesc,
+                printStream);
 
-        final FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(ctx.getFrameSize(), recordDescriptor);
+        final FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(ctx.getFrameSize(), outRecordDesc);
 
         return new AbstractUnaryInputSinkOperatorNodePushable() {
             IFrameWriter datasetPartitionWriter;

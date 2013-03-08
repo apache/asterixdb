@@ -16,10 +16,7 @@ package edu.uci.ics.hyracks.algebricks.data;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.algebricks.data.IAWriterFactory;
-import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IResultSerializerFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
 public interface IResultSerializerFactoryProvider extends Serializable {
     /**
@@ -36,5 +33,5 @@ public interface IResultSerializerFactoryProvider extends Serializable {
      * @return A new instance of result serialized appender.
      */
     public IResultSerializerFactory getAqlResultSerializerFactoryProvider(int[] fields,
-            IPrinterFactory[] printerFactories, IAWriterFactory writerFactory, RecordDescriptor inputRecordDesc);
+            IPrinterFactory[] printerFactories, IAWriterFactory writerFactory);
 }

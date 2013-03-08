@@ -25,5 +25,5 @@ public interface IResultSerializerFactory extends Serializable {
      *            - A print stream object to which the serialized results will be written.
      * @return A new instance of result serialized appender.
      */
-    public IResultSerializer createResultSerializer(PrintStream printStream);
+    public IResultSerializer createResultSerializer(RecordDescriptor recordDesc, PrintStream printStream);
 }
