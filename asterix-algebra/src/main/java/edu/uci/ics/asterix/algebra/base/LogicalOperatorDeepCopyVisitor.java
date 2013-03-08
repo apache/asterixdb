@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOpera
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DieOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
@@ -60,7 +61,7 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
 
     // Key: Variable in the original plan. Value: Variable with which to replace original variable in the plan copy.
     private final Map<LogicalVariable, LogicalVariable> inVarMapping;
-    
+
     public LogicalOperatorDeepCopyVisitor(Counter counter) {
         this.counter = counter;
         this.inVarMapping = Collections.emptyMap();
@@ -392,6 +393,11 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
 
     @Override
     public ILogicalOperator visitWriteOperator(WriteOperator op, ILogicalOperator arg) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ILogicalOperator visitDistributeResultOperator(DistributeResultOperator op, ILogicalOperator arg) {
         throw new UnsupportedOperationException();
     }
 
