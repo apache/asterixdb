@@ -14,9 +14,13 @@
  */
 package edu.uci.ics.hyracks.api.dataset;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobId;
+import java.nio.ByteBuffer;
 
-public interface IHyracksDataset {
-    public IHyracksDatasetReader createReader(JobId jobId, ResultSetId resultSetId) throws HyracksDataException;
+import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord.Status;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+
+public interface IHyracksDatasetReader {
+    public Status getResultStatus();
+
+    public int read(ByteBuffer buffer) throws HyracksDataException;
 }
