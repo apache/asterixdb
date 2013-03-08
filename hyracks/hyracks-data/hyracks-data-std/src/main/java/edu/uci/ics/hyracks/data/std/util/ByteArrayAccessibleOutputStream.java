@@ -21,6 +21,14 @@ import java.util.logging.Logger;
 public class ByteArrayAccessibleOutputStream extends ByteArrayOutputStream {
     private static final Logger LOGGER = Logger.getLogger(ByteArrayAccessibleOutputStream.class.getName());
 
+    public ByteArrayAccessibleOutputStream() {
+        super();
+    }
+
+    public ByteArrayAccessibleOutputStream(int size) {
+        super(size);
+    }
+
     public byte[] getByteArray() {
         return buf;
     }

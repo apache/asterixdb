@@ -27,6 +27,7 @@ public class FrameOutputStream extends ByteArrayAccessibleOutputStream {
     private final FrameTupleAppender frameTupleAppender;
 
     public FrameOutputStream(int frameSize) {
+        super(frameSize);
         this.frameTupleAppender = new FrameTupleAppender(frameSize);
     }
 
