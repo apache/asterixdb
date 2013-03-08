@@ -36,4 +36,22 @@ public class GlobalConfig {
     public static final float DEFAULT_BTREE_FILL_FACTOR = 1.00f;
 
     public static int DEFAULT_INPUT_DATA_COLUMN = 0;
+
+    public static int getFrameSize() {
+        int frameSize = GlobalConfig.DEFAULT_FRAME_SIZE;
+        String frameSizeStr = System.getProperty(GlobalConfig.FRAME_SIZE_PROPERTY);
+        if (frameSizeStr != null) {
+            int fz = -1;
+            try {
+                fz = Integer.parseInt(frameSizeStr);
+            } catch (NumberFormatException nfe) {
+                GlobalConfig.ASTERIX_LOGGER.warning("Wrong frame size size argument. Picking default value ("
+                        + GlobalConfig.DEFAULT_FRAME_SIZE + ") instead.\n");
+            }
+            if (fz >= 0) {
+                frameSize = fz;
+            }
+        }
+        return frameSize;
+    }
 }

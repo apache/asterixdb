@@ -250,21 +250,7 @@ public class APIFramework {
             }
         }
 
-        int frameSize = GlobalConfig.DEFAULT_FRAME_SIZE;
-        String frameSizeStr = System.getProperty(GlobalConfig.FRAME_SIZE_PROPERTY);
-        if (frameSizeStr != null) {
-            int fz = -1;
-            try {
-                fz = Integer.parseInt(frameSizeStr);
-            } catch (NumberFormatException nfe) {
-                GlobalConfig.ASTERIX_LOGGER.warning("Wrong frame size size argument. Picking default value ("
-                        + GlobalConfig.DEFAULT_FRAME_SIZE + ") instead.\n");
-                throw new AlgebricksException(nfe);
-            }
-            if (fz >= 0) {
-                frameSize = fz;
-            }
-        }
+        int frameSize = GlobalConfig.getFrameSize();
 
         HeuristicCompilerFactoryBuilder builder = new HeuristicCompilerFactoryBuilder(
                 AqlOptimizationContextFactory.INSTANCE);
