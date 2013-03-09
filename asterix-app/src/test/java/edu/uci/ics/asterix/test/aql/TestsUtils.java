@@ -7,13 +7,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.io.Reader;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import edu.uci.ics.asterix.api.java.AsterixJavaClient;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 
 public class TestsUtils {
