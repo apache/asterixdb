@@ -42,6 +42,7 @@ public class CreateCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
+        InstallerDriver.initConfig();
         ValidateCommand validateCommand = new ValidateCommand();
         boolean valid = validateCommand.validateCluster(((CreateConfig) config).clusterPath);
         if (!valid) {
@@ -95,22 +96,23 @@ public class CreateCommand extends AbstractCommand {
 
     @Override
     protected String getUsageDescription() {
-        return null;
+        return "\nCreates an ASTERIX instance with a specified name."
+                + "\n\nPost creation, the instance is in ACTIVE state, signifying its "
+                + "\navailability for executing statements/queries." + "\n\nUsage arguments/options:"
+                + "\n-n Name of the ASTERIX instance." + "\n-c Path to the cluster configuration file"
+                + "\n-a Path to the ASTERIX configuration file";
     }
 }
 
-class CreateConfig implements CommandConfig {
+class CreateConfig extends AbstractCommandConfig {
 
-    @Option(name = "-h", required = false, usage = "Help")
-    public boolean help = false;
-
-    @Option(name = "-n", required = true, usage = "Name of Asterix Instance")
+    @Option(name = "-n", required = false, usage = "Name of Asterix Instance")
     public String name;
 
-    @Option(name = "-c", required = true, usage = "Path to cluster configuration")
+    @Option(name = "-c", required = false, usage = "Path to cluster configuration")
     public String clusterPath;
 
-    @Option(name = "-a", required = true, usage = "Path to cluster configuration")
+    @Option(name = "-a", required = false, usage = "Path to cluster configuration")
     public String asterixConf;
 
 }

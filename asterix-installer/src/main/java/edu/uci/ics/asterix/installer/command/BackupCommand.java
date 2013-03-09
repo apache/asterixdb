@@ -20,6 +20,7 @@ import java.util.List;
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
+import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.events.PatternCreator;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
@@ -31,6 +32,7 @@ public class BackupCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
+        InstallerDriver.initConfig();
         String asterixInstanceName = ((BackupConfig) config).name;
         AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
         List<BackupInfo> backupInfo = instance.getBackupInfo();
@@ -51,17 +53,21 @@ public class BackupCommand extends AbstractCommand {
 
     @Override
     protected String getUsageDescription() {
-        return null;
+        return "\nIn an undesirable event of data loss either due to a disk/system"
+                + "\nfailure or accidental execution of a DDL statement (drop dataverse/dataset),"
+                + "\nyou may need to recover the lost data. The backup command allows you to take a"
+                + "\nbackup of the data stored with an ASTERIX instance. "
+                + "\nThe backed up snapshot is stored in HDFS." 
+                + "\n\nAvailable arguments/options:"
+                + "\n-n name of the Asterix instance";
+
     }
 
 }
 
-class BackupConfig implements CommandConfig {
+class BackupConfig extends AbstractCommandConfig {
 
-    @Option(name = "-h", required = false, usage = "Help")
-    public boolean help = false;
-
-    @Option(name = "-n", required = true, usage = "Name of the Asterix instance")
+    @Option(name = "-n", required = false, usage = "Name of the Asterix instance")
     public String name;
 
     @Option(name = "-local", required = false, usage = "Path on the local file system for backup")

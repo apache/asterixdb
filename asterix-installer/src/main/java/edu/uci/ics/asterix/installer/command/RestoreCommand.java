@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.installer.command;
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
+import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.events.PatternCreator;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
@@ -26,6 +27,7 @@ public class RestoreCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
+        InstallerDriver.initConfig();
         String asterixInstanceName = ((RestoreConfig) config).name;
         AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
         int backupId = ((RestoreConfig) config).backupId;
@@ -45,21 +47,19 @@ public class RestoreCommand extends AbstractCommand {
 
     @Override
     protected String getUsageDescription() {
-        // TODO Auto-generated method stub
-        return null;
+        return "\nRestores an ASTERIX instance's data from a previously taken backup snapshot."
+                + "\n\nAvailable arguments/options" + "\n-n name of the ASTERIX instance"
+                + "\n-b id of the backed up snapshot ";
     }
 
 }
 
-class RestoreConfig implements CommandConfig {
+class RestoreConfig extends AbstractCommandConfig {
 
-    @Option(name = "-h", required = false, usage = "Help")
-    public boolean help = false;
-
-    @Option(name = "-n", required = true, usage = "Name of the Asterix instance")
+    @Option(name = "-n", required = false, usage = "Name of the Asterix instance")
     public String name;
 
-    @Option(name = "-b", required = true, usage = "Id corresponding to the backed up version")
+    @Option(name = "-b", required = false, usage = "Id corresponding to the backed up version")
     public int backupId;
 
 }

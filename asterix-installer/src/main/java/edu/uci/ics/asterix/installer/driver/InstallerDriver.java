@@ -54,7 +54,7 @@ public class InstallerDriver {
         return conf;
     }
 
-    private static void initConfig() throws Exception {
+    public static void initConfig() throws Exception {
         File configFile = new File(managixHome + File.separator + MANAGIX_CONF_XML);
         JAXBContext configCtx = JAXBContext.newInstance(Configuration.class);
         Unmarshaller unmarshaller = configCtx.createUnmarshaller();
@@ -101,10 +101,6 @@ public class InstallerDriver {
         try {
             if (args.length != 0) {
                 managixHome = System.getenv(ENV_MANAGIX_HOME);
-                CommandType cmdType = CommandType.valueOf(args[0].toUpperCase());
-                if (!cmdType.equals(CommandType.VALIDATE) && !cmdType.equals(CommandType.CONFIGURE)) {
-                    initConfig();
-                }
                 CommandHandler cmdHandler = new CommandHandler();
                 cmdHandler.processCommand(args);
             } else {

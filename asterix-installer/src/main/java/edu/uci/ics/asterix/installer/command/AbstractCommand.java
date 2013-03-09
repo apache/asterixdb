@@ -14,16 +14,17 @@
  */
 package edu.uci.ics.asterix.installer.command;
 
-
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineParser;
+
+import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 
 public abstract class AbstractCommand implements ICommand {
 
     protected static final Logger LOGGER = Logger.getLogger(AbstractCommand.class.getName());
 
     protected CommandConfig config;
-    
+
     protected String usageDescription;
 
     public void execute(String[] args) throws Exception {
@@ -32,7 +33,11 @@ public abstract class AbstractCommand implements ICommand {
         config = getCommandConfig();
         CmdLineParser parser = new CmdLineParser(config);
         parser.parseArgument(cmdArgs);
-        execCommand();
+        if (config.helpMode()) {
+            System.out.println(getUsageDescription());
+        } else {
+            execCommand();
+        }
     }
 
     abstract protected void execCommand() throws Exception;

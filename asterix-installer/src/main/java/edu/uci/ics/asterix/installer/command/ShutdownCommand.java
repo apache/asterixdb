@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.asterix.installer.command;
 
-import org.kohsuke.args4j.Option;
-
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.service.ILookupService;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
@@ -35,15 +33,11 @@ public class ShutdownCommand extends AbstractCommand {
 
     @Override
     protected String getUsageDescription() {
-        // TODO Auto-generated method stub
-        return null;
+        return "\nShuts down the installer's backgrouund processes";
     }
 
 }
 
-class ShutdownConfig implements CommandConfig {
-
-    @Option(name = "-h", required = false, usage = "Help")
-    public boolean help = false;
+class ShutdownConfig extends AbstractCommandConfig {
 
 }

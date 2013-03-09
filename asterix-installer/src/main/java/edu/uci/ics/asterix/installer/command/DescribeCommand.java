@@ -18,6 +18,7 @@ import java.util.List;
 
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.error.InstallerException;
 import edu.uci.ics.asterix.installer.error.VerificationUtil;
@@ -30,6 +31,7 @@ public class DescribeCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
+        InstallerDriver.initConfig();
         String asterixInstanceName = ((DescribeConfig) config).name;
         boolean adminView = ((DescribeConfig) config).admin;
         if (asterixInstanceName != null) {
@@ -72,16 +74,13 @@ public class DescribeCommand extends AbstractCommand {
 
     @Override
     protected String getUsageDescription() {
-        // TODO Auto-generated method stub
-        return null;
+        return "\nProvides information about an ASTERIX instance." + "\n\nUsage arguments/options:-"
+                + "\n[-n] Name of the ASTERIX instance." + "\n[-admin] Provides a detailed description";
     }
 
 }
 
-class DescribeConfig implements CommandConfig {
-
-    @Option(name = "-h", required = false, usage = "Help")
-    public boolean help = false;
+class DescribeConfig extends AbstractCommandConfig {
 
     @Option(name = "-n", required = false, usage = "Name of Asterix Instance")
     public String name;

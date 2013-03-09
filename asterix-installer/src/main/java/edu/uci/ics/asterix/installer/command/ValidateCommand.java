@@ -32,8 +32,6 @@ import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 import edu.uci.ics.asterix.installer.schema.conf.Zookeeper;
-import edu.uci.ics.asterix.installer.service.ILookupService;
-import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class ValidateCommand extends AbstractCommand {
 
@@ -67,7 +65,10 @@ public class ValidateCommand extends AbstractCommand {
 
     @Override
     protected String getUsageDescription() {
-        return null;
+        return "\nValidate the installer's configuration or a cluster configuration" + "\nUsage"
+                + "\nFor validating the installer configuration" + "\n use $ managix validate"
+                + "\n\nFor validating a cluster configuration"
+                + "\n$ use managix validate -c <path to the cluster configuration file>";
     }
 
     public boolean validateEnvironment() throws Exception {
@@ -233,10 +234,7 @@ public class ValidateCommand extends AbstractCommand {
 
 }
 
-class ValidateConfig implements CommandConfig {
-
-    @Option(name = "-h", required = false, usage = "Help")
-    public boolean help = false;
+class ValidateConfig extends AbstractCommandConfig {
 
     @Option(name = "-c", required = false, usage = "Path to the cluster configuration xml")
     public String cluster;

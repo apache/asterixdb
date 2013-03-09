@@ -32,6 +32,7 @@ public class StartCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
+        InstallerDriver.initConfig();
         String asterixInstanceName = ((StartConfig) config).name;
         AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
         InstallerUtil.createAsterixZip(instance, false);
@@ -53,16 +54,14 @@ public class StartCommand extends AbstractCommand {
 
     @Override
     protected String getUsageDescription() {
-        // TODO Auto-generated method stub
-        return null;
+        return "\nStarts an ASTERIX instance that is in INACTIVE state."
+                + "\nAfter executing the start command, the ASTERIX instance transits to the ACTIVE state,"
+                + "\nindicating that it is now available for executing statements/queries."
+                + "\n\nAvailable arguments/options" + "\n-n name of the ASTERIX instance. ";
     }
-
 }
 
-class StartConfig implements CommandConfig {
-
-    @Option(name = "-h", required = false, usage = "Help")
-    public boolean help = false;
+class StartConfig extends AbstractCommandConfig {
 
     @Option(name = "-n", required = false, usage = "Name of Asterix Instance")
     public String name;

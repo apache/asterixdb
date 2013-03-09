@@ -7,8 +7,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
-import org.kohsuke.args4j.Option;
-
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.WorkingDir;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
@@ -50,8 +48,8 @@ public class ConfigureCommand extends AbstractCommand {
 
     @Override
     protected String getUsageDescription() {
-        // TODO Auto-generated method stub
-        return null;
+        return "\nAuto-generates the ASTERIX installer configruation settings and ASTERIX cluster "
+                + "\n configuration settings for a single node setup.";
     }
 
     @Override
@@ -61,9 +59,6 @@ public class ConfigureCommand extends AbstractCommand {
 
 }
 
-class ConfigureConfig implements CommandConfig {
-
-    @Option(name = "-h", required = false, usage = "Help")
-    public boolean help = false;
+class ConfigureConfig extends AbstractCommandConfig {
 
 }
