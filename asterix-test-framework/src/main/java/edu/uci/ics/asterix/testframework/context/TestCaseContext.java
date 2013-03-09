@@ -2,6 +2,7 @@ package edu.uci.ics.asterix.testframework.context;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import edu.uci.ics.asterix.testframework.xml.TestCase;
@@ -44,25 +45,46 @@ public class TestCaseContext {
         return testCase;
     }
 
-    public File getTestFile(CompilationUnit cUnit) {
+    public List<TestFileContext> getTestFiles(CompilationUnit cUnit) {
+        List<TestFileContext> testFileCtxs = new ArrayList<TestFileContext>();
+
         File path = tsRoot;
         path = new File(path, testSuite.getQueryOffsetPath());
         path = new File(path, testCase.getFilePath());
-        return new File(path, cUnit.getName() + testSuite.getQueryFileExtension());
+        path = new File(path, cUnit.getName());
+
+        String fileNames[] = path.list();
+        System.out.println(fileNames.length);
+        for (String fName : fileNames) {
+            File testFile = new File(path, fName);
+            TestFileContext tfsc = new TestFileContext(testFile);
+            String[] nameSplits = fName.split("\\.");
+            tfsc.setSeqNum(nameSplits[1]);
+            tfsc.setType(nameSplits[2]);
+            testFileCtxs.add(tfsc);
+        }
+        Collections.sort(testFileCtxs);
+        return testFileCtxs;
     }
 
-    public File getExpectedResultFile(CompilationUnit cUnit) {
+    public List<TestFileContext> getExpectedResultFiles(CompilationUnit cUnit) {
+        List<TestFileContext> resultFileCtxs = new ArrayList<TestFileContext>();
+
         File path = tsRoot;
         path = new File(path, testSuite.getResultOffsetPath());
         path = new File(path, testCase.getFilePath());
-        return new File(path, cUnit.getOutputFile().getValue());
-    }
-    
-    public File getActualResultFile(CompilationUnit cUnit, File actualResultsBase) {
-        File path = actualResultsBase;
-        path = new File(path, testSuite.getResultOffsetPath());
-        path = new File(path, testCase.getFilePath());
-        return new File(path, cUnit.getOutputFile().getValue());
+        path = new File(path, cUnit.getOutputDir().getValue());
+
+        String fileNames[] = path.list();
+        for (String fName : fileNames) {
+            File testFile = new File(path, fName);
+            TestFileContext tfsc = new TestFileContext(testFile);
+            String[] nameSplits = fName.split("\\.");
+            tfsc.setSeqNum(nameSplits[1]);
+            resultFileCtxs.add(tfsc);
+        }
+        Collections.sort(resultFileCtxs);
+        return resultFileCtxs;
     }
 
     public static class Builder {

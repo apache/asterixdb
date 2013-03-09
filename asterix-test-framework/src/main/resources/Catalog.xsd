@@ -37,15 +37,6 @@
             </xs:annotation>
          </xs:attribute>
 
-         <!-- file extension for XQuery expression files -->
-         <xs:attribute name="QueryFileExtension" type="xs:string" use="required">
-            <xs:annotation>
-               <xs:documentation>
-                  file extension for Query files
-               </xs:documentation>
-            </xs:annotation>
-         </xs:attribute>
-
       </xs:complexType>
 
       <xs:unique name="unique-test-group">
@@ -107,7 +98,7 @@
             <xs:complexType>
                <xs:sequence>
                   <xs:element name="description" type="test:description" minOccurs="0"/>
-                  <xs:element name="output-file" minOccurs="0">
+                  <xs:element name="output-dir" minOccurs="0">
                      <xs:annotation>
                         <xs:documentation>
                            Zero or one file containing expected results for this query.
