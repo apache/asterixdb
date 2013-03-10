@@ -85,7 +85,7 @@ public class DatasetPartitionReader implements IDatasetPartitionReader {
                 NetworkOutputChannel channel = (NetworkOutputChannel) writer;
                 channel.setFrameSize(resultState.getFrameSize());
                 try {
-                    fileHandle = resultState.getIOManager().open(resultState.getFileReference(),
+                    fileHandle = resultState.getIOManager().open(resultState.getValidFileReference(),
                             IIOManager.FileReadWriteMode.READ_ONLY, IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
                     channel.open();
                     try {
@@ -108,6 +108,8 @@ public class DatasetPartitionReader implements IDatasetPartitionReader {
                         channel.close();
                         resultState.getIOManager().close(fileHandle);
                     }
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 } catch (HyracksDataException e) {
                     throw new RuntimeException(e);
                 }

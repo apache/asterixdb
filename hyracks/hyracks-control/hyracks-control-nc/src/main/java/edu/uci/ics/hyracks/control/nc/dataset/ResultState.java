@@ -56,11 +56,12 @@ public class ResultState implements IStateObject {
         localPageList = new ArrayList<Page>();
     }
 
-    public void init(FileReference fileRef) {
+    public synchronized void init(FileReference fileRef) {
         this.fileRef = fileRef;
 
         size = 0;
         persistentSize = 0;
+        notifyAll();
     }
 
     public ResultSetPartitionId getResultSetPartitionId() {
@@ -139,7 +140,9 @@ public class ResultState implements IStateObject {
         return page;
     }
 
-    public FileReference getFileReference() {
+    public synchronized FileReference getValidFileReference() throws InterruptedException {
+        while (fileRef == null)
+            wait();
         return fileRef;
     }
 
