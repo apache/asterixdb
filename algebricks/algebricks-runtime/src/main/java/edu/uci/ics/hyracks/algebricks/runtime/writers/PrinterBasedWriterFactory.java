@@ -47,6 +47,7 @@ public class PrinterBasedWriterFactory implements IAWriterFactory {
                     }
                     printers[i].print(tAccess.getBuffer().array(), fldStart, fldLen, printStream);
                 }
+                printStream.println();
             }
         };
     }

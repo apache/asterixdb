@@ -70,7 +70,6 @@ public class SinkWriterRuntime extends AbstractOneInputSinkPushRuntime {
         for (int t = 0; t < nTuple; t++) {
             try {
                 writer.printTuple(tAccess, t);
-                printStream.println();
             } catch (AlgebricksException ae) {
                 throw new HyracksDataException(ae);
             }
