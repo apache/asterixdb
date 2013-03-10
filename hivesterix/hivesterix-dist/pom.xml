@@ -408,7 +408,7 @@
 				<version>2.5</version>
 				<executions>
 					<execution>
-						<id>copy-resources</id>
+						<id>copy-scripts</id>
 						<!-- here the phase you need -->
 						<phase>package</phase>
 						<goals>
@@ -418,7 +418,7 @@
 							<outputDirectory>target/appassembler/bin</outputDirectory>
 							<resources>
 								<resource>
-									<directory>resource/bin</directory>
+									<directory>src/main/resources/scripts</directory>
 								</resource>
 							</resources>
 						</configuration>
@@ -434,87 +434,7 @@
 							<outputDirectory>target/appassembler/conf</outputDirectory>
 							<resources>
 								<resource>
-									<directory>conf</directory>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					<execution>
-						<id>copy-asterix</id>
-						<!-- here the phase you need -->
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>target/appassembler/asterix</outputDirectory>
-							<resources>
-								<resource>
-									<directory>resource/asterix</directory>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					<execution>
-						<id>copy-asterix-dbg</id>
-						<!-- here the phase you need -->
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>target/appassembler/asterix_dbg</outputDirectory>
-							<resources>
-								<resource>
-									<directory>resource/asterix_dbg</directory>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					<execution>
-						<id>copy-hivesterix</id>
-						<!-- here the phase you need -->
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>target/appassembler/hivesterix</outputDirectory>
-							<resources>
-								<resource>
-									<directory>resource/hivesterix</directory>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					<execution>
-						<id>copy-conf2</id>
-						<!-- here the phase you need -->
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>target/appassembler/hivesterix/conf</outputDirectory>
-							<resources>
-								<resource>
-									<directory>conf</directory>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					<execution>
-						<id>copy-data</id>
-						<!-- here the phase you need -->
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>data</outputDirectory>
-							<resources>
-								<resource>
-									<directory>resource/data</directory>
+									<directory>src/main/resources/conf</directory>
 								</resource>
 							</resources>
 						</configuration>
