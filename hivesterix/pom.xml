@@ -133,7 +133,7 @@
 		<module>hivesterix-translator</module>
 		<module>hivesterix-optimizer</module>
 		<module>hivesterix-serde</module>
-		<module>hivesterix-core</module>
+		<module>hivesterix-dist</module>
 		<module>hivesterix-common</module>
 	</modules>
 </project>

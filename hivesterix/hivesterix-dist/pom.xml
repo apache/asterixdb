@@ -2,9 +2,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>edu.uci.ics.hyracks</groupId>
-	<artifactId>hivesterix-core</artifactId>
+	<artifactId>hivesterix-dist</artifactId>
 	<version>0.2.3-SNAPSHOT</version>
-	<name>hivesterix-core</name>
+	<name>hivesterix-dist</name>
 	<dependencies>
 		<dependency>
 			<groupId>javax.servlet</groupId>
