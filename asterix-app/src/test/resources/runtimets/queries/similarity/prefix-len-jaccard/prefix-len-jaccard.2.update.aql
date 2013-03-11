@@ -1,0 +1,15 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/similarity_prefix-len-jaccard.adm";
+
+for $l in [1]
+return [
+  prefix-len-jaccard(5, .8f),
+  prefix-len-jaccard(5, .9f),
+  prefix-len-jaccard(10, .8f),
+  prefix-len-jaccard(10, .9f),
+  prefix-len-jaccard(15, .8f),
+  prefix-len-jaccard(15, .9f)
+]

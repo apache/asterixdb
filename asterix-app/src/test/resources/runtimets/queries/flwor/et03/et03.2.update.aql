@@ -1,0 +1,10 @@
+/*
+ * Description     :  Test let clause
+ * Expected Result :  Success
+ * Date            :  6th July 2012 
+ */
+
+write output to nc1:"rttest/flwor_let03.adm";
+
+let $x := int64("92233720368547758")+1
+return $x

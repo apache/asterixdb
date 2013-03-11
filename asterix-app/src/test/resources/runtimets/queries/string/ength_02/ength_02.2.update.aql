@@ -1,0 +1,8 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/string_length_02.adm";
+
+for $x in ["ten", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "ninety"]
+return string-length($x)

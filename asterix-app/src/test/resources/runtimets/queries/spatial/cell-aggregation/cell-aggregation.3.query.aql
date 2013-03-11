@@ -1,0 +1,23 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type MyRecord as open {
+  id: int32,
+  loc: point
+}
+
+create external dataset MyData(MyRecord)
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/spatial/spatialDataAggregation.json"),("format"="adm"));
+
+write output to nc1:"rttest/spatial_cell-aggregation.adm";
+
+let $grid :=
+for $o in dataset('MyData')
+group by $c := spatial-cell($o.loc, create-point(0.0,0.0), 5.0, 5.0) with $o
+let $num :=  count($o)
+order by $num
+return { "cell": $c, "count": $num}
+for $g in $grid
+return $g

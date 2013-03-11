@@ -1,0 +1,17 @@
+/*
+ * Description  : Create UDF and invoke the UDF from with in asterix built-in function
+ * Expected Res : Success
+ * Date         : Sep 5th 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+write output to nc1:"rttest/user-defined-functions_udf18.adm";
+
+create function test.fn06(){
+false
+}
+
+let $val := not(test.fn06())
+return $val

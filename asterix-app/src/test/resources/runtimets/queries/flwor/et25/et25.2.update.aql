@@ -1,0 +1,11 @@
+/*
+ * Description     : Test let clause
+ * Expected Result : Success
+ * Date            : 23rd July 2012
+ */
+
+write output to nc1:"rttest/flwor_let25.adm";
+
+let $a := true or false
+let $b := (true or false) and not(false)
+return {"a":$a,"b":$b}

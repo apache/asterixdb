@@ -1,0 +1,40 @@
+/*
+ * Description  : Create and drop and recreate the same open type, here type has optional fields.
+ *              : verify correctness by querying metadata.
+ * Date         : 11th Feb 2013
+ * Expected Res : Success
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as open {
+id : int32,
+salary : double ?,
+name : string,
+durtn : duration ?,
+inter : interval,
+dt : date ?,
+tm : time,
+pt : point ?
+}
+
+drop type TestType;
+
+create type TestType as open {
+id : int32,
+salary : double ?,
+name : string,
+durtn : duration ?,
+inter : interval,
+dt : date ?,
+tm : time,
+pt : point ?
+}
+
+write output to nc1:"rttest/dml_create-drop-opntype.adm"; 
+
+for $l in dataset('Metadata.Datatype')
+where $l.DatatypeName = 'TestType'
+return $l

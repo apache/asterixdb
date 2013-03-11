@@ -1,0 +1,16 @@
+/*
+ * Description  : Create UDF to add two integers
+ * Expected Res : Success
+ * Date         : 4th September 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+write output to nc1:"rttest/user-defined-functions_udf12.adm";
+
+create function test.foo($a,$b) {
+$a+$b
+}
+
+test.foo(100,200)

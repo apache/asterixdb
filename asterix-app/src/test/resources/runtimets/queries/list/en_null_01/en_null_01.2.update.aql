@@ -1,0 +1,8 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/list_len_null_01.adm";
+
+let $n := null
+return {"len1": len([]), "len2": $n}

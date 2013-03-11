@@ -1,0 +1,23 @@
+/* 
+ * Test case Name  : opentype-insert2.aql
+ * Description     : verify that the case where SetClosedRecordRule should not rewrite
+ *					the plan to use closed-record-descriptor
+ * Expected Result : Success
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as open {
+	id:int32
+}
+
+create dataset testds(TestType) primary key id;
+
+insert into dataset testds( for $i in range(1,10) return { "id":$i,"name":"John Doe" });
+
+write output to nc1:"rttest/dml_opentype-insert2.adm";
+for $l in dataset('testds')
+order by $l.id
+return $l

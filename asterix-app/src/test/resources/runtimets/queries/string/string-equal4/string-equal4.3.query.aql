@@ -1,0 +1,11 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/string_string-equal4.adm";
+
+let $c1 := string-equal("","")
+let $c3 := string-equal(null,"")
+let $c4 := string-equal("",null)
+let $c5 := string-equal(null,null)
+return {"result1": $c1, "result3": $c3, "result4": $c4, "result5": $c5}

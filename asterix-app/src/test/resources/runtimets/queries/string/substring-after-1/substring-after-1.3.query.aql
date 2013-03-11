@@ -1,0 +1,8 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/string_substring-after-1.adm";
+
+let $c1 := substring-after("HEllow","El")
+return {"result1": $c1}

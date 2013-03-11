@@ -1,0 +1,16 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/numeric_round2.adm";
+
+
+let $c0 := float("20.1")
+let $c1 := float("-20.56e-30")
+let $c2 := float("NaN")
+let $c3 := float("INF")
+let $c4 := float("-INF")
+let $c5 := float("-0.0")
+let $c6 := float("0.0")
+return {"f0": numeric-round($c0), "f1": numeric-round($c1),"f2": numeric-round($c2),
+        "f3": numeric-round($c3),"f4": numeric-round($c4),"f5": numeric-round($c5), "f6": numeric-round($c6)}

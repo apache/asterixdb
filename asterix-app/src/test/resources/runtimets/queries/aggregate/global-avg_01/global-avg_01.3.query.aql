@@ -1,0 +1,12 @@
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+write output to nc1:"rttest/aggregate_global-avg_01.adm";
+
+global-avg(
+  for $x in [1.0, 2.0, double("3.0")] 
+  return { "sum": $x, "count": 1 }  
+)

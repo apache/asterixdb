@@ -1,0 +1,9 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/list_any-collection-member_01.adm";
+
+let $x := {{1,1,1}}
+return $x[?]
+ 

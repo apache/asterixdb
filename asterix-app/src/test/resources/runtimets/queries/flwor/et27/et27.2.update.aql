@@ -1,0 +1,12 @@
+/*
+ * Description     : Test let clause 
+ * Expected Result : Success 
+ * Date            : 23rd July 2012 
+ */
+
+// Bind arithmetic expressions to variable using let clause
+
+write output to nc1:"rttest/flwor_let27.adm";
+
+let $a := [(100+100),(100-100),(100 * 100),(100 / 100),(100 %10)] 
+return $a

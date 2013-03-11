@@ -1,0 +1,12 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/subset-collection_04.adm";
+
+for $l in [1]
+return subset-collection([1, 2, 3, 4], 1, 2)
+/*
+edu.uci.ics.asterix.common.exceptions.AsterixException: Trying to create an aggregate from a scalar function descriptor. (fid=subset-collection@3)
+        at edu.uci.ics.asterix.algebra.expressions.FunctionCallExpression.createEvaluatorFactory(FunctionCallExpression.java:85)
+*/

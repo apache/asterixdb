@@ -1,0 +1,11 @@
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+write output to nc1:"rttest/comparison_double_gte_01.adm";
+
+for $i in [0.8, 0.8999999761581421, 0.9, 0.901]
+where $i >= 0.9
+return $i

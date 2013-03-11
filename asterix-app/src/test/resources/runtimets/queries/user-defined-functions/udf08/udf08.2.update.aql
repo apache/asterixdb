@@ -1,0 +1,17 @@
+/*
+ * Description  : Pass a sting as input to UDF
+ * Expected Res : Success
+ * Date         : 4th September 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+write output to nc1:"rttest/user-defined-functions_udf08.adm";
+
+create function test.echo($a){
+$a
+}
+
+let $a:="This is a test string"
+return test.echo($a)

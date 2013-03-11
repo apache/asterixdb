@@ -1,0 +1,9 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/numeric_unary-minus_null.adm";
+
+let $l := [1]
+let $c := $l[1]
+return {"nullField": -$c}

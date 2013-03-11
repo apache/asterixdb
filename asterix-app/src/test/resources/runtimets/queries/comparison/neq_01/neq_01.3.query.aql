@@ -1,0 +1,10 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/comparison_neq_01.adm";
+
+for $x in [1, 2, 2]
+where $x != 2
+return $x
+ 

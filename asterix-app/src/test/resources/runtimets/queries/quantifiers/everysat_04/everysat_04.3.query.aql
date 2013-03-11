@@ -1,0 +1,23 @@
+/*
+ * Description    : Tests that universal quantification returns true/false correctly.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/quantifiers_everysat_04.adm";
+
+let $x := [
+every $x in [false,false] satisfies $x,
+every $x in [true,false] satisfies $x,
+every $x in [false,true] satisfies $x,
+every $x in [true,true] satisfies $x,
+every $x in [false,false] satisfies not($x),
+every $x in [true,false] satisfies not($x),
+every $x in [false,true] satisfies not($x),
+every $x in [true,true] satisfies not($x)
+]
+for $i in $x
+return $i

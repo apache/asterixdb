@@ -1,0 +1,9 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/string_like_null.adm";
+
+let $x := like("A8BBB", null)
+let $y :=  like(null, "_6%")
+return {"field1": $x , "field2": $y}

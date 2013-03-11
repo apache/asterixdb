@@ -1,0 +1,23 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/similarity_similarity-jaccard_ints.adm";
+
+let $a := [ ]
+let $b := [1, 2, 3, 4, 5]
+let $c := [1, 2, 3, 4, 5, 8, 9]
+let $d := [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+let $e := [4, 3, 5, 8, 9, 2, 1]
+let $f := [7, 5, 8, 9, 3, 10, 1, 2, 11, 4]
+let $results :=
+[
+  similarity-jaccard($a, $b),
+  similarity-jaccard($b, $a),
+  similarity-jaccard($c, $d),
+  similarity-jaccard($d, $c),
+  similarity-jaccard($e, $f),
+  similarity-jaccard($f, $e)
+]
+for $i in $results
+return $i

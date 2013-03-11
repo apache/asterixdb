@@ -1,0 +1,23 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/similarity_similarity-jaccard-sorted-check_ints.adm";
+
+let $a := [ ]
+let $b := [1, 2, 3, 4, 5]
+let $c := [1, 2, 3, 4, 5, 8, 9]
+let $d := [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+let $results :=
+[
+  similarity-jaccard-sorted-check($a, $b, 0.0f),
+  similarity-jaccard-sorted-check($b, $a, 0.0f),
+  similarity-jaccard-sorted-check($a, $b, 0.1f),
+  similarity-jaccard-sorted-check($b, $a, 0.1f),
+  similarity-jaccard-sorted-check($c, $d, 0.6f),
+  similarity-jaccard-sorted-check($d, $c, 0.6f),
+  similarity-jaccard-sorted-check($c, $d, 0.8f),
+  similarity-jaccard-sorted-check($d, $c, 0.8f)
+]
+for $i in $results
+return $i

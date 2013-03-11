@@ -1,0 +1,17 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/similarity_edit-distance-check_strings.adm";
+
+let $a := "Nalini Venkatasubramanian"
+let $b := "Nalini Wekatasupramanian"
+let $results :=
+[
+  edit-distance-check($a, $b, 3),
+  edit-distance-check($b, $a, 3),
+  edit-distance-check($a, $b, 2),
+  edit-distance-check($b, $a, 2)
+]
+for $i in $results
+return $i

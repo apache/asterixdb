@@ -1,0 +1,12 @@
+/*
+ * Description     :  Test let clause
+ * Expected Result :  Success
+ * Date            :  6th July 2012 
+ */
+
+write output to nc1:"rttest/flwor_let18.adm";
+
+// An ordered list comprising of an un ordered list.
+
+let $a:=[{{"John Doe",45,"HR",60000,"Separation"}}]
+return $a

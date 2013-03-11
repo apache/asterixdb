@@ -1,0 +1,10 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/quantifiers_somesat_01.adm";
+
+for $x in [10, -30, -21, 50]
+where some $y in [-20, -40]
+      satisfies $y > $x
+return $x

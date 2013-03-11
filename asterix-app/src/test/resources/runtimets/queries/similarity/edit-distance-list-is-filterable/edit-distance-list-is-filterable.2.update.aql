@@ -1,0 +1,19 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/similarity_edit-distance-list-is-filterable.adm";
+
+let $a := []
+let $b := [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+let $results :=
+[
+  edit-distance-list-is-filterable($a, 0),
+  edit-distance-list-is-filterable($a, 3),
+  edit-distance-list-is-filterable($b, 0),
+  edit-distance-list-is-filterable($b, 3),
+  edit-distance-list-is-filterable($b, 8),
+  edit-distance-list-is-filterable($b, 11)
+]
+for $i in $results
+return $i

@@ -1,0 +1,11 @@
+/*
+ * Description      :  Test for clause of the FLWOR expression
+ * Expected Result  :  Success
+ * Date             :  7th July 2012
+ */
+
+write output to nc1:"rttest/flwor_for06.adm";
+
+for $a in [1,2,3,4,5,6,7,8,9]
+where $undefined
+return $a

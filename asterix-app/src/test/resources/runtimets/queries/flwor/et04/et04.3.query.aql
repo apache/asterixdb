@@ -1,0 +1,10 @@
+/*
+ * Description     :  Test let clause
+ * Expected Result :  Success
+ * Date            :  6th July 2012 
+ */
+
+write output to nc1:"rttest/flwor_let04.adm";
+
+let $x := double("1.7976931348623157E308") 
+return $x

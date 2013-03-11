@@ -1,0 +1,8 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+
+write output to nc1:"rttest/records_closed-record-constructor_01.adm";
+
+closed-record-constructor("foo1", 10, "bar1", 20, "foo2", 30, "bar2", 40)

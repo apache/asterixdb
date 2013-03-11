@@ -1,0 +1,8 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/numeric_abs4.adm";
+
+let $c0 := int8("-20")
+return {"f0": numeric-abs($c0), "f1": numeric-abs(-1.11),"f2": numeric-abs(12.9), "f3": numeric-abs(1.11)}

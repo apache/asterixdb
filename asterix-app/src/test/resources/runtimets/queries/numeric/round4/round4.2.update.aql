@@ -1,0 +1,8 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/numeric_round4.adm";
+
+let $c0 := int8("-20")
+return {"f0": numeric-round($c0), "f1": numeric-round(-1.11),"f2": numeric-round(12.9), "f3": numeric-round(1.11)}

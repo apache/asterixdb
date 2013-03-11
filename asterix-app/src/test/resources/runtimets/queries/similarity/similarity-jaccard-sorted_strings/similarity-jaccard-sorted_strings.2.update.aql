@@ -1,0 +1,23 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/similarity_similarity-jaccard-sorted_strings.adm";
+
+let $a := [ ]
+let $b := ["abc", "bcd", "cde", "def", "efg"]
+let $c := ["abc", "bcd", "cde", "def", "efg", "hij", "ijk"]
+let $d := ["abc", "bcd", "cde", "def", "efg", "fgh", "ghi", "hij", "ijk", "jkl"]
+let $e := ["Abc", "bCd", "cdE", "DEf", "eFG", "HiJ", "IJK"]
+let $f := ["abc", "bcd", "cde", "def", "efg", "fgh", "ghi", "hij", "ijk", "jkl"]
+let $results :=
+[
+  similarity-jaccard-sorted($a, $b),
+  similarity-jaccard-sorted($b, $a),
+  similarity-jaccard-sorted($c, $d),
+  similarity-jaccard-sorted($d, $c),
+  similarity-jaccard-sorted($e, $f),
+  similarity-jaccard-sorted($f, $e)
+]
+for $i in $results
+return $i

@@ -1,0 +1,10 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/constructor_string_01.adm";
+
+let $c1 := string("true")
+let $c2 := string("false\"")
+return {"string1": $c1,"string2": $c2}
+

@@ -1,0 +1,11 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/numeric_unary-minus_float_02.adm";
+
+let $c1 := float("-80.20f")
+let $c2 := float("NaN")
+let $c3 := float("INF")
+let $c4 := float("-INF")
+return {"float1": -$c1,"float2": -$c2,"float3": -$c3,"float4": -$c4}

@@ -1,0 +1,9 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/string_contains_01.adm";
+
+for $x in ["foofoo"]
+for $y in ["barbar"]
+return [contains($x, "ofo"), contains($y, "ofo")]

@@ -1,0 +1,11 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/string_string-join1.adm";
+
+let $x :=  ["aa", "25991", "bb", "31526"]
+let $s := "::"
+let $c := string-join($x,$s)
+let $c1 := string-join($x,"")
+return {"result0": $c,"result1": $c1}

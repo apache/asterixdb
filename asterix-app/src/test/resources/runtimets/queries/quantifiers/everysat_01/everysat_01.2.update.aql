@@ -1,0 +1,10 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/quantifiers_everysat_01.adm";
+
+for $x in [10, -30]
+where every $y in [-20, -10]
+      satisfies $y > $x
+return $x

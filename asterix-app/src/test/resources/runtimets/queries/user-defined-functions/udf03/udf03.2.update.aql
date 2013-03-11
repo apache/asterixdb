@@ -1,0 +1,20 @@
+/*
+ * Description  : Pass an ordered list as input to UDF and return the zeroth element of that list.
+ * Expected Res : Success
+ * Date         : 4th September 2012
+ * Ignored      : Not part of test build due to Issue 200
+ */
+
+// This test is returning NPE... Issue 200 
+
+drop dataverse test if exists;
+create dataverse test;
+
+write output to nc1:"rttest/user-defined-functions_udf03.adm";
+
+create function test.echo($list){
+$list
+}
+
+for $a in [[1,2],["A","B"],["UCLA","UCSD","UCR","UCI"]]
+return test.echo($a)

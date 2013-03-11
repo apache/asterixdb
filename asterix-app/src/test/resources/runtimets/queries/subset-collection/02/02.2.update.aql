@@ -1,0 +1,13 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/subset-collection_02.adm";
+
+for $l in subset-collection([1, 2, 3, 4], 1, 2)
+return $l
+/*
+output: 
+2
+3
+*/

@@ -1,0 +1,18 @@
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+write output to nc1:"rttest/aggregate_avg_int32.adm";
+
+avg( 
+ for $x in [1, 2, 3] 
+ return $x
+)
+
+
+
+
+
+

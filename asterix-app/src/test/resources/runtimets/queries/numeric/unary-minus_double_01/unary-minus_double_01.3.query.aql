@@ -1,0 +1,11 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/numeric_unary-minus_double_01.adm";
+
+let $c1 := double("-20.56e-30")
+let $c2 := double("NaN")
+let $c3 := double("INF")
+let $c4 := double("-INF")
+return {"double1": numeric-unary-minus($c1),"double2": numeric-unary-minus($c2),"double3": numeric-unary-minus($c3),"double4": numeric-unary-minus($c4)}

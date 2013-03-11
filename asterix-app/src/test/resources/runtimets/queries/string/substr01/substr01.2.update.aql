@@ -1,0 +1,30 @@
+/*
+ * Testcase Name  : substr01.aql
+ * Description    : Test substring2(string,position) built in function.
+ * Success        : Yes
+ * Date           : 18th April 2012
+ */
+
+write output to nc1:"rttest/string_substr01.adm";
+
+let $str1:="Hello World"
+let $str2:=substring2($str1,10)
+
+let $str3:="This is a test string"
+let $str4:=substring2($str3,21)
+
+let $str5:="This is a test string"
+let $str6:=substring2($str5,22)
+
+let $str7:="This is a test string"
+let $str8:=substring2($str7,0)
+
+let $str9:="This is a test string"
+let $str10:=substring2($str9,-1)
+
+let $str11:="This is a test string"
+let $str12:="This is a another test string"
+let $str13:=substring2(string-concat([$str11,$str12]),21)
+
+let $str14:=substring2("UC Irvine",string-length("UC Irvine")/2)
+return { "str2":$str2,"str4":$str4,"str6":$str6,"str8":$str8,"str10":$str10,"str13":$str13,"str14":$str14}

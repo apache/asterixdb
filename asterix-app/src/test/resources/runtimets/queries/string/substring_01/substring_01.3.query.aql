@@ -1,0 +1,8 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/string_substring_01.adm";
+
+for $x in ["foobar"]
+return substring($x, 2, 3)
