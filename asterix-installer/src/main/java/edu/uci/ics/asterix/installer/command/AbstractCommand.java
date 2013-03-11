@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.asterix.installer.command;
 
-
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineParser;
 
@@ -23,16 +22,20 @@ public abstract class AbstractCommand implements ICommand {
     protected static final Logger LOGGER = Logger.getLogger(AbstractCommand.class.getName());
 
     protected CommandConfig config;
-    
+
     protected String usageDescription;
 
     public void execute(String[] args) throws Exception {
         String[] cmdArgs = new String[args.length - 1];
         System.arraycopy(args, 1, cmdArgs, 0, cmdArgs.length);
-        config = getCommandConfig();
-        CmdLineParser parser = new CmdLineParser(config);
-        parser.parseArgument(cmdArgs);
-        execCommand();
+        if (cmdArgs.length >= 1 && cmdArgs[0].equals("-help")) {
+            System.out.println(getUsageDescription());
+        } else {
+            config = getCommandConfig();
+            CmdLineParser parser = new CmdLineParser(config);
+            parser.parseArgument(cmdArgs);
+            execCommand();
+        }
     }
 
     abstract protected void execCommand() throws Exception;

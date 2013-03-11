@@ -14,26 +14,34 @@
  */
 package edu.uci.ics.asterix.installer.command;
 
+import java.util.List;
+
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
+import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.events.PatternCreator;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
 import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
+import edu.uci.ics.asterix.installer.model.BackupInfo;
 
 public class RestoreCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
+        InstallerDriver.initConfig();
         String asterixInstanceName = ((RestoreConfig) config).name;
         AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
         int backupId = ((RestoreConfig) config).backupId;
-        if (instance.getBackupInfo().size() <= backupId || backupId < 0) {
+        List<BackupInfo> backupInfoList = instance.getBackupInfo();
+        if (backupInfoList.size() <= backupId || backupId < 0) {
             throw new IllegalStateException("Invalid backup id");
         }
+
+        BackupInfo backupInfo = backupInfoList.get(backupId);
         PatternCreator pc = new PatternCreator();
-        Patterns patterns = pc.getRestoreAsterixPattern(instance, backupId);
+        Patterns patterns = pc.getRestoreAsterixPattern(instance, backupInfo);
         InstallerUtil.getEventrixClient(instance.getCluster()).submit(patterns);
         LOGGER.info("Asterix instance: " + asterixInstanceName + " has been restored from backup");
     }
@@ -45,16 +53,14 @@ public class RestoreCommand extends AbstractCommand {
 
     @Override
     protected String getUsageDescription() {
-        // TODO Auto-generated method stub
-        return null;
+        return "\nRestores an ASTERIX instance's data from a previously taken backup snapshot."
+                + "\n\nAvailable arguments/options" + "\n-n name of the ASTERIX instance"
+                + "\n-b id of the backed up snapshot ";
     }
 
 }
 
-class RestoreConfig implements CommandConfig {
-
-    @Option(name = "-h", required = false, usage = "Help")
-    public boolean help = false;
+class RestoreConfig extends AbstractCommandConfig {
 
     @Option(name = "-n", required = true, usage = "Name of the Asterix instance")
     public String name;

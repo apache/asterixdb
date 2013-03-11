@@ -97,4 +97,10 @@
     <args>WorkingDir HadoopVersion HDFSUrl Path_to_Delete</args>
     <daemon>false</daemon>
   </event>
+  <event>
+    <type>node_info</type>
+    <script>node_info/node_info.sh</script>
+    <description>Retrieved environment information for a node</description>
+    <daemon>false</daemon>
+  </event>
 </events>

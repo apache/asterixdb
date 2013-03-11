@@ -16,4 +16,5 @@ package edu.uci.ics.asterix.installer.command;
 
 public interface CommandConfig {
 
+    public boolean helpMode();
 }

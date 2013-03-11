@@ -42,14 +42,19 @@ public class CreateCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
+        InstallerDriver.initConfig();
+        ValidateCommand validateCommand = new ValidateCommand();
+        boolean valid = validateCommand.validateCluster(((CreateConfig) config).clusterPath);
+        if (!valid) {
+            throw new Exception("Cannot create an Asterix instance.");
+        }
         asterixInstanceName = ((CreateConfig) config).name;
         InstallerUtil.validateAsterixInstanceNotExists(asterixInstanceName);
         CreateConfig createConfig = (CreateConfig) config;
         JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
         Unmarshaller unmarshaller = ctx.createUnmarshaller();
         cluster = (Cluster) unmarshaller.unmarshal(new File(createConfig.clusterPath));
-        AsterixInstance asterixInstance = InstallerUtil.createAsterixInstance(asterixInstanceName, cluster,
-                ((CreateConfig) config).asterixConf);
+        AsterixInstance asterixInstance = InstallerUtil.createAsterixInstance(asterixInstanceName, cluster);
         InstallerUtil.evaluateConflictWithOtherInstances(asterixInstance);
         InstallerUtil.createAsterixZip(asterixInstance, true);
         List<Property> clusterProperties = new ArrayList<Property>();
@@ -90,22 +95,20 @@ public class CreateCommand extends AbstractCommand {
 
     @Override
     protected String getUsageDescription() {
-        return null;
+        return "\nCreates an ASTERIX instance with a specified name."
+                + "\n\nPost creation, the instance is in ACTIVE state, signifying its "
+                + "\navailability for executing statements/queries." + "\n\nUsage arguments/options:"
+                + "\n-n Name of the ASTERIX instance." + "\n-c Path to the cluster configuration file"
+                + "\n-a Path to the ASTERIX configuration file";
     }
 }
 
-class CreateConfig implements CommandConfig {
-
-    @Option(name = "-h", required = false, usage = "Help")
-    public boolean help = false;
+class CreateConfig extends AbstractCommandConfig {
 
     @Option(name = "-n", required = true, usage = "Name of Asterix Instance")
     public String name;
 
     @Option(name = "-c", required = true, usage = "Path to cluster configuration")
     public String clusterPath;
-
-    @Option(name = "-a", required = true, usage = "Path to cluster configuration")
-    public String asterixConf;
 
 }

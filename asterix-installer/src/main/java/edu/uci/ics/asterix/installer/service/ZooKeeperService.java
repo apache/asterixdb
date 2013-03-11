@@ -23,6 +23,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.CreateMode;
@@ -103,8 +104,32 @@ public class ZooKeeperService implements ILookupService {
         }
         Runtime.getRuntime().exec(cmdBuffer.toString());
         zk = new ZooKeeper(zkConnectionString, ZOOKEEPER_SESSION_TIME_OUT, watcher);
+        String head = msgQ.poll(10, TimeUnit.SECONDS);
+        if (head == null) {
+            String msg = "Unable to start Zookeeper Service. Please verify the configuration at "
+                    + InstallerDriver.getManagixHome() + File.separator + InstallerDriver.MANAGIX_CONF_XML;
+            throw new Exception(msg);
+        }
         msgQ.take();
         createRootIfNotExist();
+    }
+
+    public void stopService(Configuration conf) throws Exception {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Stopping ZooKeeper running at " + zkConnectionString);
+        }
+        String stopScript = ZOOKEEPER_HOME + File.separator + "bin" + File.separator + "stop_zk";
+        StringBuffer cmdBuffer = new StringBuffer();
+        cmdBuffer.append(stopScript + " ");
+        cmdBuffer.append(conf.getZookeeper().getHomeDir() + " ");
+        List<String> zkServers = conf.getZookeeper().getServers().getServer();
+        for (String zkServer : zkServers) {
+            cmdBuffer.append(zkServer + " ");
+        }
+        Runtime.getRuntime().exec(cmdBuffer.toString());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Stopped ZooKeeper service at " + zkConnectionString);
+        }
     }
 
     public void writeAsterixInstance(AsterixInstance asterixInstance) throws Exception {

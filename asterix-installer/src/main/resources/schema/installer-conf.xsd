@@ -18,7 +18,6 @@
     <xs:sequence>
       <xs:element ref="mg:version"/>
       <xs:element ref="mg:url"/>
-      <xs:element ref="mg:backupDir"/>
     </xs:sequence>
   </xs:complexType>
 </xs:element>
@@ -26,7 +25,8 @@
 <xs:element name="backup">
   <xs:complexType>
     <xs:sequence>
-      <xs:element ref="mg:hdfs"/>
+      <xs:element ref="mg:hdfs" minOccurs="0"/> 
+      <xs:element ref="mg:backupDir"/>
     </xs:sequence>
   </xs:complexType>
 </xs:element>

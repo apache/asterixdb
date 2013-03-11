@@ -19,6 +19,7 @@ import java.util.Properties;
 
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
 import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
@@ -29,6 +30,7 @@ public class AlterCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
+        InstallerDriver.initConfig();
         String instanceName = ((AlterConfig) config).name;
         InstallerUtil.validateAsterixInstanceExists(instanceName, State.INACTIVE);
         ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();
@@ -48,21 +50,21 @@ public class AlterCommand extends AbstractCommand {
 
     @Override
     protected String getUsageDescription() {
-        // TODO Auto-generated method stub
-        return null;
+        return "\nAlter the instance's configuration settings."
+                + "\nPrior to running this command, the instance is required to be INACTIVE state."
+                + "\n\nAvailable arguments/options" 
+                + "\n-n name of the ASTERIX instance"
+                + "\n-conf path to the ASTERIX configuration file.";
     }
 
 }
 
-class AlterConfig implements CommandConfig {
+class AlterConfig extends AbstractCommandConfig {
 
-    @Option(name = "-h", required = false, usage = "Help")
-    public boolean help = false;
-
-    @Option(name = "-n", required = false, usage = "Name of Asterix Instance")
+    @Option(name = "-n", required = true, usage = "Name of Asterix Instance")
     public String name;
 
-    @Option(name = "-conf", required = false, usage = "Path to instance configuration")
+    @Option(name = "-conf", required = true, usage = "Path to instance configuration")
     public String confPath;
 
 }

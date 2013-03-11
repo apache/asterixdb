@@ -24,6 +24,7 @@ import edu.uci.ics.asterix.event.management.EventrixClient;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.event.schema.pattern.Pattern;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
+import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.events.PatternCreator;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
@@ -34,6 +35,7 @@ public class StopCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
+        InstallerDriver.initConfig();
         String asterixInstanceName = ((StopConfig) config).name;
         AsterixInstance asterixInstance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName,
                 State.ACTIVE, State.UNUSABLE);
@@ -68,16 +70,17 @@ public class StopCommand extends AbstractCommand {
 
     @Override
     protected String getUsageDescription() {
-        // TODO Auto-generated method stub
-        return null;
+        return "\nShuts an ASTERIX instance that is in ACTIVE/UNUSABLE state."
+                + "\nAfter executing the stop command, the ASTERIX instance transits"
+                + "\nto the INACTIVE state, indicating that it is no longer available"
+                + "\nfor executing statements/queries." + "\n\nAvailable arguments/options"
+                + "\n-n name of the ASTERIX instance.";
+
     }
 
 }
 
-class StopConfig implements CommandConfig {
-
-    @Option(name = "-h", required = false, usage = "Help")
-    public boolean help = false;
+class StopConfig extends AbstractCommandConfig {
 
     @Option(name = "-n", required = true, usage = "Name of Asterix Instance")
     public String name;

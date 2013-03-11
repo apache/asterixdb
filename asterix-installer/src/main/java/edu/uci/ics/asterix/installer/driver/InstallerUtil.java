@@ -51,9 +51,10 @@ import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class InstallerUtil {
 
-    public static AsterixInstance createAsterixInstance(String asterixInstanceName, Cluster cluster, String asterixConf)
+    public static AsterixInstance createAsterixInstance(String asterixInstanceName, Cluster cluster)
             throws FileNotFoundException, IOException {
-        Properties asterixConfProp = getAsterixConfiguration(asterixConf);
+        Properties asterixConfProp = new Properties();
+        asterixConfProp.put("output_dir", cluster.getWorkingDir().getDir() + File.separator + "asterix_output");
         Node metadataNode = getMetadataNode(cluster);
         String asterixZipName = InstallerDriver.getAsterixZip().substring(
                 InstallerDriver.getAsterixZip().lastIndexOf(File.separator) + 1);

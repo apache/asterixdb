@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.installer.command;
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
+import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.events.PatternCreator;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
@@ -27,6 +28,7 @@ public class DeleteCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
+        InstallerDriver.initConfig();
         String asterixInstanceName = ((DeleteConfig) config).name;
         AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
         PatternCreator pc = new PatternCreator();
@@ -43,18 +45,15 @@ public class DeleteCommand extends AbstractCommand {
 
     @Override
     protected String getUsageDescription() {
-        // TODO Auto-generated method stub
-        return null;
+        return "\nPermanently deletes an ASTERIX instance." + "\n" + "The instance must be in the INACTIVE state."
+                + "\n\nAvailable arguments/options" + "\n-n name of the ASTERIX instance.";
     }
 
 }
 
-class DeleteConfig implements CommandConfig {
+class DeleteConfig extends AbstractCommandConfig {
 
-    @Option(name = "-h", required = false, usage = "Help")
-    public boolean help = false;
-
-    @Option(name = "-n", required = false, usage = "Name of Asterix Instance")
+    @Option(name = "-n", required = true, usage = "Name of Asterix Instance")
     public String name;
 
 }

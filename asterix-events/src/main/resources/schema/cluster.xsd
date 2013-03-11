@@ -15,6 +15,7 @@
 <xs:element name="store" type="xs:string"/>
 <xs:element name="java_home" type="xs:string"/>
 <xs:element name="username" type="xs:string"/>
+<xs:element name="debug" type="xs:integer"/>
 
 <!-- definition of complex elements -->
 <xs:element name="workingDir">
@@ -35,6 +36,7 @@
       <xs:element ref="cl:java_home" minOccurs="0"/>
       <xs:element ref="cl:ram" minOccurs="0"/>
       <xs:element ref="cl:logdir" minOccurs="0"/>
+      <xs:element ref="cl:debug" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 </xs:element>
@@ -65,6 +67,7 @@
       <xs:element ref="cl:java_home" minOccurs="0"/>
       <xs:element ref="cl:logdir" minOccurs="0"/>
       <xs:element ref="cl:store" minOccurs="0"/>
+      <xs:element ref="cl:debug" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 </xs:element>

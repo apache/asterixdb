@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.event.management;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -186,8 +187,10 @@ public class EventUtil {
 					.getLogdir() : cluster.getMasterNode().getLogdir();
 			String javaHome = cluster.getMasterNode().getJavaHome() == null ? cluster
 					.getJavaHome() : cluster.getMasterNode().getJavaHome();
+			BigInteger debug = cluster.getMasterNode().getDebug();
 			return new Node(cluster.getMasterNode().getId(), cluster
-					.getMasterNode().getIp(), ram, javaHome, logDir, null);
+					.getMasterNode().getIp(), ram, javaHome, logDir, null,
+					debug);
 		}
 
 		List<Node> nodeList = cluster.getNode();

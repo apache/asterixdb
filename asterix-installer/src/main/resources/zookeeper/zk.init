@@ -1,11 +1,11 @@
 ZK_HOME=$1
 shift 1
-cd $MANAGIX_HOME/.managix/zookeeper
+cd $MANAGIX_HOME/.installer/zookeeper
 tar cf zk.pkg.tar *
 zk_server_id=1
 for zk_host in  $@
 do
-  ssh $zk_host "mkdir $ZK_HOME"
+  ssh $zk_host "mkdir -p $ZK_HOME"
   scp ./zk.pkg.tar $zk_host:$ZK_HOME/
   ssh $zk_host "cd $ZK_HOME && tar xf $ZK_HOME/zk.pkg.tar && chmod +x $ZK_HOME/bin/start_zk.sh"
   ssh $zk_host "$ZK_HOME/bin/start_zk.sh $ZK_HOME $zk_server_id" &

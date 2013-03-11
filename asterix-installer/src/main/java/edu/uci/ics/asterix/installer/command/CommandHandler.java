@@ -46,6 +46,15 @@ public class CommandHandler {
             case STOP:
                 cmd = new StopCommand();
                 break;
+            case VALIDATE:
+                cmd = new ValidateCommand();
+                break;
+            case CONFIGURE:
+                cmd = new ConfigureCommand();
+                break;
+            case SHUTDOWN:
+                cmd = new ShutdownCommand();
+                break;
         }
         cmd.execute(args);
     }
