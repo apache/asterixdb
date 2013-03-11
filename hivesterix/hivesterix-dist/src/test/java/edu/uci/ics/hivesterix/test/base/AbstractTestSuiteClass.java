@@ -1,15 +1,20 @@
 package edu.uci.ics.hivesterix.test.base;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import junit.framework.TestSuite;
 
@@ -38,6 +43,9 @@ public abstract class AbstractTestSuiteClass extends TestSuite {
 
     private static final String PATH_TO_CLUSTER_CONF = "src/test/resources/runtimefunctionts/hive/conf/topology.xml";
     private static final String PATH_TO_DATA = "src/test/resources/runtimefunctionts/data/";
+
+    private static final String clusterPropertiesPath = "conf/cluster.properties";
+    private Properties clusterProps;
 
     private MiniDFSCluster dfsCluster;
     private MiniMRCluster mrCluster;
@@ -92,10 +100,23 @@ public abstract class AbstractTestSuiteClass extends TestSuite {
         HiveConf hconf = new HiveConf(SessionState.class);
         hconf.addResource(new Path(PATH_TO_HIVE_CONF));
         SessionState.start(hconf);
-        String ipAddress = hconf.get("hive.hyracks.host");
-        int clientPort = Integer.parseInt(hconf.get("hive.hyracks.port"));
-        int netPort = clientPort + 1;
-        String applicationName = hconf.get("hive.hyracks.app");
+        /**
+         * load the properties file if it is not loaded
+         */
+        if (clusterProps == null) {
+            clusterProps = new Properties();
+            InputStream confIn = new FileInputStream(clusterPropertiesPath);
+            clusterProps.load(confIn);
+            confIn.close();
+        }
+        Process process = Runtime.getRuntime().exec("src/main/resources/scripts/getip.sh");
+        BufferedReader ipReader = new BufferedReader(new InputStreamReader(
+                new DataInputStream(process.getInputStream())));
+        String ipAddress = ipReader.readLine();
+        ipReader.close();
+        int clientPort = Integer.parseInt(clusterProps.getProperty("CC_CLIENTPORT"));
+        int netPort = Integer.parseInt(clusterProps.getProperty("CC_CLUSTERPORT"));
+        String applicationName = "hivesterix";
 
         // start hyracks cc
         CCConfig ccConfig = new CCConfig();

@@ -1,10 +1,16 @@
 package edu.uci.ics.hivesterix.common.config;
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -28,6 +34,8 @@ public class ConfUtil {
     private static Map<String, List<String>> ncMapping;
     private static IHyracksClientConnection hcc = null;
     private static ClusterTopology topology = null;
+    private static final String clusterPropertiesPath = "conf/cluster.properties";
+    private static Properties clusterProps;
 
     public static JobConf getJobConf(Class<? extends InputFormat> format, Path path) {
         JobConf conf = new JobConf();
@@ -104,9 +112,24 @@ public class ConfUtil {
     private static void loadClusterConfig() {
         try {
             getHiveConf();
-            String ipAddress = hconf.get("hive.hyracks.host");
-            int port = Integer.parseInt(hconf.get("hive.hyracks.port"));
+
+            /**
+             * load the properties file if it is not loaded
+             */
+            if (clusterProps == null) {
+                clusterProps = new Properties();
+                InputStream confIn = new FileInputStream(clusterPropertiesPath);
+                clusterProps.load(confIn);
+                confIn.close();
+            }
+            Process process = Runtime.getRuntime().exec("src/main/resources/scripts/getip.sh");
+            BufferedReader ipReader = new BufferedReader(new InputStreamReader(new DataInputStream(
+                    process.getInputStream())));
+            String ipAddress = ipReader.readLine();
+            ipReader.close();
+            int port = Integer.parseInt(clusterProps.getProperty("CC_CLIENTPORT"));
             int mpl = Integer.parseInt(hconf.get("hive.hyracks.parrallelism"));
+
             hcc = new HyracksConnection(ipAddress, port);
             topology = hcc.getClusterTopology();
             Map<String, NodeControllerInfo> ncNameToNcInfos = hcc.getNodeControllerInfos();
