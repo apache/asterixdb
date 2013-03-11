@@ -164,7 +164,7 @@ public class AsterixInstance implements Serializable {
         buffer.append("\n");
         if (backupInfo != null && backupInfo.size() > 0) {
             for (BackupInfo info : backupInfo) {
-                buffer.append("Backup:" + info.getId() + " created at " + info.getDate() + "\n");
+                buffer.append(info + "\n");
             }
         }
         buffer.append("\n");

@@ -22,6 +22,7 @@ public class ShutdownCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
+        InstallerDriver.initConfig();
         ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();
         lookupService.stopService(InstallerDriver.getConfiguration());
     }

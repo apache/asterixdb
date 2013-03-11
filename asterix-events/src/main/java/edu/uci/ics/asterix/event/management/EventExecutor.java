@@ -45,7 +45,7 @@ public class EventExecutor {
         pargs.add("/bin/bash");
         pargs.add(client.getEventsDir() + File.separator + "scripts" + File.separator + EXECUTE_SCRIPT);
         StringBuffer envBuffer = new StringBuffer(IP_LOCATION + "=" + node.getIp() + " ");
-        if (!node.getId().equals(EventDriver.CLIENT_NODE_ID)) {
+        if (!node.getId().equals(EventDriver.CLIENT_NODE_ID) && cluster.getEnv() != null) {
             for (Property p : cluster.getEnv().getProperty()) {
                 if (p.getKey().equals("JAVA_HOME")) {
                     String val = node.getJavaHome() == null ? p.getValue() : node.getJavaHome();

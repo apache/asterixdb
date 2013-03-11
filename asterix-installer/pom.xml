@@ -36,6 +36,22 @@
                 <goal>generate</goal>
               </goals>
               <configuration>
+                <args>
+                  <arg>-Xsetters</arg>
+                  <arg>-Xvalue-constructor</arg>
+                </args>
+                <plugins>
+                  <plugin>
+                    <groupId>org.jvnet.jaxb2_commons</groupId>
+                    <artifactId>jaxb2-basics</artifactId>
+                    <version>0.6.2</version>
+                  </plugin>
+                  <plugin>
+                    <groupId>org.jvnet.jaxb2_commons</groupId>
+                    <artifactId>jaxb2-value-constructor</artifactId>
+                    <version>3.0</version>
+                  </plugin>
+                </plugins>
                 <schemaDirectory>src/main/resources/schema</schemaDirectory>
                 <schemaIncludes>
                   <include>installer-conf.xsd</include>
@@ -55,6 +71,10 @@
                   <include>cluster.xsd</include>
                 </schemaIncludes>
                 <generatePackage>edu.uci.ics.asterix.installer.schema.cluster</generatePackage>
+                <bindingDirectory>src/main/resources/schema</bindingDirectory>
+                <bindingIncludes>
+                  <bindingInclude>jaxb-bindings.xjb</bindingInclude>
+                </bindingIncludes>
                 <generateDirectory>${project.build.directory}/generated-sources/cluster</generateDirectory>
               </configuration>
             </execution>

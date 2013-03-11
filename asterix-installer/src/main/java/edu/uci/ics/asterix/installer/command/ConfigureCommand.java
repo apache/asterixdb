@@ -39,6 +39,7 @@ public class ConfigureCommand extends AbstractCommand {
         unmarshaller = ctx.createUnmarshaller();
         Configuration configuration = (Configuration) unmarshaller.unmarshal(new File(installerConfPath));
 
+        configuration.getBackup().setBackupDir(workingDir + File.separator + "backup");
         configuration.getZookeeper().setHomeDir(workingDir + File.separator + "zookeeper");
         marshaller = ctx.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);

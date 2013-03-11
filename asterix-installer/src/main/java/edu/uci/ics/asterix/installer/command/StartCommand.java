@@ -63,10 +63,9 @@ public class StartCommand extends AbstractCommand {
 
 class StartConfig extends AbstractCommandConfig {
 
-    @Option(name = "-n", required = false, usage = "Name of Asterix Instance")
+    @Option(name = "-n", required = true, usage = "Name of Asterix Instance")
     public String name;
 
-    @Option(name = "-conf", required = false, usage = "Path to instance configuration")
-    public String confPath;
+  
 
 }

@@ -82,7 +82,7 @@ public class StopCommand extends AbstractCommand {
 
 class StopConfig extends AbstractCommandConfig {
 
-    @Option(name = "-n", required = false, usage = "Name of Asterix Instance")
+    @Option(name = "-n", required = true, usage = "Name of Asterix Instance")
     public String name;
 
 }

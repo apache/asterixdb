@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.asterix.installer.command;
 
+import java.util.List;
+
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
@@ -22,6 +24,7 @@ import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.events.PatternCreator;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
 import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
+import edu.uci.ics.asterix.installer.model.BackupInfo;
 
 public class RestoreCommand extends AbstractCommand {
 
@@ -31,11 +34,14 @@ public class RestoreCommand extends AbstractCommand {
         String asterixInstanceName = ((RestoreConfig) config).name;
         AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
         int backupId = ((RestoreConfig) config).backupId;
-        if (instance.getBackupInfo().size() <= backupId || backupId < 0) {
+        List<BackupInfo> backupInfoList = instance.getBackupInfo();
+        if (backupInfoList.size() <= backupId || backupId < 0) {
             throw new IllegalStateException("Invalid backup id");
         }
+
+        BackupInfo backupInfo = backupInfoList.get(backupId);
         PatternCreator pc = new PatternCreator();
-        Patterns patterns = pc.getRestoreAsterixPattern(instance, backupId);
+        Patterns patterns = pc.getRestoreAsterixPattern(instance, backupInfo);
         InstallerUtil.getEventrixClient(instance.getCluster()).submit(patterns);
         LOGGER.info("Asterix instance: " + asterixInstanceName + " has been restored from backup");
     }
@@ -56,10 +62,10 @@ public class RestoreCommand extends AbstractCommand {
 
 class RestoreConfig extends AbstractCommandConfig {
 
-    @Option(name = "-n", required = false, usage = "Name of the Asterix instance")
+    @Option(name = "-n", required = true, usage = "Name of the Asterix instance")
     public String name;
 
-    @Option(name = "-b", required = false, usage = "Id corresponding to the backed up version")
+    @Option(name = "-b", required = true, usage = "Id corresponding to the backed up version")
     public int backupId;
 
 }

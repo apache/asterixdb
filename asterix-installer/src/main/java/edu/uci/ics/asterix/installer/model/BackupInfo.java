@@ -17,14 +17,24 @@ package edu.uci.ics.asterix.installer.model;
 import java.io.Serializable;
 import java.util.Date;
 
+import edu.uci.ics.asterix.installer.schema.conf.Backup;
+import edu.uci.ics.asterix.installer.schema.conf.Hdfs;
+
 public class BackupInfo implements Serializable {
-   
+
+    public static enum BackupType {
+        LOCAL,
+        HDFS
+    };
+
     private final int id;
     private final Date date;
+    private final Backup backupConf;
 
-    public BackupInfo(int id, Date date) {
+    public BackupInfo(int id, Date date, Backup backupConf) {
         this.id = id;
         this.date = date;
+        this.backupConf = backupConf;
     }
 
     public int getId() {
@@ -34,10 +44,25 @@ public class BackupInfo implements Serializable {
     public Date getDate() {
         return date;
     }
-    
-    @Override
-    public String toString() {
-        return id + "_" + date;
+
+    public Backup getBackupConf() {
+        return backupConf;
     }
 
+    @Override
+    public String toString() {
+        return id + " " + date + " " + "(" + getBackupType() + ")" + " " + "[ " + this.getBackupConf().getBackupDir()
+                + " ]";
+
+    }
+
+    public BackupType getBackupType() {
+        return getBackupType(this.getBackupConf());
+    }
+
+    public static BackupType getBackupType(Backup backupConf) {
+        Hdfs hdfs = backupConf.getHdfs();
+        return (hdfs != null && hdfs.getUrl() != null && hdfs.getUrl().length() > 0) ? BackupType.HDFS
+                : BackupType.LOCAL;
+    }
 }

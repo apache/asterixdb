@@ -54,8 +54,7 @@ public class CreateCommand extends AbstractCommand {
         JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
         Unmarshaller unmarshaller = ctx.createUnmarshaller();
         cluster = (Cluster) unmarshaller.unmarshal(new File(createConfig.clusterPath));
-        AsterixInstance asterixInstance = InstallerUtil.createAsterixInstance(asterixInstanceName, cluster,
-                ((CreateConfig) config).asterixConf);
+        AsterixInstance asterixInstance = InstallerUtil.createAsterixInstance(asterixInstanceName, cluster);
         InstallerUtil.evaluateConflictWithOtherInstances(asterixInstance);
         InstallerUtil.createAsterixZip(asterixInstance, true);
         List<Property> clusterProperties = new ArrayList<Property>();
@@ -106,13 +105,10 @@ public class CreateCommand extends AbstractCommand {
 
 class CreateConfig extends AbstractCommandConfig {
 
-    @Option(name = "-n", required = false, usage = "Name of Asterix Instance")
+    @Option(name = "-n", required = true, usage = "Name of Asterix Instance")
     public String name;
 
-    @Option(name = "-c", required = false, usage = "Path to cluster configuration")
+    @Option(name = "-c", required = true, usage = "Path to cluster configuration")
     public String clusterPath;
-
-    @Option(name = "-a", required = false, usage = "Path to cluster configuration")
-    public String asterixConf;
 
 }

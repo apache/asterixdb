@@ -1,20 +1,20 @@
-if [ -z $MANAGIX_HOME ] 
+if [ -z $INSTALLER_HOME ] 
  then
-   echo "MANAGIX_HOME is not defined"
+   echo "INSTALLER_HOME is not defined"
    exit 1
 fi
 
 VERSION=0.0.4-SNAPSHOT
 
-for jar in `ls $MANAGIX_HOME/lib/*.jar`
+for jar in `ls $INSTALLER_HOME/lib/*.jar`
   do 
-  if [ -z $MANAGIX_CLASSPATH ] 
+  if [ -z $INSTALLER_CLASSPATH ] 
   then 
-    MANAGIX_CLASSPATH=$jar 
+    INSTALLER_CLASSPATH=$jar 
   else
-    MANAGIX_CLASSPATH=$MANAGIX_CLASSPATH:$jar 
+    INSTALLER_CLASSPATH=$INSTALLER_CLASSPATH:$jar 
   fi
 done
 
-MANAGIX_CLASSPATH=$MANAGIX_CLASSPATH:$MANAGIX_HOME/conf/log4j.properties
-java $JAVA_OPTS -Dlog4j.configuration=file:$MANAGIX_HOME/conf/log4j.properties -cp $MANAGIX_CLASSPATH edu.uci.ics.asterix.installer.driver.InstallerDriver $@
+INSTALLER_CLASSPATH=$INSTALLER_CLASSPATH:$INSTALLER_HOME/conf/log4j.properties
+java $JAVA_OPTS -Dlog4j.configuration=file:$INSTALLER_HOME/conf/log4j.properties -cp $INSTALLER_CLASSPATH edu.uci.ics.asterix.installer.driver.InstallerDriver $@
