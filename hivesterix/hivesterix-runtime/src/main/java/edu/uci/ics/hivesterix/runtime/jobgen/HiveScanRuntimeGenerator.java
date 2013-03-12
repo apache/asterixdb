@@ -1,16 +1,17 @@
 package edu.uci.ics.hivesterix.runtime.jobgen;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.plan.PartitionDesc;
+import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.hivesterix.common.config.ConfUtil;
-import edu.uci.ics.hivesterix.runtime.operator.filescan.HiveFileScanOperatorDescriptor;
-import edu.uci.ics.hivesterix.runtime.operator.filescan.HiveFileSplitProvider;
-import edu.uci.ics.hivesterix.runtime.operator.filescan.HiveTupleParserFactory;
+import edu.uci.ics.hivesterix.runtime.operator.filescan.HiveKeyValueParserFactory;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
@@ -19,12 +20,13 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.data.ISerializerDeserializerProvider;
+import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
+import edu.uci.ics.hyracks.hdfs.dataflow.HDFSReadOperatorDescriptor;
+import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
 @SuppressWarnings({ "rawtypes", "deprecation" })
 public class HiveScanRuntimeGenerator {
@@ -80,15 +82,18 @@ public class HiveScanRuntimeGenerator {
             // get record descriptor
             RecordDescriptor recDescriptor = mkRecordDescriptor(propagatedSchema, schemaTypes, context);
 
-            // setup the run time operator
+            // setup the run time operator and constraints
             JobConf conf = ConfUtil.getJobConf(fileDesc.getInputFileFormatClass(), filePath);
-            int clusterSize = ConfUtil.getNCs().length;
-            IFileSplitProvider fsprovider = new HiveFileSplitProvider(conf, filePathName, clusterSize);
-            ITupleParserFactory tupleParserFactory = new HiveTupleParserFactory(fileDesc, conf, outputColumnsOffset);
-            HiveFileScanOperatorDescriptor opDesc = new HiveFileScanOperatorDescriptor(jobSpec, fsprovider,
-                    tupleParserFactory, recDescriptor);
+            String[] locConstraints = ConfUtil.getNCs();
+            Map<String, NodeControllerInfo> ncNameToNcInfos = ConfUtil.getNodeControllerInfo();
+            Scheduler scheduler = new Scheduler(ncNameToNcInfos);
+            InputSplit[] splits = conf.getInputFormat().getSplits(conf, locConstraints.length);
+            String[] schedule = scheduler.getLocationConstraints(splits);
+            IOperatorDescriptor scanner = new HDFSReadOperatorDescriptor(jobSpec, recDescriptor, conf, splits,
+                    schedule, new HiveKeyValueParserFactory(fileDesc, conf, outputColumnsOffset));
 
-            return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(opDesc, opDesc.getPartitionConstraint());
+            return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(scanner,
+                    new AlgebricksAbsolutePartitionConstraint(locConstraints));
         } catch (Exception e) {
             throw new AlgebricksException(e);
         }

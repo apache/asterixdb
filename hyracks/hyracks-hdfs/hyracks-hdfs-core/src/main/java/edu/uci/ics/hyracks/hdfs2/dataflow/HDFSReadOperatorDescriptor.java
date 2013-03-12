@@ -147,7 +147,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                             }
                         }
                     }
-                    parser.flush(writer);
+                    parser.close(writer);
                     writer.close();
                 } catch (Exception e) {
                     throw new HyracksDataException(e);

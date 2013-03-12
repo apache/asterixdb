@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.api.topology.ClusterTopology;
 
 @SuppressWarnings({ "rawtypes", "deprecation" })
 public class ConfUtil {
+    private static final String clusterPropertiesPath = "conf/cluster.properties";
 
     private static JobConf job;
     private static HiveConf hconf;
@@ -34,8 +35,8 @@ public class ConfUtil {
     private static Map<String, List<String>> ncMapping;
     private static IHyracksClientConnection hcc = null;
     private static ClusterTopology topology = null;
-    private static final String clusterPropertiesPath = "conf/cluster.properties";
     private static Properties clusterProps;
+    private static Map<String, NodeControllerInfo> ncNameToNcInfos;
 
     public static JobConf getJobConf(Class<? extends InputFormat> format, Path path) {
         JobConf conf = new JobConf();
@@ -109,6 +110,17 @@ public class ConfUtil {
         return ncMapping;
     }
 
+    public static Map<String, NodeControllerInfo> getNodeControllerInfo() throws HyracksException {
+        if (ncNameToNcInfos == null) {
+            try {
+                loadClusterConfig();
+            } catch (Exception e) {
+                throw new HyracksException(e);
+            }
+        }
+        return ncNameToNcInfos;
+    }
+
     private static void loadClusterConfig() {
         try {
             getHiveConf();
@@ -132,7 +144,7 @@ public class ConfUtil {
 
             hcc = new HyracksConnection(ipAddress, port);
             topology = hcc.getClusterTopology();
-            Map<String, NodeControllerInfo> ncNameToNcInfos = hcc.getNodeControllerInfos();
+            ncNameToNcInfos = hcc.getNodeControllerInfos();
             NCs = new String[ncNameToNcInfos.size() * mpl];
             ncMapping = new HashMap<String, List<String>>();
             int i = 0;

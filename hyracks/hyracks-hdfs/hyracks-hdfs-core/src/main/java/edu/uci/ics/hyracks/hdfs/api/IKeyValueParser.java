@@ -29,12 +29,24 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 public interface IKeyValueParser<K, V> {
 
     /**
+     * Initialize the key value parser.
+     * 
+     * @param writer
+     *            The hyracks writer for outputting data.
+     * @throws HyracksDataException
+     */
+    public void open(IFrameWriter writer) throws HyracksDataException;
+
+    /**
      * Parse a key-value pair returned by HDFS record reader to a tuple.
      * when the parsers' internal buffer is full, it can flush the buffer to the writer
      * 
      * @param key
+     *            The key returned from Hadoop's InputReader.
      * @param value
+     *            The value returned from Hadoop's InputReader.
      * @param writer
+     *            The hyracks writer for outputting data.
      * @throws HyracksDataException
      */
     public void parse(K key, V value, IFrameWriter writer) throws HyracksDataException;
@@ -44,7 +56,8 @@ public interface IKeyValueParser<K, V> {
      * This method is called in the close() of HDFSReadOperatorDescriptor.
      * 
      * @param writer
+     *            The hyracks writer for outputting data.
      * @throws HyracksDataException
      */
-    public void flush(IFrameWriter writer) throws HyracksDataException;
+    public void close(IFrameWriter writer) throws HyracksDataException;
 }
