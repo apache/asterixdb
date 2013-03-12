@@ -189,7 +189,7 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 /**
                  * this partition should not terminate
                  */
-                if (terminate && (!vertex.isHalted() || vertex.hasMessage()))
+                if (terminate && (!vertex.isHalted() || vertex.hasMessage() || vertex.createdNewLiveVertex()))
                     terminate = false;
 
                 /**

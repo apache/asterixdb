@@ -105,7 +105,7 @@ class VertexDelegate<I extends WritableComparable, V extends Writable, E extends
         this.vertexId = vertexId;
     }
 
-    public final void addVertex(I vertexId, V vertex) {
+    public final void addVertex(I vertexId, Vertex vertex) {
         try {
             insertTb.reset();
             DataOutput outputInsert = insertTb.getDataOutput();

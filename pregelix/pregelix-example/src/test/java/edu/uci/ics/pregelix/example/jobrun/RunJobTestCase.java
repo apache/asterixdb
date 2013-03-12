@@ -28,10 +28,7 @@ import org.junit.Test;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.jobgen.JobGen;
-import edu.uci.ics.pregelix.core.jobgen.JobGenInnerJoin;
 import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoin;
-import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoinSingleSort;
-import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoinSort;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 import edu.uci.ics.pregelix.example.util.TestUtils;
@@ -75,14 +72,14 @@ public class RunJobTestCase extends TestCase {
         job.setJobName(jobName);
         this.resultFileName = resultFile;
         this.expectedFileName = expectedFile;
-        giraphJobGens = new JobGen[4];
+        giraphJobGens = new JobGen[1];
         giraphJobGens[0] = new JobGenOuterJoin(job);
-        waitawhile();
-        giraphJobGens[1] = new JobGenInnerJoin(job);
-        waitawhile();
-        giraphJobGens[2] = new JobGenOuterJoinSort(job);
-        waitawhile();
-        giraphJobGens[3] = new JobGenOuterJoinSingleSort(job);
+        //        waitawhile();
+        //        giraphJobGens[1] = new JobGenInnerJoin(job);
+        //        waitawhile();
+        //        giraphJobGens[2] = new JobGenOuterJoinSort(job);
+        //        waitawhile();
+        //        giraphJobGens[3] = new JobGenOuterJoinSingleSort(job);
     }
 
     private void waitawhile() throws InterruptedException {
