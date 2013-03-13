@@ -16,14 +16,20 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Constructor;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.external.util.DNSResolverFactory;
+import edu.uci.ics.asterix.external.util.INodeResolver;
+import edu.uci.ics.asterix.external.util.INodeResolverFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.runtime.operators.file.AdmSchemafullRecordParserFactory;
 import edu.uci.ics.asterix.runtime.operators.file.NtDelimitedDataTupleParserFactory;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -33,10 +39,18 @@ import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 public abstract class FileSystemBasedAdapter extends AbstractDatasourceAdapter {
 
-    protected boolean userDefinedParser = false;
-    protected String parserFactoryClassname;
+    private static final long serialVersionUID = 1L;
 
+    public static final String NODE_RESOLVER_FACTORY_PROPERTY = "node.Resolver";
     public static final String KEY_DELIMITER = "delimiter";
+    public static final String KEY_PATH = "path";
+
+    protected ITupleParserFactory parserFactory;
+    protected ITupleParser parser;
+    protected static INodeResolver nodeResolver;
+
+    private static final INodeResolver DEFAULT_NODE_RESOLVER = new DNSResolverFactory().createNodeResolver();
+    private static final Logger LOGGER = Logger.getLogger(FileSystemBasedAdapter.class.getName());
 
     public abstract InputStream getInputStream(int partition) throws IOException;
 
@@ -44,13 +58,10 @@ public abstract class FileSystemBasedAdapter extends AbstractDatasourceAdapter {
         this.atype = atype;
     }
 
-    public FileSystemBasedAdapter() {
-    }
-
     @Override
     public void start(int partition, IFrameWriter writer) throws Exception {
         InputStream in = getInputStream(partition);
-        ITupleParser parser = getTupleParser();
+        parser = getTupleParser();
         parser.parse(in, writer);
     }
 
@@ -63,44 +74,33 @@ public abstract class FileSystemBasedAdapter extends AbstractDatasourceAdapter {
     @Override
     public abstract AdapterType getAdapterType();
 
+    @Override
+    public abstract AlgebricksPartitionConstraint getPartitionConstraint() throws Exception;
+
     protected ITupleParser getTupleParser() throws Exception {
-        ITupleParser parser = null;
-        if (userDefinedParser) {
-            Class tupleParserFactoryClass = Class.forName(parserFactoryClassname);
-            ITupleParserFactory parserFactory = (ITupleParserFactory) tupleParserFactoryClass.newInstance();
-            parser = parserFactory.createTupleParser(ctx);
-        } else {
-            if (FORMAT_DELIMITED_TEXT.equalsIgnoreCase(configuration.get(KEY_FORMAT))) {
-                parser = getDelimitedDataTupleParser((ARecordType) atype);
-
-            } else if (FORMAT_ADM.equalsIgnoreCase(configuration.get(KEY_FORMAT))) {
-                parser = getADMDataTupleParser((ARecordType) atype);
-            } else {
-                throw new IllegalArgumentException(" format " + configuration.get(KEY_FORMAT) + " not supported");
-            }
-        }
-        return parser;
-
+        return parserFactory.createTupleParser(ctx);
     }
 
     protected void configureFormat() throws Exception {
-        parserFactoryClassname = configuration.get(KEY_PARSER_FACTORY);
-        userDefinedParser = (parserFactoryClassname != null);
-
+        String parserFactoryClassname = configuration.get(KEY_PARSER_FACTORY);
         if (parserFactoryClassname == null) {
-            if (FORMAT_DELIMITED_TEXT.equalsIgnoreCase(configuration.get(KEY_FORMAT))) {
-                parserFactoryClassname = formatToParserFactoryMap.get(FORMAT_DELIMITED_TEXT);
+            String specifiedFormat = configuration.get(KEY_FORMAT);
+            if (specifiedFormat == null) {
+                throw new IllegalArgumentException(" Unspecified data format");
+            } else if (FORMAT_DELIMITED_TEXT.equalsIgnoreCase(specifiedFormat)) {
+                parserFactory = getDelimitedDataTupleParserFactory((ARecordType) atype);
             } else if (FORMAT_ADM.equalsIgnoreCase(configuration.get(KEY_FORMAT))) {
-                parserFactoryClassname = formatToParserFactoryMap.get(FORMAT_ADM);
+                parserFactory = getADMDataTupleParserFactory((ARecordType) atype);
             } else {
                 throw new IllegalArgumentException(" format " + configuration.get(KEY_FORMAT) + " not supported");
             }
+        } else {
+            parserFactory = (ITupleParserFactory) Class.forName(parserFactoryClassname).newInstance();
         }
 
     }
 
-    protected ITupleParser getDelimitedDataTupleParser(ARecordType recordType) throws AsterixException {
-        ITupleParser parser;
+    protected ITupleParserFactory getDelimitedDataTupleParserFactory(ARecordType recordType) throws AsterixException {
         int n = recordType.getFieldTypes().length;
         IValueParserFactory[] fieldParserFactories = new IValueParserFactory[n];
         for (int i = 0; i < n; i++) {
@@ -117,20 +117,43 @@ public abstract class FileSystemBasedAdapter extends AbstractDatasourceAdapter {
         }
 
         Character delimiter = delimiterValue.charAt(0);
-        parser = new NtDelimitedDataTupleParserFactory(recordType, fieldParserFactories, delimiter)
-                .createTupleParser(ctx);
-        return parser;
+        return new NtDelimitedDataTupleParserFactory(recordType, fieldParserFactories, delimiter);
     }
 
-    protected ITupleParser getADMDataTupleParser(ARecordType recordType) throws AsterixException {
+    protected ITupleParserFactory getADMDataTupleParserFactory(ARecordType recordType) throws AsterixException {
         try {
-            Class tupleParserFactoryClass = Class.forName(parserFactoryClassname);
-            Constructor ctor = tupleParserFactoryClass.getConstructor(ARecordType.class);
-            ITupleParserFactory parserFactory = (ITupleParserFactory) ctor.newInstance(atype);
-            return parserFactory.createTupleParser(ctx);
+            return new AdmSchemafullRecordParserFactory(recordType);
         } catch (Exception e) {
             throw new AsterixException(e);
         }
 
+    }
+
+    protected INodeResolver getNodeResolver() {
+        if (nodeResolver == null) {
+            nodeResolver = initNodeResolver();
+        }
+        return nodeResolver;
+    }
+
+    private static INodeResolver initNodeResolver() {
+        INodeResolver nodeResolver = null;
+        String configuredNodeResolverFactory = System.getProperty(NODE_RESOLVER_FACTORY_PROPERTY);
+        if (configuredNodeResolverFactory != null) {
+            try {
+                nodeResolver = ((INodeResolverFactory) (Class.forName(configuredNodeResolverFactory).newInstance()))
+                        .createNodeResolver();
+
+            } catch (Exception e) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.log(Level.WARNING, "Unable to create node resolver from the configured classname "
+                            + configuredNodeResolverFactory + "\n" + e.getMessage());
+                }
+                nodeResolver = DEFAULT_NODE_RESOLVER;
+            }
+        } else {
+            nodeResolver = DEFAULT_NODE_RESOLVER;
+        }
+        return nodeResolver;
     }
 }

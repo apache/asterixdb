@@ -20,7 +20,6 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 
 public class CommitRuntimeFactory implements IPushRuntimeFactory {
 
@@ -29,15 +28,12 @@ public class CommitRuntimeFactory implements IPushRuntimeFactory {
     private final JobId jobId;
     private final int datasetId;
     private final int[] primaryKeyFields;
-    IBinaryHashFunctionFactory[] binaryHashFunctionFactories;
     private final boolean isWriteTransaction;
 
-    public CommitRuntimeFactory(JobId jobId, int datasetId, int[] primaryKeyFields,
-            IBinaryHashFunctionFactory[] binaryHashFunctionFactories, boolean isWriteTransaction) {
+    public CommitRuntimeFactory(JobId jobId, int datasetId, int[] primaryKeyFields, boolean isWriteTransaction) {
         this.jobId = jobId;
         this.datasetId = datasetId;
         this.primaryKeyFields = primaryKeyFields;
-        this.binaryHashFunctionFactories = binaryHashFunctionFactories;
         this.isWriteTransaction = isWriteTransaction;
     }
 
@@ -48,6 +44,6 @@ public class CommitRuntimeFactory implements IPushRuntimeFactory {
 
     @Override
     public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) throws AlgebricksException {
-        return new CommitRuntime(ctx, jobId, datasetId, primaryKeyFields, binaryHashFunctionFactories, isWriteTransaction);
+        return new CommitRuntime(ctx, jobId, datasetId, primaryKeyFields, isWriteTransaction);
     }
 }

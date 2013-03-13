@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package edu.uci.ics.asterix.metadata.entities;
 
 import java.io.DataOutput;
@@ -23,6 +24,7 @@ import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -34,6 +36,11 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 
+/**
+ * Provides functionality for writing parameters for a FEED dataset into the
+ * Metadata. Since FEED dataset is a special kind of INTERNAL dataset, this
+ * class extends InternalDatasetDetails.
+ */
 public class FeedDatasetDetails extends InternalDatasetDetails {
 
     private static final long serialVersionUID = 1L;
@@ -141,8 +148,8 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
 
         // write field 7
         fieldValue.reset();
-        if (getFunction() != null) {
-            aString.setValue(getFunction().toString());
+        if (signature != null) {
+            aString.setValue(signature.toString());
             stringSerde.serialize(aString, fieldValue.getDataOutput());
             feedRecordBuilder.addField(MetadataRecordTypes.FEED_DETAILS_ARECORD_FUNCTION_FIELD_INDEX, fieldValue);
         }
@@ -155,8 +162,8 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
 
         try {
             feedRecordBuilder.write(out, true);
-        } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
+        } catch (IOException | AsterixException e) {
+            throw new HyracksDataException(e);
         }
 
     }
@@ -183,8 +190,8 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
 
         try {
             propertyRecordBuilder.write(out, true);
-        } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
+        } catch (IOException | AsterixException e) {
+            throw new HyracksDataException(e);
         }
     }
 

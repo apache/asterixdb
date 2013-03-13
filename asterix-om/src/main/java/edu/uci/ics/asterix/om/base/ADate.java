@@ -30,7 +30,7 @@ public class ADate implements IAObject {
      */
     protected int chrononTimeInDay;
 
-    private static long CHRONON_OF_DAY = 24 * 60 * 60 * 1000;
+    protected static long CHRONON_OF_DAY = 24 * 60 * 60 * 1000;
 
     public ADate(int chrononTimeInDay) {
         this.chrononTimeInDay = chrononTimeInDay;

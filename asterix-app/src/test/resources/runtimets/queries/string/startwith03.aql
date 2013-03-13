@@ -15,7 +15,7 @@ create type TestType as {
 name:string
 }
 
-create dataset testds(TestType) partitioned by key name;
+create dataset testds(TestType) primary key name;
 
 insert into dataset testds({"name":"John Smith"});
 insert into dataset testds({"name":"John Doe"});

@@ -21,7 +21,6 @@ import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -41,9 +40,9 @@ public class PrimaryIndexModificationOperationCallback extends AbstractOperation
     protected final TransactionSubsystem txnSubsystem;
 
     public PrimaryIndexModificationOperationCallback(int datasetId, int[] primaryKeyFields,
-            IBinaryHashFunctionFactory[] primaryKeyHashFunctionFactories, TransactionContext txnCtx,
-            ILockManager lockManager, TransactionSubsystem txnSubsystem, long resourceId, byte resourceType, IndexOperation indexOp) {
-        super(datasetId, primaryKeyFields, primaryKeyHashFunctionFactories, txnCtx, lockManager);
+            TransactionContext txnCtx, ILockManager lockManager,
+            TransactionSubsystem txnSubsystem, long resourceId, byte resourceType, IndexOperation indexOp) {
+        super(datasetId, primaryKeyFields, txnCtx, lockManager);
         this.resourceId = resourceId;
         this.resourceType = resourceType;
         this.indexOp = indexOp;
@@ -52,7 +51,7 @@ public class PrimaryIndexModificationOperationCallback extends AbstractOperation
 
     @Override
     public void before(ITupleReference tuple) throws HyracksDataException {
-        int pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields, primaryKeyHashFunctions);
+        int pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields);
         try {
             lockManager.lock(datasetId, pkHash, LockMode.X, txnCtx);
         } catch (ACIDException e) {
@@ -63,7 +62,7 @@ public class PrimaryIndexModificationOperationCallback extends AbstractOperation
     @Override
     public void found(ITupleReference before, ITupleReference after) throws HyracksDataException {
         IndexLogger logger = txnSubsystem.getTreeLoggerRepository().getIndexLogger(resourceId, resourceType);
-        int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields, primaryKeyHashFunctions);
+        int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
         LSMBTreeTupleReference lsmBTreeTuple = (LSMBTreeTupleReference) before;
         IndexOperation oldOp = IndexOperation.INSERT;
         if (before == null) {

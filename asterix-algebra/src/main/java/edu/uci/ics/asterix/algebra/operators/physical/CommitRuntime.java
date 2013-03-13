@@ -16,37 +16,33 @@
 package edu.uci.ics.asterix.algebra.operators.physical;
 
 import java.nio.ByteBuffer;
-import java.util.List;
-
-import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
-import edu.uci.ics.asterix.transaction.management.service.transaction.FieldsHashValueGenerator;
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext.TransactionType;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntime;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.MurmurHash128Bit;
 
 public class CommitRuntime implements IPushRuntime {
+    
+    private final static long SEED = 0L;
 
     private final IHyracksTaskContext hyracksTaskCtx;
     private final ITransactionManager transactionManager;
     private final JobId jobId;
     private final DatasetId datasetId;
     private final int[] primaryKeyFields;
-    private final IBinaryHashFunction[] primaryKeyHashFunctions;
     private final boolean isWriteTransaction;
 
     private TransactionContext transactionContext;
@@ -55,7 +51,7 @@ public class CommitRuntime implements IPushRuntime {
     private FrameTupleReference frameTupleReference;
 
     public CommitRuntime(IHyracksTaskContext ctx, JobId jobId, int datasetId, int[] primaryKeyFields,
-            IBinaryHashFunctionFactory[] binaryHashFunctionFactories, boolean isWriteTransaction) {
+            boolean isWriteTransaction) {
         this.hyracksTaskCtx = ctx;
         AsterixAppRuntimeContext runtimeCtx = (AsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
                 .getApplicationObject();
@@ -63,10 +59,6 @@ public class CommitRuntime implements IPushRuntime {
         this.jobId = jobId;
         this.datasetId = new DatasetId(datasetId);
         this.primaryKeyFields = primaryKeyFields;
-        primaryKeyHashFunctions = new IBinaryHashFunction[binaryHashFunctionFactories.length];
-        for (int i = 0; i < binaryHashFunctionFactories.length; ++i) {
-            this.primaryKeyHashFunctions[i] = binaryHashFunctionFactories[i].createBinaryHashFunction();
-        }
         this.frameTupleReference = new FrameTupleReference();
         this.isWriteTransaction = isWriteTransaction;
     }
@@ -89,14 +81,19 @@ public class CommitRuntime implements IPushRuntime {
         int nTuple = frameTupleAccessor.getTupleCount();
         for (int t = 0; t < nTuple; t++) {
             frameTupleReference.reset(frameTupleAccessor, t);
-            pkHash = FieldsHashValueGenerator.computeFieldsHashValue(frameTupleReference, primaryKeyFields,
-                    primaryKeyHashFunctions);
+            pkHash = computePrimaryKeyHashValue(frameTupleReference, primaryKeyFields);
             try {
                 transactionManager.commitTransaction(transactionContext, datasetId, pkHash);
             } catch (ACIDException e) {
                 throw new HyracksDataException(e);
             }
         }
+    }
+    
+    private int computePrimaryKeyHashValue(ITupleReference tuple, int[] primaryKeyFields) {
+        long[] longHashes= new long[2];
+        MurmurHash128Bit.hash3_x64_128(tuple, primaryKeyFields, SEED, longHashes);
+        return Math.abs((int) longHashes[0]); 
     }
 
     @Override

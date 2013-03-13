@@ -16,13 +16,11 @@
 package edu.uci.ics.asterix.transaction.management.opcallbacks;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceManagerRepository;
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionSubsystemProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -37,29 +35,27 @@ public class SecondaryIndexModificationOperationCallbackFactory extends Abstract
     private final IndexOperation indexOp;
 
     public SecondaryIndexModificationOperationCallbackFactory(JobId jobId, int datasetId, int[] primaryKeyFields,
-            IBinaryHashFunctionFactory[] primaryKeyHashFunctionFactories,
             ITransactionSubsystemProvider txnSubsystemProvider, IndexOperation indexOp, byte resourceType) {
-        super(jobId, datasetId, primaryKeyFields, primaryKeyHashFunctionFactories, txnSubsystemProvider, resourceType);
+        super(jobId, datasetId, primaryKeyFields, txnSubsystemProvider, resourceType);
         this.indexOp = indexOp;
     }
 
     @Override
-    public IModificationOperationCallback createModificationOperationCallback(long resourceId, Object resource, IHyracksTaskContext ctx)
-            throws HyracksDataException {
-        
+    public IModificationOperationCallback createModificationOperationCallback(long resourceId, Object resource,
+            IHyracksTaskContext ctx) throws HyracksDataException {
+
         TransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
         IIndexLifecycleManager indexLifeCycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
                 .getIndexLifecycleManager();
         ILSMIndex index = (ILSMIndex) indexLifeCycleManager.getIndex(resourceId);
         if (index == null) {
-            throw new HyracksDataException("Index(id:"+resourceId+") is not registered.");
+            throw new HyracksDataException("Index(id:" + resourceId + ") is not registered.");
         }
-        
+
         try {
             TransactionContext txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jobId);
-            return new SecondaryIndexModificationOperationCallback(datasetId, primaryKeyFields,
-                    primaryKeyHashFunctionFactories, txnCtx, txnSubsystem.getLockManager(), txnSubsystem, resourceId,
-                    resourceType, indexOp);
+            return new SecondaryIndexModificationOperationCallback(datasetId, primaryKeyFields, txnCtx,
+                    txnSubsystem.getLockManager(), txnSubsystem, resourceId, resourceType, indexOp);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -16,6 +16,7 @@
 package edu.uci.ics.asterix.optimizer.rules;
 
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -28,6 +29,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryBooleanInspectorImpl;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryHashFunctionFactoryProvider;
+import edu.uci.ics.asterix.formats.nontagged.AqlBinaryHashFunctionFamilyProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryIntegerInspector;
 import edu.uci.ics.asterix.formats.nontagged.AqlPrinterFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -106,8 +108,8 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
 
     private static final JobGenContext _jobGenCtx = new JobGenContext(null, null, null,
             AqlSerializerDeserializerProvider.INSTANCE, AqlBinaryHashFunctionFactoryProvider.INSTANCE,
-            AqlBinaryComparatorFactoryProvider.INSTANCE, AqlTypeTraitProvider.INSTANCE,
-            AqlBinaryBooleanInspectorImpl.FACTORY, AqlBinaryIntegerInspector.FACTORY,
+            AqlBinaryHashFunctionFamilyProvider.INSTANCE, AqlBinaryComparatorFactoryProvider.INSTANCE,
+            AqlTypeTraitProvider.INSTANCE, AqlBinaryBooleanInspectorImpl.FACTORY, AqlBinaryIntegerInspector.FACTORY,
             AqlPrinterFactoryProvider.INSTANCE, AqlNullWriterFactory.INSTANCE, null,
             new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(AqlLogicalExpressionJobGen.INSTANCE),
             AqlExpressionTypeComputer.INSTANCE, AqlNullableTypeComputer.INSTANCE, null, null, null,
@@ -187,7 +189,12 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 ARecordType rt = (ARecordType) _emptyTypeEnv.getType(expr.getArguments().get(0).getValue());
                 String str = ((AString) ((AsterixConstantValue) ((ConstantExpression) expr.getArguments().get(1)
                         .getValue()).getValue()).getObject()).getStringValue();
-                int k = rt.findFieldPosition(str);
+                int k;
+                try {
+                    k = rt.findFieldPosition(str);
+                } catch (IOException e) {
+                    throw new AlgebricksException(e);
+                }
                 if (k >= 0) {
                     // wait for the ByNameToByIndex rule to apply
                     return new Pair<Boolean, ILogicalExpression>(changed, expr);

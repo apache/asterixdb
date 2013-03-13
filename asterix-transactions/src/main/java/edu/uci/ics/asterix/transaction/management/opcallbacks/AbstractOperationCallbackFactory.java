@@ -19,23 +19,21 @@ import java.io.Serializable;
 
 import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionSubsystemProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 
-public abstract class AbstractOperationCallbackFactory implements Serializable{
+public abstract class AbstractOperationCallbackFactory implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     protected final JobId jobId;
     protected final int datasetId;
     protected final int[] primaryKeyFields;
-    protected final IBinaryHashFunctionFactory[] primaryKeyHashFunctionFactories;
     protected final ITransactionSubsystemProvider txnSubsystemProvider;
     protected final byte resourceType;
 
     public AbstractOperationCallbackFactory(JobId jobId, int datasetId, int[] primaryKeyFields,
-            IBinaryHashFunctionFactory[] primaryKeyHashFunctionFactories,
             ITransactionSubsystemProvider txnSubsystemProvider, byte resourceType) {
         this.jobId = jobId;
         this.datasetId = datasetId;
         this.primaryKeyFields = primaryKeyFields;
-        this.primaryKeyHashFunctionFactories = primaryKeyHashFunctionFactories;
         this.txnSubsystemProvider = txnSubsystemProvider;
         this.resourceType = resourceType;
     }

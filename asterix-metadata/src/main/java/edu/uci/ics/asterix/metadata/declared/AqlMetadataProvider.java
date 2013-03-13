@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -16,6 +16,7 @@
 package edu.uci.ics.asterix.metadata.declared;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,18 +30,16 @@ import edu.uci.ics.asterix.common.context.TransactionSubsystemProvider;
 import edu.uci.ics.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import edu.uci.ics.asterix.common.parse.IParseFileSplitsDecl;
 import edu.uci.ics.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveValueProviderFactory;
-import edu.uci.ics.asterix.external.adapter.factory.IExternalDatasetAdapterFactory;
-import edu.uci.ics.asterix.external.adapter.factory.IFeedDatasetAdapterFactory;
-import edu.uci.ics.asterix.external.adapter.factory.IFeedDatasetAdapterFactory.FeedAdapterType;
-import edu.uci.ics.asterix.external.adapter.factory.IGenericFeedDatasetAdapterFactory;
-import edu.uci.ics.asterix.external.adapter.factory.ITypedFeedDatasetAdapterFactory;
+import edu.uci.ics.asterix.external.adapter.factory.IAdapterFactory;
+import edu.uci.ics.asterix.external.adapter.factory.IGenericDatasetAdapterFactory;
+import edu.uci.ics.asterix.external.adapter.factory.ITypedDatasetAdapterFactory;
 import edu.uci.ics.asterix.external.data.operator.ExternalDataScanOperatorDescriptor;
+import edu.uci.ics.asterix.external.data.operator.FeedIntakeOperatorDescriptor;
+import edu.uci.ics.asterix.external.data.operator.FeedMessageOperatorDescriptor;
 import edu.uci.ics.asterix.external.dataset.adapter.IDatasourceAdapter;
-import edu.uci.ics.asterix.external.dataset.adapter.IFeedDatasourceAdapter;
-import edu.uci.ics.asterix.feed.comm.IFeedMessage;
-import edu.uci.ics.asterix.feed.mgmt.FeedId;
-import edu.uci.ics.asterix.feed.operator.FeedIntakeOperatorDescriptor;
-import edu.uci.ics.asterix.feed.operator.FeedMessageOperatorDescriptor;
+import edu.uci.ics.asterix.external.dataset.adapter.ITypedDatasourceAdapter;
+import edu.uci.ics.asterix.external.feed.lifecycle.FeedId;
+import edu.uci.ics.asterix.external.feed.lifecycle.IFeedMessage;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
@@ -97,7 +96,6 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.SinkWriterRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
@@ -288,7 +286,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             throw new AlgebricksException("Can only scan datasets of records.");
         }
 
-        IExternalDatasetAdapterFactory adapterFactory;
+        IGenericDatasetAdapterFactory adapterFactory;
         IDatasourceAdapter adapter;
         String adapterName;
         DatasourceAdapter adapterEntity;
@@ -299,22 +297,22 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     adapterName);
             if (adapterEntity != null) {
                 adapterFactoryClassname = adapterEntity.getClassname();
-                adapterFactory = (IExternalDatasetAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+                adapterFactory = (IGenericDatasetAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
             } else {
                 adapterFactoryClassname = adapterFactoryMapping.get(adapterName);
                 if (adapterFactoryClassname == null) {
                     throw new AlgebricksException(" Unknown adapter :" + adapterName);
                 }
-                adapterFactory = (IExternalDatasetAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+                adapterFactory = (IGenericDatasetAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
             }
 
-            adapter = ((IExternalDatasetAdapterFactory) adapterFactory).createAdapter(datasetDetails.getProperties(),
+            adapter = ((IGenericDatasetAdapterFactory) adapterFactory).createAdapter(datasetDetails.getProperties(),
                     itemType);
         } catch (AlgebricksException ae) {
             throw ae;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new AlgebricksException("unable to load the adapter factory class " + e);
+            throw new AlgebricksException("Unable to create adapter " + e);
         }
 
         if (!(adapter.getAdapterType().equals(IDatasourceAdapter.AdapterType.READ) || adapter.getAdapterType().equals(
@@ -329,7 +327,13 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         ExternalDataScanOperatorDescriptor dataScanner = new ExternalDataScanOperatorDescriptor(jobSpec,
                 adapterFactoryClassname, datasetDetails.getProperties(), rt, scannerDesc);
 
-        AlgebricksPartitionConstraint constraint = adapter.getPartitionConstraint();
+        AlgebricksPartitionConstraint constraint;
+        try {
+            constraint = adapter.getPartitionConstraint();
+        } catch (Exception e) {
+            throw new AlgebricksException(e);
+        }
+
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(dataScanner, constraint);
     }
 
@@ -362,25 +366,45 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         FeedDatasetDetails datasetDetails = (FeedDatasetDetails) dataset.getDatasetDetails();
         DatasourceAdapter adapterEntity;
         IDatasourceAdapter adapter;
-        IFeedDatasetAdapterFactory adapterFactory;
+        IAdapterFactory adapterFactory;
         IAType adapterOutputType;
+        String adapterName;
+        String adapterFactoryClassname;
 
         try {
-            adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, null, datasetDetails.getAdapterFactory());
-            adapterFactory = (IFeedDatasetAdapterFactory) Class.forName(adapterEntity.getClassname()).newInstance();
-            if (adapterFactory.getFeedAdapterType().equals(FeedAdapterType.TYPED)) {
-                adapter = ((ITypedFeedDatasetAdapterFactory) adapterFactory).createAdapter(datasetDetails
-                        .getProperties());
-                adapterOutputType = ((IFeedDatasourceAdapter) adapter).getAdapterOutputType();
+            adapterName = datasetDetails.getAdapterFactory();
+            adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
+                    adapterName);
+            if (adapterEntity != null) {
+                adapterFactoryClassname = adapterEntity.getClassname();
+                adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
             } else {
-                String outputTypeName = datasetDetails.getProperties().get(
-                        IGenericFeedDatasetAdapterFactory.KEY_TYPE_NAME);
-                adapterOutputType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, null, outputTypeName).getDatatype();
-                adapter = ((IGenericFeedDatasetAdapterFactory) adapterFactory).createAdapter(
-                        datasetDetails.getProperties(), adapterOutputType);
+                adapterFactoryClassname = adapterFactoryMapping.get(adapterName);
+                if (adapterFactoryClassname != null) {
+                } else {
+                    // adapterName has been provided as a fully qualified classname 
+                    adapterFactoryClassname = adapterName;
+                }
+                adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
             }
+
+            if (adapterFactory instanceof ITypedDatasetAdapterFactory) {
+                adapter = ((ITypedDatasetAdapterFactory) adapterFactory).createAdapter(datasetDetails.getProperties());
+                adapterOutputType = ((ITypedDatasourceAdapter) adapter).getAdapterOutputType();
+            } else if (adapterFactory instanceof IGenericDatasetAdapterFactory) {
+                String outputTypeName = datasetDetails.getProperties().get(IGenericDatasetAdapterFactory.KEY_TYPE_NAME);
+                adapterOutputType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getDataverseName(),
+                        outputTypeName).getDatatype();
+                adapter = ((IGenericDatasetAdapterFactory) adapterFactory).createAdapter(
+                        datasetDetails.getProperties(), adapterOutputType);
+            } else {
+                throw new IllegalStateException(" Unknown factory type for " + adapterFactoryClassname);
+            }
+        } catch (AlgebricksException ae) {
+            throw ae;
         } catch (Exception e) {
-            throw new AlgebricksException(e);
+            e.printStackTrace();
+            throw new AlgebricksException("unable to create adapter  " + e);
         }
 
         ISerializerDeserializer payloadSerde = NonTaggedDataFormat.INSTANCE.getSerdeProvider()
@@ -388,11 +412,16 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         RecordDescriptor feedDesc = new RecordDescriptor(new ISerializerDeserializer[] { payloadSerde });
 
         FeedIntakeOperatorDescriptor feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, new FeedId(
-                dataset.getDataverseName(), dataset.getDatasetName()), adapterEntity.getClassname(),
+                dataset.getDataverseName(), dataset.getDatasetName()), adapterFactoryClassname,
                 datasetDetails.getProperties(), (ARecordType) adapterOutputType, feedDesc);
 
-        return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(feedIngestor,
-                adapter.getPartitionConstraint());
+        AlgebricksPartitionConstraint constraint = null;
+        try {
+            constraint = adapter.getPartitionConstraint();
+        } catch (Exception e) {
+            throw new AlgebricksException(e);
+        }
+        return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(feedIngestor, constraint);
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildFeedMessengerRuntime(
@@ -460,19 +489,13 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 JobId jobId = ((JobEventListenerFactory) jobSpec.getJobletEventListenerFactory()).getJobId();
                 int datasetId = dataset.getDatasetId();
                 int[] primaryKeyFields = new int[numPrimaryKeys];
-                List<LogicalVariable> primaryKeyVars = new ArrayList<LogicalVariable>();
-                int varIndexOffset = outputVars.size() - numPrimaryKeys - 1;
                 for (int i = 0; i < numPrimaryKeys; i++) {
                     primaryKeyFields[i] = i;
-                    primaryKeyVars.add(new LogicalVariable(outputVars.get(varIndexOffset + i).getId()));
                 }
-                IBinaryHashFunctionFactory[] entityIdFieldHashFunctionFactories = JobGenHelper
-                        .variablesToBinaryHashFunctionFactories(primaryKeyVars, typeEnv, context);
 
                 TransactionSubsystemProvider txnSubsystemProvider = new TransactionSubsystemProvider();
                 searchCallbackFactory = new PrimaryIndexSearchOperationCallbackFactory(jobId, datasetId,
-                        primaryKeyFields, entityIdFieldHashFunctionFactories, txnSubsystemProvider,
-                        ResourceType.LSM_BTREE);
+                        primaryKeyFields, txnSubsystemProvider, ResourceType.LSM_BTREE);
             }
 
             BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(jobSpec, outputRecDesc,
@@ -742,12 +765,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             for (i = 0; i < numKeys; i++) {
                 primaryKeyFields[i] = i;
             }
-            IBinaryHashFunctionFactory[] entityIdFieldHashFunctionFactories = JobGenHelper
-                    .variablesToBinaryHashFunctionFactories(keys, typeEnv, context);
             TransactionSubsystemProvider txnSubsystemProvider = new TransactionSubsystemProvider();
             PrimaryIndexModificationOperationCallbackFactory modificationCallbackFactory = new PrimaryIndexModificationOperationCallbackFactory(
-                    jobId, datasetId, primaryKeyFields, entityIdFieldHashFunctionFactories, txnSubsystemProvider,
-                    indexOp, ResourceType.LSM_BTREE);
+                    jobId, datasetId, primaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_BTREE);
 
             LSMTreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new LSMTreeIndexInsertUpdateDeleteOperatorDescriptor(
                     spec, recordDesc, appContext.getStorageManagerInterface(),
@@ -933,12 +953,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 primaryKeyFields[i] = idx;
                 i++;
             }
-            IBinaryHashFunctionFactory[] entityIdFieldHashFunctionFactories = JobGenHelper
-                    .variablesToBinaryHashFunctionFactories(primaryKeys, typeEnv, context);
             TransactionSubsystemProvider txnSubsystemProvider = new TransactionSubsystemProvider();
             SecondaryIndexModificationOperationCallbackFactory modificationCallbackFactory = new SecondaryIndexModificationOperationCallbackFactory(
-                    jobId, datasetId, primaryKeyFields, entityIdFieldHashFunctionFactories, txnSubsystemProvider,
-                    indexOp, ResourceType.LSM_BTREE);
+                    jobId, datasetId, primaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_BTREE);
 
             LSMTreeIndexInsertUpdateDeleteOperatorDescriptor btreeBulkLoad = new LSMTreeIndexInsertUpdateDeleteOperatorDescriptor(
                     spec, recordDesc, appContext.getStorageManagerInterface(),
@@ -953,6 +970,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad,
                     splitsAndConstraint.second);
         } catch (MetadataException e) {
+            throw new AlgebricksException(e);
+        } catch (IOException e) {
             throw new AlgebricksException(e);
         }
     }
@@ -1027,12 +1046,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 primaryKeyFields[i] = idx;
                 i++;
             }
-            IBinaryHashFunctionFactory[] entityIdFieldHashFunctionFactories = JobGenHelper
-                    .variablesToBinaryHashFunctionFactories(primaryKeys, typeEnv, context);
             TransactionSubsystemProvider txnSubsystemProvider = new TransactionSubsystemProvider();
             SecondaryIndexModificationOperationCallbackFactory modificationCallbackFactory = new SecondaryIndexModificationOperationCallbackFactory(
-                    jobId, datasetId, primaryKeyFields, entityIdFieldHashFunctionFactories, txnSubsystemProvider,
-                    indexOp, ResourceType.LSM_RTREE);
+                    jobId, datasetId, primaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_RTREE);
 
             LSMTreeIndexInsertUpdateDeleteOperatorDescriptor rtreeUpdate = new LSMTreeIndexInsertUpdateDeleteOperatorDescriptor(
                     spec, recordDesc, appContext.getStorageManagerInterface(),
@@ -1047,8 +1063,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES),
                     filterFactory, modificationCallbackFactory);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(rtreeUpdate, splitsAndConstraint.second);
-        } catch (MetadataException me) {
-            throw new AlgebricksException(me);
+        } catch (MetadataException | IOException e) {
+            throw new AlgebricksException(e);
         }
     }
 

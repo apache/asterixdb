@@ -103,7 +103,7 @@ public class LogManager implements ILogManager {
         public static final int ACTIVE = 1;
     }
 
-    private AtomicLong lastFlushedLsn = new AtomicLong(-1);
+    private AtomicLong lastFlushedLSN = new AtomicLong(-1);
 
     /*
      * When the transaction eco-system comes to life, the log manager positions
@@ -111,7 +111,7 @@ public class LogManager implements ILogManager {
      * lsn value of the next log record to be written after a system (re)start.
      * The value is zero when the system is starting for the first time.
      */
-    private long startingLsn = 0;
+    private long startingLSN = 0;
 
     /*
      * lsn represents the monotonically increasing long value that can be broken
@@ -126,7 +126,7 @@ public class LogManager implements ILogManager {
     }
 
     public AtomicLong getLastFlushedLsn() {
-        return lastFlushedLsn;
+        return lastFlushedLSN;
     }
 
     public AtomicInteger getLogPageStatus(int pageIndex) {
@@ -138,7 +138,7 @@ public class LogManager implements ILogManager {
     }
 
     public long incrementLastFlushedLsn(long delta) {
-        return lastFlushedLsn.addAndGet(delta);
+        return lastFlushedLSN.addAndGet(delta);
     }
 
     public LogManager(TransactionSubsystem provider) throws ACIDException {
@@ -238,7 +238,7 @@ public class LogManager implements ILogManager {
     }
 
     public int getLogPageIndex(long lsnValue) {
-        return (int) ((lsnValue - startingLsn) / logManagerProperties.getLogPageSize()) % numLogPages;
+        return (int) ((lsnValue - startingLSN) / logManagerProperties.getLogPageSize()) % numLogPages;
 
     }
 
@@ -256,7 +256,7 @@ public class LogManager implements ILogManager {
      * record is (to be) placed.
      */
     public int getLogPageOffset(long lsnValue) {
-        return (int) (lsnValue - startingLsn) % logManagerProperties.getLogPageSize();
+        return (int) (lsnValue - startingLSN) % logManagerProperties.getLogPageSize();
     }
 
     /*
@@ -369,7 +369,7 @@ public class LogManager implements ILogManager {
 
                 // Before the count is incremented, if the flusher flushed the allocated page, 
                 // then retry to get new LSN. Otherwise, the log with allocated lsn will be lost. 
-                if (lastFlushedLsn.get() >= retVal) {
+                if (lastFlushedLSN.get() >= retVal) {
                     logPageOwnerCount[pageIndex].decrementAndGet();
                     continue;
                 }
@@ -654,18 +654,43 @@ public class LogManager implements ILogManager {
                 throw new ACIDException("Failed to delete a file: " + name);
             }
         }
+        closeLogPages();
         initLSN();
+        openLogPages();
     }
 
     private PhysicalLogLocator initLSN() throws ACIDException {
         PhysicalLogLocator nextPhysicalLsn = LogUtil.initializeLogAnchor(this);
-        startingLsn = nextPhysicalLsn.getLsn();
-        lastFlushedLsn.set(startingLsn - 1);
+        startingLSN = nextPhysicalLsn.getLsn();
+        lastFlushedLSN.set(startingLSN - 1);
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info(" Starting lsn is : " + startingLsn);
+            LOGGER.info(" Starting lsn is : " + startingLSN);
         }
-        lsn.set(startingLsn);
+        lsn.set(startingLSN);
         return nextPhysicalLsn;
+    }
+    
+    private void closeLogPages() throws ACIDException {
+        for (int i=0; i < numLogPages; i++) {
+            try {
+                logPages[i].close();
+            } catch (IOException e) {
+                throw new ACIDException(e);
+            }
+        }
+    }
+
+    private void openLogPages() throws ACIDException {
+        try {
+            String filePath = LogUtil.getLogFilePath(logManagerProperties, LogUtil.getFileId(this, startingLSN));
+            for (int i = 0; i < numLogPages; i++) {
+                logPages[i].open(filePath,
+                        LogUtil.getFileOffset(this, startingLSN) + i * logManagerProperties.getLogPageSize(),
+                        logManagerProperties.getLogPageSize());
+            }
+        } catch (Exception e) {
+            throw new ACIDException(Thread.currentThread().getName() + " unable to create log buffer", e);
+        }
     }
 
     @Override
@@ -684,7 +709,7 @@ public class LogManager implements ILogManager {
         if (logicalLogLocator.getLsn() > lsn.get()) {
             throw new ACIDException(" invalid lsn " + logicalLogLocator.getLsn());
         }
-        while (lastFlushedLsn.get() < logicalLogLocator.getLsn());
+        while (lastFlushedLSN.get() < logicalLogLocator.getLsn());
     }
 
     /*

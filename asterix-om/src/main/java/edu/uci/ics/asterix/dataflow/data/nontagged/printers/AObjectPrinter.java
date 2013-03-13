@@ -73,6 +73,10 @@ public class AObjectPrinter implements IPrinter {
                 ADurationPrinter.INSTANCE.print(b, s, l, ps);
                 break;
             }
+            case INTERVAL: {
+                AIntervalPrinter.INSTANCE.print(b, s, l, ps);
+                break;
+            }
             case POINT: {
                 APointPrinter.INSTANCE.print(b, s, l, ps);
                 break;

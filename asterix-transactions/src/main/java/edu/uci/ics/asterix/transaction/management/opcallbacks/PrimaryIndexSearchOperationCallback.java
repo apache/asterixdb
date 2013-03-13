@@ -19,7 +19,6 @@ import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.locking.ILockManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
@@ -30,14 +29,13 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 public class PrimaryIndexSearchOperationCallback extends AbstractOperationCallback implements ISearchOperationCallback {
 
     public PrimaryIndexSearchOperationCallback(int datasetId, int[] entityIdFields,
-            IBinaryHashFunctionFactory[] entityIdFieldHashFunctionFactories, ILockManager lockManager,
-            TransactionContext txnCtx) {
-        super(datasetId, entityIdFields, entityIdFieldHashFunctionFactories, txnCtx, lockManager);
+            ILockManager lockManager, TransactionContext txnCtx) {
+        super(datasetId, entityIdFields, txnCtx, lockManager);
     }
 
     @Override
     public boolean proceed(ITupleReference tuple) throws HyracksDataException {
-        int pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields, primaryKeyHashFunctions);
+        int pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields);
         try {
             return lockManager.tryLock(datasetId, pkHash, LockMode.S, txnCtx);
         } catch (ACIDException e) {
@@ -47,7 +45,7 @@ public class PrimaryIndexSearchOperationCallback extends AbstractOperationCallba
 
     @Override
     public void reconcile(ITupleReference tuple) throws HyracksDataException {
-        int pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields, primaryKeyHashFunctions);
+        int pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields);
         try {
             lockManager.lock(datasetId, pkHash, LockMode.S, txnCtx);
         } catch (ACIDException e) {
@@ -57,7 +55,7 @@ public class PrimaryIndexSearchOperationCallback extends AbstractOperationCallba
 
     @Override
     public void cancel(ITupleReference tuple) throws HyracksDataException {
-        int pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields, primaryKeyHashFunctions);
+        int pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields);
         try {
             lockManager.unlock(datasetId, pkHash, txnCtx);
         } catch (ACIDException e) {

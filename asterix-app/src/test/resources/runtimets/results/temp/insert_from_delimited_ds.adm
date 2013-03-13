@@ -1,0 +1,4 @@
+{ "date": date("-2012-12-12"), "time": time("23:49:12.390Z"), "datetime": datetime("3827-12-12T11:43:29.329Z"), "duration": duration("P20Y19DT4H14M23.34S") }
+{ "date": date("1993-12-12"), "time": time("03:32:00.000Z"), "datetime": datetime("-2012-12-12T05:00:23.071Z"), "duration": duration("P20Y19D") }
+{ "date": date("1839-03-12"), "time": time("12:30:49.382Z"), "datetime": datetime("1012-06-12T00:37:00.000Z"), "duration": duration("PT4H14M23.34S") }
+{ "date": date("0003-11-02"), "time": time("23:19:32.382Z"), "datetime": datetime("2012-12-12T00:00:00.001Z"), "duration": duration("P20Y12DT12H9.34S") }

@@ -17,10 +17,15 @@ import org.junit.runners.Parameterized.Parameters;
 
 import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.external.dataset.adapter.FileSystemBasedAdapter;
+import edu.uci.ics.asterix.external.util.IdentitiyResolverFactory;
 import edu.uci.ics.asterix.test.aql.TestsUtils;
 import edu.uci.ics.asterix.testframework.context.TestCaseContext;
 import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
 
+/**
+ * Runs the runtime test cases under 'src/test/resources/runtimets'.
+ */
 @RunWith(Parameterized.class)
 public class ExecutionTest {
     private static final String PATH_ACTUAL = "rttest/";
@@ -48,8 +53,14 @@ public class ExecutionTest {
 
         AsterixHyracksIntegrationUtil.init();
 
-        // TODO: Uncomment when hadoop version is upgraded and adapters are ported
-        //HDFSCluster.getInstance().setup();
+        // TODO: Uncomment when hadoop version is upgraded and adapters are
+        // ported. 
+        HDFSCluster.getInstance().setup();
+
+        // Set the node resolver to be the identity resolver that expects node names 
+        // to be node controller ids; a valid assumption in test environment. 
+        System.setProperty(FileSystemBasedAdapter.NODE_RESOLVER_FACTORY_PROPERTY,
+                IdentitiyResolverFactory.class.getName());
     }
 
     @AfterClass
@@ -70,6 +81,7 @@ public class ExecutionTest {
             FileUtils.deleteDirectory(log);
         File lsn = new File("last_checkpoint_lsn");
         lsn.deleteOnExit();
+        HDFSCluster.getInstance().cleanup();
     }
 
     @Parameters
@@ -95,12 +107,13 @@ public class ExecutionTest {
             File testFile = tcCtx.getTestFile(cUnit);
 
             /*************** to avoid run failure cases ****************
-            if (!testFile.getAbsolutePath().contains("query-issue205.aql")) {
+            if (!testFile.getAbsolutePath().contains("queries/failure")) {//&& !testFile.getAbsolutePath().contains("partition-by-nonexistent-field.aql"))       ) {
                 continue;
+                //System.out.println(testFile.getAbsolutePath());
             }
             System.out.println(testFile.getAbsolutePath());
             ************************************************************/
-            
+
             File expectedResultFile = tcCtx.getExpectedResultFile(cUnit);
             File actualFile = new File(PATH_ACTUAL + File.separator
                     + tcCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_" + cUnit.getName() + ".adm");

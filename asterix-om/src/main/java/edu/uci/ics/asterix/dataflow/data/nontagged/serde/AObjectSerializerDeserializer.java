@@ -15,6 +15,7 @@ import edu.uci.ics.asterix.om.base.AInt16;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AInt64;
 import edu.uci.ics.asterix.om.base.AInt8;
+import edu.uci.ics.asterix.om.base.AInterval;
 import edu.uci.ics.asterix.om.base.ALine;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.AOrderedList;
@@ -84,6 +85,9 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
             case DURATION: {
                 return ADurationSerializerDeserializer.INSTANCE.deserialize(in);
             }
+            case INTERVAL: {
+                return AIntervalSerializerDeserializer.INSTANCE.deserialize(in);
+            }
             case POINT: {
                 return APointSerializerDeserializer.INSTANCE.deserialize(in);
             }
@@ -108,9 +112,9 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
             case UNORDEREDLIST: {
                 return AUnorderedListSerializerDeserializer.SCHEMALESS_INSTANCE.deserialize(in);
             }
-                // case TYPE: {
-                // return AUnorderedListBytesConverter.INSTANCE.deserialize(in);
-                // }
+            // case TYPE: {
+            // return AUnorderedListBytesConverter.INSTANCE.deserialize(in);
+            // }
             default: {
                 throw new NotImplementedException("No serializer/deserializer implemented for type " + typeTag + " .");
             }
@@ -177,6 +181,10 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
             }
             case DURATION: {
                 ADurationSerializerDeserializer.INSTANCE.serialize((ADuration) instance, out);
+                break;
+            }
+            case INTERVAL: {
+                AIntervalSerializerDeserializer.INSTANCE.serialize((AInterval) instance, out);
                 break;
             }
             case POINT: {

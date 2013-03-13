@@ -23,9 +23,9 @@ create type CustomerType as closed {
   children: [ { name: string, age: int32? } ]
 }
 
-create dataset Customers(CustomerType) partitioned by key cid;
+create dataset Customers(CustomerType) primary key cid;
   
-create dataset Customers2(CustomerType) partitioned by key cid;
+create dataset Customers2(CustomerType) primary key cid;
 
 create index interests_index on Customers2(interests) type keyword;
 

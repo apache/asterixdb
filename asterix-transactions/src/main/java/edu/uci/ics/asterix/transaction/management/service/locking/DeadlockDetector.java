@@ -27,7 +27,6 @@ public class DeadlockDetector {
     private JobId tempJobIdObj; //temporary object to avoid object creation
     private DatasetId tempDatasetIdObj; //temporary object to avoid object creation
 
-    
     public DeadlockDetector(HashMap<JobId, JobInfo> jobHT, HashMap<DatasetId, DatasetLockInfo> datasetResourceHT,
             EntityLockInfoManager entityLockInfoManager, EntityInfoManager entityInfoManager,
             LockWaiterManager lockWaiterManager) {
@@ -43,10 +42,10 @@ public class DeadlockDetector {
         tempJobIdObj = new JobId(0);
         tempDatasetIdObj = new DatasetId(0);
     }
-    
-    public boolean isSafeToAdd(DatasetLockInfo dLockInfo, int eLockInfo, int entityInfo, boolean isDatasetLockInfo, boolean isUpgrade) {
+
+    public boolean isSafeToAdd(DatasetLockInfo dLockInfo, int eLockInfo, int entityInfo, boolean isDatasetLockInfo,
+            boolean isUpgrade) {
         int holder;
-        int nextHolder;
         int visitedHolder;
         int callerId = entityInfoManager.getJobId(entityInfo);
         int datasetId = entityInfoManager.getDatasetId(entityInfo);
@@ -67,7 +66,7 @@ public class DeadlockDetector {
         } else {
             getHolderList(datasetId, hashValue, holderList);
         }
-        
+
         //check whether this caller is upgrader or not
         //if it is upgrader, then handle it as special case in the following manner
         //if there is another upgrader or waiter of which lock mode is not compatible with the caller's lock mode,
@@ -79,11 +78,11 @@ public class DeadlockDetector {
             //there is no case such that while a job is holding any mode of lock on a dataset and waits for the same dataset as an waiter. 
             //But the job may wait for the same dataset as an upgrader.
         }
-        
+
         //TODO
         //check whether when there are multiple resources, the waiter and upgrader should be distinguished or not.
         //The current logic doesn't distinguish these two types of waiter.
-        
+
         //while holderList is not empty
         holderList.beginIterate();
         holder = holderList.getNextKey();
@@ -136,6 +135,7 @@ public class DeadlockDetector {
     /**
      * Get holder list of dataset if hashValue == -1. Get holder list of entity otherwise.
      * Where, a holder is a jobId, not entityInfo's slotNum
+     * 
      * @param datasetId
      * @param hashValue
      * @param holderList
@@ -147,35 +147,35 @@ public class DeadlockDetector {
         int entityInfo;
         int waiterObjId;
         LockWaiter waiterObj;
-        
+
         //get datasetLockInfo
         tempDatasetIdObj.setId(datasetId);
         dLockInfo = datasetResourceHT.get(tempDatasetIdObj);
         if (dLockInfo == null) {
             return;
         }
-        
+
         if (hashValue == -1) {
             //get S/X-lock holders of dataset
             entityInfo = dLockInfo.getLastHolder();
-            while(entityInfo != -1) {
+            while (entityInfo != -1) {
                 holderList.put(entityInfoManager.getJobId(entityInfo), 0);
                 entityInfo = entityInfoManager.getPrevEntityActor(entityInfo);
             }
-            
+
             //get IS/IX-lock holders of dataset
             entityHT = dLockInfo.getEntityResourceHT();
             entityHT.beginIterate();
             entityLockInfo = entityHT.getNextValue();
             while (entityLockInfo != -1) {
-                
+
                 //1. add holder of eLockInfo to holerList
                 entityInfo = entityLockInfoManager.getLastHolder(entityLockInfo);
                 while (entityInfo != -1) {
                     holderList.put(entityInfoManager.getJobId(entityInfo), 0);
                     entityInfo = entityInfoManager.getPrevEntityActor(entityInfo);
                 }
-                
+
                 //2. add waiter of eLockInfo to holderList since waiter of entityLock is a holder of datasetLock
                 //(Upgraders need not to be added since upgraders are also holders)
                 waiterObjId = entityLockInfoManager.getFirstWaiter(entityLockInfo);
@@ -185,7 +185,7 @@ public class DeadlockDetector {
                     holderList.put(entityInfoManager.getJobId(entityInfo), 0);
                     waiterObjId = waiterObj.getNextWaiterObjId();
                 }
-                
+
                 entityLockInfo = entityHT.getNextValue();
             }
         } else {
@@ -205,6 +205,7 @@ public class DeadlockDetector {
 
     /**
      * Get waiting resource list of jobId, where a resource is represented with entityInfo's slot number
+     * 
      * @param jobId
      * @param resourceList
      */
@@ -213,24 +214,23 @@ public class DeadlockDetector {
         int waiterId;
         LockWaiter waiterObj;
         int entityInfo;
-        
+
         //get JobInfo
         tempJobIdObj.setId(jobId);
         jobInfo = jobHT.get(tempJobIdObj);
         if (IS_DEBUG_MODE) {
             if (jobInfo == null) {
-                System.out.println(Thread.currentThread().getName()+"jobId:"+jobId);
+                System.out.println(Thread.currentThread().getName() + "jobId:" + jobId);
             }
         }
-        
+
         //get WaiterObj
         waiterId = jobInfo.getFirstWaitingResource();
-        while (waiterId != -1)
-        {
+        while (waiterId != -1) {
             waiterObj = lockWaiterManager.getLockWaiter(waiterId);
             entityInfo = waiterObj.getEntityInfoSlot();
             resourceList.put(entityInfo, -1);
-            waiterId = waiterObj.getNextWaitingResourceObjId(); 
+            waiterId = waiterObj.getNextWaitingResourceObjId();
         }
         return;
     }

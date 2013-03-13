@@ -17,40 +17,32 @@ package edu.uci.ics.asterix.transaction.management.opcallbacks;
 
 import edu.uci.ics.asterix.transaction.management.service.locking.ILockManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
-import edu.uci.ics.asterix.transaction.management.service.transaction.FieldsHashValueGenerator;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.MurmurHash128Bit;
 
 public abstract class AbstractOperationCallback {
+    
+    private final static long SEED = 0L;
+    
     protected final DatasetId datasetId;
     protected final int[] primaryKeyFields;
-    protected final IBinaryHashFunction[] primaryKeyHashFunctions;
     protected final ILockManager lockManager;
     protected final TransactionContext txnCtx;
     protected int transactorLocalNumActiveOperations = 0;
 
     public AbstractOperationCallback(int datasetId, int[] primaryKeyFields,
-            IBinaryHashFunctionFactory[] primaryKeyHashFunctionFactories, TransactionContext txnCtx,
-            ILockManager lockManager) {
+            TransactionContext txnCtx, ILockManager lockManager) {
         this.datasetId = new DatasetId(datasetId);
         this.primaryKeyFields = primaryKeyFields;
-        if (primaryKeyHashFunctionFactories != null) {
-            this.primaryKeyHashFunctions = new IBinaryHashFunction[primaryKeyHashFunctionFactories.length];
-            for (int i = 0; i < primaryKeyHashFunctionFactories.length; ++i) {
-                this.primaryKeyHashFunctions[i] = primaryKeyHashFunctionFactories[i].createBinaryHashFunction();
-            }
-        } else {
-            this.primaryKeyHashFunctions = null;
-        }
         this.txnCtx = txnCtx;
         this.lockManager = lockManager;
     }
 
-    public int computePrimaryKeyHashValue(ITupleReference tuple, int[] primaryKeyFields,
-            IBinaryHashFunction[] primaryKeyHashFunctions) {
-        return FieldsHashValueGenerator.computeFieldsHashValue(tuple, primaryKeyFields, primaryKeyHashFunctions);
+    public int computePrimaryKeyHashValue(ITupleReference tuple, int[] primaryKeyFields) {
+        long[] longHashes= new long[2];
+        MurmurHash128Bit.hash3_x64_128(tuple, primaryKeyFields, SEED, longHashes);
+        return Math.abs((int) longHashes[0]); 
     }
 
     public TransactionContext getTransactionContext() {

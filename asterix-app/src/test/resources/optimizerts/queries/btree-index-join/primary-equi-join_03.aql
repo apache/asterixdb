@@ -1,5 +1,5 @@
 /*
- * Description    : Self-equi joins a dataset, Customers, based on the customer id.
+ * Description    : Equi joins two datasets, Customers and Orders, based on the customer id.
  *                  Given the 'indexnl' hint we expect the join to be transformed
  *                  into an indexed nested-loop join using Customers' primary index.
  * Success        : Yes
@@ -26,11 +26,21 @@ create type CustomerType as closed {
   }
 }
 
-create dataset Customers(CustomerType) partitioned by key cid;
+create type OrderType as closed {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float
+}
 
-write output to nc1:"rttest/btree-index-join_primary-equi-join_03.adm";
+create dataset Customers(CustomerType) primary key cid;
+create dataset Orders(OrderType) primary key oid;
 
-for $c1 in dataset('Customers')
-for $c2 in dataset('Customers')
-where $c1.cid /*+ indexnl */ = $c2.cid 
-return {"customer1":$c1, "customer2":$c2} 
+write output to nc1:"rttest/btree-index-join_primary-equi-join_04.adm";
+
+for $c in dataset('Customers')
+for $o in dataset('Orders')
+where $c.cid /*+ indexnl */ = $o.cid
+return {"customer":$c, "order": $o} 

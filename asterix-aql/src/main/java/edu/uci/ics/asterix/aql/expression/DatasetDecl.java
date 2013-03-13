@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.asterix.aql.expression;
 
+import java.util.Map;
+
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
@@ -26,17 +28,18 @@ public class DatasetDecl implements Statement {
     protected final Identifier itemTypeName;
     protected final DatasetType datasetType;
     protected final IDatasetDetailsDecl datasetDetailsDecl;
+    protected final Map<String, String> hints;
+    protected final boolean ifNotExists;
 
-    public boolean ifNotExists;
-
-    public DatasetDecl(Identifier dataverse, Identifier name, Identifier itemTypeName, DatasetType datasetType,
-            IDatasetDetailsDecl idd, boolean ifNotExists) {
+    public DatasetDecl(Identifier dataverse, Identifier name, Identifier itemTypeName, Map<String, String> hints,
+            DatasetType datasetType, IDatasetDetailsDecl idd, boolean ifNotExists) {
         this.dataverse = dataverse;
         this.name = name;
         this.itemTypeName = itemTypeName;
+        this.hints = hints;
         this.ifNotExists = ifNotExists;
         this.datasetType = datasetType;
-        datasetDetailsDecl = idd;
+        this.datasetDetailsDecl = idd;
     }
 
     public boolean getIfNotExists() {
@@ -53,6 +56,10 @@ public class DatasetDecl implements Statement {
 
     public Identifier getItemTypeName() {
         return itemTypeName;
+    }
+
+    public Map<String, String> getHints() {
+        return hints;
     }
 
     @Override

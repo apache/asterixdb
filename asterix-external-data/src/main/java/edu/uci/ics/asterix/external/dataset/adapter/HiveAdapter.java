@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -17,10 +17,16 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 import java.util.Map;
 
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
+/**
+ * Provides the functionality of fetching data in form of ADM records from a Hive dataset.
+ */
 public class HiveAdapter extends AbstractDatasourceAdapter {
+
+    private static final long serialVersionUID = 1L;
 
     public static final String HIVE_DATABASE = "database";
     public static final String HIVE_TABLE = "table";
@@ -56,7 +62,7 @@ public class HiveAdapter extends AbstractDatasourceAdapter {
             tablePath = configuration.get(HIVE_WAREHOUSE_DIR) + "/" + tablePath + ".db" + "/"
                     + configuration.get(HIVE_TABLE);
         }
-        configuration.put(HDFSAdapter.KEY_HDFS_PATH, tablePath);
+        configuration.put(HDFSAdapter.KEY_PATH, tablePath);
         if (!configuration.get(KEY_FORMAT).equals(FORMAT_DELIMITED_TEXT)) {
             throw new IllegalArgumentException("format" + configuration.get(KEY_FORMAT) + " is not supported");
         }
@@ -79,6 +85,11 @@ public class HiveAdapter extends AbstractDatasourceAdapter {
     @Override
     public void start(int partition, IFrameWriter writer) throws Exception {
         hdfsAdapter.start(partition, writer);
+    }
+
+    @Override
+    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
+        return hdfsAdapter.getPartitionConstraint();
     }
 
 }

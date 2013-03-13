@@ -17,7 +17,7 @@ create type SpatialType as open {
   circle: circle
 }
 
-create dataset MyData(SpatialType) partitioned by key id;
+create dataset MyData(SpatialType) primary key id;
 create index rtree_index1 on MyData(point) type rtree;
 create index rtree_index2 on MyData(line1) type rtree;
 create index rtree_index3 on MyData(poly1) type rtree;

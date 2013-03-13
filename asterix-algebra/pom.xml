@@ -1,13 +1,12 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
 		<version>0.0.4-SNAPSHOT</version>
 	</parent>
-	<groupId>edu.uci.ics.asterix</groupId>
 	<artifactId>asterix-algebra</artifactId>
-	<version>0.0.4-SNAPSHOT</version>
 
 	<build>
 		<plugins>
@@ -16,8 +15,9 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.0.2</version>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>1.7</source>
+					<target>1.7</target>
+					<fork>true</fork>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -60,8 +60,7 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-algebricks-compiler</artifactId>
-			<version>0.2.2-SNAPSHOT</version>
+			<artifactId>algebricks-compiler</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.json</groupId>

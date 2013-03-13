@@ -14,27 +14,41 @@
  */
 package edu.uci.ics.asterix.om.base.temporal;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixRuntimeException;
+
 public class ByteArrayCharSequenceAccessor implements ICharSequenceAccessor<Byte[]> {
 
-    private byte[] string;
+    private byte[] buf;
     private int offset;
-    private int beginOffset;
+    private int length;
 
     @Override
-    public char getCharAt(int index) {
-        return (char) (string[index + offset + beginOffset]);
+    public char getCharAt(int index) throws AsterixRuntimeException {
+        if (index < 0 || index >= length) {
+            throw new AsterixRuntimeException("Byte array char accessor is out of bound: " + index + ":" + length);
+        }
+        return (char) (buf[index + offset]);
     }
 
-    /* The offset is the position of the first letter in the byte array */
-    public void reset(byte[] obj, int beginOffset, int offset) {
-        string = obj;
+    /**
+     * Reset the wrapped byte array.
+     * 
+     * @param obj
+     *            The byte array to be wrapped
+     * @param beginOffset
+     *            The offset of the string stored in the byte array.
+     * @param offset
+     *            The offset of the substring of the string stored (offset from the beginOffset).
+     */
+    public void reset(byte[] obj, int offset, int length) {
+        this.buf = obj;
         this.offset = offset;
-        this.beginOffset = beginOffset;
+        this.length = length;
     }
 
     @Override
     public int getLength() {
-        return ((string[beginOffset - 2] & 0xff) << 8) + ((string[beginOffset - 1] & 0xff) << 0) - offset;
+        return length;
     }
 
 }

@@ -111,14 +111,14 @@ class LockRequestController implements Runnable {
                     isSuccess = false;
                     break;
                 } else {
-                    log("Processed: "+lockRequest.prettyPrint());
+                    log("Processed: " + lockRequest.prettyPrint());
                 }
             } catch (ACIDException e) {
                 e.printStackTrace();
                 break;
             }
         }
-        
+
         if (isSuccess) {
             log("\n*** Test Passed ***");
         }
@@ -134,7 +134,7 @@ class LockRequestController implements Runnable {
             return validateExpectedResult(false);
         } else if (request.requestType == RequestType.WAIT) {
             try {
-                Thread.sleep((long)request.entityHashValue);
+                Thread.sleep((long) request.entityHashValue);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 return false;
@@ -146,9 +146,10 @@ class LockRequestController implements Runnable {
                     log(request.threadName + " is not in the workerReadyQueue");
                     return false;
                 }
-                log(Thread.currentThread().getName() + " waiting for "+request.threadName+" to be in the workerReadyQueue["+ i++ +"].");
+                log(Thread.currentThread().getName() + " waiting for " + request.threadName
+                        + " to be in the workerReadyQueue[" + i++ + "].");
                 try {
-                    Thread.sleep((long)10);
+                    Thread.sleep((long) 10);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                     return false;
@@ -172,9 +173,10 @@ class LockRequestController implements Runnable {
                     log(request.threadName + " is not in the workerReadyQueue");
                     return false;
                 }
-                log(Thread.currentThread().getName() + " waiting for "+request.threadName+" to be in the workerReadyQueue["+ i++ +"].");
+                log(Thread.currentThread().getName() + " waiting for " + request.threadName
+                        + " to be in the workerReadyQueue[" + i++ + "].");
                 try {
-                    Thread.sleep((long)10);
+                    Thread.sleep((long) 10);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -186,7 +188,7 @@ class LockRequestController implements Runnable {
                 worker.setWait(false);
                 worker.notify();
             }
-            
+
             try {
                 Thread.sleep((long) defaultWaitTime);
             } catch (InterruptedException e) {
@@ -241,7 +243,7 @@ class LockRequestController implements Runnable {
                         }
                         expectedResultList.add(list);
                     }
-                } else if (requestType.equals("DW")) { 
+                } else if (requestType.equals("DW")) {
                     defaultWaitTime = scanner.nextInt();
                     log("LockRequest[" + i++ + "]:T" + threadId + "," + requestType + "," + defaultWaitTime);
                     continue;
@@ -259,8 +261,8 @@ class LockRequestController implements Runnable {
                         txnContext = new TransactionContext(new JobId(jobId), txnProvider);
                         jobMap.put(jobId, txnContext);
                     }
-                    log("LockRequest[" + i++ + "]:T" + threadId + "," + requestType + ",J" + jobId + ",D" + datasetId + ",E"
-                            + PKHashVal + "," + lockMode);
+                    log("LockRequest[" + i++ + "]:T" + threadId + "," + requestType + ",J" + jobId + ",D" + datasetId
+                            + ",E" + PKHashVal + "," + lockMode);
                     lockRequest = new LockRequest("Thread-" + threadId, getRequestType(requestType), new DatasetId(
                             datasetId), PKHashVal, getLockMode(lockMode), txnContext);
                 }
@@ -301,19 +303,19 @@ class LockRequestController implements Runnable {
         if (s.equals("RL")) {
             return RequestType.RELEASE_LOCKS;
         }
-        
+
         if (s.equals("CSQ")) {
             return RequestType.CHECK_SEQUENCE;
         }
-        
+
         if (s.equals("CST")) {
             return RequestType.CHECK_SET;
         }
-        
+
         if (s.equals("END")) {
             return RequestType.END;
         }
-        
+
         if (s.equals("W")) {
             return RequestType.WAIT;
         }
@@ -370,7 +372,7 @@ class LockRequestWorker implements Runnable {
         this.lockRequest = null;
         needWait = true;
         isDone = false;
-        isAwaken = false; 
+        isAwaken = false;
     }
 
     public boolean isAwaken() {
@@ -382,11 +384,10 @@ class LockRequestWorker implements Runnable {
         //initial wait
         needWait = true;
         isAwaken = false;
-       
 
         while (!isDone) {
             while (needWait) {
-                synchronized(this) {
+                synchronized (this) {
                     workerReadyQueue.push(this);
                     try {
                         this.wait();
@@ -407,14 +408,14 @@ class LockRequestWorker implements Runnable {
                 if (lockRequest.txnContext.getStatus() == TransactionContext.TIMED_OUT_STATUS) {
                     if (lockRequest.txnContext.getTxnState() != TransactionState.ABORTED) {
                         lockRequest.txnContext.setTxnState(TransactionState.ABORTED);
-                        log("*** "+ lockRequest.txnContext.getJobId()+ " lock request causing deadlock ***");
-                        log("Abort --> Releasing all locks acquired by "+ lockRequest.txnContext.getJobId());
+                        log("*** " + lockRequest.txnContext.getJobId() + " lock request causing deadlock ***");
+                        log("Abort --> Releasing all locks acquired by " + lockRequest.txnContext.getJobId());
                         try {
                             lockMgr.releaseLocks(lockRequest.txnContext);
                         } catch (ACIDException e1) {
                             e1.printStackTrace();
                         }
-                        log("Abort --> Released all locks acquired by "+ lockRequest.txnContext.getJobId());
+                        log("Abort --> Released all locks acquired by " + lockRequest.txnContext.getJobId());
                     }
                     isDone = true;
                 } else {
@@ -428,7 +429,7 @@ class LockRequestWorker implements Runnable {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            
+
             needWait = true;
             isAwaken = false;
         }
@@ -527,11 +528,11 @@ class WorkerReadyQueue {
         int listSize = threadIdList.size();
 
         s.append("ExpectedList(Set):\t");
-        for (i=0; i < listSize; i++) {
+        for (i = 0; i < listSize; i++) {
             s.append(threadIdList.get(i)).append(" ");
         }
         s.append("\n");
-        
+
         while (queueSize < listSize) {
             //wait until workers finish its task
             try {
@@ -544,7 +545,7 @@ class WorkerReadyQueue {
         }
 
         if (listSize != queueSize) {
-            log("listSize:"+listSize +", queueSize:"+queueSize);
+            log("listSize:" + listSize + ", queueSize:" + queueSize);
             return false;
         }
 
@@ -574,9 +575,9 @@ class WorkerReadyQueue {
         LockRequestWorker worker = null;
         int queueSize = workerReadyQueue.size();
         int listSize = threadIdList.size();
-        
+
         s.append("ExpectedList(Sequence):\t");
-        for (i=0; i < listSize; i++) {
+        for (i = 0; i < listSize; i++) {
             s.append(threadIdList.get(i)).append(" ");
         }
         s.append("\n");

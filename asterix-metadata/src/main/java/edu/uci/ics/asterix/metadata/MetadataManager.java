@@ -157,7 +157,7 @@ public class MetadataManager implements IMetadataManager {
         }
         ctx.dropDataverse(dataverseName);
     }
-    
+
     @Override
     public List<Dataverse> getDataverses(MetadataTransactionContext ctx) throws MetadataException {
         try {
@@ -243,6 +243,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public Dataset getDataset(MetadataTransactionContext ctx, String dataverseName, String datasetName)
             throws MetadataException {
+
         // First look in the context to see if this transaction created the
         // requested dataset itself (but the dataset is still uncommitted).
         Dataset dataset = ctx.getDataset(dataverseName, datasetName);

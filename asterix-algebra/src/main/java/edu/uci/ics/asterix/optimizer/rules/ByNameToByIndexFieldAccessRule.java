@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -15,6 +15,7 @@
 
 package edu.uci.ics.asterix.optimizer.rules;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,40 +94,44 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
             }
 
             IAType t = (IAType) env.getType(fce.getArguments().get(0).getValue());
-            switch (t.getTypeTag()) {
-                case ANY: {
-                    return false;
-                }
-                case RECORD: {
-                    ARecordType recType = (ARecordType) t;
-                    ILogicalExpression fai = createFieldAccessByIndex(recType, fce);
-                    if (fai == null) {
+            try {
+                switch (t.getTypeTag()) {
+                    case ANY: {
                         return false;
                     }
-                    expressions.get(i).setValue(fai);
-                    changed = true;
-                    break;
-                }
-                case UNION: {
-                    AUnionType unionT = (AUnionType) t;
-                    if (unionT.isNullableType()) {
-                        IAType t2 = unionT.getUnionList().get(1);
-                        if (t2.getTypeTag() == ATypeTag.RECORD) {
-                            ARecordType recType = (ARecordType) t2;
-                            ILogicalExpression fai = createFieldAccessByIndex(recType, fce);
-                            if (fai == null) {
-                                return false;
-                            }
-                            expressions.get(i).setValue(fai);
-                            changed = true;
-                            break;
+                    case RECORD: {
+                        ARecordType recType = (ARecordType) t;
+                        ILogicalExpression fai = createFieldAccessByIndex(recType, fce);
+                        if (fai == null) {
+                            return false;
                         }
+                        expressions.get(i).setValue(fai);
+                        changed = true;
+                        break;
                     }
-                    throw new NotImplementedException("Union " + unionT);
+                    case UNION: {
+                        AUnionType unionT = (AUnionType) t;
+                        if (unionT.isNullableType()) {
+                            IAType t2 = unionT.getUnionList().get(1);
+                            if (t2.getTypeTag() == ATypeTag.RECORD) {
+                                ARecordType recType = (ARecordType) t2;
+                                ILogicalExpression fai = createFieldAccessByIndex(recType, fce);
+                                if (fai == null) {
+                                    return false;
+                                }
+                                expressions.get(i).setValue(fai);
+                                changed = true;
+                                break;
+                            }
+                        }
+                        throw new NotImplementedException("Union " + unionT);
+                    }
+                    default: {
+                        throw new AlgebricksException("Cannot call field-access on data of type " + t);
+                    }
                 }
-                default: {
-                    throw new AlgebricksException("Cannot call field-access on data of type " + t);
-                }
+            } catch (IOException e) {
+                throw new AlgebricksException(e);
             }
         }
         assign.removeAnnotation(AsterixOperatorAnnotations.PUSHED_FIELD_ACCESS);
@@ -134,7 +139,8 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
     }
 
     @SuppressWarnings("unchecked")
-    private static ILogicalExpression createFieldAccessByIndex(ARecordType recType, AbstractFunctionCallExpression fce) {
+    private static ILogicalExpression createFieldAccessByIndex(ARecordType recType, AbstractFunctionCallExpression fce)
+            throws IOException {
         String s = getStringSecondArgument(fce);
         if (s == null) {
             return null;

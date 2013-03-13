@@ -10,7 +10,7 @@ declare type UserType as open {
 declare nodegroup group1 on nc1, nc2;
 
 declare dataset Users(UserType) 
-  partitioned by key uid on group1;
+  primary key uid on group1;
 
 load dataset Users 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

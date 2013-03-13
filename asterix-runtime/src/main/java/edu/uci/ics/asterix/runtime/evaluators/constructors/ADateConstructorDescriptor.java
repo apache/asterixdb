@@ -21,7 +21,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADate;
 import edu.uci.ics.asterix.om.base.AMutableDate;
 import edu.uci.ics.asterix.om.base.ANull;
-import edu.uci.ics.asterix.om.base.temporal.ADateAndTimeParser;
+import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
@@ -84,8 +84,10 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                             byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
 
-                                charAccessor.reset(serString, 3, 0);
-                                long chrononTimeInMs = ADateAndTimeParser.parseDatePart(charAccessor, true);
+                                int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
+
+                                charAccessor.reset(serString, 3, stringLength);
+                                long chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor, true);
 
                                 short temp = 0;
                                 if (chrononTimeInMs < 0

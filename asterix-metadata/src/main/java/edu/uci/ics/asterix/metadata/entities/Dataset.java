@@ -15,6 +15,8 @@
 
 package edu.uci.ics.asterix.metadata.entities;
 
+import java.util.Map;
+
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
 import edu.uci.ics.asterix.metadata.MetadataCache;
@@ -33,13 +35,15 @@ public class Dataset implements IMetadataEntity {
     // Type of items stored in this dataset.
     private final String itemTypeName;
     private final DatasetType datasetType;
-    private IDatasetDetails datasetDetails;
+    private final IDatasetDetails datasetDetails;
+    // Hints related to cardinatlity of dataset, avg size of tuples etc.
+    private final Map<String, String> hints;
     private final int datasetId;
     // Type of pending operations with respect to atomic DDL operation
     private final int pendingOp;
 
     public Dataset(String dataverseName, String datasetName, String itemTypeName, IDatasetDetails datasetDetails,
-            DatasetType datasetType, int datasetId, int pendingOp) {
+            Map<String, String> hints, DatasetType datasetType, int datasetId, int pendingOp) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.itemTypeName = itemTypeName;
@@ -47,6 +51,7 @@ public class Dataset implements IMetadataEntity {
         this.datasetDetails = datasetDetails;
         this.datasetId = datasetId;
         this.pendingOp = pendingOp;
+        this.hints = hints;
     }
 
     public String getDataverseName() {
@@ -69,14 +74,14 @@ public class Dataset implements IMetadataEntity {
         return datasetDetails;
     }
 
-    public void setDatasetDetails(IDatasetDetails datasetDetails) {
-        this.datasetDetails = datasetDetails;
+    public Map<String, String> getHints() {
+        return hints;
     }
 
     public int getDatasetId() {
         return datasetId;
     }
-    
+
     public int getPendingOp() {
         return pendingOp;
     }
@@ -90,7 +95,7 @@ public class Dataset implements IMetadataEntity {
     public Object dropFromCache(MetadataCache cache) {
         return cache.dropDataset(this);
     }
-    
+
     @Override
     public boolean equals(Object other) {
         if (this == other) {

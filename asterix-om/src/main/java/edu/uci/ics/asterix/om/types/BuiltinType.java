@@ -329,6 +329,27 @@ public abstract class BuiltinType implements IAType {
 
     };
 
+    public final static BuiltinType AINTERVAL = new LowerCaseConstructorType() {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public String getDisplayName() {
+            return "AInterval";
+        }
+
+        @Override
+        public ATypeTag getTypeTag() {
+            return ATypeTag.INTERVAL;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "interval";
+        }
+
+    };
+
     public final static BuiltinType APOINT = new LowerCaseConstructorType() {
 
         private static final long serialVersionUID = 1L;
@@ -515,25 +536,25 @@ public abstract class BuiltinType implements IAType {
         return getTypeTag().toString();
     }
 
-	@Override
-	public boolean deepEqual(IAObject obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof BuiltinType)) {
-			return false;
-		}
-		return ((BuiltinType) obj).getTypeTag().equals(getTypeTag());
-	}
+    @Override
+    public boolean deepEqual(IAObject obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof BuiltinType)) {
+            return false;
+        }
+        return ((BuiltinType) obj).getTypeTag().equals(getTypeTag());
+    }
 
     @Override
     public boolean equals(Object object) {
         return this.deepEqual((IAObject) object);
     }
-    
+
     @Override
     public int hashCode() {
-    	return getTypeTag().hashCode();
+        return getTypeTag().hashCode();
     }
 
     @Override

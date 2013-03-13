@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -16,7 +16,7 @@ package edu.uci.ics.asterix.external.data.operator;
 
 import java.util.Map;
 
-import edu.uci.ics.asterix.external.adapter.factory.IExternalDatasetAdapterFactory;
+import edu.uci.ics.asterix.external.adapter.factory.IGenericDatasetAdapterFactory;
 import edu.uci.ics.asterix.external.dataset.adapter.IDatasourceAdapter;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
@@ -30,13 +30,18 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
+/*
+ * A single activity operator that provides the functionality of scanning data using an
+ * instance of the configured adapter.
+ */
 public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
+
     private static final long serialVersionUID = 1L;
 
     private final String adapterFactory;
     private final Map<String, String> adapterConfiguration;
     private final IAType atype;
-    private IExternalDatasetAdapterFactory datasourceAdapterFactory;
+    private IGenericDatasetAdapterFactory datasourceAdapterFactory;
 
     public ExternalDataScanOperatorDescriptor(JobSpecification spec, String adapter, Map<String, String> arguments,
             IAType atype, RecordDescriptor rDesc) {
@@ -79,11 +84,12 @@ public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOp
 
     }
 
+    @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
             throws HyracksDataException {
         try {
-            datasourceAdapterFactory = (IExternalDatasetAdapterFactory) Class.forName(adapterFactory).newInstance();
+            datasourceAdapterFactory = (IGenericDatasetAdapterFactory) Class.forName(adapterFactory).newInstance();
         } catch (Exception e) {
             throw new HyracksDataException("initialization of adapter failed", e);
         }
@@ -93,7 +99,7 @@ public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOp
                 writer.open();
                 IDatasourceAdapter adapter = null;
                 try {
-                    adapter = ((IExternalDatasetAdapterFactory) datasourceAdapterFactory).createAdapter(
+                    adapter = ((IGenericDatasetAdapterFactory) datasourceAdapterFactory).createAdapter(
                             adapterConfiguration, atype);
                     adapter.initialize(ctx);
                     adapter.start(partition, writer);

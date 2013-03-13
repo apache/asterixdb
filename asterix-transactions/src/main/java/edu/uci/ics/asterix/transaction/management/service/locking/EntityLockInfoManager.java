@@ -18,7 +18,6 @@ package edu.uci.ics.asterix.transaction.management.service.locking;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 
 /**
@@ -382,7 +381,7 @@ public class EntityLockInfoManager {
             //This entityInfo(i.e., holder) is the last resource held by this job.
             jobInfo.setlastHoldingResource(prev);
         }
-        
+
         //jobInfo.decreaseDatasetLockCount(holder);
     }
 
@@ -498,11 +497,11 @@ public class EntityLockInfoManager {
                     && hashVal == entityInfoManager.getPKHashVal(entityInfo)) {
                 return entityInfo;
             }
-//            if (LockManager.IS_DEBUG_MODE) {
-//                System.out.println("eLockInfo(" + eLockInfo + "),entityInfo(" + entityInfo + "), Request[" + jobId
-//                        + "," + hashVal + "]:Result[" + entityInfoManager.getJobId(entityInfo) + ","
-//                        + entityInfoManager.getPKHashVal(entityInfo) + "]");
-//            }
+            //            if (LockManager.IS_DEBUG_MODE) {
+            //                System.out.println("eLockInfo(" + eLockInfo + "),entityInfo(" + entityInfo + "), Request[" + jobId
+            //                        + "," + hashVal + "]:Result[" + entityInfoManager.getJobId(entityInfo) + ","
+            //                        + entityInfoManager.getPKHashVal(entityInfo) + "]");
+            //            }
             entityInfo = entityInfoManager.getPrevEntityActor(entityInfo);
         }
 
@@ -708,9 +707,9 @@ class ChildEntityLockInfoArrayManager {
         setFirstWaiter(currentSlot, -1);
         setUpgrader(currentSlot, -1);
         occupiedSlots++;
-                if (LockManager.IS_DEBUG_MODE) {
-                    System.out.println(Thread.currentThread().getName() + " Allocated ELockInfo[" + currentSlot + "]");
-                }
+        if (LockManager.IS_DEBUG_MODE) {
+            System.out.println(Thread.currentThread().getName() + " Allocated ELockInfo[" + currentSlot + "]");
+        }
         return currentSlot;
     }
 
@@ -718,9 +717,9 @@ class ChildEntityLockInfoArrayManager {
         setNextFreeSlot(slotNum, freeSlotNum);
         freeSlotNum = slotNum;
         occupiedSlots--;
-                if (LockManager.IS_DEBUG_MODE) {
-                    System.out.println(Thread.currentThread().getName() + " Deallocated ELockInfo[" + slotNum + "]");
-                }
+        if (LockManager.IS_DEBUG_MODE) {
+            System.out.println(Thread.currentThread().getName() + " Deallocated ELockInfo[" + slotNum + "]");
+        }
     }
 
     public void deinitialize() {

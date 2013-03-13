@@ -14,6 +14,7 @@ public class AqlTypeTraitProvider implements ITypeTraitProvider {
     private static final ITypeTraits FOURBYTETYPETRAIT = new TypeTrait(4 + 1);
     private static final ITypeTraits EIGHTBYTETYPETRAIT = new TypeTrait(8 + 1);
     private static final ITypeTraits SIXTEENBYTETYPETRAIT = new TypeTrait(16 + 1);
+    private static final ITypeTraits SEVENTEENBYTETYPETRAIT = new TypeTrait(17 + 1);
     private static final ITypeTraits THIRTYTWOBYTETYPETRAIT = new TypeTrait(32 + 1);
     private static final ITypeTraits TWENTYFOURBYTETYPETRAIT = new TypeTrait(24 + 1);
 
@@ -42,6 +43,8 @@ public class AqlTypeTraitProvider implements ITypeTraitProvider {
                 return EIGHTBYTETYPETRAIT;
             case POINT:
                 return SIXTEENBYTETYPETRAIT;
+            case INTERVAL:
+                return SEVENTEENBYTETYPETRAIT;
             case POINT3D:
                 return TWENTYFOURBYTETYPETRAIT;
             case LINE:

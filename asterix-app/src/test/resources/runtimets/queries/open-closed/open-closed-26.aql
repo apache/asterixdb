@@ -18,7 +18,7 @@ name : string,
 opt_tag : {{ string }}?
 }
 
-create dataset testds(testType) partitioned by key id;
+create dataset testds(testType) primary key id;
 
 insert into dataset testds({"id": 32,"name": "UCI"});
 

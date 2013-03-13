@@ -20,10 +20,11 @@ import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
 
 public class LSMBTreeLocalResourceMetadata implements ILocalResourceMetadata {
 
+    private static final long serialVersionUID = 1L;
+
     private final ITypeTraits[] typeTraits;
     private final IBinaryComparatorFactory[] cmpFactories;
     private final int[] bloomFilterKeyFields;
-    private final boolean isPrimary;
     private final int memPageSize;
     private final int memNumPages;
 
@@ -32,7 +33,6 @@ public class LSMBTreeLocalResourceMetadata implements ILocalResourceMetadata {
         this.typeTraits = typeTraits;
         this.cmpFactories = cmpFactories;
         this.bloomFilterKeyFields = bloomFilterKeyFields;
-        this.isPrimary = isPrimary;
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
     }

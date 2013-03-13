@@ -14,10 +14,23 @@
  */
 package edu.uci.ics.asterix.om.base.temporal;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixRuntimeException;
+
 public interface ICharSequenceAccessor<T> {
 
-    public char getCharAt(int index);
+    /**
+     * Return the character in the wrapped char sequence at the given index.
+     * 
+     * @param index
+     * @return
+     */
+    public char getCharAt(int index) throws AsterixRuntimeException;
 
+    /**
+     * Get the length of the wrapped char sequence.
+     * 
+     * @return
+     */
     public int getLength();
 
 }

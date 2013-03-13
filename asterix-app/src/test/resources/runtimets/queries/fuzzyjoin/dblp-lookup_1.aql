@@ -12,7 +12,7 @@ create type DBLPType as open {
   misc: string
 }
 
-create dataset DBLP(DBLPType) partitioned by key id;
+create dataset DBLP(DBLPType) primary key id;
 
 load dataset DBLP
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

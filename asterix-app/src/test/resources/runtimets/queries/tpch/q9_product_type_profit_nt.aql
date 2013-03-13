@@ -91,21 +91,21 @@ create type PartSuppType as closed {
 
 
 create dataset LineItem(LineItemType)
-  partitioned by key l_orderkey, l_linenumber;
+  primary key l_orderkey, l_linenumber;
 create dataset Orders(OrderType)
-  partitioned by key o_orderkey;
+  primary key o_orderkey;
 create dataset Supplier(SupplierType)
-  partitioned by key s_suppkey;
+  primary key s_suppkey;
 create dataset Region(RegionType) 
-  partitioned by key r_regionkey;
+  primary key r_regionkey;
 create dataset Nation(NationType) 
-  partitioned by key n_nationkey;
+  primary key n_nationkey;
 create dataset Part(PartType)
-  partitioned by key p_partkey;
+  primary key p_partkey;
 create dataset PartSupp(PartSuppType)
-  partitioned by key ps_partkey, ps_suppkey;  
+  primary key ps_partkey, ps_suppkey;  
 create dataset Customer(CustomerType) 
-  partitioned by key c_custkey;
+  primary key c_custkey;
 
 load dataset LineItem 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

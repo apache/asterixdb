@@ -1,0 +1,3 @@
+{ "date": date("-2012-12-12"), "time": time("23:49:12.390Z"), "datetime": datetime("2012-12-12T00:00:00.001Z"), "duration": duration("P20Y19DT4H14M23.34S"), "interval": interval("datetime("2012-12-12T00:00:00.001Z"), datetime("2013-08-10T22:10:15.398Z")") }
+{ "date": null, "time": null, "datetime": datetime("1920-12-20T23:29:18.478Z"), "duration": null, "interval": null }
+{ "date": null, "time": null, "datetime": null, "duration": null, "interval": null }

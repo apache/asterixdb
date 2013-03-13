@@ -21,9 +21,9 @@ stringu2:  string,
 string4:  string
 }
 
-create dataset onektup(Schema) partitioned by key unique2;
+create dataset onektup(Schema) primary key unique2;
 
-create dataset tenktup1(Schema) partitioned by key unique2;
+create dataset tenktup1(Schema) primary key unique2;
 
 load dataset onektup 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
@@ -33,7 +33,7 @@ load dataset tenktup1
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/wisc/tenktup.adm"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
-create dataset tmp(Schema) partitioned by key unique2;
+create dataset tmp(Schema) primary key unique2;
 
 load dataset tmp 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

@@ -12,7 +12,7 @@ create type MyRecord as closed {
 }
 
 create dataset MyData(MyRecord)
-  partitioned by key id;
+  primary key id;
 
 create index rtree_index on MyData(loc) type rtree;
 

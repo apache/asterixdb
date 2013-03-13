@@ -45,11 +45,11 @@ declare type CustomerType as closed {
 declare nodegroup group1 on nc1, nc2;
 
 declare dataset LineItems(LineItemType)
-  partitioned by key l_orderkey, l_linenumber on group1;
+  primary key l_orderkey, l_linenumber on group1;
 declare dataset Orders(OrderType)
-  partitioned by key o_orderkey on group1;
+  primary key o_orderkey on group1;
 declare dataset Customers(CustomerType) 
-  partitioned by key c_custkey on group1;
+  primary key c_custkey on group1;
 
 write output to nc1:"/tmp/q3_shipping_priority.adm";
 

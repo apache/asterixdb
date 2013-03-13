@@ -21,9 +21,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
-import edu.uci.ics.asterix.api.aqlj.server.APIClientThreadFactory;
-import edu.uci.ics.asterix.api.aqlj.server.ThreadedServer;
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
@@ -32,18 +31,18 @@ import edu.uci.ics.asterix.metadata.bootstrap.AsterixStateProxy;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.application.ICCBootstrap;
 
+/**
+ * The bootstrap class of the application that will manage its life cycle at the
+ * Cluster Controller.
+ */
 public class CCBootstrapImpl implements ICCBootstrap {
     private static final Logger LOGGER = Logger.getLogger(CCBootstrapImpl.class.getName());
 
     private static final int DEFAULT_WEB_SERVER_PORT = 19001;
 
-    public static final int DEFAULT_API_SERVER_PORT = 14600;
-    public static final int DEFAULT_API_NODEDATA_SERVER_PORT = 14601;
-
     private Server webServer;
     private static IAsterixStateProxy proxy;
     private ICCApplicationContext appCtx;
-    private ThreadedServer apiServer;
 
     @Override
     public void start() throws Exception {
@@ -51,21 +50,16 @@ public class CCBootstrapImpl implements ICCBootstrap {
             LOGGER.info("Starting Asterix cluster controller");
         }
 
-        // Set the AsterixStateProxy to be the distributed object
         proxy = AsterixStateProxy.registerRemoteObject();
         proxy.setAsterixProperties(AsterixProperties.INSTANCE);
         appCtx.setDistributedState(proxy);
 
-        // Create the metadata manager
         MetadataManager.INSTANCE = new MetadataManager(proxy);
 
-        // Setup and start the web interface
         setupWebServer();
         webServer.start();
 
-        // Setup and start the API server
-        setupAPIServer();
-        apiServer.start();
+        AsterixAppContextInfoImpl.initialize(appCtx);
     }
 
     @Override
@@ -76,7 +70,6 @@ public class CCBootstrapImpl implements ICCBootstrap {
         AsterixStateProxy.unregisterRemoteObject();
 
         webServer.stop();
-        apiServer.shutdown();
     }
 
     @Override
@@ -96,9 +89,5 @@ public class CCBootstrapImpl implements ICCBootstrap {
         context.setContextPath("/");
         webServer.setHandler(context);
         context.addServlet(new ServletHolder(new APIServlet()), "/*");
-    }
-
-    private void setupAPIServer() throws Exception {
-        apiServer = new ThreadedServer(DEFAULT_API_SERVER_PORT, new APIClientThreadFactory(appCtx));
     }
 }

@@ -37,11 +37,11 @@ create type CustomerOrdersType as open {
 }
 
 create dataset Customers2(CustomerType) 
-  partitioned by key cid;
+  primary key cid;
 create dataset Orders2(OrderType)
-  partitioned by key oid;
+  primary key oid;
 create dataset CustomerOrders2(CustomerOrdersType)
-  partitioned by key cid;
+  primary key cid;
 
 load dataset Customers2 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

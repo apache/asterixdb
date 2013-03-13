@@ -23,9 +23,11 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
+import edu.uci.ics.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
+import edu.uci.ics.hyracks.storage.common.buffercache.IPageCleanerPolicy;
 import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -38,7 +40,7 @@ import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactoryProvider;
 public class AsterixAppRuntimeContext {
     private static final int DEFAULT_BUFFER_CACHE_PAGE_SIZE = 32768;
     private static final int DEFAULT_LIFECYCLEMANAGER_MEMORY_BUDGET = 1024 * 1024 * 1024; // 1GB
-    private static final int DEFAULT_MAX_OPEN_FILES = 500;
+    private static final int DEFAULT_MAX_OPEN_FILES = Integer.MAX_VALUE;
     private final INCApplicationContext ncApplicationContext;
 
     private IIndexLifecycleManager indexLifecycleManager;
@@ -67,12 +69,13 @@ public class AsterixAppRuntimeContext {
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
         ioManager = ncApplicationContext.getRootContext().getIOManager();
-        bufferCache = new BufferCache(ioManager, allocator, prs, fileMapManager, pageSize, numPages,
-                DEFAULT_MAX_OPEN_FILES);
         indexLifecycleManager = new IndexLifecycleManager(DEFAULT_LIFECYCLEMANAGER_MEMORY_BUDGET);
         IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProviderForRecovery(
                 this);
         txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider);
+        IPageCleanerPolicy pcp = new DelayPageCleanerPolicy(600000);
+        bufferCache = new BufferCache(ioManager, allocator, prs, pcp, fileMapManager, pageSize, numPages,
+                DEFAULT_MAX_OPEN_FILES);
 
         lsmIOScheduler = SynchronousScheduler.INSTANCE;
         mergePolicy = new ConstantMergePolicy(3);

@@ -18,6 +18,8 @@ import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 
 public class LSMInvertedIndexLocalResourceMetadata implements ILocalResourceMetadata {
 
+    private static final long serialVersionUID = 1L;
+
     private final ITypeTraits[] invListTypeTraits;
     private final IBinaryComparatorFactory[] invListCmpFactories;
     private final ITypeTraits[] tokenTypeTraits;

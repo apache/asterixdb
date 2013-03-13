@@ -107,6 +107,10 @@ import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 
+/*
+ * Provides functionality for executing a batch of AQL statements (queries included)
+ * sequentially.
+ */
 public class AqlTranslator extends AbstractAqlTranslator {
 
     private final List<Statement> aqlStatements;
@@ -135,6 +139,16 @@ public class AqlTranslator extends AbstractAqlTranslator {
         return functionDecls;
     }
 
+    /**
+     * Compiles and submits for execution a list of AQL statements.
+     * 
+     * @param hcc
+     *            AHyracks client connection that is used to submit a jobspec to
+     *            Hyracks.
+     * @return A List<QueryResult> containing a QueryResult instance
+     *         corresponding to each submitted query.
+     * @throws Exception
+     */
     public List<QueryResult> compileAndExecute(IHyracksClientConnection hcc) throws Exception {
         List<QueryResult> executionResult = new ArrayList<QueryResult>();
         FileSplit outputFile = null;
@@ -349,6 +363,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 throw new AlgebricksException(" dataverse not specified ");
             }
             datasetName = dd.getName().getValue();
+            
             DatasetType dsType = dd.getDatasetType();
             String itemTypeName = dd.getItemTypeName().getValue();
 
@@ -408,8 +423,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
 
             //#. add a new dataset with PendingAddOp
-            Dataset dataset = new Dataset(dataverseName, datasetName, itemTypeName, datasetDetails, dsType,
-                    DatasetIdFactory.generateDatasetId(), IMetadataEntity.PENDING_ADD_OP);
+            Dataset dataset = new Dataset(dataverseName, datasetName, itemTypeName, datasetDetails, dd.getHints(),
+                    dsType, DatasetIdFactory.generateDatasetId(), IMetadataEntity.PENDING_ADD_OP);
             MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), dataset);
 
             if (dd.getDatasetType() == DatasetType.INTERNAL || dd.getDatasetType() == DatasetType.FEED) {
@@ -434,11 +449,12 @@ public class AqlTranslator extends AbstractAqlTranslator {
             //#. add a new dataset with PendingNoOp after deleting the dataset with PendingAddOp
             MetadataManager.INSTANCE.dropDataset(metadataProvider.getMetadataTxnContext(), dataverseName, datasetName);
             MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), new Dataset(dataverseName,
-                    datasetName, itemTypeName, datasetDetails, dsType, dataset.getDatasetId(),
+                    datasetName, itemTypeName, datasetDetails, dd.getHints(), dsType, dataset.getDatasetId(),
                     IMetadataEntity.PENDING_NO_OP));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             if (bActiveTxn) {
+                e.printStackTrace();
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             }
 
@@ -452,7 +468,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 JobSpecification jobSpec = DatasetOperations.createDropDatasetJobSpec(cds, metadataProvider);
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
-                
+
                 runJob(hcc, jobSpec);
             } catch (Exception e3) {
                 if (bActiveTxn) {
@@ -581,7 +597,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 JobSpecification jobSpec = IndexOperations.buildDropSecondaryIndexJobSpec(cds, metadataProvider);
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
-                
+
                 runJob(hcc, jobSpec);
             } catch (Exception e3) {
                 if (bActiveTxn) {
@@ -601,7 +617,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
                 throw new AlgebricksException(e2);
             }
-            
+
             throw new AlgebricksException(e);
         } finally {
             releaseWriteLatch();
@@ -797,7 +813,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 MetadataManager.INSTANCE.addDataset(
                         mdTxnCtx,
                         new Dataset(dataverseName, datasetName, ds.getItemTypeName(), ds.getDatasetDetails(), ds
-                                .getDatasetType(), ds.getDatasetId(), IMetadataEntity.PENDING_DROP_OP));
+                                .getHints(), ds.getDatasetType(), ds.getDatasetId(), IMetadataEntity.PENDING_DROP_OP));
 
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
@@ -1103,7 +1119,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (bActiveTxn) {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             }
-            
+
             throw new AlgebricksException(e);
         } finally {
             releaseReadLatch();
@@ -1222,7 +1238,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
         Pair<Query, Integer> reWrittenQuery = APIFramework.reWriteQuery(declaredFunctions, metadataProvider, query,
                 sessionConfig, out, pdf);
 
-        // Query Compilation (happens under the same ongoing metadata transaction)
+        // Query Compilation (happens under the same ongoing metadata
+        // transaction)
         JobSpecification spec = APIFramework.compileQuery(declaredFunctions, metadataProvider, query,
                 reWrittenQuery.second, stmt == null ? null : stmt.getDatasetName(), sessionConfig, out, pdf, stmt);
 
@@ -1243,7 +1260,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         try {
             BeginFeedStatement bfs = (BeginFeedStatement) stmt;
             String dataverseName = bfs.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : bfs.getDatasetName().getValue();
+                    : activeDefaultDataverse.getDataverseName() : bfs.getDataverseName().getValue();
 
             CompiledBeginFeedStatement cbfs = new CompiledBeginFeedStatement(dataverseName, bfs.getDatasetName()
                     .getValue(), bfs.getQuery(), bfs.getVarCounter());
@@ -1251,6 +1268,9 @@ public class AqlTranslator extends AbstractAqlTranslator {
             Dataset dataset;
             dataset = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(), dataverseName, bfs
                     .getDatasetName().getValue());
+            if (dataset == null) {
+                throw new AsterixException("Unknown dataset :" + bfs.getDatasetName().getValue());
+            }
             IDatasetDetails datasetDetails = dataset.getDatasetDetails();
             if (datasetDetails.getDatasetType() != DatasetType.FEED) {
                 throw new IllegalArgumentException("Dataset " + bfs.getDatasetName().getValue()
@@ -1279,7 +1299,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
     private void handleControlFeedStatement(AqlMetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
-
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);

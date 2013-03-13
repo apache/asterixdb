@@ -1,0 +1,25 @@
+/*
+ * Description  : create a dataset providing  hint (in upper case)
+ * Expected Res : Success
+ * Date         : 29 Jan 2013
+ * Issue        : 251
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type LineType as open {
+  id:int32,
+  text: string
+}
+
+write output to nc1:"mdtest/basic_issue_251_dataset_hint_3.adm";
+
+create dataset Book(LineType)
+primary key id
+hints(CARDINALITY=2000);
+
+for $x in dataset('Metadata.Dataset')
+where $x.DataverseName='test'
+return $x

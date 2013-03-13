@@ -89,21 +89,21 @@ declare nodegroup group1 on asterix-001, asterix-002 , asterix-003, asterix-004,
   asterix-005, asterix-006, asterix-007, asterix-008, asterix-009, asterix-010;
 
 declare dataset LineItems(LineItemType)
-  partitioned by key l_orderkey, l_linenumber on group1;
+  primary key l_orderkey, l_linenumber on group1;
 declare dataset Orders(OrderType)
-  partitioned by key o_orderkey on group1;
+  primary key o_orderkey on group1;
 declare dataset Customers(CustomerType) 
-  partitioned by key c_custkey on group1;
+  primary key c_custkey on group1;
 declare dataset Suppliers(SupplierType)
-  partitioned by key s_suppkey on group1;
+  primary key s_suppkey on group1;
 declare dataset Nations(NationType) 
-  partitioned by key n_nationkey on group1;
+  primary key n_nationkey on group1;
 declare dataset Regions(RegionType)
-  partitioned by key r_regionkey on group1;
+  primary key r_regionkey on group1;
 declare dataset Parts(PartType)
-  partitioned by key p_partkey on group1;
+  primary key p_partkey on group1;
 declare dataset PartSupp(PartSuppType)
-  partitioned by key ps_partkey, ps_suppkey on group1;  
+  primary key ps_partkey, ps_suppkey on group1;  
 
 
 enlist dataset Customers;

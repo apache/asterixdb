@@ -24,14 +24,20 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
     public IBinaryComparator createBinaryComparator() {
         return new IBinaryComparator() {
             final IBinaryComparator ascBoolComp = BooleanBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-            final IBinaryComparator ascIntComp = new PointableBinaryComparatorFactory(IntegerPointable.FACTORY).createBinaryComparator();
+            final IBinaryComparator ascIntComp = new PointableBinaryComparatorFactory(IntegerPointable.FACTORY)
+                    .createBinaryComparator();
             final IBinaryComparator ascLongComp = LongBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-            final IBinaryComparator ascStrComp = new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY).createBinaryComparator();
-            final IBinaryComparator ascFloatComp = new PointableBinaryComparatorFactory(FloatPointable.FACTORY).createBinaryComparator();
-            final IBinaryComparator ascDoubleComp = new PointableBinaryComparatorFactory(DoublePointable.FACTORY).createBinaryComparator();
+            final IBinaryComparator ascStrComp = new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY)
+                    .createBinaryComparator();
+            final IBinaryComparator ascFloatComp = new PointableBinaryComparatorFactory(FloatPointable.FACTORY)
+                    .createBinaryComparator();
+            final IBinaryComparator ascDoubleComp = new PointableBinaryComparatorFactory(DoublePointable.FACTORY)
+                    .createBinaryComparator();
             final IBinaryComparator ascRectangleComp = RectangleBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
             final IBinaryComparator ascDateTimeComp = ADateTimeAscBinaryComparatorFactory.INSTANCE
+                    .createBinaryComparator();
+            final IBinaryComparator ascDateOrTimeComp = ADateOrTimeAscBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
 
             @Override
@@ -72,6 +78,10 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
                     }
                     case DATETIME: {
                         return ascDateTimeComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                    }
+                    case TIME:
+                    case DATE: {
+                        return ascDateOrTimeComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
                     }
                     default: {
                         throw new NotImplementedException("Comparison for type " + tag + " is not implemented");

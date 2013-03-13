@@ -19,8 +19,6 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.api.aqlj.server.NodeDataClientThreadFactory;
-import edu.uci.ics.asterix.api.aqlj.server.ThreadedServer;
 import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataNode;
@@ -39,7 +37,6 @@ public class NCBootstrapImpl implements INCBootstrap {
     private AsterixAppRuntimeContext runtimeContext;
     private String nodeId;
     private boolean isMetadataNode = false;
-    private ThreadedServer apiNodeDataServer;
 
     @Override
     public void start() throws Exception {
@@ -50,10 +47,8 @@ public class NCBootstrapImpl implements INCBootstrap {
 
         runtimeContext = new AsterixAppRuntimeContext(ncApplicationContext);
         runtimeContext.initialize();
-
         ncApplicationContext.setApplicationObject(runtimeContext);
 
-        // Initialize metadata if this node is the metadata node
         IAsterixStateProxy proxy = (IAsterixStateProxy) ncApplicationContext.getDistributedState();
         isMetadataNode = nodeId.equals(proxy.getAsterixProperties().getMetadataNodeName());
         if (isMetadataNode) {
@@ -62,12 +57,11 @@ public class NCBootstrapImpl implements INCBootstrap {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Bootstrapping metadata");
             }
-
             MetadataManager.INSTANCE = new MetadataManager(proxy);
             MetadataManager.INSTANCE.init();
             MetadataBootstrap.startUniverse(proxy.getAsterixProperties(), ncApplicationContext);
         }
-        
+
         //#. recover if the system is corrupted by checking system state.
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
         if (!proxy.getAsterixProperties().isNewUniverse()) {
@@ -76,18 +70,10 @@ public class NCBootstrapImpl implements INCBootstrap {
             }
         }
         recoveryMgr.checkpoint(true);
-        
+
         if (isMetadataNode) {
             //#. clean-up incomplete DDL operations, which is DDLRecovery
             MetadataBootstrap.startDDLRecovery();
-            
-            // Start a sub-component for the API server. This server is only connected to by the 
-            // API server that lives on the CC and never by a client wishing to execute AQL.
-            // TODO: The API sub-system will change dramatically in the future and this code will go away, 
-            // but leave it for now.
-            apiNodeDataServer = new ThreadedServer(CCBootstrapImpl.DEFAULT_API_NODEDATA_SERVER_PORT,
-                    new NodeDataClientThreadFactory());
-            apiNodeDataServer.start();
         }
     }
 
@@ -108,12 +94,9 @@ public class NCBootstrapImpl implements INCBootstrap {
             LOGGER.info("Stopping Asterix node controller: " + nodeId);
         }
 
-        // Quiesce metadata
         if (isMetadataNode) {
             MetadataBootstrap.stopUniverse();
         }
-
-        apiNodeDataServer.shutdown();
         runtimeContext.deinitialize();
     }
 

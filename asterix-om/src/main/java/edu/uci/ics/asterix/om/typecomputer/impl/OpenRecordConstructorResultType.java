@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
@@ -72,6 +73,10 @@ public class OpenRecordConstructorResultType implements IResultTypeComputer {
         IAType[] fieldTypes = new IAType[n];
         fieldNames = namesList.toArray(fieldNames);
         fieldTypes = typesList.toArray(fieldTypes);
-        return new ARecordType(null, fieldNames, fieldTypes, true);
+        try {
+            return new ARecordType(null, fieldNames, fieldTypes, true);
+        } catch (AsterixException e) {
+            throw new AlgebricksException(e);
+        }
     }
 }

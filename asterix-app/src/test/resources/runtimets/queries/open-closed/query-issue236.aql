@@ -1,0 +1,52 @@
+/*
+ * Description  : This test case is to verify the fix for issue236
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=236
+ * Expected Res : Success
+ * Date         : 20 Dec. 2012
+ */
+
+drop dataverse SocialNetworkData if exists;
+
+create dataverse SocialNetworkData;
+use dataverse SocialNetworkData;
+
+create type TwitterUserType as open {
+screen-name: string,
+lang: string,
+friends_count: int32,
+statuses_count: int32,
+name: string,
+followers_count: int32
+}
+
+create type TweetMessageType as closed {
+tweetid: string,
+tweetid-copy: string,
+user: TwitterUserType,
+sender-location: point?,
+send-time: datetime,
+send-time-copy: datetime,
+referred-topics: {{ string }},
+message-text: string
+}
+
+create dataset TweetMessages(TweetMessageType)
+primary key tweetid;
+
+
+insert into dataset TweetMessages(
+{ 
+"tweetid": "1111387810", 
+"tweetid-copy": "1111387810", 
+"user": { "screen-name": "TonyNapier#786", "lang": "en", "friends_count": 4241366, 
+"statuses_count": 97, "name": "Tony Napier", "followers_count": 5984113 }, 
+"sender-location": point("29.24,78.35"), 
+"send-time": datetime("2011-11-24T14:24:51.000Z"), 
+"send-time-copy": datetime("2011-11-24T14:24:51.000Z"), 
+"referred-topics": {{ "sprint", "wireless" }}, 
+"message-text": " love sprint its wireless is mind-blowing:)" 
+});
+
+write output to nc1:"rttest/open-closed_query-issue236.adm";
+for $r in dataset('TweetMessages')
+return $r

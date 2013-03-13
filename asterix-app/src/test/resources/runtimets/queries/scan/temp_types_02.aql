@@ -11,7 +11,7 @@ create type TempType as closed {
 }
 
 create dataset Temp2(TempType) 
-	partitioned by key id;
+	primary key id;
 
 load dataset Temp2 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

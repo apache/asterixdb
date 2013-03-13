@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -14,24 +14,30 @@
  */
 package edu.uci.ics.asterix.feed.managed.adapter;
 
+import java.util.Map;
+
+/**
+ * Interface implemented by an adapter that can be controlled or managed by external
+ * commands (stop,alter)
+ */
 public interface IManagedFeedAdapter {
 
-    public enum OperationState {
-        SUSPENDED,
-        // INACTIVE state signifies that the feed dataset is not
-        // connected with the external world through the feed
-        // adapter.
-        ACTIVE,
-        // ACTIVE state signifies that the feed dataset is connected to the
-        // external world using an adapter that may put data into the dataset.
-        STOPPED,
-        INACTIVE
-    }
+    /**
+     * Discontinue the ingestion of data and end the feed.
+     * 
+     * @throws Exception
+     */
+    public void stop();
 
-    public void suspend() throws Exception;
-
-    public void resume() throws Exception;
-
-    public void stop() throws Exception;
+    /**
+     * Modify the adapter configuration parameters. This method is called
+     * when the configuration parameters need to be modified while the adapter
+     * is ingesting data in an active feed.
+     * 
+     * @param properties
+     *            A HashMap containing the set of configuration parameters
+     *            that need to be altered.
+     */
+    public void alter(Map<String, String> properties);
 
 }

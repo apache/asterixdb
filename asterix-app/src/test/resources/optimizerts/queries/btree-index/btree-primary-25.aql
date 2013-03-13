@@ -17,7 +17,7 @@ create type TestType as open {
     lname : string
 }
 
-create dataset testdst(TestType) partitioned by key fname;
+create dataset testdst(TestType) primary key fname;
 
 for $emp in dataset('testdst') 
 where $emp.fname > "Neil" and $emp.fname < "Roger" 

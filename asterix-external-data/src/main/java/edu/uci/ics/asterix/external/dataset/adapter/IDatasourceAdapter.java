@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -29,7 +29,6 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
  */
 public interface IDatasourceAdapter extends Serializable {
 
-  
     /**
      * An adapter can be used to read from an external data source and may also
      * allow writing to the external data source. This enum type indicates the
@@ -45,7 +44,6 @@ public interface IDatasourceAdapter extends Serializable {
         WRITE,
         READ_WRITE
     }
-
 
     /**
      * Returns the type of adapter indicating if the adapter can be used for
@@ -73,19 +71,6 @@ public interface IDatasourceAdapter extends Serializable {
      *         represented by the key- attributeKey.
      */
     public String getAdapterProperty(String propertyKey);
-
-    /**
-     * Allows setting a configuration property of the adapter with a specified
-     * value.
-     * 
-     * @caller Used by the wrapper operator to modify the behavior of the
-     *         adapter, if required.
-     * @param property
-     *            the property to be set
-     * @param value
-     *            the value for the property
-     */
-    public void setAdapterProperty(String property, String value);
 
     /**
      * Configures the IDatasourceAdapter instance.
@@ -131,9 +116,8 @@ public interface IDatasourceAdapter extends Serializable {
      * @Caller The wrapper operator configures its partition constraints from
      *         the constraints obtained from the adapter.
      */
-    public AlgebricksPartitionConstraint getPartitionConstraint();
+    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception;
 
-   
     /**
      * Allows the adapter to establish connection with the external data source
      * expressing intent for data and providing any configuration parameters
@@ -148,5 +132,18 @@ public interface IDatasourceAdapter extends Serializable {
      */
     public void initialize(IHyracksTaskContext ctx) throws Exception;
 
+    /**
+     * Triggers the adapter to begin ingestion of data from the external source.
+     * 
+     * @param partition
+     *            The adapter could be running with a degree of parallelism.
+     *            partition corresponds to the i'th parallel instance.
+     * @param writer
+     *            The instance of frame writer that is used by the adapter to
+     *            write frame to. Adapter packs the fetched bytes (from external source),
+     *            packs them into frames and forwards the frames to an upstream receiving
+     *            operator using the instance of IFrameWriter.
+     * @throws Exception
+     */
     public void start(int partition, IFrameWriter writer) throws Exception;
 }

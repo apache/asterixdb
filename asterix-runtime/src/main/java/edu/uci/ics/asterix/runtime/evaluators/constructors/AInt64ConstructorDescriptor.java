@@ -98,8 +98,9 @@ public class AInt64ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                                     else
                                         throw new AlgebricksException(errorMessage);
                                 }
-                                if (value < 0)
+                                if (value < 0 && value != -9223372036854775808L) {
                                     throw new AlgebricksException(errorMessage);
+                                }
                                 if (value > 0 && !positive)
                                     value *= -1;
 
