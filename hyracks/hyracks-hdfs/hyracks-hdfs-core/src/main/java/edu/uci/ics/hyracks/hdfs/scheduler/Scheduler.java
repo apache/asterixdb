@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.hdfs.scheduler;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -49,7 +50,7 @@ public class Scheduler {
     private Map<String, Integer> ncNameToIndex = new HashMap<String, Integer>();
 
     /**
-     * The constructor of the scheduler
+     * The constructor of the scheduler.
      * 
      * @param ncNameToNcInfos
      * @throws HyracksException
@@ -64,12 +65,20 @@ public class Scheduler {
         }
     }
 
+    /**
+     * The constructor of the scheduler.
+     * 
+     * @param ncNameToNcInfos the mapping from nc names to nc infos
+     * @throws HyracksException
+     */
     public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos) throws HyracksException {
         loadIPAddressToNCMap(ncNameToNcInfos);
     }
 
     /**
-     * Set location constraints for a file scan operator with a list of file splits
+     * Set location constraints for a file scan operator with a list of file splits.
+     * It guarantees the maximum slots a machine can is at most one more than the minimum slots a
+     * machine can get.
      * 
      * @throws HyracksDataException
      */
@@ -77,96 +86,159 @@ public class Scheduler {
         int[] capacity = new int[NCs.length];
         Arrays.fill(capacity, 0);
         String[] locations = new String[splits.length];
-        int slots = splits.length % capacity.length == 0 ? (splits.length / capacity.length) : (splits.length
+        /**
+         * upper bound number of slots that a machine can get
+         */
+        int upperBoundSlots = splits.length % capacity.length == 0 ? (splits.length / capacity.length) : (splits.length
                 / capacity.length + 1);
+        /**
+         * lower bound number of slots that a machine can get
+         */
+        int lowerBoundSlots = splits.length % capacity.length == 0 ? upperBoundSlots : upperBoundSlots - 1;
 
         try {
             Random random = new Random(System.currentTimeMillis());
             boolean scheduled[] = new boolean[splits.length];
             Arrays.fill(scheduled, false);
 
-            for (int i = 0; i < splits.length; i++) {
-                /**
-                 * get the location of all the splits
-                 */
-                String[] loc = splits[i].getLocations();
-                if (loc.length > 0) {
-                    for (int j = 0; j < loc.length; j++) {
-                        /**
-                         * get all the IP addresses from the name
-                         */
-                        InetAddress[] allIps = InetAddress.getAllByName(loc[j]);
-                        /**
-                         * iterate overa all ips
-                         */
-                        for (InetAddress ip : allIps) {
-                            /**
-                             * if the node controller exists
-                             */
-                            if (ipToNcMapping.get(ip.getHostAddress()) != null) {
-                                /**
-                                 * set the ncs
-                                 */
-                                List<String> dataLocations = ipToNcMapping.get(ip.getHostAddress());
-                                int arrayPos = random.nextInt(dataLocations.size());
-                                String nc = dataLocations.get(arrayPos);
-                                int pos = ncNameToIndex.get(nc);
-                                /**
-                                 * check if the node is already full
-                                 */
-                                if (capacity[pos] < slots) {
-                                    locations[i] = nc;
-                                    capacity[pos]++;
-                                    scheduled[i] = true;
-                                }
-                            }
-                        }
-
-                        /**
-                         * break the loop for data-locations if the schedule has already been found
-                         */
-                        if (scheduled[i] == true) {
-                            break;
-                        }
-                    }
-                }
-            }
+            /**
+             * push data-local lower-bounds slots to each machine
+             */
+            scheduleLocalSlots(splits, capacity, locations, lowerBoundSlots, random, scheduled);
+            /**
+             * push data-local upper-bounds slots to each machine
+             */
+            scheduleLocalSlots(splits, capacity, locations, upperBoundSlots, random, scheduled);
 
             /**
-             * find the lowest index the current available NCs
+             * push non-data-local lower-bounds slots to each machine
              */
-            int currentAvailableNC = 0;
-            for (int i = 0; i < capacity.length; i++) {
-                if (capacity[i] < slots) {
-                    currentAvailableNC = i;
-                    break;
-                }
-            }
-
+            scheduleNoLocalSlots(splits, capacity, locations, lowerBoundSlots, scheduled);
             /**
-             * schedule no-local file reads
+             * push non-data-local upper-bounds slots to each machine
              */
-            for (int i = 0; i < splits.length; i++) {
-                // if there is no data-local NC choice, choose a random one
-                if (!scheduled[i]) {
-                    locations[i] = NCs[currentAvailableNC];
-                    capacity[currentAvailableNC]++;
-                    scheduled[i] = true;
-
-                    /**
-                     * move the available NC cursor to the next one
-                     */
-                    for (int j = currentAvailableNC; j < capacity.length; j++) {
-                        if (capacity[j] < slots) {
-                            currentAvailableNC = j;
-                            break;
-                        }
-                    }
-                }
-            }
+            scheduleNoLocalSlots(splits, capacity, locations, upperBoundSlots, scheduled);
             return locations;
         } catch (IOException e) {
             throw new HyracksException(e);
+        }
+    }
+
+    /**
+     * Schedule non-local slots to each machine
+     * 
+     * @param splits
+     *            The HDFS file splits.
+     * @param capacity
+     *            The current capacity of each machine.
+     * @param locations
+     *            The result schedule.
+     * @param slots
+     *            The maximum slots of each machine.
+     * @param scheduled
+     *            Indicate which slot is scheduled.
+     */
+    private void scheduleNoLocalSlots(InputSplit[] splits, int[] capacity, String[] locations, int slots,
+            boolean[] scheduled) {
+        /**
+         * find the lowest index the current available NCs
+         */
+        int currentAvailableNC = 0;
+        for (int i = 0; i < capacity.length; i++) {
+            if (capacity[i] < slots) {
+                currentAvailableNC = i;
+                break;
+            }
+        }
+
+        /**
+         * schedule no-local file reads
+         */
+        for (int i = 0; i < splits.length; i++) {
+            // if there is no data-local NC choice, choose a random one
+            if (!scheduled[i]) {
+                locations[i] = NCs[currentAvailableNC];
+                capacity[currentAvailableNC]++;
+                scheduled[i] = true;
+
+                /**
+                 * move the available NC cursor to the next one
+                 */
+                for (int j = currentAvailableNC; j < capacity.length; j++) {
+                    if (capacity[j] < slots) {
+                        currentAvailableNC = j;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Schedule data-local slots to each machine.
+     * 
+     * @param splits
+     *            The HDFS file splits.
+     * @param capacity
+     *            The current capacity of each machine.
+     * @param locations
+     *            The result schedule.
+     * @param slots
+     *            The maximum slots of each machine.
+     * @param random
+     *            The random generator.
+     * @param scheduled
+     *            Indicate which slot is scheduled.
+     * @throws IOException
+     * @throws UnknownHostException
+     */
+    private void scheduleLocalSlots(InputSplit[] splits, int[] capacity, String[] locations, int slots, Random random,
+            boolean[] scheduled) throws IOException, UnknownHostException {
+        for (int i = 0; i < splits.length; i++) {
+            /**
+             * get the location of all the splits
+             */
+            String[] loc = splits[i].getLocations();
+            if (loc.length > 0) {
+                for (int j = 0; j < loc.length; j++) {
+                    /**
+                     * get all the IP addresses from the name
+                     */
+                    InetAddress[] allIps = InetAddress.getAllByName(loc[j]);
+                    /**
+                     * iterate overa all ips
+                     */
+                    for (InetAddress ip : allIps) {
+                        /**
+                         * if the node controller exists
+                         */
+                        if (ipToNcMapping.get(ip.getHostAddress()) != null) {
+                            /**
+                             * set the ncs
+                             */
+                            List<String> dataLocations = ipToNcMapping.get(ip.getHostAddress());
+                            int arrayPos = random.nextInt(dataLocations.size());
+                            String nc = dataLocations.get(arrayPos);
+                            int pos = ncNameToIndex.get(nc);
+                            /**
+                             * check if the node is already full
+                             */
+                            if (capacity[pos] < slots) {
+                                locations[i] = nc;
+                                capacity[pos]++;
+                                scheduled[i] = true;
+                            }
+                        }
+                    }
+
+                    /**
+                     * break the loop for data-locations if the schedule has already been found
+                     */
+                    if (scheduled[i] == true) {
+                        break;
+                    }
+                }
+            }
         }
     }
 

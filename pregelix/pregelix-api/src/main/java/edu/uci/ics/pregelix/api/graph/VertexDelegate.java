@@ -105,7 +105,7 @@ class VertexDelegate<I extends WritableComparable, V extends Writable, E extends
         this.vertexId = vertexId;
     }
 
-    public final void addVertex(I vertexId, V vertex) {
+    public final void addVertex(I vertexId, Vertex vertex) {
         try {
             insertTb.reset();
             DataOutput outputInsert = insertTb.getDataOutput();
@@ -114,6 +114,19 @@ class VertexDelegate<I extends WritableComparable, V extends Writable, E extends
             vertex.write(outputInsert);
             insertTb.addFieldEndOffset();
             FrameTupleUtils.flushTuple(appenderInsert, insertTb, insertWriter);
+
+            /**
+             * push alive when necessary
+             */
+            if (pushAlive && !vertex.isHalted()) {
+                alive.reset();
+                DataOutput outputAlive = alive.getDataOutput();
+                vertexId.write(outputAlive);
+                alive.addFieldEndOffset();
+                dummyMessageList.write(outputAlive);
+                alive.addFieldEndOffset();
+                FrameTupleUtils.flushTuple(appenderAlive, alive, aliveWriter);
+            }
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }

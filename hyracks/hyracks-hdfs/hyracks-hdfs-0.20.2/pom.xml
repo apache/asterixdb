@@ -64,6 +64,10 @@
 		<profile>
 			<activation>
 				<activeByDefault>false</activeByDefault>
+				<property>
+					<name>hadoop</name>
+					<value>1.0.4</value>
+				</property>
 			</activation>
 			<id>hadoop-1.0.4</id>
 			<dependencies>
