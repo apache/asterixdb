@@ -85,25 +85,24 @@ public class HiveMetaDataProvider<S, T> implements IMetadataProvider<S, T> {
 		return generator.getWriterRuntime(inputDesc);
 	}
 
-	@Override
-	public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getDeleteRuntime(
-			IDataSource<S> arg0, IOperatorSchema arg1,
-			List<LogicalVariable> arg2, LogicalVariable arg3,
-			RecordDescriptor arg4, JobGenContext arg5, JobSpecification arg6)
-			throws AlgebricksException {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
-	@Override
-	public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInsertRuntime(
-			IDataSource<S> arg0, IOperatorSchema arg1,
-			List<LogicalVariable> arg2, LogicalVariable arg3,
-			RecordDescriptor arg4, JobGenContext arg5, JobSpecification arg6)
-			throws AlgebricksException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInsertRuntime(IDataSource<S> dataSource,
+            IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv, List<LogicalVariable> keys,
+            LogicalVariable payLoadVar, RecordDescriptor recordDesc, JobGenContext context, JobSpecification jobSpec)
+            throws AlgebricksException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getDeleteRuntime(IDataSource<S> dataSource,
+            IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv, List<LogicalVariable> keys,
+            LogicalVariable payLoadVar, RecordDescriptor recordDesc, JobGenContext context, JobSpecification jobSpec)
+            throws AlgebricksException {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 	@Override
 	public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getWriteResultRuntime(

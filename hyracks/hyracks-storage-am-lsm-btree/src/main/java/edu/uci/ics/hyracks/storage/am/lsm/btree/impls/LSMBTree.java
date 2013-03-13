@@ -635,6 +635,6 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         for (ILSMComponent c : immutableComponents) {
             BTree btree = (BTree) ((LSMBTreeImmutableComponent) c).getBTree();
             btree.validate();
-        }
-    }
+		}
+	}
 }

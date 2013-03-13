@@ -310,5 +310,12 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+			<groupId>edu.uci.ics.hyracks</groupId>
+			<artifactId>
+				hyracks-storage-am-lsm-invertedindex
+			</artifactId>
+			<version>0.2.3-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 </project>

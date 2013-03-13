@@ -93,7 +93,7 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                                 expressionTypeComputer, nullableTypeComputer, oc, expressionEvalSizeComputer,
                                 partialAggregationTypeComputer, frameSize, clusterLocations);
                         PlanCompiler pc = new PlanCompiler(context);
-                        return pc.compilePlan(plan, null);
+                        return pc.compilePlan(plan, null, jobEventListenerFactory);
                     }
                 };
             }
