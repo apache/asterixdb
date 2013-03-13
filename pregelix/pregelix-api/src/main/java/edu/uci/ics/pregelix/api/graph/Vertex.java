@@ -73,6 +73,8 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     private boolean updated = false;
     /** has outgoing messages */
     private boolean hasMessage = false;
+    /** created new vertex */
+    private boolean createdNewLiveVertex = false;
 
     /**
      * use object pool for re-using objects
@@ -258,6 +260,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
         halt = in.readBoolean();
         updated = false;
         hasMessage = false;
+        createdNewLiveVertex = false;
     }
 
     @Override
@@ -369,6 +372,13 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     }
 
     /**
+     * Pregelix internal use only
+     */
+    public boolean createdNewLiveVertex() {
+        return this.createdNewLiveVertex;
+    }
+
+    /**
      * sort the edges
      */
     @SuppressWarnings("unchecked")
@@ -449,7 +459,8 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
      * @param vertex
      *            the vertex
      */
-    public final void addVertex(I vertexId, V vertex) {
+    public final void addVertex(I vertexId, Vertex vertex) {
+        createdNewLiveVertex |= !vertex.isHalted();
         delegate.addVertex(vertexId, vertex);
     }
 

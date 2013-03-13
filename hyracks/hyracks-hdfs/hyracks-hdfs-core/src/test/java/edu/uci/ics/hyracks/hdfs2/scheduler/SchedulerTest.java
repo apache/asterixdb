@@ -34,7 +34,6 @@ import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 
 /**
  * Test case for the new HDFS API scheduler
- * 
  */
 public class SchedulerTest extends TestCase {
 
@@ -204,8 +203,8 @@ public class SchedulerTest extends TestCase {
         Scheduler scheduler = new Scheduler(ncNameToNcInfos);
         String[] locationConstraints = scheduler.getLocationConstraints(fileSplits);
 
-        String[] expectedResults = new String[] { "nc1", "nc3", "nc4", "nc2", "nc3", "nc2", "nc1", "nc3", "nc4", "nc2",
-                "nc4", "nc5", "nc5" };
+        String[] expectedResults = new String[] { "nc1", "nc3", "nc4", "nc2", "nc3", "nc2", "nc1", "nc4", "nc5", "nc6",
+                "nc5", "nc5", "nc6" };
 
         for (int i = 0; i < locationConstraints.length; i++) {
             Assert.assertEquals(locationConstraints[i], expectedResults[i]);

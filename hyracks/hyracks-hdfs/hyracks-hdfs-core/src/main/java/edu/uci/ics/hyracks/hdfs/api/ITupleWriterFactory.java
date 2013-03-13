@@ -17,14 +17,19 @@ package edu.uci.ics.hyracks.hdfs.api;
 
 import java.io.Serializable;
 
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+
 /**
  * Users need to implement this interface to use the HDFSWriteOperatorDescriptor.
  */
 public interface ITupleWriterFactory extends Serializable {
 
     /**
+     * @param ctx
+     *            the IHyracksTaskContext
      * @return a tuple writer instance
      */
-    public ITupleWriter getTupleWriter();
+    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx) throws HyracksDataException;
 
 }

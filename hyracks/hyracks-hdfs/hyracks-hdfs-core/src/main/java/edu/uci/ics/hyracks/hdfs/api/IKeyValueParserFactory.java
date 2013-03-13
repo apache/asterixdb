@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.hdfs.api;
 import java.io.Serializable;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Users need to implement this interface to use the HDFSReadOperatorDescriptor.
@@ -36,6 +37,6 @@ public interface IKeyValueParserFactory<K, V> extends Serializable {
      *            the IHyracksTaskContext
      * @return a key-value parser instance.
      */
-    public IKeyValueParser<K, V> createKeyValueParser(IHyracksTaskContext ctx);
+    public IKeyValueParser<K, V> createKeyValueParser(IHyracksTaskContext ctx) throws HyracksDataException;
 
 }

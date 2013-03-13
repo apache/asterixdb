@@ -43,6 +43,11 @@ public class TextKeyValueParserFactory implements IKeyValueParserFactory<LongWri
         return new IKeyValueParser<LongWritable, Text>() {
 
             @Override
+            public void open(IFrameWriter writer) {
+
+            }
+
+            @Override
             public void parse(LongWritable key, Text value, IFrameWriter writer) throws HyracksDataException {
                 tb.reset();
                 tb.addField(value.getBytes(), 0, value.getLength());
@@ -56,7 +61,7 @@ public class TextKeyValueParserFactory implements IKeyValueParserFactory<LongWri
             }
 
             @Override
-            public void flush(IFrameWriter writer) throws HyracksDataException {
+            public void close(IFrameWriter writer) throws HyracksDataException {
                 FrameUtils.flushFrame(buffer, writer);
             }
 
