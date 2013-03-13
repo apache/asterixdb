@@ -11,8 +11,6 @@ drop dataverse testdv2 if exists;
 create dataverse testdv1;
 create dataverse testdv2;
 
-write output to nc1:"rttest/cross-dataverse_cross-dv13.adm";
-
 create function testdv1.fun01(){
 testdv2.fun02()
 }
@@ -25,4 +23,3 @@ create function testdv2.fun03(){
 testdv1.fun01()
 }
 
-testdv1.fun01();

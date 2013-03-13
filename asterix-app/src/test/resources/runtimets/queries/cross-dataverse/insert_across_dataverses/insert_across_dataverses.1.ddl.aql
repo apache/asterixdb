@@ -41,25 +41,7 @@ create type test2.CustomerType as closed {
   }
 };
 
-create dataset test1.Customers(CustomerType)
-primary key cid;
+create dataset test1.Customers(CustomerType) primary key cid;
 
-create dataset test2.Customers(CustomerType)
-primary key cid;
-
-load dataset test1.Customers
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/nontagged/customerData.json"),("format"="adm"));
-
-
-insert into dataset test2.Customers(
-for $x in dataset('test1.Customers')
-return $x
-);
-
-write output to nc1:"rttest/cross-dataverse_insert_across_dataverses.adm";
-
-for $c in dataset('test2.Customers')
-order by $c.cid
-return $c
+create dataset test2.Customers(CustomerType) primary key cid;
 

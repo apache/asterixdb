@@ -1,8 +1,1 @@
-write output to nc1:"rttest/cross-dataverse_metadata_dataset.adm";
-
-for $c in dataset('Metadata.Dataset')
-where $c.DataverseName='Metadata'
-return $c
-
-
-
+// no DDLs

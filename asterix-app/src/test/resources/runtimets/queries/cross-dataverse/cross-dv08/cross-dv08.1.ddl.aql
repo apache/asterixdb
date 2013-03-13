@@ -25,18 +25,6 @@ id : int32
 create dataset test.t1(testtype) primary key id;
 create dataset fest.t1(testtype) primary key id;
 
-insert into dataset test.t1({"id":24});
-insert into dataset test.t1({"id":23});
-insert into dataset test.t1({"id":21});
-insert into dataset test.t1({"id":44});
-insert into dataset test.t1({"id":64});
-
-insert into dataset fest.t1({"id":24});
-insert into dataset fest.t1({"id":23});
-insert into dataset fest.t1({"id":21});
-insert into dataset fest.t1({"id":44});
-insert into dataset fest.t1({"id":64});
-
 create function test.f1(){
 for $l in dataset('fest.t1')
 return $l
@@ -47,6 +35,3 @@ for $m in dataset('test.t1')
 return $m
 }
 
-let $a := test.f1()
-let $b := fest.f1()
-return { "a" : $a, "b" : $b }

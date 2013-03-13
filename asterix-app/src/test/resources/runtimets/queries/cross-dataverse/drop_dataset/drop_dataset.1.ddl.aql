@@ -19,13 +19,7 @@ create type test.CustomerType as closed {
   }
 };
 
-create dataset test.Customers(CustomerType)
-primary key cid;
+create dataset test.Customers(CustomerType) primary key cid;
 
 drop dataset test.Customers;
 
-write output to nc1:"rttest/cross-dataverse_drop_dataset.adm";
-
-for $x in dataset('Metadata.Dataset')
-where $x.DataverseName='test' and $x.DatasetName='Customers'
-return $x

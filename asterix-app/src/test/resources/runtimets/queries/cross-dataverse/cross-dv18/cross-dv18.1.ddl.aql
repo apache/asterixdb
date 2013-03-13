@@ -24,18 +24,3 @@ id : int32
 create dataset test.t1(testtype) primary key id;
 create dataset fest.t1(testtype) primary key id;
 
-insert into dataset test.t1({"id":24});
-insert into dataset test.t1({"id":23});
-insert into dataset test.t1({"id":21});
-insert into dataset test.t1({"id":44});
-insert into dataset test.t1({"id":64});
-
-insert into dataset fest.t1({"id":24});
-insert into dataset fest.t1({"id":23});
-insert into dataset fest.t1({"id":21});
-insert into dataset fest.t1({"id":44});
-insert into dataset fest.t1({"id":64});
-
-let $a := (for $l in dataset('fest.t1') return $l)
-let $b := (for $m in dataset('test.t1') return $m)
-return {"a":$a,"b":$b}

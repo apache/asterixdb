@@ -41,20 +41,3 @@ create type test2.OrderType as open {
 create dataset test2.Orders(OrderType)
 primary key oid;
 
-
-load dataset test1.Customers
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/nontagged/customerData.json"),
-("format"="adm"));
-
-load dataset test2.Orders
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/nontagged/orderData.json"),("format"="adm"));
-
-write output to nc1:"rttest/cross-dataverse_join_across_dataverses.adm";
-
-for $c in dataset('test1.Customers')
-for $o in dataset('test2.Orders')
-where $c.cid = $o.cid
-order by $c.name, $o.total
-return {"cust_name":$c.name, "cust_age": $c.age, "order_total":$o.total, "orderList":[$o.oid, $o.cid]}
