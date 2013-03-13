@@ -1,10 +1,4 @@
-drop dataverse test if exists;
-
-create dataverse test;
-
 use dataverse test;
-
-write output to nc1:"rttest/comparison_datetime_order.adm";
 
 let $dt1 := datetime("2011-12-31T14:00:00-10:00")
 let $dt2 := datetime("2012-01-01T00:00:00Z")

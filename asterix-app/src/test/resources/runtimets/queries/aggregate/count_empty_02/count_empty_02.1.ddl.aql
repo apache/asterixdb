@@ -15,9 +15,3 @@ create type TestType as closed {
 
 create dataset Test(TestType) primary key id;
 
-write output to nc1:"rttest/aggregate_count_empty_02.adm";
-
-count(
- for $x in dataset('Test')
- return $x.val
-)

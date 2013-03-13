@@ -5,18 +5,4 @@
  * Issue        : 188
  */
 
-drop dataverse test if exists;
-create dataverse test;
-use dataverse test;
-
-write output to nc1:"rttest/aggregate_droptype.adm";
-
-create type footype as open {
-bar : int32?
-}
-
-drop type footype;
-
-create type footype as open {
-bar : int32?
-}
+// There is no Query in this test as we only create/drop from DDL file.

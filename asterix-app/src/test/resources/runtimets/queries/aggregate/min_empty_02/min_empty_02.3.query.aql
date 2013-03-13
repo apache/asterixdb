@@ -4,18 +4,7 @@
  * Success        : Yes
  */
 
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-create type TestType as closed {
-  id: int32,
-  val: double
-}
-
-create dataset Test(TestType) primary key id;
-
-write output to nc1:"rttest/aggregate_min_empty_02.adm";
 
 min(
  for $x in dataset('Test')

@@ -3,10 +3,4 @@
  * Success        : Yes
  */
 
-drop dataverse test if exists;
-create dataverse test;
-use dataverse test;
-
-write output to nc1:"rttest/aggregate_scalar_count_empty.adm";
-
-count([ ])
+// no inserts, deletes here

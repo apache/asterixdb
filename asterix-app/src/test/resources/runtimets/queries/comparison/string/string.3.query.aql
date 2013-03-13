@@ -1,8 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/comparison_string.adm";
 
 let $c1 := "AA"
 let $c2 := "B"

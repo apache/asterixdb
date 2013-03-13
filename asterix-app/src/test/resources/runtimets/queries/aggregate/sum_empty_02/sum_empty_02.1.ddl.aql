@@ -6,7 +6,6 @@
 
 drop dataverse test if exists;
 create dataverse test;
-use dataverse test;
 
 create type TestType as closed {
   id: int32,
@@ -15,9 +14,3 @@ create type TestType as closed {
 
 create dataset Test(TestType) primary key id;
 
-write output to nc1:"rttest/aggregate_sum_empty_02.adm";
-
-sum(
- for $x in dataset('Test')
- return $x.val
-)

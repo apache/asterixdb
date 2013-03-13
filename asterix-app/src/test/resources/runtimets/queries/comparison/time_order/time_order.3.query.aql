@@ -1,8 +1,4 @@
-drop dataverse test if exists;
-
-create dataverse test;
-
-write output to nc1:"rttest/comparison_time_order.adm";
+use dataverse test;
 
 let $t1 := time("13:00:00.382-10:00")
 let $t2 := time("23:59:59.999Z")

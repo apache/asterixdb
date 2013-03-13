@@ -3,11 +3,7 @@
  * Success        : Yes
  */
 
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/aggregate_scalar_min.adm";
 
 let $i8 := min([int8("1"), int8("2"), int8("3")])
 let $i16 := min([int16("1"), int16("2"), int16("3")])
