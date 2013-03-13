@@ -5,8 +5,5 @@
  * Date             :  26th July 2012
  */
 
-write output to nc1:"rttest/flwor_ret-04.adm";
-
-
 let $a := 12345
 return (if($a > 999) then "GREATER" else "LESSER") 

@@ -1,8 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/string_end-with5.adm";
 
 let $c1 := end-with("ends","s")
 let $c2 := end-with("start",null)

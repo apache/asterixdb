@@ -1,8 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/string_replace22.adm";
 
 let $c1 := replace2("abracadabra","", null , null)
 let $c2 := replace2("abracadabra","bra", "XXX" ,"")

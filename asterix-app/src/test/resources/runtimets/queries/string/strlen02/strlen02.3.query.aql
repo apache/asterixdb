@@ -16,7 +16,6 @@ string-length("~!@#$%^&*()_+{}:?<>/.,';`][\")]
 return $a
 */
 
-write output to nc1:"rttest/string_strlen02.adm";
 
 for $a in [ string-length("abcdefghijklmnopqrstu"),
 string-length("ABCDEFGHIJKLMNOPQRSTU"),

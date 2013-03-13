@@ -7,14 +7,7 @@
  */
 
 
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-create type TestType as open{
-id:int32,
-cpt:[int32]
-}
 
 create dataset testds(TestType) primary key id;
 
@@ -22,7 +15,3 @@ create dataset testds(TestType) primary key id;
 
 insert into dataset testds({"id":123,"cpt":[0048,0045,0057,0044,0065,0045,0090]});
 
-write output to nc1:"rttest/string_cpttostr01.adm";
-
-for $l in dataset('testds')
-return codepoint-to-string($l.cpt)

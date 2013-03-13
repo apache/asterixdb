@@ -1,8 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/constructor_point_01.adm";
 
 let $c1 := point("80.10d, -10E5")
 let $c2 := point3d("5e2, -10E+5, +10.5e-10d")

@@ -16,12 +16,3 @@ string-length("~!@#$%^&*()_+{}:?<>/.,';`][\")]
 return $a
 */
 
-write output to nc1:"rttest/string_strlen02.adm";
-
-for $a in [ string-length("abcdefghijklmnopqrstu"),
-string-length("ABCDEFGHIJKLMNOPQRSTU"),
-string-length("abcdEFGHijklMNOPqrstu"),
-string-length("abcd EFGH ijkl MNOP qrstu"),
-string-length("   Hello World    !!!!....:-)"),
-string-length("~!@#$%^&*()_+{}:?<>/.,';`][\")]
-return $a

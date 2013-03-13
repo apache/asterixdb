@@ -1,8 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/string_start-with4.adm";
 
 let $c1 := start-with("start","")
 let $c2 := start-with("start",null)

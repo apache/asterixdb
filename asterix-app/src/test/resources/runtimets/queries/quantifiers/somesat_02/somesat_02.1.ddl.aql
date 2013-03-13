@@ -1,7 +1,5 @@
 drop dataverse test if exists;
 create dataverse test;
-use dataverse test;
-
 
 create type AddressType as open {
   number: int32, 
@@ -29,23 +27,3 @@ create type OrderType as open {
   total: float
 }
 
-create dataset CustomerSomeSat02(CustomerType)
-  primary key cid;
-create dataset OrdersSomeSat02(OrderType)
-  primary key oid;
-
-load dataset CustomerSomeSat02 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
-(("path"="nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm"));
-
-load dataset OrdersSomeSat02 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
-(("path"="nc1://data/custord-tiny/order-tiny.adm"),("format"="adm"));
-
-write output to nc1:"rttest/quantifiers_somesat_02.adm";
-
-for $x in dataset('CustomerSomeSat02')
-where some $y in dataset('OrdersSomeSat02')
-      satisfies $y.cid = $x.cid
-order by $x.cid      
-return $x.cid

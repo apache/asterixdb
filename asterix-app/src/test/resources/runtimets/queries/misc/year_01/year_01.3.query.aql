@@ -1,6 +1,3 @@
-drop dataverse test if exists;
-create dataverse test;
-
-write output to nc1:"rttest/misc_year_01.adm";
+use dataverse test;
 
 year("1996-12-01")

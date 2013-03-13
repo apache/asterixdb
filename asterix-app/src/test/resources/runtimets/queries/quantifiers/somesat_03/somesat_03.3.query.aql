@@ -4,8 +4,6 @@
  * Date            : 6th July 2012
  */
 
-write output to nc1:"rttest/quantifiers_somesat_03.adm";
-
 let $a := [
 some $x in [1, 2] satisfies $x + $x = 3,
 some $x in [1, 2] satisfies $x + $x = 2,

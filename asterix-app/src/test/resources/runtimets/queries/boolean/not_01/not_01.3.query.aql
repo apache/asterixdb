@@ -1,10 +1,4 @@
-drop dataverse test if exists;
-
-create dataverse test;
-
 use dataverse test;
-
-write output to nc1:"rttest/boolean_not_01.adm";
 
 let $x := true
 let $y := false

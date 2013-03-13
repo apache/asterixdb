@@ -5,21 +5,7 @@
  * Success        : Yes
  */
 
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-create type MyRecord as closed {
-  id: int32,
-  point: point,
-  kwds: string,
-  line1: line,
-  line2: line,
-  poly1: polygon,
-  poly2: polygon,
-  rec: rectangle,
-  circle: circle
-}
 
 create dataset MyData1(MyRecord) primary key id;
 create dataset MyData2(MyRecord) primary key id;
@@ -34,10 +20,3 @@ using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 
 create index rtree_index on MyData1(point) type rtree;
 
-write output to nc1:"rttest/index-join_rtree-spatial-intersect-point.adm";
-
-for $a in dataset('MyData1')
-for $b in dataset('MyData2')
-where spatial-intersect($a.point, $b.point) and $a.id != $b.id
-order by $a.id, $b.id
-return {"aid": $a.id, "bid": $b.id, "apt": $a.point, "bp": $b.point}

@@ -1,8 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/string_codepoint-to-string2.adm";
 
 let $x1 :=  []
 let $c1 := codepoint-to-string($x1)

@@ -2,7 +2,6 @@
 
 drop dataverse test if exists;
 create dataverse test;
-use dataverse test;
 
 create type DBLPType as closed {
   id: int32, 
@@ -12,16 +11,3 @@ create type DBLPType as closed {
   misc: string
 }
 
-create dataset DBLPadm(DBLPType) 
-  primary key id;
-
-// drop dataset DBLPadm;
-load dataset DBLPadm 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
-(("path"="nc1://data/dblp-small/dblp-small.adm"),("format"="adm"));
-
-write output to nc1:"rttest/scan_20.adm";
-
-for $paper in dataset('DBLPadm')
-order by $paper.id
-return $paper

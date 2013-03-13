@@ -1,9 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/numeric_floor1.adm";
-
 
 let $c0 := int8("-20")
 let $c1 := int16("-23")

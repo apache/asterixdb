@@ -1,9 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/numeric_round2.adm";
-
 
 let $c0 := float("20.1")
 let $c1 := float("-20.56e-30")

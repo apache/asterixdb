@@ -1,8 +1,5 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
 
-write output to nc1:"rttest/constructor_double_01.adm";
 
 let $c1 := double("NaN")
 let $c2 := double("INF")

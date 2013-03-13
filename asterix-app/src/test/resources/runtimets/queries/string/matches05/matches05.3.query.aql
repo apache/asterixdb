@@ -6,25 +6,8 @@
  * Date           :  25th April 2012
  */
 
-drop dataverse test if exists;
-create dataverse test;
+
 use dataverse test;
-
-create type TestType1 as{
-fname:string,
-lname:string,
-id:int32
-}
-
-create dataset testds1(TestType1) primary key id;
-
-insert into dataset testds1({"fname":"Test","lname":"Test","id":123});
-insert into dataset testds1({"fname":"Testa","lname":"Test","id":124});
-insert into dataset testds1({"fname":"Test1","lname":"Test1","id":125});
-insert into dataset testds1({"fname":"Test","lname":"Testb","id":126});
-insert into dataset testds1({"fname":"Test2","lname":"Test2","id":127});
-
-write output to nc1:"rttest/string_matches05.adm";
 
 //Perform the match for fname and lname
 for $l in dataset('testds1')

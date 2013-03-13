@@ -4,8 +4,6 @@
  * Date         : May 21 2012
  */
 
-write output to nc1:"rttest/string_matches06.adm";
-
 for $a in [matches("mnop","."),
 matches("abcdefABCDEF","/d"),
 matches("12345","\d"),

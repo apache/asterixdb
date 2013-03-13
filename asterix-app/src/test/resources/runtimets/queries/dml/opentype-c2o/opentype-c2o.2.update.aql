@@ -5,23 +5,7 @@
  * Expected Result : Success
  */
 
-drop dataverse testdv2 if exists;
-create dataverse testdv2;
 use dataverse testdv2;
-
-create type testtype as closed {
-  id: string,
-  name: string,
-  hobby: {{string}}?
-}
-
-/*
-* name and hobby from the closed dataset will
-* become open fields, and hobby can be null
-*/
-create type testtype2 as open {
-  id: string
-}
 
 create dataset testds(testtype) primary key id;
 
@@ -52,8 +36,3 @@ insert into dataset testds2 (
 	return $d
 );
 
-write output to nc1:"rttest/dml_opentype-c2o.adm";
-
-for $d in dataset("testds2") 
-order by $d.id
-return $d

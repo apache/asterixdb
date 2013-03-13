@@ -2,7 +2,6 @@ drop dataverse test if exists;
 
 create dataverse test;
 
-use dataverse test;
 create type AddressType as open {
   number: int32, 
   street: string,
@@ -32,20 +31,3 @@ create type OrderType as open {
   items: [int32]
 }
 
- 
-create external dataset Customers(CustomerType)
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/nontagged/customerData.json"),("format"="adm"));
-        
-create external dataset Orders(OrderType)
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/nontagged/orderData.json"),("format"="adm"));
-
-write output to nc1:"rttest/custord_join_q_04.adm";
-      
-
-for $c in dataset('Customers')
-return {"order_id" :
-for $o in dataset('Orders')
-where $c.cid = $o.cid
-return $o.oid } 

@@ -1,0 +1,5 @@
+use dataverse test;
+
+let $x := like("A8BBB", null)
+let $y :=  like(null, "_6%")
+return {"field1": $x , "field2": $y}

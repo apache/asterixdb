@@ -1,24 +1,9 @@
 drop dataverse tpch if exists;
 create dataverse tpch;
 
-use dataverse tpch;
-
 create type RegionType as closed {
   r_regionkey: int32,
   r_name: string,
   r_comment: string
 }
 
-create dataset Regions_group_no_agg(RegionType) 
-  primary key r_regionkey;
-
-write output to nc1:"rttest/tpch_group_no_agg.adm";
-
-load dataset Regions_group_no_agg 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/tpch0.001/region.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
-
-for $r in dataset('Regions_group_no_agg')
-group by $name := $r.r_name  with $r
-order by $name
-return $name

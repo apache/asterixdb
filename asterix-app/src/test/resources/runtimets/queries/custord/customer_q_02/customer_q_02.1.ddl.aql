@@ -2,8 +2,6 @@ drop dataverse test if exists;
 
 create dataverse test;
 
-use dataverse test;
-
 create type AddressType as open {
   number: int32, 
   street: string,
@@ -22,12 +20,3 @@ create type CustomerType as closed {
   }
 }
 
-create external dataset Customers(CustomerType)
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/nontagged/customerData.json"),("format"="adm"));
-        
-write output to nc1:"rttest/custord_customer_q_02.adm";
-      
-for $c in dataset('Customers')
-let $nestedRec := $c.lastorder
-return { "id": $c.cid, "nestedRecord":$nestedRec, "order_id" : $nestedRec.oid}

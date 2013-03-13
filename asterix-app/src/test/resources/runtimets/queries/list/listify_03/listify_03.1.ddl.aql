@@ -1,0 +1,9 @@
+/*
+ * Description      :  Test that a listify on a nullable type creates a homogeneous list of type ANY.
+ *                     Guards against regression to issue 186.
+ * Expected Result  :  Success
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+

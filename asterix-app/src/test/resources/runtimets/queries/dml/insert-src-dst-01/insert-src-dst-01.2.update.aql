@@ -5,20 +5,7 @@
  * Issue #         : Issue 76
  */
 
-drop dataverse testdv2 if exists;
-create dataverse testdv2;
 use dataverse testdv2;
-
-write output to nc1:"rttest/dml_insert-src-dst-01.adm";
-
-create type testtype01 as closed {
-  id: string,
-  name: string?
-}
-
-create type testtype02 as closed {
-  id: string
-}
 
 create dataset testds01(testtype01) primary key id;
 create dataset testds02(testtype02) primary key id;
@@ -35,6 +22,3 @@ for $d in dataset("testds02")
 return $d
 );
 
-for $d in dataset("testds01")
-order by $d.id
-return $d

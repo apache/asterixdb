@@ -1,8 +1,5 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
 
-write output to nc1:"rttest/constructor_duration_01.adm";
 
 let $c1 := duration("P30Y10M25DT13H12M50S")
 let $c2 := duration("P25DT13H12M50S")

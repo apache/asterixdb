@@ -7,7 +7,6 @@
 
 drop dataverse test if exists;
 create dataverse test;
-use dataverse test;
 
 create type AddressType as open {
   number: int32, 
@@ -36,22 +35,3 @@ create type OrderType as open {
   total: float,
   items: [int32]
 }
-
-create dataset Customers(CustomerType) primary key cid;
-create dataset Orders(OrderType) primary key oid;
-
-load dataset Customers
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/nontagged/customerData.json"),("format"="adm"));
-
-load dataset Orders
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/nontagged/orderData.json"),("format"="adm"));
-
-write output to nc1:"rttest/index-join_btree-primary-equi-join.adm";
-
-for $c in dataset('Customers')
-for $o in dataset('Orders')
-where $c.cid /*+ indexnl */ = $o.cid
-order by $c.cid, $o.oid
-return {"cid":$c.cid, "oid": $o.oid}

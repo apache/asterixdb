@@ -1,6 +1,5 @@
 drop dataverse test if exists;
 create dataverse test;
-use dataverse test;
 
 create type UserType as open {
   uid: int32, 
@@ -16,22 +15,3 @@ create type VisitorType as open {
   interests: {{string}}
 }
 
-create dataset Users(UserType) primary key uid;
-create dataset Visitors(VisitorType) primary key vid;
-
-
-load dataset Users 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
-(("path"="nc1://data/users-visitors-small/users.json"),("format"="adm"));
-
-load dataset Visitors 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
-(("path"="nc1://data/users-visitors-small/visitors.json"),("format"="adm"));
-
-write output to nc1:'rttest/misc_nested-loop-join_01.adm';
-
-for $user in dataset('Users')
-for $visitor in dataset('Visitors')
-where len($user.lottery_numbers) = len($visitor.lottery_numbers)
-order by $user.uid, $visitor.vid
-return {'user': $user, 'visitor': $visitor, 'user-lottery_numbers-len': len($user.lottery_numbers), 'visitor-lottery_numbers-len': len($visitor.lottery_numbers)}

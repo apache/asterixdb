@@ -1,8 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/string_string-equal4.adm";
 
 let $c1 := string-equal("","")
 let $c3 := string-equal(null,"")

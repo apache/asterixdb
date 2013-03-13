@@ -1,8 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/string_string-join1.adm";
 
 let $x :=  ["aa", "25991", "bb", "31526"]
 let $s := "::"

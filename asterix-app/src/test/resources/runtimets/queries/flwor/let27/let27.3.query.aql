@@ -1,0 +1,11 @@
+/*
+ * Description     : Test let clause 
+ * Expected Result : Success 
+ * Date            : 23rd July 2012 
+ */
+
+// Bind arithmetic expressions to variable using let clause
+
+
+let $a := [(100+100),(100-100),(100 * 100),(100 / 100),(100 %10)] 
+return $a

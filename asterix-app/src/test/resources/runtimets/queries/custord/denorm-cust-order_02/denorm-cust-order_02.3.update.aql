@@ -1,0 +1,17 @@
+use dataverse test;
+
+write into dataset CustomerOrders2 (
+
+for $c in dataset('Customers2')
+let $orders := 
+  for $o in dataset('Orders2')
+  where $o.cid = $c.cid
+  order by $o.oid asc
+  return $o
+return { "cid": $c.cid, "cust": $c, "orders": $orders }
+
+);
+
+for $co in dataset('CustomerOrders2')
+order by $co.cid
+return $co

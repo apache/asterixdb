@@ -1,8 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/constructor_datetime_01.adm";
 
 let $c1 := datetime("2010-10-30T10:50:56.999+05:45")
 let $c2 := datetime("2010-10-30T10:30:56.250-10:00")

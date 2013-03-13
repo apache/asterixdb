@@ -7,13 +7,7 @@
 
 // create internal dataset, insert string data into string field and pass the string filed as input to end-with function
 
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-create type TestType as {
-name:string
-}
 
 create dataset testds(TestType) primary key name;
 
@@ -23,11 +17,4 @@ insert into dataset testds({"name":"Bruce Li"});
 insert into dataset testds({"name":"Marian Jones"});
 insert into dataset testds({"name":"Phil Jones"});
 insert into dataset testds({"name":"I am Jones"});
-
-write output to nc1:"rttest/string_endwith03.adm";
-
-for $l in dataset('testds')
-order by $l.name
-where end-with($l.name,"Jones")
-return $l
 

@@ -4,7 +4,6 @@
  * Date            : 21st Aug 2012
  */
 
-write output to nc1:"rttest/flwor_for18.adm";
 
 for $a in (
     for $b in (

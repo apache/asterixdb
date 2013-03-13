@@ -1,9 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/numeric_round-half-to-even24.adm";
-
 
 let $c0 := double("0.015")
 let $c1 := double("0.025")

@@ -7,15 +7,7 @@
  */
 
 
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-create type TestType as open{
-id:int32,
-fname:string,
-lname:string
-}
 
 create dataset testds(TestType) primary key id;
 
@@ -31,8 +23,3 @@ insert into dataset testds({"id":127,"fname":"Raman","lname":"Grover"});
 insert into dataset testds({"id":128,"fname":"Yingyi","lname":"Bu"});
 insert into dataset testds({"id":129,"fname":"Vinayak","lname":"Borkar"});
 
-write output to nc1:"rttest/string_strconcat01.adm";
-
-for $l in dataset('testds')
-order by $l.id
-return { "Full Name": string-concat([$l.fname,$l.lname]) }

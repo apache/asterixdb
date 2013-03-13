@@ -5,18 +5,7 @@
  *
  */
 
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-create type TestType as open {
-id : int32,
-name : string,
-locn : point,
-zip : string
-}
-
-write output to nc1:"rttest/dml_drop-empty-secondary-indexes.adm";
 
 create dataset t1(TestType) primary key id;
 
@@ -32,6 +21,3 @@ drop index t1.keyWD_indx;
 
 drop index t1.secndIndx;
 
-for $l in dataset('Metadata.Index')
-where $l.IsPrimary=false
-return $l;

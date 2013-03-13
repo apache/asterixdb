@@ -7,7 +7,6 @@
 
 drop dataverse test if exists;
 create dataverse test;
-use dataverse test;
 
 create type AddressType as closed {
   number: int32, 
@@ -24,19 +23,3 @@ create type CustomerType as closed {
   children: [ { name: string, age: int32? } ]
 }
 
-create dataset Customers(CustomerType) primary key cid;
-
-load dataset Customers 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/semistructured/co1k/customer.adm"),("format"="adm"));
-
-create index age_index on Customers(age);
-
-delete $c from dataset Customers where $c.cid>=200;
-
-write output to nc1:"rttest/dml_scan-delete-btree-secondary-index-nullable.adm";
-
-for $c in dataset('Customers')
-where $c.age < 20
-order by $c.cid
-return $c

@@ -1,0 +1,51 @@
+use dataverse tpch;
+
+create dataset LineItem(LineItemType)
+  primary key l_orderkey, l_linenumber;
+create dataset Orders(OrderType)
+  primary key o_orderkey;
+create dataset Supplier(SupplierType)
+  primary key s_suppkey;
+create dataset Region(RegionType) 
+  primary key r_regionkey;
+create dataset Nation(NationType) 
+  primary key n_nationkey;
+create dataset Part(PartType)
+  primary key p_partkey;
+create dataset PartSupp(PartSuppType)
+  primary key ps_partkey, ps_suppkey;  
+create dataset Customer(CustomerType) 
+  primary key c_custkey;
+
+load dataset LineItem 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset Orders 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset Supplier 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/supplier.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset Region 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/region.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset Nation 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/nation.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset Part 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/part.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset PartSupp 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/partsupp.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset Customer 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/customer.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+

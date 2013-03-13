@@ -1,0 +1,4 @@
+use dataverse test;
+
+for $x in ["ten", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "ninety"]
+return string-length($x)

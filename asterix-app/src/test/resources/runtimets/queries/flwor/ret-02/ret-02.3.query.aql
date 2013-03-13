@@ -6,7 +6,6 @@
 
 // Return a string
 
-write output to nc1:"rttest/flwor_ret-02.adm";
 
 for $x in [true]
 return "this is a test string"

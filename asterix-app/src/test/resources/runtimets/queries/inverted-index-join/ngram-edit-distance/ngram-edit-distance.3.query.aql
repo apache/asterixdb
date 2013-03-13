@@ -4,40 +4,7 @@
  * Success        : Yes
  */
 
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-create type AddressType as open {
-  number: int32, 
-  street: string,
-  city: string
-}
-
-create type CustomerType as open {
-  cid: int32, 
-  name: string,
-  age: int32?,
-  address: AddressType?,
-  interests: [string],
-  children: [ { name: string, age: int32? } ]
-}
-
-create dataset Customers(CustomerType) primary key cid;
-
-create dataset Customers2(CustomerType) primary key cid;
-
-load dataset Customers 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/semistructured/co1k_olist/customer.adm"),("format"="adm"));
-
-load dataset Customers2
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/semistructured/co1k_olist/customer.adm"),("format"="adm"));
-
-create index ngram_index on Customers(name) type ngram(3);
-
-write output to nc1:"rttest/inverted-index-join_ngram-edit-distance.adm";
 
 for $a in dataset('Customers')
 for $b in dataset('Customers2')

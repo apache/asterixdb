@@ -7,7 +7,3 @@
 
 //Input = Output
 
-write output to nc1:"rttest/string_cpttostr04.adm";
-
-let $c1 := codepoint-to-string(string-to-codepoint("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"))
-return { "c1":$c1 }

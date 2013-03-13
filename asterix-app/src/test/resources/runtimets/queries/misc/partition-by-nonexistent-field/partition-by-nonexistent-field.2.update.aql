@@ -4,17 +4,9 @@
  * Author: zheilbron
  */
  
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-create type TestType as open{
-name1:string
-}
 
 create dataset testds(TestType) primary key id;
 
 insert into dataset testds({"name1":"John","name2":"Smith"});
 
-for $l in dataset('testds')
-return $l

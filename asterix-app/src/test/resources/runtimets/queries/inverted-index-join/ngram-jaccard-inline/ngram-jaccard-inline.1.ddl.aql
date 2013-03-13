@@ -7,7 +7,6 @@
 
 drop dataverse test if exists;
 create dataverse test;
-use dataverse test;
 
 create type DBLPType as closed {
   id: int32, 
@@ -25,25 +24,3 @@ create type CSXType as closed {
   misc: string
 }
 
-create dataset DBLP(DBLPType) primary key id;
-
-create dataset CSX(CSXType) primary key id;
-
-load dataset DBLP 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
-
-load dataset CSX
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/pub-small/csx-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
-
-create index ngram_index on DBLP(title) type ngram(3);
-
-write output to nc1:"rttest/inverted-index-join_ngram-jaccard-inline.adm";
-
-for $a in dataset('DBLP')
-for $b in dataset('CSX')
-let $jacc := similarity-jaccard(gram-tokens($a.title, 3, false), gram-tokens($b.title, 3, false))
-where $jacc >= 0.5f and $a.id < $b.id
-order by $jacc, $a.id, $b.id
-return { "arec": $a, "brec": $b, "jacc": $jacc }

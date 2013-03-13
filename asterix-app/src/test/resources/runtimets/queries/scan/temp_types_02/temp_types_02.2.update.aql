@@ -1,14 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-create type TempType as closed {
-  id: int32,
-  date: date,
-  time: time,
-  datetime: datetime,
-  duration: duration
-}
 
 create dataset Temp2(TempType) 
 	primary key id;
@@ -16,8 +6,3 @@ create dataset Temp2(TempType)
 load dataset Temp2 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/nontagged/tempData.txt"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
-       
-write output to nc1:"rttest/scan_temp_types_02.adm";
-      
-for $a in dataset('Temp2')
-return $a 

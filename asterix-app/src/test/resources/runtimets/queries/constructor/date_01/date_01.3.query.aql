@@ -1,8 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/constructor_date_01.adm";
 
 let $c1 := date("2010-10-30")
 let $c2 := date("1987-11-19")

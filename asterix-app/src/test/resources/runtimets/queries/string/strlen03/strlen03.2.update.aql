@@ -7,13 +7,7 @@
 
 // Create internal dataset, insert string data and pass the string attribute to string-length function, and verify results.
 
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-create type TestType as {
-name:string
-}
 
 create dataset testds(TestType) primary key name;
 
@@ -30,8 +24,3 @@ insert into dataset testds({"name":"Messi"});
 insert into dataset testds({"name":"Tevez"});
 insert into dataset testds({"name":"Henry"});
 
-write output to nc1:"rttest/string_strlen03.adm";
-
-for $l in dataset('testds')
-order by $l.name
-return string-length($l.name)

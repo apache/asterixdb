@@ -1,8 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/numeric_multiply_float.adm";
 
 let $c1 := int8("+1")
 let $c2 := int16("2")

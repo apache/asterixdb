@@ -2,8 +2,6 @@ drop dataverse test if exists;
 
 create dataverse test;
 
-use dataverse test;
-
 create type AddressType as open {
   number: int32, 
   street: string,
@@ -36,29 +34,3 @@ create type CustomerOrdersType as open {
   orders: [OrderType]
 }
 
-create dataset Customers1(CustomerType) 
-  primary key cid;
-create dataset Orders1(OrderType)
-  primary key oid;
-create dataset CustomerOrders1(CustomerOrdersType)
-  primary key cid;
-
-load dataset Customers1 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm")) pre-sorted;
-
-load dataset Orders1 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/custord-tiny/order-tiny.adm"),("format"="adm")) pre-sorted;
-
-// write output to nc1:"rttest/denorm-cust-order_01.adm";
-
-write into dataset CustomerOrders1 (
-
-for $c in dataset('Customers1')
-for $o in dataset('Orders1')
-where $c.cid = $o.cid and $c.age < 21 and $c.total > 50.0
-group by $cid := $c.cid decor $cust := $c with $o
-return {"cid":$cid, "cust": $cust, "orders": $o} 
-
-);

@@ -5,7 +5,5 @@
  * Date             :  26th July 2012
  */
 
-write output to nc1:"rttest/flwor_ret-06.adm";
-
 let $b := 12345
 return {{"Welcome","UCI","Anteater","DBH","ICS"}}

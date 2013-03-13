@@ -6,20 +6,8 @@
 
 drop dataverse testdv2 if exists;
 create dataverse testdv2;
-use dataverse testdv2;
-
 create type testtype as open {
   id: string,
   name: string
 }
 
-create dataset testds(testtype) primary key id;
- 
- insert into dataset testds (
- { "id": "001", "name": "Person Three", "hobbies": {{"scuba", "music"}}}
- );
-
-write output to nc1:"rttest/dml_opentype-insert.adm";
-
-for $d in dataset("testds") 
-return $d

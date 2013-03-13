@@ -6,8 +6,6 @@
 
 // Return  op1 and op2 or op3 and op4
 
-write output to nc1:"rttest/flwor_ret-15.adm";
-
 let $a := true
 let $b := false
 let $c := true

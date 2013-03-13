@@ -4,15 +4,8 @@
  *					 verify the bag-based fields
  * Expected Result : Success
  */
- 
-drop dataverse testdv2 if exists;
-create dataverse testdv2;
-use dataverse testdv2;
 
-create type testtype as open {
-  name: string?,
-  id: string
-}
+use dataverse testdv2;
 
 create dataset testds(testtype) primary key id;
 
@@ -24,8 +17,3 @@ insert into dataset testds (
 { "id": "002"}
 );
 
-write output to nc1:"rttest/dml_opentype-noexpand.adm";
-
-for $d in dataset("testds") 
-order by $d.id
-return $d

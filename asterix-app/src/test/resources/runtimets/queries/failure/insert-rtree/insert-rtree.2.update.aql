@@ -1,20 +1,4 @@
-drop dataverse test if exists;
-
-create dataverse test;
 use dataverse test;
-
-create type MyRecord as closed {
-	id: int32,
-	tweetid: int64,
-	loc: point,
-	time: datetime,
-	text: string
-}
-
-create type MyMiniRecord as closed {
-  id: int32,
-  loc: point
-}
 
 create dataset MyData(MyRecord)
   primary key id;
@@ -56,8 +40,3 @@ insert into dataset MyMiniData
 	}
 );
 
-write output to nc1:"rttest/failure_insert-rtree.adm";
-
-for $o in dataset('MyMiniData')
-order by $o.id
-return {"id":$o.id}

@@ -6,8 +6,6 @@
  *
  */
 
-write output to nc1:"rttest/constructor_primitive-02.adm";
-
 //Boundary value tests int16().
 //with MIN and MAX supported values.
 

@@ -1,8 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/constructor_boolean_01.adm";
 
 let $c1 := boolean("true")
 let $c2 := boolean("false")

@@ -5,21 +5,7 @@
  * Expected Result : Success
  */
 
-
-drop dataverse testdv2 if exists;
-create dataverse testdv2;
 use dataverse testdv2;
-
-create type testtype as open {
-  id: string,
-  name: string
-}
-
-create type testtype2 as closed {
-  hobby: {{string}}?,
-  id: string,
-  name: string
-}
 
 create dataset testds(testtype) primary key id;
 
@@ -50,8 +36,3 @@ insert into dataset testds2 (
 	return $d
 );
 
-write output to nc1:"rttest/dml_opentype-o2c.adm";
-
-for $d in dataset("testds2") 
-order by $d.id
-return $d

@@ -7,7 +7,6 @@
 
 drop dataverse testdv2 if exists;
 create dataverse testdv2;
-use dataverse testdv2;
 
 create type testtype as closed {
   id: string,
@@ -23,37 +22,3 @@ create type testtype2 as open {
   id: string
 }
 
-create dataset testds(testtype) primary key id;
-
-create dataset testds2(testtype2) primary key id;
- 
-insert into dataset testds (
-{ "hobby": {{"music", "coding"}}, "id": "001", "name": "Person Three"}
-);
-
-insert into dataset testds (
-{ "name": "Person One", "id": "002", "hobby": {{"sports"}} }
-);
-
-insert into dataset testds (
-{ "id": "003", "hobby": {{"movie", "sports"}}, "name": "Person Two"}
-);
-
-insert into dataset testds (
-{ "id": "004", "name": "Person Four", "hobby": {{"swimming"}} }
-);
- 
-insert into dataset testds (
-{ "name": "Person Five", "id": "005"}
-); 
- 
-insert into dataset testds2 (
- for $d in dataset("testds") 
-	return $d
-);
-
-write output to nc1:"rttest/dml_opentype-c2o.adm";
-
-for $d in dataset("testds2") 
-order by $d.id
-return $d

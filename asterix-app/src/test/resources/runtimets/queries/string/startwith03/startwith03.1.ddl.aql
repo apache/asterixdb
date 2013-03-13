@@ -9,27 +9,8 @@
 
 drop dataverse test if exists;
 create dataverse test;
-use dataverse test;
 
 create type TestType as {
 name:string
 }
 
-create dataset testds(TestType) primary key name;
-
-insert into dataset testds({"name":"John Smith"});
-insert into dataset testds({"name":"John Doe"});
-insert into dataset testds({"name":"John Wayne"});
-insert into dataset testds({"name":"Johnson Ben"});
-insert into dataset testds({"name":"Johnny Walker"});
-insert into dataset testds({"name":"David Smith"});
-insert into dataset testds({"name":"Not a Name"});
-
-write output to nc1:"rttest/string_startwith03.adm";
-
-// Return all names that start with John
-
-for $l in dataset('testds')
-order by $l.name
-where start-with($l.name,"John")
-return $l
