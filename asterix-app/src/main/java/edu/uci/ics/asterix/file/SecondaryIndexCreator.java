@@ -28,6 +28,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
 import edu.uci.ics.asterix.metadata.MetadataException;
+import edu.uci.ics.asterix.metadata.dataset.hints.DatasetHints.DatasetCardinalityHint;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Index;
@@ -93,8 +94,7 @@ public abstract class SecondaryIndexCreator {
     protected String secondaryIndexName;
     protected boolean anySecondaryKeyIsNullable = false;
 
-    //TODO: change number of elements hint to the correct value.
-    protected final long numElementsHint = 1000000L;
+    protected long numElementsHint;
     protected IBinaryComparatorFactory[] primaryComparatorFactories;
     protected int[] primaryBloomFilterKeyFields;
     protected RecordDescriptor primaryRecDesc;
@@ -170,6 +170,13 @@ public abstract class SecondaryIndexCreator {
         // Must be called in this order.
         setPrimaryRecDescAndComparators();
         setSecondaryRecDescAndComparators(createIndexStmt, metadataProvider);
+
+        String numElementsHintString = dataset.getHints().get("CARDINALITY");
+        if (numElementsHintString == null) {
+            numElementsHint = DatasetCardinalityHint.DEFAULT;
+        } else {
+            numElementsHint = Long.parseLong(dataset.getHints().get("CARDINALITY"));
+        }
     }
 
     protected void setPrimaryRecDescAndComparators() throws AlgebricksException {
@@ -178,7 +185,7 @@ public abstract class SecondaryIndexCreator {
         ISerializerDeserializer[] primaryRecFields = new ISerializerDeserializer[numPrimaryKeys + 1];
         ITypeTraits[] primaryTypeTraits = new ITypeTraits[numPrimaryKeys + 1];
         primaryComparatorFactories = new IBinaryComparatorFactory[numPrimaryKeys];
-        primaryBloomFilterKeyFields = new int [numPrimaryKeys];
+        primaryBloomFilterKeyFields = new int[numPrimaryKeys];
         ISerializerDeserializerProvider serdeProvider = metadataProvider.getFormat().getSerdeProvider();
         for (int i = 0; i < numPrimaryKeys; i++) {
             IAType keyType;
@@ -203,7 +210,7 @@ public abstract class SecondaryIndexCreator {
         List<String> secondaryKeyFields = createIndexStmt.getKeyFields();
         secondaryFieldAccessEvalFactories = new ICopyEvaluatorFactory[numSecondaryKeys];
         secondaryComparatorFactories = new IBinaryComparatorFactory[numSecondaryKeys + numPrimaryKeys];
-        secondaryBloomFilterKeyFields = new int [numSecondaryKeys];
+        secondaryBloomFilterKeyFields = new int[numSecondaryKeys];
         ISerializerDeserializer[] secondaryRecFields = new ISerializerDeserializer[numPrimaryKeys + numSecondaryKeys];
         ITypeTraits[] secondaryTypeTraits = new ITypeTraits[numSecondaryKeys + numPrimaryKeys];
         ISerializerDeserializerProvider serdeProvider = metadataProvider.getFormat().getSerdeProvider();

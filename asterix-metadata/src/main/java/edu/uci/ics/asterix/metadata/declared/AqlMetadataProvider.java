@@ -48,6 +48,7 @@ import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
+import edu.uci.ics.asterix.metadata.dataset.hints.DatasetHints.DatasetCardinalityHint;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
@@ -696,8 +697,14 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     dataSource.getId().getDataverseName(), datasetName, indexName);
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
 
-            //TODO: change number of elements hint to the correct value.
-            long numElementsHint = 1000000L;
+            String numElementsHintString = dataset.getHints().get("CARDINALITY");
+            long numElementsHint;
+            if (numElementsHintString == null) {
+                numElementsHint = DatasetCardinalityHint.DEFAULT;
+            } else {
+                numElementsHint = Long.parseLong(dataset.getHints().get("CARDINALITY"));
+            }
+
             //TODO
             //figure out the right behavior of the bulkload and then give the right callback
             //(ex. what's the expected behavior when there is an error during bulkload?)
