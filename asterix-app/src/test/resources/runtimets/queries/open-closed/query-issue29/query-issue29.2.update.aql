@@ -1,0 +1,7 @@
+/*
+ * Description  : This test case is to verify the fix for issue29
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=29
+ * Expected Res : Success
+ * Date         : 26th November 2012
+ */
+

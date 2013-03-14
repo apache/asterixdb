@@ -1,0 +1,26 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type AddressType as closed {
+ street: string,
+ city: string,
+ zip: string,
+ latlong: point2d
+}
+
+create type UserType as open{
+ name: string,
+ interests: {{string}},
+ address: AddressType,
+ member_of: {{
+  {
+    sig_id: int32,
+    chapter_name: string,
+    member_since: date
+  }
+}}
+}
+
+create dataset User(UserType) primary key name;
+

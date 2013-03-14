@@ -1,0 +1,16 @@
+/*
+ * Description    : Tests the scalar version of count with nulls.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+let $i8 := count([int8("1"), int8("2"), int8("3"), null])
+let $i16 := count([int16("1"), int16("2"), int16("3"), null])
+let $i32 := count([int32("1"), int32("2"), int32("3"), null])
+let $i64 := count([int64("1"), int64("2"), int64("3"), null])
+let $f := count([float("1"), float("2"), float("3"), null])
+let $d := count([double("1"), double("2"), double("3"), null])
+let $s := count(["a", "b", "c", null])
+for $i in [$i8, $i16, $i32, $i64, $f, $d, $s]
+return $i

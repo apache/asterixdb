@@ -1,0 +1,15 @@
+/*
+ * Testcase Name  : c2c-wo-optional.aql
+ * Description    : Insert data into target datase by doing a select on source dataset.
+ *                : Here both source and target datasets are internal datasets
+ *                : The schema includes one optional field named optnl_fld.
+ *                : Note that the optional field in source dataset does not hold any data.
+ * Success        : Yes
+ * Date           : 23rd May 2012
+ */
+
+use dataverse test;
+
+for $d in dataset("T2")
+order by $d.id
+return $d

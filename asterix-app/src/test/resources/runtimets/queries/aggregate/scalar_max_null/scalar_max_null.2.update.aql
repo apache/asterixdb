@@ -1,0 +1,6 @@
+/*
+ * Description    : Tests the scalar version of max with nulls.
+ * Success        : Yes
+ */
+
+// no inserts, deletes here
