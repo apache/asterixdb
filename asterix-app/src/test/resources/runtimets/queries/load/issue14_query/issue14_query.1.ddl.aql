@@ -13,14 +13,6 @@ age: int32,
 name: string
 }
 
-create dataset onektup(Schema) 
+create dataset onektup(Schema)
 primary key id;
-
-load dataset onektup 
-using localfs(("path"="nc1:///tmp/one.adm"));
-
-write output to nc1:"/tmp/foo.adm";
-
-for $l in dataset('onektup')
-return $l
 

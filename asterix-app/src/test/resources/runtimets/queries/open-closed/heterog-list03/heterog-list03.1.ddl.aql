@@ -25,12 +25,3 @@ batters:[[BatterType]]?
 
 create dataset T1(TestType) primary key id;
 
-insert into dataset T1({
-"id":1234,
-"description":"donut",
-"name":"Cake",
-"batters":[[{"id":345,"descrpt":"Regular"},{"id":445,"descrpt":"Chocolate"}],[{"id":349,"descrpt":"Soft"},{"id":449,"descrpt":"Vanilla"}]] }
-);
-
-for $l in dataset('T1')
-return $l

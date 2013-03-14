@@ -14,8 +14,3 @@ fname2: string
 }
 
 create dataset testds(opentype) primary key fname1; 
-
-insert into dataset testds({'fname1': "name", 'fname2': "name"});
-
-for $x in dataset('testds')
-return {$x.fname1: "john", $x.fname2: "smith"}

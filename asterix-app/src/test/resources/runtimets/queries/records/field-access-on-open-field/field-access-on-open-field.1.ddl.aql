@@ -15,10 +15,3 @@ create type TestType as open {
 
 create dataset testds(TestType) primary key id;
 
-insert into dataset testds({"id": 123, "name": "John Doe", "address": { "zip": 92617} });
-
-write output to nc1:"rttest/records_field-access-on-open-field.adm";
-
-for $l in dataset("testds")
-let $a := $l.address
-return $a.zip

@@ -7,26 +7,7 @@
  * Date           : March 30th 2012
  */
 
-drop dataverse test if exists;
-
-create dataverse test;
-
 use dataverse test;
-
-create type Schema as closed{
-id_8: int8,
-id_16: int16,
-id_32: int32,
-id_64: int64,
-fp : float,
-name: string,
-dt: date,
-tm: time,
-dt_tm: datetime,
-lat_lon: point
-}
-
-create dataset tdtst(Schema) primary key id_32; 
 
 insert into dataset tdtst(
 let $f1:=time("10:50:56:200+05:00")
@@ -45,8 +26,4 @@ return {
 "lat_lon": $f3
 }
 );
-
-write output to nc1:"rttest/open-closed_open-closed-15.adm";
-for $l in dataset('tdtst')
-return $l
 

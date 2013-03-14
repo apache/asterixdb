@@ -6,21 +6,7 @@
  * Date           : 23rd May 2012
  */
 
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-create type TestType as closed {
-id:int32,
-description:string,
-name:string
-}
-
-// source dataset
-create dataset T1(TestType) primary key id;
-
-// target dataset
-create dataset T2(TestType) primary key id;
 
 insert into dataset T1({
 "id":1234,
@@ -31,6 +17,3 @@ insert into dataset T1({
 
 insert into dataset T2(for $l in dataset("T1") return $l );
 
-for $d in dataset("T2")
-order by $d.id
-return $d

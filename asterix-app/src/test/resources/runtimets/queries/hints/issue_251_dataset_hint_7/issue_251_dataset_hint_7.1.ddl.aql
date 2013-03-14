@@ -22,12 +22,6 @@ using "edu.uci.ics.asterix.tools.external.data.RateControlledFileSystemBasedAdap
 (("fs"="localfs"),("path"="nc1://data/twitter/obamatweets.adm"),("format"="adm"),("output-type-name"="TweetType"),("tuple-interval"="10"))
 primary key id
 hints(cardinality=200);
+  
+begin feed feeds.TweetFeed;
 
-begin feed feeds.TweetFeed; 
-
-write output to nc1:"rttest/hints_issue_251_dataset_hint_7.adm";
-
-for $x in dataset('TweetFeed')
-return $x
-
-drop dataverse feeds;

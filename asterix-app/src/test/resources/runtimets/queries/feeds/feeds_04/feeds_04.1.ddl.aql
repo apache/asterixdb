@@ -21,12 +21,6 @@ create feed dataset TweetFeed(TweetType)
 using "edu.uci.ics.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory"
 (("fs"="hdfs"),("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/obamatweets.adm"),("format"="adm"),("input-format"="text-input-format"),("output-type-name"="TweetType"),("tuple-interval"="10"))
 primary key id;
+  
+begin feed TweetFeed;
 
-begin feed TweetFeed; 
-
-write output to nc1:"rttest/feeds_feeds_04.adm";
-
-for $x in dataset('TweetFeed')
-return $x
-
-drop dataverse feeds;

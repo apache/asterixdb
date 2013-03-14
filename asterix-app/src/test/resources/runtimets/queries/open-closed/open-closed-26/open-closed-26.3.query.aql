@@ -6,22 +6,7 @@
  * Date          : 29th May 2012
  */
 
-drop dataverse test if exists;
-
-create dataverse test;
-
 use dataverse test;
 
-create type testType as open {
-id : int32,
-name : string,
-opt_tag : {{ string }}?
-}
-
-create dataset testds(testType) primary key id;
-
-insert into dataset testds({"id": 32,"name": "UCI"});
-
-write output to nc1:"rttest/open-closed_open-closed-26.adm";
 for $l in dataset('testds')
 return $l

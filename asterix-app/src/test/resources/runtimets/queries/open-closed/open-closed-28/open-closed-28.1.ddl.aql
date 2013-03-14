@@ -23,29 +23,3 @@ name : string
 create dataset testds01(testtype01) primary key id;
 
 create dataset testds02(testtype02) primary key id;
-
-insert into dataset testds02 (
-{ "id": "001", "name": "Person One", "hobbies": {{"scuba", "music"}}}
-);
-
-insert into dataset testds02 (
-{ "id": "002", "name": "Person Two", "hobbies": {{"fishing", "dance"}}}
-);
-
-
-insert into dataset testds02 (
-{ "id": "003", "name": "Person Three", "hobbies": {{"hiking", "surfing"}}}
-);
-
-insert into dataset testds01(
-for $d in dataset("testds02")
-return $d
-);
-
-// select all hobbies where hiking is one of the hobbies
-
-write output to nc1:"rttest/open-closed_open-closed-28.adm";
-for $d in dataset('testds01')
-where every $h in $d.hobbies satisfies $h='hiking' 
-order by $d.id
-return $d

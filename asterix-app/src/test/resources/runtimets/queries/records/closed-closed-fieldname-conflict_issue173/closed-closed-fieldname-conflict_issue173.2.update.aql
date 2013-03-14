@@ -3,9 +3,5 @@
  * Expected Result: An error reporting that there is a duplicate field name "name"
  * Author: zheilbron
  */
-drop dataverse test if exists;
-create dataverse test;
-use dataverse test;
 
-let $x := {"name": "john", "name": "smith"}
-return $x
+// no inserts, deletes

@@ -5,24 +5,8 @@
  * Date            : April 2 2012
  */
 
-drop dataverse test if exists;
-
-create dataverse test;
-
 use dataverse test;
 
-create type testType as{
-id : int32,
-name : string
-}
-
-create dataset testds(testType) primary key id;
-
-
-insert into dataset testds({"id": 123, "name": "John Doe", "hobbies": {{ "scuba", "music" }} }
-);
-
-write output to nc1:"rttest/open-closed_open-closed-01.adm";
 for $l in dataset("testds") 
 order by $l.id
 return $l
