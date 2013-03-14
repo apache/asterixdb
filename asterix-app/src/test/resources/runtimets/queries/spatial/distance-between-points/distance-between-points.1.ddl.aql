@@ -11,11 +11,3 @@ create type MyRecord as open {
 create external dataset MyData(MyRecord)
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/spatial/spatialData.json"),("format"="adm"));
-
-write output to nc1:"rttest/spatial_distance-between-points.adm";
-
-for $o in dataset('MyData')
-let $distance := spatial-distance($o.point, create-point(0.0, 0.0))
-order by $o.id
-return {"id":$o.id, "distance":$distance}
- 

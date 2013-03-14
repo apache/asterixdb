@@ -14,10 +14,3 @@ create type OrderType as open {
 create external dataset Orders(OrderType)
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/semistructured/tiny01/orders.adm"),("format"="adm"));
-
-write output to nc1:"rttest/semistructured_has-param1.adm";
-
-for $o in dataset('Orders')
-where not(is-null($o.param1))
-order by $o.oid 
-return $o

@@ -12,10 +12,3 @@ create external dataset MyData(MyRecord)
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/spatial/spatialData.json"),("format"="adm"));
 
-write output to nc1:"rttest/spatial_rectangle-intersect-circle.adm";
-
-for $o in dataset('MyData')
-where spatial-intersect($o.rec, create-circle(create-point(4.1,4.1), 1.0))
-order by $o.id
-return {"id":$o.id}
- 

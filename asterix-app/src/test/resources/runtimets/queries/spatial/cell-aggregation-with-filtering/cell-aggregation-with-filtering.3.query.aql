@@ -1,28 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-create type Tweet as closed {
-	id: int32,
-	tweetid: int64,
-	loc: point,
-	time: datetime,
-	text: string
-}
-
-create nodegroup group1 if not exists on nc1, nc2;
-
-create dataset TwitterData(Tweet)
-  primary key id on group1;
-
-
-load dataset TwitterData 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/twitter/extrasmalltweets.txt"),("format"="adm")) pre-sorted;
-
-create index rtree_index_point on TwitterData(loc) type rtree;
-
-write output to nc1:"rttest/spatial_cell-aggregation-with-filtering.adm";
 
 for $t in dataset('TwitterData')
 let $keyword := "Allergies"

@@ -3,7 +3,6 @@
  * Success        : Yes
  */
 
-
 drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
@@ -24,11 +23,3 @@ create index rtree_index3 on MyData(poly1) type rtree;
 create index rtree_index5 on MyData(rec) type rtree;
 create index rtree_index4 on MyData(circle) type rtree;
 
-write output to nc1:"rttest/spatial_create-rtree-index.adm";
-
-load dataset MyData 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/spatial/spatialData.json"),("format"="adm"));
-
-for $a in dataset('MyData')
-return $a.id
