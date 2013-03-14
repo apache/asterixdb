@@ -1,7 +1,6 @@
 package edu.uci.ics.hivesterix.test.base;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -9,6 +8,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -45,8 +45,9 @@ public abstract class AbstractTestSuiteClass extends TestSuite {
     private static final String PATH_TO_DATA = "src/test/resources/runtimefunctionts/data/";
 
     private static final String clusterPropertiesPath = "conf/cluster.properties";
-    private Properties clusterProps;
+    private static final String masterFilePath = "conf/master";
 
+    private Properties clusterProps;
     private MiniDFSCluster dfsCluster;
     private MiniMRCluster mrCluster;
 
@@ -109,11 +110,16 @@ public abstract class AbstractTestSuiteClass extends TestSuite {
             clusterProps.load(confIn);
             confIn.close();
         }
-        Process process = Runtime.getRuntime().exec("src/main/resources/scripts/getip.sh");
-        BufferedReader ipReader = new BufferedReader(new InputStreamReader(
-                new DataInputStream(process.getInputStream())));
-        String ipAddress = ipReader.readLine();
+        BufferedReader ipReader = new BufferedReader(new InputStreamReader(new FileInputStream(masterFilePath)));
+        String masterNode = ipReader.readLine();
         ipReader.close();
+        InetAddress[] ips = InetAddress.getAllByName(masterNode);
+        String ipAddress = null;
+        for (InetAddress ip : ips) {
+            if (ip.getAddress().length <= 4) {
+                ipAddress = ip.getHostAddress();
+            }
+        }
         int clientPort = Integer.parseInt(clusterProps.getProperty("CC_CLIENTPORT"));
         int netPort = Integer.parseInt(clusterProps.getProperty("CC_CLUSTERPORT"));
         String applicationName = "hivesterix";

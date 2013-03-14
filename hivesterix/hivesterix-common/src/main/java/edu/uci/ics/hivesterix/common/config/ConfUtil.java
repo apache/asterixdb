@@ -1,7 +1,6 @@
 package edu.uci.ics.hivesterix.common.config;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -28,6 +27,7 @@ import edu.uci.ics.hyracks.api.topology.ClusterTopology;
 @SuppressWarnings({ "rawtypes", "deprecation" })
 public class ConfUtil {
     private static final String clusterPropertiesPath = "conf/cluster.properties";
+    private static final String masterFilePath = "conf/master";
 
     private static JobConf job;
     private static HiveConf hconf;
@@ -134,15 +134,27 @@ public class ConfUtil {
                 clusterProps.load(confIn);
                 confIn.close();
             }
-            Process process = Runtime.getRuntime().exec("src/main/resources/scripts/getip.sh");
-            BufferedReader ipReader = new BufferedReader(new InputStreamReader(new DataInputStream(
-                    process.getInputStream())));
-            String ipAddress = ipReader.readLine();
-            ipReader.close();
-            int port = Integer.parseInt(clusterProps.getProperty("CC_CLIENTPORT"));
-            int mpl = Integer.parseInt(hconf.get("hive.hyracks.parrallelism"));
 
-            hcc = new HyracksConnection(ipAddress, port);
+            if (hcc == null) {
+                BufferedReader ipReader = new BufferedReader(new InputStreamReader(new FileInputStream(masterFilePath)));
+                String masterNode = ipReader.readLine();
+                ipReader.close();
+
+                InetAddress[] ips = InetAddress.getAllByName(masterNode);
+                int port = Integer.parseInt(clusterProps.getProperty("CC_CLIENTPORT"));
+                for (InetAddress ip : ips) {
+                    if (ip.getAddress().length <= 4) {
+                        try {
+                            hcc = new HyracksConnection(ip.getHostAddress(), port);
+                            break;
+                        } catch (Exception e) {
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            int mpl = Integer.parseInt(hconf.get("hive.hyracks.parrallelism"));
             topology = hcc.getClusterTopology();
             ncNameToNcInfos = hcc.getNodeControllerInfos();
             NCs = new String[ncNameToNcInfos.size() * mpl];
