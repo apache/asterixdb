@@ -47,7 +47,7 @@ public class GraphMutationVertex extends Vertex<VLongWritable, DoubleWritable, F
             if (newVertex == null) {
                 newVertex = new GraphMutationVertex();
             }
-            if (getVertexId().get() % 2 == 0) {
+            if (getVertexId().get() % 2 == 0 || getVertexId().get() % 3 == 0) {
                 deleteVertex(getVertexId());
             } else {
                 vid.set(100 * getVertexId().get());
@@ -59,7 +59,7 @@ public class GraphMutationVertex extends Vertex<VLongWritable, DoubleWritable, F
         } else {
             if (getVertexId().get() % 190 == 0) {
                 deleteVertex(getVertexId());
-            } 
+            }
             voteToHalt();
         }
     }
