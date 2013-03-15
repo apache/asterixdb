@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
@@ -42,7 +43,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
 import edu.uci.ics.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.result.ResultWriterOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
@@ -57,6 +58,7 @@ import edu.uci.ics.hyracks.test.support.TestIndexRegistryProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerInterface;
 import edu.uci.ics.hyracks.tests.integration.AbstractIntegrationTest;
+import edu.uci.ics.hyracks.tests.util.ResultSerializerFactoryProvider;
 
 public class BTreePrimaryIndexStatsOperatorTest extends AbstractIntegrationTest {
     static {
@@ -82,7 +84,6 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractIntegrationTest 
     private IFileSplitProvider primaryBtreeSplitProvider = new ConstantFileSplitProvider(
             new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(primaryFileName))) });
 
-
     @Before
     public void setup() throws Exception {
         // field, type and key declarations for primary index
@@ -107,7 +108,7 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractIntegrationTest 
         spec.addRoot(primaryCreateOp);
         runTest(spec);
     }
-    
+
     public void loadPrimaryIndexTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
@@ -136,8 +137,9 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractIntegrationTest 
 
         int[] fieldPermutation = { 0, 1, 2, 4, 5, 7 };
         TreeIndexBulkLoadOperatorDescriptor primaryBtreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManager, indexRegistryProvider, primaryBtreeSplitProvider, primaryTypeTraits, primaryComparatorFactories, fieldPermutation, 0.7f,
-                dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+                storageManager, indexRegistryProvider, primaryBtreeSplitProvider, primaryTypeTraits,
+                primaryComparatorFactories, fieldPermutation, 0.7f, dataflowHelperFactory,
+                NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeBulkLoad, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), ordScanner, 0, sorter, 0);
@@ -153,12 +155,15 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractIntegrationTest 
         JobSpecification spec = new JobSpecification();
 
         TreeIndexStatsOperatorDescriptor primaryStatsOp = new TreeIndexStatsOperatorDescriptor(spec, storageManager,
-                indexRegistryProvider, primaryBtreeSplitProvider,
-                primaryTypeTraits, primaryComparatorFactories, dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
+                indexRegistryProvider, primaryBtreeSplitProvider, primaryTypeTraits, primaryComparatorFactories,
+                dataflowHelperFactory, NoOpOperationCallbackProvider.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryStatsOp, NC1_ID);
-        IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
-                createTempFile().getAbsolutePath()) });
-        IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");
+
+        ResultSetId rsId = new ResultSetId(1);
+        spec.addResultSetId(rsId);
+
+        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true,
+                ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), primaryStatsOp, 0, printer, 0);

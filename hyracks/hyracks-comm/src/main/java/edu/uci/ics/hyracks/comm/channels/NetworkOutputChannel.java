@@ -12,14 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.nc.net;
+package edu.uci.ics.hyracks.comm.channels;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.net.buffers.IBufferAcceptor;
 import edu.uci.ics.hyracks.net.protocols.muxdemux.ChannelControlBlock;
@@ -40,9 +39,9 @@ public class NetworkOutputChannel implements IFrameWriter {
         ccb.getWriteInterface().setEmptyBufferAcceptor(new WriteEmptyBufferAcceptor());
     }
 
-    public void setTaskContext(IHyracksTaskContext ctx) {
+    public void setFrameSize(int frameSize) {
         for (int i = 0; i < nBuffers; ++i) {
-            emptyStack.push(ByteBuffer.allocateDirect(ctx.getFrameSize()));
+            emptyStack.push(ByteBuffer.allocateDirect(frameSize));
         }
     }
 
@@ -87,7 +86,7 @@ public class NetworkOutputChannel implements IFrameWriter {
         ccb.getWriteInterface().getFullBufferAcceptor().close();
     }
 
-    void abort() {
+    public void abort() {
         ccb.getWriteInterface().getFullBufferAcceptor().error(1);
         synchronized (NetworkOutputChannel.this) {
             aborted = true;

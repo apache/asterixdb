@@ -48,9 +48,9 @@ public class MuxDemux {
      * Constructor.
      * 
      * @param localAddress
-     *            - TCP/IP socket address to listen on
+     *            - TCP/IP socket address to listen on. Null for non-listening unidirectional sockets
      * @param listener
-     *            - Callback interface to report channel events
+     *            - Callback interface to report channel events. Null for non-listening unidirectional sockets
      * @param nThreads
      *            - Number of threads to use for data transfer
      * @param maxConnectionAttempts

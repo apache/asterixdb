@@ -41,6 +41,11 @@
   		<artifactId>hyracks-net</artifactId>
   		<version>0.2.3-SNAPSHOT</version>
   	</dependency>
+  	<dependency>
+  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<artifactId>hyracks-comm</artifactId>
+  		<version>0.2.3-SNAPSHOT</version>
+  	</dependency>
   </dependencies>
   <reporting>
     <plugins>
