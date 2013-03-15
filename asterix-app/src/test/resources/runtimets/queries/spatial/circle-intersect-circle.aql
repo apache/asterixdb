@@ -15,7 +15,7 @@ using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 write output to nc1:"rttest/spatial_circle-intersect-circle.adm";
 
 for $o in dataset('MyData')
-where spatial-intersect(create-circle(create-point(0.0,0.0), 5.0), create-circle(create-point(9.9,0.0), 5.0))
+where spatial-intersect(create-circle(create-point(0.0,0.0), 5.0), $o.circle)
 order by $o.id
 return {"id":$o.id}
  
