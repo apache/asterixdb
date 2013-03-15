@@ -53,12 +53,14 @@ public class IndexOperationTracker implements ILSMOperationTracker {
     @Override
     public void beforeOperation(LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
-        numActiveOperations++;
+        if (opType != LSMOperationType.FORCE_MODIFICATION) {
+            numActiveOperations++;
 
-        // Increment transactor-local active operations count.
-        AbstractOperationCallback opCallback = getOperationCallback(searchCallback, modificationCallback);
-        if (opCallback != null) {
-            opCallback.incrementLocalNumActiveOperations();
+            // Increment transactor-local active operations count.
+            AbstractOperationCallback opCallback = getOperationCallback(searchCallback, modificationCallback);
+            if (opCallback != null) {
+                opCallback.incrementLocalNumActiveOperations();
+            }
         }
     }
 
