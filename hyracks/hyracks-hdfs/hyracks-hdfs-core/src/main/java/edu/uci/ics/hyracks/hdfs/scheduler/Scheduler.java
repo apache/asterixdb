@@ -20,11 +20,14 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Random;
 
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapred.InputSplit;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
@@ -34,8 +37,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 
 /**
- * The scheduler conduct data-local scheduling for data reading on HDFS.
- * This class works for Hadoop old API.
+ * The scheduler conduct data-local scheduling for data reading on HDFS. This
+ * class works for Hadoop old API.
  */
 @SuppressWarnings("deprecation")
 public class Scheduler {
@@ -68,7 +71,8 @@ public class Scheduler {
     /**
      * The constructor of the scheduler.
      * 
-     * @param ncNameToNcInfos the mapping from nc names to nc infos
+     * @param ncNameToNcInfos
+     *            the mapping from nc names to nc infos
      * @throws HyracksException
      */
     public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos) throws HyracksException {
@@ -76,9 +80,9 @@ public class Scheduler {
     }
 
     /**
-     * Set location constraints for a file scan operator with a list of file splits.
-     * It guarantees the maximum slots a machine can is at most one more than the minimum slots a
-     * machine can get.
+     * Set location constraints for a file scan operator with a list of file
+     * splits. It guarantees the maximum slots a machine can is at most one more
+     * than the minimum slots a machine can get.
      * 
      * @throws HyracksDataException
      */
@@ -86,6 +90,7 @@ public class Scheduler {
         int[] capacity = new int[NCs.length];
         Arrays.fill(capacity, 0);
         String[] locations = new String[splits.length];
+        Map<String, IntWritable> locationToNumOfSplits = new HashMap<String, IntWritable>();
         /**
          * upper bound number of slots that a machine can get
          */
@@ -102,13 +107,19 @@ public class Scheduler {
             Arrays.fill(scheduled, false);
 
             /**
+             * scan the splits and build the popularity map
+             * give the machines with less local splits more scheduling priority
+             */
+            buildPopularityMap(splits, locationToNumOfSplits);
+
+            /**
              * push data-local lower-bounds slots to each machine
              */
-            scheduleLocalSlots(splits, capacity, locations, lowerBoundSlots, random, scheduled);
+            scheduleLocalSlots(splits, capacity, locations, lowerBoundSlots, random, scheduled, locationToNumOfSplits);
             /**
              * push data-local upper-bounds slots to each machine
              */
-            scheduleLocalSlots(splits, capacity, locations, upperBoundSlots, random, scheduled);
+            scheduleLocalSlots(splits, capacity, locations, upperBoundSlots, random, scheduled, locationToNumOfSplits);
 
             /**
              * push non-data-local lower-bounds slots to each machine
@@ -193,18 +204,33 @@ public class Scheduler {
      * @throws UnknownHostException
      */
     private void scheduleLocalSlots(InputSplit[] splits, int[] capacity, String[] locations, int slots, Random random,
-            boolean[] scheduled) throws IOException, UnknownHostException {
+            boolean[] scheduled, final Map<String, IntWritable> locationToNumSplits) throws IOException,
+            UnknownHostException {
+        /** scheduling candidates will be ordered inversely according to their popularity */
+        PriorityQueue<String> scheduleCadndiates = new PriorityQueue<String>(3, new Comparator<String>() {
+
+            @Override
+            public int compare(String s1, String s2) {
+                return locationToNumSplits.get(s1).compareTo(locationToNumSplits.get(s2));
+            }
+
+        });
         for (int i = 0; i < splits.length; i++) {
             /**
              * get the location of all the splits
              */
-            String[] loc = splits[i].getLocations();
-            if (loc.length > 0) {
-                for (int j = 0; j < loc.length; j++) {
+            String[] locs = splits[i].getLocations();
+            if (locs.length > 0) {
+                scheduleCadndiates.clear();
+                for (int j = 0; j < locs.length; j++) {
+                    scheduleCadndiates.add(locs[j]);
+                }
+
+                for (String candidate : scheduleCadndiates) {
                     /**
                      * get all the IP addresses from the name
                      */
-                    InetAddress[] allIps = InetAddress.getAllByName(loc[j]);
+                    InetAddress[] allIps = InetAddress.getAllByName(candidate);
                     /**
                      * iterate overa all ips
                      */
@@ -230,14 +256,38 @@ public class Scheduler {
                             }
                         }
                     }
-
                     /**
-                     * break the loop for data-locations if the schedule has already been found
+                     * break the loop for data-locations if the schedule has
+                     * already been found
                      */
                     if (scheduled[i] == true) {
                         break;
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Scan the splits once and build a popularity map
+     * 
+     * @param splits
+     *            the split array
+     * @param locationToNumOfSplits
+     *            the map to be built
+     * @throws IOException
+     */
+    private void buildPopularityMap(InputSplit[] splits, Map<String, IntWritable> locationToNumOfSplits)
+            throws IOException {
+        for (InputSplit split : splits) {
+            String[] locations = split.getLocations();
+            for (String loc : locations) {
+                IntWritable locCount = locationToNumOfSplits.get(loc);
+                if (locCount == null) {
+                    locCount = new IntWritable(0);
+                    locationToNumOfSplits.put(loc, locCount);
+                }
+                locCount.set(locCount.get() + 1);
             }
         }
     }
