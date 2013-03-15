@@ -26,6 +26,15 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 public interface ITupleWriter {
 
     /**
+     * Initialize the the tuple writer.
+     * 
+     * @param output
+     *            The channel for output data.
+     * @throws HyracksDataException
+     */
+    public void open(DataOutput output) throws HyracksDataException;
+
+    /**
      * Write the tuple to the DataOutput.
      * 
      * @param output
@@ -35,5 +44,14 @@ public interface ITupleWriter {
      * @throws HyracksDataException
      */
     public void write(DataOutput output, ITupleReference tuple) throws HyracksDataException;
+
+    /**
+     * Close the writer.
+     * 
+     * @param output
+     *            The channel for output data.
+     * @throws HyracksDataException
+     */
+    public void close(DataOutput output) throws HyracksDataException;
 
 }

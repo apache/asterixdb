@@ -1,0 +1,12 @@
+<cluster-topology>
+    <network-switch name="switch1">
+        <network-switch name="switch2">
+            <terminal name="nc0"/>
+            <terminal name="nc3"/>
+        </network-switch>
+        <network-switch name="switch3">
+            <terminal name="nc1"/>
+            <terminal name="nc4"/>
+        </network-switch>
+    </network-switch>
+</cluster-topology>

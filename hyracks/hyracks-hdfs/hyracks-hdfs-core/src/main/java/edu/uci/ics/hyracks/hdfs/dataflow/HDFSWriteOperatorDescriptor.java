@@ -89,10 +89,11 @@ public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
                 String outputDirPath = FileOutputFormat.getOutputPath(conf).toString();
                 String fileName = outputDirPath + File.separator + "part-" + partition;
 
-                tupleWriter = tupleWriterFactory.getTupleWriter();
+                tupleWriter = tupleWriterFactory.getTupleWriter(ctx);
                 try {
                     FileSystem dfs = FileSystem.get(conf);
                     dos = dfs.create(new Path(fileName), true);
+                    tupleWriter.open(dos);
                 } catch (Exception e) {
                     throw new HyracksDataException(e);
                 }
@@ -116,6 +117,7 @@ public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
             @Override
             public void close() throws HyracksDataException {
                 try {
+                    tupleWriter.close(dos);
                     dos.close();
                 } catch (Exception e) {
                     throw new HyracksDataException(e);

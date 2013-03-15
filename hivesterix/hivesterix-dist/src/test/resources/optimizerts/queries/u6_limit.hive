@@ -1,0 +1,8 @@
+drop table IF EXISTS orders;
+drop table IF EXISTS result;
+drop table IF EXISTS q_limit2;
+
+create external table orders (O_ORDERKEY INT, O_CUSTKEY INT, O_ORDERSTATUS STRING, O_TOTALPRICE DOUBLE, O_ORDERDATE STRING, O_ORDERPRIORITY STRING, O_CLERK STRING, O_SHIPPRIORITY INT, O_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/orders';
+create table q_limit2(col1 int, col2 double, col3 string, col4 string);
+
+insert overwrite table q_limit2 select O_ORDERKEY, O_TOTALPRICE, O_ORDERDATE, O_CLERK from orders where O_TOTALPRICE<10000 order by o_totalprice limit 4;

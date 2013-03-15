@@ -110,7 +110,7 @@ public class HiveFileScanOperatorDescriptor extends
 			if (returnedSplits[i] != null)
 				splits[i] = returnedSplits[i];
 
-		System.out.println("!!! number of splits: " + splits.length);
+		System.out.println("number of splits: " + splits.length);
 		constraintsByHostNames = new String[splits.length];
 		for (int i = 0; i < splits.length; i++) {
 			try {

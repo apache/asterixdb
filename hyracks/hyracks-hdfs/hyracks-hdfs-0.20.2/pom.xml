@@ -20,6 +20,7 @@
 				<configuration>
 					<source>1.7</source>
 					<target>1.7</target>
+					<fork>true</fork>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -63,6 +64,10 @@
 		<profile>
 			<activation>
 				<activeByDefault>false</activeByDefault>
+				<property>
+					<name>hadoop</name>
+					<value>1.0.4</value>
+				</property>
 			</activation>
 			<id>hadoop-1.0.4</id>
 			<dependencies>

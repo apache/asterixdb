@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.hdfs.lib;
 
 import java.io.DataOutput;
 
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.hdfs.api.ITupleWriter;
@@ -26,9 +27,14 @@ public class TextTupleWriterFactory implements ITupleWriterFactory {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public ITupleWriter getTupleWriter() {
+    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx) {
         return new ITupleWriter() {
-            byte newLine = "\n".getBytes()[0];
+            private byte newLine = "\n".getBytes()[0];
+
+            @Override
+            public void open(DataOutput output) {
+
+            }
 
             @Override
             public void write(DataOutput output, ITupleReference tuple) throws HyracksDataException {
@@ -41,6 +47,11 @@ public class TextTupleWriterFactory implements ITupleWriterFactory {
                 } catch (Exception e) {
                     throw new HyracksDataException(e);
                 }
+            }
+
+            @Override
+            public void close(DataOutput output) {
+
             }
 
         };
