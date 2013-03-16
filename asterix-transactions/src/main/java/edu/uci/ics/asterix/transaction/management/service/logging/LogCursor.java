@@ -82,8 +82,8 @@ public class LogCursor implements ILogCursor {
         boolean logRecordBeginPosFound = false;
         long bytesSkipped = 0;
 
-        //if the lsn to read is greater than the most recent lsn, then return false
-        if (logicalLogLocator.getLsn() > logManager.getCurrentLsn().get()) {
+        //if the lsn to read is greater than or equal to the most recent lsn, then return false
+        if (logicalLogLocator.getLsn() >= logManager.getCurrentLsn().get()) {
             return false;
         }
 
@@ -98,9 +98,10 @@ public class LogCursor implements ILogCursor {
             readOnlyBuffer = getReadOnlyBuffer(logicalLogLocator.getLsn(), logManager.getLogManagerProperties()
                     .getLogBufferSize());
             logicalLogLocator.setBuffer(readOnlyBuffer);
+            logicalLogLocator.setMemoryOffset(0);
             needReloadBuffer = false;
         }
-
+        
         //check whether the currentOffset has enough space to have new log record by comparing
         //the smallest log record type(which is commit)'s log header.
         while (logicalLogLocator.getMemoryOffset() <= readOnlyBuffer.getSize()
@@ -179,7 +180,6 @@ public class LogCursor implements ILogCursor {
         needReloadBuffer = true;
 
         int pageIndex = logManager.getLogPageIndex(lsn);
-        //int pageOffset = logManager.getLogPageOffset(lsn);
         logicalLogLocator.setMemoryOffset(logManager.getLogPageOffset(lsn));
 
         // take a lock on the log page so that the page is not flushed to

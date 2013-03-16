@@ -106,12 +106,11 @@ public class ExecutionTest {
         for (CompilationUnit cUnit : cUnits) {
             File testFile = tcCtx.getTestFile(cUnit);
 
-            /*************** to avoid run failure cases ****************
-            if (!testFile.getAbsolutePath().contains("queries/failure")) {//&& !testFile.getAbsolutePath().contains("partition-by-nonexistent-field.aql"))       ) {
+            /*************** to avoid/run failure cases ****************
+            if (testFile.getAbsolutePath().contains("queries/failure")) {
                 continue;
                 //System.out.println(testFile.getAbsolutePath());
             }
-            System.out.println(testFile.getAbsolutePath());
             ************************************************************/
 
             File expectedResultFile = tcCtx.getExpectedResultFile(cUnit);

@@ -30,6 +30,7 @@ public abstract class AbstractOperationCallback {
     protected final ILockManager lockManager;
     protected final TransactionContext txnCtx;
     protected int transactorLocalNumActiveOperations = 0;
+    protected final long[] longHashes;
 
     public AbstractOperationCallback(int datasetId, int[] primaryKeyFields,
             TransactionContext txnCtx, ILockManager lockManager) {
@@ -37,10 +38,10 @@ public abstract class AbstractOperationCallback {
         this.primaryKeyFields = primaryKeyFields;
         this.txnCtx = txnCtx;
         this.lockManager = lockManager;
+        this.longHashes= new long[2];
     }
 
     public int computePrimaryKeyHashValue(ITupleReference tuple, int[] primaryKeyFields) {
-        long[] longHashes= new long[2];
         MurmurHash128Bit.hash3_x64_128(tuple, primaryKeyFields, SEED, longHashes);
         return Math.abs((int) longHashes[0]); 
     }

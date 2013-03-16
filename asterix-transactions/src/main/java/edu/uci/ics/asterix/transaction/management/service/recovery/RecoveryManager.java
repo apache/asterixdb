@@ -625,7 +625,7 @@ public class RecoveryManager implements IRecoveryManager {
                 }
             }
 
-            if (LogManager.IS_DEBUG_MODE) {
+            if (IS_DEBUG_MODE) {
                 System.out.println(logManager.getLogRecordHelper().getLogRecordForDisplay(currentLogLocator));
             }
 
@@ -640,7 +640,7 @@ public class RecoveryManager implements IRecoveryManager {
                         TxnId txnId = new TxnId(logRecordHelper.getJobId(currentLogLocator),
                                 logRecordHelper.getDatasetId(currentLogLocator),
                                 logRecordHelper.getPKHashValue(currentLogLocator));
-                        undoLSNSet = new ArrayList<Long>();
+                        undoLSNSet = new LinkedList<Long>();
                         loserTxnTable.put(txnId, undoLSNSet);
                     }
                     undoLSNSet.add(currentLogLocator.getLsn());
@@ -679,13 +679,13 @@ public class RecoveryManager implements IRecoveryManager {
         byte resourceMgrId;
         int undoCount = 0;
         while (iter.hasNext()) {
-
+            //TODO 
+            //Sort the lsns in order to undo in one pass. 
+            
             Map.Entry<TxnId, List<Long>> loserTxn = (Map.Entry<TxnId, List<Long>>) iter.next();
             txnId = loserTxn.getKey();
 
             undoLSNSet = loserTxn.getValue();
-            Comparator<Long> comparator = Collections.reverseOrder();
-            Collections.sort(undoLSNSet, comparator);
 
             for (long undoLSN : undoLSNSet) {
                 // here, all the log records are UPDATE type. So, we don't need to check the type again.
@@ -693,7 +693,7 @@ public class RecoveryManager implements IRecoveryManager {
                 //read the corresponding log record to be undone.
                 logManager.readLog(undoLSN, currentLogLocator);
 
-                if (LogManager.IS_DEBUG_MODE) {
+                if (IS_DEBUG_MODE) {
                     System.out.println(logManager.getLogRecordHelper().getLogRecordForDisplay(currentLogLocator));
                 }
 

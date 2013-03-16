@@ -44,6 +44,7 @@ public class CommitRuntime implements IPushRuntime {
     private final DatasetId datasetId;
     private final int[] primaryKeyFields;
     private final boolean isWriteTransaction;
+    private final long[] longHashes; 
 
     private TransactionContext transactionContext;
     private RecordDescriptor inputRecordDesc;
@@ -61,6 +62,7 @@ public class CommitRuntime implements IPushRuntime {
         this.primaryKeyFields = primaryKeyFields;
         this.frameTupleReference = new FrameTupleReference();
         this.isWriteTransaction = isWriteTransaction;
+        this.longHashes= new long[2];
     }
 
     @Override
@@ -91,7 +93,6 @@ public class CommitRuntime implements IPushRuntime {
     }
     
     private int computePrimaryKeyHashValue(ITupleReference tuple, int[] primaryKeyFields) {
-        long[] longHashes= new long[2];
         MurmurHash128Bit.hash3_x64_128(tuple, primaryKeyFields, SEED, longHashes);
         return Math.abs((int) longHashes[0]); 
     }

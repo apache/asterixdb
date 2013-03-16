@@ -73,9 +73,9 @@ public class LogManager implements ILogManager {
      * point, the ownership count is decremented as the transaction is done with
      * using the page. When a page is requested to be flushed, logPageFlusher
      * set the count to 0(LOG_FLUSHER: meaning that the page is being flushed)
-     * only if the count is 1(LOG_WRITER: meaning that there is no other 
-     * transactions who own the page to write logs.) After flushing the page, 
-     * logPageFlusher set this count to 1. 
+     * only if the count is 1(LOG_WRITER: meaning that there is no other
+     * transactions who own the page to write logs.) After flushing the page,
+     * logPageFlusher set this count to 1.
      */
     private AtomicInteger[] logPageOwnerCount;
 
@@ -86,15 +86,16 @@ public class LogManager implements ILogManager {
 
     /*
      * LogPageStatus: A page is either ACTIVE or INACTIVE. The status for each
-     * page is maintained in logPageStatus. A page is ACTIVE when the LogManager 
-     * can allocate space in the page for writing a log record. Initially all 
-     * pages are ACTIVE. As transactions fill up space by writing log records, 
-     * a page may not have sufficient space left for serving a request by a 
+     * page is maintained in logPageStatus. A page is ACTIVE when the LogManager
+     * can allocate space in the page for writing a log record. Initially all
+     * pages are ACTIVE. As transactions fill up space by writing log records, a
+     * page may not have sufficient space left for serving a request by a
      * transaction. When this happens, the page is flushed to disk by calling
-     * logPageFlusher.requestFlush(). In the requestFlush(), after groupCommitWaitTime,
-     * the page status is set to INACTIVE. Then, there is no more writer on the
-     * page(meaning the corresponding logPageOwnerCount is 1), the page is flushed
-     * by the logPageFlusher and the status is reset to ACTIVE by the logPageFlusher.   
+     * logPageFlusher.requestFlush(). In the requestFlush(), after
+     * groupCommitWaitTime, the page status is set to INACTIVE. Then, there is
+     * no more writer on the page(meaning the corresponding logPageOwnerCount is
+     * 1), the page is flushed by the logPageFlusher and the status is reset to
+     * ACTIVE by the logPageFlusher.
      */
     private AtomicInteger[] logPageStatus;
 
@@ -297,22 +298,28 @@ public class LogManager implements ILogManager {
             boolean forwardPage = false;
             long old = lsn.get();
 
-            //get the log page corresponding to the current lsn value
+            // get the log page corresponding to the current lsn value
             int pageIndex = getLogPageIndex(old);
             long retVal = old;
 
-            // the lsn value for the next request if the current request is served.
+            // the lsn value for the next request if the current request is
+            // served.
             long next = old + entrySize;
             int prevPage = -1;
 
-            // check if the log  record will cross page boundaries, a case that is not allowed.
+            // check if the log record will cross page boundaries, a case that
+            // is not allowed.
             if ((next - 1) / pageSize != old / pageSize || (next % pageSize == 0)) {
 
                 if ((old != 0 && old % pageSize == 0)) {
-                    // On second thought, this shall never be the case as it means that the lsn is
-                    // currently at the beginning of a page and we still need to forward the page which
-                    // means that the entrySize exceeds a log page size. If this is the case, an
-                    // exception is thrown before calling this API. would remove this case.
+                    // On second thought, this shall never be the case as it
+                    // means that the lsn is
+                    // currently at the beginning of a page and we still need to
+                    // forward the page which
+                    // means that the entrySize exceeds a log page size. If this
+                    // is the case, an
+                    // exception is thrown before calling this API. would remove
+                    // this case.
                     retVal = old;
 
                 } else {
@@ -322,7 +329,8 @@ public class LogManager implements ILogManager {
 
                 next = retVal;
 
-                // as the log record shall cross log page boundary, we must re-assign the lsn so
+                // as the log record shall cross log page boundary, we must
+                // re-assign the lsn so
                 // that the log record begins on a different location.
                 forwardPage = true;
 
@@ -345,7 +353,8 @@ public class LogManager implements ILogManager {
             waitUntillPageIsAvailableForWritingLog(pageIndex);
 
             if (!lsn.compareAndSet(old, next)) {
-                // Atomic call -> returns true only when the value represented by lsn is same as
+                // Atomic call -> returns true only when the value represented
+                // by lsn is same as
                 // "old". The value is updated to "next".
                 continue;
             }
@@ -367,8 +376,10 @@ public class LogManager implements ILogManager {
                 // space in the log page and hence is an owner.
                 logPageOwnerCount[pageIndex].incrementAndGet();
 
-                // Before the count is incremented, if the flusher flushed the allocated page, 
-                // then retry to get new LSN. Otherwise, the log with allocated lsn will be lost. 
+                // Before the count is incremented, if the flusher flushed the
+                // allocated page,
+                // then retry to get new LSN. Otherwise, the log with allocated
+                // lsn will be lost.
                 if (lastFlushedLSN.get() >= retVal) {
                     logPageOwnerCount[pageIndex].decrementAndGet();
                     continue;
@@ -387,7 +398,8 @@ public class LogManager implements ILogManager {
         HashMap<TransactionContext, Integer> map = null;
         int activeTxnCount;
 
-        // logLocator is a re-usable object that is appropriately set in each invocation. 
+        // logLocator is a re-usable object that is appropriately set in each
+        // invocation.
         // If the reference is null, the log manager must throw an exception.
         if (logicalLogLocator == null) {
             throw new ACIDException(
@@ -409,7 +421,8 @@ public class LogManager implements ILogManager {
         // all constraints checked and we are good to go and acquire a lsn.
         long previousLSN = -1;
 
-        // the will be set to the location (a long value) where the log record needs to be placed.
+        // the will be set to the location (a long value) where the log record
+        // needs to be placed.
         long currentLSN;
 
         // The logs written by a transaction need to be linked to each other for
@@ -435,7 +448,8 @@ public class LogManager implements ILogManager {
          * performed correctly that is ownership is released.
          */
 
-        // indicates if the transaction thread has release ownership of the page.
+        // indicates if the transaction thread has release ownership of the
+        // page.
         boolean decremented = false;
 
         int pageIndex = (int) getLogPageIndex(currentLSN);
@@ -455,8 +469,9 @@ public class LogManager implements ILogManager {
             // content in the correct region of the allocated space.
             logicalLogLocator.increaseMemoryOffset(logRecordHelper.getLogHeaderSize(logType));
 
-            // a COMMIT log record does not have any content and hence 
-            // the logger (responsible for putting the log content) is not invoked.
+            // a COMMIT log record does not have any content and hence
+            // the logger (responsible for putting the log content) is not
+            // invoked.
             if (logContentSize != 0) {
                 logger.preLog(txnCtx, reusableLogContentObject);
             }
@@ -486,7 +501,8 @@ public class LogManager implements ILogManager {
                 System.out.println("--------------> LSN(" + currentLSN + ") is written");
             }
 
-            // release the ownership as the log record has been placed in created space.
+            // release the ownership as the log record has been placed in
+            // created space.
             logPageOwnerCount[pageIndex].decrementAndGet();
 
             // indicating that the transaction thread has released ownership
@@ -548,14 +564,17 @@ public class LogManager implements ILogManager {
     private void readDiskLog(long lsnValue, LogicalLogLocator logicalLogLocator) throws ACIDException {
         String filePath = LogUtil.getLogFilePath(logManagerProperties, LogUtil.getFileId(this, lsnValue));
         long fileOffset = LogUtil.getFileOffset(this, lsnValue);
+
         ByteBuffer buffer = ByteBuffer.allocate(logManagerProperties.getLogPageSize());
         RandomAccessFile raf = null;
+        FileChannel fileChannel = null;
         try {
             raf = new RandomAccessFile(filePath, "r");
-            raf.seek(fileOffset);
-            FileChannel fileChannel = raf.getChannel();
+            fileChannel = raf.getChannel();
+            fileChannel.position(fileOffset);
             fileChannel.read(buffer);
             buffer.position(0);
+            
             byte logType = buffer.get(4);
             int logHeaderSize = logRecordHelper.getLogHeaderSize(logType);
             int logBodySize = buffer.getInt(logHeaderSize - 4);
@@ -573,16 +592,19 @@ public class LogManager implements ILogManager {
                 throw new ACIDException(" invalid log record at lsn " + lsnValue);
             }
         } catch (Exception fnfe) {
+            fnfe.printStackTrace();
             throw new ACIDException(" unable to retrieve log record with lsn " + lsnValue + " from the file system",
                     fnfe);
         } finally {
             try {
-                if (raf != null) {
+                if (fileChannel != null) {
+                    fileChannel.close();
+                } else if (raf != null) {
                     raf.close();
                 }
             } catch (IOException ioe) {
                 ioe.printStackTrace();
-                throw new ACIDException(" exception in closing " + raf, ioe);
+                throw new ACIDException(" exception in closing a file: " + filePath, ioe);
             }
         }
     }
@@ -590,8 +612,8 @@ public class LogManager implements ILogManager {
     @Override
     public void readLog(long lsnValue, LogicalLogLocator logicalLogLocator) throws ACIDException {
         byte[] logRecord = null;
-        //long lsnValue = physicalLogLocator.getLsn();
-        if (lsnValue > lsn.get()) {
+
+        if (lsnValue >= lsn.get()) {
             throw new ACIDException(" invalid lsn " + lsnValue);
         }
 
@@ -600,15 +622,18 @@ public class LogManager implements ILogManager {
             int pageIndex = getLogPageIndex(lsnValue);
             int pageOffset = getLogPageOffset(lsnValue);
 
-            //TODO
-            //minimize memory allocation overhead. current code allocates the log page size per reading a log record.
+            // TODO
+            // minimize memory allocation overhead. current code allocates the
+            // log page size per reading a log record.
 
             byte[] pageContent = new byte[logManagerProperties.getLogPageSize()];
 
-            // take a lock on the log page so that the page is not flushed to disk interim
+            // take a lock on the log page so that the page is not flushed to
+            // disk interim
             synchronized (logPages[pageIndex]) {
 
-                // need to check again (this thread may have got de-scheduled and must refresh!)
+                // need to check again (this thread may have got de-scheduled
+                // and must refresh!)
                 if (lsnValue > getLastFlushedLsn().get()) {
 
                     // get the log record length
@@ -669,9 +694,9 @@ public class LogManager implements ILogManager {
         lsn.set(startingLSN);
         return nextPhysicalLsn;
     }
-    
+
     private void closeLogPages() throws ACIDException {
-        for (int i=0; i < numLogPages; i++) {
+        for (int i = 0; i < numLogPages; i++) {
             try {
                 logPages[i].close();
             } catch (IOException e) {
@@ -837,20 +862,21 @@ class LogPageFlushThread extends Thread {
 
     public void requestFlush(int pageIndex, long lsn, boolean isSynchronous) {
         synchronized (logManager.getLogPage(pageIndex)) {
-            //return if flushedLSN >= lsn
+            // return if flushedLSN >= lsn
             if (logManager.getLastFlushedLsn().get() >= lsn) {
                 return;
             }
 
-            //put a new request to the queue only if the request on the page is not in the queue.
+            // put a new request to the queue only if the request on the page is
+            // not in the queue.
             flushRequestQueue[pageIndex].offer(flushRequests[pageIndex]);
 
-            //return if the request is asynchronous
+            // return if the request is asynchronous
             if (!isSynchronous) {
                 return;
             }
 
-            //wait until there is flush.
+            // wait until there is flush.
             boolean isNotified = false;
             while (!isNotified) {
                 try {
@@ -889,23 +915,26 @@ class LogPageFlushThread extends Thread {
                                 logManager.getLogManagerProperties().getLogPageSize());
                     }
 
-                    //#. sleep during the groupCommitWaitTime
+                    // #. sleep during the groupCommitWaitTime
                     sleep(groupCommitWaitPeriod);
 
-                    //#. set the logPageStatus to INACTIVE in order to prevent other txns from writing on this page.
+                    // #. set the logPageStatus to INACTIVE in order to prevent
+                    // other txns from writing on this page.
                     logManager.getLogPageStatus(pageToFlush).set(PageState.INACTIVE);
 
-                    //#. need to wait until the logPageOwnerCount reaches 1 (LOG_WRITER) 
-                    //   meaning every one has finished writing logs on this page.
+                    // #. need to wait until the logPageOwnerCount reaches 1
+                    // (LOG_WRITER)
+                    // meaning every one has finished writing logs on this page.
                     while (logManager.getLogPageOwnershipCount(pageToFlush).get() != PageOwnershipStatus.LOG_WRITER) {
                         sleep(0);
                     }
 
-                    //#. set the logPageOwnerCount to 0 (LOG_FLUSHER)
-                    //   meaning it is flushing. 
+                    // #. set the logPageOwnerCount to 0 (LOG_FLUSHER)
+                    // meaning it is flushing.
                     logManager.getLogPageOwnershipCount(pageToFlush).set(PageOwnershipStatus.LOG_FLUSHER);
 
-                    // put the content to disk (the thread still has a lock on the log page)
+                    // put the content to disk (the thread still has a lock on
+                    // the log page)
                     logManager.getLogPage(pageToFlush).flush();
 
                     // increment the last flushed lsn and lastFlushedPage
@@ -927,8 +956,9 @@ class LogPageFlushThread extends Thread {
                     // mark the page as ACTIVE
                     logManager.getLogPageStatus(pageToFlush).set(LogManager.PageState.ACTIVE);
 
-                    //#. checks the queue whether there is another flush request on the same log buffer
-                    //   If there is another request, then simply remove it.
+                    // #. checks the queue whether there is another flush
+                    // request on the same log buffer
+                    // If there is another request, then simply remove it.
                     if (flushRequestQueue[pageToFlush].peek() != null) {
                         flushRequestQueue[pageToFlush].take();
                     }

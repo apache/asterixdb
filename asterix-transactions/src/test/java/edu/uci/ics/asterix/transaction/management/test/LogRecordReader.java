@@ -51,12 +51,12 @@ public class LogRecordReader {
                 return true;
             }
         });
-        LogicalLogLocator memLSN = LogUtil.getDummyLogicalLogLocator(logManager);
+        LogicalLogLocator currentLogLocator = LogUtil.getDummyLogicalLogLocator(logManager);
         int logCount = 0;
         while (true) {
-            boolean logValidity = logCursor.next(memLSN);
+            boolean logValidity = logCursor.next(currentLogLocator);
             if (logValidity) {
-                System.out.println(++logCount + parser.getLogRecordForDisplay(memLSN));
+                System.out.println(++logCount + parser.getLogRecordForDisplay(currentLogLocator));
             } else {
                 break;
             }
@@ -73,16 +73,13 @@ public class LogRecordReader {
      * @param args
      */
     public static void main(String[] args) throws ACIDException, Exception {
-        long lsnValue = 10747454;
-        String id = "nc1";
-        String logDir = "/home/raman/research/work/hyracks-branches/svn/trunk/hyracks/asterix_logs/";
         Properties props = new Properties();
-        props.setProperty(LogManagerProperties.LOG_DIR_KEY, logDir + "/" + id);
+        props.setProperty(LogManagerProperties.LOG_DIR_KEY,
+                "/home/kisskys/workspace/lsm_merge/asterix_lsm_stabilization/debug/asterix_logs/nc1");
         LogManagerProperties logProps = new LogManagerProperties(props);
         LogManager logManager = new LogManager(null, logProps);
         LogRecordReader logReader = new LogRecordReader(logManager);
         logReader.readLogs(0);
-        //   logReader.readLogRecord(1703620);
     }
 
 }
