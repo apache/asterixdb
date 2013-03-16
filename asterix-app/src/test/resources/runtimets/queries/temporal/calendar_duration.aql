@@ -8,7 +8,7 @@ drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
 
-write output to nc1:"rttest/temp_calendar_duration.adm";
+write output to nc1:"rttest/temporal_calendar_duration.adm";
 
 let $t1 := datetime("1987-11-19T23:49:23.938")
 let $t2 := date("-1328-10-23")

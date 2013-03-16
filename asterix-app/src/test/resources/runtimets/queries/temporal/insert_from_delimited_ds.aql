@@ -16,7 +16,7 @@ create type testtype as closed {
   durationField: duration
 }
 
-write output to nc1:"rttest/temp_insert_from_delimited_ds.adm";
+write output to nc1:"rttest/temporal_insert_from_delimited_ds.adm";
 
 create external dataset testds(testtype)
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

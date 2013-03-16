@@ -17,7 +17,7 @@ create type testtype as open {
   intervalField: interval?
 }
 
-write output to nc1:"rttest/temp_insert_from_ext_ds.adm";
+write output to nc1:"rttest/temporal_insert_from_ext_ds.adm";
 
 create external dataset testds(testtype)
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

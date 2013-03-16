@@ -8,7 +8,7 @@ drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
 
-write output to nc1:"rttest/temp_datetime_functions.adm";
+write output to nc1:"rttest/temporal_datetime_functions.adm";
 
 let $dt1 := datetime-from-unix-time-in-ms(956007429)
 let $d1 := date("1327-12-02")
