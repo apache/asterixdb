@@ -81,10 +81,56 @@ public class InstallerUtil {
 
     }
 
+    public static void addLibraryToAsterixZip(AsterixInstance asterixInstance, String dataverseName,
+            String libraryName, String libraryPath) throws IOException {
+        File instanceDir = new File(InstallerDriver.getAsterixDir() + File.separator + asterixInstance.getName());
+        if (!instanceDir.exists()) {
+            instanceDir.mkdirs();
+        }
+        String asterixZipName = InstallerDriver.getAsterixZip().substring(
+                InstallerDriver.getAsterixZip().lastIndexOf(File.separator) + 1);
+
+        String sourceZip = instanceDir.getAbsolutePath() + File.separator + asterixZipName;
+        unzip(sourceZip, instanceDir.getAbsolutePath());
+        File libraryPathInZip = new File(instanceDir.getAbsolutePath() + File.separator + "external" + File.separator
+                + "library" + dataverseName + File.separator + "to-add" + File.separator + libraryName);
+        libraryPathInZip.mkdirs();
+        Runtime.getRuntime().exec("cp" + " " + libraryPath + " " + libraryPathInZip.getAbsolutePath());
+        Runtime.getRuntime().exec("rm " + sourceZip);
+        String destZip = InstallerDriver.getAsterixDir() + File.separator + asterixInstance.getName() + File.separator
+                + asterixZipName;
+        zipDir(instanceDir, new File(destZip));
+        Runtime.getRuntime().exec("mv" + " " + destZip + " " + sourceZip);
+    }
+
     private static Node getMetadataNode(Cluster cluster) {
         Random random = new Random();
         int nNodes = cluster.getNode().size();
         return cluster.getNode().get(random.nextInt(nNodes));
+    }
+
+    public static String getNodeDirectories(String asterixInstanceName, Node node, Cluster cluster) {
+        String storeDataSubDir = asterixInstanceName + File.separator + "data" + File.separator;
+        String storeLibrarySubDir = asterixInstanceName + File.separator + "library" + File.separator;
+        String[] storeDirs = null;
+        StringBuffer nodeDataStore = new StringBuffer();
+        String storeDirValue = node.getStore();
+        if (storeDirValue == null) {
+            storeDirValue = cluster.getStore();
+            if (storeDirValue == null) {
+                throw new IllegalStateException(" Store not defined for node " + node.getId());
+            }
+            storeDataSubDir = node.getId() + File.separator + storeDataSubDir;
+            storeLibrarySubDir = node.getId() + File.separator + storeLibrarySubDir;
+        }
+
+        storeDirs = storeDirValue.split(",");
+        for (String ns : storeDirs) {
+            nodeDataStore.append(ns + File.separator + storeDataSubDir.trim());
+            nodeDataStore.append(",");
+        }
+        nodeDataStore.deleteCharAt(nodeDataStore.length() - 1);
+        return nodeDataStore.toString();
     }
 
     private static void writeAsterixConfigurationFile(AsterixInstance asterixInstance, boolean newData)
@@ -98,30 +144,8 @@ public class InstallerUtil {
         conf.append("NewUniverse=" + newData + "\n");
 
         for (Node node : cluster.getNode()) {
-            StringBuffer nodeDataStore = new StringBuffer();
-            if (node.getStore() != null) {
-                String[] nodeStores = node.getStore().split(",");
-                for (String ns : nodeStores) {
-                    nodeDataStore.append(ns + File.separator + asterixInstanceName + File.separator);
-                    nodeDataStore.append(",");
-                }
-                nodeDataStore.deleteCharAt(nodeDataStore.length() - 1);
-            } else {
-                if (cluster.getStore() != null) {
-                    String[] nodeStores = cluster.getStore().split(",");
-                    for (String ns : nodeStores) {
-                        nodeDataStore.append(ns + File.separator + node.getId() + File.separator + asterixInstanceName
-                                + File.separator);
-                        nodeDataStore.append(",");
-                    }
-                    nodeDataStore.deleteCharAt(nodeDataStore.length() - 1);
-                }
-            }
-            if (nodeDataStore.length() == 0) {
-                throw new IllegalStateException(" Store not defined for node " + node.getId());
-            }
-            conf.append(asterixInstanceName + "_" + node.getId() + ".stores" + "=" + nodeDataStore + "\n");
-
+            String nodeDir = getNodeDirectories(asterixInstance.getName(), node, cluster);
+            conf.append(asterixInstanceName + "_" + node.getId() + ".stores" + "=" + nodeDir + "\n");
         }
         Properties asterixConfProp = asterixInstance.getConfiguration();
         String outputDir = asterixConfProp.getProperty("output_dir");
@@ -251,7 +275,7 @@ public class InstallerUtil {
             throws Exception {
         AsterixInstance instance = ServiceProvider.INSTANCE.getLookupService().getAsterixInstance(name);
         if (instance == null) {
-            throw new InstallerException(" Asterix instance by name " + name + " does not exist.");
+            throw new InstallerException("Asterix instance by name " + name + " does not exist.");
         }
         boolean valid = false;
         for (State state : permissibleStates) {
@@ -261,7 +285,7 @@ public class InstallerUtil {
             }
         }
         if (!valid) {
-            throw new InstallerException(" Asterix instance by the name " + name + " is in " + instance.getState()
+            throw new InstallerException("Asterix instance by the name " + name + " is in " + instance.getState()
                     + " state ");
         }
         return instance;
@@ -270,7 +294,7 @@ public class InstallerUtil {
     public static void validateAsterixInstanceNotExists(String name) throws Exception {
         AsterixInstance instance = ServiceProvider.INSTANCE.getLookupService().getAsterixInstance(name);
         if (instance != null) {
-            throw new InstallerException(" Asterix instance by name " + name + " already exists.");
+            throw new InstallerException("Asterix instance by name " + name + " already exists.");
         }
     }
 

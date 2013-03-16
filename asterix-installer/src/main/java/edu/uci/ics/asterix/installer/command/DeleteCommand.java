@@ -35,7 +35,7 @@ public class DeleteCommand extends AbstractCommand {
         Patterns patterns = pc.createDeleteInstancePattern(instance);
         InstallerUtil.getEventrixClient(instance.getCluster()).submit(patterns);
         ServiceProvider.INSTANCE.getLookupService().removeAsterixInstance(asterixInstanceName);
-        LOGGER.info(" Asterix instance: " + asterixInstanceName + " deleted");
+        LOGGER.info("Deleted Asterix instance: " + asterixInstanceName);
     }
 
     @Override

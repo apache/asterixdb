@@ -24,7 +24,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import edu.uci.ics.asterix.installer.command.CommandHandler;
-import edu.uci.ics.asterix.installer.command.ICommand.CommandType;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 import edu.uci.ics.asterix.installer.service.ILookupService;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
@@ -39,7 +38,7 @@ public class InstallerDriver {
     public static final String EVENTS_DIR = "events";
 
     private static final Logger LOGGER = Logger.getLogger(InstallerDriver.class.getName());
-    public static final String ENV_MANAGIX_HOME = "INSTALLER_HOME";
+    public static final String ENV_MANAGIX_HOME = "MANAGIX_HOME";
     public static final String MANAGIX_CONF_XML = "conf" + File.separator + "installer-conf.xml";
 
     private static Configuration conf;
@@ -124,6 +123,10 @@ public class InstallerDriver {
         buffer.append("backup   " + ":" + " Creates a back up for an existing asterix instance" + "\n");
         buffer.append("restore  " + ":" + " Restores an asterix instance" + "\n");
         buffer.append("describe " + ":" + " Describes an existing asterix instance" + "\n");
+        buffer.append("validate " + ":" + " Validates the installer/cluster configuration" + "\n");
+        buffer.append("configure" + ":" + " Auto-generate configuration for local psedu-distributed Asterix instance"
+                + "\n");
+        buffer.append("shutdown " + ":" + " Shutdown the installer service" + "\n");
         buffer.append("validate " + ":" + " Validates the installer/cluster configuration" + "\n");
         buffer.append("configure" + ":" + " Auto-generate configuration for local psedu-distributed Asterix instance"
                 + "\n");
