@@ -21,7 +21,8 @@ public class ATimeSerializerDeserializer implements ISerializerDeserializer<ATim
     @SuppressWarnings("unchecked")
     private static final ISerializerDeserializer<ATime> timeSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ATIME);
-
+    private static final AMutableTime aTime = new AMutableTime(0);
+    
     private ATimeSerializerDeserializer() {
     }
 
@@ -46,7 +47,6 @@ public class ATimeSerializerDeserializer implements ISerializerDeserializer<ATim
     }
 
     public static void parse(String time, DataOutput out) throws HyracksDataException {
-        AMutableTime aTime = new AMutableTime(0);
         int chrononTimeInMs;
 
         try {

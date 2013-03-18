@@ -58,7 +58,7 @@ public class ATimeParserFactory implements IValueParserFactory {
      * @return
      * @throws HyracksDataException
      */
-    public static <T> int parseTimePart(String timeString, int start, int length) throws HyracksDataException {
+    public static int parseTimePart(String timeString, int start, int length) throws HyracksDataException {
 
         int offset = 0;
 
@@ -162,7 +162,7 @@ public class ATimeParserFactory implements IValueParserFactory {
      * @return
      * @throws HyracksDataException
      */
-    public static <T> int parseTimezonePart(String timeString, int start) throws HyracksDataException {
+    public static int parseTimezonePart(String timeString, int start) throws HyracksDataException {
         int timezone = 0;
 
         if (timeString.charAt(start) != 'Z') {

@@ -36,7 +36,7 @@ public class ADateTimeSerializerDeserializer implements ISerializerDeserializer<
     @SuppressWarnings("unchecked")
     private static final ISerializerDeserializer<ADateTime> datetimeSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ADATETIME);
-
+    private static final AMutableDateTime aDateTime = new AMutableDateTime(0L);
     private static final String errorMessage = "This can not be an instance of datetime";
 
     private ADateTimeSerializerDeserializer() {
@@ -61,7 +61,6 @@ public class ADateTimeSerializerDeserializer implements ISerializerDeserializer<
     }
 
     public static void parse(String datetime, DataOutput out) throws HyracksDataException {
-        AMutableDateTime aDateTime = new AMutableDateTime(0L);
 
         long chrononTimeInMs = 0;
         try {

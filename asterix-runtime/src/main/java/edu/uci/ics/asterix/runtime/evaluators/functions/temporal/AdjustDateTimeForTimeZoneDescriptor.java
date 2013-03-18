@@ -108,9 +108,6 @@ public class AdjustDateTimeForTimeZoneDescriptor extends AbstractScalarFunctionD
                                                 + argOut1.getByteArray()[0]);
                             }
 
-                            int stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
-                                    + (argOut1.getByteArray()[2] & 0xff << 0);
-
                             int timezone = ATimeParserFactory.parseTimezonePart(argOut1.getByteArray(), 3);
 
                             if (!calInstance.validateTimeZone(timezone)) {

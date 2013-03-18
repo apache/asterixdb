@@ -20,6 +20,7 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
     @SuppressWarnings("unchecked")
     private static final ISerializerDeserializer<ADuration> durationSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ADURATION);
+    private static final AMutableDuration aDuration = new AMutableDuration(0, 0);
 
     private ADurationSerializerDeserializer() {
     }
@@ -45,9 +46,7 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
 
     public static void parse(String duration, DataOutput out) throws HyracksDataException {
         try {
-            AMutableDuration aDuration = new AMutableDuration(0, 0);
             ADurationParserFactory.parseDuration(duration, 0, duration.length(), aDuration);
-
             durationSerde.serialize(aDuration, out);
         } catch (Exception e) {
             throw new HyracksDataException(e);
