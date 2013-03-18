@@ -23,7 +23,6 @@ import edu.uci.ics.asterix.om.base.ADateTime;
 import edu.uci.ics.asterix.om.base.AMutableDateTime;
 import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
-import edu.uci.ics.asterix.om.base.temporal.StringCharSequenceAccessor;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -37,7 +36,7 @@ public class ADateTimeSerializerDeserializer implements ISerializerDeserializer<
     @SuppressWarnings("unchecked")
     private static final ISerializerDeserializer<ADateTime> datetimeSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ADATETIME);
-
+    private static final AMutableDateTime aDateTime = new AMutableDateTime(0L);
     private static final String errorMessage = "This can not be an instance of datetime";
 
     private ADateTimeSerializerDeserializer() {
@@ -62,28 +61,25 @@ public class ADateTimeSerializerDeserializer implements ISerializerDeserializer<
     }
 
     public static void parse(String datetime, DataOutput out) throws HyracksDataException {
-        AMutableDateTime aDateTime = new AMutableDateTime(0L);
 
         long chrononTimeInMs = 0;
         try {
-            StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
-            charAccessor.reset(datetime, 0, datetime.length());
 
             // +1 if it is negative (-)
-            short timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
+            short timeOffset = (short) ((datetime.charAt(0) == '-') ? 1 : 0);
 
-            if (charAccessor.getCharAt(timeOffset + 10) != 'T' && charAccessor.getCharAt(timeOffset + 8) != 'T') {
-                throw new AlgebricksException(errorMessage + ": missing T");
+            timeOffset += 8;
+            
+            if(datetime.charAt(timeOffset) != 'T'){
+                timeOffset += 2;
+                if(datetime.charAt(timeOffset) != 'T'){
+                    throw new AlgebricksException(errorMessage + ": missing T");
+                }
             }
 
-            // if extended form 11, else 9
-            timeOffset += (charAccessor.getCharAt(timeOffset + 13) == ':') ? (short) (11) : (short) (9);
+            chrononTimeInMs = ADateParserFactory.parseDatePart(datetime, 0, timeOffset);
 
-            chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor, false);
-
-            charAccessor.reset(datetime, timeOffset, datetime.length() - timeOffset);
-
-            chrononTimeInMs += ATimeParserFactory.parseTimePart(charAccessor);
+            chrononTimeInMs += ATimeParserFactory.parseTimePart(datetime, timeOffset + 1, datetime.length() - timeOffset - 1);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

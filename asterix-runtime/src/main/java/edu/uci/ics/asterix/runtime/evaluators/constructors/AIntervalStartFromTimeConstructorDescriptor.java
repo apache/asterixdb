@@ -25,7 +25,6 @@ import edu.uci.ics.asterix.om.base.AMutableInterval;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
-import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
 import edu.uci.ics.asterix.om.base.temporal.DurationArithmeticOperations;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
@@ -82,8 +81,6 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
-                    private ByteArrayCharSequenceAccessor charAccessor = new ByteArrayCharSequenceAccessor();
-
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
 
@@ -104,8 +101,8 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                                 int stringLength = (argOut0.getByteArray()[1] & 0xff << 8)
                                         + (argOut0.getByteArray()[2] & 0xff << 0);
 
-                                charAccessor.reset(argOut0.getByteArray(), 3, stringLength);
-                                int intervalStart = ATimeParserFactory.parseTimePart(charAccessor);
+                                int intervalStart = ATimeParserFactory.parseTimePart(argOut0.getByteArray(), 3,
+                                        stringLength);
 
                                 if (intervalStart < 0) {
                                     intervalStart += GregorianCalendarSystem.CHRONON_OF_DAY;
@@ -116,8 +113,8 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                                 stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
                                         + (argOut1.getByteArray()[2] & 0xff << 0);
 
-                                charAccessor.reset(argOut1.getByteArray(), 3, stringLength);
-                                ADurationParserFactory.parseDuration(charAccessor, aDuration);
+                                ADurationParserFactory
+                                        .parseDuration(argOut1.getByteArray(), 3, stringLength, aDuration);
 
                                 if (aDuration.getMonths() != 0) {
                                     throw new AlgebricksException("Cannot add a year-month duration to a time value.");

@@ -448,7 +448,7 @@ public class AsterixBuiltinFunctions {
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "year", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_MONTH = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "month", 2);
+            FunctionConstants.ASTERIX_NS, "month", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_DAY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "day", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_HOUR = new FunctionIdentifier(

@@ -22,7 +22,6 @@ import edu.uci.ics.asterix.om.base.AMutableTime;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.ATime;
 import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
-import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
@@ -73,8 +72,6 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
-                    private ByteArrayCharSequenceAccessor charAccessor = new ByteArrayCharSequenceAccessor();
-
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
 
@@ -86,8 +83,7 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
 
                                 int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
 
-                                charAccessor.reset(serString, 3, stringLength);
-                                int chrononTimeInMs = ATimeParserFactory.parseTimePart(charAccessor);
+                                int chrononTimeInMs = ATimeParserFactory.parseTimePart(serString, 3, stringLength);
 
                                 if (chrononTimeInMs < 0) {
                                     chrononTimeInMs += GregorianCalendarSystem.CHRONON_OF_DAY;

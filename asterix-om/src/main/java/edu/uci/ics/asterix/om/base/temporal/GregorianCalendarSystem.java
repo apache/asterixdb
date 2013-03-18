@@ -135,11 +135,11 @@ public class GregorianCalendarSystem implements ICalendarSystem {
         // Check whether leap month.
         if (month == 2) {
             if (isLeapYear(year)) {
-                if (month > DAYS_OF_MONTH_LEAP[1]) {
+                if (day > DAYS_OF_MONTH_LEAP[1]) {
                     return false;
                 }
             } else {
-                if (month > DAYS_OF_MONTH_ORDI[1]) {
+                if (day > DAYS_OF_MONTH_ORDI[1]) {
                     return false;
                 }
             }

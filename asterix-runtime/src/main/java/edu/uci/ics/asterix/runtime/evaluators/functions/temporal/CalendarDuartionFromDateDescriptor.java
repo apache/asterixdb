@@ -186,9 +186,9 @@ public class CalendarDuartionFromDateDescriptor extends AbstractScalarFunctionDy
                                 }
 
                                 if (day < 0) {
-                                    boolean isLeapYear = calInstanct.isLeapYear(year0);
-                                    day += (isLeapYear) ? (GregorianCalendarSystem.DAYS_OF_MONTH_LEAP[month0 - 1])
-                                            : (GregorianCalendarSystem.DAYS_OF_MONTH_ORDI[month0 - 1]);
+                                    boolean isLeapYear = calInstanct.isLeapYear(year1);
+                                    day += (isLeapYear) ? (GregorianCalendarSystem.DAYS_OF_MONTH_LEAP[month1 - 2])
+                                            : (GregorianCalendarSystem.DAYS_OF_MONTH_ORDI[month1 - 2]);
                                     month -= 1;
                                 }
 
