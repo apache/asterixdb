@@ -6,3 +6,6 @@
  * Date         : 30th Jan 2013
  */
 
+use dataverse feeds;
+
+begin feed feeds.TweetFeed;

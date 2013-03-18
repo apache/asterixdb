@@ -30,8 +30,7 @@ public class QueryAPIServlet extends RESTAPIServlet {
     }
 
     protected List<Statement.Kind> getAllowedStatements() {
-        Kind[] statementsArray = { Kind.DATAVERSE_DECL, Kind.FUNCTION_DECL, Kind.QUERY, Kind.SET, Kind.WRITE,
-                Kind.BEGIN_FEED, Kind.CONTROL_FEED };
+        Kind[] statementsArray = { Kind.DATAVERSE_DECL, Kind.FUNCTION_DECL, Kind.QUERY, Kind.SET, Kind.WRITE };
         return Arrays.asList(statementsArray);
     }
 

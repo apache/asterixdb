@@ -1,6 +1,2 @@
 /* scan and print 2 ADM file splits as an external dataset of closed records */
-use dataverse test;
 
-create external dataset DBLPsplits(DBLPType) 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/dblp-small/dblp-small.adm"),("format"="adm")); 

@@ -78,14 +78,16 @@ public class TestCaseContext {
         String fileNames[] = path.list();
         System.out.println("Path: " + path.toString());
 
-        for (String fName : fileNames) {
-            File testFile = new File(path, fName);
-            TestFileContext tfsc = new TestFileContext(testFile);
-            String[] nameSplits = fName.split("\\.");
-            tfsc.setSeqNum(nameSplits[nameSplits.length - 2]);
-            resultFileCtxs.add(tfsc);
+        if (fileNames != null) {
+            for (String fName : fileNames) {
+                File testFile = new File(path, fName);
+                TestFileContext tfsc = new TestFileContext(testFile);
+                String[] nameSplits = fName.split("\\.");
+                tfsc.setSeqNum(nameSplits[nameSplits.length - 2]);
+                resultFileCtxs.add(tfsc);
+            }
+            Collections.sort(resultFileCtxs);
         }
-        Collections.sort(resultFileCtxs);
         return resultFileCtxs;
     }
 

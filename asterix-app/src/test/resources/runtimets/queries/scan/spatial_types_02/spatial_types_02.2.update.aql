@@ -1,6 +1,0 @@
-use dataverse test;
-
-load dataset Spatial2 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/nontagged/spatialData.txt"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
-

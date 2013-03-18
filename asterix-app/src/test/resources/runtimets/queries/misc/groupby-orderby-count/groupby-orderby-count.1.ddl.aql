@@ -11,3 +11,6 @@ create type Tweet as open {
   text: string
 }
 
+create external dataset TwitterData(Tweet)
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/twitter/extrasmalltweets.txt"),("format"="adm"));

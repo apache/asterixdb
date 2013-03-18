@@ -1498,8 +1498,7 @@
         <output-dir compare="Text">dblp-aqlplus_1</output-dir>
       </compilation-unit>
     </test-case>
-<!-- TODO(madhusudancs)
-    <test-case FilePath="fuzzyjoin">
+<!-- TODO(madhusudancs) <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-aqlplus_2">
         <output-dir compare="Text">dblp-aqlplus_2</output-dir>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>

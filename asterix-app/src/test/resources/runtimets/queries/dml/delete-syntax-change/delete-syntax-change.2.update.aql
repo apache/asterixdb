@@ -4,5 +4,5 @@ load dataset LineItem
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
-delete $l from dataset LineItem where $l.l_orderkey>=10
+delete $l from dataset LineItem where $l.l_orderkey>=10;
 

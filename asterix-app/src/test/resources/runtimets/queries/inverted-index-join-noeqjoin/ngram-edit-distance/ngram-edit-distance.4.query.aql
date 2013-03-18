@@ -5,26 +5,10 @@
  * Success        : Yes
  */
 
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
 
-create type AddressType as open {
-  number: int32, 
-  street: string,
-  city: string
-}
-
-create type CustomerType as open {
-  cid: int32, 
-  name: string,
-  age: int32?,
-  address: AddressType?,
-  interests: [string],
-  children: [ { name: string, age: int32? } ]
-}
-
-create dataset Customers(CustomerType) primary key cid;
-
-create dataset Customers2(CustomerType) primary key cid;
-
+for $a in dataset('Customers')
+for $b in dataset('Customers2')
+where edit-distance($a.name, $b.name) <= 4 and $a.cid < $b.cid
+order by $a.cid, $b.cid
+return { "a": $a.name, "b": $b.name }

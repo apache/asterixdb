@@ -8,5 +8,4 @@
 use dataverse test;
 
 for $a in dataset All
-return $a 
-
+return $a

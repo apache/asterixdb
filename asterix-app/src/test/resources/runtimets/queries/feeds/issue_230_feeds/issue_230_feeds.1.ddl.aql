@@ -20,6 +20,4 @@ create feed dataset TweetFeed(TweetType)
 using "edu.uci.ics.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory"
 (("fs"="localfs"),("path"="nc1://data/twitter/obamatweets.adm"),("format"="adm"),("output-type-name"="TweetType"),("tuple-interval"="10"))
 primary key id;
-  
-begin feed feeds.TweetFeed;
 

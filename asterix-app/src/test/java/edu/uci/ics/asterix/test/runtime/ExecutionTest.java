@@ -33,6 +33,7 @@ import edu.uci.ics.asterix.test.aql.TestsUtils;
 import edu.uci.ics.asterix.testframework.context.TestCaseContext;
 import edu.uci.ics.asterix.testframework.context.TestFileContext;
 import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
+import edu.uci.ics.hyracks.algebricks.core.config.SysoutFormatter;
 
 /**
  * Runs the runtime test cases under 'asterix-app/src/test/resources/runtimets'.
@@ -193,7 +194,7 @@ public class ExecutionTest {
     }
 
     // Executes Query and returns results as JSONArray
-    public JSONArray executeQuery(String str) throws Exception {
+    public JSONObject executeQuery(String str) throws Exception {
 
         final String url = "http://localhost:19101/query";
 
@@ -208,7 +209,7 @@ public class ExecutionTest {
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
 
-        JSONArray jArray = null;
+        JSONObject result = null;
 
         try {
             // Execute the method.
@@ -224,14 +225,12 @@ public class ExecutionTest {
 
             System.out.println(responseBody);
 
-            JSONObject jsonObj = new JSONObject(responseBody);
-
-            jArray = jsonObj.getJSONArray("results");
+            result = new JSONObject(responseBody);
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
-        return jArray;
+        return result;
     }
 
     @Test
@@ -244,7 +243,7 @@ public class ExecutionTest {
         String statement;
 
         int queryCount = 0;
-        JSONArray resultsArray;
+        JSONObject result;
 
         List<CompilationUnit> cUnits = tcCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
@@ -263,12 +262,20 @@ public class ExecutionTest {
                             executeUpdate(statement);
                             break;
                         case "query":
-                            resultsArray = executeQuery(statement);
-                            expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
+                            result = executeQuery(statement);
+                            if (!cUnit.getExpectedError().isEmpty()) {
+                                if (!result.has("error")) {
+                                    throw new Exception("Test \"" + testFile + "\" FAILED!");
+                                }
+                            } else {
+                                expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
+                                TestsUtils
+                                        .runScriptAndCompareWithResult(
+                                                AsterixHyracksIntegrationUtil.getHyracksClientConnection(), testFile,
+                                                new PrintWriter(System.err), expectedResultFile,
+                                                result.getJSONArray("results"));
+                            }
                             queryCount++;
-                            TestsUtils.runScriptAndCompareWithResult(
-                                    AsterixHyracksIntegrationUtil.getHyracksClientConnection(), testFile,
-                                    new PrintWriter(System.err), expectedResultFile, resultsArray);
                             break;
                         default:
                             throw new IllegalArgumentException("No statements of type " + ctx.getType());

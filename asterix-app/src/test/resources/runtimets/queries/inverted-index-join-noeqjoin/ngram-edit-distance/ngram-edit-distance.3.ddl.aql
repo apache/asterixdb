@@ -5,12 +5,6 @@
  * Success        : Yes
  */
 
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
 
-for $a in dataset('Customers')
-for $b in dataset('Customers2')
-where edit-distance($a.name, $b.name) <= 4 and $a.cid < $b.cid
-order by $a.cid, $b.cid
-return { "a": $a.name, "b": $b.name }
+create index ngram_index on Customers(name) type ngram(3);
