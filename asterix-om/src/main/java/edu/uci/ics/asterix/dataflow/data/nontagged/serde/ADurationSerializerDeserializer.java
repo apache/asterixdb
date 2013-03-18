@@ -8,7 +8,6 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADuration;
 import edu.uci.ics.asterix.om.base.AMutableDuration;
 import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory;
-import edu.uci.ics.asterix.om.base.temporal.StringCharSequenceAccessor;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -47,9 +46,7 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
     public static void parse(String duration, DataOutput out) throws HyracksDataException {
         try {
             AMutableDuration aDuration = new AMutableDuration(0, 0);
-            StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
-            charAccessor.reset(duration, 0, duration.length());
-            ADurationParserFactory.parseDuration(charAccessor, aDuration);
+            ADurationParserFactory.parseDuration(duration, 0, duration.length(), aDuration);
 
             durationSerde.serialize(aDuration, out);
         } catch (Exception e) {

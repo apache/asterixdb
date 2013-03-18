@@ -36,32 +36,27 @@ public class ADateTimeParserFactory implements IValueParserFactory {
     @Override
     public IValueParser createValueParser() {
 
-        final CharArrayCharSequenceAccessor charArrayAccessor = new CharArrayCharSequenceAccessor();
-
         return new IValueParser() {
 
             @Override
             public void parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
                 long chrononTimeInMs = 0;
 
-                charArrayAccessor.reset(buffer, start, length);
-
-                short timeOffset = (short) ((charArrayAccessor.getCharAt(0) == '-') ? 1 : 0);
+                short timeOffset = (short) ((buffer[start] == '-') ? 1 : 0);
 
                 timeOffset += 8;
 
-                if (charArrayAccessor.getCharAt(timeOffset) != 'T') {
+                if (buffer[start + timeOffset] != 'T') {
                     timeOffset += 2;
-                    if (charArrayAccessor.getCharAt(timeOffset) != 'T') {
+                    if (buffer[start + timeOffset] != 'T') {
                         throw new HyracksDataException(dateTimeErrorMessage + ": missing T");
                     }
                 }
 
-                charArrayAccessor.reset(buffer, start, timeOffset);
-                chrononTimeInMs = ADateParserFactory.parseDatePart(charArrayAccessor);
+                chrononTimeInMs = ADateParserFactory.parseDatePart(buffer, start, timeOffset);
 
-                charArrayAccessor.reset(buffer, start + timeOffset + 1, length - timeOffset - 1);
-                chrononTimeInMs += ATimeParserFactory.parseTimePart(charArrayAccessor);
+                chrononTimeInMs += ATimeParserFactory.parseTimePart(buffer, start + timeOffset + 1, length - timeOffset
+                        - 1);
 
                 try {
                     out.writeLong(chrononTimeInMs);

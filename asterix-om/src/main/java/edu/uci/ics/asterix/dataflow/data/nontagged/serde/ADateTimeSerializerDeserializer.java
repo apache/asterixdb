@@ -23,7 +23,6 @@ import edu.uci.ics.asterix.om.base.ADateTime;
 import edu.uci.ics.asterix.om.base.AMutableDateTime;
 import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
-import edu.uci.ics.asterix.om.base.temporal.StringCharSequenceAccessor;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -66,27 +65,22 @@ public class ADateTimeSerializerDeserializer implements ISerializerDeserializer<
 
         long chrononTimeInMs = 0;
         try {
-            StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
-            
-            charAccessor.reset(datetime, 0, datetime.length());
 
             // +1 if it is negative (-)
-            short timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
+            short timeOffset = (short) ((datetime.charAt(0) == '-') ? 1 : 0);
 
             timeOffset += 8;
             
-            if(charAccessor.getCharAt(timeOffset) != 'T'){
+            if(datetime.charAt(timeOffset) != 'T'){
                 timeOffset += 2;
-                if(charAccessor.getCharAt(timeOffset) != 'T'){
+                if(datetime.charAt(timeOffset) != 'T'){
                     throw new AlgebricksException(errorMessage + ": missing T");
                 }
             }
 
-            charAccessor.reset(datetime, 0, timeOffset);
-            chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor);
+            chrononTimeInMs = ADateParserFactory.parseDatePart(datetime, 0, timeOffset);
 
-            charAccessor.reset(datetime, timeOffset + 1, datetime.length() - timeOffset - 1);
-            chrononTimeInMs += ATimeParserFactory.parseTimePart(charAccessor);
+            chrononTimeInMs += ATimeParserFactory.parseTimePart(datetime, timeOffset + 1, datetime.length() - timeOffset - 1);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

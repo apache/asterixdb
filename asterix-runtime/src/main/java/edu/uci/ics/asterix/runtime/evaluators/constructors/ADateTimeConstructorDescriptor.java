@@ -23,7 +23,6 @@ import edu.uci.ics.asterix.om.base.AMutableDateTime;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
-import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -72,7 +71,6 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
-                    private ByteArrayCharSequenceAccessor charAccessor = new ByteArrayCharSequenceAccessor();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -85,27 +83,22 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
 
                                 int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
 
-                                charAccessor.reset(serString, 3, stringLength);
-
                                 // +1 if it is negative (-)
-                                short timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
+                                short timeOffset = (short) ((serString[3] == '-') ? 1 : 0);
 
                                 timeOffset += 8;
 
-                                if (charAccessor.getCharAt(timeOffset) != 'T') {
+                                if (serString[3 + timeOffset] != 'T') {
                                     timeOffset += 2;
-                                    if (charAccessor.getCharAt(timeOffset) != 'T') {
+                                    if (serString[3 + timeOffset] != 'T') {
                                         throw new AlgebricksException(errorMessage + ": missing T");
                                     }
                                 }
 
-                                charAccessor.reset(serString, 3, timeOffset);
+                                long chrononTimeInMs = ADateParserFactory.parseDatePart(serString, 3, timeOffset);
 
-                                long chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor);
-
-                                charAccessor.reset(serString, 3 + timeOffset + 1, stringLength - timeOffset - 1);
-
-                                chrononTimeInMs += ATimeParserFactory.parseTimePart(charAccessor);
+                                chrononTimeInMs += ATimeParserFactory.parseTimePart(serString, 3 + timeOffset + 1,
+                                        stringLength - timeOffset - 1);
 
                                 aDateTime.setValue(chrononTimeInMs);
                                 datetimeSerde.serialize(aDateTime, out);

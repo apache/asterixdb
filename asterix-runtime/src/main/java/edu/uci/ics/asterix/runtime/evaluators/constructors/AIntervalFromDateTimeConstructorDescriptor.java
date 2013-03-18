@@ -24,7 +24,6 @@ import edu.uci.ics.asterix.om.base.AMutableInterval;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
-import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -78,8 +77,6 @@ public class AIntervalFromDateTimeConstructorDescriptor extends AbstractScalarFu
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
-                    private ByteArrayCharSequenceAccessor charAccessor = new ByteArrayCharSequenceAccessor();
-
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
 
@@ -99,43 +96,39 @@ public class AIntervalFromDateTimeConstructorDescriptor extends AbstractScalarFu
                                 int stringLength = (argOut0.getByteArray()[1] & 0xff << 8)
                                         + (argOut0.getByteArray()[2] & 0xff << 0);
 
-                                charAccessor.reset(argOut0.getByteArray(), 3, stringLength);
                                 // get offset for time part: +1 if it is negative (-)
-                                short timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
+                                short timeOffset = (short) ((argOut0.getByteArray()[3] == '-') ? 1 : 0);
                                 timeOffset += 8;
-                                if (charAccessor.getCharAt(timeOffset) != 'T') {
+                                if (argOut0.getByteArray()[3 + timeOffset] != 'T') {
                                     timeOffset += 2;
-                                    if (charAccessor.getCharAt(timeOffset) != 'T') {
+                                    if (argOut0.getByteArray()[3 + timeOffset] != 'T') {
                                         throw new AlgebricksException(errorMessage + ": missing T");
                                     }
                                 }
 
-                                charAccessor.reset(argOut0.getByteArray(), 3, timeOffset);
-                                long intervalStart = ADateParserFactory.parseDatePart(charAccessor);
-                                charAccessor.reset(argOut0.getByteArray(), 3 + timeOffset + 1, stringLength
-                                        - timeOffset - 1);
-                                intervalStart += ATimeParserFactory.parseTimePart(charAccessor);
+                                long intervalStart = ADateParserFactory.parseDatePart(argOut0.getByteArray(), 3,
+                                        timeOffset);
+                                intervalStart += ATimeParserFactory.parseTimePart(argOut0.getByteArray(),
+                                        3 + timeOffset + 1, stringLength - timeOffset - 1);
 
                                 // end datetime
                                 stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
                                         + (argOut1.getByteArray()[2] & 0xff << 0);
 
-                                charAccessor.reset(argOut1.getByteArray(), 3, stringLength);
                                 // get offset for time part: +1 if it is negative (-)
-                                timeOffset = (short) ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
+                                timeOffset = (short) ((argOut1.getByteArray()[3] == '-') ? 1 : 0);
                                 timeOffset += 8;
-                                if (charAccessor.getCharAt(timeOffset) != 'T') {
+                                if (argOut1.getByteArray()[3 + timeOffset] != 'T') {
                                     timeOffset += 2;
-                                    if (charAccessor.getCharAt(timeOffset) != 'T') {
+                                    if (argOut1.getByteArray()[3 + timeOffset] != 'T') {
                                         throw new AlgebricksException(errorMessage + ": missing T");
                                     }
                                 }
 
-                                charAccessor.reset(argOut1.getByteArray(), 3, timeOffset);
-                                long intervalEnd = ADateParserFactory.parseDatePart(charAccessor);
-                                charAccessor.reset(argOut1.getByteArray(), 3 + timeOffset + 1, stringLength
-                                        - timeOffset - 1);
-                                intervalEnd += ATimeParserFactory.parseTimePart(charAccessor);
+                                long intervalEnd = ADateParserFactory.parseDatePart(argOut1.getByteArray(), 3,
+                                        timeOffset);
+                                intervalEnd += ATimeParserFactory.parseTimePart(argOut1.getByteArray(),
+                                        3 + timeOffset + 1, stringLength - timeOffset - 1);
 
                                 if (intervalEnd < intervalStart) {
                                     throw new AlgebricksException(

@@ -8,7 +8,6 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AMutableTime;
 import edu.uci.ics.asterix.om.base.ATime;
 import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
-import edu.uci.ics.asterix.om.base.temporal.StringCharSequenceAccessor;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -51,9 +50,7 @@ public class ATimeSerializerDeserializer implements ISerializerDeserializer<ATim
         int chrononTimeInMs;
 
         try {
-            StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
-            charAccessor.reset(time, 0, time.length());
-            chrononTimeInMs = ATimeParserFactory.parseTimePart(charAccessor);
+            chrononTimeInMs = ATimeParserFactory.parseTimePart(time, 0, time.length());
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

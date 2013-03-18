@@ -24,7 +24,6 @@ import edu.uci.ics.asterix.om.base.AMutableInterval;
 import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
-import edu.uci.ics.asterix.om.base.temporal.StringCharSequenceAccessor;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -93,8 +92,6 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
         long chrononTimeInMsEnd = 0;
         try {
 
-            StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
-
             // the starting point for parsing (so for the accessor)
             int startOffset = 0;
             int endOffset, timeSeperatorOffsetInDatetimeString;
@@ -115,24 +112,22 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
                 startOffset++;
             }
 
-            charAccessor.reset(interval, startOffset, endOffset - startOffset + 1);
-
             // +1 if it is negative (-)
-            timeSeperatorOffsetInDatetimeString = ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
+            timeSeperatorOffsetInDatetimeString = ((interval.charAt(startOffset) == '-') ? 1 : 0);
 
             timeSeperatorOffsetInDatetimeString += 8;
 
-            if (charAccessor.getCharAt(timeSeperatorOffsetInDatetimeString) != 'T') {
+            if (interval.charAt(startOffset + timeSeperatorOffsetInDatetimeString) != 'T') {
                 timeSeperatorOffsetInDatetimeString += 2;
-                if (charAccessor.getCharAt(timeSeperatorOffsetInDatetimeString) != 'T') {
+                if (interval.charAt(startOffset + timeSeperatorOffsetInDatetimeString) != 'T') {
                     throw new AlgebricksException(errorMessage + ": missing T for a datetime value.");
                 }
             }
-            charAccessor.reset(interval, startOffset, timeSeperatorOffsetInDatetimeString);
-            chrononTimeInMsStart = ADateParserFactory.parseDatePart(charAccessor);
-            charAccessor.reset(interval, startOffset + timeSeperatorOffsetInDatetimeString + 1, endOffset
+
+            chrononTimeInMsStart = ADateParserFactory.parseDatePart(interval, startOffset, timeSeperatorOffsetInDatetimeString);
+
+            chrononTimeInMsStart += ATimeParserFactory.parseTimePart(interval, startOffset + timeSeperatorOffsetInDatetimeString + 1, endOffset
                     - (startOffset + timeSeperatorOffsetInDatetimeString + 1) + 1);
-            chrononTimeInMsStart += ATimeParserFactory.parseTimePart(charAccessor);
 
             // Interval End
             startOffset = commaIndex + 1;
@@ -145,24 +140,22 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
                 startOffset++;
             }
 
-            charAccessor.reset(interval, startOffset, endOffset - startOffset + 1);
-
             // +1 if it is negative (-)
-            timeSeperatorOffsetInDatetimeString = ((charAccessor.getCharAt(0) == '-') ? 1 : 0);
+            timeSeperatorOffsetInDatetimeString = ((interval.charAt(startOffset) == '-') ? 1 : 0);
 
             timeSeperatorOffsetInDatetimeString += 8;
 
-            if (charAccessor.getCharAt(timeSeperatorOffsetInDatetimeString) != 'T') {
+            if (interval.charAt(startOffset + timeSeperatorOffsetInDatetimeString) != 'T') {
                 timeSeperatorOffsetInDatetimeString += 2;
-                if (charAccessor.getCharAt(timeSeperatorOffsetInDatetimeString) != 'T') {
+                if (interval.charAt(startOffset + timeSeperatorOffsetInDatetimeString) != 'T') {
                     throw new AlgebricksException(errorMessage + ": missing T for a datetime value.");
                 }
             }
-            charAccessor.reset(interval, startOffset, timeSeperatorOffsetInDatetimeString);
-            chrononTimeInMsEnd = ADateParserFactory.parseDatePart(charAccessor);
-            charAccessor.reset(interval, startOffset + timeSeperatorOffsetInDatetimeString + 1, endOffset
+
+            chrononTimeInMsEnd = ADateParserFactory.parseDatePart(interval, startOffset, timeSeperatorOffsetInDatetimeString);
+
+            chrononTimeInMsEnd += ATimeParserFactory.parseTimePart(interval, startOffset + timeSeperatorOffsetInDatetimeString + 1, endOffset
                     - (startOffset + timeSeperatorOffsetInDatetimeString + 1) + 1);
-            chrononTimeInMsEnd += ATimeParserFactory.parseTimePart(charAccessor);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
@@ -178,8 +171,6 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
         long chrononTimeInMsStart = 0;
         long chrononTimeInMsEnd = 0;
         try {
-
-            StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
 
             int startOffset = 0;
             int endOffset;
@@ -201,8 +192,7 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
             }
 
             // Interval Start
-            charAccessor.reset(interval, startOffset, endOffset - startOffset + 1);
-            chrononTimeInMsStart = ATimeParserFactory.parseTimePart(charAccessor);
+            chrononTimeInMsStart = ATimeParserFactory.parseTimePart(interval, startOffset, endOffset - startOffset + 1);
 
             if (chrononTimeInMsStart < 0) {
                 chrononTimeInMsStart += GregorianCalendarSystem.CHRONON_OF_DAY;
@@ -220,8 +210,7 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
                 endOffset--;
             }
 
-            charAccessor.reset(interval, startOffset, endOffset - startOffset + 1);
-            chrononTimeInMsEnd = ATimeParserFactory.parseTimePart(charAccessor);
+            chrononTimeInMsEnd = ATimeParserFactory.parseTimePart(interval, startOffset, endOffset - startOffset + 1);
 
             if (chrononTimeInMsEnd < 0) {
                 chrononTimeInMsEnd += GregorianCalendarSystem.CHRONON_OF_DAY;
@@ -243,7 +232,6 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
         short tempStart = 0;
         short tempEnd = 0;
         try {
-            StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
 
             // the starting point for parsing (so for the accessor)
             int startOffset = 0;
@@ -265,8 +253,7 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
                 startOffset++;
             }
 
-            charAccessor.reset(interval, startOffset, endOffset - startOffset + 1);
-            chrononTimeInMsStart = ADateParserFactory.parseDatePart(charAccessor);
+            chrononTimeInMsStart = ADateParserFactory.parseDatePart(interval, startOffset, endOffset - startOffset + 1);
 
             // Interval End
             startOffset = commaIndex + 1;
@@ -279,8 +266,7 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
                 startOffset++;
             }
 
-            charAccessor.reset(interval, startOffset, endOffset - startOffset + 1);
-            chrononTimeInMsEnd = ADateParserFactory.parseDatePart(charAccessor);
+            chrononTimeInMsEnd = ADateParserFactory.parseDatePart(interval, startOffset, endOffset - startOffset + 1);
 
         } catch (Exception e) {
             throw new HyracksDataException(e);

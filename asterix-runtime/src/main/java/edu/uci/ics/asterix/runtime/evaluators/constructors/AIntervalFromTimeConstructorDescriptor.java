@@ -23,7 +23,6 @@ import edu.uci.ics.asterix.om.base.AInterval;
 import edu.uci.ics.asterix.om.base.AMutableInterval;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
-import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -78,8 +77,6 @@ public class AIntervalFromTimeConstructorDescriptor extends AbstractScalarFuncti
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
-                    private ByteArrayCharSequenceAccessor charAccessor = new ByteArrayCharSequenceAccessor();
-
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
 
@@ -99,8 +96,8 @@ public class AIntervalFromTimeConstructorDescriptor extends AbstractScalarFuncti
                                 int stringLength = (argOut0.getByteArray()[1] & 0xff << 8)
                                         + (argOut0.getByteArray()[2] & 0xff << 0);
 
-                                charAccessor.reset(argOut0.getByteArray(), 3, stringLength);
-                                long intervalStart = ATimeParserFactory.parseTimePart(charAccessor);
+                                long intervalStart = ATimeParserFactory.parseTimePart(argOut0.getByteArray(), 3,
+                                        stringLength);
                                 if (intervalStart < 0) {
                                     intervalStart += GregorianCalendarSystem.CHRONON_OF_DAY;
                                 }
@@ -109,8 +106,8 @@ public class AIntervalFromTimeConstructorDescriptor extends AbstractScalarFuncti
                                 stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
                                         + (argOut1.getByteArray()[2] & 0xff << 0);
 
-                                charAccessor.reset(argOut1.getByteArray(), 3, stringLength);
-                                long intervalEnd = ATimeParserFactory.parseTimePart(charAccessor);
+                                long intervalEnd = ATimeParserFactory.parseTimePart(argOut1.getByteArray(), 3,
+                                        stringLength);
                                 if (intervalEnd < 0) {
                                     intervalEnd += GregorianCalendarSystem.CHRONON_OF_DAY;
                                 }
