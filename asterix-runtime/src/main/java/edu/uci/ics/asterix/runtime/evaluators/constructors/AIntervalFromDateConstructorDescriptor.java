@@ -23,7 +23,6 @@ import edu.uci.ics.asterix.om.base.AInterval;
 import edu.uci.ics.asterix.om.base.AMutableInterval;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
-import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -78,8 +77,6 @@ public class AIntervalFromDateConstructorDescriptor extends AbstractScalarFuncti
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
-                    private ByteArrayCharSequenceAccessor charAccessor = new ByteArrayCharSequenceAccessor();
-
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
 
@@ -100,17 +97,15 @@ public class AIntervalFromDateConstructorDescriptor extends AbstractScalarFuncti
                                         + (argOut0.getByteArray()[2] & 0xff << 0);
 
                                 // start date
-                                charAccessor.reset(argOut0.getByteArray(), 3, stringLength);
-                                long intervalStart = ADateParserFactory.parseDatePart(charAccessor, true)
-                                        / GregorianCalendarSystem.CHRONON_OF_DAY;
-                                // end date
+                                long intervalStart = ADateParserFactory.parseDatePart(argOut0.getByteArray(), 3,
+                                        stringLength) / GregorianCalendarSystem.CHRONON_OF_DAY;
 
+                                // end date
                                 stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
                                         + (argOut1.getByteArray()[2] & 0xff << 0);
 
-                                charAccessor.reset(argOut1.getByteArray(), 3, stringLength);
-                                long intervalEnd = ADateParserFactory.parseDatePart(charAccessor, true)
-                                        / GregorianCalendarSystem.CHRONON_OF_DAY;
+                                long intervalEnd = ADateParserFactory.parseDatePart(argOut1.getByteArray(), 3,
+                                        stringLength) / GregorianCalendarSystem.CHRONON_OF_DAY;
 
                                 if (intervalEnd < intervalStart) {
                                     throw new AlgebricksException(

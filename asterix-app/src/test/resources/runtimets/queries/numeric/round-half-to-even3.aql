@@ -12,5 +12,6 @@ let $c3 := double("INF")
 let $c4 := double("-INF")
 let $c5 := double("-0.0")
 let $c6 := double("0.0")
+let $c7 := double("-6223372036854775807.89239")
 return {"d0": numeric-round-half-to-even($c0), "d1": numeric-round-half-to-even($c1), "d2": numeric-round-half-to-even($c2),
-        "d3": numeric-round-half-to-even($c3), "d4": numeric-round-half-to-even($c4), "d5": numeric-round-half-to-even($c5), "d6": numeric-round-half-to-even($c6)}
+        "d3": numeric-round-half-to-even($c3), "d4": numeric-round-half-to-even($c4), "d5": numeric-round-half-to-even($c5), "d6": numeric-round-half-to-even($c6), "d7": numeric-round-half-to-even($c7)}

@@ -136,7 +136,7 @@ public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
     private ComparisonResult compareDateOrTimeWithArg(ATypeTag typeTag2) throws AlgebricksException {
         if (typeTag2 == ATypeTag.NULL) {
             return ComparisonResult.GREATER_THAN;
-        } else if (typeTag2 == ATypeTag.DATETIME) {
+        } else if (typeTag2 == ATypeTag.DATE || typeTag2 == ATypeTag.TIME) {
             int result = dateOrTimeBinaryComp.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1,
                     outRight.getByteArray(), 1, outRight.getLength() - 1);
             if (result == 0)
@@ -146,7 +146,7 @@ public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
             else
                 return ComparisonResult.GREATER_THAN;
         }
-        throw new AlgebricksException("Comparison is undefined between types ADateTime and " + typeTag2 + " .");
+        throw new AlgebricksException("Comparison is undefined between types Date/Time and " + typeTag2 + " .");
     }
 
     private ComparisonResult compareDateTimeWithArg(ATypeTag typeTag2) throws AlgebricksException {
@@ -162,7 +162,7 @@ public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
             else
                 return ComparisonResult.GREATER_THAN;
         }
-        throw new AlgebricksException("Comparison is undefined between types ADateTime and " + typeTag2 + " .");
+        throw new AlgebricksException("Comparison is undefined between types Datetime and " + typeTag2 + " .");
     }
 
     private ComparisonResult compareBooleanWithArg(ATypeTag typeTag2) throws AlgebricksException {

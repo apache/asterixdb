@@ -234,7 +234,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 try {
                     if (checkType(ATypeTag.INTERVAL, objectType, out)) {
                         if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
-                            if (admLexer.next() == AdmLexer.TOKEN_STRING_CONS) {
+                            if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
                                 AIntervalSerializerDeserializer.parseDate(admLexer.getLastTokenImage(), out);
 
                                 if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
@@ -252,7 +252,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 try {
                     if (checkType(ATypeTag.INTERVAL, objectType, out)) {
                         if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
-                            if (admLexer.next() == AdmLexer.TOKEN_STRING_CONS) {
+                            if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
                                 AIntervalSerializerDeserializer.parseTime(admLexer.getLastTokenImage(), out);
 
                                 if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
@@ -270,7 +270,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 try {
                     if (checkType(ATypeTag.INTERVAL, objectType, out)) {
                         if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
-                            if (admLexer.next() == AdmLexer.TOKEN_STRING_CONS) {
+                            if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
                                 AIntervalSerializerDeserializer.parseDatetime(admLexer.getLastTokenImage(), out);
 
                                 if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {

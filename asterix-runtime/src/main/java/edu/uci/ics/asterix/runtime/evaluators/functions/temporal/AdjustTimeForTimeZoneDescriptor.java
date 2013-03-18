@@ -21,7 +21,6 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserial
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
-import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem.Fields;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
@@ -81,8 +80,6 @@ public class AdjustTimeForTimeZoneDescriptor extends AbstractScalarFunctionDynam
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
-                    private ByteArrayCharSequenceAccessor charAccessor = new ByteArrayCharSequenceAccessor();
-
                     private GregorianCalendarSystem calInstance = GregorianCalendarSystem.getInstance();
 
                     @Override
@@ -111,12 +108,7 @@ public class AdjustTimeForTimeZoneDescriptor extends AbstractScalarFunctionDynam
                                                 + argOut1.getByteArray()[0]);
                             }
 
-                            int stringLength = (argOut0.getByteArray()[1] & 0xff << 8)
-                                    + (argOut0.getByteArray()[2] & 0xff << 0);
-
-                            charAccessor.reset(argOut1.getByteArray(), 3, stringLength);
-
-                            int timezone = ATimeParserFactory.parseTimezonePart(charAccessor, 0);
+                            int timezone = ATimeParserFactory.parseTimezonePart(argOut1.getByteArray(), 3);
 
                             if (!calInstance.validateTimeZone(timezone)) {
                                 throw new AlgebricksException("Wrong format for a time zone string!");

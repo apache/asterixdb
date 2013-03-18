@@ -8,7 +8,6 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AMutableTime;
 import edu.uci.ics.asterix.om.base.ATime;
 import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
-import edu.uci.ics.asterix.om.base.temporal.StringCharSequenceAccessor;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -22,7 +21,8 @@ public class ATimeSerializerDeserializer implements ISerializerDeserializer<ATim
     @SuppressWarnings("unchecked")
     private static final ISerializerDeserializer<ATime> timeSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ATIME);
-
+    private static final AMutableTime aTime = new AMutableTime(0);
+    
     private ATimeSerializerDeserializer() {
     }
 
@@ -47,13 +47,10 @@ public class ATimeSerializerDeserializer implements ISerializerDeserializer<ATim
     }
 
     public static void parse(String time, DataOutput out) throws HyracksDataException {
-        AMutableTime aTime = new AMutableTime(0);
         int chrononTimeInMs;
 
         try {
-            StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
-            charAccessor.reset(time, 0, time.length());
-            chrononTimeInMs = ATimeParserFactory.parseTimePart(charAccessor);
+            chrononTimeInMs = ATimeParserFactory.parseTimePart(time, 0, time.length());
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

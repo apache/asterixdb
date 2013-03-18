@@ -31,6 +31,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AInt16Printer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AInt32Printer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AInt64Printer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AInt8Printer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AIntervalPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ALinePrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ANullPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.APoint3DPrinter;
@@ -171,6 +172,10 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
                 }
                 case STRING: {
                     AStringPrinter.INSTANCE.print(b, s, l, ps);
+                    break;
+                }
+                case INTERVAL: {
+                    AIntervalPrinter.INSTANCE.print(b, s, l, ps);
                     break;
                 }
                 default: {
