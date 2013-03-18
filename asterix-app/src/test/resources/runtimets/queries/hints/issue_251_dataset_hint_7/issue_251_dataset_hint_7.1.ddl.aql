@@ -22,6 +22,4 @@ using "edu.uci.ics.asterix.tools.external.data.RateControlledFileSystemBasedAdap
 (("fs"="localfs"),("path"="nc1://data/twitter/obamatweets.adm"),("format"="adm"),("output-type-name"="TweetType"),("tuple-interval"="10"))
 primary key id
 hints(cardinality=200);
-  
-begin feed feeds.TweetFeed;
 

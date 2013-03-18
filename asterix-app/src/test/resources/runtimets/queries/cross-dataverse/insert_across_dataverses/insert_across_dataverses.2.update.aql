@@ -7,3 +7,5 @@ using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 insert into dataset test2.Customers(
 for $x in dataset('test1.Customers')
 return $x
+);
+
