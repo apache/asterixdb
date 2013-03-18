@@ -5,20 +5,16 @@ import java.io.IOException;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
-import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -37,7 +33,6 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
         }
     };
     private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
     private final byte stringTypeTag = ATypeTag.STRING.serialize();
 
@@ -58,9 +53,6 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                     private ArrayBackedValueStorage outInputSep = new ArrayBackedValueStorage();
                     private ICopyEvaluator evalList = listEvalFactory.createEvaluator(outInputList);
                     private ICopyEvaluator evalSep = sepEvalFactory.createEvaluator(outInputSep);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -72,20 +64,14 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                             outInputSep.reset();
                             evalSep.evaluate(tuple);
                             byte[] serSep = outInputSep.getByteArray();
-                            if (serOrderedList[0] == SER_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                return;
-                            }
                             if (serOrderedList[0] != SER_ORDEREDLIST_TYPE_TAG) {
-                                throw new AlgebricksException("Expects String List."
+                                throw new AlgebricksException("Expects String List but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[0]));
                             }
 
-                            if (serSep[0] == SER_NULL_TYPE_TAG) {
-                            }
                             if (serSep[0] != SER_STRING_TYPE_TAG) {
-                                throw new AlgebricksException("Expects String as Seperator."
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[0]));
+                                throw new AlgebricksException("Expects String as Seperator but got "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serSep[0]));
                             }
 
                             int size = AOrderedListSerializerDeserializer.getNumberOfItems(serOrderedList);
