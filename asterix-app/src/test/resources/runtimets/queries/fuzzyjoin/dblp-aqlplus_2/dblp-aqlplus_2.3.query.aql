@@ -7,21 +7,7 @@
  * Success        : Yes
  */
 
-drop dataverse fuzzyjoin if exists;
-create dataverse fuzzyjoin;
 use dataverse fuzzyjoin;
-
-create type DBLPType as open {
-  id: int32
-}
-
-create dataset DBLP(DBLPType) primary key id;
-
-load dataset DBLP 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/dblp-small/dblp-small.adm"),("format"="adm"));
-
-write output to nc1:'rttest/fuzzyjoin_dblp-aqlplus_2.adm';
 
 set simthreshold '.5f';
 

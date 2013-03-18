@@ -1,12 +1,5 @@
 use dataverse test;
 
-create dataset Customers3(CustomerType) 
-  primary key cid;
-create dataset Orders3(OrderType)
-  primary key oid;
-create dataset CustomerOrders3(CustomerOrdersType)
-  primary key cid;
-
 load dataset Customers3 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm")) pre-sorted;

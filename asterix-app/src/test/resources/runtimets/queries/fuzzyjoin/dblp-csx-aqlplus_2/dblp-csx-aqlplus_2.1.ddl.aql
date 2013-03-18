@@ -23,20 +23,3 @@ create type CSXType as open {
 create dataset DBLP(DBLPType) primary key id;
 create dataset CSX(CSXType) primary key id;
 
-load dataset DBLP
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/pub-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
-
-load dataset CSX
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/pub-small/csx-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
-
-write output to nc1:'rttest/fuzzyjoin_dblp-csx-aqlplus_2.adm';
-
-set simthreshold '.5f';
-
-for $csx in dataset('CSX')
-for $dblp in dataset('DBLP')
-where $dblp.title ~= $csx.title
-order by $dblp.id, $csx.id
-return {'dblp': $dblp, 'csx': $csx}

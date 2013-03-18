@@ -2,6 +2,8 @@ drop dataverse test if exists;
 
 create dataverse test;
 
+use dataverse test;
+
 create type OrderType as open {
   oid: int32,
   cid: int32,

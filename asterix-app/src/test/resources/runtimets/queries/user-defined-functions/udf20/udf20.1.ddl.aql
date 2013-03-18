@@ -8,7 +8,7 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/user-defined-functions_udf20.adm";
+use dataverse test;
 
 create function test.pie(){
 3.14
@@ -18,6 +18,3 @@ create function test.area($radius){
 test.pie() * $radius * $radius
 }
 
-for $a in [2,4,6,8,10,12]
-where test.area($a) > 100
-return { "radius" : $a,"area" : test.area($a) }

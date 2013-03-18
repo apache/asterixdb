@@ -11,11 +11,9 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/user-defined-functions_udf15.adm";
+use dataverse test;
 
 create function test.OList2(){
 [[1,2,3,4,5,6,7,8,9,10],["a","b","c","d","e","f","g","h","y"]]
 }
 
-for $a in test.OList2()
-return $a

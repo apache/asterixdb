@@ -30,21 +30,5 @@ create dataset DBLP(DBLPType) primary key id;
 
 create dataset CSX(CSXType) primary key id;
 
-load dataset DBLP 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
-
-load dataset CSX
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/pub-small/csx-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
-
 create index keyword_index on DBLP(title) type keyword;
 
-write output to nc1:"rttest/inverted-index-join-noeqjoin_word-jaccard-inline.adm";
-
-for $a in dataset('DBLP')
-for $b in dataset('CSX')
-let $jacc := similarity-jaccard(word-tokens($a.title), word-tokens($b.title))
-where $jacc >= 0.5f and $a.id < $b.id
-order by $jacc, $a.id, $b.id
-return { "a": $a.title, "b": $b.title, "jacc": $jacc }

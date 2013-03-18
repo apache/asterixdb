@@ -8,6 +8,8 @@
 drop dataverse testdv2 if exists;
 create dataverse testdv2;
 
+use dataverse test;
+
 create type testtype01 as closed {
   id: string,
   name: string?
@@ -16,4 +18,7 @@ create type testtype01 as closed {
 create type testtype02 as closed {
   id: string
 }
+
+create dataset testds01(testtype01) primary key id;
+create dataset testds02(testtype02) primary key id;
 

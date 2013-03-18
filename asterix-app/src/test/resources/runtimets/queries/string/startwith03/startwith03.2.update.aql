@@ -9,8 +9,6 @@
 
 use dataverse test;
 
-create dataset testds(TestType) primary key name;
-
 insert into dataset testds({"name":"John Smith"});
 insert into dataset testds({"name":"John Doe"});
 insert into dataset testds({"name":"John Wayne"});

@@ -134,7 +134,7 @@ public class ExecutionTest {
     // create index statement
     // create dataverse statement
     // create function statement
-    public void executeDDLUpdate(String str) throws Exception {
+    public void executeDDL(String str) throws Exception {
         final String url = "http://localhost:19101/ddl";
 
         // Create an instance of HttpClient.
@@ -150,6 +150,11 @@ public class ExecutionTest {
 
         // Execute the method.
         int statusCode = client.executeMethod(method);
+
+        // Read the response body as String.
+        String responseBody = method.getResponseBodyAsString();
+
+        System.out.println(responseBody);
 
         // Check if the method was executed successfully.
         if (statusCode != HttpStatus.SC_OK) {
@@ -175,6 +180,11 @@ public class ExecutionTest {
 
         // Execute the method.
         int statusCode = client.executeMethod(method);
+
+        // Read the response body as String.
+        String responseBody = method.getResponseBodyAsString();
+
+        System.out.println(responseBody);
 
         // Check if the method was executed successfully.
         if (statusCode != HttpStatus.SC_OK) {
@@ -212,6 +222,8 @@ public class ExecutionTest {
             // Read the response body as String.
             String responseBody = method.getResponseBodyAsString();
 
+            System.out.println(responseBody);
+
             JSONObject jsonObj = new JSONObject(responseBody);
 
             jArray = jsonObj.getJSONArray("results");
@@ -245,13 +257,12 @@ public class ExecutionTest {
                 try {
                     switch (ctx.getType()) {
                         case "ddl":
-                            executeDDLUpdate(statement);
+                            executeDDL(statement);
                             break;
                         case "update":
                             executeUpdate(statement);
                             break;
                         case "query":
-                            System.out.println("Executing this part");
                             resultsArray = executeQuery(statement);
                             expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
                             queryCount++;

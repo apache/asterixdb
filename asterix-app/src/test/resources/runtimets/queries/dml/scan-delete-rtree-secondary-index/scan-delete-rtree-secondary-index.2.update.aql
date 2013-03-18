@@ -1,13 +1,6 @@
 use dataverse test;
 
-create dataset MyData(MyRecord)
-  primary key id;
-
 load dataset MyData 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
-
-create index rtree_index_point on MyData(point) type rtree;
-
-delete $m from dataset MyData where $m.id>10;
 

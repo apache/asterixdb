@@ -8,6 +8,8 @@
 drop dataverse test if exists;
 create dataverse test;
 
+use dataverse test;
+
 create type LineItemType as closed {
   l_orderkey: int32, 
   l_partkey: int32, 
@@ -26,4 +28,9 @@ create type LineItemType as closed {
   l_shipmode: string, 
   l_comment: string
 }
+
+create dataset LineItem(LineItemType)
+  primary key l_orderkey, l_linenumber;
+
+create index part_index on LineItem(l_partkey);
 

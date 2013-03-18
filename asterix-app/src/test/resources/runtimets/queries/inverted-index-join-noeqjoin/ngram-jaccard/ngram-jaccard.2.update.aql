@@ -5,29 +5,7 @@
  * Success        : Yes
  */
 
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-create type DBLPType as closed {
-  id: int32, 
-  dblpid: string,
-  title: string,
-  authors: string,
-  misc: string
-}
-
-create type CSXType as closed {
-  id: int32, 
-  csxid: string,
-  title: string,
-  authors: string,
-  misc: string
-}
-
-create dataset DBLP(DBLPType) primary key id;
-
-create dataset CSX(CSXType) primary key id;
 
 load dataset DBLP 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
@@ -37,13 +15,3 @@ load dataset CSX
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/pub-small/csx-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
 
-create index ngram_index on DBLP(title) type ngram(3);
-
-write output to nc1:"rttest/inverted-index-join-noeqjoin_ngram-jaccard.adm";
-
-for $a in dataset('DBLP')
-for $b in dataset('CSX')
-where similarity-jaccard(gram-tokens($a.title, 3, false), gram-tokens($b.title, 3, false)) >= 0.5f 
-      and $a.id < $b.id
-order by $a.id, $b.id
-return { "a": $a.title, "b": $b.title }

@@ -9,6 +9,8 @@
 drop dataverse testdv2 if exists;
 create dataverse testdv2;
 
+use dataverse test;
+
 create type testtype as open {
   name: string,
   id: string
@@ -19,4 +21,8 @@ create type testtype2 as open {
   name: string,
   hobby: string
 }
+
+create dataset testds(testtype) primary key id;
+
+create dataset testds2(testtype2) primary key id;
 

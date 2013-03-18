@@ -5,8 +5,5 @@
  */
 use dataverse test;
 
-create dataset Office(Employee)
-primary key id;
-
 insert into dataset Office({"id": 1, "name": "clerk#1", "salary":120000});
 

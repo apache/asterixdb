@@ -1,6 +1,8 @@
 drop dataverse test if exists;
 create dataverse test;
 
+use dataverse test;
+
 create type TempType as open {
   id: int32,
   date: date,

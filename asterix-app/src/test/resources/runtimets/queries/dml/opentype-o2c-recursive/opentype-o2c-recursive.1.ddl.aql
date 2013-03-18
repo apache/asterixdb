@@ -7,6 +7,8 @@
 drop dataverse testdv2 if exists;
 create dataverse testdv2;
 
+use dataverse testdv2;
+
 create type AddressType as open{
   street: string,
   city: string
@@ -28,4 +30,8 @@ create type testtype2 as closed {
   address: AddressType?,
   department: {{Dept}}?
 }
+
+create dataset testds(testtype) primary key id;
+
+create dataset testds2(testtype2) primary key id;
 

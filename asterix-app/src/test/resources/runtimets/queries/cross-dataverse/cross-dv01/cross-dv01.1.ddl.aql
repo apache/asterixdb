@@ -12,6 +12,9 @@ drop dataverse teacher if exists;
 create dataverse student;
 create dataverse teacher;
 
+use dataverse student;
+use dataverse teacher;
+
 create type student.stdType as open {
 id : int32,
 name : string,

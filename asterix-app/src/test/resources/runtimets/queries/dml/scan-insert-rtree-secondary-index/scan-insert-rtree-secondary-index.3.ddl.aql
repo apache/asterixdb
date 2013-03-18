@@ -1,0 +1,5 @@
+use dataverse test;
+
+create index rtree_index_point_0 on MyData(point) type rtree;
+create index rtree_index_point on MyMiniData(point) type rtree;
+

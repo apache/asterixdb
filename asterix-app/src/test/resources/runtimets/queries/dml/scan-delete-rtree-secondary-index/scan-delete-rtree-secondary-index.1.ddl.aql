@@ -1,6 +1,8 @@
 drop dataverse test if exists;
 create dataverse test;
 
+use dataverse test;
+
 create type MyRecord as closed {
   id: int32,
   point: point,
@@ -12,4 +14,7 @@ create type MyRecord as closed {
   rec: rectangle,
   circle: circle
 }
+
+create dataset MyData(MyRecord)
+  primary key id;
 

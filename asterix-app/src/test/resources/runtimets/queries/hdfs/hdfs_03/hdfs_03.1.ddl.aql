@@ -9,6 +9,8 @@
 drop dataverse test if exists;
 create dataverse test;
 
+use dataverse test;
+
 create type LineType as closed {
  content: string
 };

@@ -5,8 +5,6 @@
  */
 
 use dataverse testdv2;
-
-create dataset testds(testtype) primary key id;
  
  insert into dataset testds (
  { "id": "001", "name": "Person Three", "hobbies": {{"scuba", "music"}}}

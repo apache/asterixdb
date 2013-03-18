@@ -7,6 +7,8 @@
 drop dataverse testdvt if exists;
 create dataverse testdvt;
 
+use dataverse test;
+
 create type testtype as closed {
   id: string,
   dateField: date,

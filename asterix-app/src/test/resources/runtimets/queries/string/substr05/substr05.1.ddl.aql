@@ -10,7 +10,10 @@
 drop dataverse test if exists;
 create dataverse test;
 
+use dataverse test;
+
 create type TestType as open {
 name : string
 }
 
+create dataset testdst(TestType) primary key name;

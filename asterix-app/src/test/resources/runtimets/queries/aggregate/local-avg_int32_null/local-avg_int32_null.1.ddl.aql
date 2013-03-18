@@ -2,6 +2,8 @@ drop dataverse test if exists;
 
 create dataverse test;
 
+use dataverse test;
+
 create type NumericType as open {
   id: int32,
   int8Field: int8?,
@@ -15,4 +17,3 @@ create type NumericType as open {
 create external dataset Numeric(NumericType)
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/nontagged/numericData.json"),("format"="adm"));
-

@@ -10,8 +10,11 @@
 drop dataverse test if exists;
 create dataverse test;
 
+use dataverse test;
+
 create type TestType as open{
 id:int32,
 cpt:[int32]
 }
 
+create dataset testds(TestType) primary key id;

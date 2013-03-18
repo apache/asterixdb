@@ -7,15 +7,7 @@
 
 // Returns java.lang.ClassCastException : Issue 195
 
-drop dataverse test if exists;
-create dataverse test;
-
-write output to nc1:"rttest/user-defined-functions_udf24.adm";
-
-create function test.myRangeFn($n)
-{
-   range(1,$n)
-}
+use dataverse test;
 
 for $i in test.myRangeFn(100)
 return $i

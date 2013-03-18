@@ -1,10 +1,5 @@
 use dataverse test;
 
-create dataset CustomerSomeSat02(CustomerType)
-  primary key cid;
-create dataset OrdersSomeSat02(OrderType)
-  primary key oid;
-
 load dataset CustomerSomeSat02 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
 (("path"="nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm"));

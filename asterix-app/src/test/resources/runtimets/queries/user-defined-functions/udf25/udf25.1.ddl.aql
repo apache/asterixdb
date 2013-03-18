@@ -9,7 +9,7 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/user-defined-functions_udf25.adm";
+use dataverse test;
 
 create function test.computeBonus($pbcRating,$salary)
 {
@@ -18,6 +18,4 @@ create function test.computeBonus($pbcRating,$salary)
    else
         $salary * 0.10
 }
-
-test.computeBonus(-1,-1)
 

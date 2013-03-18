@@ -1,12 +1,5 @@
 use dataverse test;
 
-create dataset Customers2(CustomerType) 
-  primary key cid;
-create dataset Orders2(OrderType)
-  primary key oid;
-create dataset CustomerOrders2(CustomerOrdersType)
-  primary key cid;
-
 load dataset Customers2 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm")) pre-sorted;
@@ -15,3 +8,14 @@ load dataset Orders2
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/custord-tiny/order-tiny.adm"),("format"="adm")) pre-sorted;
 
+write into dataset CustomerOrders2 (
+
+for $c in dataset('Customers2')
+let $orders := 
+  for $o in dataset('Orders2')
+  where $o.cid = $c.cid
+  order by $o.oid asc
+  return $o
+return { "cid": $c.cid, "cust": $c, "orders": $orders }
+
+);

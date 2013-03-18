@@ -5,18 +5,3 @@
  * Date         : Sep 5th 2012
  */
 
-drop dataverse test if exists;
-create dataverse test;
-
-write output to nc1:"rttest/user-defined-functions_udf17.adm";
-
-create function test.parent(){
-test.child()
-}
-
-create function test.child() {
-"This data is from the child function"
-}
-
-let $str := test.parent()
-return $str

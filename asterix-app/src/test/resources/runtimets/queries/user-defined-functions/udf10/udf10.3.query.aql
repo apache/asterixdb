@@ -4,14 +4,7 @@
  * Date         : 4th September 2012
  */
 
-drop dataverse test if exists;
-create dataverse test;
-
-write output to nc1:"rttest/user-defined-functions_udf10.adm";
-
-create function test.echo($uolist){
-$uolist
-}
+use dataverse test;
 
 let $a:={{"this is optional data","this is extra data","open types are good"}}
 return test.echo($a)

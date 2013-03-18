@@ -7,9 +7,6 @@
 
 use dataverse test;
 
-create dataset MyData1(MyRecord) primary key id;
-create dataset MyData2(MyRecord) primary key id;
-
 load dataset MyData1
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
@@ -17,6 +14,4 @@ using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 load dataset MyData2
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
-
-create index rtree_index on MyData1(point) type rtree;
 

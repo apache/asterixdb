@@ -10,11 +10,9 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/user-defined-functions_udf27.adm";
+use dataverse test;
 
 create function test.f1(){
 100
 }
 
-let $a := true
-return some $i in [100,200] satisfies test.f1()

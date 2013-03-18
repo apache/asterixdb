@@ -7,9 +7,6 @@
 
 use dataverse test;
 
-create dataset Customers(CustomerType) primary key cid;
-create dataset Orders(OrderType) primary key oid;
-
 load dataset Customers
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/nontagged/customerData.json"),("format"="adm"));

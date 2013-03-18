@@ -29,21 +29,5 @@ create dataset Customers(CustomerType) primary key cid;
 
 create dataset Customers2(CustomerType) primary key cid;
 
-load dataset Customers 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/semistructured/co1k_olist/customer.adm"),("format"="adm"));
-
-load dataset Customers2
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/semistructured/co1k_olist/customer.adm"),("format"="adm"));
-
 create index interests_index on Customers(interests) type keyword;
 
-write output to nc1:"rttest/inverted-index-join-noeqjoin_olist-edit-distance-inline.adm";
-
-for $a in dataset('Customers')
-for $b in dataset('Customers2')
-let $ed := edit-distance($a.interests, $b.interests)
-where len($a.interests) > 2 and len($b.interests) > 2 and $ed <= 1 and $a.cid < $b.cid
-order by $ed, $a.cid, $b.cid
-return { "a": $a.interests, "b": $b.interests, "ed": $ed }

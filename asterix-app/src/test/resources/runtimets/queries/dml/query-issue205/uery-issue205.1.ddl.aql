@@ -8,6 +8,8 @@
 drop dataverse test if exists;
 create dataverse test;
 
+use dataverse test;
+
 create type EmployeeStat as open {
   age: int32,
   salary:int32
@@ -18,4 +20,7 @@ create type EmployeeType as closed {
   stat:EmployeeStat,
   deptCode:int32
 }
+
+create dataset Employees(EmployeeType)
+  primary key id;
 

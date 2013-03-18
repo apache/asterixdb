@@ -8,6 +8,8 @@
 drop dataverse test if exists;
 create dataverse test;
 
+use dataverse test;
+
 create type Schema as closed {
 unique1:  int32,
 unique2:  int32,
@@ -26,4 +28,6 @@ stringu1:  string,
 stringu2:  string,
 string4:  string
 }
+
+create dataset t1(Schema) primary key unique2;
 

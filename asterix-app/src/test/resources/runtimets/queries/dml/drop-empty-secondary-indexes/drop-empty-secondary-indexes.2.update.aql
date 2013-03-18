@@ -5,19 +5,3 @@
  *
  */
 
-use dataverse test;
-
-create dataset t1(TestType) primary key id;
-
-create index rtree_index_point on t1(locn) type rtree;
-
-create index keyWD_indx on t1(name) type keyword;
-
-create index secndIndx on t1(zip);
-
-drop index t1.rtree_index_point;
-
-drop index t1.keyWD_indx;
-
-drop index t1.secndIndx;
-

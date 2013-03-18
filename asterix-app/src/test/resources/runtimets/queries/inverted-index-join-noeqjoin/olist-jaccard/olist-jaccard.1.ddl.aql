@@ -28,21 +28,5 @@ create dataset Customers(CustomerType) primary key cid;
   
 create dataset Customers2(CustomerType) primary key cid;
 
-load dataset Customers 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/semistructured/co1k_olist/customer.adm"),("format"="adm"));
-
-load dataset Customers2
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/semistructured/co1k_olist/customer.adm"),("format"="adm"));
-
 create index interests_index on Customers(interests) type keyword;
 
-write output to nc1:"rttest/inverted-index-join-noeqjoin_olist-jaccard.adm";
-
-for $a in dataset('Customers')
-for $b in dataset('Customers2')
-where /*+ indexnl */ similarity-jaccard($a.interests, $b.interests) >= 0.9f 
-      and $a.cid < $b.cid and len($a.interests) > 1 and len($b.interests) > 1
-order by $a.cid, $b.cid
-return { "a": $a.interests, "b": $b.interests }

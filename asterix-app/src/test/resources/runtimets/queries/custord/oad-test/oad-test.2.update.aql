@@ -1,10 +1,4 @@
 use dataverse test;
-
-
-create dataset c1(CustomerType) 
-  primary key cid;
-create dataset c2(CustomerType) 
-  primary key cid;  
   
 load dataset c1 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

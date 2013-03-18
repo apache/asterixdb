@@ -1,9 +1,5 @@
 use dataverse test;
 
-create dataset Users(UserType) primary key uid;
-create dataset Visitors(VisitorType) primary key vid;
-
-
 load dataset Users 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
 (("path"="nc1://data/users-visitors-small/users.json"),("format"="adm"));

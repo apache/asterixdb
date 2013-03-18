@@ -1,24 +1,4 @@
-drop dataverse fuzzyjoin if exists;
-
-create dataverse fuzzyjoin;
-
 use dataverse fuzzyjoin;
-
-create type DBLPType as closed {
-  id: int32, 
-  dblpid: string,
-  title: string,
-  authors: string,
-  misc: string
-}
-
-create dataset DBLP(DBLPType) primary key id;
-
-load dataset DBLP 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/pub-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
-
-write output to nc1:'rttest/fuzzyjoin_dblp-2_5.3.1.adm';
 
     //
     // -- - Stage 2 - --

@@ -2,6 +2,8 @@
 drop dataverse test if exists;
 create dataverse test;
 
+use dataverse test;
+
 create type DBLPType as open {
   id: int32, 
   dblpid: string,
@@ -9,4 +11,7 @@ create type DBLPType as open {
   authors: string,
   misc: string
 }
+
+create dataset DBLP1(DBLPType) 
+  primary key id;
 

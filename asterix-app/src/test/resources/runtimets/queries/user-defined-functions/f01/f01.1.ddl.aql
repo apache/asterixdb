@@ -8,7 +8,5 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/user-defined-functions_f01.adm";
+use dataverse test;
 
-let $c1 := int8()
-return $c1

@@ -7,14 +7,7 @@
 
 // This test is returning NPE... Issue 200 
 
-drop dataverse test if exists;
-create dataverse test;
-
-write output to nc1:"rttest/user-defined-functions_udf03.adm";
-
-create function test.echo($list){
-$list
-}
+use dataverse test;
 
 for $a in [[1,2],["A","B"],["UCLA","UCSD","UCR","UCI"]]
 return test.echo($a)

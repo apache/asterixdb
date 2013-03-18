@@ -8,11 +8,9 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/user-defined-functions_udf16.adm";
+use dataverse test;
 
 create function test.fn02(){
 "Welcome to the world of Asterix"
 }
 
-let $str := test.fn02()
-return string-length($str)

@@ -9,8 +9,6 @@
 
 use dataverse test;
 
-create dataset testds(TestType) primary key id;
-
 // insert string data into internal dataset testds into the name attribute
 
 insert into dataset testds({"id":123,"fname":"John","lname":"Smith"});

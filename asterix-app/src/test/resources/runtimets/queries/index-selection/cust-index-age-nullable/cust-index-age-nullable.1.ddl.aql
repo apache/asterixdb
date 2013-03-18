@@ -19,15 +19,5 @@ create type CustomerType as open {
 
 create dataset Customers(CustomerType) primary key cid;
 
-load dataset Customers 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/semistructured/tiny01/customer.adm"),("format"="adm"));
-
 create index age_index on Customers(age);
 
-write output to nc1:"rttest/index-selection_cust-index-age-nullable.adm";
-
-for $c in dataset('Customers')
-where $c.age < 20
-order by $c.cid
-return $c

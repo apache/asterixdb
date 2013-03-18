@@ -1,0 +1,10 @@
+use dataverse test;
+
+// create secondary indexes
+create index idx_t1_str1 on t1(stringu1);
+create index idx_t1_unique1 on t1(unique1);
+
+// drop secondary indexes
+drop index t1.idx_t1_str1;
+drop index t1.idx_t1_unique1;
+

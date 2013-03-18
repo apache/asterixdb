@@ -8,10 +8,6 @@
 
 use dataverse test;
 
-create dataset Customers(CustomerType) primary key cid;
-
-create dataset Customers2(CustomerType) primary key cid;
-
 load dataset Customers 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/semistructured/co1k_olist/customer.adm"),("format"="adm"));

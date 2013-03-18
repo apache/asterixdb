@@ -1,10 +1,5 @@
 use dataverse test;
 
-create dataset LineItem(LineItemType)
-  primary key l_orderkey, l_linenumber;
-
-create index idx_partkey on LineItem(l_partkey);
-
 load dataset LineItem 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;

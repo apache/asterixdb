@@ -7,12 +7,9 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/user-defined-functions_udf23.adm";
+use dataverse test;
 
 create function test.numRows(){
 6
 }
-   
-for $l in dataset('Metadata.Dataset')
-limit test.numRows()
-return $l
+

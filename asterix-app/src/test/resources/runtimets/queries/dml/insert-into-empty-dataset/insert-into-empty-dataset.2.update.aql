@@ -7,9 +7,6 @@
 
 use dataverse test;
 
-create dataset LineID(LineIDType)
-  primary key l_orderkey, l_linenumber;
-
 insert into dataset LineID (
 let $x:=1
 let $y:=2

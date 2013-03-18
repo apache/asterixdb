@@ -7,9 +7,6 @@
 
 use dataverse test;
 
-create dataset DBLP(DBLPType) primary key id;
-create dataset CSX(CSXType) primary key id;
-
 load dataset DBLP 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/pub-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
@@ -17,6 +14,4 @@ using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 load dataset CSX
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/pub-small/csx-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
-
-create index title_index on DBLP(authors);
 

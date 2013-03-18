@@ -7,6 +7,8 @@
 drop dataverse test if exists;
 create dataverse test;
 
+use dataverse test;
+
 create type TestType as closed {
   id: int32,
   val: double

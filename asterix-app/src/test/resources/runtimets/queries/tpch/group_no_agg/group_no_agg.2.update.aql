@@ -1,8 +1,5 @@
 use dataverse tpch;
 
-create dataset Regions_group_no_agg(RegionType) 
-  primary key r_regionkey;
-
 load dataset Regions_group_no_agg 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/tpch0.001/region.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;

@@ -14,17 +14,3 @@ create type DBLPType as open {
 
 create dataset DBLP(DBLPType) primary key id;
 
-load dataset DBLP 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/pub-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
-
-write output to nc1:'rttest/fuzzyjoin_dblp-1_1.adm';
-
-            //
-            // -- - Stage 1 - --
-            //
-            for $paper in dataset('DBLP')
-            for $token in counthashed-word-tokens($paper.title)
-            group by $tokenGroupped := $token with $paper
-            order by count($paper), $tokenGroupped
-            return $tokenGroupped

@@ -8,6 +8,8 @@
 drop dataverse test if exists;
 create dataverse test;
 
+use dataverse test;
+
 create type AddressType as closed {
   number: int32, 
   street: string,
@@ -22,4 +24,8 @@ create type CustomerType as closed {
   interests: [string],
   children: [ { name: string, age: int32? } ]
 }
+
+create dataset Customers(CustomerType) primary key cid;
+  
+create dataset Customers2(CustomerType) primary key cid;
 

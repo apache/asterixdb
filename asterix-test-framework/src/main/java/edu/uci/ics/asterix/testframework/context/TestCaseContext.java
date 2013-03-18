@@ -76,6 +76,7 @@ public class TestCaseContext {
         path = new File(path, cUnit.getOutputDir().getValue());
 
         String fileNames[] = path.list();
+        System.out.println("Path: " + path.toString());
         for (String fName : fileNames) {
             File testFile = new File(path, fName);
             TestFileContext tfsc = new TestFileContext(testFile);

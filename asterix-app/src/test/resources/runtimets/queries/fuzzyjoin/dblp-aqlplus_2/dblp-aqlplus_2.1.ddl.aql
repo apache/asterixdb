@@ -17,16 +17,3 @@ create type DBLPType as open {
 
 create dataset DBLP(DBLPType) primary key id;
 
-load dataset DBLP 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/dblp-small/dblp-small.adm"),("format"="adm"));
-
-write output to nc1:'rttest/fuzzyjoin_dblp-aqlplus_2.adm';
-
-set simthreshold '.5f';
-
-for $dblp in dataset('DBLP')
-for $dblp2 in dataset('DBLP')
-where $dblp.title ~= $dblp2.title and $dblp.id < $dblp2.id
-order by $dblp.id, $dblp2.id
-return {'dblp': $dblp, 'dblp2': $dblp2}

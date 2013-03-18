@@ -7,10 +7,9 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/user-defined-functions_udf26.adm";
+use dataverse test;
 
 create function test.needs_f1($x){
  $x + f1()
 }
 
-test.needs_f1(12345)

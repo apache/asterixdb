@@ -8,3 +8,8 @@ create type DBLPType as closed {
   misc: string
 }
 
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset DBLP(DBLPType) 
+  primary key id on group1;
+

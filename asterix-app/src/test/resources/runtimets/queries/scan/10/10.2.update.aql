@@ -1,9 +1,6 @@
 /* scan and print a delimited text file */
 use dataverse test;
 
-create dataset DBLP1(DBLPType) 
-  primary key id;
-
 // drop dataset DBLP1;
 load dataset DBLP1
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"

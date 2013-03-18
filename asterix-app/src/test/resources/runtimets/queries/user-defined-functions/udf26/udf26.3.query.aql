@@ -4,13 +4,6 @@
  * Date         : Sep 6th 2012
  */
 
-drop dataverse test if exists;
-create dataverse test;
-
-write output to nc1:"rttest/user-defined-functions_udf26.adm";
-
-create function test.needs_f1($x){
- $x + f1()
-}
+use dataverse test;
 
 test.needs_f1(12345)

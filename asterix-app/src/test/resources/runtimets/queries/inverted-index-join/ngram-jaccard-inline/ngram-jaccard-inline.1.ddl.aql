@@ -8,6 +8,8 @@
 drop dataverse test if exists;
 create dataverse test;
 
+use dataverse test;
+
 create type DBLPType as closed {
   id: int32, 
   dblpid: string,
@@ -23,4 +25,8 @@ create type CSXType as closed {
   authors: string,
   misc: string
 }
+
+create dataset DBLP(DBLPType) primary key id;
+
+create dataset CSX(CSXType) primary key id;
 

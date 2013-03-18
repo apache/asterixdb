@@ -2,6 +2,8 @@ drop dataverse test if exists;
   
 create dataverse test;
 
+use dataverse test;
+
 create type AddressType as open {
   number: int32, 
   street: string,
@@ -18,4 +20,9 @@ create type CustomerType as open {
     total: float
   }
 }
+
+create dataset c1(CustomerType) 
+  primary key cid;
+create dataset c2(CustomerType) 
+  primary key cid;  
 

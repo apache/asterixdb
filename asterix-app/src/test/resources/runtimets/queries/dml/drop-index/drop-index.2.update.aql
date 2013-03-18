@@ -7,18 +7,8 @@
 
 use dataverse test;
 
-create dataset t1(Schema) primary key unique2;
-
 // Load data
 load dataset t1
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/wisc/onektup.adm"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
-
-// create secondary indexes
-create index idx_t1_str1 on t1(stringu1);
-create index idx_t1_unique1 on t1(unique1);
-
-// drop secondary indexes
-drop index t1.idx_t1_str1;
-drop index t1.idx_t1_unique1;
 

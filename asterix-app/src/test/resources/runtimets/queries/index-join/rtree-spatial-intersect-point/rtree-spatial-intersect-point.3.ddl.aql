@@ -1,0 +1,11 @@
+/*
+ * Description    : Joins two datasets on the intersection of their point attributes.
+ *                  The dataset 'MyData1' has an RTree index, and we expect the 
+ *                  join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+create index rtree_index on MyData1(point) type rtree;
+

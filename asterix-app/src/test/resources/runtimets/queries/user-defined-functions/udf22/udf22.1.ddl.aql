@@ -7,12 +7,9 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/user-defined-functions_udf22.adm";
+use dataverse test;
 
 create function test.getFullName($fname,$lname){
 string-concat([$fname,$lname])
 }
 
-let $fn := "Bob"
-let $ln := "Harbus"
-return test.getFullName($fn,$ln)

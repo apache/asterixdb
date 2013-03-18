@@ -7,8 +7,11 @@
 drop dataverse testdv2 if exists;
 create dataverse testdv2;
 
+use dataverse test;
+
 create type testtype as closed {
   name: string?,
   id: string
 }
 
+create dataset testds(testtype) primary key id;

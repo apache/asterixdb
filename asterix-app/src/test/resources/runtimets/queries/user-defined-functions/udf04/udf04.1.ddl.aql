@@ -7,11 +7,8 @@
 drop dataverse test if exists;
 create dataverse test;
 
-write output to nc1:"rttest/user-defined-functions_udf04.adm";
+use dataverse test;
 
 create function test.echo($list){
 $list
 }
-
-for $a in [{"name":"John","age":45,"id":123},{"name":"Jim","age":55,"id":103},{"name":"Bill","age":35,"id":125}]
-return test.echo($a)

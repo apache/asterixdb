@@ -9,8 +9,6 @@
 
 use dataverse test;
 
-create dataset testds(TestType) primary key id;
-
 // insert codepoint data into internal dataset testds here into the cpt attribute
 
 insert into dataset testds({"id":123,"cpt":[0048,0045,0057,0044,0065,0045,0090]});

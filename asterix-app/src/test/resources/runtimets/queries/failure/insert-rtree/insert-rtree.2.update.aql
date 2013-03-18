@@ -1,42 +1,11 @@
 use dataverse test;
 
-create dataset MyData(MyRecord)
-  primary key id;
-
 load dataset MyData 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/twitter/smalltweets.txt"),("format"="adm")) pre-sorted;
 
 
-create dataset MyMiniData(MyMiniRecord)
-  primary key id;
-
 load dataset MyMiniData 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/spatial/spatialData0.json"),("format"="adm")) pre-sorted;
-
-
-create index rtree_index_loc_0 on MyData(loc) type rtree;
-create index rtree_index_loc on MyMiniData(loc) type rtree;
-
-insert into dataset MyMiniData
-(
-	for $m in dataset('MyData')
-	where $m.id<1000
-	return {
-		"id": $m.id,
-		"loc": $m.loc
-	}
-);
-
-insert into dataset MyMiniData
-(
-	for $m in dataset('MyData')
-	where $m.id>=1000
-	die after 1000
-	return {
-		"id": $m.id,
-		"loc": $m.loc
-	}
-);
 

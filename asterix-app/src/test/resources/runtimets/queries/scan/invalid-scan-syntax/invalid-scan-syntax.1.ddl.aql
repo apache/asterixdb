@@ -6,9 +6,14 @@
 drop dataverse test if exists;
 create dataverse test;
 
+use dataverse test;
+
 create type Employee as closed {
 id: int32,
 name: string,
 salary: int32
 }
+
+create dataset Office(Employee)
+primary key id;
 

@@ -1,6 +1,8 @@
 drop dataverse test if exists;
 create dataverse test;
 
+use dataverse test;
+
 create type DBLPType as closed {
   id: int32, 
   dblpid: string,
@@ -8,4 +10,9 @@ create type DBLPType as closed {
   authors: string,
   misc: string
 }
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset DBLP(DBLPType) 
+  primary key id on group1;
 

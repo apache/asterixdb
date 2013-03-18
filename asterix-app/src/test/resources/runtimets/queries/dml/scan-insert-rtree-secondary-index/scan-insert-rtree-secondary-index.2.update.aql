@@ -1,28 +1,10 @@
 use dataverse test;
 
-create dataset MyData(MyRecord)
-  primary key id;
-
 load dataset MyData 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
 
-create dataset MyMiniData(MyMiniRecord)
-  primary key id;
-
 load dataset MyMiniData 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/spatial/spatialData0.json"),("format"="adm")) pre-sorted;
-
-create index rtree_index_point_0 on MyData(point) type rtree;
-create index rtree_index_point on MyMiniData(point) type rtree;
-
-insert into dataset MyMiniData
-(
-	for $m in dataset('MyData')
-	return {
-		"id": $m.id,
-		"point": $m.point
-	}
-);
 
