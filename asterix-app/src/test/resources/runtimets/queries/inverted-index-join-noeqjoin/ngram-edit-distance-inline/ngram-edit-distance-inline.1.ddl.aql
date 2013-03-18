@@ -29,5 +29,3 @@ create dataset Customers(CustomerType) primary key cid;
 
 create dataset Customers2(CustomerType) primary key cid;
 
-create index ngram_index on Customers(name) type ngram(3);
-

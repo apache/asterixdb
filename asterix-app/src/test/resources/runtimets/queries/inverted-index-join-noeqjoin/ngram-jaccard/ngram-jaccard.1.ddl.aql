@@ -29,5 +29,3 @@ create dataset DBLP(DBLPType) primary key id;
 
 create dataset CSX(CSXType) primary key id;
 
-create index ngram_index on DBLP(title) type ngram(3);
-

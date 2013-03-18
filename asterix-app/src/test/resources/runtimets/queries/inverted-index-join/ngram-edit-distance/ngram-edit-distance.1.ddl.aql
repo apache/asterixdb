@@ -6,7 +6,6 @@
 
 drop dataverse test if exists;
 create dataverse test;
-
 use dataverse test;
 
 create type AddressType as open {

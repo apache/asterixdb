@@ -3515,7 +3515,7 @@
     </test-case>
     <test-case FilePath="tpch">
       <compilation-unit name="q10_returned_item_int64">
-	<output-dir compare="Text">q10_returned_item_int64</output-dir>
+       <output-dir compare="Text">q10_returned_item_int64</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">

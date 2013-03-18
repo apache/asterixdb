@@ -14,5 +14,3 @@ load dataset Customers2
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/semistructured/co1k_olist/customer.adm"),("format"="adm"));
 
-create index interests_index on Customers(interests) type keyword;
-

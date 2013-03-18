@@ -7,7 +7,6 @@
 
 drop dataverse test if exists;
 create dataverse test;
-
 use dataverse test;
 
 create type AddressType as closed {
@@ -28,3 +27,4 @@ create type CustomerType as closed {
 create dataset Customers(CustomerType) primary key cid;
   
 create dataset Customers2(CustomerType) primary key cid;
+

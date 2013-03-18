@@ -8,3 +8,4 @@
 use dataverse test;
 
 create index ngram_index on Customers(name) type ngram(3);
+
