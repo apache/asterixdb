@@ -16,9 +16,19 @@ package edu.uci.ics.asterix.installer.command;
 
 public interface ICommand {
 
-	public enum CommandType {
-		CREATE, DELETE, START, STOP, BACKUP, RESTORE, DESCRIBE, ALTER, VALIDATE, CONFIGURE, SHUTDOWN
-	}
+    public enum CommandType {
+        CREATE,
+        DELETE,
+        START,
+        STOP,
+        BACKUP,
+        RESTORE,
+        DESCRIBE,
+        ALTER,
+        VALIDATE,
+        CONFIGURE,
+        SHUTDOWN
+    }
 
-	public void execute(String args[]) throws Exception;
+    public void execute(String args[]) throws Exception;
 }

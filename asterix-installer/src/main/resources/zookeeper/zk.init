@@ -1,6 +1,6 @@
 ZK_HOME=$1
 shift 1
-cd $INSTALLER_HOME/.installer/zookeeper
+cd $MANAGIX_HOME/.installer/zookeeper
 tar cf zk.pkg.tar *
 zk_server_id=1
 for zk_host in  $@

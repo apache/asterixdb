@@ -40,19 +40,18 @@ public class OutputHandler implements IOutputHandler {
         switch (eventType) {
             case FILE_TRANSFER:
                 if (trimmedOutput.length() > 0) {
-                    if (!output.contains("Permission denied") || output.contains("does not exist")
-                            || output.contains("File exist")) {
-                        ignore = true;
-                    } else {
+                    if (output.contains("Permission denied") || output.contains("cannot find or open")) {
                         ignore = false;
+                        break;
                     }
                 }
                 break;
 
             case BACKUP:
+            case RESTORE:
                 if (trimmedOutput.length() > 0) {
                     if (trimmedOutput.contains("AccessControlException")) {
-                        errorMessage.append("Insufficient permissions on HDFS back up directory");
+                        errorMessage.append("Insufficient permissions on back up directory");
                         ignore = false;
                     }
                     if (output.contains("does not exist") || output.contains("File exist")
@@ -64,42 +63,19 @@ public class OutputHandler implements IOutputHandler {
                 }
                 break;
 
-            case RESTORE:
-                if (trimmedOutput.length() > 0) {
-                    if (trimmedOutput.contains("AccessControlException")) {
-                        errorMessage.append("Insufficient permissions on HDFS back up directory");
-                        ignore = false;
-                    }
-                    if (output.contains("does not exist") || output.contains("File exist")
-                            || output.contains("No such file or directory")) {
-                        ignore = true;
-                    } else {
-                        ignore = false;
-                    }
-                }
-                break;
-
-            case ASTERIX_DEPLOY:
-                if (trimmedOutput.length() > 0) {
-                    if (trimmedOutput.contains("Exception")) {
-                        ignore = false;
-                        errorMessage.append("Error in deploying Asterix: " + output);
-                        errorMessage.append("\nStop the instance to initiate a cleanup");
-                    }
-                }
             case NODE_INFO:
                 Properties p = new Properties();
                 try {
                     p.load(new ByteArrayInputStream(trimmedOutput.getBytes()));
                 } catch (IOException e) {
                 }
-                String javaVersion = (String) p.get("JAVA_VERSION");
-                if (p.get("JAVA_VERSION") == null) {
+                String javaVersion = (String) p.get("java_version");
+                if (p.get("java_version") == null) {
                     errorMessage.append("Java not installed on " + event.getNodeid().getValue().getAbsvalue());
                     ignore = false;
-                } else if (!javaVersion.contains("1.8")) {
+                } else if (!javaVersion.contains("1.7")) {
                     errorMessage.append("Asterix requires Java 1.7.x. Incompatible version found on  "
-                            + event.getNodeid().getValue().getAbsvalue());
+                            + event.getNodeid().getValue().getAbsvalue() + "\n");
                     ignore = false;
                 }
                 break;

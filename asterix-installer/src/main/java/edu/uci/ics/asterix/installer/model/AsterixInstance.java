@@ -18,7 +18,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Properties;
 
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
@@ -161,7 +160,6 @@ public class AsterixInstance implements Serializable {
             buffer.append(node.getId() + ":" + node.getIp() + "\n");
         }
 
-        buffer.append("\n");
         if (backupInfo != null && backupInfo.size() > 0) {
             for (BackupInfo info : backupInfo) {
                 buffer.append(info + "\n");
@@ -169,10 +167,6 @@ public class AsterixInstance implements Serializable {
         }
         buffer.append("\n");
         buffer.append("Asterix version:" + asterixVersion + "\n");
-        buffer.append("Asterix Configuration" + "\n");
-        for (Entry<Object, Object> entry : configuration.entrySet()) {
-            buffer.append(entry.getKey() + " = " + entry.getValue() + "\n");
-        }
         buffer.append("Metadata Node:" + metadataNodeId + "\n");
         buffer.append("Processes" + "\n");
         for (ProcessInfo pInfo : runtimeState.getProcesses()) {

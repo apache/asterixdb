@@ -55,7 +55,7 @@ public class RestoreCommand extends AbstractCommand {
     protected String getUsageDescription() {
         return "\nRestores an ASTERIX instance's data from a previously taken backup snapshot."
                 + "\n\nAvailable arguments/options" + "\n-n name of the ASTERIX instance"
-                + "\n-b id of the backed up snapshot ";
+                + "\n-b id of the backup snapshot ";
     }
 
 }

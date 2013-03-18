@@ -16,7 +16,9 @@ package edu.uci.ics.asterix.installer.events;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.uci.ics.asterix.event.driver.EventDriver;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
@@ -266,18 +268,43 @@ public class PatternCreator {
         List<Pattern> patternList = new ArrayList<Pattern>();
         patternList.addAll(createRemoveAsterixStoragePattern(instance).getPattern());
         if (instance.getBackupInfo() != null && instance.getBackupInfo().size() > 0) {
-            patternList.addAll(createRemoveHDFSBackupPattern(instance).getPattern());
+            List<BackupInfo> backups = instance.getBackupInfo();
+            Set<String> removedBackupDirsHDFS = new HashSet<String>();
+            Set<String> removedBackupDirsLocal = new HashSet<String>();
+
+            String backupDir;
+            for (BackupInfo binfo : backups) {
+                backupDir = binfo.getBackupConf().getBackupDir();
+                switch (binfo.getBackupType()) {
+                    case HDFS:
+                        if (removedBackupDirsHDFS.contains(backups)) {
+                            continue;
+                        }
+                        patternList.addAll(createRemoveHDFSBackupPattern(instance, backupDir).getPattern());
+                        removedBackupDirsHDFS.add(backupDir);
+                        break;
+
+                    case LOCAL:
+                        if (removedBackupDirsLocal.contains(backups)) {
+                            continue;
+                        }
+                        patternList.addAll(createRemoveLocalBackupPattern(instance, backupDir).getPattern());
+                        removedBackupDirsLocal.add(backupDir);
+                        break;
+                }
+
+            }
         }
+        patternList.addAll(createRemoveAsterixLogDirPattern(instance).getPattern());
         Patterns patterns = new Patterns(patternList);
         return patterns;
     }
 
-    private Patterns createRemoveHDFSBackupPattern(AsterixInstance instance) throws Exception {
+    private Patterns createRemoveHDFSBackupPattern(AsterixInstance instance, String hdfsBackupDir) throws Exception {
         List<Pattern> patternList = new ArrayList<Pattern>();
         Cluster cluster = instance.getCluster();
         String hdfsUrl = InstallerDriver.getConfiguration().getBackup().getHdfs().getUrl();
         String hadoopVersion = InstallerDriver.getConfiguration().getBackup().getHdfs().getVersion();
-        String hdfsBackupDir = InstallerDriver.getConfiguration().getBackup().getBackupDir();
         String workingDir = cluster.getWorkingDir().getDir();
         Node launchingNode = cluster.getNode().get(0);
         Nodeid nodeid = new Nodeid(new Value(null, launchingNode.getId()));
@@ -285,6 +312,66 @@ public class PatternCreator {
         String pargs = workingDir + " " + hadoopVersion + " " + hdfsUrl + " " + pathToDelete;
         Event event = new Event("hdfs_delete", nodeid, pargs);
         patternList.add(new Pattern(null, 1, null, event));
+        Patterns patterns = new Patterns(patternList);
+        return patterns;
+    }
+
+    private Patterns createRemoveLocalBackupPattern(AsterixInstance instance, String localBackupDir) throws Exception {
+        List<Pattern> patternList = new ArrayList<Pattern>();
+        Cluster cluster = instance.getCluster();
+
+        String pathToDelete = localBackupDir + File.separator + instance.getName();
+        String pargs = pathToDelete;
+        List<String> removedBackupDirs = new ArrayList<String>();
+        for (Node node : cluster.getNode()) {
+            if (removedBackupDirs.contains(node.getIp())) {
+                continue;
+            }
+            Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
+            Event event = new Event("file_delete", nodeid, pargs);
+            patternList.add(new Pattern(null, 1, null, event));
+            removedBackupDirs.add(node.getIp());
+        }
+
+        Patterns patterns = new Patterns(patternList);
+        return patterns;
+    }
+
+    public Patterns createRemoveAsterixWorkingDirPattern(AsterixInstance instance) throws Exception {
+        List<Pattern> patternList = new ArrayList<Pattern>();
+        Cluster cluster = instance.getCluster();
+        String workingDir = cluster.getWorkingDir().getDir();
+        String pargs = workingDir;
+        Nodeid nodeid = new Nodeid(new Value(null, cluster.getMasterNode().getId()));
+        Event event = new Event("file_delete", nodeid, pargs);
+        patternList.add(new Pattern(null, 1, null, event));
+
+        if (!cluster.getWorkingDir().isNFS()) {
+            for (Node node : cluster.getNode()) {
+                nodeid = new Nodeid(new Value(null, node.getId()));
+                event = new Event("file_delete", nodeid, pargs);
+                patternList.add(new Pattern(null, 1, null, event));
+            }
+        }
+        Patterns patterns = new Patterns(patternList);
+        return patterns;
+    }
+
+    private Patterns createRemoveAsterixLogDirPattern(AsterixInstance instance) throws Exception {
+        List<Pattern> patternList = new ArrayList<Pattern>();
+        Cluster cluster = instance.getCluster();
+        String pargs = instance.getCluster().getLogdir();
+        Nodeid nodeid = new Nodeid(new Value(null, cluster.getMasterNode().getId()));
+        Event event = new Event("file_delete", nodeid, pargs);
+        patternList.add(new Pattern(null, 1, null, event));
+
+        if (!cluster.getWorkingDir().isNFS()) {
+            for (Node node : cluster.getNode()) {
+                nodeid = new Nodeid(new Value(null, node.getId()));
+                event = new Event("file_delete", nodeid, pargs);
+                patternList.add(new Pattern(null, 1, null, event));
+            }
+        }
         Patterns patterns = new Patterns(patternList);
         return patterns;
     }
@@ -320,8 +407,8 @@ public class PatternCreator {
         String username = cluster.getUsername() != null ? cluster.getUsername() : System.getProperty("user.name");
         String asterixZipName = InstallerDriver.getAsterixZip().substring(
                 InstallerDriver.getAsterixZip().lastIndexOf(File.separator) + 1);
-        String fileToTransfer = InstallerDriver.getAsterixDir() + File.separator + instanceName + File.separator
-                + asterixZipName;
+        String fileToTransfer = new File(InstallerDriver.getAsterixDir() + File.separator + instanceName
+                + File.separator + asterixZipName).getAbsolutePath();
         String pargs = username + " " + fileToTransfer + " " + destinationIp + " " + destDir + " " + "unpack";
         Event event = new Event("file_transfer", nodeid, pargs);
         return new Pattern(null, 1, null, event);

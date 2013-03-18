@@ -17,8 +17,4 @@
      <id>node1</id>
      <ip>127.0.0.1</ip>
   </node>
-  <node>
-     <id>node2</id>
-     <ip>127.0.0.1</ip>
-  </node>
 </cluster>
