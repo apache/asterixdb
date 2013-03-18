@@ -1,8 +1,4 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/constructor_float_01.adm";
 
 let $c1 := float("NaN")
 let $c2 := float("INF")

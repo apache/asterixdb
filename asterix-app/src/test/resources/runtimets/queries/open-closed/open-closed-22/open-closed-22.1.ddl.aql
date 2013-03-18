@@ -9,8 +9,6 @@ drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
 
-write output to nc1:"rttest/open-closed-22.adm";
-
 create type Emp as closed {
 id:int32,
 name:string,

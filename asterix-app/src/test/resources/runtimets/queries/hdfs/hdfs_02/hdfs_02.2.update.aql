@@ -4,10 +4,4 @@
 * Expected Res : Success
 * Date         : 7th Jan 2013
 */
-use dataverse test;
-
-
-create external dataset TextDataset(LineType)
-using hdfs
-(("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/textFileS"),("input-format"="sequence-input-format"),("format"="delimited-text"),("delimiter"="."));
 

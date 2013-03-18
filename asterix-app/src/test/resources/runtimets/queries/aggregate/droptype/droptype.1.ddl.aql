@@ -9,8 +9,6 @@ drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
 
-write output to nc1:"rttest/aggregate_droptype.adm";
-
 create type footype as open {
 bar : int32?
 }

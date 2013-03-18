@@ -1,8 +1,5 @@
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
 
-write output to nc1:"rttest/constructor_time_01.adm";
 
 let $c1 := time("10:50:56.200+05:00")
 let $c2 := time("10:50:56.200-10:15")

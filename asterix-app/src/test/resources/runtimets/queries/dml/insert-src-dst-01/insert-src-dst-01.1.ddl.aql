@@ -8,7 +8,7 @@
 drop dataverse testdv2 if exists;
 create dataverse testdv2;
 
-use dataverse test;
+use dataverse testdv2;
 
 create type testtype01 as closed {
   id: string,

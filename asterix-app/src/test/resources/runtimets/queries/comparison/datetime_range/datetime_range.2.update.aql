@@ -3,4 +3,4 @@ use dataverse test;
 load dataset TwitterData 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/twitter/smalltweets.txt"),("format"="adm")) pre-sorted;
-write output to nc1:"rttest/comparison_datetime_range.adm";
+

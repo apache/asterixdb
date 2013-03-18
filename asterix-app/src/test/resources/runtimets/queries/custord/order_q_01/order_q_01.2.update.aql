@@ -1,5 +1,0 @@
-use dataverse test;
-
-create external dataset Orders(OrderType)
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/nontagged/orderData.json"),("format"="adm"));
