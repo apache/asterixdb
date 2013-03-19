@@ -174,7 +174,7 @@ public final class RuleCollections {
 
     public final static List<IAlgebraicRewriteRule> buildFuzzyJoinRuleCollection() {
         List<IAlgebraicRewriteRule> fuzzy = new LinkedList<IAlgebraicRewriteRule>();
-        // fuzzy.add(new FuzzyJoinRule()); -- The non-indexed fuzzy join will be temporarily disabled. It should enabled some time in the near future.
+        // fuzzy.add(new FuzzyJoinRule()); -- The non-indexed fuzzy join will be temporarily disabled. It should be enabled some time in the near future.
         fuzzy.add(new InferTypesRule());
         return fuzzy;
     }
