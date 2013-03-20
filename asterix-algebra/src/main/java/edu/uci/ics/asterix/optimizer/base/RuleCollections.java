@@ -26,7 +26,6 @@ import edu.uci.ics.asterix.optimizer.rules.ExtractDistinctByExpressionsRule;
 import edu.uci.ics.asterix.optimizer.rules.ExtractOrderExpressionsRule;
 import edu.uci.ics.asterix.optimizer.rules.FeedScanCollectionToUnnest;
 import edu.uci.ics.asterix.optimizer.rules.FuzzyEqRule;
-import edu.uci.ics.asterix.optimizer.rules.FuzzyJoinRule;
 import edu.uci.ics.asterix.optimizer.rules.IfElseToSwitchCaseFunctionRule;
 import edu.uci.ics.asterix.optimizer.rules.InlineUnnestFunctionRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceDynamicTypeCastRule;
@@ -175,7 +174,7 @@ public final class RuleCollections {
 
     public final static List<IAlgebraicRewriteRule> buildFuzzyJoinRuleCollection() {
         List<IAlgebraicRewriteRule> fuzzy = new LinkedList<IAlgebraicRewriteRule>();
-        fuzzy.add(new FuzzyJoinRule());
+        // fuzzy.add(new FuzzyJoinRule()); -- The non-indexed fuzzy join will be temporarily disabled. It should be enabled some time in the near future.
         fuzzy.add(new InferTypesRule());
         return fuzzy;
     }
