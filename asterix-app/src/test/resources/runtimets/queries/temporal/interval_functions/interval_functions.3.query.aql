@@ -1,14 +1,4 @@
-/*
- * Description      :   Check temporal functions for interval
- * Expected Result  :   Success
- * Date             :   2nd Nov, 2012
- */
-
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/temporal_interval_functions.adm";
 
 let $itv1 := interval-from-date("2010-10-30", "2010-12-21")
 let $itv2 := interval-from-date("2011-10-30", "2012-10-21")

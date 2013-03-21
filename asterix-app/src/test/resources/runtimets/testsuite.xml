@@ -541,6 +541,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="constructor">
+      <compilation-unit name="interval">
+        <output-dir compare="Text">interval</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
       <compilation-unit name="line_01">
         <output-dir compare="Text">line_01</output-dir>
       </compilation-unit>
@@ -3966,6 +3971,58 @@
         <output-dir compare="Text">hdfs_03</output-dir>
       </compilation-unit>
     </test-case>
+  </test-group>
+    <test-group name="temporal">
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="accessors">
+        <output-dir compare="Text">accessors</output-dir>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="adjust_timezone">
+        <output-dir compare="Text">adjust_timezone</output-dir>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="calendar_duration">
+        <output-dir compare="Text">calendar_duration</output-dir>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="date_functions">
+        <output-dir compare="Text">date_functions</output-dir>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="datetime_functions">
+        <output-dir compare="Text">datetime_functions</output-dir>
+      </compilation-unit>
+  	</test-case>
+<!--   	<test-case FilePath="temporal">
+  		<compilation-unit name="insert_from_delimited_ds">
+        <output-dir compare="Text">insert_from_delimited_ds</output-dir>
+      </compilation-unit>
+  	</test-case> -->
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="insert_from_ext_ds">
+        <output-dir compare="Text">insert_from_ext_ds</output-dir>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="interval_functions">
+        <output-dir compare="Text">interval_functions</output-dir>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="time_functions">
+        <output-dir compare="Text">time_functions</output-dir>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="constructor">
+  		<compilation-unit name="interval">
+        <output-dir compare="Text">interval</output-dir>
+      </compilation-unit>
+  	</test-case>
   </test-group>
 </test-suite>
 

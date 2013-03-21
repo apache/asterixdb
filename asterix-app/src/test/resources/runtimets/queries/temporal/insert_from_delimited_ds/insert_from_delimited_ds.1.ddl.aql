@@ -1,0 +1,8 @@
+/*
+ * Test case name: date-insert.aql
+ * Description: verify insertion operation for date type
+ * Expected result: success
+ */
+ 
+drop dataverse testdvt if exists;
+create dataverse testdvt;

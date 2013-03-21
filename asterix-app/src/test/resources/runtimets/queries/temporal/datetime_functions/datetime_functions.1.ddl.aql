@@ -1,0 +1,8 @@
+/*
+ * Description      :   Check temporal functions for datetime
+ * Expected Result  :   Success
+ * Date             :   24th Sep, 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;

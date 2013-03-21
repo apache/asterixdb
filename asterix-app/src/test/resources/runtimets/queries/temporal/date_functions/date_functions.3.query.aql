@@ -1,13 +1,4 @@
-/*
- * Description      :   Check temporal functions for date type
- * Expected Result  :   Success
- * Date             :   24th Sep, 2012
- */
-drop dataverse test if exists;
-create dataverse test;
 use dataverse test;
-
-write output to nc1:"rttest/temporal_date_functions.adm";
 
 let $d1 := date-from-unix-time-in-days(15600)
 let $dt1 := datetime("1327-12-02T23:35:49.938Z")

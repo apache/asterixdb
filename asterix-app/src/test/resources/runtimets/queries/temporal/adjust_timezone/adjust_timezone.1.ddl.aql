@@ -1,0 +1,8 @@
+/*
+ * Description      :   Check the adjust-timezone functions
+ * Expected Result  :   Success
+ * Date             :   15th Oct, 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
