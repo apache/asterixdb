@@ -151,6 +151,10 @@ public class Scheduler {
      * @throws HyracksDataException
      */
     public String[] getLocationConstraints(InputSplit[] splits) throws HyracksException {
+        if (splits == null) {
+            /**deal the case when the splits array is null*/
+            return new String[] {};
+        }
         int[] workloads = new int[NCs.length];
         Arrays.fill(workloads, 0);
         String[] locations = new String[splits.length];
