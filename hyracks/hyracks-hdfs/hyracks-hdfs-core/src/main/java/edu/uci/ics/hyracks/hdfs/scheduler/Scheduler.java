@@ -64,8 +64,6 @@ public class Scheduler {
      * the nc collection builder
      */
     private INcCollectionBuilder ncCollectionBuilder;
-    
-    private ClusterTopology topology;
 
     /**
      * The constructor of the scheduler.
@@ -74,7 +72,16 @@ public class Scheduler {
      * @throws HyracksException
      */
     public Scheduler(String ipAddress, int port) throws HyracksException {
-        this(ipAddress, port, new IPProximityNcCollectionBuilder());
+        try {
+            IHyracksClientConnection hcc = new HyracksConnection(ipAddress, port);
+            this.ncNameToNcInfos = hcc.getNodeControllerInfos();
+            ClusterTopology topology = hcc.getClusterTopology();
+            this.ncCollectionBuilder = topology == null ? new IPProximityNcCollectionBuilder()
+                    : new RackAwareNcCollectionBuilder(topology);
+            loadIPAddressToNCMap(ncNameToNcInfos);
+        } catch (Exception e) {
+            throw new HyracksException(e);
+        }
     }
 
     /**
@@ -87,27 +94,11 @@ public class Scheduler {
         try {
             IHyracksClientConnection hcc = new HyracksConnection(ipAddress, port);
             this.ncNameToNcInfos = hcc.getNodeControllerInfos();
-            this.topology = hcc.getClusterTopology();
             this.ncCollectionBuilder = ncCollectionBuilder;
             loadIPAddressToNCMap(ncNameToNcInfos);
         } catch (Exception e) {
             throw new HyracksException(e);
         }
-    }
-
-    /**
-     * The constructor of the scheduler.
-     * 
-     * @param ncNameToNcInfos
-     *            the mapping from nc names to nc infos
-     * @param topology
-     *            the hyracks cluster toplogy
-     * @throws HyracksException
-     */
-    public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos, INcCollectionBuilder ncCollectionBuilder,
-            ClusterTopology topology) throws HyracksException {
-        this(ncNameToNcInfos, ncCollectionBuilder);
-        this.topology = topology;
     }
 
     /**
@@ -121,6 +112,21 @@ public class Scheduler {
         this.ncNameToNcInfos = ncNameToNcInfos;
         this.ncCollectionBuilder = new IPProximityNcCollectionBuilder();
         loadIPAddressToNCMap(ncNameToNcInfos);
+    }
+
+    /**
+     * The constructor of the scheduler.
+     * 
+     * @param ncNameToNcInfos
+     *            the mapping from nc names to nc infos
+     * @param topology
+     *            the hyracks cluster toplogy
+     * @throws HyracksException
+     */
+    public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos, ClusterTopology topology) throws HyracksException {
+        this(ncNameToNcInfos);
+        this.ncCollectionBuilder = topology == null ? new IPProximityNcCollectionBuilder()
+                : new RackAwareNcCollectionBuilder(topology);
     }
 
     /**
