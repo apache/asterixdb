@@ -152,7 +152,7 @@ public class Scheduler {
      */
     public String[] getLocationConstraints(InputSplit[] splits) throws HyracksException {
         if (splits == null) {
-            /**deal the case when the splits array is null*/
+            /** deal the case when the splits array is null */
             return new String[] {};
         }
         int[] workloads = new int[NCs.length];
@@ -193,7 +193,8 @@ public class Scheduler {
                     dataLocalCount++;
                 }
             }
-            LOGGER.info("Data local rate: " + ((float) dataLocalCount / (float) (scheduled.length)));
+            LOGGER.info("Data local rate: "
+                    + (scheduled.length == 0 ? 0.0 : ((float) dataLocalCount / (float) (scheduled.length))));
             /**
              * push non-data-local lower-bounds slots to each machine
              */
