@@ -3634,11 +3634,13 @@
         <output-dir compare="Text">print_01</output-dir>
       </compilation-unit>
     </test-case>
+<!--  TODO(madhusudancs): Enable this test when REST API supports serialized output support.
     <test-case FilePath="writers">
       <compilation-unit name="serialized_01">
         <output-dir compare="Text">serialized_01</output-dir>
       </compilation-unit>
     </test-case>
+-->
   </test-group>
   <test-group name="cross-dataverse">
     <test-case FilePath="cross-dataverse">
