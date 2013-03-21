@@ -313,7 +313,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         }
                         response.put("results", results);
                     }
-                    out.write(response.toString());
+                    out.print(response);
                 }
                 hcc.waitForCompletion(jobId);
             }

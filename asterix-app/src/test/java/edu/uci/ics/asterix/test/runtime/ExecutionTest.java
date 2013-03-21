@@ -16,7 +16,6 @@ import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.io.FileUtils;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -33,7 +32,6 @@ import edu.uci.ics.asterix.test.aql.TestsUtils;
 import edu.uci.ics.asterix.testframework.context.TestCaseContext;
 import edu.uci.ics.asterix.testframework.context.TestFileContext;
 import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
-import edu.uci.ics.hyracks.algebricks.core.config.SysoutFormatter;
 
 /**
  * Runs the runtime test cases under 'asterix-app/src/test/resources/runtimets'.

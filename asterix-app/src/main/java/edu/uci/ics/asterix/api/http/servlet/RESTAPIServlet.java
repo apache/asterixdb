@@ -49,6 +49,9 @@ abstract class RESTAPIServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("utf-8");
+
         PrintWriter out = response.getWriter();
 
         DisplayFormat format = DisplayFormat.HTML;
@@ -64,7 +67,6 @@ abstract class RESTAPIServlet extends HttpServlet {
         String query = getQueryParameter(request);
         boolean asyncResults = isAsync(request);
 
-        response.setContentType("application/json");
         ServletContext context = getServletContext();
         IHyracksClientConnection hcc;
         IHyracksDataset hds;

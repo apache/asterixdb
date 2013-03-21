@@ -328,8 +328,9 @@ public class APIServlet extends HttpServlet {
         String strPort = request.getParameter("hyracks-port");
         String strDisplayResult = request.getParameter("display-result");
         int port = Integer.parseInt(strPort);
-        PrintWriter out = response.getWriter();
+        response.setCharacterEncoding("utf-8");
         response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
         out.println("<H1>Input statements:</H1>");
         printInHtml(out, query);
         ServletContext context = getServletContext();
@@ -383,6 +384,7 @@ public class APIServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setCharacterEncoding("utf-8");
         PrintWriter out = response.getWriter();
         response.setContentType("text/html");
         final String form = HTML_HEADER_TEMPLATE + String.format(HTML_FORM_CONTENT_TEMPLATE, "")

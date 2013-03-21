@@ -42,9 +42,10 @@ public class QueryStatusAPIServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("text/html");
+        response.setCharacterEncoding("utf-8");
         String strHandle = request.getParameter("handle");
         PrintWriter out = response.getWriter();
-        response.setContentType("text/html");
         ServletContext context = getServletContext();
         IHyracksClientConnection hcc;
         IHyracksDataset hds;
