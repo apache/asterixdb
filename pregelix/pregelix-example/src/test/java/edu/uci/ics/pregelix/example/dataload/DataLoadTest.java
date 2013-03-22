@@ -77,7 +77,6 @@ public class DataLoadTest {
         ClusterConfig.setClusterPropertiesPath(PATH_TO_CLUSTER_PROPERTIES);
         cleanupStores();
         PregelixHyracksIntegrationUtil.init();
-        PregelixHyracksIntegrationUtil.createApp(HYRACKS_APP_NAME);
         LOGGER.info("Hyracks mini-cluster started");
         startHDFS();
         FileUtils.forceMkdir(new File(EXPECT_RESULT_DIR));
@@ -112,7 +111,6 @@ public class DataLoadTest {
     }
 
     public void tearDown() throws Exception {
-        PregelixHyracksIntegrationUtil.destroyApp(HYRACKS_APP_NAME);
         PregelixHyracksIntegrationUtil.deinit();
         LOGGER.info("Hyracks mini-cluster shut down");
         cleanupHDFS();

@@ -29,17 +29,12 @@ import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
 
 public interface INodeController {
-    public void startTasks(String appName, JobId jobId, byte[] planBytes, List<TaskAttemptDescriptor> taskDescriptors,
+    public void startTasks(JobId jobId, byte[] planBytes, List<TaskAttemptDescriptor> taskDescriptors,
             Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies, EnumSet<JobFlag> flags) throws Exception;
 
     public void abortTasks(JobId jobId, List<TaskAttemptId> tasks) throws Exception;
 
     public void cleanUpJoblet(JobId jobId, JobStatus status) throws Exception;
-
-    public void createApplication(String appName, boolean deployHar, byte[] serializedDistributedState)
-            throws Exception;
-
-    public void destroyApplication(String appName) throws Exception;
 
     public void reportPartitionAvailability(PartitionId pid, NetworkAddress networkAddress) throws Exception;
 }

@@ -20,7 +20,6 @@ import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.control.common.application.ApplicationStatus;
 import edu.uci.ics.hyracks.control.common.base.IClusterController;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
@@ -97,6 +96,11 @@ public class ClusterControllerRemoteProxy implements IClusterController {
     }
 
     @Override
+    public void sendApplicationMessageToCC(byte[] data, String nodeId) throws Exception {
+        CCNCFunctions.SendApplicationMessageFunction fn = new CCNCFunctions.SendApplicationMessageFunction(data, nodeId);
+        ipcHandle.send(-1, fn, null);
+    }
+
     public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult, int partition,
             int nPartitions, NetworkAddress networkAddress) throws Exception {
         CCNCFunctions.RegisterResultPartitionLocationFunction fn = new CCNCFunctions.RegisterResultPartitionLocationFunction(
@@ -115,20 +119,6 @@ public class ClusterControllerRemoteProxy implements IClusterController {
     public void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition) throws Exception {
         CCNCFunctions.ReportResultPartitionFailureFunction fn = new CCNCFunctions.ReportResultPartitionFailureFunction(
                 jobId, rsId, partition);
-        ipcHandle.send(-1, fn, null);
-    }
-
-    @Override
-    public void notifyApplicationStateChange(String nodeId, String appName, ApplicationStatus status) throws Exception {
-        CCNCFunctions.ApplicationStateChangeResponseFunction fn = new CCNCFunctions.ApplicationStateChangeResponseFunction(
-                nodeId, appName, status);
-        ipcHandle.send(-1, fn, null);
-    }
-
-    @Override
-    public void sendApplicationMessageToCC(byte[] data, String appName, String nodeId) throws Exception {
-        CCNCFunctions.SendApplicationMessageFunction fn = new CCNCFunctions.SendApplicationMessageFunction(data,
-                appName, nodeId);
         ipcHandle.send(-1, fn, null);
     }
 

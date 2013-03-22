@@ -1,0 +1,12 @@
+mapred.input.dir=data/file1.txt
+mapred.output.dir=output
+mapred.job.name=wordcount(static)
+mapred.mapper.class=edu.uci.ics.hyracks.examples.wordcount.WordCount$Map
+mapred.combiner.class=edu.uci.ics.hyracks.examples.wordcount.WordCount$Reduce
+mapred.reducer.class=edu.uci.ics.hyracks.examples.wordcount.WordCount$Reduce
+mapred.input.format.class=org.apache.hadoop.mapred.TextInputFormat
+mapred.output.format.class=org.apache.hadoop.mapred.TextOutputFormat
+mapred.mapoutput.key.class=org.apache.hadoop.io.Text
+mapred.mapoutput.value.class=org.apache.hadoop.io.IntWritable
+mapred.output.key.class=org.apache.hadoop.io.Text
+mapred.output.value.class=org.apache.hadoop.io.IntWritable

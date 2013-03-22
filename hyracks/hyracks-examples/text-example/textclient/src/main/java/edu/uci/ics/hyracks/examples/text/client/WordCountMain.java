@@ -65,9 +65,6 @@ public class WordCountMain {
         @Option(name = "-port", usage = "Hyracks Cluster Controller Port (default: 1098)")
         public int port = 1098;
 
-        @Option(name = "-app", usage = "Hyracks Application name", required = true)
-        public String app;
-
         @Option(name = "-infile-splits", usage = "Comma separated list of file-splits for the input. A file-split is <node-name>:<path>", required = true)
         public String inFileSplits;
 
@@ -101,8 +98,8 @@ public class WordCountMain {
                 options.algo, options.htSize, options.sbSize, options.format);
 
         long start = System.currentTimeMillis();
-        JobId jobId = hcc.startJob(options.app, job, options.runtimeProfiling ? EnumSet.of(JobFlag.PROFILE_RUNTIME)
-                : EnumSet.noneOf(JobFlag.class));
+        JobId jobId = hcc.startJob(job,
+                options.runtimeProfiling ? EnumSet.of(JobFlag.PROFILE_RUNTIME) : EnumSet.noneOf(JobFlag.class));
         hcc.waitForCompletion(jobId);
         long end = System.currentTimeMillis();
         System.err.println(start + " " + end + " " + (end - start));

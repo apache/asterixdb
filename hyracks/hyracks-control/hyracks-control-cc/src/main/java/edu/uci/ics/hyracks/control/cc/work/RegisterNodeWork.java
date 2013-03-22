@@ -67,6 +67,7 @@ public class RegisterNodeWork extends SynchronizableWork {
             LOGGER.log(Level.INFO, "Registered INodeController: id = " + id);
             NodeParameters params = new NodeParameters();
             params.setClusterControllerInfo(ccs.getClusterControllerInfo());
+            params.setDistributedState(ccs.getApplicationContext().getDistributedState());
             params.setHeartbeatPeriod(ccs.getCCConfig().heartbeatPeriod);
             params.setProfileDumpPeriod(ccs.getCCConfig().profileDumpPeriod);
             result = new CCNCFunctions.NodeRegistrationResult(params, null);

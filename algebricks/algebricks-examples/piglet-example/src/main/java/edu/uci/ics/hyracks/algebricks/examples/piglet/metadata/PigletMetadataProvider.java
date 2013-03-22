@@ -62,10 +62,13 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
 
     @SuppressWarnings("unchecked")
     @Override
-    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getScannerRuntime(IDataSource<String> dataSource,
-            List<LogicalVariable> scanVariables, List<LogicalVariable> projectVariables, boolean projectPushed,
-            IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec)
-            throws AlgebricksException {
+	public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getScannerRuntime(
+			IDataSource<String> dataSource,
+			List<LogicalVariable> scanVariables,
+			List<LogicalVariable> projectVariables, boolean projectPushed,
+			IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv,
+			JobGenContext context, JobSpecification jobSpec)
+			throws AlgebricksException {
         PigletFileDataSource ds = (PigletFileDataSource) dataSource;
 
         FileSplit[] fileSplits = ds.getFileSplits();
@@ -136,15 +139,15 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
     }
 
     @Override
-    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getResultHandleRuntime(IDataSink sink,
-            int[] printColumns, IPrinterFactory[] printerFactories, RecordDescriptor inputDesc, boolean ordered,
-            JobSpecification spec) throws AlgebricksException {
+    public IDataSourceIndex<String, String> findDataSourceIndex(String indexId, String dataSourceId)
+            throws AlgebricksException {
         return null;
     }
 
     @Override
-    public IDataSourceIndex<String, String> findDataSourceIndex(String indexId, String dataSourceId)
-            throws AlgebricksException {
+    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getResultHandleRuntime(IDataSink sink,
+            int[] printColumns, IPrinterFactory[] printerFactories, RecordDescriptor inputDesc, boolean ordered,
+            JobSpecification spec) throws AlgebricksException {
         return null;
     }
 
@@ -191,7 +194,7 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
         // TODO Auto-generated method stub
         return null;
     }
-
+    
     @Override
     public IFunctionInfo lookupFunction(FunctionIdentifier fid) {
         return FN_MAP.get(fid);

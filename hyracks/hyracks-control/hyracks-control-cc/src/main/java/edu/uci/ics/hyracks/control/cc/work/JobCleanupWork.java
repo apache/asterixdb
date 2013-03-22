@@ -69,7 +69,7 @@ public class JobCleanupWork extends AbstractWork {
                 }
             }
         } else {
-            CCApplicationContext appCtx = ccs.getApplicationMap().get(run.getApplicationName());
+            CCApplicationContext appCtx = ccs.getApplicationContext();
             if (appCtx != null) {
                 try {
                     appCtx.notifyJobFinish(jobId);
