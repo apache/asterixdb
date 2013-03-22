@@ -51,7 +51,8 @@ public class EventExecutor {
                     String val = node.getJavaHome() == null ? p.getValue() : node.getJavaHome();
                     envBuffer.append(p.getKey() + "=" + val + " ");
                 } else if (p.getKey().equals("JAVA_OPTS")) {
-                    String val = "\"" + "-Xmx" + (node.getRam() == null ? cluster.getRam() : node.getRam());
+                    String val = "\"" + "-Xmx"
+                            + (node.getJavaHeap() == null ? cluster.getJavaHeap() : node.getJavaHeap());
                     if (node.getDebug() != null) {
                         val = val + " " + "-Xdebug -Xrunjdwp:transport=dt_socket,address=" + node.getDebug().intValue()
                                 + "," + "server=y,suspend=n";

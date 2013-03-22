@@ -3,7 +3,7 @@
 
 <!-- definition of simple types --> 
 <xs:element name="name" type="xs:string"/>
-<xs:element name="ram" type="xs:string"/>
+<xs:element name="java_heap" type="xs:string"/>
 <xs:element name="logdir" type="xs:string"/>
 <xs:element name="id" type="xs:string"/>
 <xs:element name="ip" type="xs:string"/>
@@ -34,7 +34,7 @@
       <xs:element ref="cl:ip"/>
       <xs:element ref="cl:cluster-ip"/>
       <xs:element ref="cl:java_home" minOccurs="0"/>
-      <xs:element ref="cl:ram" minOccurs="0"/>
+      <xs:element ref="cl:java_heap" minOccurs="0"/>
       <xs:element ref="cl:logdir" minOccurs="0"/>
       <xs:element ref="cl:debug" minOccurs="0"/>
     </xs:sequence>
@@ -63,7 +63,7 @@
     <xs:sequence>
       <xs:element ref="cl:id"/>
       <xs:element ref="cl:ip"/>
-      <xs:element ref="cl:ram" minOccurs="0"/>
+      <xs:element ref="cl:java_heap" minOccurs="0"/>
       <xs:element ref="cl:java_home" minOccurs="0"/>
       <xs:element ref="cl:logdir" minOccurs="0"/>
       <xs:element ref="cl:store" minOccurs="0"/>
@@ -78,7 +78,7 @@
       <xs:element ref="cl:name"/>
       <xs:element ref="cl:username"/>
       <xs:element ref="cl:env" minOccurs="0"/>
-      <xs:element ref="cl:ram" minOccurs="0"/>
+      <xs:element ref="cl:java_heap" minOccurs="0"/>
       <xs:element ref="cl:java_home" minOccurs="0"/>
       <xs:element ref="cl:logdir" minOccurs="0"/>
       <xs:element ref="cl:store" minOccurs="0"/>

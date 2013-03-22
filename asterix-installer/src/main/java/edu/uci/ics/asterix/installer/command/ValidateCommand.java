@@ -45,7 +45,7 @@ public class ValidateCommand extends AbstractCommand {
 	@Override
 	protected void execCommand() throws Exception {
 		ValidateConfig vConfig = (ValidateConfig) config;
-		logValidationResult("Enviornment", validateEnvironment());
+		logValidationResult("Environment", validateEnvironment());
 		if (((ValidateConfig) config).cluster != null) {
 			logValidationResult("Cluster configuration",
 					validateCluster(vConfig.cluster));
@@ -73,9 +73,9 @@ public class ValidateCommand extends AbstractCommand {
 		return "\nValidate the installer's configuration or a cluster configuration"
 				+ "\nUsage"
 				+ "\nFor validating the installer configuration"
-				+ "\n use $ managix validate"
+				+ "\nuse managix validate"
 				+ "\n\nFor validating a cluster configuration"
-				+ "\n$ use managix validate -c <path to the cluster configuration file>";
+				+ "\nuse managix validate -c <path to the cluster configuration file>";
 	}
 
 	public boolean validateEnvironment() throws Exception {
@@ -116,7 +116,7 @@ public class ValidateCommand extends AbstractCommand {
 
 			MasterNode masterNode = cluster.getMasterNode();
 			Node master = new Node(masterNode.getId(), masterNode.getIp(),
-					masterNode.getRam(), masterNode.getJavaHome(),
+					masterNode.getJavaHeap(), masterNode.getJavaHome(),
 					masterNode.getLogdir(), null, masterNode.getDebug());
 
 			valid = valid & validateNodeConfiguration(master, cluster);
@@ -197,10 +197,11 @@ public class ValidateCommand extends AbstractCommand {
 			}
 		}
 
-		if (node.getRam() == null || node.getRam().length() == 0) {
-			if (cluster.getRam() == null || cluster.getRam().length() == 0) {
+		if (node.getJavaHeap() == null || node.getJavaHeap().length() == 0) {
+			if (cluster.getJavaHeap() == null
+					|| cluster.getJavaHeap().length() == 0) {
 				valid = false;
-				LOGGER.fatal("ram not defined at cluster/node level for node: "
+				LOGGER.fatal("java heap size not defined at cluster/node level for node: "
 						+ node.getId() + ERROR);
 			}
 		}

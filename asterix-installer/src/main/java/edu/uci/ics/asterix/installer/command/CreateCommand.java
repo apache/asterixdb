@@ -70,7 +70,7 @@ public class CreateCommand extends AbstractCommand {
 		clusterProperties.add(new Property("ASTERIX_HOME", cluster
 				.getWorkingDir().getDir() + File.separator + "asterix"));
 		clusterProperties.add(new Property("JAVA_OPTS", "-Xmx"
-				+ cluster.getRam()));
+				+ cluster.getJavaHeap()));
 		clusterProperties.add(new Property("CLUSTER_NET_IP", cluster
 				.getMasterNode().getClusterIp()));
 		clusterProperties.add(new Property("CLIENT_NET_IP", cluster

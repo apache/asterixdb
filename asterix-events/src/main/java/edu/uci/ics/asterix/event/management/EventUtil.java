@@ -181,8 +181,8 @@ public class EventUtil {
 		}
 
 		if (nodeid.equals(cluster.getMasterNode().getId())) {
-			String ram = cluster.getMasterNode().getRam() == null ? cluster
-					.getRam() : cluster.getMasterNode().getRam();
+			String ram = cluster.getMasterNode().getJavaHeap() == null ? cluster
+					.getJavaHeap() : cluster.getMasterNode().getJavaHeap();
 			String logDir = cluster.getMasterNode().getLogdir() == null ? cluster
 					.getLogdir() : cluster.getMasterNode().getLogdir();
 			String javaHome = cluster.getMasterNode().getJavaHome() == null ? cluster

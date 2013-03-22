@@ -7,7 +7,7 @@
   <logdir>/tmp/asterix/logs</logdir>
   <store>/tmp/asterix/storage</store>
   <java_home></java_home>
-  <ram>1024m</ram>
+  <java_heap>1024m</java_heap>
   <master-node>
      <id>master</id>
      <ip>127.0.0.1</ip>
