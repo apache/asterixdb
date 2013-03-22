@@ -47,9 +47,6 @@ public class DmlTest {
             loadReader.close();
         }
         asterixLoad.execute();
-        AsterixHyracksIntegrationUtil.destroyApp();
-
-        AsterixHyracksIntegrationUtil.createApp();
         File enlistFile = new File(ENLIST_FILE);
         String resultFileName = TestsUtils.aqlExtToResExt(enlistFile.getName());
         File expectedFile = new File(PATH_EXPECTED + SEPARATOR + resultFileName);
