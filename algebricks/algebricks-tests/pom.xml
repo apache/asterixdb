@@ -16,9 +16,11 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>2.0.2</version>
         <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
-        </configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+          <fork>true</fork>
+	  <encoding>UTF-8</encoding>
+	</configuration>
       </plugin>
       <plugin>
         <artifactId>maven-antrun-plugin</artifactId>

@@ -17,13 +17,18 @@ package edu.uci.ics.hyracks.hdfs.scheduler;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Random;
+import java.util.logging.Logger;
 
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapred.InputSplit;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
@@ -31,13 +36,17 @@ import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.topology.ClusterTopology;
+import edu.uci.ics.hyracks.hdfs.api.INcCollection;
+import edu.uci.ics.hyracks.hdfs.api.INcCollectionBuilder;
 
 /**
- * The scheduler conduct data-local scheduling for data reading on HDFS.
- * This class works for Hadoop old API.
+ * The scheduler conduct data-local scheduling for data reading on HDFS. This
+ * class works for Hadoop old API.
  */
 @SuppressWarnings("deprecation")
 public class Scheduler {
+    private static final Logger LOGGER = Logger.getLogger(Scheduler.class.getName());
 
     /** a list of NCs */
     private String[] NCs;
@@ -48,8 +57,16 @@ public class Scheduler {
     /** a map from the NC name to the index */
     private Map<String, Integer> ncNameToIndex = new HashMap<String, Integer>();
 
+    /** a map from NC name to the NodeControllerInfo */
+    private Map<String, NodeControllerInfo> ncNameToNcInfos;
+
     /**
-     * The constructor of the scheduler
+     * the nc collection builder
+     */
+    private INcCollectionBuilder ncCollectionBuilder;
+
+    /**
+     * The constructor of the scheduler.
      * 
      * @param ncNameToNcInfos
      * @throws HyracksException
@@ -57,116 +74,286 @@ public class Scheduler {
     public Scheduler(String ipAddress, int port) throws HyracksException {
         try {
             IHyracksClientConnection hcc = new HyracksConnection(ipAddress, port);
-            Map<String, NodeControllerInfo> ncNameToNcInfos = hcc.getNodeControllerInfos();
+            this.ncNameToNcInfos = hcc.getNodeControllerInfos();
+            ClusterTopology topology = hcc.getClusterTopology();
+            this.ncCollectionBuilder = topology == null ? new IPProximityNcCollectionBuilder()
+                    : new RackAwareNcCollectionBuilder(topology);
             loadIPAddressToNCMap(ncNameToNcInfos);
         } catch (Exception e) {
             throw new HyracksException(e);
         }
     }
 
+    /**
+     * The constructor of the scheduler.
+     * 
+     * @param ncNameToNcInfos
+     * @throws HyracksException
+     */
+    public Scheduler(String ipAddress, int port, INcCollectionBuilder ncCollectionBuilder) throws HyracksException {
+        try {
+            IHyracksClientConnection hcc = new HyracksConnection(ipAddress, port);
+            this.ncNameToNcInfos = hcc.getNodeControllerInfos();
+            this.ncCollectionBuilder = ncCollectionBuilder;
+            loadIPAddressToNCMap(ncNameToNcInfos);
+        } catch (Exception e) {
+            throw new HyracksException(e);
+        }
+    }
+
+    /**
+     * The constructor of the scheduler.
+     * 
+     * @param ncNameToNcInfos
+     *            the mapping from nc names to nc infos
+     * @throws HyracksException
+     */
     public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos) throws HyracksException {
+        this.ncNameToNcInfos = ncNameToNcInfos;
+        this.ncCollectionBuilder = new IPProximityNcCollectionBuilder();
         loadIPAddressToNCMap(ncNameToNcInfos);
     }
 
     /**
-     * Set location constraints for a file scan operator with a list of file splits
+     * The constructor of the scheduler.
+     * 
+     * @param ncNameToNcInfos
+     *            the mapping from nc names to nc infos
+     * @param topology
+     *            the hyracks cluster toplogy
+     * @throws HyracksException
+     */
+    public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos, ClusterTopology topology) throws HyracksException {
+        this(ncNameToNcInfos);
+        this.ncCollectionBuilder = topology == null ? new IPProximityNcCollectionBuilder()
+                : new RackAwareNcCollectionBuilder(topology);
+    }
+
+    /**
+     * The constructor of the scheduler.
+     * 
+     * @param ncNameToNcInfos
+     *            the mapping from nc names to nc infos
+     * @throws HyracksException
+     */
+    public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos, INcCollectionBuilder ncCollectionBuilder)
+            throws HyracksException {
+        this.ncNameToNcInfos = ncNameToNcInfos;
+        this.ncCollectionBuilder = ncCollectionBuilder;
+        loadIPAddressToNCMap(ncNameToNcInfos);
+    }
+
+    /**
+     * Set location constraints for a file scan operator with a list of file
+     * splits. It guarantees the maximum slots a machine can is at most one more
+     * than the minimum slots a machine can get.
      * 
      * @throws HyracksDataException
      */
     public String[] getLocationConstraints(InputSplit[] splits) throws HyracksException {
-        int[] capacity = new int[NCs.length];
-        Arrays.fill(capacity, 0);
+        int[] workloads = new int[NCs.length];
+        Arrays.fill(workloads, 0);
         String[] locations = new String[splits.length];
-        int slots = splits.length % capacity.length == 0 ? (splits.length / capacity.length) : (splits.length
-                / capacity.length + 1);
+        Map<String, IntWritable> locationToNumOfSplits = new HashMap<String, IntWritable>();
+        /**
+         * upper bound number of slots that a machine can get
+         */
+        int upperBoundSlots = splits.length % workloads.length == 0 ? (splits.length / workloads.length)
+                : (splits.length / workloads.length + 1);
+        /**
+         * lower bound number of slots that a machine can get
+         */
+        int lowerBoundSlots = splits.length % workloads.length == 0 ? upperBoundSlots : upperBoundSlots - 1;
 
         try {
             Random random = new Random(System.currentTimeMillis());
             boolean scheduled[] = new boolean[splits.length];
             Arrays.fill(scheduled, false);
-
-            for (int i = 0; i < splits.length; i++) {
-                /**
-                 * get the location of all the splits
-                 */
-                String[] loc = splits[i].getLocations();
-                if (loc.length > 0) {
-                    for (int j = 0; j < loc.length; j++) {
-                        /**
-                         * get all the IP addresses from the name
-                         */
-                        InetAddress[] allIps = InetAddress.getAllByName(loc[j]);
-                        /**
-                         * iterate overa all ips
-                         */
-                        for (InetAddress ip : allIps) {
-                            /**
-                             * if the node controller exists
-                             */
-                            if (ipToNcMapping.get(ip.getHostAddress()) != null) {
-                                /**
-                                 * set the ncs
-                                 */
-                                List<String> dataLocations = ipToNcMapping.get(ip.getHostAddress());
-                                int arrayPos = random.nextInt(dataLocations.size());
-                                String nc = dataLocations.get(arrayPos);
-                                int pos = ncNameToIndex.get(nc);
-                                /**
-                                 * check if the node is already full
-                                 */
-                                if (capacity[pos] < slots) {
-                                    locations[i] = nc;
-                                    capacity[pos]++;
-                                    scheduled[i] = true;
-                                }
-                            }
-                        }
-
-                        /**
-                         * break the loop for data-locations if the schedule has already been found
-                         */
-                        if (scheduled[i] == true) {
-                            break;
-                        }
-                    }
-                }
-            }
-
             /**
-             * find the lowest index the current available NCs
+             * scan the splits and build the popularity map
+             * give the machines with less local splits more scheduling priority
              */
-            int currentAvailableNC = 0;
-            for (int i = 0; i < capacity.length; i++) {
-                if (capacity[i] < slots) {
-                    currentAvailableNC = i;
-                    break;
-                }
-            }
-
+            buildPopularityMap(splits, locationToNumOfSplits);
             /**
-             * schedule no-local file reads
+             * push data-local lower-bounds slots to each machine
              */
-            for (int i = 0; i < splits.length; i++) {
-                // if there is no data-local NC choice, choose a random one
-                if (!scheduled[i]) {
-                    locations[i] = NCs[currentAvailableNC];
-                    capacity[currentAvailableNC]++;
-                    scheduled[i] = true;
+            scheduleLocalSlots(splits, workloads, locations, lowerBoundSlots, random, scheduled, locationToNumOfSplits);
+            /**
+             * push data-local upper-bounds slots to each machine
+             */
+            scheduleLocalSlots(splits, workloads, locations, upperBoundSlots, random, scheduled, locationToNumOfSplits);
 
-                    /**
-                     * move the available NC cursor to the next one
-                     */
-                    for (int j = currentAvailableNC; j < capacity.length; j++) {
-                        if (capacity[j] < slots) {
-                            currentAvailableNC = j;
-                            break;
-                        }
-                    }
+            int dataLocalCount = 0;
+            for (int i = 0; i < scheduled.length; i++) {
+                if (scheduled[i] == true) {
+                    dataLocalCount++;
                 }
             }
+            LOGGER.info("Data local rate: " + ((float) dataLocalCount / (float) (scheduled.length)));
+            /**
+             * push non-data-local lower-bounds slots to each machine
+             */
+            scheduleNonLocalSlots(splits, workloads, locations, lowerBoundSlots, scheduled);
+            /**
+             * push non-data-local upper-bounds slots to each machine
+             */
+            scheduleNonLocalSlots(splits, workloads, locations, upperBoundSlots, scheduled);
             return locations;
         } catch (IOException e) {
             throw new HyracksException(e);
+        }
+    }
+
+    /**
+     * Schedule non-local slots to each machine
+     * 
+     * @param splits
+     *            The HDFS file splits.
+     * @param workloads
+     *            The current capacity of each machine.
+     * @param locations
+     *            The result schedule.
+     * @param slotLimit
+     *            The maximum slots of each machine.
+     * @param scheduled
+     *            Indicate which slot is scheduled.
+     */
+    private void scheduleNonLocalSlots(InputSplit[] splits, int[] workloads, String[] locations, int slotLimit,
+            boolean[] scheduled) throws IOException, UnknownHostException {
+        /**
+         * build the map from available ips to the number of available slots
+         */
+        INcCollection ncCollection = this.ncCollectionBuilder.build(ncNameToNcInfos, ipToNcMapping, ncNameToIndex, NCs,
+                workloads, slotLimit);
+        if (ncCollection.numAvailableSlots() == 0) {
+            return;
+        }
+        /**
+         * schedule no-local file reads
+         */
+        for (int i = 0; i < splits.length; i++) {
+            /** if there is no data-local NC choice, choose a random one */
+            if (!scheduled[i]) {
+                InputSplit split = splits[i];
+                String selectedNcName = ncCollection.findNearestAvailableSlot(split);
+                if (selectedNcName != null) {
+                    int ncIndex = ncNameToIndex.get(selectedNcName);
+                    workloads[ncIndex]++;
+                    scheduled[i] = true;
+                    locations[i] = selectedNcName;
+                }
+            }
+        }
+    }
+
+    /**
+     * Schedule data-local slots to each machine.
+     * 
+     * @param splits
+     *            The HDFS file splits.
+     * @param workloads
+     *            The current capacity of each machine.
+     * @param locations
+     *            The result schedule.
+     * @param slots
+     *            The maximum slots of each machine.
+     * @param random
+     *            The random generator.
+     * @param scheduled
+     *            Indicate which slot is scheduled.
+     * @throws IOException
+     * @throws UnknownHostException
+     */
+    private void scheduleLocalSlots(InputSplit[] splits, int[] workloads, String[] locations, int slots, Random random,
+            boolean[] scheduled, final Map<String, IntWritable> locationToNumSplits) throws IOException,
+            UnknownHostException {
+        /** scheduling candidates will be ordered inversely according to their popularity */
+        PriorityQueue<String> scheduleCadndiates = new PriorityQueue<String>(3, new Comparator<String>() {
+
+            @Override
+            public int compare(String s1, String s2) {
+                return locationToNumSplits.get(s1).compareTo(locationToNumSplits.get(s2));
+            }
+
+        });
+        for (int i = 0; i < splits.length; i++) {
+            if (scheduled[i]) {
+                continue;
+            }
+            /**
+             * get the location of all the splits
+             */
+            String[] locs = splits[i].getLocations();
+            if (locs.length > 0) {
+                scheduleCadndiates.clear();
+                for (int j = 0; j < locs.length; j++) {
+                    scheduleCadndiates.add(locs[j]);
+                }
+
+                for (String candidate : scheduleCadndiates) {
+                    /**
+                     * get all the IP addresses from the name
+                     */
+                    InetAddress[] allIps = InetAddress.getAllByName(candidate);
+                    /**
+                     * iterate overa all ips
+                     */
+                    for (InetAddress ip : allIps) {
+                        /**
+                         * if the node controller exists
+                         */
+                        if (ipToNcMapping.get(ip.getHostAddress()) != null) {
+                            /**
+                             * set the ncs
+                             */
+                            List<String> dataLocations = ipToNcMapping.get(ip.getHostAddress());
+                            int arrayPos = random.nextInt(dataLocations.size());
+                            String nc = dataLocations.get(arrayPos);
+                            int pos = ncNameToIndex.get(nc);
+                            /**
+                             * check if the node is already full
+                             */
+                            if (workloads[pos] < slots) {
+                                locations[i] = nc;
+                                workloads[pos]++;
+                                scheduled[i] = true;
+                                break;
+                            }
+                        }
+                    }
+                    /**
+                     * break the loop for data-locations if the schedule has
+                     * already been found
+                     */
+                    if (scheduled[i] == true) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Scan the splits once and build a popularity map
+     * 
+     * @param splits
+     *            the split array
+     * @param locationToNumOfSplits
+     *            the map to be built
+     * @throws IOException
+     */
+    private void buildPopularityMap(InputSplit[] splits, Map<String, IntWritable> locationToNumOfSplits)
+            throws IOException {
+        for (InputSplit split : splits) {
+            String[] locations = split.getLocations();
+            for (String loc : locations) {
+                IntWritable locCount = locationToNumOfSplits.get(loc);
+                if (locCount == null) {
+                    locCount = new IntWritable(0);
+                    locationToNumOfSplits.put(loc, locCount);
+                }
+                locCount.set(locCount.get() + 1);
+            }
         }
     }
 
@@ -179,6 +366,8 @@ public class Scheduler {
     private void loadIPAddressToNCMap(Map<String, NodeControllerInfo> ncNameToNcInfos) throws HyracksException {
         try {
             NCs = new String[ncNameToNcInfos.size()];
+            ipToNcMapping.clear();
+            ncNameToIndex.clear();
             int i = 0;
 
             /**

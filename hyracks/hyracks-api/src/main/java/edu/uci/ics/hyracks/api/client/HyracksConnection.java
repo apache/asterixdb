@@ -19,6 +19,7 @@ import java.util.EnumSet;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.client.impl.JobSpecificationActivityClusterGraphGeneratorFactory;
+import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
@@ -86,6 +87,10 @@ public final class HyracksConnection implements IHyracksClientConnection {
 
     public JobId startJob(IActivityClusterGraphGeneratorFactory acggf, EnumSet<JobFlag> jobFlags) throws Exception {
         return hci.startJob(JavaSerializationUtils.serialize(acggf), jobFlags);
+    }
+
+    public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception {
+        return hci.getDatasetDirectoryServiceInfo();
     }
 
     @Override

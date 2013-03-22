@@ -26,7 +26,6 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -134,11 +133,11 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
                 appender.reset(frame, true);
 
                 VertexInputFormat vertexInputFormat = BspUtils.createVertexInputFormat(conf);
-                TaskAttemptContext context = new TaskAttemptContext(conf, new TaskAttemptID());
                 InputSplit split = splits.get(splitId);
+                TaskAttemptContext mapperContext = ctxFactory.createContext(conf, splitId);
 
-                VertexReader vertexReader = vertexInputFormat.createVertexReader(split, context);
-                vertexReader.initialize(split, context);
+                VertexReader vertexReader = vertexInputFormat.createVertexReader(split, mapperContext);
+                vertexReader.initialize(split, mapperContext);
                 Vertex readerVertex = (Vertex) BspUtils.createVertex(conf);
                 ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldSize);
                 DataOutput dos = tb.getDataOutput();
@@ -146,7 +145,6 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
                 /**
                  * set context
                  */
-                TaskAttemptContext mapperContext = ctxFactory.createContext(conf, splits.get(splitId));
                 Vertex.setContext(mapperContext);
 
                 /**

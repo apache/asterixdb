@@ -102,6 +102,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                     JobConf conf = confFactory.getConf();
                     IKeyValueParser parser = tupleParserFactory.createKeyValueParser(ctx);
                     writer.open();
+                    parser.open(writer);
                     InputFormat inputFormat = conf.getInputFormat();
                     for (int i = 0; i < inputSplits.length; i++) {
                         /**
@@ -131,7 +132,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                             }
                         }
                     }
-                    parser.flush(writer);
+                    parser.close(writer);
                     writer.close();
                 } catch (Exception e) {
                     throw new HyracksDataException(e);

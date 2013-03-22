@@ -39,6 +39,9 @@ public class NCConfig implements Serializable {
     @Option(name = "-data-ip-address", usage = "IP Address to bind data listener", required = true)
     public String dataIPAddress;
 
+    @Option(name = "-result-ip-address", usage = "IP Address to bind dataset result distribution listener", required = true)
+    public String datasetIPAddress;
+
     @Option(name = "-iodevices", usage = "Comma separated list of IO Device mount points (default: One device in default temp folder)", required = false)
     public String ioDevices = System.getProperty("java.io.tmpdir");
 
@@ -55,6 +58,9 @@ public class NCConfig implements Serializable {
     @Option(name = "--", handler = StopOptionHandler.class)
     public List<String> appArgs;
 
+    @Option(name = "-result-manager-memory", usage = "Memory usable for result caching at this Node Controller in bytes (default: -1 auto)")
+    public int resultManagerMemory = -1;
+
     public void toCommandLine(List<String> cList) {
         cList.add("-cc-host");
         cList.add(ccHost);
@@ -66,6 +72,7 @@ public class NCConfig implements Serializable {
         cList.add(nodeId);
         cList.add("-data-ip-address");
         cList.add(dataIPAddress);
+        cList.add(datasetIPAddress);
         cList.add("-iodevices");
         cList.add(ioDevices);
         cList.add("-net-thread-count");
@@ -82,5 +89,7 @@ public class NCConfig implements Serializable {
                 cList.add(appArg);
             }
         }
+        cList.add("-result-manager-memory");
+        cList.add(String.valueOf(resultManagerMemory));
     }
 }

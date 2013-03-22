@@ -16,7 +16,9 @@ package edu.uci.ics.hyracks.control.common.base;
 
 import java.util.List;
 
+import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
@@ -46,6 +48,13 @@ public interface IClusterController {
     public void registerPartitionRequest(PartitionRequest partitionRequest) throws Exception;
 
     public void sendApplicationMessageToCC(byte[] data, String nodeId) throws Exception;
+
+    public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult, int partition,
+            int nPartitions, NetworkAddress networkAddress) throws Exception;
+
+    public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws Exception;
+
+    public void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition) throws Exception;
 
     public void getNodeControllerInfos() throws Exception;
 }

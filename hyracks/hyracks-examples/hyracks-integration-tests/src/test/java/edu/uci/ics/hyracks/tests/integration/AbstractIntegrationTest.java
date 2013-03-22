@@ -14,29 +14,39 @@
  */
 package edu.uci.ics.hyracks.tests.integration;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
+import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetReader;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.client.dataset.HyracksDataset;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ResultFrameTupleAccessor;
+import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
 public abstract class AbstractIntegrationTest {
     private static final Logger LOGGER = Logger.getLogger(AbstractIntegrationTest.class.getName());
@@ -80,6 +90,7 @@ public abstract class AbstractIntegrationTest {
         ncConfig1.ccPort = 39001;
         ncConfig1.clusterNetIPAddress = "127.0.0.1";
         ncConfig1.dataIPAddress = "127.0.0.1";
+        ncConfig1.datasetIPAddress = "127.0.0.1";
         ncConfig1.nodeId = NC1_ID;
         nc1 = new NodeControllerService(ncConfig1);
         nc1.start();
@@ -89,6 +100,7 @@ public abstract class AbstractIntegrationTest {
         ncConfig2.ccPort = 39001;
         ncConfig2.clusterNetIPAddress = "127.0.0.1";
         ncConfig2.dataIPAddress = "127.0.0.1";
+        ncConfig2.datasetIPAddress = "127.0.0.1";
         ncConfig2.nodeId = NC2_ID;
         nc2 = new NodeControllerService(ncConfig2);
         nc2.start();
@@ -106,7 +118,7 @@ public abstract class AbstractIntegrationTest {
         cc.stop();
     }
 
-    protected void runTest(JobSpecification spec) throws Exception {
+    protected JobId executeTest(JobSpecification spec) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(spec.toJSON().toString(2));
         }
@@ -114,25 +126,72 @@ public abstract class AbstractIntegrationTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(jobId.toString());
         }
-        hcc.waitForCompletion(jobId);
-        dumpOutputFiles();
+        return jobId;
     }
 
-    private void dumpOutputFiles() {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            for (File f : outputFiles) {
-                if (f.exists() && f.isFile()) {
-                    try {
-                        LOGGER.info("Reading file: " + f.getAbsolutePath() + " in test: " + getClass().getName());
-                        String data = FileUtils.readFileToString(f);
-                        LOGGER.info(data);
-                    } catch (IOException e) {
-                        LOGGER.info("Error reading file: " + f.getAbsolutePath());
-                        LOGGER.info(e.getMessage());
-                    }
+    protected void runTest(JobSpecification spec) throws Exception {
+        JobId jobId = executeTest(spec);
+        hcc.waitForCompletion(jobId);
+    }
+
+    protected List<String> readResults(JobSpecification spec, JobId jobId, ResultSetId resultSetId) throws Exception {
+        int nReaders = 1;
+        ByteBuffer resultBuffer = ByteBuffer.allocate(spec.getFrameSize());
+        resultBuffer.clear();
+
+        IFrameTupleAccessor frameTupleAccessor = new ResultFrameTupleAccessor(spec.getFrameSize());
+
+        IHyracksDataset hyracksDataset = new HyracksDataset(hcc, spec.getFrameSize(), nReaders);
+        IHyracksDatasetReader reader = hyracksDataset.createReader(jobId, resultSetId);
+
+        List<String> resultRecords = new ArrayList<String>();
+        ByteBufferInputStream bbis = new ByteBufferInputStream();
+
+        int readSize = reader.read(resultBuffer);
+
+        while (readSize > 0) {
+
+            try {
+                frameTupleAccessor.reset(resultBuffer);
+                for (int tIndex = 0; tIndex < frameTupleAccessor.getTupleCount(); tIndex++) {
+                    int start = frameTupleAccessor.getTupleStartOffset(tIndex);
+                    int length = frameTupleAccessor.getTupleEndOffset(tIndex) - start;
+                    bbis.setByteBuffer(resultBuffer, start);
+                    byte[] recordBytes = new byte[length];
+                    bbis.read(recordBytes, 0, length);
+                    resultRecords.add(new String(recordBytes, 0, length));
                 }
+            } finally {
+                bbis.close();
             }
+
+            resultBuffer.clear();
+            readSize = reader.read(resultBuffer);
         }
+        return resultRecords;
+    }
+
+    protected boolean runTestAndCompareResults(JobSpecification spec, String[] expectedFileNames) throws Exception {
+        JobId jobId = executeTest(spec);
+
+        List<String> results;
+        for (int i = 0; i < expectedFileNames.length; i++) {
+            results = readResults(spec, jobId, spec.getResultSetIds().get(i));
+            BufferedReader expectedFile = new BufferedReader(new FileReader(expectedFileNames[i]));
+
+            String expectedLine, actualLine;
+            int j = 0;
+            while ((expectedLine = expectedFile.readLine()) != null) {
+                actualLine = results.get(j).trim();
+                Assert.assertEquals(expectedLine, actualLine);
+                j++;
+            }
+            Assert.assertEquals(j, results.size());
+            expectedFile.close();
+        }
+
+        hcc.waitForCompletion(jobId);
+        return true;
     }
 
     protected File createTempFile() throws IOException {

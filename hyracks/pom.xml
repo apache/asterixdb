@@ -73,6 +73,8 @@
   <modules>
     <module>hyracks-ipc</module>
     <module>hyracks-api</module>
+    <module>hyracks-comm</module>
+    <module>hyracks-client</module>
     <module>hyracks-dataflow-common</module>
     <module>hyracks-dataflow-std</module>
     <module>hyracks-dataflow-hadoop</module>
