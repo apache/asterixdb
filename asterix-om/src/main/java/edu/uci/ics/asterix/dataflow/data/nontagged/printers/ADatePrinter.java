@@ -30,4 +30,14 @@ public class ADatePrinter implements IPrinter {
                 .append("-").append(String.format("%02d", gCalInstance.getDayOfMonthYear(chrononTime, year, month)));
         ps.print("\")");
     }
+
+    public void printString(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+        long chrononTime = AInt32SerializerDeserializer.getInt(b, s + 1) * CHRONON_OF_DAY;
+
+        int year = gCalInstance.getYear(chrononTime);
+        int month = gCalInstance.getMonthOfYear(chrononTime, year);
+
+        ps.append(String.format(year < 0 ? "%05d" : "%04d", year)).append("-").append(String.format("%02d", month))
+                .append("-").append(String.format("%02d", gCalInstance.getDayOfMonthYear(chrononTime, year, month)));
+    }
 }

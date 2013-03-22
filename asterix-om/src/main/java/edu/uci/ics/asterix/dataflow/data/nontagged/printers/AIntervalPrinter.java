@@ -23,8 +23,6 @@ import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 
 public class AIntervalPrinter implements IPrinter {
 
-    private static final long serialVersionUID = 1L;
-
     public static final AIntervalPrinter INSTANCE = new AIntervalPrinter();
 
     /* (non-Javadoc)
@@ -39,30 +37,32 @@ public class AIntervalPrinter implements IPrinter {
      */
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        ps.print("interval(\"");
+        ps.print("interval");
 
         short typetag = AInt8SerializerDeserializer.getByte(b, s + 1 + 8 * 2);
 
         IPrinter timeInstancePrinter;
 
         if (typetag == ATypeTag.DATE.serialize()) {
+            ps.print("-date(\"");
             timeInstancePrinter = ADatePrinter.INSTANCE;
+            ((ADatePrinter)timeInstancePrinter).printString(b, s + 4, 4, ps);
+            ps.print(", ");
+            ((ADatePrinter)timeInstancePrinter).printString(b, s + 12, 4, ps);
         } else if (typetag == ATypeTag.TIME.serialize()) {
+            ps.print("-time(\"");
             timeInstancePrinter = ATimePrinter.INSTANCE;
+            ((ATimePrinter)timeInstancePrinter).printString(b, s + 4, 4, ps);
+            ps.print(", ");
+            ((ATimePrinter)timeInstancePrinter).printString(b, s + 12, 4, ps);
         } else if (typetag == ATypeTag.DATETIME.serialize()) {
+            ps.print("-datetime(\"");
             timeInstancePrinter = ADateTimePrinter.INSTANCE;
+            ((ADateTimePrinter)timeInstancePrinter).printString(b, s, 8, ps);
+            ps.print(", ");
+            ((ADateTimePrinter)timeInstancePrinter).printString(b, s + 8, 8, ps);
         } else {
             throw new AlgebricksException("Unsupport internal time types in interval: " + typetag);
-        }
-
-        if (typetag == ATypeTag.TIME.serialize() || typetag == ATypeTag.DATE.serialize()) {
-            timeInstancePrinter.print(b, s + 1 + 4 - 1, 8, ps);
-            ps.print(", ");
-            timeInstancePrinter.print(b, s + 1 + 8 + 4 - 1, 8, ps);
-        } else {
-            timeInstancePrinter.print(b, s, 8, ps);
-            ps.print(", ");
-            timeInstancePrinter.print(b, s + 1 + 8 - 1, 8, ps);
         }
 
         ps.print("\")");

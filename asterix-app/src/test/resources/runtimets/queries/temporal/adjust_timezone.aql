@@ -8,7 +8,7 @@ drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
 
-write output to nc1:"rttest/temp_adjust_timezone.adm";
+write output to nc1:"rttest/temporal_adjust_timezone.adm";
 
 let $t1 := time("20:15:10.327")
 let $dt1 := datetime("2010-10-23T01:12:13.329Z")

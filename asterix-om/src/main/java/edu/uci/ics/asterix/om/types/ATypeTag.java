@@ -42,9 +42,9 @@ public enum ATypeTag implements IEnumSerializer {
     LINE(30),
     POLYGON(31),
     CIRCLE(32),
-    INTERVAL(34),
     RECTANGLE(33),
-    SYSTEM_NULL(34);
+    INTERVAL(34),
+    SYSTEM_NULL(35);
 
     private byte value;
 

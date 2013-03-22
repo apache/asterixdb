@@ -11,6 +11,8 @@ for $a in [matches("hello",null),
 matches("hello","helllo"),
 matches("hello"," "),
 matches(null,"hello"),
+matches(null, ""),
+matches(null, null),
 matches("hello","[^a-z]")]
 return $a
 

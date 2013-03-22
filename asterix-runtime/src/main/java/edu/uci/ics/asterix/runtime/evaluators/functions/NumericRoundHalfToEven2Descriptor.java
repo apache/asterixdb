@@ -98,13 +98,10 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
                             return (int) AInt32SerializerDeserializer.getInt(argOut.getByteArray(), 1);
                         } else if (argOut.getByteArray()[0] == serInt64TypeTag) {
                             return (int) AInt64SerializerDeserializer.getLong(argOut.getByteArray(), 1);
-                        } else if (argOut.getByteArray()[0] == serFloatTypeTag) {
-                            return (int) AFloatSerializerDeserializer.getFloat(argOut.getByteArray(), 1);
-                        } else if (argOut.getByteArray()[0] == serDoubleTypeTag) {
-                            return (int) ADoubleSerializerDeserializer.getDouble(argOut.getByteArray(), 1);
+                        } else {
+                            throw new AlgebricksException(
+                                    "The precision argument for round-half-to-even should be an integer.");
                         }
-
-                        return 0;
                     }
 
                     @SuppressWarnings("unchecked")
