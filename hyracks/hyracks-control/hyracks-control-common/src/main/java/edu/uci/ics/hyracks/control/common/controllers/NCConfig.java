@@ -61,9 +61,6 @@ public class NCConfig implements Serializable {
     @Option(name = "--", handler = StopOptionHandler.class)
     public List<String> appArgs;
 
-    @Option(name = "-result-manager-memory", usage = "Memory usable for result caching at this Node Controller in bytes (default: -1 auto)")
-    public int resultManagerMemory = -1;
-
     public void toCommandLine(List<String> cList) {
         cList.add("-cc-host");
         cList.add(ccHost);
@@ -94,7 +91,5 @@ public class NCConfig implements Serializable {
                 cList.add(appArg);
             }
         }
-        cList.add("-result-manager-memory");
-        cList.add(String.valueOf(resultManagerMemory));
-    }
+   }
 }
