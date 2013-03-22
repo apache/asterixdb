@@ -17,80 +17,61 @@ package edu.uci.ics.asterix.transaction.management.service.logging;
 import java.io.Serializable;
 import java.util.Properties;
 
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
-
 public class LogManagerProperties implements Serializable {
 
-    /**
-     * generated SerialVersionUID
-     */
     private static final long serialVersionUID = 2084227360840799662L;
 
-    private String logFilePrefix = "asterix_transaction_log"; // log files
-
-    // follow the
-    // naming
-    // convention
-    // <logFilePrefix>_<number>
-    // where number
-    // starts from 0
-
-    private String logDir = "asterix_logs"; // the path where the LogManager
-                                            // will create log files
-
-    private int logPageSize = 128 * 1024; // 128 KB
-    private int numLogPages = 8; // number of log pages in the log buffer.
-
-    private long groupCommitWaitPeriod = 1; // time in milliseconds for which a
-    // commit record will wait before
-    // the housing page is marked for
-    // flushing.
-    private int logBufferSize = logPageSize * numLogPages;
-    // maximum size of each log file
-    private long logPartitionSize = logBufferSize * 1024 * 2; //2GB
-
-    public int logMagicNumber = 123456789;
-
-    public static final String LOG_PARTITION_SIZE_KEY = "log_partition_size";
+    public static final int LOG_MAGIC_NUMBER = 123456789;
     public static final String LOG_DIR_KEY = "log_dir";
     public static final String LOG_PAGE_SIZE_KEY = "log_page_size";
+    public static final String LOG_PARTITION_SIZE_KEY = "log_partition_size";
     public static final String NUM_LOG_PAGES_KEY = "num_log_pages";
     public static final String LOG_FILE_PREFIX_KEY = "log_file_prefix";
-    public static final String GROUP_COMMIT_WAIT_PERIOD = "group_commit_wait_period";
+    public static final String GROUP_COMMIT_WAIT_PERIOD_KEY = "group_commit_wait_period";
+
+    private static final int DEFAULT_LOG_PAGE_SIZE = 128 * 1024; //128KB
+    private static final int DEFAULT_NUM_LOG_PAGES = 8;
+    private static final long DEFAULT_LOG_PARTITION_SIZE = (long) 1024 * 1024 * 1024 * 2; //2GB 
+    private static final long DEFAULT_GROUP_COMMIT_WAIT_PERIOD = 1; // time in millisec.
+    private static final String DEFAULT_LOG_FILE_PREFIX = "asterix_transaction_log";
+    private static final String DEFAULT_LOG_DIRECTORY = "asterix_logs";
+
+    // follow the naming convention <logFilePrefix>_<number> where number starts from 0
+    private final String logFilePrefix;
+    private final String logDir;
+
+    // number of log pages in the log buffer
+    private final int logPageSize;
+    // number of log pages in the log buffer.
+    private final int numLogPages;
+    // time in milliseconds
+    private final long groupCommitWaitPeriod;
+    // logBufferSize = logPageSize * numLogPages;
+    private final int logBufferSize;
+    // maximum size of each log file
+    private final long logPartitionSize;
 
     public LogManagerProperties(Properties properties) {
-        if (properties.get(LOG_PAGE_SIZE_KEY) != null) {
-            logPageSize = Integer.parseInt(properties.getProperty(LOG_PAGE_SIZE_KEY));
-        }
-        if (properties.get(NUM_LOG_PAGES_KEY) != null) {
-            numLogPages = Integer.parseInt(properties.getProperty(NUM_LOG_PAGES_KEY));
-        }
+        this.logPageSize = Integer.parseInt(properties.getProperty(LOG_PAGE_SIZE_KEY, "" + DEFAULT_LOG_PAGE_SIZE));
+        this.numLogPages = Integer.parseInt(properties.getProperty(NUM_LOG_PAGES_KEY, "" + DEFAULT_NUM_LOG_PAGES));
+        long logPartitionSize = Long.parseLong(properties.getProperty(LOG_PARTITION_SIZE_KEY, ""
+                + DEFAULT_LOG_PARTITION_SIZE));
+        this.logDir = properties.getProperty(LOG_DIR_KEY, DEFAULT_LOG_DIRECTORY);
+        this.logFilePrefix = properties.getProperty(LOG_FILE_PREFIX_KEY, DEFAULT_LOG_FILE_PREFIX);
+        this.groupCommitWaitPeriod = Long.parseLong(properties.getProperty(GROUP_COMMIT_WAIT_PERIOD_KEY, ""
+                + DEFAULT_GROUP_COMMIT_WAIT_PERIOD));
 
-        if (properties.get(LOG_PARTITION_SIZE_KEY) != null) {
-            logPartitionSize = Long.parseLong(properties.getProperty(LOG_PARTITION_SIZE_KEY));
-        }
-
-        groupCommitWaitPeriod = Long.parseLong(properties.getProperty("group_commit_wait_period", ""
-                + groupCommitWaitPeriod));
-        logFilePrefix = properties.getProperty(LOG_FILE_PREFIX_KEY, logFilePrefix);
-        logDir = properties
-                .getProperty(LOG_DIR_KEY, TransactionManagementConstants.LogManagerConstants.DEFAULT_LOG_DIR);
+        this.logBufferSize = logPageSize * numLogPages;
+        //make sure that the log partition size is the multiple of log buffer size.
+        this.logPartitionSize = (logPartitionSize / logBufferSize) * logBufferSize;
     }
 
     public long getLogPartitionSize() {
         return logPartitionSize;
     }
 
-    public void setLogPartitionSize(long logPartitionSize) {
-        this.logPartitionSize = logPartitionSize;
-    }
-
     public String getLogFilePrefix() {
         return logFilePrefix;
-    }
-
-    public void setLogDir(String logDir) {
-        this.logDir = logDir;
     }
 
     public String getLogDir() {
@@ -101,8 +82,16 @@ public class LogManagerProperties implements Serializable {
         return logPageSize;
     }
 
-    public void setLogPageSize(int logPageSize) {
-        this.logPageSize = logPageSize;
+    public int getNumLogPages() {
+        return numLogPages;
+    }
+
+    public int getLogBufferSize() {
+        return logBufferSize;
+    }
+
+    public long getGroupCommitWaitPeriod() {
+        return groupCommitWaitPeriod;
     }
 
     public String toString() {
@@ -115,29 +104,4 @@ public class LogManagerProperties implements Serializable {
         builder.append("group_commit_wait_period : " + groupCommitWaitPeriod + FileUtil.lineSeparator);
         return builder.toString();
     }
-
-    public void setNumLogPages(int numLogPages) {
-        this.numLogPages = numLogPages;
-    }
-
-    public int getNumLogPages() {
-        return numLogPages;
-    }
-
-    public void setLogBufferSize(int logBufferSize) {
-        this.logBufferSize = logBufferSize;
-    }
-
-    public int getLogBufferSize() {
-        return logBufferSize;
-    }
-
-    public long getGroupCommitWaitPeriod() {
-        return groupCommitWaitPeriod;
-    }
-
-    public void setGroupCommitWaitPeriod(long groupCommitWaitPeriod) {
-        this.groupCommitWaitPeriod = groupCommitWaitPeriod;
-    }
-
 }

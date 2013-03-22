@@ -27,7 +27,7 @@ public class TransactionManagementConstants {
 
     public static class LogManagerConstants {
         public static final String LOG_CONF_DIR = "log_conf";
-        public static final String LOG_CONF_FILE = "log.conf";
+        public static final String LOG_CONF_FILE = "log.properties";
         public static final String ASTERIX_CONF_DIR = "src/main/resources";
         public static final String ASTERIX_CONF_FILE = "test.properties";
         public static final String DEFAULT_LOG_DIR = "asterix_logs";

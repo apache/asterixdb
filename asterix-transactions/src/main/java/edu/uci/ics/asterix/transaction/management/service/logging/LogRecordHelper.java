@@ -178,7 +178,7 @@ public class LogRecordHelper implements ILogRecordHelper {
 
         /* magic no */
         (logicalLogLocator.getBuffer()).writeInt(logicalLogLocator.getMemoryOffset() + MAGIC_NO_POS,
-                logManager.getLogManagerProperties().logMagicNumber);
+                logManager.getLogManagerProperties().LOG_MAGIC_NUMBER);
 
         /* log type */
         (logicalLogLocator.getBuffer()).put(logicalLogLocator.getMemoryOffset() + LOG_TYPE_POS, logType);

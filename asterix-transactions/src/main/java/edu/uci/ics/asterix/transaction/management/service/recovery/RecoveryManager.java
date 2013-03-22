@@ -24,7 +24,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -681,7 +680,7 @@ public class RecoveryManager implements IRecoveryManager {
         while (iter.hasNext()) {
             //TODO 
             //Sort the lsns in order to undo in one pass. 
-            
+
             Map.Entry<TxnId, List<Long>> loserTxn = (Map.Entry<TxnId, List<Long>>) iter.next();
             txnId = loserTxn.getKey();
 

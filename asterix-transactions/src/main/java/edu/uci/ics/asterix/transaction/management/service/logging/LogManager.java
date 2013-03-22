@@ -15,7 +15,6 @@
 package edu.uci.ics.asterix.transaction.management.service.logging;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
@@ -158,21 +157,37 @@ public class LogManager implements ILogManager {
      * initialize the log manager properties either from the configuration file
      * on disk or with default values
      */
-    private void initLogManagerProperties(LogManagerProperties logConfiguration) throws ACIDException {
-        if (logConfiguration == null) {
+    private void initLogManagerProperties(LogManagerProperties logProperties) throws ACIDException {
+        if (logProperties == null) {
             InputStream is = null;
             try {
-                File file = new File(TransactionManagementConstants.LogManagerConstants.LOG_CONF_DIR
-                        + File.pathSeparator + TransactionManagementConstants.LogManagerConstants.LOG_CONF_FILE);
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Log Configuration file path is " + file.getAbsolutePath());
-                }
-                if (file.exists()) {
-                    is = new FileInputStream(TransactionManagementConstants.LogManagerConstants.LOG_CONF_DIR
+                is = this.getClass().getClassLoader()
+                        .getResourceAsStream(TransactionManagementConstants.LogManagerConstants.LOG_CONF_FILE);
+                if (is != null) {
+                    Properties p = new Properties();
+                    p.load(is);
+                    String logDir = p.getProperty(LogManagerProperties.LOG_DIR_KEY);
+                    if (logDir == null) {
+                        p.setProperty(LogManagerProperties.LOG_DIR_KEY,
+                                TransactionManagementConstants.LogManagerConstants.DEFAULT_LOG_DIR + File.separator
+                                        + provider.getId());
+                    }
+                    logProperties = new LogManagerProperties(p);
+
+                    /*
+                    File file = new File(TransactionManagementConstants.LogManagerConstants.LOG_CONF_DIR
                             + File.pathSeparator + TransactionManagementConstants.LogManagerConstants.LOG_CONF_FILE);
-                    Properties configuredProperties = new Properties();
-                    configuredProperties.load(is);
-                    logConfiguration = new LogManagerProperties(configuredProperties);
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Log Configuration file path is " + file.getAbsolutePath());
+                    }
+                    if (file.exists()) {
+                        is = new FileInputStream(TransactionManagementConstants.LogManagerConstants.LOG_CONF_DIR
+                                + File.pathSeparator + TransactionManagementConstants.LogManagerConstants.LOG_CONF_FILE);
+                        Properties configuredProperties = new Properties();
+                        configuredProperties.load(is);
+                        logConfiguration = new LogManagerProperties(configuredProperties);
+                    */
+
                 } else {
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("Log configuration file not found, using defaults !");
@@ -181,7 +196,7 @@ public class LogManager implements ILogManager {
                     configuredProperties.setProperty(LogManagerProperties.LOG_DIR_KEY,
                             TransactionManagementConstants.LogManagerConstants.DEFAULT_LOG_DIR + File.separator
                                     + provider.getId());
-                    logConfiguration = new LogManagerProperties(configuredProperties);
+                    logProperties = new LogManagerProperties(configuredProperties);
                 }
             } catch (IOException ioe) {
                 if (is != null) {
@@ -193,7 +208,7 @@ public class LogManager implements ILogManager {
                 }
             }
         }
-        logManagerProperties = logConfiguration;
+        logManagerProperties = logProperties;
     }
 
     private void initLogManager() throws ACIDException {
@@ -574,7 +589,7 @@ public class LogManager implements ILogManager {
             fileChannel.position(fileOffset);
             fileChannel.read(buffer);
             buffer.position(0);
-            
+
             byte logType = buffer.get(4);
             int logHeaderSize = logRecordHelper.getLogHeaderSize(logType);
             int logBodySize = buffer.getInt(logHeaderSize - 4);

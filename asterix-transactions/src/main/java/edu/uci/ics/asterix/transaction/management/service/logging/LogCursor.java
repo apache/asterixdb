@@ -107,7 +107,7 @@ public class LogCursor implements ILogCursor {
         while (logicalLogLocator.getMemoryOffset() <= readOnlyBuffer.getSize()
                 - logManager.getLogRecordHelper().getLogHeaderSize(LogType.COMMIT)) {
             integerRead = readOnlyBuffer.readInt(logicalLogLocator.getMemoryOffset());
-            if (integerRead == logManager.getLogManagerProperties().logMagicNumber) {
+            if (integerRead == logManager.getLogManagerProperties().LOG_MAGIC_NUMBER) {
                 logRecordBeginPosFound = true;
                 break;
             }
@@ -193,7 +193,7 @@ public class LogCursor implements ILogCursor {
                 //----------------------------------------------------------------
                 int readNumber = -1;
                 int logPageSize = logManager.getLogManagerProperties().getLogPageSize();
-                int logMagicNumber = logManager.getLogManagerProperties().logMagicNumber;
+                int logMagicNumber = logManager.getLogManagerProperties().LOG_MAGIC_NUMBER;
                 int bytesSkipped = 0;
                 boolean logRecordBeginPosFound = false;
                 //check whether the currentOffset has enough space to have new log record by comparing

@@ -51,8 +51,12 @@ public class TransactionSubsystem {
         this.loggerRepository = new IndexLoggerRepository(this);
         this.resourceRepository = new TransactionalResourceManagerRepository();
         this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
-        this.checkpointThread = new CheckpointThread(recoveryManager,
-                asterixAppRuntimeContextProvider.getIndexLifecycleManager(), 0);
+        if (asterixAppRuntimeContextProvider != null) {
+	        this.checkpointThread = new CheckpointThread(recoveryManager,
+	                asterixAppRuntimeContextProvider.getIndexLifecycleManager(), 0);
+        } else {
+        	this.checkpointThread = null;
+        }
     }
 
     public ILogManager getLogManager() {
