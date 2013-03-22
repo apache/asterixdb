@@ -40,24 +40,8 @@ public class HyracksClient {
         initialize(properties);
     }
 
-    private Set<String> getRequiredLibs(Set<String> userLibs) {
-        Set<String> requiredLibs = new HashSet<String>();
-        for (String systemLib : systemLibs) {
-            requiredLibs.add(systemLib);
-        }
-        for (String userLib : userLibs) {
-            requiredLibs.add(userLib);
-        }
-        return requiredLibs;
-    }
-
     public JobStatus getJobStatus(JobId jobId) throws Exception {
         return connection.getJobStatus(jobId);
-    }
-
-    private void createApplication(String applicationName, Set<String> userLibs) throws Exception {
-        connection.createApplication(applicationName,
-                Utilities.getHyracksArchive(applicationName, getRequiredLibs(userLibs)));
     }
 
     public HyracksRunningJob submitJob(String applicationName, JobSpecification spec) throws Exception {
@@ -66,9 +50,9 @@ public class HyracksClient {
         JobId jobId;
         if (doProfiling) {
             System.out.println("PROFILING");
-            jobId = connection.startJob(applicationName, spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
+            jobId = connection.startJob(spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         } else {
-            jobId = connection.startJob(applicationName, spec);
+            jobId = connection.startJob(spec);
         }
         HyracksRunningJob runningJob = new HyracksRunningJob(jobId, spec, this);
         return runningJob;
@@ -76,7 +60,6 @@ public class HyracksClient {
 
     public HyracksRunningJob submitJob(String applicationName, JobSpecification spec, Set<String> userLibs)
             throws Exception {
-        createApplication(applicationName, userLibs);
         return submitJob(applicationName, spec);
     }
 

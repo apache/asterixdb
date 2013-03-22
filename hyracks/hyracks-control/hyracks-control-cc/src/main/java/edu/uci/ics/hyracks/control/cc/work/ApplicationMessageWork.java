@@ -18,14 +18,14 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.messages.IMessage;
+import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
 /**
  * @author rico
- * 
  */
 public class ApplicationMessageWork extends AbstractWork {
 
@@ -33,26 +33,24 @@ public class ApplicationMessageWork extends AbstractWork {
     private byte[] message;
     private String nodeId;
     private ClusterControllerService ccs;
-    private String appName;
 
-    public ApplicationMessageWork(ClusterControllerService ccs, byte[] message, String appName, String nodeId) {
+    public ApplicationMessageWork(ClusterControllerService ccs, byte[] message, String nodeId) {
         this.ccs = ccs;
         this.nodeId = nodeId;
         this.message = message;
-        this.appName = appName;
     }
 
     @Override
     public void run() {
-
-        final ApplicationContext ctx = ccs.getApplicationMap().get(appName);
+        final ICCApplicationContext ctx = ccs.getApplicationContext();
         try {
-            final IMessage data = (IMessage) ctx.deserialize(message);
-            (new Thread() {
+            final IMessage data = (IMessage) JavaSerializationUtils.deserialize(message);
+            ccs.getExecutor().execute(new Runnable() {
+                @Override
                 public void run() {
                     ctx.getMessageBroker().receivedMessage(data, nodeId);
                 }
-            }).start();
+            });
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Error in stats reporting", e);
         } catch (ClassNotFoundException e) {
@@ -64,5 +62,4 @@ public class ApplicationMessageWork extends AbstractWork {
     public String toString() {
         return "nodeID: " + nodeId;
     }
-
 }

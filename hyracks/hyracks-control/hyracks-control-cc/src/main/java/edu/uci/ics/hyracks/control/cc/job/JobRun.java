@@ -47,8 +47,6 @@ import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 public class JobRun implements IJobStatusConditionVariable {
     private final JobId jobId;
 
-    private final String applicationName;
-
     private final IActivityClusterGraphGenerator acgg;
 
     private final ActivityClusterGraph acg;
@@ -83,10 +81,9 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private Exception pendingException;
 
-    public JobRun(ClusterControllerService ccs, JobId jobId, String applicationName,
-            IActivityClusterGraphGenerator acgg, EnumSet<JobFlag> jobFlags) {
+    public JobRun(ClusterControllerService ccs, JobId jobId, IActivityClusterGraphGenerator acgg,
+            EnumSet<JobFlag> jobFlags) {
         this.jobId = jobId;
-        this.applicationName = applicationName;
         this.acgg = acgg;
         this.acg = acgg.initialize();
         this.scheduler = new JobScheduler(ccs, this, acgg.getConstraints());
@@ -101,10 +98,6 @@ public class JobRun implements IJobStatusConditionVariable {
 
     public JobId getJobId() {
         return jobId;
-    }
-
-    public String getApplicationName() {
-        return applicationName;
     }
 
     public ActivityClusterGraph getActivityClusterGraph() {
@@ -208,7 +201,6 @@ public class JobRun implements IJobStatusConditionVariable {
         JSONObject result = new JSONObject();
 
         result.put("job-id", jobId.toString());
-        result.put("application-name", applicationName);
         result.put("status", getStatus());
         result.put("create-time", getCreateTime());
         result.put("start-time", getCreateTime());

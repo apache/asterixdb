@@ -558,9 +558,8 @@ public class HyracksExecutionEngine implements IExecutionEngine {
             }
         }
 
-        String applicationName = "hivesterix";
         long start = System.currentTimeMillis();
-        JobId jobId = hcc.startJob(applicationName, job);
+        JobId jobId = hcc.startJob(job);
         hcc.waitForCompletion(jobId);
 
         // System.out.println("job finished: " + jobId.toString());

@@ -20,20 +20,4 @@ public class AlgebricksConfig {
     public static final boolean DEBUG = true;
     public static final String ALGEBRICKS_LOGGER_NAME = "edu.uci.ics.hyracks.algebricks";
     public static final Logger ALGEBRICKS_LOGGER = Logger.getLogger(ALGEBRICKS_LOGGER_NAME);
-    public static final String HYRACKS_APP_NAME = "algebricks";
-
-    // public static final Level ALGEBRICKS_LOG_LEVEL = Level.FINEST;
-    //
-    // static {
-    // Handler h;
-    // try {
-    // h = new ConsoleHandler();
-    // h.setFormatter(new SysoutFormatter());
-    // } catch (Exception e) {
-    // h = new ConsoleHandler();
-    // }
-    // h.setLevel(ALGEBRICKS_LOG_LEVEL);
-    // ALGEBRICKS_LOGGER.addHandler(h);
-    // ALGEBRICKS_LOGGER.setLevel(ALGEBRICKS_LOG_LEVEL);
-    // }
 }
