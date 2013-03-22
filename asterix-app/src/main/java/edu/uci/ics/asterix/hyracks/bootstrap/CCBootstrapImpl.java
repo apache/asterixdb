@@ -22,19 +22,18 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
 import edu.uci.ics.asterix.api.http.servlet.DDLAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryResultAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryStatusAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.UpdateAPIServlet;
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixStateProxy;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
-import edu.uci.ics.hyracks.api.application.ICCBootstrap;
 
 /**
  * The bootstrap class of the application that will manage its life cycle at the

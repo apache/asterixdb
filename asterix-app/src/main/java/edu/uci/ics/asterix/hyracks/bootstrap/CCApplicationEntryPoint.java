@@ -8,6 +8,11 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
+import edu.uci.ics.asterix.api.http.servlet.DDLAPIServlet;
+import edu.uci.ics.asterix.api.http.servlet.QueryAPIServlet;
+import edu.uci.ics.asterix.api.http.servlet.QueryResultAPIServlet;
+import edu.uci.ics.asterix.api.http.servlet.QueryStatusAPIServlet;
+import edu.uci.ics.asterix.api.http.servlet.UpdateAPIServlet;
 import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
@@ -22,7 +27,10 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
     private static final int DEFAULT_WEB_SERVER_PORT = 19001;
 
+    private static final int DEFAULT_JSON_API_SERVER_PORT = 19101;
+
     private Server webServer;
+    private Server jsonAPIServer;
     private static IAsterixStateProxy proxy;
     private ICCApplicationContext appCtx;
 
@@ -42,6 +50,10 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         setupWebServer();
         webServer.start();
 
+        // Setup and start the web interface
+        setupJSONAPIServer();
+        jsonAPIServer.start();
+
         AsterixAppContextInfoImpl.initialize(appCtx);
     }
 
@@ -53,6 +65,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         AsterixStateProxy.unregisterRemoteObject();
 
         webServer.stop();
+        jsonAPIServer.stop();
     }
 
     private void setupWebServer() throws Exception {
@@ -67,5 +80,23 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         context.setContextPath("/");
         webServer.setHandler(context);
         context.addServlet(new ServletHolder(new APIServlet()), "/*");
+    }
+
+    private void setupJSONAPIServer() throws Exception {
+        String portStr = System.getProperty(GlobalConfig.JSON_API_SERVER_PORT_PROPERTY);
+        int port = DEFAULT_JSON_API_SERVER_PORT;
+        if (portStr != null) {
+            port = Integer.parseInt(portStr);
+        }
+        jsonAPIServer = new Server(port);
+
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        context.setContextPath("/");
+        jsonAPIServer.setHandler(context);
+        context.addServlet(new ServletHolder(new QueryAPIServlet()), "/query");
+        context.addServlet(new ServletHolder(new QueryStatusAPIServlet()), "/query/status");
+        context.addServlet(new ServletHolder(new QueryResultAPIServlet()), "/query/result");
+        context.addServlet(new ServletHolder(new UpdateAPIServlet()), "/update");
+        context.addServlet(new ServletHolder(new DDLAPIServlet()), "/ddl");
     }
 }

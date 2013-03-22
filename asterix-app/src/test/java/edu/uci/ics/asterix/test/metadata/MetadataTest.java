@@ -15,10 +15,8 @@
 package edu.uci.ics.asterix.test.metadata;
 
 import java.io.File;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
@@ -33,7 +31,6 @@ import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.test.aql.TestsUtils;
 import edu.uci.ics.asterix.testframework.context.TestCaseContext;
-import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
 
 /**
  * Executes the Metadata tests.
