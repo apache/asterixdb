@@ -1,0 +1,19 @@
+/*
+ * Description  : Create internal dataset, insert data and query metadata Dataset to verify entries for that dataset.
+ * Expected Res : Success
+ * Date         : Sep 17 2012
+ */
+
+use dataverse test;
+
+insert into dataset test.t1({"id":123});
+insert into dataset test.t1({"id":133});
+insert into dataset test.t1({"id":223});
+insert into dataset test.t1({"id":127});
+insert into dataset test.t1({"id":423});
+insert into dataset test.t1({"id":183});
+insert into dataset test.t1({"id":193});
+insert into dataset test.t1({"id":129});
+insert into dataset test.t1({"id":373});
+insert into dataset test.t1({"id":282});
+

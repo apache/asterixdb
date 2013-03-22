@@ -1,0 +1,6 @@
+/*
+ * Description  : Create dataset and drop that dataset and query Metadata Dataset to verify the drop.
+ * Expected Res : Success
+ * Date         : Sep 17 2012
+ */
+

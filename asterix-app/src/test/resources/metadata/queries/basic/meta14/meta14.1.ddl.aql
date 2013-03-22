@@ -1,0 +1,16 @@
+/*
+ * Description      :  Test that a synthetically created content type is dropped with its parent type. 
+ *                     Guards against regression to issue 188.
+ * Expected Result  :  Success
+ */
+
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type FooType as closed {
+   bar: int32?
+};
+
+drop type FooType;

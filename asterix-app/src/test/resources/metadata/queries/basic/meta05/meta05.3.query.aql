@@ -1,0 +1,10 @@
+/*
+ * Description  : Create primary & secondary indexes & query Metadata dataset to verify.
+ * Expected Res : Success
+ * Date         : 15 Sep 2012
+ */
+
+for $l in dataset('Metadata.Index')
+where $l.DataverseName='testdv' 
+return $l
+
