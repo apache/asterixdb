@@ -34,6 +34,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
+import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -348,8 +349,12 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     }
 
     @Override
+    public IDatasetPartitionManager getDatasetPartitionManager() {
+        return ncs.getDatasetPartitionManager();
+    }
+
+    @Override
     public void sendApplicationMessageToCC(byte[] message, String nodeId) throws Exception {
-        this.ncs.sendApplicationMessageToCC(message, this.getJobletContext().getApplicationContext()
-                .getApplicationName(), nodeId);
+        this.ncs.sendApplicationMessageToCC(message, nodeId);
     }
 }

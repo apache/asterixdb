@@ -127,9 +127,9 @@ public class PigletCompiler {
             }
         });
         builder.setTypeTraitProvider(new ITypeTraitProvider() {
-			public ITypeTraits getTypeTrait(Object type) {
-				return null;
-			}
+            public ITypeTraits getTypeTrait(Object type) {
+                return null;
+            }
         });
         builder.setPrinterProvider(PigletPrinterFactoryProvider.INSTANCE);
         builder.setExpressionRuntimeProvider(new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(

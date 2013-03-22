@@ -29,7 +29,7 @@ public class JobSpecificationActivityClusterGraphGeneratorFactory implements IAc
     }
 
     @Override
-    public IActivityClusterGraphGenerator createActivityClusterGraphGenerator(String appName, JobId jobId,
+    public IActivityClusterGraphGenerator createActivityClusterGraphGenerator(JobId jobId,
             final ICCApplicationContext ccAppCtx, EnumSet<JobFlag> jobFlags) throws HyracksException {
         final JobActivityGraphBuilder builder = new JobActivityGraphBuilder(spec, jobFlags);
         PlanUtils.visit(spec, new IConnectorDescriptorVisitor() {

@@ -58,6 +58,10 @@ $(function() {
         var netPayloadBytesWritten = result['net-payload-bytes-written'];
         var netSignalingBytesRead = result['net-signaling-bytes-read'];
         var netSignalingBytesWritten = result['net-signaling-bytes-written'];
+        var datasetNetPayloadBytesRead = result['dataset-net-payload-bytes-read'];
+        var datasetNetPayloadBytesWritten = result['dataset-net-payload-bytes-written'];
+        var datasetNetSignalingBytesRead = result['dataset-net-signaling-bytes-read'];
+        var datasetNetSignalingBytesWritten = result['dataset-net-signaling-bytes-written'];
         var ipcMessagesSent = result['ipc-messages-sent'];
         var ipcMessageBytesSent = result['ipc-message-bytes-sent'];
         var ipcMessagesReceived = result['ipc-messages-received'];
@@ -117,9 +121,13 @@ $(function() {
             }
             if (i < sysLoad.length - 1) {
                 netPayloadReadBWArray.push([ i, computeRate(netPayloadBytesRead, rrdPtr) ]);
+                netPayloadReadBWArray.push([ i, computeRate(datasetNetPayloadBytesRead, rrdPtr) ]);
                 netPayloadWriteBWArray.push([ i, computeRate(netPayloadBytesWritten, rrdPtr) ]);
+                netPayloadWriteBWArray.push([ i, computeRate(datasetNetPayloadBytesWritten, rrdPtr) ]);
                 netSignalingReadBWArray.push([ i, computeRate(netSignalingBytesRead, rrdPtr) ]);
+                netSignalingReadBWArray.push([ i, computeRate(datasetNetSignalingBytesRead, rrdPtr) ]);
                 netSignalingWriteBWArray.push([ i, computeRate(netSignalingBytesWritten, rrdPtr) ]);
+                netSignalingWriteBWArray.push([ i, computeRate(etSignalingBytesWritten, rrdPtr) ]);
                 ipcMessageSendRateArray.push([ i, computeRate(ipcMessagesSent, rrdPtr) ]);
                 ipcMessageBytesSendRateArray.push([ i, computeRate(ipcMessageBytesSent, rrdPtr) ]);
                 ipcMessageReceiveRateArray.push([ i, computeRate(ipcMessagesReceived, rrdPtr) ]);

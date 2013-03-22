@@ -36,8 +36,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * The runtime of a SuperActivity, which internally executes a DAG of one-to-one connected
- * activities in a single thread.
+ * The runtime of a SuperActivity, which internally executes a DAG of one-to-one
+ * connected activities in a single thread.
  * 
  * @author yingyib
  */
@@ -62,7 +62,8 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
         this.nPartitions = nPartitions;
 
         /**
-         * initialize the writer-relationship for the internal DAG of operator node pushables
+         * initialize the writer-relationship for the internal DAG of operator
+         * node pushables
          */
         try {
             init();
@@ -72,7 +73,7 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
     }
 
     @Override
-    public synchronized void initialize() throws HyracksDataException {
+    public void initialize() throws HyracksDataException {
         /**
          * initialize operator node pushables in the BFS order
          */
@@ -105,7 +106,8 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
         }
 
         /**
-         * Using BFS (breadth-first search) to construct to runtime execution DAG;
+         * Using BFS (breadth-first search) to construct to runtime execution
+         * DAG;
          */
         while (childQueue.size() > 0) {
             /**
@@ -165,8 +167,7 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
     }
 
     @Override
-    public synchronized void setOutputFrameWriter(int clusterOutputIndex, IFrameWriter writer,
-            RecordDescriptor recordDesc) {
+    public void setOutputFrameWriter(int clusterOutputIndex, IFrameWriter writer, RecordDescriptor recordDesc) {
         /**
          * set the right output frame writer
          */
@@ -176,7 +177,7 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
     }
 
     @Override
-    public synchronized IFrameWriter getInputFrameWriter(final int index) {
+    public IFrameWriter getInputFrameWriter(final int index) {
         /**
          * get the right IFrameWriter from the cluster input index
          */

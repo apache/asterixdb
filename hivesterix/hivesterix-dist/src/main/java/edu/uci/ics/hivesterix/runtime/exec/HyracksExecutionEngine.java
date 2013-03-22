@@ -1,12 +1,12 @@
 package edu.uci.ics.hivesterix.runtime.exec;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -80,6 +80,7 @@ public class HyracksExecutionEngine implements IExecutionEngine {
 
     private static final Log LOG = LogFactory.getLog(HyracksExecutionEngine.class.getName());
     private static final String clusterPropertiesPath = "conf/cluster.properties";
+    private static final String masterFilePath = "conf/master";
 
     private static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> DEFAULT_LOGICAL_REWRITES = new ArrayList<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>();
     private static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> DEFAULT_PHYSICAL_REWRITES = new ArrayList<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>();
@@ -150,6 +151,11 @@ public class HyracksExecutionEngine implements IExecutionEngine {
      * properties
      */
     private Properties clusterProps;
+
+    /**
+     * the Hyracks client connection
+     */
+    private IHyracksClientConnection hcc;
 
     public HyracksExecutionEngine(HiveConf conf) {
         this.conf = conf;
@@ -533,17 +539,27 @@ public class HyracksExecutionEngine implements IExecutionEngine {
             confIn.close();
         }
 
-        Process process = Runtime.getRuntime().exec("src/main/resources/scripts/getip.sh");
-        BufferedReader ipReader = new BufferedReader(new InputStreamReader(
-                new DataInputStream(process.getInputStream())));
-        String ipAddress = ipReader.readLine();
-        ipReader.close();
-        int port = Integer.parseInt(clusterProps.getProperty("CC_CLIENTPORT"));
-        String applicationName = "hivesterix";
+        if (hcc == null) {
+            BufferedReader ipReader = new BufferedReader(new InputStreamReader(new FileInputStream(masterFilePath)));
+            String masterNode = ipReader.readLine();
+            ipReader.close();
 
-        IHyracksClientConnection hcc = new HyracksConnection(ipAddress, port);
+            InetAddress[] ips = InetAddress.getAllByName(masterNode);
+            int port = Integer.parseInt(clusterProps.getProperty("CC_CLIENTPORT"));
+            for (InetAddress ip : ips) {
+                if (ip.getAddress().length <= 4) {
+                    try {
+                        hcc = new HyracksConnection(ip.getHostAddress(), port);
+                        break;
+                    } catch (Exception e) {
+                        continue;
+                    }
+                }
+            }
+        }
+
         long start = System.currentTimeMillis();
-        JobId jobId = hcc.startJob(applicationName, job);
+        JobId jobId = hcc.startJob(job);
         hcc.waitForCompletion(jobId);
 
         // System.out.println("job finished: " + jobId.toString());

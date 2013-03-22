@@ -23,6 +23,8 @@ public class NodeParameters implements Serializable {
 
     private ClusterControllerInfo ccInfo;
 
+    private Serializable distributedState;
+
     private int heartbeatPeriod;
 
     private int profileDumpPeriod;
@@ -33,6 +35,14 @@ public class NodeParameters implements Serializable {
 
     public void setClusterControllerInfo(ClusterControllerInfo ccInfo) {
         this.ccInfo = ccInfo;
+    }
+
+    public Serializable getDistributedState() {
+        return distributedState;
+    }
+
+    public void setDistributedState(Serializable distributedState) {
+        this.distributedState = distributedState;
     }
 
     public int getHeartbeatPeriod() {

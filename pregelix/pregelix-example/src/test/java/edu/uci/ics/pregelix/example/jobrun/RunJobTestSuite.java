@@ -74,7 +74,6 @@ public class RunJobTestSuite extends TestSuite {
         ClusterConfig.setClusterPropertiesPath(PATH_TO_CLUSTER_PROPERTIES);
         cleanupStores();
         PregelixHyracksIntegrationUtil.init();
-        PregelixHyracksIntegrationUtil.createApp(HYRACKS_APP_NAME);
         LOGGER.info("Hyracks mini-cluster started");
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
@@ -126,7 +125,6 @@ public class RunJobTestSuite extends TestSuite {
     }
 
     public void tearDown() throws Exception {
-        PregelixHyracksIntegrationUtil.destroyApp(HYRACKS_APP_NAME);
         PregelixHyracksIntegrationUtil.deinit();
         LOGGER.info("Hyracks mini-cluster shut down");
         cleanupHDFS();
@@ -169,7 +167,7 @@ public class RunJobTestSuite extends TestSuite {
     public void run(TestResult result) {
         try {
             int testCount = countTestCases();
-            for (int i = 2; i == 2; i++) {
+            for (int i = 0; i < testCount; i++) {
                 // cleanupStores();
                 Test each = this.testAt(i);
                 if (result.shouldStop())

@@ -13,6 +13,6 @@
   <modules>
     <module>texthelper</module>
     <module>textclient</module>
-    <module>textapp</module>
+    <module>textserver</module>
   </modules>
 </project>

@@ -17,7 +17,9 @@ package edu.uci.ics.hyracks.control.common.controllers;
 import java.io.File;
 import java.util.List;
 
+import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.StopOptionHandler;
 
 public class CCConfig {
     @Option(name = "-client-net-ip-address", usage = "Sets the IP Address to listen for connections from clients", required = true)
@@ -26,7 +28,7 @@ public class CCConfig {
     @Option(name = "-client-net-port", usage = "Sets the port to listen for connections from clients (default 1098)")
     public int clientNetPort = 1098;
 
-    @Option(name = "-cluster-net-ip-address", usage = "Sets the IP Address to listen for connections from ", required = true)
+    @Option(name = "-cluster-net-ip-address", usage = "Sets the IP Address to listen for connections from", required = true)
     public String clusterNetIpAddress;
 
     @Option(name = "-cluster-net-port", usage = "Sets the port to listen for connections from node controllers (default 1099)")
@@ -53,8 +55,15 @@ public class CCConfig {
     @Option(name = "-cc-root", usage = "Sets the root folder used for file operations. (default: ClusterControllerService)")
     public String ccRoot = "ClusterControllerService";
 
-    @Option(name = "-cluster-topology", usage = "Sets the XML file that defines the cluster topology. (default: null)")
+    @Option(name = "-cluster-topology", required = false, usage = "Sets the XML file that defines the cluster topology. (default: null)")
     public File clusterTopologyDefinition = null;
+
+    @Option(name = "-app-cc-main-class", required = false, usage = "Application CC Main Class")
+    public String appCCMainClass = null;
+
+    @Argument
+    @Option(name = "--", handler = StopOptionHandler.class)
+    public List<String> appArgs;
 
     public void toCommandLine(List<String> cList) {
         cList.add("-client-net-ip-address");
@@ -82,6 +91,16 @@ public class CCConfig {
         if (clusterTopologyDefinition != null) {
             cList.add("-cluster-topology");
             cList.add(clusterTopologyDefinition.getAbsolutePath());
+        }
+        if (appCCMainClass != null) {
+            cList.add("-app-cc-main-class");
+            cList.add(appCCMainClass);
+        }
+        if (appArgs != null && !appArgs.isEmpty()) {
+            cList.add("--");
+            for (String appArg : appArgs) {
+                cList.add(appArg);
+            }
         }
     }
 }

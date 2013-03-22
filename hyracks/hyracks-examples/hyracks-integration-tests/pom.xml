@@ -9,7 +9,6 @@
 		<artifactId>hyracks-examples</artifactId>
 		<version>0.2.3-SNAPSHOT</version>
 	</parent>
-
 	<build>
 		<plugins>
 			<plugin>
@@ -99,5 +98,12 @@
 			<artifactId>hyracks-data-std</artifactId>
 			<version>0.2.3-SNAPSHOT</version>
 		</dependency>
+  	    <dependency>
+            <groupId>edu.uci.ics.hyracks</groupId>
+            <artifactId>hyracks-client</artifactId>
+            <version>0.2.3-SNAPSHOT</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
 	</dependencies>
 </project>

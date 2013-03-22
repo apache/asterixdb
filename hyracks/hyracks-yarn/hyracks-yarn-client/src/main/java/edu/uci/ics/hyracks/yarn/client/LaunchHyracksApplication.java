@@ -53,7 +53,6 @@ public class LaunchHyracksApplication {
 
         File amZipFile = new File(System.getProperty("basedir") + "/hyracks-yarn-am/hyracks-yarn-am.zip");
         localResources.put("archive", LocalResourceHelper.createArchiveResource(conf, amZipFile));
-        localResources.put("manifest.xml", LocalResourceHelper.createFileResource(conf, options.hcManifest));
         clCtx.setLocalResources(localResources);
 
         String command = "./archive/bin/hyracks-yarn-am 1>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout"
@@ -84,10 +83,19 @@ public class LaunchHyracksApplication {
         @Option(name = "-application-name", required = true, usage = "Application Name")
         String appName;
 
+        @Option(name = "-am-host", required = false, usage = "Application master host name (default: *). Currently has NO effect")
+        String amHostName = "*";
+
         @Option(name = "-am-memory", required = false, usage = "Application Master memory requirements")
         int amMemory = 128;
 
-        @Option(name = "-hyracks-cluster-manifest", required = true, usage = "Hyracks Cluster Manifest file")
-        File hcManifest;
+        @Option(name = "-workers", required = true, usage = "Number of worker containers")
+        int nWorkers;
+
+        @Option(name = "-worker-memory", required = true, usage = "Amount of memory to provide to each worker")
+        int workerMemory;
+
+        @Option(name = "-extra-jars", required = false, usage = "Other jars that need to be added to the classpath")
+        String extraJars = "";
     }
 }

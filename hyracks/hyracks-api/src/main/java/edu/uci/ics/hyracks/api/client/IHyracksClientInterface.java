@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.api.client;
 import java.util.EnumSet;
 import java.util.Map;
 
+import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
@@ -25,15 +26,11 @@ import edu.uci.ics.hyracks.api.topology.ClusterTopology;
 public interface IHyracksClientInterface {
     public ClusterControllerInfo getClusterControllerInfo() throws Exception;
 
-    public void createApplication(String appName) throws Exception;
-
-    public void startApplication(String appName) throws Exception;
-
-    public void destroyApplication(String appName) throws Exception;
-
     public JobStatus getJobStatus(JobId jobId) throws Exception;
 
-    public JobId startJob(String appName, byte[] acggfBytes, EnumSet<JobFlag> jobFlags) throws Exception;
+    public JobId startJob(byte[] acggfBytes, EnumSet<JobFlag> jobFlags) throws Exception;
+
+    public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception;
 
     public void waitForCompletion(JobId jobId) throws Exception;
 

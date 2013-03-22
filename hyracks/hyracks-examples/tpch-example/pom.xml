@@ -12,6 +12,6 @@
 
   <modules>
     <module>tpchclient</module>
-    <module>tpchapp</module>
+    <module>tpchserver</module>
   </modules>
 </project>

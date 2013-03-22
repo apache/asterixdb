@@ -43,8 +43,10 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import edu.uci.ics.hyracks.api.application.INCApplicationEntryPoint;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
@@ -61,7 +63,9 @@ import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.work.FutureValue;
 import edu.uci.ics.hyracks.control.common.work.WorkQueue;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
+import edu.uci.ics.hyracks.control.nc.dataset.DatasetPartitionManager;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
+import edu.uci.ics.hyracks.control.nc.net.DatasetNetworkManager;
 import edu.uci.ics.hyracks.control.nc.net.NetworkManager;
 import edu.uci.ics.hyracks.control.nc.partitions.PartitionManager;
 import edu.uci.ics.hyracks.control.nc.runtime.RootHyracksContext;
@@ -69,8 +73,6 @@ import edu.uci.ics.hyracks.control.nc.work.AbortTasksWork;
 import edu.uci.ics.hyracks.control.nc.work.ApplicationMessageWork;
 import edu.uci.ics.hyracks.control.nc.work.BuildJobProfilesWork;
 import edu.uci.ics.hyracks.control.nc.work.CleanupJobletWork;
-import edu.uci.ics.hyracks.control.nc.work.CreateApplicationWork;
-import edu.uci.ics.hyracks.control.nc.work.DestroyApplicationWork;
 import edu.uci.ics.hyracks.control.nc.work.ReportPartitionAvailabilityWork;
 import edu.uci.ics.hyracks.control.nc.work.StartTasksWork;
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
@@ -94,6 +96,10 @@ public class NodeControllerService extends AbstractRemoteService {
 
     private final NetworkManager netManager;
 
+    private final IDatasetPartitionManager datasetPartitionManager;
+
+    private final DatasetNetworkManager datasetNetworkManager;
+
     private final WorkQueue queue;
 
     private final Timer timer;
@@ -114,7 +120,9 @@ public class NodeControllerService extends AbstractRemoteService {
 
     private final ServerContext serverCtx;
 
-    private final Map<String, NCApplicationContext> applications;
+    private NCApplicationContext appCtx;
+
+    private INCApplicationEntryPoint ncAppEntryPoint;
 
     private final MemoryMXBean memoryMXBean;
 
@@ -140,14 +148,17 @@ public class NodeControllerService extends AbstractRemoteService {
             throw new Exception("id not set");
         }
         partitionManager = new PartitionManager(this);
-        netManager = new NetworkManager(getIpAddress(ncConfig), partitionManager, ncConfig.nNetThreads);
+        netManager = new NetworkManager(getIpAddress(ncConfig.dataIPAddress), partitionManager, ncConfig.nNetThreads);
+
+        datasetPartitionManager = new DatasetPartitionManager(this, executor, ncConfig.resultManagerMemory);
+        datasetNetworkManager = new DatasetNetworkManager(getIpAddress(ncConfig.datasetIPAddress),
+                datasetPartitionManager, ncConfig.nNetThreads);
 
         queue = new WorkQueue();
         jobletMap = new Hashtable<JobId, Joblet>();
         timer = new Timer(true);
         serverCtx = new ServerContext(ServerContext.ServerType.NODE_CONTROLLER, new File(new File(
                 NodeControllerService.class.getName()), id));
-        applications = new Hashtable<String, NCApplicationContext>();
         memoryMXBean = ManagementFactory.getMemoryMXBean();
         gcMXBeans = ManagementFactory.getGarbageCollectorMXBeans();
         threadMXBean = ManagementFactory.getThreadMXBean();
@@ -159,6 +170,10 @@ public class NodeControllerService extends AbstractRemoteService {
 
     public IHyracksRootContext getRootContext() {
         return ctx;
+    }
+
+    public NCApplicationContext getApplicationContext() {
+        return appCtx;
     }
 
     private static List<IODeviceHandle> getDevices(String ioDevices) {
@@ -205,6 +220,10 @@ public class NodeControllerService extends AbstractRemoteService {
         LOGGER.log(Level.INFO, "Starting NodeControllerService");
         ipc.start();
         netManager.start();
+
+        startApplication();
+
+        datasetNetworkManager.start();
         IIPCHandle ccIPCHandle = ipc.getHandle(new InetSocketAddress(ncConfig.ccHost, ncConfig.ccPort));
         this.ccs = new ClusterControllerRemoteProxy(ccIPCHandle);
         HeartbeatSchema.GarbageCollectorInfo[] gcInfos = new HeartbeatSchema.GarbageCollectorInfo[gcMXBeans.size()];
@@ -213,10 +232,11 @@ public class NodeControllerService extends AbstractRemoteService {
         }
         HeartbeatSchema hbSchema = new HeartbeatSchema(gcInfos);
         ccs.registerNode(new NodeRegistration(ipc.getSocketAddress(), id, ncConfig, netManager.getNetworkAddress(),
-                osMXBean.getName(), osMXBean.getArch(), osMXBean.getVersion(), osMXBean.getAvailableProcessors(),
-                runtimeMXBean.getVmName(), runtimeMXBean.getVmVersion(), runtimeMXBean.getVmVendor(), runtimeMXBean
-                        .getClassPath(), runtimeMXBean.getLibraryPath(), runtimeMXBean.getBootClassPath(),
-                runtimeMXBean.getInputArguments(), runtimeMXBean.getSystemProperties(), hbSchema));
+                datasetNetworkManager.getNetworkAddress(), osMXBean.getName(), osMXBean.getArch(), osMXBean
+                        .getVersion(), osMXBean.getAvailableProcessors(), runtimeMXBean.getVmName(), runtimeMXBean
+                        .getVmVersion(), runtimeMXBean.getVmVendor(), runtimeMXBean.getClassPath(), runtimeMXBean
+                        .getLibraryPath(), runtimeMXBean.getBootClassPath(), runtimeMXBean.getInputArguments(),
+                runtimeMXBean.getSystemProperties(), hbSchema));
 
         synchronized (this) {
             while (registrationPending) {
@@ -226,6 +246,7 @@ public class NodeControllerService extends AbstractRemoteService {
         if (registrationException != null) {
             throw registrationException;
         }
+        appCtx.setDistributedState(nodeParameters.getDistributedState());
 
         queue.start();
 
@@ -240,6 +261,21 @@ public class NodeControllerService extends AbstractRemoteService {
         }
 
         LOGGER.log(Level.INFO, "Started NodeControllerService");
+        if (ncAppEntryPoint != null) {
+            ncAppEntryPoint.notifyStartupComplete();
+        }
+    }
+
+    private void startApplication() throws Exception {
+        appCtx = new NCApplicationContext(serverCtx, ctx, id);
+        String className = ncConfig.appNCMainClass;
+        if (className != null) {
+            Class<?> c = Class.forName(className);
+            ncAppEntryPoint = (INCApplicationEntryPoint) c.newInstance();
+            String[] args = ncConfig.appArgs == null ? new String[0] : ncConfig.appArgs
+                    .toArray(new String[ncConfig.appArgs.size()]);
+            ncAppEntryPoint.start(appCtx, args);
+        }
     }
 
     @Override
@@ -247,8 +283,10 @@ public class NodeControllerService extends AbstractRemoteService {
         LOGGER.log(Level.INFO, "Stopping NodeControllerService");
         executor.shutdownNow();
         partitionManager.close();
+        datasetPartitionManager.close();
         heartbeatTask.cancel();
         netManager.stop();
+        datasetNetworkManager.stop();
         queue.stop();
         LOGGER.log(Level.INFO, "Stopped NodeControllerService");
     }
@@ -261,16 +299,16 @@ public class NodeControllerService extends AbstractRemoteService {
         return serverCtx;
     }
 
-    public Map<String, NCApplicationContext> getApplications() {
-        return applications;
-    }
-
     public Map<JobId, Joblet> getJobletMap() {
         return jobletMap;
     }
 
     public NetworkManager getNetworkManager() {
         return netManager;
+    }
+
+    public DatasetNetworkManager getDatasetNetworkManager() {
+        return datasetNetworkManager;
     }
 
     public PartitionManager getPartitionManager() {
@@ -297,8 +335,7 @@ public class NodeControllerService extends AbstractRemoteService {
         return queue;
     }
 
-    private static InetAddress getIpAddress(NCConfig ncConfig) throws Exception {
-        String ipaddrStr = ncConfig.dataIPAddress;
+    private static InetAddress getIpAddress(String ipaddrStr) throws Exception {
         ipaddrStr = ipaddrStr.trim();
         Pattern pattern = Pattern.compile("(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})");
         Matcher m = pattern.matcher(ipaddrStr);
@@ -355,6 +392,12 @@ public class NodeControllerService extends AbstractRemoteService {
             hbData.netSignalingBytesRead = netPC.getSignalingBytesRead();
             hbData.netSignalingBytesWritten = netPC.getSignalingBytesWritten();
 
+            MuxDemuxPerformanceCounters datasetNetPC = datasetNetworkManager.getPerformanceCounters();
+            hbData.datasetNetPayloadBytesRead = datasetNetPC.getPayloadBytesRead();
+            hbData.datasetNetPayloadBytesWritten = datasetNetPC.getPayloadBytesWritten();
+            hbData.datasetNetSignalingBytesRead = datasetNetPC.getSignalingBytesRead();
+            hbData.datasetNetSignalingBytesWritten = datasetNetPC.getSignalingBytesWritten();
+
             IPCPerformanceCounters ipcPC = ipc.getPerformanceCounters();
             hbData.ipcMessagesSent = ipcPC.getMessageSentCount();
             hbData.ipcMessageBytesSent = ipcPC.getMessageBytesSent();
@@ -400,13 +443,13 @@ public class NodeControllerService extends AbstractRemoteService {
                 case SEND_APPLICATION_MESSAGE: {
                     CCNCFunctions.SendApplicationMessageFunction amf = (CCNCFunctions.SendApplicationMessageFunction) fn;
                     queue.schedule(new ApplicationMessageWork(NodeControllerService.this, amf.getMessage(), amf
-                            .getAppName(), amf.getNodeId()));
+                            .getNodeId()));
                     return;
                 }
                 case START_TASKS: {
                     CCNCFunctions.StartTasksFunction stf = (CCNCFunctions.StartTasksFunction) fn;
-                    queue.schedule(new StartTasksWork(NodeControllerService.this, stf.getAppName(), stf.getJobId(), stf
-                            .getPlanBytes(), stf.getTaskDescriptors(), stf.getConnectorPolicies(), stf.getFlags()));
+                    queue.schedule(new StartTasksWork(NodeControllerService.this, stf.getJobId(), stf.getPlanBytes(),
+                            stf.getTaskDescriptors(), stf.getConnectorPolicies(), stf.getFlags()));
                     return;
                 }
 
@@ -419,19 +462,6 @@ public class NodeControllerService extends AbstractRemoteService {
                 case CLEANUP_JOBLET: {
                     CCNCFunctions.CleanupJobletFunction cjf = (CCNCFunctions.CleanupJobletFunction) fn;
                     queue.schedule(new CleanupJobletWork(NodeControllerService.this, cjf.getJobId(), cjf.getStatus()));
-                    return;
-                }
-
-                case CREATE_APPLICATION: {
-                    CCNCFunctions.CreateApplicationFunction caf = (CCNCFunctions.CreateApplicationFunction) fn;
-                    queue.schedule(new CreateApplicationWork(NodeControllerService.this, caf.getAppName(), caf
-                            .isDeployHar(), caf.getSerializedDistributedState()));
-                    return;
-                }
-
-                case DESTROY_APPLICATION: {
-                    CCNCFunctions.DestroyApplicationFunction daf = (CCNCFunctions.DestroyApplicationFunction) fn;
-                    queue.schedule(new DestroyApplicationWork(NodeControllerService.this, daf.getAppName()));
                     return;
                 }
 
@@ -459,7 +489,11 @@ public class NodeControllerService extends AbstractRemoteService {
         }
     }
 
-    public void sendApplicationMessageToCC(byte[] data, String appName, String nodeId) throws Exception {
-        ccs.sendApplicationMessageToCC(data, appName, nodeId);
+    public void sendApplicationMessageToCC(byte[] data, String nodeId) throws Exception {
+        ccs.sendApplicationMessageToCC(data, nodeId);
+    }
+
+    public IDatasetPartitionManager getDatasetPartitionManager() {
+        return datasetPartitionManager;
     }
 }

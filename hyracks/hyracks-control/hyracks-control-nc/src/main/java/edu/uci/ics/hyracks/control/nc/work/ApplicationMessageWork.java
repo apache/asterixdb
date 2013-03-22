@@ -19,35 +19,31 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.messages.IMessage;
+import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
 
 /**
  * @author rico
- * 
  */
 public class ApplicationMessageWork extends AbstractWork {
-
     private static final Logger LOGGER = Logger.getLogger(ApplicationMessageWork.class.getName());
     private byte[] message;
     private String nodeId;
     private NodeControllerService ncs;
-    private String appName;
 
-    public ApplicationMessageWork(NodeControllerService ncs, byte[] message, String appName, String nodeId) {
+    public ApplicationMessageWork(NodeControllerService ncs, byte[] message, String nodeId) {
         this.ncs = ncs;
         this.nodeId = nodeId;
         this.message = message;
-        this.appName = appName;
     }
 
     @Override
     public void run() {
-
-        NCApplicationContext ctx = ncs.getApplications().get(appName);
+        NCApplicationContext ctx = ncs.getApplicationContext();
         try {
-            IMessage data = (IMessage) ctx.deserialize(message);
+            IMessage data = (IMessage) JavaSerializationUtils.deserialize(message);
             if (ctx.getMessageBroker() != null) {
                 ctx.getMessageBroker().receivedMessage(data, nodeId);
             } else {
@@ -64,5 +60,4 @@ public class ApplicationMessageWork extends AbstractWork {
     public String toString() {
         return "nodeID: " + nodeId;
     }
-
 }

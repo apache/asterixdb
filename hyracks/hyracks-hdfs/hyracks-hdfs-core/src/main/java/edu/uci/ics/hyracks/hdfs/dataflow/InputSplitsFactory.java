@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 
+import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -38,6 +39,8 @@ public class InputSplitsFactory implements Serializable {
         splitBytes = splitsToBytes(splits);
         if (splits.length > 0) {
             splitClassName = splits[0].getClass().getName();
+        } else {
+            splitClassName = FileSplit.class.getName();
         }
     }
 

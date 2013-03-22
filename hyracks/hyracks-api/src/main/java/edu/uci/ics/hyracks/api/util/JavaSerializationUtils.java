@@ -33,6 +33,14 @@ public class JavaSerializationUtils {
         return baos.toByteArray();
     }
 
+    public static Object deserialize(byte[] bytes) throws IOException, ClassNotFoundException {
+        if (bytes == null) {
+            return null;
+        }
+        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes));
+        return ois.readObject();
+    }
+
     public static Object deserialize(byte[] bytes, ClassLoader classLoader) throws IOException, ClassNotFoundException {
         if (bytes == null) {
             return null;
