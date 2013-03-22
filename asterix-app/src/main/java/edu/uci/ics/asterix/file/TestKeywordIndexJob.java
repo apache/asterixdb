@@ -220,7 +220,7 @@ public class TestKeywordIndexJob {
         JobSpecification jobSpec = tij.createJobSpec();
 
         long start = System.currentTimeMillis();
-        JobId jobId = hcc.startJob("asterix", jobSpec);
+        JobId jobId = hcc.startJob(jobSpec);
         hcc.waitForCompletion(jobId);
         long end = System.currentTimeMillis();
         System.err.println(start + " " + end + " " + (end - start));
