@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.api.topology.ClusterTopology;
 import edu.uci.ics.hyracks.hdfs.dataflow.HDFSReadOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
@@ -86,7 +87,8 @@ public class HiveScanRuntimeGenerator {
             JobConf conf = ConfUtil.getJobConf(fileDesc.getInputFileFormatClass(), filePath);
             String[] locConstraints = ConfUtil.getNCs();
             Map<String, NodeControllerInfo> ncNameToNcInfos = ConfUtil.getNodeControllerInfo();
-            Scheduler scheduler = new Scheduler(ncNameToNcInfos);
+            ClusterTopology topology = ConfUtil.getClusterTopology();
+            Scheduler scheduler = new Scheduler(ncNameToNcInfos, topology);
             InputSplit[] splits = conf.getInputFormat().getSplits(conf, locConstraints.length);
             String[] schedule = scheduler.getLocationConstraints(splits);
             IOperatorDescriptor scanner = new HDFSReadOperatorDescriptor(jobSpec, recDescriptor, conf, splits,
