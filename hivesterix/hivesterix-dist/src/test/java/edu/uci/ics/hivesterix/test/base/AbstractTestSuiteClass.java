@@ -25,7 +25,6 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MiniMRCluster;
 
 import edu.uci.ics.hivesterix.common.config.ConfUtil;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
@@ -49,7 +48,6 @@ public abstract class AbstractTestSuiteClass extends TestSuite {
 
     private Properties clusterProps;
     private MiniDFSCluster dfsCluster;
-    private MiniMRCluster mrCluster;
 
     private JobConf conf = new JobConf();
     protected FileSystem dfs;
@@ -82,10 +80,6 @@ public abstract class AbstractTestSuiteClass extends TestSuite {
         System.setProperty("hadoop.log.dir", "logs");
         dfsCluster = new MiniDFSCluster(hconf, numberOfNC, true, null);
         dfs = dfsCluster.getFileSystem();
-
-        mrCluster = new MiniMRCluster(2, dfs.getUri().toString(), 1);
-        hconf.setVar(HiveConf.ConfVars.HADOOPJT, "localhost:" + mrCluster.getJobTrackerPort());
-
         conf = new JobConf(hconf);
         ConfUtil.setJobConf(conf);
 
