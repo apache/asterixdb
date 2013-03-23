@@ -76,7 +76,7 @@ public class DataLoadTest {
         ClusterConfig.setStorePath(PATH_TO_CLUSTER_STORE);
         ClusterConfig.setClusterPropertiesPath(PATH_TO_CLUSTER_PROPERTIES);
         cleanupStores();
-        PregelixHyracksIntegrationUtil.init();
+        PregelixHyracksIntegrationUtil.init("src/test/resources/topology.xml");
         PregelixHyracksIntegrationUtil.createApp(HYRACKS_APP_NAME);
         LOGGER.info("Hyracks mini-cluster started");
         startHDFS();

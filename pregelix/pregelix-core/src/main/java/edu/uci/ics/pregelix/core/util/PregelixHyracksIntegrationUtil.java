@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.pregelix.core.util;
 
+import java.io.File;
 import java.util.EnumSet;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
@@ -44,7 +45,7 @@ public class PregelixHyracksIntegrationUtil {
     private static NodeControllerService nc2;
     private static IHyracksClientConnection hcc;
 
-    public static void init() throws Exception {
+    public static void init(String topologyFilePath) throws Exception {
         CCConfig ccConfig = new CCConfig();
         ccConfig.clientNetIpAddress = CC_HOST;
         ccConfig.clusterNetIpAddress = CC_HOST;
@@ -53,6 +54,7 @@ public class PregelixHyracksIntegrationUtil {
         ccConfig.defaultMaxJobAttempts = 0;
         ccConfig.jobHistorySize = 0;
         ccConfig.profileDumpPeriod = -1;
+        ccConfig.clusterTopologyDefinition = new File(topologyFilePath);
 
         // cluster controller
         cc = new ClusterControllerService(ccConfig);
