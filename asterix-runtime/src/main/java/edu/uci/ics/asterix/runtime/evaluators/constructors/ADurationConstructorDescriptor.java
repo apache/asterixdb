@@ -21,7 +21,6 @@ import edu.uci.ics.asterix.om.base.ADuration;
 import edu.uci.ics.asterix.om.base.AMutableDuration;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory;
-import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -42,8 +41,6 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
     private static final long serialVersionUID = 1L;
     private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-
-    private final static ByteArrayCharSequenceAccessor charAccessor = new ByteArrayCharSequenceAccessor();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -85,9 +82,7 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
 
                                 int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
 
-                                charAccessor.reset(serString, 3, stringLength);
-
-                                ADurationParserFactory.parseDuration(charAccessor, aDuration);
+                                ADurationParserFactory.parseDuration(serString, 3, stringLength, aDuration);
 
                                 durationSerde.serialize(aDuration, out);
                             } else if (serString[0] == SER_NULL_TYPE_TAG) {

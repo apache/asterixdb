@@ -23,7 +23,6 @@ import edu.uci.ics.asterix.om.base.ADate;
 import edu.uci.ics.asterix.om.base.AMutableDate;
 import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
-import edu.uci.ics.asterix.om.base.temporal.StringCharSequenceAccessor;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -63,9 +62,7 @@ public class ADateSerializerDeserializer implements ISerializerDeserializer<ADat
 
         long chrononTimeInMs = 0;
         try {
-            StringCharSequenceAccessor charAccessor = new StringCharSequenceAccessor();
-            charAccessor.reset(date, 0, date.length());
-            chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor, true);
+            chrononTimeInMs = ADateParserFactory.parseDatePart(date, 0, date.length());
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

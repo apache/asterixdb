@@ -93,9 +93,6 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                     private ICopyEvaluatorFactory listEvalFactory = args[0];
                     private ArrayBackedValueStorage outInputList = new ArrayBackedValueStorage();
                     private ICopyEvaluator evalList = listEvalFactory.createEvaluator(outInputList);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -103,10 +100,6 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                             outInputList.reset();
                             evalList.evaluate(tuple);
                             byte[] serOrderedList = outInputList.getByteArray();
-                            if (serOrderedList[0] == SER_NULL_TYPE_TAG) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                return;
-                            }
                             if (serOrderedList[0] != SER_ORDEREDLIST_TYPE_TAG) {
                                 throw new AlgebricksException("Expects an Integer List."
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[0]));

@@ -754,6 +754,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="delete-syntax-change">
+        <output-file compare="Text">delete-syntax-change.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="drop-empty-secondary-indexes">
         <output-file compare="Text">drop-empty-secondary-indexes.adm</output-file>
       </compilation-unit>
@@ -784,8 +789,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
-      <compilation-unit name="insert-into-empty-dataset">
-        <output-file compare="Text">insert-into-empty-dataset.adm</output-file>
+      <compilation-unit name="insert-into-empty-dataset-with-index">
+        <output-file compare="Text">insert-into-empty-dataset-with-index.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-syntax">
+        <output-file compare="Text">insert-syntax.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -2728,6 +2738,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="scan">
+      <compilation-unit name="invalid-scan-syntax">
+        <output-file compare="Text">invalid-scan-syntax.adm</output-file>
+        <expected-error>SyntaxError</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
       <compilation-unit name="30">
         <output-file compare="Text">30.adm</output-file>
       </compilation-unit>
@@ -2735,6 +2751,11 @@
     <test-case FilePath="scan">
       <compilation-unit name="alltypes_01">
         <output-file compare="Text">alltypes_01.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
+      <compilation-unit name="alltypes_02">
+        <output-file compare="Text">alltypes_02.adm</output-file>
       </compilation-unit>
     </test-case>
     <test-case FilePath="scan">
@@ -3759,6 +3780,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="cross-dataverse">
+      <compilation-unit name="cross-dv20">
+        <output-file compare="Text">cross-dv20.adm</output-file>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cross-dataverse">
       <compilation-unit name="insert_across_dataverses">
         <output-file compare="Text">insert_across_dataverses.adm</output-file>
       </compilation-unit>
@@ -3994,5 +4020,77 @@
         <output-file compare="Text">hdfs_03.adm</output-file>
       </compilation-unit>
     </test-case>
+  </test-group>
+    <test-group name="temporal">
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="accessors">
+        <output-file compare="Text">accessors.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="adjust_timezone">
+        <output-file compare="Text">adjust_timezone.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="calendar_duration">
+        <output-file compare="Text">calendar_duration.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="date_functions">
+        <output-file compare="Text">date_functions.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="datetime_functions">
+        <output-file compare="Text">datetime_functions.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+<!--   	<test-case FilePath="temporal">
+  		<compilation-unit name="insert_from_delimited_ds">
+        <output-file compare="Text">insert_from_delimited_ds.adm</output-file>
+      </compilation-unit>
+  	</test-case> -->
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="insert_from_ext_ds">
+        <output-file compare="Text">insert_from_ext_ds.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="interval_functions">
+        <output-file compare="Text">interval_functions.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="time_functions">
+        <output-file compare="Text">time_functions.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  	<test-case FilePath="constructor">
+  		<compilation-unit name="date_01">
+        <output-file compare="Text">date_01.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  	  	<test-case FilePath="constructor">
+  		<compilation-unit name="time_01">
+        <output-file compare="Text">time_01.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  	  	<test-case FilePath="constructor">
+  		<compilation-unit name="datetime_01">
+        <output-file compare="Text">datetime_01.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  	  	  	<test-case FilePath="constructor">
+  		<compilation-unit name="duration_01">
+        <output-file compare="Text">duration_01.adm</output-file>
+      </compilation-unit>
+  	</test-case>
+  	  	<test-case FilePath="constructor">
+  		<compilation-unit name="interval">
+        <output-file compare="Text">interval.adm</output-file>
+      </compilation-unit>
+  	</test-case>
   </test-group>
 </test-suite>

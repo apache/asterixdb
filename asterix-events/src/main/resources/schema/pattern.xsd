@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:eg="patterns" targetNamespace="patterns">
+
+
+<!-- definition of simple types --> 
+<xs:element name="maxOccurs" type = "xs:int"/> 
+<xs:element name="pargs" type="xs:string"/>
+<xs:element name="absvalue" type="xs:string"/>
+<xs:element name="unit" type="xs:string"/>
+<xs:element name="type" type="xs:string"/>
+<xs:element name="min" type="xs:string"/>
+<xs:element name="max" type="xs:string"/>
+<xs:element name="abs" type="xs:string"/>
+<xs:element name="set" type="xs:string"/>
+<xs:element name="exclude" type="xs:string"/>
+<xs:element name="reuse" type="xs:boolean"/>
+<!-- definition of attributes -->
+
+<!-- definition of complex elements -->
+
+<xs:element name="range">
+  <xs:complexType>
+    <xs:sequence>
+     <xs:element ref="eg:set"/>
+     <xs:element ref="eg:exclude" minOccurs="0"/>
+     <xs:element ref="eg:reuse" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="minmax">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="eg:min"/>
+      <xs:element ref="eg:max"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+
+<xs:element name="random">
+  <xs:complexType>
+    <xs:sequence>
+       <xs:element ref="eg:minmax" minOccurs="0"/>
+       <xs:element ref="eg:range" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="value">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="eg:random" minOccurs="0"/>
+      <xs:element ref="eg:absvalue" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="nodeid">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="eg:value"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="period">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="eg:absvalue"/>
+      <xs:element ref="eg:unit"/>
+    </xs:sequence>   
+  </xs:complexType>
+</xs:element>    
+
+<xs:element name="delay">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="eg:value"/>
+      <xs:element ref="eg:unit"/>
+    </xs:sequence>   
+  </xs:complexType>
+</xs:element>    
+
+<xs:element name="event">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="eg:type"/>
+      <xs:element ref="eg:nodeid"/>
+      <xs:element ref="eg:pargs"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+ 
+<xs:element name="pattern">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="eg:delay"/>
+      <xs:element ref="eg:maxOccurs" maxOccurs="1" minOccurs="0"/>
+      <xs:element ref="eg:period"/>
+      <xs:element ref="eg:event"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="patterns">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="eg:pattern" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+</xs:schema>     

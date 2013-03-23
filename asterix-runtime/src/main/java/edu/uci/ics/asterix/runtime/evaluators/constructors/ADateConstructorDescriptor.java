@@ -22,7 +22,6 @@ import edu.uci.ics.asterix.om.base.ADate;
 import edu.uci.ics.asterix.om.base.AMutableDate;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
-import edu.uci.ics.asterix.om.base.temporal.ByteArrayCharSequenceAccessor;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
@@ -73,8 +72,6 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
-                    private ByteArrayCharSequenceAccessor charAccessor = new ByteArrayCharSequenceAccessor();
-
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
 
@@ -86,8 +83,17 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
 
                                 int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
 
-                                charAccessor.reset(serString, 3, stringLength);
-                                long chrononTimeInMs = ADateParserFactory.parseDatePart(charAccessor, true);
+                                int startOffset = 3;
+                                while (serString[startOffset] == ' ') {
+                                    startOffset++;
+                                }
+                                int endOffset = stringLength - 1 + 3;
+                                while (serString[endOffset] == ' ') {
+                                    endOffset--;
+                                }
+
+                                long chrononTimeInMs = ADateParserFactory.parseDatePart(serString, startOffset,
+                                        endOffset - startOffset + 1);
 
                                 short temp = 0;
                                 if (chrononTimeInMs < 0

@@ -29,5 +29,14 @@ public class ATimePrinter implements IPrinter {
 
         ps.print("\")");
     }
+    
+    public void printString(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+        int time = AInt32SerializerDeserializer.getInt(b, s + 1);
+
+        ps.append(String.format("%02d", gCalInstance.getHourOfDay(time))).append(":")
+                .append(String.format("%02d", gCalInstance.getMinOfHour(time))).append(":")
+                .append(String.format("%02d", gCalInstance.getSecOfMin(time))).append(".")
+                .append(String.format("%03d", gCalInstance.getMillisOfSec(time))).append("Z");
+    }
 
 }

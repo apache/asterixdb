@@ -1399,7 +1399,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         for (int i = 0; i < jobs.length; i++) {
             JobSpecification spec = jobs[i].getJobSpec();
             spec.setMaxReattempts(0);
-            JobId jobId = hcc.startJob(GlobalConfig.HYRACKS_APP_NAME, spec);
+            JobId jobId = hcc.startJob(spec);
             hcc.waitForCompletion(jobId);
         }
     }

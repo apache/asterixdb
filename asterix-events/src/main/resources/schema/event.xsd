@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:es="events" targetNamespace="events" elementFormDefault="qualified">
+
+<!-- definition of simple types --> 
+<xs:element name="script" type="xs:string"/>
+<xs:element name="type" type="xs:string"/>
+<xs:element name="description" type="xs:string"/>
+<xs:element name="args" type="xs:string"/>
+<xs:element name="daemon" type="xs:boolean"/>
+
+<!-- definition of complex elements -->
+
+<xs:element name="event">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="es:type"/>
+      <xs:element ref="es:script"/>
+      <xs:element ref="es:description"/>
+      <xs:element ref="es:args"/>
+      <xs:element ref="es:daemon"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="events">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="es:event" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+ 
+</xs:schema>     

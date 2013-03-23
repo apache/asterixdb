@@ -116,8 +116,8 @@ public class RecoveryManager implements IRecoveryManager {
         } catch (FileNotFoundException e) {
             //This is initial bootstrap. 
             //Otherwise, the checkpoint file is deleted unfortunately. What we can do in this case?
-            state = SystemState.CORRUPTED;
-            new ACIDException("Checkpoint file doesn't exist", e);
+            state = SystemState.HEALTHY;
+            return state;
         }
 
         //#. if minMCTFirstLSN is equal to -1 && 

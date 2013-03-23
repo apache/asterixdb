@@ -4,7 +4,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
@@ -66,10 +65,6 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                 listAccessor.reset(listBytes, 0);
                             } catch (AsterixException e) {
                                 throw new AlgebricksException(e);
-                            }
-                            if (listAccessor.getItemType() == ATypeTag.NULL) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                return;
                             }
                             try {
                                 // calculate length first

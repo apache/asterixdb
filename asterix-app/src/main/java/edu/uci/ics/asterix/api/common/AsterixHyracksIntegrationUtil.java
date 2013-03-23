@@ -3,6 +3,8 @@ package edu.uci.ics.asterix.api.common;
 import java.util.EnumSet;
 
 import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.hyracks.bootstrap.CCApplicationEntryPoint;
+import edu.uci.ics.asterix.hyracks.bootstrap.NCApplicationEntryPoint;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.job.JobFlag;
@@ -35,6 +37,7 @@ public class AsterixHyracksIntegrationUtil {
         ccConfig.clientNetPort = DEFAULT_HYRACKS_CC_CLIENT_PORT;
         ccConfig.clusterNetPort = DEFAULT_HYRACKS_CC_CLUSTER_PORT;
         ccConfig.defaultMaxJobAttempts = 0;
+        ccConfig.appCCMainClass = CCApplicationEntryPoint.class.getName();
         // ccConfig.useJOL = true;
         cc = new ClusterControllerService(ccConfig);
         cc.start();
@@ -44,7 +47,9 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig1.ccPort = DEFAULT_HYRACKS_CC_CLUSTER_PORT;
         ncConfig1.clusterNetIPAddress = "127.0.0.1";
         ncConfig1.dataIPAddress = "127.0.0.1";
+        ncConfig1.datasetIPAddress = "127.0.0.1";
         ncConfig1.nodeId = NC1_ID;
+        ncConfig1.appNCMainClass = NCApplicationEntryPoint.class.getName();
         nc1 = new NodeControllerService(ncConfig1);
         nc1.start();
 
@@ -53,25 +58,17 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig2.ccPort = DEFAULT_HYRACKS_CC_CLUSTER_PORT;
         ncConfig2.clusterNetIPAddress = "127.0.0.1";
         ncConfig2.dataIPAddress = "127.0.0.1";
+        ncConfig2.datasetIPAddress = "127.0.0.1";
         ncConfig2.nodeId = NC2_ID;
+        ncConfig2.appNCMainClass = NCApplicationEntryPoint.class.getName();
         nc2 = new NodeControllerService(ncConfig2);
         nc2.start();
 
         hcc = new HyracksConnection(cc.getConfig().clientNetIpAddress, cc.getConfig().clientNetPort);
-        hcc.createApplication(GlobalConfig.HYRACKS_APP_NAME, null);
-
     }
 
     public static IHyracksClientConnection getHyracksClientConnection() {
         return hcc;
-    }
-
-    public static void destroyApp() throws Exception {
-        hcc.destroyApplication(GlobalConfig.HYRACKS_APP_NAME);
-    }
-
-    public static void createApp() throws Exception {
-        hcc.createApplication(GlobalConfig.HYRACKS_APP_NAME, null);
     }
 
     public static void deinit() throws Exception {
@@ -82,7 +79,7 @@ public class AsterixHyracksIntegrationUtil {
 
     public static void runJob(JobSpecification spec) throws Exception {
         GlobalConfig.ASTERIX_LOGGER.info(spec.toJSON().toString());
-        JobId jobId = hcc.startJob(GlobalConfig.HYRACKS_APP_NAME, spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
+        JobId jobId = hcc.startJob(spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         GlobalConfig.ASTERIX_LOGGER.info(jobId.toString());
         hcc.waitForCompletion(jobId);
     }

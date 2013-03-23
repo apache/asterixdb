@@ -332,14 +332,16 @@ public class MetadataBootstrap {
         ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
         IInMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(DEFAULT_MEM_NUM_PAGES,
                 metaDataFrameFactory);
-        LSMBTree lsmBtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file,
-                bufferCache, fileMapProvider, typeTraits, comparatorFactories, bloomFilterKeyFields,
-                runtimeContext.getLSMMergePolicy(), runtimeContext.getLSMBTreeOperationTrackerFactory(),
-                runtimeContext.getLSMIOScheduler(), AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
+        LSMBTree lsmBtree = null;
         long resourceID = -1;
         if (create) {
+            lsmBtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file,
+                    bufferCache, fileMapProvider, typeTraits, comparatorFactories, bloomFilterKeyFields,
+                    runtimeContext.getLSMMergePolicy(), runtimeContext.getLSMBTreeOperationTrackerFactory(),
+                    runtimeContext.getLSMIOScheduler(), AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
             lsmBtree.create();
             resourceID = runtimeContext.getResourceIdFactory().createId();
+            indexLifecycleManager.register(resourceID, lsmBtree);
 
             ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits,
                     comparatorFactories, bloomFilterKeyFields, index.isPrimaryIndex(),
@@ -351,12 +353,22 @@ public class MetadataBootstrap {
                     .getPath(), 0));
         } else {
             resourceID = localResourceRepository.getResourceByName(file.getFile().getPath()).getResourceId();
+            lsmBtree = (LSMBTree) indexLifecycleManager.getIndex(resourceID);
+            if (lsmBtree == null) {
+                lsmBtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file,
+                        bufferCache, fileMapProvider, typeTraits, comparatorFactories, bloomFilterKeyFields,
+                        runtimeContext.getLSMMergePolicy(), runtimeContext.getLSMBTreeOperationTrackerFactory(),
+                        runtimeContext.getLSMIOScheduler(), AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
+                indexLifecycleManager.register(resourceID, lsmBtree);
+            }
         }
+        
         index.setResourceID(resourceID);
         index.setFile(file);
-        indexLifecycleManager.register(resourceID, lsmBtree);
         indexLifecycleManager.open(resourceID);
     }
+    
+    
 
     public static String getOutputDir() {
         return outputDir;

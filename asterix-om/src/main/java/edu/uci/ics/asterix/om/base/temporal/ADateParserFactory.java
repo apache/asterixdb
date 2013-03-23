@@ -36,15 +36,12 @@ public class ADateParserFactory implements IValueParserFactory {
     @Override
     public IValueParser createValueParser() {
 
-        final CharArrayCharSequenceAccessor charArrayAccessor = new CharArrayCharSequenceAccessor();
-
         return new IValueParser() {
 
             @Override
             public void parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
-                charArrayAccessor.reset(buffer, start, length);
                 try {
-                    out.writeInt((int) (parseDatePart(charArrayAccessor, true) / GregorianCalendarSystem.CHRONON_OF_DAY));
+                    out.writeInt((int) (parseDatePart(buffer, start, length) / GregorianCalendarSystem.CHRONON_OF_DAY));
                 } catch (IOException ex) {
                     throw new HyracksDataException(ex);
                 }
@@ -63,10 +60,9 @@ public class ADateParserFactory implements IValueParserFactory {
      * @return
      * @throws Exception
      */
-    public static <T> long parseDatePart(ICharSequenceAccessor<T> charAccessor, boolean isDateOnly)
+    public static long parseDatePart(String dateString, int start, int length)
             throws HyracksDataException {
 
-        int length = charAccessor.getLength();
         int offset = 0;
 
         int year = 0, month = 0, day = 0;
@@ -74,26 +70,25 @@ public class ADateParserFactory implements IValueParserFactory {
 
         boolean isExtendedForm = false;
 
-        if (charAccessor.getCharAt(offset) == '-') {
+        if (dateString.charAt(start + offset) == '-') {
             offset++;
             positive = false;
         }
 
-        if ((isDateOnly) && charAccessor.getCharAt(offset + 4) == '-' || (!isDateOnly)
-                && charAccessor.getCharAt(offset + 13) == ':') {
+        if (dateString.charAt(start + offset + 4) == '-') {
             isExtendedForm = true;
         }
 
         if (isExtendedForm) {
-            if (charAccessor.getCharAt(offset + 4) != '-' || charAccessor.getCharAt(offset + 7) != '-') {
+            if (dateString.charAt(start + offset + 4) != '-' || dateString.charAt(start + offset + 7) != '-') {
                 throw new HyracksDataException("Missing dash in the date string as an extended form");
             }
         }
 
         // year
         for (int i = 0; i < 4; i++) {
-            if (charAccessor.getCharAt(offset + i) >= '0' && charAccessor.getCharAt(offset + i) <= '9') {
-                year = year * 10 + charAccessor.getCharAt(offset + i) - '0';
+            if (dateString.charAt(start + offset + i) >= '0' && dateString.charAt(start + offset + i) <= '9') {
+                year = year * 10 + dateString.charAt(start + offset + i) - '0';
             } else {
                 throw new HyracksDataException("Non-numeric value in year field");
             }
@@ -108,8 +103,8 @@ public class ADateParserFactory implements IValueParserFactory {
 
         // month
         for (int i = 0; i < 2; i++) {
-            if ((charAccessor.getCharAt(offset + i) >= '0' && charAccessor.getCharAt(offset + i) <= '9')) {
-                month = month * 10 + charAccessor.getCharAt(offset + i) - '0';
+            if ((dateString.charAt(start + offset + i) >= '0' && dateString.charAt(start + offset + i) <= '9')) {
+                month = month * 10 + dateString.charAt(start + offset + i) - '0';
             } else {
                 throw new HyracksDataException("Non-numeric value in month field");
             }
@@ -123,8 +118,8 @@ public class ADateParserFactory implements IValueParserFactory {
 
         // day
         for (int i = 0; i < 2; i++) {
-            if ((charAccessor.getCharAt(offset + i) >= '0' && charAccessor.getCharAt(offset + i) <= '9')) {
-                day = day * 10 + charAccessor.getCharAt(offset + i) - '0';
+            if ((dateString.charAt(start + offset + i) >= '0' && dateString.charAt(start + offset + i) <= '9')) {
+                day = day * 10 + dateString.charAt(start + offset + i) - '0';
             } else {
                 throw new HyracksDataException("Non-numeric value in day field");
             }
@@ -141,10 +136,208 @@ public class ADateParserFactory implements IValueParserFactory {
             year *= -1;
         }
 
-        if (isDateOnly && length > offset) {
+        if (length > offset) {
             throw new HyracksDataException("Too many chars for a date only value");
         }
+        
+        if (!GregorianCalendarSystem.getInstance().validate(year, month, day, 0, 0, 0, 0)){
+            throw new HyracksDataException(dateErrorMessage);
+        }
+        
+        return GregorianCalendarSystem.getInstance().getChronon(year, month, day, 0, 0, 0, 0, 0);
+    }
+    
+    /**
+     * A copy-and-paste of {@link #parseDatePart(String, int, int)} but for a char array, in order
+     * to avoid object creation.
+     * 
+     * @param dateString
+     * @param start
+     * @param length
+     * @return
+     * @throws HyracksDataException
+     */
+    public static long parseDatePart(char[] dateString, int start, int length)
+            throws HyracksDataException {
+
+        int offset = 0;
+
+        int year = 0, month = 0, day = 0;
+        boolean positive = true;
+
+        boolean isExtendedForm = false;
+
+        if (dateString[start + offset] == '-') {
+            offset++;
+            positive = false;
+        }
+
+        if (dateString[start + offset + 4] == '-') {
+            isExtendedForm = true;
+        }
+
+        if (isExtendedForm) {
+            if (dateString[start + offset + 4] != '-' || dateString[start + offset + 7] != '-') {
+                throw new HyracksDataException("Missing dash in the date string as an extended form");
+            }
+        }
+
+        // year
+        for (int i = 0; i < 4; i++) {
+            if (dateString[start + offset + i] >= '0' && dateString[start + offset + i] <= '9') {
+                year = year * 10 + dateString[start + offset + i] - '0';
+            } else {
+                throw new HyracksDataException("Non-numeric value in year field");
+            }
+        }
+
+        if (year < GregorianCalendarSystem.FIELD_MINS[GregorianCalendarSystem.Fields.YEAR.ordinal()]
+                || year > GregorianCalendarSystem.FIELD_MAXS[GregorianCalendarSystem.Fields.YEAR.ordinal()]) {
+            throw new HyracksDataException(dateErrorMessage + ": year " + year);
+        }
+
+        offset += (isExtendedForm) ? 5 : 4;
+
+        // month
+        for (int i = 0; i < 2; i++) {
+            if ((dateString[start + offset + i] >= '0' && dateString[start + offset + i] <= '9')) {
+                month = month * 10 + dateString[start + offset + i] - '0';
+            } else {
+                throw new HyracksDataException("Non-numeric value in month field");
+            }
+        }
+
+        if (month < GregorianCalendarSystem.FIELD_MINS[GregorianCalendarSystem.Fields.MONTH.ordinal()]
+                || month > GregorianCalendarSystem.FIELD_MAXS[GregorianCalendarSystem.Fields.MONTH.ordinal()]) {
+            throw new HyracksDataException(dateErrorMessage + ": month " + month);
+        }
+        offset += (isExtendedForm) ? 3 : 2;
+
+        // day
+        for (int i = 0; i < 2; i++) {
+            if ((dateString[start + offset + i] >= '0' && dateString[start + offset + i] <= '9')) {
+                day = day * 10 + dateString[start + offset + i] - '0';
+            } else {
+                throw new HyracksDataException("Non-numeric value in day field");
+            }
+        }
+
+        if (day < GregorianCalendarSystem.FIELD_MINS[GregorianCalendarSystem.Fields.DAY.ordinal()]
+                || day > GregorianCalendarSystem.FIELD_MAXS[GregorianCalendarSystem.Fields.DAY.ordinal()]) {
+            throw new HyracksDataException(dateErrorMessage + ": day " + day);
+        }
+
+        offset += 2;
+
+        if (!positive) {
+            year *= -1;
+        }
+
+        if (length > offset) {
+            throw new HyracksDataException("Too many chars for a date only value");
+        }
+        
+        if (!GregorianCalendarSystem.getInstance().validate(year, month, day, 0, 0, 0, 0)){
+            throw new HyracksDataException(dateErrorMessage);
+        }
+        
         return GregorianCalendarSystem.getInstance().getChronon(year, month, day, 0, 0, 0, 0, 0);
     }
 
+    /**
+     * A copy-and-paste of {@link #parseDatePart(String, int, int)} but for a byte array, in order
+     * to avoid object creation.
+     * 
+     * @param dateString
+     * @param start
+     * @param length
+     * @return
+     * @throws HyracksDataException
+     */
+    public static long parseDatePart(byte[] dateString, int start, int length)
+            throws HyracksDataException {
+
+        int offset = 0;
+
+        int year = 0, month = 0, day = 0;
+        boolean positive = true;
+
+        boolean isExtendedForm = false;
+
+        if (dateString[start + offset] == '-') {
+            offset++;
+            positive = false;
+        }
+
+        if (dateString[start + offset + 4] == '-') {
+            isExtendedForm = true;
+        }
+
+        if (isExtendedForm) {
+            if (dateString[start + offset + 4] != '-' || dateString[start + offset + 7] != '-') {
+                throw new HyracksDataException("Missing dash in the date string as an extended form");
+            }
+        }
+
+        // year
+        for (int i = 0; i < 4; i++) {
+            if (dateString[start + offset + i] >= '0' && dateString[start + offset + i] <= '9') {
+                year = year * 10 + dateString[start + offset + i] - '0';
+            } else {
+                throw new HyracksDataException("Non-numeric value in year field");
+            }
+        }
+
+        if (year < GregorianCalendarSystem.FIELD_MINS[GregorianCalendarSystem.Fields.YEAR.ordinal()]
+                || year > GregorianCalendarSystem.FIELD_MAXS[GregorianCalendarSystem.Fields.YEAR.ordinal()]) {
+            throw new HyracksDataException(dateErrorMessage + ": year " + year);
+        }
+
+        offset += (isExtendedForm) ? 5 : 4;
+
+        // month
+        for (int i = 0; i < 2; i++) {
+            if ((dateString[start + offset + i] >= '0' && dateString[start + offset + i] <= '9')) {
+                month = month * 10 + dateString[start + offset + i] - '0';
+            } else {
+                throw new HyracksDataException("Non-numeric value in month field");
+            }
+        }
+
+        if (month < GregorianCalendarSystem.FIELD_MINS[GregorianCalendarSystem.Fields.MONTH.ordinal()]
+                || month > GregorianCalendarSystem.FIELD_MAXS[GregorianCalendarSystem.Fields.MONTH.ordinal()]) {
+            throw new HyracksDataException(dateErrorMessage + ": month " + month);
+        }
+        offset += (isExtendedForm) ? 3 : 2;
+
+        // day
+        for (int i = 0; i < 2; i++) {
+            if ((dateString[start + offset + i] >= '0' && dateString[start + offset + i] <= '9')) {
+                day = day * 10 + dateString[start + offset + i] - '0';
+            } else {
+                throw new HyracksDataException("Non-numeric value in day field");
+            }
+        }
+
+        if (day < GregorianCalendarSystem.FIELD_MINS[GregorianCalendarSystem.Fields.DAY.ordinal()]
+                || day > GregorianCalendarSystem.FIELD_MAXS[GregorianCalendarSystem.Fields.DAY.ordinal()]) {
+            throw new HyracksDataException(dateErrorMessage + ": day " + day);
+        }
+
+        offset += 2;
+
+        if (!positive) {
+            year *= -1;
+        }
+
+        if (length > offset) {
+            throw new HyracksDataException("Too many chars for a date only value");
+        }
+        
+        if (!GregorianCalendarSystem.getInstance().validate(year, month, day, 0, 0, 0, 0)){
+            throw new HyracksDataException(dateErrorMessage);
+        }
+        
+        return GregorianCalendarSystem.getInstance().getChronon(year, month, day, 0, 0, 0, 0, 0);
+    }
 }
