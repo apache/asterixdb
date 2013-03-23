@@ -75,11 +75,17 @@ public class Driver implements IDriver {
         try {
             /** add hadoop configurations */
             URL hadoopCore = job.getClass().getClassLoader().getResource("core-site.xml");
-            job.getConfiguration().addResource(hadoopCore);
+            if (hadoopCore != null) {
+                job.getConfiguration().addResource(hadoopCore);
+            }
             URL hadoopMapRed = job.getClass().getClassLoader().getResource("mapred-site.xml");
-            job.getConfiguration().addResource(hadoopMapRed);
+            if (hadoopMapRed != null) {
+                job.getConfiguration().addResource(hadoopMapRed);
+            }
             URL hadoopHdfs = job.getClass().getClassLoader().getResource("hdfs-site.xml");
-            job.getConfiguration().addResource(hadoopHdfs);
+            if (hadoopHdfs != null) {
+                job.getConfiguration().addResource(hadoopHdfs);
+            }
             ClusterConfig.loadClusterConfig(ipAddress, port);
 
             LOG.info("job started");
