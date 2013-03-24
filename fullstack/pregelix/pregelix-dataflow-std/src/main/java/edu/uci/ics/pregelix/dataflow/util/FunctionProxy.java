@@ -15,6 +15,7 @@
 
 package edu.uci.ics.pregelix.dataflow.util;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -36,6 +37,7 @@ public class FunctionProxy {
     private final IFrameWriter[] writers;
     private TupleDeserializer tupleDe;
     private RecordDescriptor inputRd;
+    private ClassLoader ctxCL;
 
     public FunctionProxy(IHyracksTaskContext ctx, IUpdateFunctionFactory functionFactory,
             IRuntimeHookFactory preHookFactory, IRuntimeHookFactory postHookFactory,
@@ -56,6 +58,7 @@ public class FunctionProxy {
     public void functionOpen() throws HyracksDataException {
         inputRd = inputRdFactory.createRecordDescriptor();
         tupleDe = new TupleDeserializer(inputRd);
+        ctxCL = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
         for (IFrameWriter writer : writers) {
             writer.open();
@@ -68,16 +71,19 @@ public class FunctionProxy {
     /**
      * Call the function
      * 
-     * @param tb
-     *            input data
+     * @param leftAccessor
+     *            input page accessor
+     * @param leftTupleIndex
+     *            the tuple index in the page
      * @param updateRef
      *            update pointer
      * @throws HyracksDataException
      */
-    public void functionCall(ArrayTupleBuilder tb, ITupleReference updateRef) throws HyracksDataException {
-        Object[] tuple = tupleDe.deserializeRecord(tb);
+    public void functionCall(IFrameTupleAccessor leftAccessor, int leftTupleIndex, ITupleReference right,
+            ArrayTupleBuilder cloneUpdateTb) throws HyracksDataException {
+        Object[] tuple = tupleDe.deserializeRecord(leftAccessor, leftTupleIndex, right);
         function.process(tuple);
-        function.update(updateRef);
+        function.update(right, cloneUpdateTb);
     }
 
     /**
@@ -86,10 +92,26 @@ public class FunctionProxy {
      * @param updateRef
      * @throws HyracksDataException
      */
-    public void functionCall(ITupleReference updateRef) throws HyracksDataException {
+    public void functionCall(ITupleReference updateRef, ArrayTupleBuilder cloneUpdateTb) throws HyracksDataException {
         Object[] tuple = tupleDe.deserializeRecord(updateRef);
         function.process(tuple);
-        function.update(updateRef);
+        function.update(updateRef, cloneUpdateTb);
+    }
+
+    /**
+     * Call the function
+     * 
+     * @param tb
+     *            input data
+     * @param inPlaceUpdateRef
+     *            update pointer
+     * @throws HyracksDataException
+     */
+    public void functionCall(ArrayTupleBuilder tb, ITupleReference inPlaceUpdateRef, ArrayTupleBuilder cloneUpdateTb)
+            throws HyracksDataException {
+        Object[] tuple = tupleDe.deserializeRecord(tb, inPlaceUpdateRef);
+        function.process(tuple);
+        function.update(inPlaceUpdateRef, cloneUpdateTb);
     }
 
     /**
@@ -104,5 +126,6 @@ public class FunctionProxy {
         for (IFrameWriter writer : writers) {
             writer.close();
         }
+        Thread.currentThread().setContextClassLoader(ctxCL);
     }
 }

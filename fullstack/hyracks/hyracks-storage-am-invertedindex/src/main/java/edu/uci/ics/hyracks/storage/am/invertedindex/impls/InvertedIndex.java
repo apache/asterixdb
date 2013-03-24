@@ -202,7 +202,9 @@ public class InvertedIndex implements IIndex {
     public void endBulkLoad(IIndexBulkLoadContext ictx) throws HyracksDataException {
         // Create entry in btree for last inverted list.
         InvertedIndexBulkLoadContext ctx = (InvertedIndexBulkLoadContext) ictx;
-        createAndInsertBTreeTuple(ctx);
+        if (ctx.lastTuple.getFieldData(0) != null) {
+            createAndInsertBTreeTuple(ctx);
+        }
         btree.endBulkLoad(ctx.btreeBulkLoadCtx);
         ctx.deinit();
     }

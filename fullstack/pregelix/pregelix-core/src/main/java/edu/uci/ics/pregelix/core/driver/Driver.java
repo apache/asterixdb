@@ -72,22 +72,29 @@ public class Driver implements IDriver {
     public void runJob(PregelixJob job, Plan planChoice, String ipAddress, int port, boolean profiling)
             throws HyracksException {
         applicationName = exampleClass.getSimpleName() + UUID.randomUUID();
-        /** add hadoop configurations */
-        URL hadoopCore = job.getClass().getClassLoader().getResource("core-site.xml");
-        job.getConfiguration().addResource(hadoopCore);
-        URL hadoopMapRed = job.getClass().getClassLoader().getResource("mapred-site.xml");
-        job.getConfiguration().addResource(hadoopMapRed);
-        URL hadoopHdfs = job.getClass().getClassLoader().getResource("hdfs-site.xml");
-        job.getConfiguration().addResource(hadoopHdfs);
-        ClusterConfig.loadClusterConfig(ipAddress, port);
-
-        LOG.info("job started");
-        long start = System.currentTimeMillis();
-        long end = start;
-        long time = 0;
-
-        this.profiling = profiling;
         try {
+            /** add hadoop configurations */
+            URL hadoopCore = job.getClass().getClassLoader().getResource("core-site.xml");
+            if (hadoopCore != null) {
+                job.getConfiguration().addResource(hadoopCore);
+            }
+            URL hadoopMapRed = job.getClass().getClassLoader().getResource("mapred-site.xml");
+            if (hadoopMapRed != null) {
+                job.getConfiguration().addResource(hadoopMapRed);
+            }
+            URL hadoopHdfs = job.getClass().getClassLoader().getResource("hdfs-site.xml");
+            if (hadoopHdfs != null) {
+                job.getConfiguration().addResource(hadoopHdfs);
+            }
+            ClusterConfig.loadClusterConfig(ipAddress, port);
+
+            LOG.info("job started");
+            long start = System.currentTimeMillis();
+            long end = start;
+            long time = 0;
+
+            this.profiling = profiling;
+
             switch (planChoice) {
                 case INNER_JOIN:
                     jobGen = new JobGenInnerJoin(job);
@@ -146,6 +153,16 @@ public class Driver implements IDriver {
             LOG.info("result writing finished " + time + "ms");
             LOG.info("job finished");
         } catch (Exception e) {
+            try {
+                /**
+                 * destroy application if there is any exception
+                 */
+                if (hcc != null) {
+                    destroyApplication(applicationName);
+                }
+            } catch (Exception e2) {
+                throw new HyracksException(e2);
+            }
             throw new HyracksException(e);
         }
     }
@@ -224,8 +241,8 @@ public class Driver implements IDriver {
         LOG.info("jar deployment finished " + (end - start) + "ms");
     }
 
-    public void destroyApplication(String jarFile) throws Exception {
-        hcc.destroyApplication(applicationName);
+    public void destroyApplication(String appName) throws Exception {
+        hcc.destroyApplication(appName);
     }
 
 }

@@ -19,8 +19,9 @@
 
 package edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers;
 
-import java.io.DataOutput;
 import java.io.IOException;
+
+import edu.uci.ics.hyracks.data.std.util.GrowableArray;
 
 public interface IToken {
 	public byte[] getData();
@@ -34,7 +35,7 @@ public interface IToken {
 	public void reset(byte[] data, int start, int length, int tokenLength,
 			int tokenCount);
 
-	public void serializeToken(DataOutput dos) throws IOException;
+	public void serializeToken(GrowableArray out) throws IOException;
 
-	public void serializeTokenCount(DataOutput dos) throws IOException;
+	public void serializeTokenCount(GrowableArray out) throws IOException;
 }

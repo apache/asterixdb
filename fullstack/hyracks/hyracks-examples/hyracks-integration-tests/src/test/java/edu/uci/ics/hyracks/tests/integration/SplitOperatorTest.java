@@ -26,6 +26,7 @@ import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
@@ -35,8 +36,9 @@ import edu.uci.ics.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
 import edu.uci.ics.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
-import edu.uci.ics.hyracks.dataflow.std.file.LineFileWriteOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.misc.SplitOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.result.ResultWriterOperatorDescriptor;
+import edu.uci.ics.hyracks.tests.util.ResultSerializerFactoryProvider;
 
 public class SplitOperatorTest extends AbstractIntegrationTest {
 
@@ -50,6 +52,8 @@ public class SplitOperatorTest extends AbstractIntegrationTest {
             Assert.assertEquals(lineA, lineB);
         }
         Assert.assertNull(fileB.readLine());
+        fileA.close();
+        fileB.close();
     }
 
     @Test
@@ -83,8 +87,11 @@ public class SplitOperatorTest extends AbstractIntegrationTest {
 
         IOperatorDescriptor outputOp[] = new IOperatorDescriptor[outputFile.length];
         for (int i = 0; i < outputArity; i++) {
-            outputOp[i] = new LineFileWriteOperatorDescriptor(spec, new FileSplit[] { new FileSplit(NC1_ID,
-                    outputFile[i].getAbsolutePath()) });
+            ResultSetId rsId = new ResultSetId(i);
+            spec.addResultSetId(rsId);
+
+            outputOp[i] = new ResultWriterOperatorDescriptor(spec, rsId, true,
+                    ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
             PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, outputOp[i], locations);
         }
 
@@ -96,10 +103,10 @@ public class SplitOperatorTest extends AbstractIntegrationTest {
         for (int i = 0; i < outputArity; i++) {
             spec.addRoot(outputOp[i]);
         }
-        runTest(spec);
-
+        String[] expectedResultsFileNames = new String[outputArity];
         for (int i = 0; i < outputArity; i++) {
-            compareFiles(inputFileName, outputFile[i].getAbsolutePath());
+            expectedResultsFileNames[i] = inputFileName;
         }
+        runTestAndCompareResults(spec, expectedResultsFileNames);
     }
 }

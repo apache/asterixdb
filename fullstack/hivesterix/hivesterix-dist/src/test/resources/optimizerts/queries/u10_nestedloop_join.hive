@@ -1,0 +1,21 @@
+DROP TABLE IF EXISTS nation;
+DROP TABLE IF EXISTS u10_nestedloop_join;
+
+-- create tables and load data
+create external table nation (N_NATIONKEY INT, N_NAME STRING, N_REGIONKEY INT, N_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/nation';
+
+-- create the target table
+create table u10_nestedloop_join(supp_nation string, cust_nation string, s_nationkey int, c_nationkey int);
+
+-- the query
+insert overwrite table u10_nestedloop_join
+select 
+  * 
+from
+  (
+    select 
+      n1.n_name as supp_nation, n2.n_name as cust_nation, n1.n_nationkey as s_nationkey,      
+      n2.n_nationkey as c_nationkey
+from 
+  nation n1 join nation n2 where n1.n_nationkey > n2.n_nationkey
+) a;

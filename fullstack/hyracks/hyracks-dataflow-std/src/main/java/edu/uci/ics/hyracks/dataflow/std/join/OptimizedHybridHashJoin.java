@@ -81,6 +81,8 @@ public class OptimizedHybridHashJoin {
 
     private int[] buildPSizeInFrames; //Used for partition tuning
     private int freeFramesCounter; //Used for partition tuning
+    
+    private boolean isTableEmpty;	//Added for handling the case, where build side is empty (tableSize is 0)
 
     public OptimizedHybridHashJoin(IHyracksTaskContext ctx, int memForJoin, int numOfPartitions, String rel0Name,
             String rel1Name, int[] keys0, int[] keys1, IBinaryComparator[] comparators, RecordDescriptor buildRd,
@@ -89,10 +91,10 @@ public class OptimizedHybridHashJoin {
         this.memForJoin = memForJoin;
         this.buildRd = buildRd;
         this.probeRd = probeRd;
-        this.buildHpc = probeHpc;
-        this.probeHpc = buildHpc;
-        this.buildKeys = keys0;
-        this.probeKeys = keys1;
+        this.buildHpc = buildHpc; 	
+        this.probeHpc = probeHpc; 	
+        this.buildKeys = keys1; 	
+        this.probeKeys = keys0;		
         this.comparators = comparators;
         this.rel0Name = rel0Name;
         this.rel1Name = rel1Name;
@@ -117,10 +119,10 @@ public class OptimizedHybridHashJoin {
         this.memForJoin = memForJoin;
         this.buildRd = buildRd;
         this.probeRd = probeRd;
-        this.buildHpc = probeHpc;
-        this.probeHpc = buildHpc;
-        this.buildKeys = keys0;
-        this.probeKeys = keys1;
+        this.buildHpc = buildHpc; 	
+        this.probeHpc = probeHpc; 	
+        this.buildKeys = keys1; 	
+        this.probeKeys = keys0;		
         this.comparators = comparators;
         this.rel0Name = rel0Name;
         this.rel1Name = rel1Name;
@@ -171,6 +173,12 @@ public class OptimizedHybridHashJoin {
     public void build(ByteBuffer buffer) throws HyracksDataException {
         accessorBuild.reset(buffer);
         int tupleCount = accessorBuild.getTupleCount();
+   
+        boolean print = false;
+    	if(print){
+    		accessorBuild.prettyPrint();
+    	}
+        
         for (int i = 0; i < tupleCount; ++i) {
             int pid = buildHpc.partition(accessorBuild, i, numOfPartitions);
             processTuple(i, pid);
@@ -338,6 +346,7 @@ public class OptimizedHybridHashJoin {
 
         createInMemoryJoiner(inMemTupCount);
         cacheInMemJoin();
+        this.isTableEmpty = (inMemTupCount == 0);
     }
 
     private void partitionTune() throws HyracksDataException {
@@ -457,10 +466,14 @@ public class OptimizedHybridHashJoin {
     }
 
     public void probe(ByteBuffer buffer, IFrameWriter writer) throws HyracksDataException {
-
         accessorProbe.reset(buffer);
         int tupleCount = accessorProbe.getTupleCount();
 
+        boolean print = false;
+    	if(print){
+    		accessorProbe.prettyPrint();
+    	}
+        
         if (numOfSpilledParts == 0) {
             inMemJoiner.join(buffer, writer);
             return;
@@ -603,5 +616,9 @@ public class OptimizedHybridHashJoin {
                 + avgProbeSpSz + "\nIn-Memory Tups:\t" + numOfInMemTups + "\nNum of Free Buffers:\t"
                 + freeFramesCounter;
         return s;
+    }
+    
+    public boolean isTableEmpty(){
+    	return this.isTableEmpty;
     }
 }

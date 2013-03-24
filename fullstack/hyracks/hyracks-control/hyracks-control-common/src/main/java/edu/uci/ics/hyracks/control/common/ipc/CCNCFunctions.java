@@ -36,6 +36,7 @@ import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
@@ -68,6 +69,9 @@ public class CCNCFunctions {
         REPORT_PROFILE,
         REGISTER_PARTITION_PROVIDER,
         REGISTER_PARTITION_REQUEST,
+        REGISTER_RESULT_PARTITION_LOCATION,
+        REPORT_RESULT_PARTITION_WRITE_COMPLETION,
+        REPORT_RESULT_PARTITION_FAILURE,
         APPLICATION_STATE_CHANGE_RESPONSE,
 
         NODE_REGISTRATION_RESULT,
@@ -435,6 +439,127 @@ public class CCNCFunctions {
 
             // Write Partition State
             writePartitionState(dos, pr.getMinimumState());
+        }
+    }
+
+    public static class RegisterResultPartitionLocationFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final JobId jobId;
+
+        private final ResultSetId rsId;
+
+        private final boolean orderedResult;
+
+        private final int partition;
+
+        private final int nPartitions;
+
+        private NetworkAddress networkAddress;
+
+        public RegisterResultPartitionLocationFunction(JobId jobId, ResultSetId rsId, boolean orderedResult,
+                int partition, int nPartitions, NetworkAddress networkAddress) {
+            this.jobId = jobId;
+            this.rsId = rsId;
+            this.orderedResult = orderedResult;
+            this.partition = partition;
+            this.nPartitions = nPartitions;
+            this.networkAddress = networkAddress;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.REGISTER_RESULT_PARTITION_LOCATION;
+        }
+
+        public JobId getJobId() {
+            return jobId;
+        }
+
+        public ResultSetId getResultSetId() {
+            return rsId;
+        }
+
+        public boolean getOrderedResult() {
+            return orderedResult;
+        }
+
+        public int getPartition() {
+            return partition;
+        }
+
+        public int getNPartitions() {
+            return nPartitions;
+        }
+
+        public NetworkAddress getNetworkAddress() {
+            return networkAddress;
+        }
+    }
+
+    public static class ReportResultPartitionWriteCompletionFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final JobId jobId;
+
+        private final ResultSetId rsId;
+
+        private final int partition;
+
+        public ReportResultPartitionWriteCompletionFunction(JobId jobId, ResultSetId rsId, int partition) {
+            this.jobId = jobId;
+            this.rsId = rsId;
+            this.partition = partition;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.REPORT_RESULT_PARTITION_WRITE_COMPLETION;
+        }
+
+        public JobId getJobId() {
+            return jobId;
+        }
+
+        public ResultSetId getResultSetId() {
+            return rsId;
+        }
+
+        public int getPartition() {
+            return partition;
+        }
+    }
+
+    public static class ReportResultPartitionFailureFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final JobId jobId;
+
+        private final ResultSetId rsId;
+
+        private final int partition;
+
+        public ReportResultPartitionFailureFunction(JobId jobId, ResultSetId rsId, int partition) {
+            this.jobId = jobId;
+            this.rsId = rsId;
+            this.partition = partition;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.REPORT_RESULT_PARTITION_FAILURE;
+        }
+
+        public JobId getJobId() {
+            return jobId;
+        }
+
+        public ResultSetId getResultSetId() {
+            return rsId;
+        }
+
+        public int getPartition() {
+            return partition;
         }
     }
 

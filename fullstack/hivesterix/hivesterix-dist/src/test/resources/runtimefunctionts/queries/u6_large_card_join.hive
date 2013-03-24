@@ -1,0 +1,23 @@
+DROP TABLE IF EXISTS joinsrc1;
+DROP TABLE IF EXISTS joinsrc2;
+DROP TABLE IF EXISTS u6_large_card_join;
+
+-- create the tables and load the data
+create external table joinsrc1 (ID_1 INT) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' 
+STORED AS TEXTFILE LOCATION '/test/joinsrc1';
+
+create external table joinsrc2 (ID_2 INT) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' 
+STORED AS TEXTFILE LOCATION '/test/joinsrc2';
+
+-- create the result tables
+create table u6_large_card_join(col1 int, col2 int);
+
+-- the query
+insert overwrite table u6_large_card_join
+select 
+   ID_1, ID_2
+from 
+  joinsrc1 join joinsrc2
+on
+  joinsrc1.ID_1=joinsrc2.ID_2;
+

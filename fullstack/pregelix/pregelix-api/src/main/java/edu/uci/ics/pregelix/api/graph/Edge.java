@@ -42,7 +42,7 @@ public class Edge<I extends WritableComparable, E extends Writable> implements W
     private E edgeValue = null;
     /** Configuration - Used to instantiate classes */
     private Configuration conf = null;
-    /** Whether the edgeValue field is not null*/
+    /** Whether the edgeValue field is not null */
     private boolean hasEdgeValue = false;
 
     /**
@@ -115,8 +115,9 @@ public class Edge<I extends WritableComparable, E extends Writable> implements W
         destVertexId.readFields(input);
         hasEdgeValue = input.readBoolean();
         if (hasEdgeValue) {
-            if (edgeValue == null)
+            if (edgeValue == null) {
                 edgeValue = (E) BspUtils.createEdgeValue(getConf());
+            }
             edgeValue.readFields(input);
         }
     }
@@ -128,8 +129,9 @@ public class Edge<I extends WritableComparable, E extends Writable> implements W
         }
         destVertexId.write(output);
         output.writeBoolean(hasEdgeValue);
-        if (hasEdgeValue)
+        if (hasEdgeValue) {
             edgeValue.write(output);
+        }
     }
 
     @Override

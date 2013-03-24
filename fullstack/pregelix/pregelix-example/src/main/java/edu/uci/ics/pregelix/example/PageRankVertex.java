@@ -54,6 +54,7 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
     public static final String ITERATIONS = "HyracksPageRankVertex.iteration";
     private DoubleWritable outputValue = new DoubleWritable();
     private DoubleWritable tmpVertexValue = new DoubleWritable();
+    private int maxIteration = -1;
 
     /**
      * Test whether combiner is called by summing up the messages.
@@ -97,7 +98,9 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
 
     @Override
     public void compute(Iterator<DoubleWritable> msgIterator) {
-        int maxIteration = this.getContext().getConfiguration().getInt(ITERATIONS, 10);
+        if (maxIteration < 0) {
+            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 10);
+        }
         if (getSuperstep() == 1) {
             tmpVertexValue.set(1.0 / getNumVertices());
             setVertexValue(tmpVertexValue);
@@ -123,13 +126,13 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
     /**
      * Simple VertexReader that supports {@link SimplePageRankVertex}
      */
-    public static class SimplePageRankVertexReader extends
+    public static class SimulatedPageRankVertexReader extends
             GeneratedVertexReader<VLongWritable, DoubleWritable, FloatWritable, DoubleWritable> {
         /** Class logger */
-        private static final Logger LOG = Logger.getLogger(SimplePageRankVertexReader.class.getName());
+        private static final Logger LOG = Logger.getLogger(SimulatedPageRankVertexReader.class.getName());
         private Map<VLongWritable, FloatWritable> edges = Maps.newHashMap();
 
-        public SimplePageRankVertexReader() {
+        public SimulatedPageRankVertexReader() {
             super();
         }
 
@@ -162,12 +165,12 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
     /**
      * Simple VertexInputFormat that supports {@link SimplePageRankVertex}
      */
-    public static class SimplePageRankVertexInputFormat extends
+    public static class SimulatedPageRankVertexInputFormat extends
             GeneratedVertexInputFormat<VLongWritable, DoubleWritable, FloatWritable, DoubleWritable> {
         @Override
         public VertexReader<VLongWritable, DoubleWritable, FloatWritable, DoubleWritable> createVertexReader(
                 InputSplit split, TaskAttemptContext context) throws IOException {
-            return new SimplePageRankVertexReader();
+            return new SimulatedPageRankVertexReader();
         }
     }
 
@@ -186,6 +189,11 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
             getRecordWriter().write(new Text(vertex.getVertexId().toString()),
                     new Text(vertex.getVertexValue().toString()));
         }
+    }
+
+    @Override
+    public String toString() {
+        return getVertexId() + " " + getVertexValue();
     }
 
     /**

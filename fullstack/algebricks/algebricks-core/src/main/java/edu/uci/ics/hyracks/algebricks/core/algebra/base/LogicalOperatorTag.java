@@ -20,6 +20,7 @@ public enum LogicalOperatorTag {
     CLUSTER,
     DATASOURCESCAN,
     DISTINCT,
+    DISTRIBUTE_RESULT,
     GROUP,
     EMPTYTUPLESOURCE,
     EXCHANGE,

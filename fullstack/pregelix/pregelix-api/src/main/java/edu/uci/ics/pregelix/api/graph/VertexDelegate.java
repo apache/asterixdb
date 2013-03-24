@@ -44,6 +44,16 @@ class VertexDelegate<I extends WritableComparable, V extends Writable, E extends
     private IFrameWriter aliveWriter;
     private FrameTupleAppender appenderAlive;
 
+    /** the tuple for insert */
+    private ArrayTupleBuilder insertTb;
+    private IFrameWriter insertWriter;
+    private FrameTupleAppender appenderInsert;
+
+    /** the tuple for insert */
+    private ArrayTupleBuilder deleteTb;
+    private IFrameWriter deleteWriter;
+    private FrameTupleAppender appenderDelete;
+
     /** message list */
     private MsgList dummyMessageList = new MsgList();
     /** whether alive message should be pushed out */
@@ -95,25 +105,70 @@ class VertexDelegate<I extends WritableComparable, V extends Writable, E extends
         this.vertexId = vertexId;
     }
 
+    public final void addVertex(I vertexId, Vertex vertex) {
+        try {
+            insertTb.reset();
+            DataOutput outputInsert = insertTb.getDataOutput();
+            vertexId.write(outputInsert);
+            insertTb.addFieldEndOffset();
+            vertex.write(outputInsert);
+            insertTb.addFieldEndOffset();
+            FrameTupleUtils.flushTuple(appenderInsert, insertTb, insertWriter);
+
+            /**
+             * push alive when necessary
+             */
+            if (pushAlive && !vertex.isHalted()) {
+                alive.reset();
+                DataOutput outputAlive = alive.getDataOutput();
+                vertexId.write(outputAlive);
+                alive.addFieldEndOffset();
+                dummyMessageList.write(outputAlive);
+                alive.addFieldEndOffset();
+                FrameTupleUtils.flushTuple(appenderAlive, alive, aliveWriter);
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    public final void deleteVertex(I vertexId) {
+        try {
+            deleteTb.reset();
+            DataOutput outputDelete = deleteTb.getDataOutput();
+            vertexId.write(outputDelete);
+            deleteTb.addFieldEndOffset();
+            FrameTupleUtils.flushTuple(appenderDelete, deleteTb, deleteWriter);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     public final void setOutputWriters(List<IFrameWriter> outputs) {
         msgWriter = outputs.get(0);
-        if (outputs.size() > 1) {
-            aliveWriter = outputs.get(1);
+        insertWriter = outputs.get(1);
+        deleteWriter = outputs.get(2);
+        if (outputs.size() > 3) {
+            aliveWriter = outputs.get(outputs.size() - 1);
             pushAlive = true;
         }
     }
 
     public final void setOutputAppenders(List<FrameTupleAppender> appenders) {
         appenderMsg = appenders.get(0);
-        if (appenders.size() > 1) {
-            appenderAlive = appenders.get(1);
+        appenderInsert = appenders.get(1);
+        appenderDelete = appenders.get(2);
+        if (appenders.size() > 3) {
+            appenderAlive = appenders.get(appenders.size() - 1);
         }
     }
 
     public final void setOutputTupleBuilders(List<ArrayTupleBuilder> tbs) {
         message = tbs.get(0);
-        if (tbs.size() > 1) {
-            alive = tbs.get(1);
+        insertTb = tbs.get(1);
+        deleteTb = tbs.get(2);
+        if (tbs.size() > 3) {
+            alive = tbs.get(tbs.size() - 1);
         }
     }
 }

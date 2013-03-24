@@ -1,0 +1,60 @@
+DROP TABLE IF EXISTS customer;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS q22_customer_tmp;
+DROP TABLE IF EXISTS q22_customer_tmp1;
+DROP TABLE IF EXISTS q22_orders_tmp;
+DROP TABLE IF EXISTS q22_global_sales_opportunity;
+
+-- create tables and load data
+create external table customer (C_CUSTKEY INT, C_NAME STRING, C_ADDRESS STRING, C_NATIONKEY INT, C_PHONE STRING, C_ACCTBAL DOUBLE, C_MKTSEGMENT STRING, C_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/customer';
+create external table orders (O_ORDERKEY INT, O_CUSTKEY INT, O_ORDERSTATUS STRING, O_TOTALPRICE DOUBLE, O_ORDERDATE STRING, O_ORDERPRIORITY STRING, O_CLERK STRING, O_SHIPPRIORITY INT, O_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/orders';
+
+-- create target tables
+create table q22_customer_tmp(c_acctbal double, c_custkey int, cntrycode string);
+create table q22_customer_tmp1(avg_acctbal double);
+create table q22_orders_tmp(o_custkey int);
+create table q22_global_sales_opportunity(cntrycode string, numcust int, totacctbal double);
+
+-- the query
+insert overwrite table q22_customer_tmp
+select 
+  c_acctbal, c_custkey, substr(c_phone, 1, 2) as cntrycode
+from 
+  customer;
+ 
+insert overwrite table q22_customer_tmp1
+select
+  avg(c_acctbal)
+from
+  q22_customer_tmp
+where
+  c_acctbal > 0.00;
+
+insert overwrite table q22_orders_tmp
+select 
+  o_custkey 
+from 
+  orders
+group by 
+  o_custkey;
+
+insert overwrite table q22_global_sales_opportunity
+select
+  cntrycode, count(1) as numcust, sum(c_acctbal) as totacctbal
+from
+(
+  select cntrycode, c_acctbal, avg_acctbal from
+  q22_customer_tmp1 ct1 join
+  (
+    select cntrycode, c_acctbal from
+      q22_orders_tmp ot 
+      right outer join q22_customer_tmp ct 
+      on
+        ct.c_custkey = ot.o_custkey
+  ) ct2
+) a
+where
+  c_acctbal > avg_acctbal
+group by cntrycode
+order by cntrycode;
+

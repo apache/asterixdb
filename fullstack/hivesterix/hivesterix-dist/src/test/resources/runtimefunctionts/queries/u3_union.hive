@@ -1,0 +1,11 @@
+drop table IF EXISTS supplier;
+drop table IF EXISTS u3_union;
+
+create external table supplier (S_SUPPKEY INT, S_NAME STRING, S_ADDRESS STRING, S_NATIONKEY INT, S_PHONE STRING, S_ACCTBAL DOUBLE, S_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/supplier';
+create table u3_union (S_SUPPKEY INT, S_ADDRESS STRING, S_NATIONKEY INT,  S_NAME STRING);
+
+insert overwrite table u3_union 
+select * from (select (2*s_suppkey), s_address, s_nationkey,  s_name  FROM supplier where S_SUPPKEY*2 < 20 
+union all 
+select (2*s_suppkey), s_address, s_nationkey,  s_name   FROM supplier where S_SUPPKEY*2 > 50) t
+order by t.s_address;

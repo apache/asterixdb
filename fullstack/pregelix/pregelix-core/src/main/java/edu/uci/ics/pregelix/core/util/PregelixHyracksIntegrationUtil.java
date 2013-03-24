@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.pregelix.core.util;
 
+import java.io.File;
 import java.util.EnumSet;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
@@ -44,14 +45,16 @@ public class PregelixHyracksIntegrationUtil {
     private static NodeControllerService nc2;
     private static IHyracksClientConnection hcc;
 
-    public static void init() throws Exception {
+    public static void init(String topologyFilePath) throws Exception {
         CCConfig ccConfig = new CCConfig();
         ccConfig.clientNetIpAddress = CC_HOST;
         ccConfig.clusterNetIpAddress = CC_HOST;
         ccConfig.clusterNetPort = TEST_HYRACKS_CC_PORT;
         ccConfig.clientNetPort = TEST_HYRACKS_CC_CLIENT_PORT;
         ccConfig.defaultMaxJobAttempts = 0;
-        ccConfig.jobHistorySize = 10;
+        ccConfig.jobHistorySize = 0;
+        ccConfig.profileDumpPeriod = -1;
+        ccConfig.clusterTopologyDefinition = new File(topologyFilePath);
 
         // cluster controller
         cc = new ClusterControllerService(ccConfig);
@@ -63,6 +66,7 @@ public class PregelixHyracksIntegrationUtil {
         ncConfig1.clusterNetIPAddress = "localhost";
         ncConfig1.ccPort = TEST_HYRACKS_CC_PORT;
         ncConfig1.dataIPAddress = "127.0.0.1";
+        ncConfig1.datasetIPAddress = "127.0.0.1";
         ncConfig1.nodeId = NC1_ID;
         nc1 = new NodeControllerService(ncConfig1);
         nc1.start();
@@ -72,6 +76,7 @@ public class PregelixHyracksIntegrationUtil {
         ncConfig2.clusterNetIPAddress = "localhost";
         ncConfig2.ccPort = TEST_HYRACKS_CC_PORT;
         ncConfig2.dataIPAddress = "127.0.0.1";
+        ncConfig2.datasetIPAddress = "127.0.0.1";
         ncConfig2.nodeId = NC2_ID;
         nc2 = new NodeControllerService(ncConfig2);
         nc2.start();

@@ -25,9 +25,11 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.example.ConnectedComponentsVertex;
 import edu.uci.ics.pregelix.example.ConnectedComponentsVertex.SimpleConnectedComponentsVertexOutputFormat;
+import edu.uci.ics.pregelix.example.GraphMutationVertex;
+import edu.uci.ics.pregelix.example.GraphMutationVertex.SimpleGraphMutationVertexOutputFormat;
 import edu.uci.ics.pregelix.example.PageRankVertex;
-import edu.uci.ics.pregelix.example.PageRankVertex.SimplePageRankVertexInputFormat;
 import edu.uci.ics.pregelix.example.PageRankVertex.SimplePageRankVertexOutputFormat;
+import edu.uci.ics.pregelix.example.PageRankVertex.SimulatedPageRankVertexInputFormat;
 import edu.uci.ics.pregelix.example.ReachabilityVertex;
 import edu.uci.ics.pregelix.example.ReachabilityVertex.SimpleReachibilityVertexOutputFormat;
 import edu.uci.ics.pregelix.example.ShortestPathsVertex;
@@ -35,6 +37,14 @@ import edu.uci.ics.pregelix.example.inputformat.TextConnectedComponentsInputForm
 import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
 import edu.uci.ics.pregelix.example.inputformat.TextReachibilityVertexInputFormat;
 import edu.uci.ics.pregelix.example.inputformat.TextShortestPathsInputFormat;
+import edu.uci.ics.pregelix.example.maximalclique.MaximalCliqueAggregator;
+import edu.uci.ics.pregelix.example.maximalclique.MaximalCliqueVertex;
+import edu.uci.ics.pregelix.example.maximalclique.MaximalCliqueVertex.MaximalCliqueVertexOutputFormat;
+import edu.uci.ics.pregelix.example.maximalclique.TextMaximalCliqueInputFormat;
+import edu.uci.ics.pregelix.example.trianglecounting.TextTriangleCountingInputFormat;
+import edu.uci.ics.pregelix.example.trianglecounting.TriangleCountingAggregator;
+import edu.uci.ics.pregelix.example.trianglecounting.TriangleCountingVertex;
+import edu.uci.ics.pregelix.example.trianglecounting.TriangleCountingVertex.TriangleCountingVertexOutputFormat;
 
 public class JobGenerator {
     private static String outputBase = "src/test/resources/jobs/";
@@ -43,6 +53,9 @@ public class JobGenerator {
 
     private static String HDFS_INPUTPATH2 = "/webmapcomplex";
     private static String HDFS_OUTPUTPAH2 = "/resultcomplex";
+
+    private static String HDFS_INPUTPATH3 = "/clique";
+    private static String HDFS_OUTPUTPAH3 = "/resultclique";
 
     private static void generatePageRankJobReal(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
@@ -148,9 +161,69 @@ public class JobGenerator {
     private static void generatePageRankJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(PageRankVertex.class);
-        job.setVertexInputFormatClass(SimplePageRankVertexInputFormat.class);
+        job.setVertexInputFormatClass(SimulatedPageRankVertexInputFormat.class);
         job.setMessageCombinerClass(PageRankVertex.SimpleSumCombiner.class);
         job.setVertexOutputFormatClass(SimplePageRankVertexOutputFormat.class);
+        FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
+        FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
+        job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void generateShortestPathJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(ShortestPathsVertex.class);
+        job.setVertexInputFormatClass(SimulatedPageRankVertexInputFormat.class);
+        job.setMessageCombinerClass(ShortestPathsVertex.SimpleMinCombiner.class);
+        job.setVertexOutputFormatClass(SimplePageRankVertexOutputFormat.class);
+        FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
+        FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
+        job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
+        job.getConfiguration().setLong(ShortestPathsVertex.SOURCE_ID, 0);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void generatePageRankJobRealDynamic(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(PageRankVertex.class);
+        job.setVertexInputFormatClass(TextPageRankInputFormat.class);
+        job.setVertexOutputFormatClass(SimplePageRankVertexOutputFormat.class);
+        job.setMessageCombinerClass(PageRankVertex.SimpleSumCombiner.class);
+        job.setDynamicVertexValueSize(true);
+        FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
+        FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
+        job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void generateTriangleCountingJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(TriangleCountingVertex.class);
+        job.setGlobalAggregatorClass(TriangleCountingAggregator.class);
+        job.setVertexInputFormatClass(TextTriangleCountingInputFormat.class);
+        job.setVertexOutputFormatClass(TriangleCountingVertexOutputFormat.class);
+        FileInputFormat.setInputPaths(job, HDFS_INPUTPATH3);
+        FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH3));
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void generateMaximalCliqueJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(MaximalCliqueVertex.class);
+        job.setGlobalAggregatorClass(MaximalCliqueAggregator.class);
+        job.setDynamicVertexValueSize(true);
+        job.setVertexInputFormatClass(TextMaximalCliqueInputFormat.class);
+        job.setVertexOutputFormatClass(MaximalCliqueVertexOutputFormat.class);
+        FileInputFormat.setInputPaths(job, HDFS_INPUTPATH3);
+        FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH3));
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void generateGraphMutationJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(GraphMutationVertex.class);
+        job.setVertexInputFormatClass(TextPageRankInputFormat.class);
+        job.setVertexOutputFormatClass(SimpleGraphMutationVertexOutputFormat.class);
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
@@ -160,21 +233,9 @@ public class JobGenerator {
     private static void genPageRank() throws IOException {
         generatePageRankJob("PageRank", outputBase + "PageRank.xml");
         generatePageRankJobReal("PageRank", outputBase + "PageRankReal.xml");
+        generatePageRankJobRealDynamic("PageRank", outputBase + "PageRankRealDynamic.xml");
         generatePageRankJobRealComplex("PageRank", outputBase + "PageRankRealComplex.xml");
         generatePageRankJobRealNoCombiner("PageRank", outputBase + "PageRankRealNoCombiner.xml");
-    }
-
-    private static void generateShortestPathJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = new PregelixJob(jobName);
-        job.setVertexClass(ShortestPathsVertex.class);
-        job.setVertexInputFormatClass(SimplePageRankVertexInputFormat.class);
-        job.setMessageCombinerClass(ShortestPathsVertex.SimpleMinCombiner.class);
-        job.setVertexOutputFormatClass(SimplePageRankVertexOutputFormat.class);
-        FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
-        FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
-        job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
-        job.getConfiguration().setLong(ShortestPathsVertex.SOURCE_ID, 0);
-        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
     private static void genShortestPath() throws IOException {
@@ -194,11 +255,25 @@ public class JobGenerator {
                 + "ReachibilityRealComplexNoConnectivity.xml");
     }
 
+    private static void genTriangleCounting() throws IOException {
+        generateTriangleCountingJob("Triangle Counting", outputBase + "TriangleCounting.xml");
+    }
+
+    private static void genMaximalClique() throws IOException {
+        generateMaximalCliqueJob("Maximal Clique", outputBase + "MaximalClique.xml");
+    }
+
+    private static void genGraphMutation() throws IOException {
+        generateGraphMutationJob("Graph Mutation", outputBase + "GraphMutation.xml");
+    }
+
     public static void main(String[] args) throws IOException {
         genPageRank();
         genShortestPath();
         genConnectedComponents();
         genReachibility();
+        genTriangleCounting();
+        genMaximalClique();
+        genGraphMutation();
     }
-
 }
