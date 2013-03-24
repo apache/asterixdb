@@ -1,0 +1,11 @@
+DROP TABLE IF EXISTS nation;
+DROP TABLE IF EXISTS u1_gby;
+
+-- create tables and load data
+create external table nation (N_NATIONKEY INT, N_NAME STRING, N_REGIONKEY INT, N_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/nation';
+create table u1_gby(col1 INT, col2 INT);
+
+insert overwrite table u1_gby select N_REGIONKEY, count(1)
+from nation
+group by N_REGIONKEY
+order by N_REGIONKEY;

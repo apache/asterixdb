@@ -126,6 +126,11 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
         }
         voteToHalt();
     }
+    
+    @Override
+    public String toString() {
+        return getVertexId() + " " + getVertexValue();
+    }
 
     public static void main(String[] args) throws Exception {
         PregelixJob job = new PregelixJob(ShortestPathsVertex.class.getSimpleName());

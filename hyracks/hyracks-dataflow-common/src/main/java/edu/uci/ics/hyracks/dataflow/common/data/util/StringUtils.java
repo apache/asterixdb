@@ -18,17 +18,19 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 public class StringUtils {
-    public static void writeCharAsModifiedUTF8(char c, DataOutput dos) throws IOException {
-
+    public static int writeCharAsModifiedUTF8(char c, DataOutput dos) throws IOException {
         if (c >= 0x0000 && c <= 0x007F) {
             dos.writeByte(c);
+            return 1;
         } else if (c <= 0x07FF) {
             dos.writeByte((byte) (0xC0 | ((c >> 6) & 0x3F)));
             dos.writeByte((byte) (0x80 | (c & 0x3F)));
+            return 2;
         } else {
             dos.writeByte((byte) (0xE0 | ((c >> 12) & 0x0F)));
             dos.writeByte((byte) (0x80 | ((c >> 6) & 0x3F)));
             dos.writeByte((byte) (0x80 | (c & 0x3F)));
+            return 3;
         }
     }
 

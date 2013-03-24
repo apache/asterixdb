@@ -1,0 +1,6 @@
+-- union case: both subqueries are map jobs on same input, followed by filesink
+DROP TABLE IF EXISTS src;
+
+CREATE TABLE src(key int, value struct<v1:int, v2:int>);
+
+select value from src;

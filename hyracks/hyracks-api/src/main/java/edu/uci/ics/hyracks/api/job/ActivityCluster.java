@@ -33,7 +33,7 @@ import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
-public final class ActivityCluster implements Serializable {
+public class ActivityCluster implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final ActivityClusterGraph acg;

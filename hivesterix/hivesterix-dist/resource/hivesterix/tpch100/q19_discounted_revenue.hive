@@ -1,0 +1,46 @@
+DROP TABLE IF EXISTS lineitem;
+DROP TABLE IF EXISTS part;
+DROP TABLE IF EXISTS q19_discounted_revenue;
+
+-- create the tables and load the data
+create external table lineitem (L_ORDERKEY INT, L_PARTKEY INT, L_SUPPKEY INT, L_LINENUMBER INT, L_QUANTITY DOUBLE, L_EXTENDEDPRICE DOUBLE, L_DISCOUNT DOUBLE, L_TAX DOUBLE, L_RETURNFLAG STRING, L_LINESTATUS STRING, L_SHIPDATE STRING, L_COMMITDATE STRING, L_RECEIPTDATE STRING, L_SHIPINSTRUCT STRING, L_SHIPMODE STRING, L_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/100/lineitem';
+create external table part (P_PARTKEY INT, P_NAME STRING, P_MFGR STRING, P_BRAND STRING, P_TYPE STRING, P_SIZE INT, P_CONTAINER STRING, P_RETAILPRICE DOUBLE, P_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/100/part';
+
+-- create the result table
+create table q19_discounted_revenue(revenue double);
+
+-- the query
+insert overwrite table q19_discounted_revenue
+select
+  sum(l_extendedprice * (1 - l_discount) ) as revenue
+from
+  part p join lineitem l
+  on 
+    p.p_partkey = l.l_partkey    
+where
+  (
+    p_brand = 'Brand#12'
+	and p_container REGEXP 'SM CASE||SM BOX||SM PACK||SM PKG'
+	and l_quantity >= 1 and l_quantity <= 11
+	and p_size >= 1 and p_size <= 5
+	and l_shipmode REGEXP 'AIR||AIR REG'
+	and l_shipinstruct = 'DELIVER IN PERSON'
+  ) 
+  or 
+  (
+    p_brand = 'Brand#23'
+	and p_container REGEXP 'MED BAG||MED BOX||MED PKG||MED PACK'
+	and l_quantity >= 10 and l_quantity <= 20
+	and p_size >= 1 and p_size <= 10
+	and l_shipmode REGEXP 'AIR||AIR REG'
+	and l_shipinstruct = 'DELIVER IN PERSON'
+  )
+  or
+  (
+	p_brand = 'Brand#34'
+	and p_container REGEXP 'LG CASE||LG BOX||LG PACK||LG PKG'
+	and l_quantity >= 20 and l_quantity <= 30
+	and p_size >= 1 and p_size <= 15
+	and l_shipmode REGEXP 'AIR||AIR REG'
+	and l_shipinstruct = 'DELIVER IN PERSON'
+  );

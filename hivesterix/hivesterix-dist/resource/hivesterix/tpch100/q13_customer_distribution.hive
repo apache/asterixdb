@@ -1,0 +1,26 @@
+DROP TABLE IF EXISTS customer;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS q13_customer_distribution;
+
+-- create the tables and load the data
+create external table customer (C_CUSTKEY INT, C_NAME STRING, C_ADDRESS STRING, C_NATIONKEY INT, C_PHONE STRING, C_ACCTBAL DOUBLE, C_MKTSEGMENT STRING, C_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/100/customer';
+create external table orders (O_ORDERKEY INT, O_CUSTKEY INT, O_ORDERSTATUS STRING, O_TOTALPRICE DOUBLE, O_ORDERDATE STRING, O_ORDERPRIORITY STRING, O_CLERK STRING, O_SHIPPRIORITY INT, O_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/100/orders';
+
+-- create the result table
+create table q13_customer_distribution (c_count int, custdist int);
+
+-- the query
+insert overwrite table q13_customer_distribution
+select 
+  c_count, count(1) as custdist
+from 
+  (select 
+     c_custkey, count(o_orderkey) as c_count
+   from 
+     customer c left outer join orders o 
+     on 
+       c.c_custkey = o.o_custkey and not o.o_comment like '%special%requests%'
+   group by c_custkey
+   ) c_orders
+group by c_count
+order by custdist desc, c_count desc;

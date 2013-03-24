@@ -135,6 +135,7 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     /*
      * returns true if op1 and op2 have already been compared
      */
+    @Override
     public boolean checkAndAddToAlreadyCompared(ILogicalOperator op1, ILogicalOperator op2) {
         HashSet<ILogicalOperator> ops = alreadyCompared.get(op1);
         if (ops == null) {
@@ -150,6 +151,11 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
                 return false;
             }
         }
+    }
+    
+    @Override
+    public void removeFromAlreadyCompared(ILogicalOperator op1) {
+        alreadyCompared.remove(op1);
     }
 
     public void addNotToBeInlinedVar(LogicalVariable var) {

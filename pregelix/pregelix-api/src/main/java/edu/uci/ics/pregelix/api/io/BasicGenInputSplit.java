@@ -21,60 +21,64 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 /**
  * This InputSplit will not give any ordering or location data. It is used
  * internally by BspInputFormat (which determines how many tasks to run the
  * application on). Users should not use this directly.
  */
-public class BasicGenInputSplit extends InputSplit implements Writable, Serializable {
-    private static final long serialVersionUID = 1L;
-    /** Number of splits */
-    private int numSplits = -1;
-    /** Split index */
-    private int splitIndex = -1;
+public class BasicGenInputSplit extends FileSplit implements Writable,
+		Serializable {
+	private static final long serialVersionUID = 1L;
+	/** Number of splits */
+	private int numSplits = -1;
+	/** Split index */
+	private int splitIndex = -1;
 
-    public BasicGenInputSplit() {
-    }
+	public BasicGenInputSplit() {
+		super(null, 0, 0, null);
+	}
 
-    public BasicGenInputSplit(int splitIndex, int numSplits) {
-        this.splitIndex = splitIndex;
-        this.numSplits = numSplits;
-    }
+	public BasicGenInputSplit(int splitIndex, int numSplits) {
+		super(null, 0, 0, null);
+		this.splitIndex = splitIndex;
+		this.numSplits = numSplits;
+	}
 
-    @Override
-    public long getLength() throws IOException, InterruptedException {
-        return 0;
-    }
+	@Override
+	public long getLength() {
+		return 0;
+	}
 
-    @Override
-    public String[] getLocations() throws IOException, InterruptedException {
-        return new String[] {};
-    }
+	@Override
+	public String[] getLocations() throws IOException {
+		return new String[] {};
+	}
 
-    @Override
-    public void readFields(DataInput in) throws IOException {
-        splitIndex = in.readInt();
-        numSplits = in.readInt();
-    }
+	@Override
+	public void readFields(DataInput in) throws IOException {
+		splitIndex = in.readInt();
+		numSplits = in.readInt();
+	}
 
-    @Override
-    public void write(DataOutput out) throws IOException {
-        out.writeInt(splitIndex);
-        out.writeInt(numSplits);
-    }
+	@Override
+	public void write(DataOutput out) throws IOException {
+		out.writeInt(splitIndex);
+		out.writeInt(numSplits);
+	}
 
-    public int getSplitIndex() {
-        return splitIndex;
-    }
+	public int getSplitIndex() {
+		return splitIndex;
+	}
 
-    public int getNumSplits() {
-        return numSplits;
-    }
+	public int getNumSplits() {
+		return numSplits;
+	}
 
-    @Override
-    public String toString() {
-        return "'" + getClass().getCanonicalName() + ", index=" + getSplitIndex() + ", num=" + getNumSplits();
-    }
+	@Override
+	public String toString() {
+		return "'" + getClass().getCanonicalName() + ", index="
+				+ getSplitIndex() + ", num=" + getNumSplits();
+	}
 }

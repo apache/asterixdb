@@ -1,0 +1,16 @@
+write [%0->$$8, %0->$$3, %0->$$4, %0->$$2]
+-- SINK_WRITE  |PARTITIONED|
+  project ([$$8, $$3, $$4, $$2])
+  -- STREAM_PROJECT  |PARTITIONED|
+    assign [$$8] <- [function-call: hive:org.apache.hadoop.hive.ql.udf.UDFOPMultiply, Args:[2, %0->$$1]]
+    -- ASSIGN  |PARTITIONED|
+      select (function-call: algebricks:lt, Args:[function-call: hive:org.apache.hadoop.hive.ql.udf.UDFOPMultiply, Args:[%0->$$1, 2], 20])
+      -- STREAM_SELECT  |PARTITIONED|
+        exchange 
+        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          data-scan []<-[$$1, $$2, $$3, $$4, $$5, $$6, $$7] <- default.supplier
+          -- DATASOURCE_SCAN  |PARTITIONED|
+            exchange 
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              empty-tuple-source
+              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

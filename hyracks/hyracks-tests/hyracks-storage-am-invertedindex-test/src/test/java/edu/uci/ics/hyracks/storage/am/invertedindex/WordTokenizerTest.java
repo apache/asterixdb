@@ -34,6 +34,7 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.uci.ics.hyracks.data.std.util.GrowableArray;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.AbstractUTF8Token;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.HashedUTF8WordTokenFactory;
@@ -127,14 +128,13 @@ public class WordTokenizerTest {
             tokenizer.next();
 
             // serialize token
-            ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
-            DataOutput tokenDos = new DataOutputStream(tokenBaos);
+            GrowableArray tokenStorage = new GrowableArray();
 
             IToken token = tokenizer.getToken();
-            token.serializeToken(tokenDos);
+            token.serializeToken(tokenStorage);
 
             // deserialize token
-            ByteArrayInputStream bais = new ByteArrayInputStream(tokenBaos.toByteArray());
+            ByteArrayInputStream bais = new ByteArrayInputStream(tokenStorage.getByteArray());
             DataInput in = new DataInputStream(bais);
 
             Integer hashedToken = in.readInt();
@@ -159,14 +159,13 @@ public class WordTokenizerTest {
             tokenizer.next();
 
             // serialize token
-            ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
-            DataOutput tokenDos = new DataOutputStream(tokenBaos);
+            GrowableArray tokenStorage = new GrowableArray();
 
             IToken token = tokenizer.getToken();
-            token.serializeToken(tokenDos);
+            token.serializeToken(tokenStorage);
 
             // deserialize token
-            ByteArrayInputStream bais = new ByteArrayInputStream(tokenBaos.toByteArray());
+            ByteArrayInputStream bais = new ByteArrayInputStream(tokenStorage.getByteArray());
             DataInput in = new DataInputStream(bais);
 
             Integer hashedToken = in.readInt();
@@ -191,14 +190,13 @@ public class WordTokenizerTest {
             tokenizer.next();
 
             // serialize hashed token
-            ByteArrayOutputStream tokenBaos = new ByteArrayOutputStream();
-            DataOutput tokenDos = new DataOutputStream(tokenBaos);
+            GrowableArray tokenStorage = new GrowableArray();
 
             IToken token = tokenizer.getToken();
-            token.serializeToken(tokenDos);
+            token.serializeToken(tokenStorage);
 
             // deserialize token
-            ByteArrayInputStream bais = new ByteArrayInputStream(tokenBaos.toByteArray());
+            ByteArrayInputStream bais = new ByteArrayInputStream(tokenStorage.getByteArray());
             DataInput in = new DataInputStream(bais);
 
             String strToken = in.readUTF();

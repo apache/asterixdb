@@ -25,14 +25,17 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DieOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -49,13 +52,17 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.RunningAggr
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ScriptOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.HashPartitionExchangePOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.HashPartitionMergeExchangePOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.RangePartitionPOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.SortMergeExchangePOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> {
@@ -106,8 +113,49 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
     }
 
     @Override
-    public Void visitExchangeOperator(ExchangeOperator op, Void arg) {
-        // does not use any variable
+    public Void visitExchangeOperator(ExchangeOperator op, Void arg) throws AlgebricksException {
+        // Used variables depend on the physical operator.
+        if (op.getPhysicalOperator() != null) {
+            IPhysicalOperator physOp = op.getPhysicalOperator();
+            switch (physOp.getOperatorTag()) {
+                case BROADCAST_EXCHANGE:
+                case ONE_TO_ONE_EXCHANGE:
+                case RANDOM_MERGE_EXCHANGE: {
+                    // No variables used.
+                    break;
+                }
+                case HASH_PARTITION_EXCHANGE: {
+                    HashPartitionExchangePOperator concreteOp = (HashPartitionExchangePOperator) physOp;
+                    usedVariables.addAll(concreteOp.getHashFields());
+                    break;
+                }
+                case HASH_PARTITION_MERGE_EXCHANGE: {
+                    HashPartitionMergeExchangePOperator concreteOp = (HashPartitionMergeExchangePOperator) physOp;
+                    usedVariables.addAll(concreteOp.getPartitionFields());
+                    for (OrderColumn orderCol : concreteOp.getOrderColumns()) {
+                        usedVariables.add(orderCol.getColumn());
+                    }
+                    break;
+                }
+                case SORT_MERGE_EXCHANGE: {
+                    SortMergeExchangePOperator concreteOp = (SortMergeExchangePOperator) physOp;
+                    for (OrderColumn orderCol : concreteOp.getSortColumns()) {
+                        usedVariables.add(orderCol.getColumn());
+                    }
+                    break;
+                }
+                case RANGE_PARTITION_EXCHANGE: {
+                    RangePartitionPOperator concreteOp = (RangePartitionPOperator) physOp;
+                    for (OrderColumn partCol : concreteOp.getPartitioningFields()) {
+                        usedVariables.add(partCol.getColumn());
+                    }
+                    break;
+                }
+                default: {
+                    throw new AlgebricksException("Unhandled physical operator tag '" + physOp.getOperatorTag() + "'.");
+                }
+            }
+        }
         return null;
     }
 
@@ -257,6 +305,14 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
     }
 
     @Override
+    public Void visitDistributeResultOperator(DistributeResultOperator op, Void arg) {
+        for (Mutable<ILogicalExpression> expr : op.getExpressions()) {
+            expr.getValue().getUsedVariables(usedVariables);
+        }
+        return null;
+    }
+
+    @Override
     public Void visitWriteResultOperator(WriteResultOperator op, Void arg) {
         op.getPayloadExpression().getValue().getUsedVariables(usedVariables);
         for (Mutable<ILogicalExpression> e : op.getKeyExpressions()) {
@@ -297,6 +353,7 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitExtensionOperator(ExtensionOperator op, Void arg) throws AlgebricksException {
+        op.getDelegate().getUsedVariables(usedVariables);
         return null;
     }
 

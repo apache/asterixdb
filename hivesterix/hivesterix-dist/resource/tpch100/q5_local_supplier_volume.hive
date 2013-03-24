@@ -1,0 +1,41 @@
+-- create tables and load data
+create external table customer (C_CUSTKEY INT, C_NAME STRING, C_ADDRESS STRING, C_NATIONKEY INT, C_PHONE STRING, C_ACCTBAL DOUBLE, C_MKTSEGMENT STRING, C_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/100/customer';
+Create external table lineitem (L_ORDERKEY INT, L_PARTKEY INT, L_SUPPKEY INT, L_LINENUMBER INT, L_QUANTITY DOUBLE, L_EXTENDEDPRICE DOUBLE, L_DISCOUNT DOUBLE, L_TAX DOUBLE, L_RETURNFLAG STRING, L_LINESTATUS STRING, L_SHIPDATE STRING, L_COMMITDATE STRING, L_RECEIPTDATE STRING, L_SHIPINSTRUCT STRING, L_SHIPMODE STRING, L_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/100/lineitem';
+create external table orders (O_ORDERKEY INT, O_CUSTKEY INT, O_ORDERSTATUS STRING, O_TOTALPRICE DOUBLE, O_ORDERDATE STRING, O_ORDERPRIORITY STRING, O_CLERK STRING, O_SHIPPRIORITY INT, O_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/100/orders';
+create external table supplier (S_SUPPKEY INT, S_NAME STRING, S_ADDRESS STRING, S_NATIONKEY INT, S_PHONE STRING, S_ACCTBAL DOUBLE, S_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/100/supplier';
+create external table nation (N_NATIONKEY INT, N_NAME STRING, N_REGIONKEY INT, N_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/100/nation';
+create external table region (R_REGIONKEY INT, R_NAME STRING, R_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/100/region';
+
+-- create the target table
+create table q5_local_supplier_volume (N_NAME STRING, REVENUE DOUBLE);
+
+set mapred.min.split.size=536870912;
+
+-- the query
+insert overwrite table q5_local_supplier_volume 
+select 
+  n_name, sum(l_extendedprice * (1 - l_discount)) as revenue 
+from
+  customer c join
+    ( select n_name, l_extendedprice, l_discount, s_nationkey, o_custkey from orders o join
+      ( select n_name, l_extendedprice, l_discount, l_orderkey, s_nationkey from lineitem l join
+        ( select n_name, s_suppkey, s_nationkey from supplier s join
+          ( select n_name, n_nationkey 
+            from nation n join region r 
+            on n.n_regionkey = r.r_regionkey and r.r_name = 'ASIA'
+          ) n1 on s.s_nationkey = n1.n_nationkey
+        ) s1 on l.l_suppkey = s1.s_suppkey
+      ) l1 on l1.l_orderkey = o.o_orderkey and o.o_orderdate >= '1994-01-01' 
+              and o.o_orderdate < '1995-01-01'
+) o1 
+on c.c_nationkey = o1.s_nationkey and c.c_custkey = o1.o_custkey
+group by n_name 
+order by revenue desc;
+
+DROP TABLE customer;
+DROP TABLE orders;
+DROP TABLE lineitem;
+DROP TABLE supplier;
+DROP TABLE nation;
+DROP TABLE region;
+DROP TABLE q5_local_supplier_volume;

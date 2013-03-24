@@ -1,0 +1,42 @@
+-- create the tables and load the data
+create external table lineitem (L_ORDERKEY INT, L_PARTKEY INT, L_SUPPKEY INT, L_LINENUMBER INT, L_QUANTITY DOUBLE, L_EXTENDEDPRICE DOUBLE, L_DISCOUNT DOUBLE, L_TAX DOUBLE, L_RETURNFLAG STRING, L_LINESTATUS STRING, L_SHIPDATE STRING, L_COMMITDATE STRING, L_RECEIPTDATE STRING, L_SHIPINSTRUCT STRING, L_SHIPMODE STRING, L_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/100/lineitem';
+create external table orders (O_ORDERKEY INT, O_CUSTKEY INT, O_ORDERSTATUS STRING, O_TOTALPRICE DOUBLE, O_ORDERDATE STRING, O_ORDERPRIORITY STRING, O_CLERK STRING, O_SHIPPRIORITY INT, O_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/100/orders';
+
+-- create the result table
+create table q12_shipping(l_shipmode string, high_line_count double, low_line_count double);
+
+set mapred.min.split.size=536870912;
+set hive.exec.reducers.bytes.per.reducer=1225000000;
+
+-- the query
+insert overwrite table q12_shipping
+select 
+  l_shipmode,
+  sum(case
+    when o_orderpriority ='1-URGENT'
+         or o_orderpriority ='2-HIGH'
+    then 1
+    else 0
+end
+  ) as high_line_count,
+  sum(case
+    when o_orderpriority <> '1-URGENT'
+         and o_orderpriority <> '2-HIGH'
+    then 1
+    else 0
+end
+  ) as low_line_count
+from
+  orders o join lineitem l 
+  on 
+    o.o_orderkey = l.l_orderkey and l.l_commitdate < l.l_receiptdate
+and l.l_shipdate < l.l_commitdate and l.l_receiptdate >= '1994-01-01' 
+and l.l_receiptdate < '1995-01-01'
+where 
+  l.l_shipmode = 'MAIL' or l.l_shipmode = 'SHIP'
+group by l_shipmode
+order by l_shipmode;
+
+DROP TABLE lineitem;
+DROP TABLE orders;
+DROP TABLE q12_shipping;

@@ -143,11 +143,11 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
         if (!intersectsBranch[0] && !intersectsBranch[1]) {
             return false;
         }
+        if (needToPushOps) {
+            pushOps(pushedOnLeft, joinBranchLeftRef, context);
+            pushOps(pushedOnRight, joinBranchRightRef, context);
+        }
         if (intersectsAllBranches) {
-            if (needToPushOps) {
-                pushOps(pushedOnLeft, joinBranchLeftRef, context);
-                pushOps(pushedOnRight, joinBranchRightRef, context);
-            }
             addCondToJoin(select, join, context);
         } else { // push down
             Iterator<Mutable<ILogicalOperator>> branchIter = join.getInputs().iterator();
@@ -156,13 +156,6 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
                 Mutable<ILogicalOperator> branch = branchIter.next();
                 boolean inter = intersectsBranch[j];
                 if (inter) {
-                    if (needToPushOps) {
-                        if (j == 0) {
-                            pushOps(pushedOnLeft, joinBranchLeftRef, context);
-                        } else {
-                            pushOps(pushedOnRight, joinBranchRightRef, context);
-                        }
-                    }
                     copySelectToBranch(select, branch, context);
                 }
 

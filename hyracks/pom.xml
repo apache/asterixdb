@@ -1,4 +1,4 @@
-
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
@@ -8,23 +8,8 @@
   <name>hyracks</name>
 
   <properties>
-    <jvm.extraargs />
+    <jvm.extraargs/>
   </properties>
-
-  <profiles>
-    <profile>
-      <id>macosx</id>
-      <activation>
-        <os>
-          <name>mac os x</name>
-        </os>
-        <jdk>1.7</jdk>
-      </activation>
-      <properties>
-        <jvm.extraargs>-Djava.nio.channels.spi.SelectorProvider=sun.nio.ch.KQueueSelectorProvider</jvm.extraargs>
-      </properties>
-    </profile>
-  </profiles>
 
   <build>
     <plugins>
@@ -44,6 +29,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.13</version>
         <configuration>
             <forkMode>pertest</forkMode>
             <argLine>-enableassertions -Djava.util.logging.config.file=${user.home}/logging.properties -Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n ${jvm.extraargs}</argLine>
@@ -57,6 +43,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-changelog-plugin</artifactId>
+        <version>2.2</version>
       </plugin>
     </plugins>
   </reporting>
@@ -96,6 +83,8 @@
   <modules>
     <module>hyracks-ipc</module>
     <module>hyracks-api</module>
+    <module>hyracks-comm</module>
+    <module>hyracks-client</module>
     <module>hyracks-dataflow-common</module>
     <module>hyracks-dataflow-std</module>
     <module>hyracks-dataflow-hadoop</module>
@@ -116,5 +105,7 @@
     <module>hyracks-hadoop-compat</module>
     <!--module>hyracks-yarn</module-->
     <module>hyracks-maven-plugins</module>
+    <module>hyracks-hdfs</module>
+    <module>hyracks-dist</module>
   </modules>
 </project>

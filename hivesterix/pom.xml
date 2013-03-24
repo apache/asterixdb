@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>edu.uci.ics.hyracks</groupId>
+	<artifactId>hivesterix</artifactId>
+	<version>0.2.3-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<name>hivesterix</name>
+
+	<properties>
+		<jvm.extraargs />
+	</properties>
+
+	<profiles>
+		<profile>
+			<id>macosx</id>
+			<activation>
+				<os>
+					<name>mac os x</name>
+				</os>
+				<jdk>1.7</jdk>
+			</activation>
+			<properties>
+				<jvm.extraargs>-Djava.nio.channels.spi.SelectorProvider=sun.nio.ch.KQueueSelectorProvider</jvm.extraargs>
+			</properties>
+		</profile>
+	</profiles>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.0</version>
+				<configuration>
+					<goals>package source:jar javadoc:jar deploy:deploy</goals>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>versions-maven-plugin</artifactId>
+				<version>1.2</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.13</version>
+				<configuration>
+					<forkMode>pertest</forkMode>
+					<argLine>-enableassertions
+						-Djava.util.logging.config.file=${user.home}/logging.properties
+						-Xdebug
+						-Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n
+						${jvm.extraargs}</argLine>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-changelog-plugin</artifactId>
+				<version>2.2</version>
+			</plugin>
+		</plugins>
+	</reporting>
+
+	<distributionManagement>
+		<repository>
+			<id>hyracks-releases</id>
+			<url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>hyracks-snapshots</id>
+			<url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+	<repositories>
+		<repository>
+			<id>hyracks-public</id>
+			<url>http://obelix.ics.uci.edu/nexus/content/groups/hyracks-public/</url>
+		</repository>
+		<repository>
+			<id>jboss-public</id>
+			<url>https://repository.jboss.org/nexus/content/groups/public/</url>
+		</repository>
+		<repository>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+				<checksumPolicy>warn</checksumPolicy>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+				<checksumPolicy>fail</checksumPolicy>
+			</snapshots>
+			<id>third-party</id>
+			<url>http://obelix.ics.uci.edu/nexus/content/repositories/third-party</url>
+		</repository>
+		<repository>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+				<checksumPolicy>warn</checksumPolicy>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+				<checksumPolicy>fail</checksumPolicy>
+			</snapshots>
+			<id>hyracks-public-release</id>
+			<url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-public-releases</url>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>hyracks-public</id>
+			<url>http://obelix.ics.uci.edu/nexus/content/groups/hyracks-public/</url>
+			<releases>
+				<updatePolicy>always</updatePolicy>
+			</releases>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<modules>
+		<module>hivesterix-runtime</module>
+		<module>hivesterix-translator</module>
+		<module>hivesterix-optimizer</module>
+		<module>hivesterix-serde</module>
+		<module>hivesterix-dist</module>
+		<module>hivesterix-common</module>
+	</modules>
+</project>

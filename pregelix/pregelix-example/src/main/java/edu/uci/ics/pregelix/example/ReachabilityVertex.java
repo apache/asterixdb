@@ -85,6 +85,7 @@ public class ReachabilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
     }
 
     private ByteWritable tmpVertexValue = new ByteWritable();
+    private long sourceId = -1;
 
     /** The source vertex id */
     public static final String SOURCE_ID = "ReachibilityVertex.sourceId";
@@ -101,7 +102,7 @@ public class ReachabilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
      * @return True if the source id
      */
     private boolean isSource(VLongWritable v) {
-        return (v.get() == getContext().getConfiguration().getLong(SOURCE_ID, SOURCE_ID_DEFAULT));
+        return (v.get() == sourceId);
     }
 
     /**
@@ -115,6 +116,9 @@ public class ReachabilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
 
     @Override
     public void compute(Iterator<ByteWritable> msgIterator) {
+        if (sourceId < 0) {
+            sourceId = getContext().getConfiguration().getLong(SOURCE_ID, SOURCE_ID_DEFAULT);
+        }
         if (getSuperstep() == 1) {
             boolean isSource = isSource(getVertexId());
             if (isSource) {
@@ -159,6 +163,11 @@ public class ReachabilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
             }
         }
         voteToHalt();
+    }
+
+    @Override
+    public String toString() {
+        return getVertexId() + " " + getVertexValue();
     }
 
     private void signalTerminate() {

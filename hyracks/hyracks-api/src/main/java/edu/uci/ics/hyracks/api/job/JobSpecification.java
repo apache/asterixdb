@@ -34,11 +34,14 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 
 public class JobSpecification implements Serializable, IOperatorDescriptorRegistry, IConnectorDescriptorRegistry {
     private static final long serialVersionUID = 1L;
 
     private final List<OperatorDescriptorId> roots;
+
+    private final List<ResultSetId> resultSetIds;
 
     private final Map<OperatorDescriptorId, IOperatorDescriptor> opMap;
 
@@ -72,6 +75,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     public JobSpecification() {
         roots = new ArrayList<OperatorDescriptorId>();
+        resultSetIds = new ArrayList<ResultSetId>();
         opMap = new HashMap<OperatorDescriptorId, IOperatorDescriptor>();
         connMap = new HashMap<ConnectorDescriptorId, IConnectorDescriptor>();
         opInputMap = new HashMap<OperatorDescriptorId, List<IConnectorDescriptor>>();
@@ -102,6 +106,10 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     public void addRoot(IOperatorDescriptor op) {
         roots.add(op.getOperatorId());
+    }
+
+    public void addResultSetId(ResultSetId rsId) {
+        resultSetIds.add(rsId);
     }
 
     public void connect(IConnectorDescriptor conn, IOperatorDescriptor producerOp, int producerPort,
@@ -206,6 +214,10 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     public List<OperatorDescriptorId> getRoots() {
         return roots;
+    }
+
+    public List<ResultSetId> getResultSetIds() {
+        return resultSetIds;
     }
 
     public IConnectorPolicyAssignmentPolicy getConnectorPolicyAssignmentPolicy() {

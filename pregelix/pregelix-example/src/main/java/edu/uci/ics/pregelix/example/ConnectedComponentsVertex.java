@@ -126,6 +126,11 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
         }
     }
 
+    @Override
+    public String toString() {
+        return getVertexId() + " " + getVertexValue();
+    }
+
     public static void main(String[] args) throws Exception {
         PregelixJob job = new PregelixJob(ConnectedComponentsVertex.class.getSimpleName());
         job.setVertexClass(ConnectedComponentsVertex.class);

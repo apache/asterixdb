@@ -2,7 +2,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks.examples.btree</groupId>
   <artifactId>btreeapp</artifactId>
-  <version>0.2.3-SNAPSHOT</version>
   <name>btreeapp</name>
 
   <parent>

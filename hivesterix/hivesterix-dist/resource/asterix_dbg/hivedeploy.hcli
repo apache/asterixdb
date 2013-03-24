@@ -1,0 +1,2 @@
+connect to "localhost:3099";
+create application hivesterix "/home/yingyib/hivesterix/target/algebricks-hivesterix-0.0.1-SNAPSHOT-binary-assembly.zip";

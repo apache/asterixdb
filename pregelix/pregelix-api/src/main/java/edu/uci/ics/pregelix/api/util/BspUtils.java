@@ -410,4 +410,26 @@ public class BspUtils {
             throw new IllegalArgumentException("createMessageValue: Illegally accessed", e);
         }
     }
+
+    /**
+     * Get the job configuration parameter whether the vertex states will increase dynamically
+     * 
+     * @param conf
+     *            the job configuration
+     * @return the boolean setting of the parameter, by default it is false
+     */
+    public static boolean getDynamicVertexValueSize(Configuration conf) {
+        return conf.getBoolean(PregelixJob.INCREASE_STATE_LENGTH, false);
+    }
+
+    /**
+     * Get the specified frame size
+     * 
+     * @param conf
+     *            the job configuration
+     * @return the specified frame size; -1 if it is not set by users
+     */
+    public static int getFrameSize(Configuration conf) {
+        return conf.getInt(PregelixJob.FRAME_SIZE, -1);
+    }
 }
