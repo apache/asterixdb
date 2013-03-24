@@ -1,9 +1,8 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>edu.uci.ics.hyracks</groupId>
 	<artifactId>hivesterix-dist</artifactId>
-	<version>0.2.3-SNAPSHOT</version>
+	<version>0.2.3</version>
 	<name>hivesterix-dist</name>
 	<dependencies>
 		<dependency>
@@ -270,14 +269,14 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hivesterix-translator</artifactId>
-			<version>0.2.3-SNAPSHOT</version>
+			<version>0.2.3</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hivesterix-optimizer</artifactId>
-			<version>0.2.3-SNAPSHOT</version>
+			<version>0.2.3</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
@@ -291,21 +290,21 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>algebricks-compiler</artifactId>
-			<version>0.2.3-SNAPSHOT</version>
+			<version>0.2.3</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-control-cc</artifactId>
-			<version>0.2.3-SNAPSHOT</version>
+			<version>0.2.3</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-control-nc</artifactId>
-			<version>0.2.3-SNAPSHOT</version>
+			<version>0.2.3</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>

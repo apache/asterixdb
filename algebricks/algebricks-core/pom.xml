@@ -6,7 +6,7 @@
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>algebricks</artifactId>
-    <version>0.2.3-SNAPSHOT</version>
+    <version>0.2.3</version>
   </parent>
 
   <build>
@@ -27,27 +27,27 @@
   <dependency>
   	<groupId>edu.uci.ics.hyracks</groupId>
   	<artifactId>hyracks-storage-am-btree</artifactId>
-  	<version>0.2.3-SNAPSHOT</version>
+  	<version>0.2.3</version>
   </dependency>
   <dependency>
   	<groupId>edu.uci.ics.hyracks</groupId>
   	<artifactId>hyracks-storage-am-rtree</artifactId>
-  	<version>0.2.3-SNAPSHOT</version>
+  	<version>0.2.3</version>
   </dependency>
   <dependency>
   	<groupId>edu.uci.ics.hyracks</groupId>
   	<artifactId>hyracks-dataflow-std</artifactId>
-  	<version>0.2.3-SNAPSHOT</version>
+  	<version>0.2.3</version>
   </dependency>
   <dependency>
   	<groupId>edu.uci.ics.hyracks</groupId>
   	<artifactId>algebricks-runtime</artifactId>
-  	<version>0.2.3-SNAPSHOT</version>
+  	<version>0.2.3</version>
   </dependency>
   <dependency>
   	<groupId>edu.uci.ics.hyracks</groupId>
   	<artifactId>algebricks-common</artifactId>
-  	<version>0.2.3-SNAPSHOT</version>
+  	<version>0.2.3</version>
   </dependency>
   </dependencies>
 </project>
