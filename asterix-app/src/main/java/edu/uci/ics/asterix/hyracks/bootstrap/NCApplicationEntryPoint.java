@@ -46,15 +46,6 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             recoveryMgr.startRecovery(true);
         }
         recoveryMgr.checkpoint(true);
-        
-        //TODO
-        //#. synchronize metadata and jobid
-        /*********************************************
-        if (isMetadataNode) {
-            //#. clean-up incomplete DDL operations, which is DDLRecovery
-            MetadataBootstrap.startDDLRecovery();
-        }
-        **********************************************/
     }
 
     @Override
@@ -89,7 +80,11 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             MetadataManager.INSTANCE = new MetadataManager(proxy);
             MetadataManager.INSTANCE.init();
             MetadataBootstrap.startUniverse(proxy.getAsterixProperties(), ncApplicationContext);
+            MetadataBootstrap.startDDLRecovery();
         }
+        
+        //TODO
+        //reclaim storage for orphaned index artifacts in NCs.
     }
 
     public void registerRemoteMetadataNode(IAsterixStateProxy proxy) throws RemoteException {

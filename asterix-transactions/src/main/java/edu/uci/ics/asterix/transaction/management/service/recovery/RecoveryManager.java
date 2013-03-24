@@ -357,8 +357,6 @@ public class RecoveryManager implements IRecoveryManager {
         for (long r : resourceIdList) {
             indexLifecycleManager.close(r);
         }
-
-        JobIdFactory.initJobId(maxJobId);
     }
 
     //TODO
