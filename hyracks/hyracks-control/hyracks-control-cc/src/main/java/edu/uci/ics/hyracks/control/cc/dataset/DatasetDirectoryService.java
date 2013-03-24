@@ -14,16 +14,17 @@
  */
 package edu.uci.ics.hyracks.control.cc.dataset;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
-import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord.Status;
+import edu.uci.ics.hyracks.api.dataset.DatasetJobRecord;
+import edu.uci.ics.hyracks.api.dataset.DatasetJobRecord.Status;
 import edu.uci.ics.hyracks.api.dataset.IDatasetDirectoryService;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
+import edu.uci.ics.hyracks.api.dataset.ResultSetMetaData;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobId;
 
@@ -35,25 +36,21 @@ import edu.uci.ics.hyracks.api.job.JobId;
  * job.
  */
 public class DatasetDirectoryService implements IDatasetDirectoryService {
-    private final Map<JobId, Map<ResultSetId, ResultSetMetaData>> jobResultLocationsMap;
+    private final Map<JobId, DatasetJobRecord> jobResultLocations;
 
     public DatasetDirectoryService() {
-        jobResultLocationsMap = new HashMap<JobId, Map<ResultSetId, ResultSetMetaData>>();
+        jobResultLocations = new HashMap<JobId, DatasetJobRecord>();
     }
 
     @Override
     public synchronized void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult,
             int partition, int nPartitions, NetworkAddress networkAddress) {
-        Map<ResultSetId, ResultSetMetaData> rsMap = jobResultLocationsMap.get(jobId);
-        if (rsMap == null) {
-            rsMap = new HashMap<ResultSetId, ResultSetMetaData>();
-            jobResultLocationsMap.put(jobId, rsMap);
-        }
+        DatasetJobRecord djr = getDatasetJobRecord(jobId);
 
-        ResultSetMetaData resultSetMetaData = rsMap.get(rsId);
+        ResultSetMetaData resultSetMetaData = djr.get(rsId);
         if (resultSetMetaData == null) {
             resultSetMetaData = new ResultSetMetaData(orderedResult, new DatasetDirectoryRecord[nPartitions]);
-            rsMap.put(rsId, resultSetMetaData);
+            djr.put(rsId, resultSetMetaData);
         }
 
         DatasetDirectoryRecord[] records = resultSetMetaData.getRecords();
@@ -67,20 +64,42 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
 
     @Override
     public synchronized void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) {
-        DatasetDirectoryRecord ddr = getDatasetDirectoryRecord(jobId, rsId, partition);
-        ddr.writeEOS();
+        int successCount = 0;
+
+        DatasetJobRecord djr = jobResultLocations.get(jobId);
+        ResultSetMetaData resultSetMetaData = djr.get(rsId);
+        DatasetDirectoryRecord[] records = resultSetMetaData.getRecords();
+        records[partition].writeEOS();
+
+        for (DatasetDirectoryRecord record : records) {
+            if (record.getStatus() == DatasetDirectoryRecord.Status.SUCCESS) {
+                successCount++;
+            }
+        }
+        if (successCount == records.length) {
+            djr.success();
+        }
+        notifyAll();
     }
 
     @Override
     public synchronized void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition) {
-        DatasetDirectoryRecord ddr = getDatasetDirectoryRecord(jobId, rsId, partition);
-        ddr.fail();
+        DatasetJobRecord djr = getDatasetJobRecord(jobId);
+        djr.fail();
+        notifyAll();
+    }
+
+    @Override
+    public synchronized void reportJobFailure(JobId jobId) {
+        DatasetJobRecord djr = getDatasetJobRecord(jobId);
+        djr.fail();
+        notifyAll();
     }
 
     @Override
     public synchronized Status getResultStatus(JobId jobId, ResultSetId rsId) throws HyracksDataException {
-        Map<ResultSetId, ResultSetMetaData> rsMap;
-        while ((rsMap = jobResultLocationsMap.get(jobId)) == null) {
+        DatasetJobRecord djr;
+        while ((djr = jobResultLocations.get(jobId)) == null) {
             try {
                 wait();
             } catch (InterruptedException e) {
@@ -88,38 +107,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
             }
         }
 
-        ResultSetMetaData resultSetMetaData = rsMap.get(rsId);
-        if (resultSetMetaData == null || resultSetMetaData.getRecords() == null) {
-            throw new HyracksDataException("ResultSet locations uninitialized when it is expected to be initialized.");
-        }
-        DatasetDirectoryRecord[] records = resultSetMetaData.getRecords();
-
-        ArrayList<Status> statuses = new ArrayList<Status>(records.length);
-        for (int i = 0; i < records.length; i++) {
-            statuses.add(records[i].getStatus());
-        }
-
-        // Default status is idle
-        Status status = Status.IDLE;
-        if (statuses.contains(Status.FAILED)) {
-            // Even if there is at least one failed entry we should return failed status.
-            return Status.FAILED;
-        } else if (statuses.contains(Status.RUNNING)) {
-            // If there are not failed entry and if there is at least one running entry we should return running status.
-            return Status.RUNNING;
-        } else {
-            // If each and every partition has reported success do we report success as the status.
-            int successCount = 0;
-            for (int i = 0; i < statuses.size(); i++) {
-                if (statuses.get(i) == Status.SUCCESS) {
-                    successCount++;
-                }
-            }
-            if (successCount == statuses.size()) {
-                return Status.SUCCESS;
-            }
-        }
-        return status;
+        return djr.getStatus();
     }
 
     @Override
@@ -134,13 +122,6 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
             }
         }
         return newRecords;
-    }
-
-    public DatasetDirectoryRecord getDatasetDirectoryRecord(JobId jobId, ResultSetId rsId, int partition) {
-        Map<ResultSetId, ResultSetMetaData> rsMap = jobResultLocationsMap.get(jobId);
-        ResultSetMetaData resultSetMetaData = rsMap.get(rsId);
-        DatasetDirectoryRecord[] records = resultSetMetaData.getRecords();
-        return records[partition];
     }
 
     /**
@@ -177,14 +158,15 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
      */
     private DatasetDirectoryRecord[] updatedRecords(JobId jobId, ResultSetId rsId, DatasetDirectoryRecord[] knownRecords)
             throws HyracksDataException {
-        Map<ResultSetId, ResultSetMetaData> rsMap = jobResultLocationsMap.get(jobId);
-        if (rsMap == null) {
-            return null;
+        DatasetJobRecord djr = getDatasetJobRecord(jobId);
+
+        if (djr.getStatus() == Status.FAILED) {
+            throw new HyracksDataException("Job failed.");
         }
 
-        ResultSetMetaData resultSetMetaData = rsMap.get(rsId);
+        ResultSetMetaData resultSetMetaData = djr.get(rsId);
         if (resultSetMetaData == null || resultSetMetaData.getRecords() == null) {
-            throw new HyracksDataException("ResultSet locations uninitialized when it is expected to be initialized.");
+            return null;
         }
 
         boolean ordered = resultSetMetaData.getOrderedResult();
@@ -220,22 +202,12 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
         return null;
     }
 
-    private class ResultSetMetaData {
-        private final boolean ordered;
-
-        private final DatasetDirectoryRecord[] records;
-
-        public ResultSetMetaData(boolean ordered, DatasetDirectoryRecord[] records) {
-            this.ordered = ordered;
-            this.records = records;
+    private DatasetJobRecord getDatasetJobRecord(JobId jobId) {
+        DatasetJobRecord djr = jobResultLocations.get(jobId);
+        if (djr == null) {
+            djr = new DatasetJobRecord();
+            jobResultLocations.put(jobId, djr);
         }
-
-        public boolean getOrderedResult() {
-            return ordered;
-        }
-
-        public DatasetDirectoryRecord[] getRecords() {
-            return records;
-        }
+        return djr;
     }
 }
