@@ -81,7 +81,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
 
     @Override
     public void close() throws HyracksDataException {
-        writer.close();
+        
     }
 
     @Override
