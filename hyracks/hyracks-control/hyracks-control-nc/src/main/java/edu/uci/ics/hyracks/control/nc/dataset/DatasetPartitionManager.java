@@ -14,7 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.nc.dataset;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
@@ -44,10 +44,17 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
     private final DatasetMemoryManager datasetMemoryManager;
 
-    public DatasetPartitionManager(NodeControllerService ncs, Executor executor, int availableMemory) {
+    public DatasetPartitionManager(NodeControllerService ncs, Executor executor, int availableMemory,
+            final int resultHistorySize) {
         this.ncs = ncs;
         this.executor = executor;
-        partitionResultStateMap = new HashMap<JobId, ResultState[]>();
+        partitionResultStateMap = new LinkedHashMap<JobId, ResultState[]>() {
+            private static final long serialVersionUID = 1L;
+
+            protected boolean removeEldestEntry(Map.Entry<JobId, ResultState[]> eldest) {
+                return size() > resultHistorySize;
+            }
+        };
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         fileFactory = new WorkspaceFileFactory(deallocatableRegistry, (IOManager) ncs.getRootContext().getIOManager());
         datasetMemoryManager = new DatasetMemoryManager(availableMemory);

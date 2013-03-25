@@ -15,7 +15,7 @@
 package edu.uci.ics.hyracks.control.cc.dataset;
 
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
@@ -38,8 +38,15 @@ import edu.uci.ics.hyracks.api.job.JobId;
 public class DatasetDirectoryService implements IDatasetDirectoryService {
     private final Map<JobId, DatasetJobRecord> jobResultLocations;
 
-    public DatasetDirectoryService() {
-        jobResultLocations = new HashMap<JobId, DatasetJobRecord>();
+    public DatasetDirectoryService(final int jobHistorySize) {
+        jobResultLocations = new LinkedHashMap<JobId, DatasetJobRecord>() {
+            private static final long serialVersionUID = 1L;
+
+            protected boolean removeEldestEntry(Map.Entry<JobId, DatasetJobRecord> eldest) {
+                return size() > jobHistorySize;
+            }
+        };
+;
     }
 
     @Override

@@ -170,7 +170,7 @@ public class ClusterControllerService extends AbstractRemoteService {
             }
         };
         sweeper = new DeadNodeSweeper();
-        datasetDirectoryService = new DatasetDirectoryService();
+        datasetDirectoryService = new DatasetDirectoryService(ccConfig.jobHistorySize);
         jobCounter = 0;
     }
 

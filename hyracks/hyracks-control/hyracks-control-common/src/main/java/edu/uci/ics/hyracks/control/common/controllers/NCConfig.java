@@ -51,6 +51,9 @@ public class NCConfig implements Serializable {
     @Option(name = "-max-memory", usage = "Maximum memory usable at this Node Controller in bytes (default: -1 auto)")
     public int maxMemory = -1;
 
+    @Option(name = "-result-history-size", usage = "Limits the number of jobs whose results should be remembered by the system to the specified value. (default: 10)")
+    public int resultHistorySize = 100;
+
     @Option(name = "-result-manager-memory", usage = "Memory usable for result caching at this Node Controller in bytes (default: -1 auto)")
     public int resultManagerMemory = -1;
 
@@ -79,10 +82,12 @@ public class NCConfig implements Serializable {
         cList.add(String.valueOf(nNetThreads));
         cList.add("-max-memory");
         cList.add(String.valueOf(maxMemory));
+        cList.add("-result-history-size");
+        cList.add(String.valueOf(resultHistorySize));
         cList.add("-result-manager-memory");
         cList.add(String.valueOf(resultManagerMemory));
 
-       if (appNCMainClass != null) {
+        if (appNCMainClass != null) {
             cList.add("-app-nc-main-class");
             cList.add(appNCMainClass);
         }
@@ -92,5 +97,5 @@ public class NCConfig implements Serializable {
                 cList.add(appArg);
             }
         }
-   }
+    }
 }
