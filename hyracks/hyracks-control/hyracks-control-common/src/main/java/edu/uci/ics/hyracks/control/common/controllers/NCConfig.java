@@ -81,7 +81,8 @@ public class NCConfig implements Serializable {
         cList.add(String.valueOf(maxMemory));
         cList.add("-result-manager-memory");
         cList.add(String.valueOf(resultManagerMemory));
-        if (appNCMainClass != null) {
+
+       if (appNCMainClass != null) {
             cList.add("-app-nc-main-class");
             cList.add(appNCMainClass);
         }
