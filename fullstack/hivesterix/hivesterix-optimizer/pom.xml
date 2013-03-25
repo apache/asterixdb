@@ -4,7 +4,7 @@
 	<parent>
 		<artifactId>hivesterix</artifactId>
 		<groupId>edu.uci.ics.hyracks</groupId>
-		<version>0.2.3</version>
+		<version>0.2.4-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>hivesterix-optimizer</artifactId>
@@ -30,14 +30,14 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hivesterix-common</artifactId>
-			<version>0.2.3</version>
+			<version>0.2.4-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hivesterix-translator</artifactId>
-			<version>0.2.3</version>
+			<version>0.2.4-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>

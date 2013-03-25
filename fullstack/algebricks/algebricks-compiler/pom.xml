@@ -6,7 +6,7 @@
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>algebricks</artifactId>
-    <version>0.2.3</version>
+    <version>0.2.4-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -27,12 +27,12 @@
   <dependency>
   	<groupId>edu.uci.ics.hyracks</groupId>
   	<artifactId>algebricks-rewriter</artifactId>
-  	<version>0.2.3</version>
+  	<version>0.2.4-SNAPSHOT</version>
   </dependency>
   <dependency>
   	<groupId>edu.uci.ics.hyracks</groupId>
   	<artifactId>algebricks-core</artifactId>
-  	<version>0.2.3</version>
+  	<version>0.2.4-SNAPSHOT</version>
   </dependency>
   </dependencies>
 </project>

@@ -3,12 +3,12 @@
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>hyracks-control-common</artifactId>
   <name>hyracks-control-common</name>
-  <version>0.2.3</version>
+  <version>0.2.4-SNAPSHOT</version>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks-control</artifactId>
-    <version>0.2.3</version>
+    <version>0.2.4-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -29,7 +29,7 @@
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-api</artifactId>
-  		<version>0.2.3</version>
+  		<version>0.2.4-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
