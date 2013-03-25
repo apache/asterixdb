@@ -28,6 +28,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 public interface IRecoveryManager {
 
     public enum SystemState {
+        NEW_UNIVERSE,
         RECOVERING,
         HEALTHY,
         CORRUPTED

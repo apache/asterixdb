@@ -116,7 +116,7 @@ public class RecoveryManager implements IRecoveryManager {
         } catch (FileNotFoundException e) {
             //This is initial bootstrap. 
             //Otherwise, the checkpoint file is deleted unfortunately. What we can do in this case?
-            state = SystemState.HEALTHY;
+            state = SystemState.NEW_UNIVERSE;
             return state;
         }
 

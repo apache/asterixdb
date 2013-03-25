@@ -2,7 +2,6 @@ package edu.uci.ics.asterix.hyracks.bootstrap;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,6 +24,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     private String nodeId;
     private boolean isMetadataNode = false;
     private boolean stopInitiated = false;
+    private SystemState systemState = SystemState.NEW_UNIVERSE;
 
     @Override
     public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
@@ -42,10 +42,12 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         
         //#. recover if the system is corrupted by checking system state.
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
-        if (recoveryMgr.getSystemState() == SystemState.CORRUPTED) {
+        systemState = recoveryMgr.getSystemState();
+        if (systemState == SystemState.CORRUPTED) {
             recoveryMgr.startRecovery(true);
+        } else if (systemState == SystemState.NEW_UNIVERSE) {
+            recoveryMgr.checkpoint(true);
         }
-        recoveryMgr.checkpoint(true);
     }
 
     @Override
@@ -82,6 +84,9 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             MetadataBootstrap.startUniverse(proxy.getAsterixProperties(), ncApplicationContext);
             MetadataBootstrap.startDDLRecovery();
         }
+        
+        IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
+        recoveryMgr.checkpoint(true);
         
         //TODO
         //reclaim storage for orphaned index artifacts in NCs.
