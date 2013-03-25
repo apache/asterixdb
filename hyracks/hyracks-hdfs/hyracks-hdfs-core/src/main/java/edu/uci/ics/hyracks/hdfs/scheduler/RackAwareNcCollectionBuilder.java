@@ -38,6 +38,11 @@ public class RackAwareNcCollectionBuilder implements INcCollectionBuilder {
                 String ipAddress = InetAddress.getByAddress(
                         ncNameToNcInfos.get(NCs[i]).getNetworkAddress().getIpAddress()).getHostAddress();
                 topology.lookupNetworkTerminal(ipAddress, path);
+                if (path.size() <= 0) {
+                    // if the hyracks nc is not in the defined cluster
+                    path.add(Integer.MIN_VALUE);
+                    LOGGER.info(NCs[i] + "'s IP address is not in the cluster toplogy file!");
+                }
                 List<String> ncs = pathToNCs.get(path);
                 if (ncs == null) {
                     ncs = new ArrayList<String>();
@@ -70,6 +75,10 @@ public class RackAwareNcCollectionBuilder implements INcCollectionBuilder {
                     String ipAddress = InetAddress.getByAddress(
                             ncNameToNcInfos.get(NCs[i]).getNetworkAddress().getIpAddress()).getHostAddress();
                     topology.lookupNetworkTerminal(ipAddress, path);
+                    if (path.size() <= 0) {
+                        // if the hyracks nc is not in the defined cluster
+                        path.add(Integer.MIN_VALUE);
+                    }
                     IntWritable availableSlot = availableIpsToSlots.get(path);
                     if (availableSlot == null) {
                         availableSlot = new IntWritable(slotLimit - workloads[i]);
