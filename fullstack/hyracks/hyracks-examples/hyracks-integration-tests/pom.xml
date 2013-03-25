@@ -6,7 +6,7 @@
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks-examples</artifactId>
-    <version>0.2.4-SNAPSHOT</version>
+    <version>0.2.3-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -34,63 +34,63 @@
   	<dependency>
         <groupId>edu.uci.ics.hyracks</groupId>
         <artifactId>hyracks-client</artifactId>
-        <version>0.2.4-SNAPSHOT</version>
+        <version>0.2.3-SNAPSHOT</version>
         <type>jar</type>
         <scope>compile</scope>
     </dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-dataflow-std</artifactId>
-  		<version>0.2.4-SNAPSHOT</version>
+  		<version>0.2.3-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-control-cc</artifactId>
-  		<version>0.2.4-SNAPSHOT</version>
+  		<version>0.2.3-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-control-nc</artifactId>
-  		<version>0.2.4-SNAPSHOT</version>
+  		<version>0.2.3-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-am-btree</artifactId>
-  		<version>0.2.4-SNAPSHOT</version>
+  		<version>0.2.3-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-am-invertedindex</artifactId>
-  		<version>0.2.4-SNAPSHOT</version>
+  		<version>0.2.3-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-am-rtree</artifactId>
-  		<version>0.2.4-SNAPSHOT</version>
+  		<version>0.2.3-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-test-support</artifactId>
-  		<version>0.2.4-SNAPSHOT</version>
+  		<version>0.2.3-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>test</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-data-std</artifactId>
-  		<version>0.2.4-SNAPSHOT</version>
+  		<version>0.2.3-SNAPSHOT</version>
   	</dependency>
   </dependencies>
 </project>
