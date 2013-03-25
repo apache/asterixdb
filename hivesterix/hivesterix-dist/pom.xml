@@ -5,6 +5,13 @@
 	<artifactId>hivesterix-dist</artifactId>
 	<version>0.2.3-SNAPSHOT</version>
 	<name>hivesterix-dist</name>
+
+	<parent>
+                <groupId>edu.uci.ics.hyracks</groupId>
+                <artifactId>hivesterix</artifactId>
+                <version>0.2.3-SNAPSHOT</version>
+        </parent>
+
 	<dependencies>
 		<dependency>
 			<groupId>javax.servlet</groupId>
