@@ -204,6 +204,11 @@
     			<artifactId>hyracks-storage-am-common</artifactId>
     			<version>${hyracks.version}</version>
     		</dependency>
+		    <dependency>
+                <groupId>edu.uci.ics.hyracks</groupId>
+                <artifactId>hyracks-client</artifactId>
+                <version>${hyracks.version}</version>
+            </dependency>
     	</dependencies>
     </dependencyManagement>
 </project>

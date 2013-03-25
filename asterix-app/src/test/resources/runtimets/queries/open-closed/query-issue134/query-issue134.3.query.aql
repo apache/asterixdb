@@ -1,0 +1,9 @@
+/*
+ * Description  : This test case is to verify the fix for issue134
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=134
+ * Expected Res : Success
+ * Date         : 26th November 2012
+ */
+
+let $a:=true
+return {{[1,2,3,4,5],[6,5,3,8,9],[44,22,66,-1,0,99.9]}}

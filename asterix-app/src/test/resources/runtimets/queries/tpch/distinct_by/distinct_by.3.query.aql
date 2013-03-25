@@ -1,0 +1,10 @@
+use dataverse tpch;
+
+for $l in dataset('LineItem')
+distinct by $l.l_returnflag, $l.l_linestatus, $l.l_shipmode
+order by $l.l_returnflag, $l.l_linestatus, $l.l_shipmode
+return {
+"l_returnflag": $l.l_returnflag,
+"l_linestatus": $l.l_linestatus,
+"l_shipmode": $l.l_shipmode
+}

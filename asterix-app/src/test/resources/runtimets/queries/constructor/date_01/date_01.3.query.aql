@@ -1,0 +1,14 @@
+use dataverse test;
+
+let $c1 := date("2010-10-30")
+let $c2 := date("1987-11-19")
+let $c3 := date("-1987-11-19")
+let $c4 := date("0001-12-27")
+let $c5 := date("-1951-12-27")
+let $c6 := date("-2043-11-19")
+let $c7 := date("-19280329")
+let $c8 := date("19280329")
+let $c9 := date("19000228")
+let $c10 := date("20000229")
+
+return {"date1": $c1, "date2": $c2, "date3": $c3, "date4": $c4, "date5": $c5, "date6": $c6, "date7": $c7, "date8": $c8, "date9": $c9, "date10": $c10}

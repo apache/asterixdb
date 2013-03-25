@@ -1,0 +1,14 @@
+use dataverse test;
+
+write into dataset CustomerOrders3 (
+
+for $c in dataset('Customers3')
+let $orders := 
+  for $o in dataset('Orders3')
+  where $o.cid = $c.cid
+  order by $o.orderpriority desc
+  return $o
+return { "cid": $c.cid, "cust": $c, "orders": $orders }
+
+);
+

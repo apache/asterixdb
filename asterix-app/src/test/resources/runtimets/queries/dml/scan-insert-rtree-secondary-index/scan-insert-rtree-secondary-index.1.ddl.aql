@@ -1,0 +1,28 @@
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type MyRecord as closed {
+  id: int32,
+  point: point,
+  kwds: string,
+  line1: line,
+  line2: line,
+  poly1: polygon,
+  poly2: polygon,
+  rec: rectangle,
+  circle: circle
+}
+
+create type MyMiniRecord as closed {
+  id: int32,
+  point: point
+}
+
+create dataset MyData(MyRecord)
+  primary key id;
+
+create dataset MyMiniData(MyMiniRecord)
+  primary key id;
+

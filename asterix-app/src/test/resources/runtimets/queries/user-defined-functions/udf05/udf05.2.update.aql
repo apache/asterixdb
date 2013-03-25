@@ -1,0 +1,6 @@
+/*
+ * Description  : Create UDF and bind its return value to a variable and return that variable
+ * Expected Res : Success
+ * Date         : Sep 4th 2012
+ */
+

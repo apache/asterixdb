@@ -1,0 +1,17 @@
+/*
+ * Description  : Create UDF to read from internal dataset 
+ * Expected Res : Success
+ * Date         : Sep 4th 2012
+ */
+
+use dataverse test;
+
+insert into dataset test.t1({"id":345});
+insert into dataset test.t1({"id":315});
+insert into dataset test.t1({"id":245});
+insert into dataset test.t1({"id":385});
+insert into dataset test.t1({"id":241});
+insert into dataset test.t1({"id":745});
+insert into dataset test.t1({"id":349});
+insert into dataset test.t1({"id":845});
+

@@ -1,0 +1,10 @@
+/*
+ * Description    : Create r-tree indexes for all spatial data types.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+load dataset MyData 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/spatial/spatialData.json"),("format"="adm"));

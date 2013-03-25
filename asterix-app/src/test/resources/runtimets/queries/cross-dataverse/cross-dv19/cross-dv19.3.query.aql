@@ -1,0 +1,10 @@
+/*
+ * Description  : Create internal and external datasets in more than one dataverse and query metadata to verify entries in Metadata.
+ * Expected Res : Success
+ * Date         : Sep 20 2012
+ */
+
+for $l in dataset('Metadata.Dataset')
+where $l.DataverseName='test1' or $l.DataverseName='test2' or $l.DataverseName='TwitterData'
+return $l
+

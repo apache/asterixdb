@@ -1,0 +1,6 @@
+use dataverse tpch;
+
+for $r in dataset('Regions_group_no_agg')
+group by $name := $r.r_name  with $r
+order by $name
+return $name

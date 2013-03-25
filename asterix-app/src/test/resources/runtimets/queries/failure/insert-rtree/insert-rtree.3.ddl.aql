@@ -1,0 +1,5 @@
+use dataverse test;
+
+create index rtree_index_loc_0 on MyData(loc) type rtree;
+create index rtree_index_loc on MyMiniData(loc) type rtree;
+

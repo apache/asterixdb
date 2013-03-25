@@ -1,0 +1,23 @@
+use dataverse test;
+
+insert into dataset MyMiniData
+(
+	for $m in dataset('MyData')
+	where $m.id<1000
+	return {
+		"id": $m.id,
+		"loc": $m.loc
+	}
+);
+
+insert into dataset MyMiniData
+(
+	for $m in dataset('MyData')
+	where $m.id>=1000
+	die after 1000
+	return {
+		"id": $m.id,
+		"loc": $m.loc
+	}
+);
+

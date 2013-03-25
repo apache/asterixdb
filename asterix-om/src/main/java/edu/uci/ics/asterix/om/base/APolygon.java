@@ -14,6 +14,10 @@
  */
 package edu.uci.ics.asterix.om.base;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -84,5 +88,18 @@ public class APolygon implements IAObject {
         }
         sb.append(" ]");
         return sb.toString();
+    }
+
+    @Override
+    public JSONObject toJSON() throws JSONException {
+        JSONObject json = new JSONObject();
+
+        JSONArray polygon = new JSONArray();
+        for (int i = 0; i < points.length; i++) {
+            polygon.put(points[i].toJSON());
+        }
+        json.put("APolygon", polygon);
+
+        return json;
     }
 }

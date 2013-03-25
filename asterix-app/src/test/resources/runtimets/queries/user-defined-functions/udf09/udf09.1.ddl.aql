@@ -1,0 +1,20 @@
+/*
+ * Description  : Create UDF to read from internal dataset 
+ * Expected Res : Success
+ * Date         : Sep 4th 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type test.TestType as open {
+id : int32
+}
+
+create dataset test.t1(TestType) primary key id;
+
+create function test.readDataset($a) {
+$a
+}

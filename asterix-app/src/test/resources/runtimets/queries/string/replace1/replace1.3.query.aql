@@ -1,0 +1,6 @@
+use dataverse test;
+
+let $c1 := replace("abracadabra", "a", "")
+let $c2 := replace("abracadabra", "a(.)", "a$1$1")
+let $c3 := replace("darted", "^(.*?)d(.*)$", "$1c$2")
+return {"result1": $c1, "result2": $c2, "result3": $c3}

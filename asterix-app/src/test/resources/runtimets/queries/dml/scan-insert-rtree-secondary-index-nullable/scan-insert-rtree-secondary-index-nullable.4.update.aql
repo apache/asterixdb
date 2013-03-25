@@ -1,0 +1,11 @@
+use dataverse test;
+
+insert into dataset MyMiniData
+(
+	for $m in dataset('MyData')
+	return {
+		"id": $m.id,
+		"point": $m.point
+	}
+);
+

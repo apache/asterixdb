@@ -1,0 +1,20 @@
+/*
+ * Decription   : Create UDF to query two different datasets that are in tow different dataverses.
+ * Expected Res : Success
+ * Date         : Sep 7 2012
+ */
+
+// this test currently gives ParseException
+
+insert into dataset test.t1({"id":24});
+insert into dataset test.t1({"id":23});
+insert into dataset test.t1({"id":21});
+insert into dataset test.t1({"id":44});
+insert into dataset test.t1({"id":64});
+
+insert into dataset fest.t1({"id":24});
+insert into dataset fest.t1({"id":23});
+insert into dataset fest.t1({"id":21});
+insert into dataset fest.t1({"id":44});
+insert into dataset fest.t1({"id":64});
+

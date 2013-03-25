@@ -1,0 +1,16 @@
+/*
+ * Description  : Test cross dataverse functionality
+ *              : use dataverse statement is now optional.
+ *              : Use fully qualified names to create datasets, types and query Metadata to verify.
+ * Expected Res : Success
+ * Date         : 28th Aug 2012
+ */
+
+insert into dataset student.ugdstd({"id":457,"name":"John Doe","age":22,"sex":"M","dept":"Dance"});
+
+insert into dataset student.gdstd({"id":418,"name":"John Smith","age":26,"sex":"M","dept":"Economics"});
+
+insert into dataset teacher.prof({"id":152,"name":"John Meyer","age":42,"sex":"M","dept":"History"});
+
+insert into dataset teacher.pstdoc({"id":259,"name":"Sophia Reece","age":36,"sex":"F","dept":"Anthropology"});
+

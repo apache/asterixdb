@@ -1,0 +1,17 @@
+use dataverse test;
+
+for $t in dataset('TwitterData')
+let $keyword := "Allergies"
+let $region := polygon("
+	33.80503407287759,-126.41235263538363 
+	44.9090773200516,-126.41235263538363 
+	44.9090773200516,-87.65258701038363 
+	33.80503407287759,-87.65258701038363")
+
+where spatial-intersect($t.loc, $region)  and
+$t.time > datetime("2011-05-15T00:00:00Z") and $t.time < datetime("2011-05-16T23:59:59Z") and
+contains($t.text, $keyword)
+group by $c := spatial-cell($t.loc, create-point(24.5,-125.5), 3.0, 3.0) with $t
+let $num :=  count($t)
+order by $num
+return { "cell": $c, "count": $num }

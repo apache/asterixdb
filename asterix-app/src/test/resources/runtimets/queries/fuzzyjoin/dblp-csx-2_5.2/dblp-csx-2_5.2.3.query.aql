@@ -1,0 +1,69 @@
+use dataverse fuzzyjoin;
+
+    //
+    // -- - Stage 2 - --
+    //
+    for $paperDBLP in dataset('DBLP')
+    let $idDBLP := $paperDBLP.id
+    let $tokensUnrankedDBLP := counthashed-word-tokens($paperDBLP.title)
+    let $lenDBLP := len($tokensUnrankedDBLP)
+    let $tokensDBLP :=
+        for $tokenUnranked in $tokensUnrankedDBLP
+        for $tokenRanked at $i in
+            //
+            // -- - Stage 1 - --
+            //
+            for $paper in dataset('DBLP')
+            let $id := $paper.id
+            for $token in counthashed-word-tokens($paper.title)
+            /*+ hash */
+            group by $tokenGrouped := $token with $id
+            order by count($id), $tokenGrouped
+            return $tokenGrouped
+        where $tokenUnranked = $tokenRanked
+        order by $i
+        return $i
+    for $prefixTokenDBLP in subset-collection(
+                                $tokensDBLP,
+                                0,
+                                prefix-len-jaccard(len($tokensDBLP), .5f))
+
+    for $paperCSX in dataset('CSX')
+    let $idCSX := $paperCSX.id
+    let $tokensUnrankedCSX := counthashed-word-tokens($paperCSX.title)
+    let $lenCSX := len($tokensUnrankedCSX)
+    let $tokensCSX :=
+        for $tokenUnranked in $tokensUnrankedCSX
+        for $tokenRanked at $i in
+            //
+            // -- - Stage 1 - --
+            //
+            for $paper in dataset('DBLP')
+            let $id := $paper.id
+            for $token in counthashed-word-tokens($paper.title)
+            /*+ hash */
+            group by $tokenGrouped := $token with $id
+            order by count($id), $tokenGrouped
+            return $tokenGrouped
+        where $tokenUnranked = $tokenRanked
+        order by $i
+        return $i
+    for $prefixTokenCSX in subset-collection(
+                                $tokensCSX,
+                                0,
+                                prefix-len-jaccard(len($tokensCSX), .5f))
+
+    where $prefixTokenDBLP = $prefixTokenCSX
+
+    let $sim := similarity-jaccard-prefix(
+                    $lenDBLP,
+                    $tokensDBLP,
+                    $lenCSX,
+                    $tokensCSX,
+                    $prefixTokenDBLP,
+                    .5f)
+    where $sim >= .5f
+    /*+ hash*/ 
+    group by $idDBLP := $idDBLP, $idCSX := $idCSX with $sim
+    order by $idDBLP, $idCSX
+    return {'idDBLP': $idDBLP, 'idCSX': $idCSX, 'sim': $sim[0]}

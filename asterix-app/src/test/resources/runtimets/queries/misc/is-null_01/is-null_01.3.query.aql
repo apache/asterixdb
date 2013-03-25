@@ -1,0 +1,3 @@
+use dataverse test;
+
+[is-null(null), is-null(10)]

@@ -1,0 +1,10 @@
+/*
+ * Description     :  Test let clause
+ * Expected Result :  Success
+ * Date            :  6th July 2012 
+ */
+
+// Return an ordered list comprising of records and other values
+
+let $a := ["a",{"i":1},"b",{"j":2},"c",{"k":3}]
+return $a

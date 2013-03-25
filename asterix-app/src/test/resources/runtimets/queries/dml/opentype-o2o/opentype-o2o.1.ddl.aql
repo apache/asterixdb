@@ -1,0 +1,28 @@
+/* 
+ * Test case Name  : opentype-o2o.aql
+ * Description     : verify that the dynamic type cast from one open type to another compatible open type
+ *					 verify the bag-based fields
+ * Expected Result : Success
+ */
+
+
+drop dataverse testdv2 if exists;
+create dataverse testdv2;
+
+use dataverse testdv2;
+
+create type testtype as open {
+  name: string,
+  id: string
+}
+
+create type testtype2 as open {
+  id: string,
+  name: string,
+  hobby: string
+}
+
+create dataset testds(testtype) primary key id;
+
+create dataset testds2(testtype2) primary key id;
+

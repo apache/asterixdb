@@ -1,0 +1,12 @@
+/*
+ * Description    : Tests that sum aggregation correctly returns null for an empty stream,
+ *                  with an aggregate combiner.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+sum(
+ for $x in dataset('Test')
+ return $x.val
+)

@@ -1,0 +1,145 @@
+use dataverse fuzzyjoin;
+
+//
+// -- - Stage 3 - --
+//
+for $ridpair in 
+    //
+    // -- - Stage 2 - --
+    //
+    for $paperLeft in dataset('DBLP')
+    let $lenLeft := len(counthashed-word-tokens($paperLeft.title))
+    let $tokensLeft :=
+        for $tokenUnranked in counthashed-word-tokens($paperLeft.title)
+        for $tokenRanked at $i in
+            //
+            // -- - Stage 1 - --
+            //
+            for $paper in dataset('DBLP')
+            for $token in counthashed-word-tokens($paper.title)
+            group by $tokenGroupped := $token with $paper
+            order by count($paper), $tokenGroupped
+            return $tokenGroupped
+        where $tokenUnranked = $tokenRanked
+        order by $i
+        return $i
+    for $prefix_tokenLeft in subset-collection(
+                                $tokensLeft, 
+                                0,
+                                prefix-len-jaccard(len($tokensLeft), .5f))
+
+    for $paperRight in dataset('DBLP')
+    let $lenRight := len(counthashed-word-tokens($paperRight.title))
+    let $tokensRight :=
+        for $tokenUnranked in counthashed-word-tokens($paperRight.title)
+        for $tokenRanked at $i in
+            //
+            // -- - Stage 1 - --
+            //
+            for $paper in dataset('DBLP')
+            for $token in counthashed-word-tokens($paper.title)
+            group by $tokenGroupped := $token with $paper
+            order by count($paper), $tokenGroupped
+            return $tokenGroupped
+        where $tokenUnranked = $tokenRanked
+        order by $i
+        return $i
+    for $prefix_tokenRight in subset-collection(
+                                $tokensRight, 
+                                0,
+                                prefix-len-jaccard(len($tokensRight), .5f))
+
+    where $prefix_tokenLeft = $prefix_tokenRight
+
+    let $sim := similarity-jaccard-prefix(
+                    $lenLeft,
+                    $tokensLeft,
+                    $lenRight,
+                    $tokensRight,
+                    $prefix_tokenLeft,
+                    .5f)
+    where $sim >= .5f and $paperLeft.id < $paperRight.id
+    group by $idLeft := $paperLeft.id, $idRight := $paperRight.id with $sim
+    return {'idLeft': $idLeft, 'idRight': $idRight, 'sim': $sim[0]}
+
+for $paperLeft in dataset('DBLP')
+for $paperRight in dataset('DBLP')
+where $ridpair.idLeft = $paperLeft.id and $ridpair.idRight = $paperRight.id
+order by $paperLeft.id, $paperRight.id
+return {'left': $paperLeft, 'right': $paperRight, 'sim': $ridpair.sim}
+
+/*
+edu.uci.ics.aqua.common.exceptions.AquaException: Attempting to construct a nested plan with 3 operator descriptors. Currently, nested plans can only consist in linear pipelines of Asterix micro operators.
+	at edu.uci.ics.aqua.algebra.operators.physical.AbstractGroupByPhysicalOperator.buildPipelineWithProjection(AbstractGroupByPhysicalOperator.java:47)
+	at edu.uci.ics.aqua.algebra.operators.physical.AbstractGroupByPhysicalOperator.compileSubplans(AbstractGroupByPhysicalOperator.java:29)
+	at edu.uci.ics.aqua.algebra.operators.physical.PreSortedGroupByPOperator.contributeRuntimeOperator(PreSortedGroupByPOperator.java:133)
+	at edu.uci.ics.aqua.algebra.operators.logical.AbstractLogicalOperator.contributeRuntimeOperator(AbstractLogicalOperator.java:208)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:52)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compileOpRef(PlanCompiler.java:44)
+	at edu.uci.ics.aqua.jobgen.impl.PlanCompiler.compilePlan(PlanCompiler.java:30)
+	at edu.uci.ics.aqua.api.HeuristicCompilerFactoryBuilder$1$1.createJob(HeuristicCompilerFactoryBuilder.java:64)
+	at edu.uci.ics.asterix.api.common.APIFramework.compileQuery(APIFramework.java:323)
+	at edu.uci.ics.asterix.api.java.AsterixJavaClient.compile(AsterixJavaClient.java:71)
+	at edu.uci.ics.asterix.test.runtime.functions.RuntimeFunctionsTest.test(RuntimeFunctionsTest.java:150)
+	at sun.reflect.GeneratedMethodAccessor28.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:597)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:44)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:15)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:41)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:20)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:76)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:50)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:193)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:52)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:191)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:42)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:184)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:236)
+	at org.junit.runners.Suite.runChild(Suite.java:128)
+	at org.junit.runners.Suite.runChild(Suite.java:24)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:193)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:52)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:191)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:42)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:184)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:28)
+	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:31)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:236)
+	at org.eclipse.jdt.internal.junit4.runner.JUnit4TestReference.run(JUnit4TestReference.java:49)
+	at org.eclipse.jdt.internal.junit.runner.TestExecution.run(TestExecution.java:38)
+	at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.runTests(RemoteTestRunner.java:467)
+	at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.runTests(RemoteTestRunner.java:683)
+	at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.run(RemoteTestRunner.java:390)
+	at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.main(RemoteTestRunner.java:197)
+
+*/

@@ -1,0 +1,9 @@
+/*
+ * Description    : Create r-tree indexes for all spatial data types.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+for $a in dataset('MyData')
+return $a.id

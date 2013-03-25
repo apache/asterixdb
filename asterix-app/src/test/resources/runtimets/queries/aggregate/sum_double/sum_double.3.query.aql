@@ -1,0 +1,7 @@
+use dataverse test;
+
+sum( 
+ for $x in [1.0, 2.0, 3.0] 
+ return $x
+)
+

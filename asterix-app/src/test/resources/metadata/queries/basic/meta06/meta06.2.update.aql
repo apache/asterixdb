@@ -1,0 +1,6 @@
+/*
+ * Description  : Create AQL bodied UDFs and verify that there are related entries in metadata Function dataset
+ * Expected Res : Success
+ * Date         : Sep 17 2012
+ */
+

@@ -1,0 +1,9 @@
+/*
+ * Description  : Create UDF to read from internal dataset 
+ * Expected Res : Success
+ * Date         : Sep 4th 2012
+ */
+
+use dataverse test;
+   
+test.readDataset(for $a in dataset('test.t1') order by $a.id return $a);

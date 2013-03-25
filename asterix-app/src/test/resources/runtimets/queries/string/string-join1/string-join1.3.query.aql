@@ -1,0 +1,7 @@
+use dataverse test;
+
+let $x :=  ["aa", "25991", "bb", "31526"]
+let $s := "::"
+let $c := string-join($x,$s)
+let $c1 := string-join($x,"")
+return {"result0": $c,"result1": $c1}

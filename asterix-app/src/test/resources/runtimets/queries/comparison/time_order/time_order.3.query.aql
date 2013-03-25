@@ -1,0 +1,12 @@
+use dataverse test;
+
+let $t1 := time("13:00:00.382-10:00")
+let $t2 := time("23:59:59.999Z")
+let $t3 := time("22:00:00+03:00")
+let $t4 := time("00:00:00.00Z")
+let $t5 := time("00:00:00.00-02:00")
+let $t6 := time("00:00:00.47+04:00")
+
+for $t in [$t1, $t2, $t3, $t4, $t5, $t6]
+order by $t
+return $t

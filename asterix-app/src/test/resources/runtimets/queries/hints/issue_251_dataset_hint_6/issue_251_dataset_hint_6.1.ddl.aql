@@ -1,0 +1,21 @@
+/*
+* Description  : Create an external dataset that contains a tuples, the lines from a (*sequence*) file in HDFS.
+                 Provide hint(cardinality) when creating the dataset.
+                 Perform a word-count over the data in the dataset.
+* Expected Res : Success
+* Date         : 30th Jan 2013
+*/
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type LineType as closed {
+ content: string
+};
+
+create external dataset TextDataset(LineType)
+using hdfs
+(("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/textFileS"),("input-format"="sequence-input-format"),("format"="delimited-text"),("delimiter"="."))
+hints(cardinality=10);
+

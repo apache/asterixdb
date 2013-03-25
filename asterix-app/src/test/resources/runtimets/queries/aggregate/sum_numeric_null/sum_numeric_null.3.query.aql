@@ -1,0 +1,13 @@
+/*
+ * Description      :   Add numeric values with a null value, sum() aggregate function must return null.
+ * Expected result  :   Success
+ * Date             :   July 20th 2012
+ */
+
+use dataverse test;
+
+// In AQL
+// sum(numeric + null) => null
+
+sum(for $l in dataset('tdst')
+return $l.sal)

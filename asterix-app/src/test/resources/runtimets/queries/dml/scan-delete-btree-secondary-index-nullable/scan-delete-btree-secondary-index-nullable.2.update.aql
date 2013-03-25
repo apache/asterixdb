@@ -1,0 +1,13 @@
+/* 
+ * Test case Name  : scan-delete-btree-secondary-index-nullable.aql
+ * Description     : This test is intended to test deletion from secondary btree indexes that are built on nullable fields 
+ * Expected Result : Success
+ * Date            : May 12 2012
+ */
+
+use dataverse test;
+
+load dataset Customers 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/semistructured/co1k/customer.adm"),("format"="adm"));
+

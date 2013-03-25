@@ -1,0 +1,5 @@
+use dataverse test;
+
+let $token_list := 
+  for $token in [1, 2, 3] return $token
+return $token_list

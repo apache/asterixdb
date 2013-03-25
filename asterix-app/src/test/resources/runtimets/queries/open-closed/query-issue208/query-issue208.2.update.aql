@@ -1,0 +1,13 @@
+/*
+ * Description  : This test case is to verify the fix for issue208
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=208
+ * Expected Res : Success
+ * Date         : 26th November 2012
+ */
+
+use dataverse OpenSocialNetworkData;
+
+load dataset TweetMessages
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/twitter/tw_messages.adm"),("format"="adm"));
+

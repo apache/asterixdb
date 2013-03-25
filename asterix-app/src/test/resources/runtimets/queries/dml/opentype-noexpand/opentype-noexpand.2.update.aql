@@ -1,0 +1,17 @@
+/* 
+ * Test case Name  : opentype-noexpand.aql
+ * Description     : verify that open type dataset can have records without open fields
+ *					 verify the bag-based fields
+ * Expected Result : Success
+ */
+
+use dataverse testdv2;
+
+insert into dataset testds (
+{ "id": "001", "name": "Person One"}
+);
+
+insert into dataset testds (
+{ "id": "002"}
+);
+

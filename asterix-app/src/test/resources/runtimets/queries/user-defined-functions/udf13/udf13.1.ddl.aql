@@ -1,0 +1,15 @@
+/*
+ * Description  : Create UDF to subtract two integers
+ * Expected Res : Success
+ * Date         : 4th September 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create function test.foo($a,$b) {
+$a - $b
+}
+

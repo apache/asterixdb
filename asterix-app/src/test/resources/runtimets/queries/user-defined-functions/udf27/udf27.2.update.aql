@@ -1,0 +1,10 @@
+/*
+ * Description  : Create UDF and invoke UDF from a quantified expression
+ * Expected Res : Success
+ * Date         : Sep 6th 2012
+ */
+
+// this test is not giving expected results.
+// issue 194 reported to track this
+
+

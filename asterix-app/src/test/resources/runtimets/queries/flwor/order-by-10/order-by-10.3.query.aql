@@ -1,0 +1,10 @@
+/*
+ * Description     : Test order by clause of FLWOR
+ * Expected Result : Success
+ * Date            : 24th July 2012
+ */
+
+
+for $x in ["ten","twenty","thirty","forty","fifty","sixty","seventy","ninety"]
+order by string-concat([$x,$x]) desc 
+return string-concat([$x,$x])

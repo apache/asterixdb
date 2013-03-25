@@ -65,6 +65,7 @@ import edu.uci.ics.asterix.runtime.formats.FormatUtils;
 import edu.uci.ics.asterix.runtime.formats.NonTaggedDataFormat;
 import edu.uci.ics.asterix.runtime.transaction.TreeIndexInsertUpdateDeleteOperatorDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
@@ -83,14 +84,17 @@ import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import edu.uci.ics.hyracks.algebricks.data.IAWriterFactory;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
+import edu.uci.ics.hyracks.algebricks.data.IResultSerializerFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.SinkWriterRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IResultSerializerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.ConstantFileSplitProvider;
@@ -98,6 +102,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
+import edu.uci.ics.hyracks.dataflow.std.result.ResultWriterOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
@@ -120,6 +125,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private Map<String, String> config;
     private IAWriterFactory writerFactory;
     private FileSplit outputFile;
+    private ResultSetId resultSetId;
+    private IResultSerializerFactoryProvider resultSerializerFactoryProvider;
     private long jobTxnId;
 
     private final Dataverse defaultDataverse;
@@ -182,6 +189,22 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     public void setOutputFile(FileSplit outputFile) {
         this.outputFile = outputFile;
+    }
+
+    public ResultSetId getResultSetId() {
+        return resultSetId;
+    }
+
+    public void setResultSetId(ResultSetId resultSetId) {
+        this.resultSetId = resultSetId;
+    }
+
+    public void setResultSerializerFactoryProvider(IResultSerializerFactoryProvider rafp) {
+        this.resultSerializerFactoryProvider = rafp;
+    }
+
+    public IResultSerializerFactoryProvider getResultSerializerFactoryProvider() {
+        return resultSerializerFactoryProvider;
     }
 
     @Override
@@ -545,8 +568,22 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getResultHandleRuntime(IDataSink sink,
             int[] printColumns, IPrinterFactory[] printerFactories, RecordDescriptor inputDesc, boolean ordered,
             JobSpecification spec) throws AlgebricksException {
-        // TODO(madhusudancs): Stub implementation of the method
-        return null;
+        ResultSetDataSink rsds = (ResultSetDataSink) sink;
+        ResultSetSinkId rssId = (ResultSetSinkId) rsds.getId();
+        ResultSetId rsId = rssId.getResultSetId();
+        String nodeName = rssId.getResultNodeName();
+
+        ResultWriterOperatorDescriptor resultWriter = null;
+        try {
+            IResultSerializerFactory resultSerializedAppenderFactory = resultSerializerFactoryProvider
+                    .getAqlResultSerializerFactoryProvider(printColumns, printerFactories, getWriterFactory());
+            resultWriter = new ResultWriterOperatorDescriptor(spec, rsId, ordered, resultSerializedAppenderFactory);
+        } catch (IOException e) {
+            throw new AlgebricksException(e);
+        }
+
+        AlgebricksPartitionConstraint apc = new AlgebricksAbsolutePartitionConstraint(new String[] { nodeName });
+        return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(resultWriter, apc);
     }
 
     @Override

@@ -1,0 +1,8 @@
+use dataverse twitter;
+
+for $t in dataset('TwitterData')
+let $tokens := word-tokens($t.text)
+for $token in $tokens
+group by $tok := $token with $token
+order by count($token) desc, $tok asc
+return { "word": $tok, "count": count($token) }

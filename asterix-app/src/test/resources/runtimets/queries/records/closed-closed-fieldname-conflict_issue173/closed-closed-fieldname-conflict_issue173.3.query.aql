@@ -1,0 +1,9 @@
+/*
+ * Description    : Tests whether a conflict between two closed field names are detected
+ * Expected Result: An error reporting that there is a duplicate field name "name"
+ * Author: zheilbron
+ */
+use dataverse test;
+
+let $x := {"name": "john", "name": "smith"}
+return $x

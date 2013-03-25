@@ -1,0 +1,12 @@
+/*
+ * Testcase Name : open-closed-26.aql
+ * Description   : Test use of additional data(open) optional field in create type statement 
+ *               : No additional data is inserted (as it is declared as optional) from the insert statement.
+ * Success       : Yes
+ * Date          : 29th May 2012
+ */
+
+use dataverse test;
+
+for $l in dataset('testds')
+return $l

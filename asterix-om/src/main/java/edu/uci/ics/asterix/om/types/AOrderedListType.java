@@ -1,5 +1,8 @@
 package edu.uci.ics.asterix.om.types;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.ics.asterix.om.base.IAObject;
 
 public class AOrderedListType extends AbstractCollectionType {
@@ -51,5 +54,12 @@ public class AOrderedListType extends AbstractCollectionType {
     @Override
     public int hash() {
         return hashCode();
+    }
+
+    @Override
+    public JSONObject toJSON() throws JSONException{
+        JSONObject type = new JSONObject();
+        type.put("type", itemType);
+        return type;
     }
 }

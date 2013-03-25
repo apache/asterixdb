@@ -1,0 +1,5 @@
+/*
+ * Description  : Create UDF and invoke UDF in return clause of FLWOR expression
+ * Expected Res : Success
+ * Date         : 31st Aug 2012
+ */

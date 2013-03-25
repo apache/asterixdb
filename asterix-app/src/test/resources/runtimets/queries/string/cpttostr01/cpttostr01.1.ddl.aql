@@ -1,0 +1,20 @@
+/*
+ * Test case Name : cpttostr01.aql
+ * Description    : Test codepoint-to-string(codepoint) function.
+ *                : Pass the codepoints which are in the internal dataset to the function. 
+ * Success        : Yes
+ * Date           : 16th April 2012
+ */
+
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type TestType as open{
+id:int32,
+cpt:[int32]
+}
+
+create dataset testds(TestType) primary key id;

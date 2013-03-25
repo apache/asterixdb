@@ -1,0 +1,26 @@
+use dataverse test;
+
+let $a := [ ]
+let $b := [1, 2, 3, 4, 5]
+let $c := [4, 3, 5, 8, 9, 2, 1]
+let $d := [7, 5, 8, 9, 3, 10, 1, 2, 11, 4]
+let $e := [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+let $f := [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+let $results :=
+[ 
+  similarity-jaccard-check($a, $b, 0.0f),
+  similarity-jaccard-check($b, $a, 0.0f),
+  similarity-jaccard-check($a, $b, 0.1f),
+  similarity-jaccard-check($b, $a, 0.1f),
+  similarity-jaccard-check($c, $d, 0.6f),
+  similarity-jaccard-check($d, $c, 0.6f),
+  similarity-jaccard-check($c, $d, 0.8f),
+  similarity-jaccard-check($d, $c, 0.8f),
+  similarity-jaccard-check($e, $f, 0.05f),
+  similarity-jaccard-check($f, $e, 0.05f),
+  similarity-jaccard-check($e, $f, 0.8f),
+  similarity-jaccard-check($f, $e, 0.8f)
+  
+]
+for $i in $results
+return $i

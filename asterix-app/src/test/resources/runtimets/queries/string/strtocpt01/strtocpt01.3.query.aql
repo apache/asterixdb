@@ -1,0 +1,9 @@
+/*
+ * Description  : Test string to codepoint function with valid inputs
+ * Expected Res : Success
+ * Date         : 7th Aug 2012
+ */
+
+
+let $x := "ABCDEFGHIJKLMNOPQRSTUVWXYZ-01234567890"
+return string-to-codepoint($x)

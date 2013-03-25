@@ -1,0 +1,14 @@
+drop dataverse tpch if exists;
+create dataverse tpch;
+
+use dataverse tpch;
+
+create type RegionType as closed {
+  r_regionkey: int32,
+  r_name: string,
+  r_comment: string
+}
+
+create dataset Regions_group_no_agg(RegionType) 
+  primary key r_regionkey;
+

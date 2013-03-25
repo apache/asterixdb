@@ -1,0 +1,19 @@
+/*
+ * Description    : Test string-length(string) function 
+ * Expected Res   : Success
+ * Date           : 19th April 2012
+ */
+
+
+// Create internal dataset, insert string data and pass the string attribute to string-length function, and verify results.
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type TestType as {
+name:string
+}
+
+create dataset testds(TestType) primary key name;

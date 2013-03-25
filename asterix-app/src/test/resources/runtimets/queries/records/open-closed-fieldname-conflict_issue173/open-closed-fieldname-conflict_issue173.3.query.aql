@@ -1,0 +1,10 @@
+/*
+ * Description    : Tests whether a conflict between an open and closed field name are detected
+ * Expected Result: An error reporting that there is a duplicate field name "name"
+ * Author: zheilbron
+ */
+ 
+use dataverse test;
+
+for $x in dataset('testds')
+return {$x.fname: "smith", lowercase("NAME"): "john"}

@@ -1,0 +1,9 @@
+/*
+ * Description  : Create UDF to subtract two integers
+ * Expected Res : Success
+ * Date         : 4th September 2012
+ */
+
+use dataverse test;
+
+test.foo(400,200)

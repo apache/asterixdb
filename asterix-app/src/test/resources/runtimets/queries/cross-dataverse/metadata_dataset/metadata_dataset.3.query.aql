@@ -1,0 +1,6 @@
+//Query metadata dataset
+
+for $c in dataset('Metadata.Dataset')
+where $c.DataverseName='Metadata'
+return $c
+

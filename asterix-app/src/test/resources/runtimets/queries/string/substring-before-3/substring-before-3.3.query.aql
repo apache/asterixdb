@@ -1,0 +1,8 @@
+use dataverse test;
+
+let $c1 := substring-before("HEllow","")
+let $c2 := substring-before("HEllow",null)
+let $c3 := substring-before("",null)
+let $c4 := substring-before("","")
+let $c5 := substring-before(null,null)
+return {"result1": $c1, "result2": $c2, "result3": $c3, "result4": $c4, "result5": $c5}

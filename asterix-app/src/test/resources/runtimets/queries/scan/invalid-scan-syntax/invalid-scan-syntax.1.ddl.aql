@@ -1,0 +1,19 @@
+/*
+ * Description    : Tests syntax error for the changed dataset access syntax
+ * Expected Result: Syntax Error from parser
+ * Date: 			March 6th 2013
+ */
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type Employee as closed {
+id: int32,
+name: string,
+salary: int32
+}
+
+create dataset Office(Employee)
+primary key id;
+

@@ -1,0 +1,12 @@
+/* 
+ * Test case Name  : opentype-noexpand.aql
+ * Description     : verify that open type dataset can have records without open fields
+ *					 verify the bag-based fields
+ * Expected Result : Success
+ */
+
+use dataverse testdv2;
+
+for $d in dataset("testds") 
+order by $d.id
+return $d

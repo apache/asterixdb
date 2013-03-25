@@ -1,0 +1,8 @@
+/*
+* Description  : Create an external dataset that contains a tuples, the lines from a file in HDFS.
+                 Iterate over the contained tuples.
+* Expected Res : Success
+* Issue        : 245
+* Date         : 7th Jan 2013
+*/
+

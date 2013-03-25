@@ -1,0 +1,21 @@
+use dataverse test;
+
+load dataset LineItem 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset LineID 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/lineitem_0.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+
+insert into dataset LineID (
+for $l in dataset('LineItem')
+	where $l.l_orderkey<10
+	return {
+		"l_orderkey": $l.l_orderkey,
+		"l_linenumber": $l.l_linenumber,
+		"l_suppkey": $l.l_partkey
+	}
+);
+

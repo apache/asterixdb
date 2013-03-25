@@ -1,0 +1,16 @@
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type TempType as open {
+  id: int32,
+  date: date,
+  time: time,
+  datetime: datetime,
+  duration: duration
+}
+
+create external dataset Temp(TempType)
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/tempData.json"),("format"="adm"));

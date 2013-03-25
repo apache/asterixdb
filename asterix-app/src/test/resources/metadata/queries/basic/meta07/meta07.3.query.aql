@@ -1,0 +1,10 @@
+/*
+ * Description  : Verify default entries for Node dataset in Metadata dataverse
+ * Expected Res : Success
+ * Date         : Sep 17 2012
+ */
+
+// Please note this query was run on two nodes, i.e; two NCs
+
+for $l in dataset('Metadata.Node')
+return $l

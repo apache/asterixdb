@@ -1,0 +1,27 @@
+/*
+ * Testcase Name  : open-closed-16.aql  
+ * Description    : Test open type dataset (with primitives).
+ *                : Create Index on int 32 field
+ *                : Insert data into primitives and retrieve data.
+ * Success        : Yes this test should PASS!
+ * Date           : March 30th 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type Schema as open{
+id_8: int8,
+id_16: int16,
+id_32: int32,
+id_64: int64,
+fp : float,
+name: string,
+dt: date,
+tm: time,
+dt_tm: datetime,
+lat_lon: point
+}
+
+create dataset tdtst(Schema) primary key id_32; 

@@ -1,0 +1,10 @@
+use dataverse test;
+      
+for $c in dataset('Customers')
+for $o in dataset('Orders')
+let $rec := $c.lastorder
+let $ol := [$o.oid, $rec.oid, $o.cid]
+let $ul := {{$o.oid, $rec.oid, $o.cid}}
+where $c.cid = $o.cid
+order by $c.name, $o.total
+return {"cust_name":$c.name, "order_total": $o.total, "orderedlist": $ol, "unorderedlist": $ul  } 

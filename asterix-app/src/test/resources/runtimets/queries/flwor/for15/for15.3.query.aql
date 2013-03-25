@@ -1,0 +1,9 @@
+/*
+ * Description      :  Test for clause of the FLWOR expression
+ * Expected Result  :  Success
+ * Date             :  7th July 2012
+ */
+
+
+for $a in [{"name":"Rocky","age":59,"sex":"M"},[1]]
+return $a

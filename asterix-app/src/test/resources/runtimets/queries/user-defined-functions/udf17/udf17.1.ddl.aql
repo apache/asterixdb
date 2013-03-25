@@ -1,0 +1,20 @@
+/*
+ * Description  : Create UDF and invoke it from another UDF and 
+ *              : child UDF returns a string to the parent.
+ * Expected Res : Success
+ * Date         : Sep 5th 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create function test.parent(){
+test.child()
+}
+
+create function test.child() {
+"This data is from the child function"
+}
+

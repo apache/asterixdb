@@ -1,0 +1,11 @@
+/*
+ * Test case Name : cpttostr04.aql
+ * Description    : Test codepoint-to-string(codepoint) function.
+ * Success        : Yes
+ * Date           : 16th April 2012
+ */
+
+//Input = Output
+
+let $c1 := codepoint-to-string(string-to-codepoint("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"))
+return { "c1":$c1 }

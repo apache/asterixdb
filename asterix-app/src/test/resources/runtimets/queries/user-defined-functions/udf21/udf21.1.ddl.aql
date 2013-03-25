@@ -1,0 +1,15 @@
+/*
+ * Description  : Create UDF to verify if input is odd
+ * Expected Res : Success
+ * Date         : Sep 5th 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create function test.isOdd($b){
+$b%2 != 0
+}
+

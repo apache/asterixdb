@@ -1,0 +1,14 @@
+/*
+ * Description  : Create UDF that returns a heterogeneous ordered list
+ *              : invoke the UDF in the FOR expression of FLWOR
+ * Expected Res : Success
+ * Date         : Sep 5th 2012
+ * Ignored      : Not part of current tests because of Issue 200
+ */
+
+// this test resturns NPE:Issue 166
+
+use dataverse test;
+
+for $a in test.OList2()
+return $a

@@ -1,0 +1,21 @@
+/*
+ * Test case name : primitive-03.aql
+ * Description    : Test primitive integer type int32 constructor function with boundary values
+ * Success        : Yes
+ * Date           : May 7th 2012
+ *
+ */
+
+//Boundary value tests int32().
+//with MIN and MAX supported values.
+
+let $a:=int32("-2147483647")
+let $b:=int32("2147483647")
+
+let $c:=int32("0")
+let $d:=int32("1")
+let $e:=int32("-1")
+let $f:=int32("1073741828")
+let $g:=int32("-1073741828")
+
+return {"$a":$a,"$b":$b,"$c":$c,"$d":$d,"$e":$e,"$f":$f,"$g":$g}

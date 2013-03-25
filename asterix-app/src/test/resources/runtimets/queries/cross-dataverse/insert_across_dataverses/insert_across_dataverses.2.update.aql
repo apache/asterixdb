@@ -1,0 +1,11 @@
+//***** Test to read from a dataset and insert into another dataset when the datasets belong to different dataverses*****//
+
+load dataset test1.Customers
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/customerData.json"),("format"="adm"));
+
+insert into dataset test2.Customers(
+for $x in dataset('test1.Customers')
+return $x
+);
+

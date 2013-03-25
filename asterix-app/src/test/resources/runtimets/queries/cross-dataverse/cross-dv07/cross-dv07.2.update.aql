@@ -1,0 +1,14 @@
+/*
+ * Description     : Use fully qualified name to create dataset, type and index
+ *                 : and to access dataset
+ * Expected Result : Success
+ * Date            : 29th August 2012
+ */
+
+use dataverse test;
+
+load dataset test.employee
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/names.adm"),("format"="delimited-text"),("delimiter"="|"));
+
+

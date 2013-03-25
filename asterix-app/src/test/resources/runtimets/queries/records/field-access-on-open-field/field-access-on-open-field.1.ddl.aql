@@ -1,0 +1,17 @@
+/*
+ * Description    : Tests whether a field access on an open field (statically of type ANY) succeeds.
+ *                  Guards against regression to issue 207.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as open {
+  id : int32,
+  name : string
+}
+
+create dataset testds(TestType) primary key id;
+

@@ -1,0 +1,17 @@
+/* 
+ * Test case Name  : opentype-closed-optional.aql
+ * Description     : verify that closed type can have optional fields
+ * Expected Result : Success
+ */
+
+drop dataverse testdv2 if exists;
+create dataverse testdv2;
+
+use dataverse testdv2;
+
+create type testtype as closed {
+  name: string?,
+  id: string
+}
+
+create dataset testds(testtype) primary key id;

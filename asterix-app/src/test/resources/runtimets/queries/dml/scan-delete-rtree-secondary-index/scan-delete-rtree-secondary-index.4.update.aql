@@ -1,0 +1,4 @@
+use dataverse test;
+
+delete $m from dataset MyData where $m.id>10;
+

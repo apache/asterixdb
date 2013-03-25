@@ -1,0 +1,19 @@
+/*
+ * Description    : Test substring2(string,position) built in function.
+ * Success        : Yes
+ * Date           : 19th April 2012
+ */
+
+// To test substring function with string data stored in an internal dataset.
+
+use dataverse test;
+
+insert into dataset testdst({"name":"UC Berkeley"});
+insert into dataset testdst({"name":"UC Irvine"});
+insert into dataset testdst({"name":"UC LA"});
+insert into dataset testdst({"name":"UC Riverside"});
+insert into dataset testdst({"name":"UC San Diego"});
+insert into dataset testdst({"name":"UC Santa Barbara"});
+insert into dataset testdst({"name":"UT Austin "});
+insert into dataset testdst({"name":"UT Dallas"});
+

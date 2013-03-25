@@ -1,0 +1,14 @@
+use dataverse test;
+
+let $c1 := time("10:50:56.200+05:00")
+let $c2 := time("10:50:56.200-10:15")
+let $c3 := time("10:50:56")
+let $c4 := time("10:50:56.200Z")
+let $c5 := time("23:59:59.999-13:30")
+let $c6 := time("00:00:00.000+14:45")
+let $c7 := time("12:59:00.019-01:00")
+let $c8 := time("12:59:00.01-01:00")
+let $c9 := time("12:59:00.019-01:00")
+let $c10 := time("12590001-0100")
+let $c11 := time("125900019+0100")
+return {"time1": $c1, "time2": $c2, "time3": $c3, "time4": $c4, "time5": $c5, "time6": $c6, "time7": $c7, "time8": $c8, "time9": $c9, "time10": $c10, "time11": $c11}

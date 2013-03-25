@@ -1,0 +1,19 @@
+/*
+ * Testcase Name  : substr05.aql
+ * Description    : Test substring2(string,position,position) built in function.
+ * Success        : Yes
+ * Date           : 19th April 2012
+ */
+
+// To test substring2 function with string data stored in an internal dataset.
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type TestType as open {
+name : string
+}
+
+create dataset testdst(TestType) primary key name;

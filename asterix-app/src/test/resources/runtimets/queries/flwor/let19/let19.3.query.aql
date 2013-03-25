@@ -1,0 +1,11 @@
+/*
+ * Description     :  Test let clause
+ * Expected Result :  Success
+ * Date            :  6th July 2012 
+ */
+
+
+// bind and return bag of data
+
+let $a:={{"John Doe",45,"HR",60000,"Separation"}}
+return $a

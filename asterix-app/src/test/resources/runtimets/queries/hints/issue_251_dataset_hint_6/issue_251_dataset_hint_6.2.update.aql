@@ -1,0 +1,7 @@
+/*
+* Description  : Create an external dataset that contains a tuples, the lines from a (*sequence*) file in HDFS.
+                 Provide hint(cardinality) when creating the dataset.
+                 Perform a word-count over the data in the dataset.
+* Expected Res : Success
+* Date         : 30th Jan 2013
+*/

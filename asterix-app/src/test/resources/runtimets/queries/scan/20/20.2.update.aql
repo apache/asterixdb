@@ -1,0 +1,9 @@
+/* scan and print an ADM file as a dataset of closed records */
+
+use dataverse test;
+
+// drop dataset DBLPadm;
+load dataset DBLPadm 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
+(("path"="nc1://data/dblp-small/dblp-small.adm"),("format"="adm"));
+

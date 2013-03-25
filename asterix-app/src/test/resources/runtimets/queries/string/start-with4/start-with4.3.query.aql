@@ -1,0 +1,10 @@
+use dataverse test;
+
+let $c1 := start-with("start","")
+let $c2 := start-with("start",null)
+let $c3 := start-with(null,null)
+let $c4 := start-with("",null)
+let $c5 := start-with("","")
+let $c6 := start-with(null,"")
+
+return {"f1": $c1, "f2": $c2, "f3": $c3, "f4": $c4, "f5": $c5, "f6": $c6}

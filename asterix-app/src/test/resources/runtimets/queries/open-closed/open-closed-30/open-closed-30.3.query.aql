@@ -1,0 +1,15 @@
+/*
+ * Test case Name : open-closed-30.aql
+ * Description    : Query undeclared data using every in the WHERE clause
+ *                : where every $h in $d.hobbies satisfies $h='hiking'
+ * Success        : Yes
+ * Date           : 31st May 2012
+ */
+
+use dataverse testdv2;
+
+for $d in dataset('testds01')
+where every $h in $d.hobbies satisfies $h='hiking' 
+order by $d.id
+return $d.hobbies
+

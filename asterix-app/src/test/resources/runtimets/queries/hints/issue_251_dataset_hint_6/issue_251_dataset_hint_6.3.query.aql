@@ -1,0 +1,16 @@
+/*
+* Description  : Create an external dataset that contains a tuples, the lines from a (*sequence*) file in HDFS.
+                 Provide hint(cardinality) when creating the dataset.
+                 Perform a word-count over the data in the dataset.
+* Expected Res : Success
+* Date         : 30th Jan 2013
+*/
+
+use dataverse test;
+
+for $line in dataset('TextDataset')
+let $tokens := word-tokens($line.content)
+for $token in $tokens
+group by $tok := $token with $token
+order by $tok
+return { "word": $tok, "count": count($token) }

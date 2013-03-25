@@ -1,0 +1,13 @@
+/*
+ * Test case Name : cpttostr01.aql
+ * Description    : Test codepoint-to-string(codepoint) function.
+ *                : Pass the codepoints which are in the internal dataset to the function. 
+ * Success        : Yes
+ * Date           : 16th April 2012
+ */
+
+
+use dataverse test;
+
+for $l in dataset('testds')
+return codepoint-to-string($l.cpt)

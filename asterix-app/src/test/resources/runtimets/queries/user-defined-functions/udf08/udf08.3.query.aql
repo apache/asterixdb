@@ -1,0 +1,10 @@
+/*
+ * Description  : Pass a sting as input to UDF
+ * Expected Res : Success
+ * Date         : 4th September 2012
+ */
+
+use dataverse test;
+
+let $a:="This is a test string"
+return test.echo($a)

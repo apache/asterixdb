@@ -1,0 +1,30 @@
+/*
+ * Description     : Insert open data into internal dataset and query the open data
+ * Expected Result : Success
+ * Date            : 23rd October 2012
+ * Notes           : This test was written to cover the scenario which is used in the proposal.
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type TweetMessageType as open {
+tweetid : string,
+user : {
+         screen-name: string,
+         lang: string,
+         friends_count: int32,
+         statuses_count: int32,
+         name: string,
+         followers_count: int32
+},    sender-location: point?,
+      send-time: datetime,
+      referred-topics: {{ string }},
+      message-text: string
+};
+
+create dataset TweetMessages(TweetMessageType)
+primary key tweetid;
+

@@ -1,0 +1,21 @@
+/*
+ * Description     : Insert from source dataset into target dataset
+ * Expected Result : Success
+ * Date            : 25th July 2012
+ * Issue #         : Issue 76
+ */
+
+use dataverse testdv2;
+
+insert into dataset testds01 ({ "id": "001" });
+insert into dataset testds01 ({ "id": "002", "name": "John Doe" });
+
+insert into dataset testds02 ({ "id": "003" });
+insert into dataset testds02 ({ "id": "004" });
+insert into dataset testds02 ({ "id": "005" });
+
+insert into dataset testds01(
+for $d in dataset("testds02")
+return $d
+);
+

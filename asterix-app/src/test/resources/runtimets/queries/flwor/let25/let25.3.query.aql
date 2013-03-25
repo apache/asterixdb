@@ -1,0 +1,9 @@
+/*
+ * Description     : Test let clause
+ * Expected Result : Success
+ * Date            : 23rd July 2012
+ */
+
+let $a := true or false
+let $b := (true or false) and not(false)
+return {"a":$a,"b":$b}

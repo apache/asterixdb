@@ -1,0 +1,35 @@
+/*
+ * Description  : Test various syntax for dataset access
+ *              : Using parentheses for dataset access is now optional
+ *              : New syntax can use fully qualified names to access datasets.
+ * Expected Res : Success
+ * Date         : 6th March 2013
+ */
+
+drop dataverse student if exists;
+drop dataverse teacher if exists;
+
+create dataverse student;
+create dataverse teacher;
+
+create type student.stdType as open {
+id : int32,
+name : string,
+age : int32,
+sex : string,
+dept : string
+}
+
+create type teacher.tchrType as open {
+id : int32,
+name : string,
+age : int32,
+sex : string,
+dept : string
+}
+
+create dataset student.ugdstd(stdType) primary key id;
+create dataset student.gdstd(stdType) primary key id;
+create dataset teacher.prof(tchrType) primary key id;
+create dataset teacher.pstdoc(tchrType) primary key id;
+

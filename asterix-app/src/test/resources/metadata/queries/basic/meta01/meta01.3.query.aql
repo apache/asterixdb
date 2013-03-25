@@ -1,0 +1,10 @@
+/*
+ * Description  : Create dataverse & query Metadata dataset Dataverse to verify.
+ * Expected Res : Success
+ * Date         : 15 Sep 2012
+ */
+
+
+for $l in dataset('Metadata.Dataverse')
+return $l
+

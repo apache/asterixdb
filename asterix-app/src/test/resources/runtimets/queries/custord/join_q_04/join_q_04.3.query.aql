@@ -1,0 +1,7 @@
+use dataverse test;
+
+for $c in dataset('Customers')
+return {"order_id" :
+for $o in dataset('Orders')
+where $c.cid = $o.cid
+return $o.oid } 

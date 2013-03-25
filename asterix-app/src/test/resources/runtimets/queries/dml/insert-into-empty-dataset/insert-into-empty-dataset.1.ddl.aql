@@ -1,0 +1,21 @@
+/* 
+ * Test case Name  : insert-into-empty-dataset.aql
+ * Description     : Check that we can insert into an empty dataset 
+ * Expected Result : Success
+ * Date            : May 2 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type LineIDType as closed {
+  l_orderkey: int32, 
+  l_linenumber: int32, 
+  l_suppkey: int32
+}
+
+create dataset LineID(LineIDType)
+  primary key l_orderkey, l_linenumber;
+

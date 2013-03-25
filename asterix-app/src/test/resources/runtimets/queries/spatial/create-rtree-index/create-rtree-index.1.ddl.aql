@@ -1,0 +1,25 @@
+/*
+ * Description    : Create r-tree indexes for all spatial data types.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type SpatialType as open {
+  id: int32,
+  point: point,
+  line1: line,
+  poly1: polygon,
+  rec: rectangle,
+  circle: circle
+}
+
+create dataset MyData(SpatialType) primary key id;
+create index rtree_index1 on MyData(point) type rtree;
+create index rtree_index2 on MyData(line1) type rtree;
+create index rtree_index3 on MyData(poly1) type rtree;
+create index rtree_index5 on MyData(rec) type rtree;
+create index rtree_index4 on MyData(circle) type rtree;
+

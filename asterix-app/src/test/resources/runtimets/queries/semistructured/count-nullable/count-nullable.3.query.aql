@@ -1,0 +1,6 @@
+use dataverse test;
+
+for $c in dataset('Customers')
+group by $age := $c.age with $c
+order by $age
+return { "custage": $age, "count": count($c) }

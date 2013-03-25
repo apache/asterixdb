@@ -1,0 +1,7 @@
+/*
+ * Description  : Create UDF and invoke in the WHERE clause of FLWOR expression
+ * Expected Res : Success
+ * Date         : Sep 5th 2012
+ */
+
+

@@ -1,0 +1,6 @@
+use dataverse test;
+
+avg( 
+ for $x in [int8("1"),int8("2"), int8("3")] 
+ return $x
+)

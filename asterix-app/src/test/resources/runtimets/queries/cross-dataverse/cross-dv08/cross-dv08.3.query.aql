@@ -1,0 +1,13 @@
+/*
+ * Description  : Create two UDFs in two different dataverses and create datasets in tose dvs
+ *              : access the datasets from the UDF defined in the other dataverse and invoke one of the UDF
+ * Expected Res : Success
+ * Date         : Sep 7th 2012
+ */
+
+// dv1 - udf1 - dataset1
+// dv2 - udf2 - dataset2
+
+let $a := test.f1()
+let $b := fest.f1()
+return { "a" : $a, "b" : $b }

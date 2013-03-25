@@ -1,0 +1,8 @@
+//***** Test to read from a dataset and insert into another dataset when the datasets belong to different dataverses*****//
+
+use dataverse test2;
+
+for $c in dataset('test2.Customers')
+order by $c.cid
+return $c
+

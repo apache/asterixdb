@@ -1,0 +1,8 @@
+/*
+ * Test case Name : toLowerCas04.aql
+ * Description    : Test lowercase(string) function 
+ *                : Convert all upper case english alphabets A-Z to lower case a-z
+ * Success        : Yes
+ * Date           : 19th April 2012
+ */
+

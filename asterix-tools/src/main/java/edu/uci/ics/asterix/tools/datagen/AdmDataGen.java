@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Random;
 
 import edu.uci.ics.asterix.aql.base.Statement;
-import edu.uci.ics.asterix.aql.expression.Query;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
 import edu.uci.ics.asterix.common.annotations.AutoDataGen;

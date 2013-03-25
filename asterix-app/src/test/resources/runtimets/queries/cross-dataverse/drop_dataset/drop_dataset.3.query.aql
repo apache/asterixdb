@@ -1,0 +1,3 @@
+for $x in dataset('Metadata.Dataset')
+where $x.DataverseName='test' and $x.DatasetName='Customers'
+return $x

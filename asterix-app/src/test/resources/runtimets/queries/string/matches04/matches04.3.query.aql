@@ -1,0 +1,15 @@
+/*
+ * Testcase Name  :  matches04.aql
+ * Description    :  Positive tests
+ * Success        :  Yes (tests to check for patterns using regular expressions)
+ * Date           :  20th April 2012
+ */
+
+for $a in [matches("UCI UCI UCI UCI UCI UCI","[UCI{6}]"),
+matches("UCI UCI UCI UCI UCI UCI","[UCI{3,6}]"),
+matches("UCI UCI UCI UCI UCI UCI","[UCI{7}]"),
+matches("UCI UCI UCI UCI UCI UCI","[UCI{1}]"),
+matches("UCI UCI UCI","[UCI+]"),
+matches("false","[true|false]"),
+matches("YX","[XY]")]
+return $a

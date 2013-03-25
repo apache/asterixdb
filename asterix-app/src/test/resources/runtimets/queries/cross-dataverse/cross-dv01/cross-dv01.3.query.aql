@@ -1,0 +1,14 @@
+/*
+ * Description  : Test cross dataverse functionality
+ *              : use dataverse statement is now optional.
+ *              : Use fully qualified names to access datasets.
+ * Expected Res : Success
+ * Date         : 29th Aug 2012
+ */
+
+
+for $s in dataset('student.ugdstd')
+for $p in dataset('teacher.prof')
+for $a in dataset('student.gdstd')
+for $b in dataset('teacher.pstdoc')
+return {"ug-student":$s,"prof":$p,"grd-student":$a,"postdoc":$b}

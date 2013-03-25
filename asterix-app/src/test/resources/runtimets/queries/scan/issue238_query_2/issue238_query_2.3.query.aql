@@ -1,0 +1,15 @@
+/*
+* Description  : Create an  dataset and load it from two file splits 
+                 Include newline between the elements in the comma-separated list of file paths.
+* Expected Res : Success
+* Issue        : 238
+* Date         : 7th Jan 2013
+*/
+
+/* scan and print an ADM file as a dataset of closed records */
+
+use dataverse test;
+
+for $paper in dataset('DBLPadm')
+order by $paper.id
+return $paper

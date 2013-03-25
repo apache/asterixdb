@@ -1,0 +1,8 @@
+use dataverse test;
+
+set simfunction 'jaccard';
+set simthreshold '0.5f';
+
+for $paper in dataset('DBLP')
+where word-tokens($paper.title) ~= word-tokens("Transactions for Cooperative Environments")
+return $paper

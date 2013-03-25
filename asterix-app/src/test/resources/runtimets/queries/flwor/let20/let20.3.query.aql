@@ -1,0 +1,10 @@
+/*
+ * Description     :  Test let clause
+ * Expected Result :  Success
+ * Date            :  6th July 2012 
+ */
+
+// An ordered list of un ordered lists, records and ordered list.
+
+let $a:=[{{"John Doe",45,"HR",60000,"Separation"}},{"name":"Roger Sanders","age":50,"dept":"DB2-Books","designatin":"Author"},["DB2 for Z/OS","DB2 for LUW","DB2 9 Application Development","DB2 9 DBA","DB2 for Dummies"]]
+return $a

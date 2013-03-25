@@ -1,0 +1,9 @@
+/*
+ * Description    : Test string-concat([string]) function.
+ * Success        : Yes
+ * Date           : 16th April 2012
+ */
+
+
+for $a in [string-concat([codepoint-to-string(string-to-codepoint("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")),codepoint-to-string(string-to-codepoint("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")),codepoint-to-string(string-to-codepoint("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"))]),string-concat([" ","a","b","  ","c","d","e","f","g","p","o","q","r","s","t"," "]),string-concat(["This is a test","and all tests must pass","and life is good..."])]
+return $a

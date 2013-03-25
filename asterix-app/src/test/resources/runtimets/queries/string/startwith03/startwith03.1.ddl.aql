@@ -1,0 +1,20 @@
+/*
+ * Testcase Name : startwith02.aql
+ * Description   : Positive tests
+ * Success       : Yes
+ * Date          : 19th April 2012
+ */
+
+// Create internal dataset, insert string data into string field and pass the string field as first input to start-with function
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type TestType as {
+name:string
+}
+
+create dataset testds(TestType) primary key name;
+

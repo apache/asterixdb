@@ -1,0 +1,21 @@
+/*
+ * Test case name : primitive-02.aql
+ * Description    : Test primitive integer type int16 constructor function with boundary values
+ * Success        : Yes
+ * Date           : May 7th 2012
+ *
+ */
+
+//Boundary value tests int16().
+//with MIN and MAX supported values.
+
+let $a:=int16("-32767")
+let $b:=int16("32767")
+let $c:=int16("0")
+let $d:=int16("1")
+let $e:=int16("-1")
+let $f:=int16("16383")
+let $g:=int16("-16383")
+
+return {"$a":$a,"$b":$b,"$c":$c,"$d":$d,"$e":$e,"$f":$f,"$g":$g}
+

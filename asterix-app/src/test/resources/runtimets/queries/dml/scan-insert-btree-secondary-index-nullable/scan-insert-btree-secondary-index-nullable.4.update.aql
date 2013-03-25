@@ -1,0 +1,16 @@
+use dataverse test;
+
+insert into dataset CustomersMini
+(
+	for $c in dataset('Customers')
+	where $c.cid < 200	
+	return {
+	  "cid": $c.cid,
+  	  "name": $c.name,
+  	  "age": $c.age,
+  	  "address": $c.address,
+  	  "interests": $c.interests,
+  	  "children": $c.children
+	}	
+);
+

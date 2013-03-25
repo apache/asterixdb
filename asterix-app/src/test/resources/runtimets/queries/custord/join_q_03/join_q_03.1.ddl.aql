@@ -1,0 +1,42 @@
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+create type AddressType as open {
+  number: int32, 
+  street: string,
+  city: string
+}
+
+create type CustomerType as closed {
+  cid: int32, 
+  name: string,
+  cashBack: int32,
+  age: int32?,
+  address: AddressType?,
+  lastorder: {
+    oid: int32,
+    total: float
+  }
+}
+
+
+create type OrderType as open {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float,
+  items: [int32]
+}
+
+create external dataset Customers(CustomerType)
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/customerData.json"),("format"="adm"));
+        
+create external dataset Orders(OrderType)
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/orderData.json"),("format"="adm"));

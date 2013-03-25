@@ -1,0 +1,5 @@
+/* scan and print 2 ADM file splits as an external dataset of closed records */
+use dataverse test;
+
+for $paper in dataset('DBLPsplits')
+return $paper
