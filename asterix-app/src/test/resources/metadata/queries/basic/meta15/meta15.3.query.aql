@@ -1,0 +1,9 @@
+/*
+ * Description  : Query Metadata dataset Adapter to verify to contents.
+ * Expected Res : Success
+ * Date         : 25 Nov 2012
+ */
+
+for $l in dataset('Metadata.DatasourceAdapter')
+return $l
+

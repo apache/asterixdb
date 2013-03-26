@@ -1,0 +1,12 @@
+/*
+ * Description  : Create functions and drop that function and query metadata 
+ *              : to verify entries in Function dataset for the dropped UDF.
+ * Expected Res : Success
+ * Date         : Sep 17 2012
+ */
+
+count(
+for $l in dataset('Metadata.Function')
+where $l.DataverseName='test' and $l.Name='foo' and $l.Arity=0
+return $l);
+

@@ -1,0 +1,8 @@
+use dataverse test;
+
+let $c := global-avg(
+ for $x in dataset('Numeric') 
+ return { "sum": $x.doubleField, "count": $x.int32Field }   
+)
+return {"global-average": $c}
+

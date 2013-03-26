@@ -1,0 +1,14 @@
+/*
+ * Testcase Name  : open-closed-28.aql
+ * Description    : Query for undeclared data from an open type internal dataset
+ *                : use the every keyword in the where clause
+ * Status         : Yes
+ * Date           : 31st May 2012
+ */
+
+use dataverse testdv2;
+
+for $d in dataset('testds01')
+where every $h in $d.hobbies satisfies $h='hiking' 
+order by $d.id
+return $d

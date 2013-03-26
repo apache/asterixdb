@@ -1,0 +1,12 @@
+use dataverse test;
+
+count( 
+ for $x in [1, 2, 3] 
+ return $x
+)
+
+
+
+
+
+

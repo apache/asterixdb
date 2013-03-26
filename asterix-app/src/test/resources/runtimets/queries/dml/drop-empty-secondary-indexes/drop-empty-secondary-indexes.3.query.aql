@@ -1,0 +1,12 @@
+/*
+ * Description     : Drop empty secondary index.
+ * Expected Result : Success
+ * Date            : 8th Feb 2013
+ *
+ */
+
+use dataverse test;
+
+for $l in dataset('Metadata.Index')
+where $l.IsPrimary=false
+return $l;

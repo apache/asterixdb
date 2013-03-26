@@ -1,0 +1,31 @@
+use dataverse test;
+
+let $a := [ ]
+let $b := ["abc", "bcd", "cde", "def", "efg"]
+let $c := ["efg", "abc", "cde", "def", "hij", "ijk", "bcd"]
+let $d := ["abc", "ijk", "bcd", "efg", "fgh", "ghi", "def", "hij", "jkl", "cde"]
+let $e := ["Efg", "aBc", "cdE", "DEf", "hIJ", "IjK", "BCD"]
+let $f := ["abc", "ijk", "bcd", "efg", "fgh", "ghi", "def", "hij", "jkl", "cde"]
+let $g := ["cde", "zza", "zzb", "zzc", "zwz", "za", "zbe", "zer", "zba", "zfe", "wab"]
+let $h := ["abc", "ijk", "bcd", "efg", "fgh", "ghi", "def", "hij", "jkl", "cde"]
+let $results :=
+[ 
+  similarity-jaccard-check($a, $b, 0.0f),
+  similarity-jaccard-check($b, $a, 0.0f),
+  similarity-jaccard-check($a, $b, 0.1f),
+  similarity-jaccard-check($b, $a, 0.1f),
+  similarity-jaccard-check($c, $d, 0.6f),
+  similarity-jaccard-check($d, $c, 0.6f),
+  similarity-jaccard-check($c, $d, 0.8f),
+  similarity-jaccard-check($d, $c, 0.8f),
+  similarity-jaccard-check($e, $f, 0.6f),
+  similarity-jaccard-check($f, $e, 0.6f),
+  similarity-jaccard-check($e, $f, 0.8f),
+  similarity-jaccard-check($f, $e, 0.8f),
+  similarity-jaccard-check($g, $h, 0.05f),
+  similarity-jaccard-check($h, $g, 0.05f),
+  similarity-jaccard-check($g, $h, 0.8f),
+  similarity-jaccard-check($h, $g, 0.8f)  
+]
+for $i in $results
+return $i

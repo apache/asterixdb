@@ -1,0 +1,6 @@
+use dataverse test;
+
+let $txt := "Jürgen S. Generic's Car"
+let $tokens := gram-tokens($txt, 3, true)
+for $token in $tokens
+return $token

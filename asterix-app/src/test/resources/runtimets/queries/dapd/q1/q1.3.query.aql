@@ -1,0 +1,6 @@
+use dataverse test;
+
+for $user in dataset('User')
+where some $i in $user.interests
+  satisfies $i = "movies"
+return {"name": $user.name}

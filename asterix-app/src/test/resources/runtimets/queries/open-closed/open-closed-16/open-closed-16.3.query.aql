@@ -1,0 +1,13 @@
+/*
+ * Testcase Name  : open-closed-16.aql  
+ * Description    : Test open type dataset (with primitives).
+ *                : Create Index on int 32 field
+ *                : Insert data into primitives and retrieve data.
+ * Success        : Yes this test should PASS!
+ * Date           : March 30th 2012
+ */
+use dataverse test;
+
+for $l in dataset('tdtst')
+return $l
+

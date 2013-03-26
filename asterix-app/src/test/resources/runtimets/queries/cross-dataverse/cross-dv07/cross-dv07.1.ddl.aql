@@ -1,0 +1,21 @@
+/*
+ * Description     : Use fully qualified name to create dataset, type and index
+ *                 : and to access dataset
+ * Expected Result : Success
+ * Date            : 29th August 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+create type test.Emp as closed {
+id:int32,
+fname:string,
+lname:string,
+age:int32,
+dept:string
+}
+
+create dataset test.employee(Emp) primary key id;
+
+create index idx_employee_f_l_name on test.employee(fname,lname);

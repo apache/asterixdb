@@ -1,0 +1,9 @@
+/*
+ * Description      :  Test return clause of the FLWOR expression
+ *                  :  Return an un-ordered list
+ * Expected Result  :  Success
+ * Date             :  26th July 2012
+ */
+
+let $b := 12345
+return {{"Welcome","UCI","Anteater","DBH","ICS"}}

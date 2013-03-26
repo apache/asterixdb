@@ -1,0 +1,18 @@
+/*
+ * Testcase Name : endwith03.aql
+ * Description   : Positive tests
+ * Success       : Yes
+ * Date          : 20th April 2012
+ */
+
+// create internal dataset, insert string data into string field and pass the string filed as input to end-with function
+
+use dataverse test;
+
+insert into dataset testds({"name":"Jim Jones"});
+insert into dataset testds({"name":"Ravi Kumar"});
+insert into dataset testds({"name":"Bruce Li"});
+insert into dataset testds({"name":"Marian Jones"});
+insert into dataset testds({"name":"Phil Jones"});
+insert into dataset testds({"name":"I am Jones"});
+

@@ -1,0 +1,5 @@
+use dataverse test;
+
+for $e in dataset('Emp')
+let $m := [{"EmpName": $e.name, "parent_interest_1": $e.interests[?], "child1Name": $e.children[?], "child2Name": $e.children[1]}]
+return $m 

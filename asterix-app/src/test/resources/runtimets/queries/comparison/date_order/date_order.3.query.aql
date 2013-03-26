@@ -1,0 +1,12 @@
+use dataverse test;
+
+let $d1 := date("2049-04-23")
+let $d2 := date("2012-02-29")
+let $d3 := date("2021-03-01")
+let $d4 := date("1362-02-28")
+let $d5 := date("1600-02-29")
+let $d6 := date("-0500-03-21")
+
+for $d in [$d1, $d2, $d3, $d4, $d5, $d6]
+order by $d
+return $d

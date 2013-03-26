@@ -1,0 +1,21 @@
+/*
+* Description  : Create an external dataset that contains a tuples, the lines from a large (35kb) text file in HDFS.
+                 The input file is sufficiently large to guarantee that # of bytes > than internal buffer of size 8192.
+                 This causes a record to span across the buffer size boundaries. 
+                 Perform a word-count over the data in the dataset.
+* Expected Res : Success
+* Date         : 7th Jan 2013
+*/
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type LineType as closed {
+ content: string
+};
+
+create external dataset TextDataset(LineType)
+using hdfs
+(("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/large_text"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="."));
+

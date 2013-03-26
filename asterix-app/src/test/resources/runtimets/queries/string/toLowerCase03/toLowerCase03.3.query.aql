@@ -1,0 +1,16 @@
+/*
+ * Test case Name : toLowerCas03.aql
+ * Description    : Test lowercase(string) function 
+ *                : This test case covers Positive tests
+ * Success        : Yes
+ * Date           : 19th April 2012
+ */
+
+
+// Create internal dataset, insert string data and pass the string attribute to lowercase function, and verify results.
+
+use dataverse test;
+
+for $l in dataset('testds')
+order by $l.name
+return lowercase($l.name)

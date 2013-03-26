@@ -1,0 +1,30 @@
+/* 
+ * Test case Name  : opentype-c2o.aql
+ * Description     : read data from a closed type dataset into a open type dataset and verify if
+ *					records can be casted to the target open type 
+ * Expected Result : Success
+ */
+
+drop dataverse testdv2 if exists;
+create dataverse testdv2;
+
+use dataverse testdv2;
+
+create type testtype as closed {
+  id: string,
+  name: string,
+  hobby: {{string}}?
+}
+
+/*
+* name and hobby from the closed dataset will
+* become open fields, and hobby can be null
+*/
+create type testtype2 as open {
+  id: string
+}
+
+create dataset testds(testtype) primary key id;
+
+create dataset testds2(testtype2) primary key id;
+

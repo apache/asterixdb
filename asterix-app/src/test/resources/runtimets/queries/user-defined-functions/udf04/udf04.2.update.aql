@@ -1,0 +1,6 @@
+/*
+ * Description  : Pass as input an ordered list of Records as input to UDF and return the list.
+ * Expected Res : Success
+ * Date         : 4th September 2012
+ */
+

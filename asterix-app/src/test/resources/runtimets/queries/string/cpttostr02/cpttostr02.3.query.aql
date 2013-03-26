@@ -1,0 +1,15 @@
+/*
+ * Test case Name : cpttostr02.aql
+ * Description    : Test codepoint-to-string(codepoint) function.
+ *                : Inputs are codepoint values for lowecase, uppercase and special characters
+ * Success        : Yes
+ * Date           : 16th April 2012
+ */
+
+let $c1 := codepoint-to-string([0065,0066,0067,0068,0069,0070,0071,0072,0073,0074,0075,0076,0077,0078,0079,0080,0081,0082,0083,0084,0085,0086,0087,0088,0089,0090]) 
+
+let $c2 := codepoint-to-string([0097,0098,0099,0100,0101,0102,0103,0104,0105,0106,0107,0108,0109,0110,0111,0112,0113,0114,0115,0116,0117,0118,0119,0120,0121,0122]) 
+
+let $c3 := codepoint-to-string([0033,0034,0035,0036,0037,0038,0039,0040,0041,0042,0043,0044,0045,0046,0047,0048,0049,0050,0051,0052,0053,0054,0055,0063,0064]) 
+
+return {"c1":$c1,"c2":$c2,"c3":$c3}

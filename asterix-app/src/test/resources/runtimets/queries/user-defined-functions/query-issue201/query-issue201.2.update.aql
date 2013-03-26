@@ -1,0 +1,7 @@
+/*
+ * Description  : This test case is to verify the fix for issue201
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=201
+ * Expected Res : Success
+ * Date         : 26th November 2012
+ */
+

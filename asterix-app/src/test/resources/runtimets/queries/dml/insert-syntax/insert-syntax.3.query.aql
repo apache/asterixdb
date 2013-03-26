@@ -1,0 +1,5 @@
+use dataverse testdv2;
+
+for $d in dataset("testds")
+order by $d.id
+return $d

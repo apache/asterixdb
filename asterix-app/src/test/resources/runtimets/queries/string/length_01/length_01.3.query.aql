@@ -1,0 +1,6 @@
+use dataverse test;
+
+let $c1 := string-length("hellow")
+let $c2 := string-length("")
+let $c3 := string-length(null)
+return {"result1": $c1, "result2": $c2, "result3": $c3}

@@ -1,0 +1,20 @@
+/*
+ * Description  : Test to cover =>  create type - drop type - recreate that dropped type 
+ * Expected Res : Success
+ * Date         : 13 Sep 2012
+ * Issue        : 188
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type footype as open {
+bar : int32?
+}
+
+drop type footype;
+
+create type footype as open {
+bar : int32?
+}

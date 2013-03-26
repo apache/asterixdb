@@ -1,0 +1,10 @@
+/*
+ * Description  : Pass an ordered list as input to UDF and return the zeroth element of that list.
+ * Expected Res : Success
+ * Date         : 4th September 2012
+ */
+
+use dataverse test;
+
+for $a in [[1,2],[3,4]]
+return test.getFirst($a)

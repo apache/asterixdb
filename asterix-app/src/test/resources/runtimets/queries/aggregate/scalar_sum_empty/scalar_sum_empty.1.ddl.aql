@@ -1,0 +1,11 @@
+/*
+ * Description    : Tests the scalar version of sum with an empty list.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+sum([ ])

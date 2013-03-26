@@ -1,0 +1,7 @@
+/*
+ * Description  : Test variant syntax for dataset access (scan)
+ *              : using parentheses and quotes is optional
+ * Expected Res : Success
+ * Date         : 6th March 2013
+ */
+

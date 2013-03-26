@@ -1,0 +1,5 @@
+use dataverse test;
+
+create index idx_LineID_partkey on LineID(l_linenumber);
+create index idx_LineID_suppkey on LineID(l_suppkey);
+

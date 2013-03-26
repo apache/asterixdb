@@ -1,0 +1,14 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type MyRecord as open {
+  id: int32,
+  point: point,
+  kwds: string
+}
+
+create external dataset MyData(MyRecord)
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/spatial/spatialData.json"),("format"="adm"));
+ 

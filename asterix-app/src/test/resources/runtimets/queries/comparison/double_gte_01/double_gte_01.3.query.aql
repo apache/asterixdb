@@ -1,0 +1,5 @@
+use dataverse test;
+
+for $i in [0.8, 0.8999999761581421, 0.9, 0.901]
+where $i >= 0.9
+return $i

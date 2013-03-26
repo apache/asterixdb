@@ -1,0 +1,22 @@
+/*
+ * Description     : Insert open data into internal dataset and query the open data
+ * Expected Result : Success
+ * Date            : 23rd October 2012
+ * Notes           : This test was written to cover the scenario which is used in the proposal.
+ *                 : this is another variant of the test in query-proposal.aql
+ */
+
+use dataverse test;
+
+for $tweet in dataset('TweetMessages')
+    where some $reftopic in $tweet.referred-topics
+        satisfies contains($reftopic, 'verizon')
+            for $reftopic in $tweet.referred-topics
+            group by $topic := $reftopic with $tweet
+            order by $topic 
+            return 
+            {
+                "topic": $topic,
+                "count": count($tweet)
+            }
+

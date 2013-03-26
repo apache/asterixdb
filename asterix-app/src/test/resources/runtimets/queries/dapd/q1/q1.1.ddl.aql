@@ -1,0 +1,30 @@
+drop dataverse test if exists;
+  
+create dataverse test;
+use dataverse test;
+
+create type AddressType as closed {
+  street: string,
+  city: string,
+  zip: string,
+  latlong: point
+}
+
+create type UserType as open {
+  name: string,
+  email: string,
+  interests: {{string}},
+  address: AddressType,
+  member_of: {{
+    {
+      sig_id: int32,
+      chapter_name: string,
+      member_since: date
+    }
+  }}
+}
+
+create external dataset User(UserType) 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/events/tiny/user.adm"),("format"="adm"));
+

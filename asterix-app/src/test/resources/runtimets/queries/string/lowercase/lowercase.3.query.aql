@@ -1,0 +1,6 @@
+use dataverse test;
+
+let $c1 := lowercase("HEllow")
+let $c2 := lowercase("")
+let $c3 := lowercase(null)
+return {"result1": $c1, "result2": $c2, "result3": $c3}

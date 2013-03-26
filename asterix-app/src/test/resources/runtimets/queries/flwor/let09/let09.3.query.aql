@@ -1,0 +1,9 @@
+/*
+ * Description     :  Test let clause
+ * Expected Result :  Success
+ * Date            :  6th July 2012 
+ */
+
+for $a in range(1,100)
+where $a%5=0
+return $a

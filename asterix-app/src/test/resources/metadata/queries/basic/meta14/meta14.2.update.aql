@@ -1,0 +1,6 @@
+/*
+ * Description      :  Test that a synthetically created content type is dropped with its parent type. 
+ *                     Guards against regression to issue 188.
+ * Expected Result  :  Success
+ */
+

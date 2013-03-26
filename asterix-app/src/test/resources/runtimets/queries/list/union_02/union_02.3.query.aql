@@ -1,0 +1,16 @@
+use dataverse test;
+
+for $z in (
+(
+for $x in {{3,2}}
+return $x
+)
+union
+(
+for $y in {{2,1}}
+return $y
+)
+)
+order by $z
+return $z
+

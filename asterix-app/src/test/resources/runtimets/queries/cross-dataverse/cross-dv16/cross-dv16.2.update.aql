@@ -1,0 +1,7 @@
+/*
+ * Description  : Detect Recursion in UDFs
+ * Expected Res : Failure
+ * Date         : 30 Aug 2012
+ * Ignored      : Not part of test build, as its a negative test case that thrwos an exception
+ */
+

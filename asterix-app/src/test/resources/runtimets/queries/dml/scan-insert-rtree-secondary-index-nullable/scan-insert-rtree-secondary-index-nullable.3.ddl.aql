@@ -1,0 +1,7 @@
+use dataverse test;
+
+create dataset MyMiniData(MyMiniRecord)
+  primary key id;
+
+create index rtree_index_point on MyMiniData(point) type rtree;
+

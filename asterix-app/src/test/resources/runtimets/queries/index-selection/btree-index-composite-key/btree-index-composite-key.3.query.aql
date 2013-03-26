@@ -1,0 +1,15 @@
+/*
+ * Description     : Test that BTree index is used in query plan
+ *                 : define the BTree index on a composite key (fname,lanme)
+ *                 : predicate => where $l.fname="Julio" and $l.lname="Isa"
+ * Expected Result : Success
+ * Issue           : Issue 162
+ * Date            : 7th August 2012
+ */
+
+use dataverse test;
+
+for $l in dataset('employee')
+where $l.fname="Julio" and $l.lname="Isa"
+return $l
+

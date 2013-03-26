@@ -1,0 +1,17 @@
+/*
+ * Test case Name : heterog-list01.aql
+ * Description    : To test insertion of an array of objects into internal dataset. 
+ *                : Heterogenous list construction.
+ * Success        : Yes
+ * Date           : 14th April 2012
+ */
+
+use dataverse test;
+
+insert into dataset T1({
+"id":1234,
+"description":"donut",
+"name":"Cake",
+"batters":{{ {"id":345,"descrpt":"Regular"},{"id":445,"descrpt":"Chocolate"} }} }
+);
+

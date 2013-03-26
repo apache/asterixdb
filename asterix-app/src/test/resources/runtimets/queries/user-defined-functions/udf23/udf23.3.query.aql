@@ -1,0 +1,11 @@
+/*
+ * Description  : Create UDF and invoke it in limit clause
+ * Expected Res : Success
+ * Date         : Sep 5th 2012
+ */
+
+use dataverse test;
+   
+for $l in dataset('Metadata.Dataset')
+limit test.numRows()
+return $l

@@ -1,0 +1,11 @@
+use dataverse test;
+
+let $a := "Nalini Venkatasubramanian"
+let $b := "Nalini Wekatasupramanian"
+let $results :=
+[
+  edit-distance($a, $b),
+  edit-distance($b, $a)  
+]
+for $i in $results
+return $i

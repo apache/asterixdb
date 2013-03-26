@@ -1,0 +1,11 @@
+/* 
+ * Test case Name  : open-closed-01.aql
+ * Description     : This test is intended to test insertion of additional data into an open type 
+ * Expected Result : Success
+ * Date            : April 2 2012
+ */
+
+use dataverse test;
+
+insert into dataset testds({"id": 123, "name": "John Doe", "hobbies": {{ "scuba", "music" }} }
+);

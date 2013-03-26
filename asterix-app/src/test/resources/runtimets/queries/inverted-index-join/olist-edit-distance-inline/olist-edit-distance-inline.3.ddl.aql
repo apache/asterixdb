@@ -1,0 +1,11 @@
+/*
+ * Description    : Fuzzy joins two datasets, Customers and Customers2, based on the edit-distance function of their interest lists.
+ *                  Customers has a keyword index on interests, and we expect the join to be transformed into an indexed nested-loop join.
+ *                  We test the inlining of variables that enable the select to be pushed into the join for subsequent optimization with an index.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+create index interests_index on Customers(interests) type keyword;
+

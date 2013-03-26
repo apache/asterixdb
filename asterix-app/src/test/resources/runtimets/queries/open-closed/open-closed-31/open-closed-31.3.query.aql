@@ -1,0 +1,14 @@
+/*
+ * Test case Name : open-closed-31.aql
+ * Description    : 
+ * Success        : Yes
+ * Date           : 31st May 2012
+ */
+
+use dataverse testdv2;
+
+for $d in dataset('testds01')
+where some $h in $d.hobbies satisfies $h='hiking' 
+order by $d.id
+return $d.hobbies
+

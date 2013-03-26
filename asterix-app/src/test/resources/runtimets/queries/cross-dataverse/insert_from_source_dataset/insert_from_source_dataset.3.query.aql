@@ -1,0 +1,11 @@
+/*
+ * Description  : Use fully qualified dataset names to insert into target dataset by doing a select on source dataset.
+ * Expected Res : Success
+ * Date         : Sep 19 2012
+ */
+
+use dataverse test;
+
+for $l in dataset('test.t1')
+order by $l.id
+return $l;

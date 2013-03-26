@@ -1,0 +1,10 @@
+use dataverse test;
+  
+for $c in dataset('Customers')
+let $nestedRec := $c.lastorder
+let $c1 := [ $c.cid, $nestedRec.oid]
+let $c2 := {{ $c.cid, $nestedRec.oid}}
+let $c3 := [ $c.lastorder, $nestedRec]
+let $c4 := {{ $c.lastorder, $nestedRec}}
+where $c.cid >= int32("3") 
+return { "id": $c.cid, "list1":$c1, "list2":$c2,"list3":$c3,"list4":$c4}

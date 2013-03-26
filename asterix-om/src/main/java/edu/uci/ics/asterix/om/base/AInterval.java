@@ -14,6 +14,9 @@
  */
 package edu.uci.ics.asterix.om.base;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -141,4 +144,9 @@ public class AInterval implements IAObject {
         return typetag;
     }
 
+    @Override
+    public JSONObject toJSON() throws JSONException {
+        // TODO(madhusudancs): Remove this method when a printer based JSON serializer is implemented.
+        return null;
+    }
 }

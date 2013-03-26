@@ -1,0 +1,20 @@
+/*
+ * Description  : Create secondary index and drop the secondary index and query metadata to verify drop index.
+ * Expected Res : Success 
+ * Date         : Sep 17 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+create type test.testtype as open {
+id : int32,
+name : string
+}
+
+create dataset test.dst01(testtype) primary key id;
+
+create index idx1 on test.dst01(name);
+
+drop index test.dst01.idx1;
+

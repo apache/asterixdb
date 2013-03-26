@@ -1,0 +1,19 @@
+/*
+ * Description  : Create UDF that returns a range
+ * Expected Res : Success
+ * Date         : Sep 5 2012
+ * Ignored      : Not part of current test build because of Issue 201
+ */
+
+// Returns java.lang.ClassCastException : Issue 195
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create function test.myRangeFn($n)
+{
+   range(1,$n)
+}
+

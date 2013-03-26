@@ -1,0 +1,10 @@
+/*
+ * Description  : Pass input of type double to UDF
+ * Expected Res : Success
+ * Date         : 4th September 2012
+ */
+
+use dataverse test;
+
+let $b:=1234.1
+return test.echo($b)

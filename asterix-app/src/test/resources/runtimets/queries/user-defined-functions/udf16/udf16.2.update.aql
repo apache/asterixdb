@@ -1,0 +1,7 @@
+/*
+ * Description  : Create UDF that returns string
+ *              : compute the string lenght of the string
+ * Expected Res : Success
+ * Date         : Sep 5th 2012
+ */
+

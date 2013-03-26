@@ -1,0 +1,12 @@
+/*
+ * Description     : Insert from source dataset into target dataset
+ * Expected Result : Success
+ * Date            : 25th July 2012
+ * Issue #         : Issue 76
+ */
+
+use dataverse testdv2;
+
+for $d in dataset("testds01")
+order by $d.id
+return $d

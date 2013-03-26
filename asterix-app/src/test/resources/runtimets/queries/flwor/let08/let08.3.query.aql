@@ -1,0 +1,11 @@
+/*
+ * Description     :  Test let clause
+ * Expected Result :  Success
+ * Date            :  6th July 2012 
+ */
+
+
+let $x:=[1,2,3]
+for $b in $x
+let $y:=$b+1
+return $y

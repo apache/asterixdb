@@ -138,6 +138,10 @@
 			<artifactId>algebricks-compiler</artifactId>
 		</dependency>
 		<dependency>
+            <groupId>edu.uci.ics.hyracks</groupId>
+            <artifactId>hyracks-client</artifactId>
+        </dependency>
+		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-aql</artifactId>
 			<version>0.0.4-SNAPSHOT</version>

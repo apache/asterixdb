@@ -16,13 +16,16 @@ package edu.uci.ics.asterix.aql.translator;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.ByteBuffer;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import edu.uci.ics.asterix.api.common.APIFramework;
 import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
@@ -82,6 +85,8 @@ import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.types.TypeSignature;
+import edu.uci.ics.asterix.result.ResultReader;
+import edu.uci.ics.asterix.result.ResultUtils;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import edu.uci.ics.asterix.translator.AbstractAqlTranslator;
@@ -100,8 +105,12 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import edu.uci.ics.hyracks.algebricks.data.IAWriterFactory;
+import edu.uci.ics.hyracks.algebricks.data.IResultSerializerFactoryProvider;
+import edu.uci.ics.hyracks.algebricks.runtime.serializer.ResultSerializerFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -143,16 +152,21 @@ public class AqlTranslator extends AbstractAqlTranslator {
      * Compiles and submits for execution a list of AQL statements.
      * 
      * @param hcc
-     *            AHyracks client connection that is used to submit a jobspec to
-     *            Hyracks.
-     * @return A List<QueryResult> containing a QueryResult instance
-     *         corresponding to each submitted query.
+     *            A Hyracks client connection that is used to submit a jobspec to Hyracks.
+     * @param hdc
+     *            A Hyracks dataset client object that is used to read the results.
+     * @param asyncResults
+     *            True if the results should be read asynchronously or false if we should wait for results to be read.
+     * @return A List<QueryResult> containing a QueryResult instance corresponding to each submitted query.
      * @throws Exception
      */
-    public List<QueryResult> compileAndExecute(IHyracksClientConnection hcc) throws Exception {
+    public List<QueryResult> compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc, boolean asyncResults)
+            throws Exception {
+        int resultSetIdCounter = 0;
         List<QueryResult> executionResult = new ArrayList<QueryResult>();
         FileSplit outputFile = null;
         IAWriterFactory writerFactory = PrinterBasedWriterFactory.INSTANCE;
+        IResultSerializerFactoryProvider resultSerializerFactoryProvider = ResultSerializerFactoryProvider.INSTANCE;
         Map<String, String> config = new HashMap<String, String>();
         List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
 
@@ -160,105 +174,106 @@ public class AqlTranslator extends AbstractAqlTranslator {
             validateOperation(activeDefaultDataverse, stmt);
             AqlMetadataProvider metadataProvider = new AqlMetadataProvider(activeDefaultDataverse);
             metadataProvider.setWriterFactory(writerFactory);
+            metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);
             metadataProvider.setOutputFile(outputFile);
             metadataProvider.setConfig(config);
             jobsToExecute.clear();
             try {
                 switch (stmt.getKind()) {
                     case SET: {
-                        handleSetStatement(metadataProvider, stmt, config, jobsToExecute);
+                        handleSetStatement(metadataProvider, stmt, config);
                         break;
                     }
                     case DATAVERSE_DECL: {
-                        activeDefaultDataverse = handleUseDataverseStatement(metadataProvider, stmt, jobsToExecute);
+                        activeDefaultDataverse = handleUseDataverseStatement(metadataProvider, stmt);
                         break;
                     }
                     case CREATE_DATAVERSE: {
-                        handleCreateDataverseStatement(metadataProvider, stmt, jobsToExecute);
+                        handleCreateDataverseStatement(metadataProvider, stmt);
                         break;
                     }
                     case DATASET_DECL: {
-                        handleCreateDatasetStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleCreateDatasetStatement(metadataProvider, stmt, hcc);
                         break;
                     }
                     case CREATE_INDEX: {
-                        handleCreateIndexStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleCreateIndexStatement(metadataProvider, stmt, hcc);
                         break;
                     }
                     case TYPE_DECL: {
-                        handleCreateTypeStatement(metadataProvider, stmt, jobsToExecute);
+                        handleCreateTypeStatement(metadataProvider, stmt);
                         break;
                     }
                     case NODEGROUP_DECL: {
-                        handleCreateNodeGroupStatement(metadataProvider, stmt, jobsToExecute);
+                        handleCreateNodeGroupStatement(metadataProvider, stmt);
                         break;
                     }
                     case DATAVERSE_DROP: {
-                        handleDataverseDropStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleDataverseDropStatement(metadataProvider, stmt, hcc);
                         break;
                     }
                     case DATASET_DROP: {
-                        handleDatasetDropStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleDatasetDropStatement(metadataProvider, stmt, hcc);
                         break;
                     }
                     case INDEX_DROP: {
-                        handleIndexDropStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleIndexDropStatement(metadataProvider, stmt, hcc);
                         break;
                     }
                     case TYPE_DROP: {
-                        handleTypeDropStatement(metadataProvider, stmt, jobsToExecute);
+                        handleTypeDropStatement(metadataProvider, stmt);
                         break;
                     }
                     case NODEGROUP_DROP: {
-                        handleNodegroupDropStatement(metadataProvider, stmt, jobsToExecute);
+                        handleNodegroupDropStatement(metadataProvider, stmt);
                         break;
                     }
 
                     case CREATE_FUNCTION: {
-                        handleCreateFunctionStatement(metadataProvider, stmt, jobsToExecute);
+                        handleCreateFunctionStatement(metadataProvider, stmt);
                         break;
                     }
 
                     case FUNCTION_DROP: {
-                        handleFunctionDropStatement(metadataProvider, stmt, jobsToExecute);
+                        handleFunctionDropStatement(metadataProvider, stmt);
                         break;
                     }
 
                     case LOAD_FROM_FILE: {
-                        handleLoadFromFileStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleLoadFromFileStatement(metadataProvider, stmt, hcc);
                         break;
                     }
                     case WRITE_FROM_QUERY_RESULT: {
-                        handleWriteFromQueryResultStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleWriteFromQueryResultStatement(metadataProvider, stmt, hcc);
                         break;
                     }
                     case INSERT: {
-                        handleInsertStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleInsertStatement(metadataProvider, stmt, hcc);
                         break;
                     }
                     case DELETE: {
-                        handleDeleteStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleDeleteStatement(metadataProvider, stmt, hcc);
                         break;
                     }
 
                     case BEGIN_FEED: {
-                        handleBeginFeedStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleBeginFeedStatement(metadataProvider, stmt, hcc);
                         break;
                     }
 
                     case CONTROL_FEED: {
-                        handleControlFeedStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleControlFeedStatement(metadataProvider, stmt, hcc);
                         break;
                     }
 
                     case QUERY: {
-                        executionResult.add(handleQuery(metadataProvider, (Query) stmt, hcc, jobsToExecute));
+                        metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
+                        executionResult.add(handleQuery(metadataProvider, (Query) stmt, hcc, hdc, asyncResults));
                         break;
                     }
 
                     case WRITE: {
-                        Pair<IAWriterFactory, FileSplit> result = handleWriteStatement(metadataProvider, stmt,
-                                jobsToExecute);
+                        Pair<IAWriterFactory, FileSplit> result = handleWriteStatement(metadataProvider, stmt);
                         if (result.first != null) {
                             writerFactory = result.first;
                         }
@@ -274,17 +289,16 @@ public class AqlTranslator extends AbstractAqlTranslator {
         return executionResult;
     }
 
-    private void handleSetStatement(AqlMetadataProvider metadataProvider, Statement stmt, Map<String, String> config,
-            List<JobSpecification> jobsToExecute) throws RemoteException, ACIDException {
+    private void handleSetStatement(AqlMetadataProvider metadataProvider, Statement stmt, Map<String, String> config)
+            throws RemoteException, ACIDException {
         SetStatement ss = (SetStatement) stmt;
         String pname = ss.getPropName();
         String pvalue = ss.getPropValue();
         config.put(pname, pvalue);
     }
 
-    private Pair<IAWriterFactory, FileSplit> handleWriteStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws InstantiationException, IllegalAccessException,
-            ClassNotFoundException {
+    private Pair<IAWriterFactory, FileSplit> handleWriteStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         WriteStatement ws = (WriteStatement) stmt;
         File f = new File(ws.getFileName());
         FileSplit outputFile = new FileSplit(ws.getNcName().getValue(), new FileReference(f));
@@ -295,8 +309,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
         return new Pair<IAWriterFactory, FileSplit>(writerFactory, outputFile);
     }
 
-    private Dataverse handleUseDataverseStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws MetadataException, RemoteException, ACIDException {
+    private Dataverse handleUseDataverseStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws MetadataException, RemoteException, ACIDException {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -319,9 +333,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
     }
 
-    private void handleCreateDataverseStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws MetadataException, AlgebricksException, RemoteException,
-            ACIDException {
+    private void handleCreateDataverseStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws MetadataException, AlgebricksException, RemoteException, ACIDException {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -346,7 +359,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
     }
 
     private void handleCreateDatasetStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws AsterixException, Exception {
+            IHyracksClientConnection hcc) throws AsterixException, Exception {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -363,7 +376,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 throw new AlgebricksException(" dataverse not specified ");
             }
             datasetName = dd.getName().getValue();
-            
+
             DatasetType dsType = dd.getDatasetType();
             String itemTypeName = dd.getItemTypeName().getValue();
 
@@ -438,7 +451,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 bActiveTxn = false;
 
                 //#. runJob
-                runJob(hcc, jobSpec);
+                runJob(hcc, jobSpec, true);
 
                 //#. begin new metadataTxn
                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -469,7 +482,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
 
-                runJob(hcc, jobSpec);
+                runJob(hcc, jobSpec, true);
             } catch (Exception e3) {
                 if (bActiveTxn) {
                     MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
@@ -496,7 +509,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
     }
 
     private void handleCreateIndexStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
+            IHyracksClientConnection hcc) throws Exception {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -553,7 +566,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 
-            runJob(hcc, spec);
+            runJob(hcc, spec, true);
 
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             bActiveTxn = true;
@@ -566,7 +579,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 
-            runJob(hcc, spec);
+            runJob(hcc, spec, true);
 
             //#. begin new metadataTxn
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -598,7 +611,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
 
-                runJob(hcc, jobSpec);
+                runJob(hcc, jobSpec, true);
             } catch (Exception e3) {
                 if (bActiveTxn) {
                     MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
@@ -624,9 +637,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
     }
 
-    private void handleCreateTypeStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws AlgebricksException, RemoteException, ACIDException,
-            MetadataException {
+    private void handleCreateTypeStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws AlgebricksException, RemoteException, ACIDException, MetadataException {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -670,7 +682,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
     }
 
     private void handleDataverseDropStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
+            IHyracksClientConnection hcc) throws Exception {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -678,6 +690,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         acquireWriteLatch();
 
         String dvName = null;
+        List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
         try {
             DataverseDropStatement stmtDelete = (DataverseDropStatement) stmt;
             dvName = stmtDelete.getDataverseName().getValue();
@@ -723,7 +736,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             bActiveTxn = false;
 
             for (JobSpecification jobSpec : jobsToExecute) {
-                runJob(hcc, jobSpec);
+                runJob(hcc, jobSpec, true);
             }
 
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -745,7 +758,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             //#. execute compensation operations
             //   remove the all indexes in NC
             for (JobSpecification jobSpec : jobsToExecute) {
-                runJob(hcc, jobSpec);
+                runJob(hcc, jobSpec, true);
             }
 
             //   remove the record from the metadata.
@@ -766,7 +779,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
     }
 
     private void handleDatasetDropStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
+            IHyracksClientConnection hcc) throws Exception {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -775,6 +788,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         String dataverseName = null;
         String datasetName = null;
+        List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
         try {
             DropStatement stmtDelete = (DropStatement) stmt;
             dataverseName = stmtDelete.getDataverseName() == null ? activeDefaultDataverse == null ? null
@@ -820,7 +834,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
                 //#. run the jobs
                 for (JobSpecification jobSpec : jobsToExecute) {
-                    runJob(hcc, jobSpec);
+                    runJob(hcc, jobSpec, true);
                 }
 
                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -840,7 +854,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             //#. execute compensation operations
             //   remove the all indexes in NC
             for (JobSpecification jobSpec : jobsToExecute) {
-                runJob(hcc, jobSpec);
+                runJob(hcc, jobSpec, true);
             }
 
             //   remove the record from the metadata.
@@ -862,7 +876,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
     }
 
     private void handleIndexDropStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
+            IHyracksClientConnection hcc) throws Exception {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -872,6 +886,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         String dataverseName = null;
         String datasetName = null;
         String indexName = null;
+        List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
         try {
             IndexDropStatement stmtIndexDrop = (IndexDropStatement) stmt;
             datasetName = stmtIndexDrop.getDatasetName().getValue();
@@ -912,7 +927,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     bActiveTxn = false;
 
                     for (JobSpecification jobSpec : jobsToExecute) {
-                        runJob(hcc, jobSpec);
+                        runJob(hcc, jobSpec, true);
                     }
 
                     //#. begin a new transaction
@@ -937,7 +952,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             //#. execute compensation operations
             //   remove the all indexes in NC
             for (JobSpecification jobSpec : jobsToExecute) {
-                runJob(hcc, jobSpec);
+                runJob(hcc, jobSpec, true);
             }
 
             //   remove the record from the metadata.
@@ -959,9 +974,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
     }
 
-    private void handleTypeDropStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws AlgebricksException, MetadataException, RemoteException,
-            ACIDException {
+    private void handleTypeDropStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws AlgebricksException, MetadataException, RemoteException, ACIDException {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -991,9 +1005,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
     }
 
-    private void handleNodegroupDropStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws MetadataException, AlgebricksException, RemoteException,
-            ACIDException {
+    private void handleNodegroupDropStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws MetadataException, AlgebricksException, RemoteException, ACIDException {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -1019,9 +1032,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
     }
 
-    private void handleCreateFunctionStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws AlgebricksException, MetadataException, RemoteException,
-            ACIDException {
+    private void handleCreateFunctionStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws AlgebricksException, MetadataException, RemoteException, ACIDException {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         acquireWriteLatch();
@@ -1051,9 +1063,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
     }
 
-    private void handleFunctionDropStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws MetadataException, RemoteException, ACIDException,
-            AlgebricksException {
+    private void handleFunctionDropStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws MetadataException, RemoteException, ACIDException, AlgebricksException {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         acquireWriteLatch();
@@ -1078,13 +1089,13 @@ public class AqlTranslator extends AbstractAqlTranslator {
     }
 
     private void handleLoadFromFileStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
+            IHyracksClientConnection hcc) throws Exception {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         acquireReadLatch();
-
+        List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
         try {
             LoadFromFileStatement loadStmt = (LoadFromFileStatement) stmt;
             String dataverseName = loadStmt.getDataverseName() == null ? activeDefaultDataverse == null ? null
@@ -1113,7 +1124,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             bActiveTxn = false;
 
             for (JobSpecification jobspec : jobsToExecute) {
-                runJob(hcc, jobspec);
+                runJob(hcc, jobspec, true);
             }
         } catch (Exception e) {
             if (bActiveTxn) {
@@ -1127,8 +1138,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
     }
 
     private void handleWriteFromQueryResultStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
-
+            IHyracksClientConnection hcc) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -1142,12 +1152,11 @@ public class AqlTranslator extends AbstractAqlTranslator {
             CompiledWriteFromQueryResultStatement clfrqs = new CompiledWriteFromQueryResultStatement(dataverseName, st1
                     .getDatasetName().getValue(), st1.getQuery(), st1.getVarCounter());
 
-            Pair<JobSpecification, FileSplit> compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(),
-                    clfrqs);
+            JobSpecification compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
-            if (compiled.first != null) {
-                runJob(hcc, compiled.first);
+            if (compiled != null) {
+                runJob(hcc, compiled, true);
             }
         } catch (Exception e) {
             if (bActiveTxn) {
@@ -1160,7 +1169,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
     }
 
     private void handleInsertStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
+            IHyracksClientConnection hcc) throws Exception {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -1174,14 +1183,13 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     : activeDefaultDataverse.getDataverseName() : stmtInsert.getDataverseName().getValue();
             CompiledInsertStatement clfrqs = new CompiledInsertStatement(dataverseName, stmtInsert.getDatasetName()
                     .getValue(), stmtInsert.getQuery(), stmtInsert.getVarCounter());
-            Pair<JobSpecification, FileSplit> compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(),
-                    clfrqs);
+            JobSpecification compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 
-            if (compiled.first != null) {
-                runJob(hcc, compiled.first);
+            if (compiled != null) {
+                runJob(hcc, compiled, true);
             }
 
         } catch (Exception e) {
@@ -1195,7 +1203,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
     }
 
     private void handleDeleteStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
+            IHyracksClientConnection hcc) throws Exception {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -1210,14 +1218,13 @@ public class AqlTranslator extends AbstractAqlTranslator {
             CompiledDeleteStatement clfrqs = new CompiledDeleteStatement(stmtDelete.getVariableExpr(), dataverseName,
                     stmtDelete.getDatasetName().getValue(), stmtDelete.getCondition(), stmtDelete.getDieClause(),
                     stmtDelete.getVarCounter(), metadataProvider);
-            Pair<JobSpecification, FileSplit> compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(),
-                    clfrqs);
+            JobSpecification compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 
-            if (compiled.first != null) {
-                runJob(hcc, compiled.first);
+            if (compiled != null) {
+                runJob(hcc, compiled, true);
             }
 
         } catch (Exception e) {
@@ -1230,7 +1237,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
     }
 
-    private Pair<JobSpecification, FileSplit> rewriteCompileQuery(AqlMetadataProvider metadataProvider, Query query,
+    private JobSpecification rewriteCompileQuery(AqlMetadataProvider metadataProvider, Query query,
             ICompiledDmlStatement stmt) throws AsterixException, RemoteException, AlgebricksException, JSONException,
             ACIDException {
 
@@ -1243,14 +1250,12 @@ public class AqlTranslator extends AbstractAqlTranslator {
         JobSpecification spec = APIFramework.compileQuery(declaredFunctions, metadataProvider, query,
                 reWrittenQuery.second, stmt == null ? null : stmt.getDatasetName(), sessionConfig, out, pdf, stmt);
 
-        Pair<JobSpecification, FileSplit> compiled = new Pair<JobSpecification, FileSplit>(spec,
-                metadataProvider.getOutputFile());
-        return compiled;
+        return spec;
 
     }
 
     private void handleBeginFeedStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
+            IHyracksClientConnection hcc) throws Exception {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -1278,13 +1283,13 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
             bfs.initialize(metadataProvider.getMetadataTxnContext(), dataset);
             cbfs.setQuery(bfs.getQuery());
-            Pair<JobSpecification, FileSplit> compiled = rewriteCompileQuery(metadataProvider, bfs.getQuery(), cbfs);
+            JobSpecification compiled = rewriteCompileQuery(metadataProvider, bfs.getQuery(), cbfs);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 
-            if (compiled.first != null) {
-                runJob(hcc, compiled.first);
+            if (compiled != null) {
+                runJob(hcc, compiled, true);
             }
 
         } catch (Exception e) {
@@ -1298,7 +1303,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
     }
 
     private void handleControlFeedStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
+            IHyracksClientConnection hcc) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -1315,7 +1320,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 
-            runJob(hcc, jobSpec);
+            runJob(hcc, jobSpec, true);
 
         } catch (Exception e) {
             if (bActiveTxn) {
@@ -1328,7 +1333,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
     }
 
     private QueryResult handleQuery(AqlMetadataProvider metadataProvider, Query query, IHyracksClientConnection hcc,
-            List<JobSpecification> jobsToExecute) throws Exception {
+            IHyracksDataset hdc, boolean asyncResults) throws Exception {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -1336,15 +1341,36 @@ public class AqlTranslator extends AbstractAqlTranslator {
         acquireReadLatch();
 
         try {
-            Pair<JobSpecification, FileSplit> compiled = rewriteCompileQuery(metadataProvider, query, null);
+            JobSpecification compiled = rewriteCompileQuery(metadataProvider, query, null);
 
-            QueryResult queryResult = new QueryResult(query, compiled.second.getLocalFile().getFile().getAbsolutePath());
+            QueryResult queryResult = new QueryResult(query, metadataProvider.getResultSetId());
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 
-            if (compiled.first != null) {
-                GlobalConfig.ASTERIX_LOGGER.info(compiled.first.toJSON().toString(1));
-                runJob(hcc, compiled.first);
+            if (compiled != null) {
+                GlobalConfig.ASTERIX_LOGGER.info(compiled.toJSON().toString(1));
+                JobId jobId = runJob(hcc, compiled, false);
+
+                JSONObject response = new JSONObject();
+                if (asyncResults) {
+                    JSONArray handle = new JSONArray();
+                    handle.put(jobId.getId());
+                    handle.put(metadataProvider.getResultSetId().getId());
+                    response.put("handle", handle);
+                } else {
+                    ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
+                    ResultReader resultReader = new ResultReader(hcc, hdc);
+                    resultReader.open(jobId, metadataProvider.getResultSetId());
+                    buffer.clear();
+                    JSONArray results = new JSONArray();
+                    while (resultReader.read(buffer) > 0) {
+                        results.put(ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor()));
+                        buffer.clear();
+                    }
+                    response.put("results", results);
+                }
+                out.print(response);
+                hcc.waitForCompletion(jobId);
             }
 
             return queryResult;
@@ -1358,9 +1384,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
     }
 
-    private void handleCreateNodeGroupStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws MetadataException, AlgebricksException, RemoteException,
-            ACIDException {
+    private void handleCreateNodeGroupStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws MetadataException, AlgebricksException, RemoteException, ACIDException {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -1390,18 +1415,25 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
     }
 
-    private void runJob(IHyracksClientConnection hcc, JobSpecification spec) throws Exception {
-        executeJobArray(hcc, new Job[] { new Job(spec) }, out, pdf);
+    private JobId runJob(IHyracksClientConnection hcc, JobSpecification spec, boolean waitForCompletion)
+            throws Exception {
+        JobId[] jobIds = executeJobArray(hcc, new Job[] { new Job(spec) }, out, pdf, waitForCompletion);
+        return jobIds[0];
     }
 
-    public void executeJobArray(IHyracksClientConnection hcc, Job[] jobs, PrintWriter out, DisplayFormat pdf)
-            throws Exception {
+    public JobId[] executeJobArray(IHyracksClientConnection hcc, Job[] jobs, PrintWriter out, DisplayFormat pdf,
+            boolean waitForCompletion) throws Exception {
+        JobId[] startedJobIds = new JobId[jobs.length];
         for (int i = 0; i < jobs.length; i++) {
             JobSpecification spec = jobs[i].getJobSpec();
             spec.setMaxReattempts(0);
             JobId jobId = hcc.startJob(spec);
-            hcc.waitForCompletion(jobId);
+            startedJobIds[i] = jobId;
+            if (waitForCompletion) {
+                hcc.waitForCompletion(jobId);
+            }
         }
+        return startedJobIds;
     }
 
     private static IDataFormat getDataFormat(MetadataTransactionContext mdTxnCtx, String dataverseName)

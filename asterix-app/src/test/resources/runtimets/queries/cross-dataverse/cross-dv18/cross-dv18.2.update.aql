@@ -1,0 +1,21 @@
+/*
+ * Description  : Create two dataverses and one dataset in each of the dataverse
+ *              : insert data and query using the datasets using fully qualified names and return results.
+ * Expected Res : Success
+ * Date         : Sep 7th 2012
+ * Ignored      : Not part of the current test build because of Issue 199
+ */
+
+
+insert into dataset test.t1({"id":24});
+insert into dataset test.t1({"id":23});
+insert into dataset test.t1({"id":21});
+insert into dataset test.t1({"id":44});
+insert into dataset test.t1({"id":64});
+
+insert into dataset fest.t1({"id":24});
+insert into dataset fest.t1({"id":23});
+insert into dataset fest.t1({"id":21});
+insert into dataset fest.t1({"id":44});
+insert into dataset fest.t1({"id":64});
+

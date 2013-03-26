@@ -1,0 +1,13 @@
+/*
+ * Description      :  Test return clause of the FLWOR expression
+ * Expected Result  :  Success
+ * Date             :  30th July 2012
+ */
+
+// Return arithmetic-expr1 and arithmetic-expr2 
+
+let $a := 100 + 100
+let $b := 13.4 * 14.97
+let $c := 9999 + 98677
+let $d := 34.67 / 5.324
+return (($a*$d) and ($b / $c))

@@ -1,0 +1,7 @@
+use dataverse test;
+
+let $a := avg( 
+ for $x in dataset('Numeric') 
+ return $x.int64Field
+)
+return {"average": $a}

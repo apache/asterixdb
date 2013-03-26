@@ -7,8 +7,8 @@
 	<packaging>pom</packaging>
 
     <properties>
-    	<algebricks.version>0.2.3-SNAPSHOT</algebricks.version>
-    	<hyracks.version>0.2.3-SNAPSHOT</hyracks.version>
+    	<algebricks.version>0.2.4-SNAPSHOT</algebricks.version>
+    	<hyracks.version>0.2.4-SNAPSHOT</hyracks.version>
     </properties>
 
 	<build>
@@ -203,6 +203,11 @@
     			<artifactId>hyracks-storage-am-common</artifactId>
     			<version>${hyracks.version}</version>
     		</dependency>
+		    <dependency>
+                <groupId>edu.uci.ics.hyracks</groupId>
+                <artifactId>hyracks-client</artifactId>
+                <version>${hyracks.version}</version>
+            </dependency>
     	</dependencies>
     </dependencyManagement>
 </project>

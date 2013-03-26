@@ -1,0 +1,11 @@
+/*
+ * Description      :  Test return clause of the FLWOR expression
+ * Expected Result  :  Success
+ * Date             :  7th July 2012
+ */
+
+// return string length
+
+
+for $x in ["ten","twenty","thirty","forty","fifty","sixty","seventy","ninety"]
+return string-length($x)

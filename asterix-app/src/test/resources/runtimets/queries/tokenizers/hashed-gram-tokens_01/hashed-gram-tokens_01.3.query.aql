@@ -1,0 +1,6 @@
+use dataverse test;
+
+let $txt := "Jürgen S. Generic's Car"
+let $tokens := hashed-gram-tokens($txt, 3, false)
+for $token in $tokens
+return $token

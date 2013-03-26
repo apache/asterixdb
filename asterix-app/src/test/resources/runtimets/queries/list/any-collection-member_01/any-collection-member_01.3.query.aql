@@ -1,0 +1,5 @@
+use dataverse test;
+
+let $x := {{1,1,1}}
+return $x[?]
+ 

@@ -1,0 +1,21 @@
+/*
+ * Description  : Create UDF and invoke with negative inputs.
+ * Expected Res : Failure
+ * Date         : 5th Sep 2012
+ */
+
+// This one returns NPE...
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create function test.computeBonus($pbcRating,$salary)
+{
+   if ($pbcRating = 1) then
+        $salary * 0.25
+   else
+        $salary * 0.10
+}
+

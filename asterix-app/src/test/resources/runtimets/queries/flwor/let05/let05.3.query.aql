@@ -1,0 +1,8 @@
+/*
+ * Description     :  Test let clause
+ * Expected Result :  Success
+ * Date            :  6th July 2012 
+ */
+
+let $x := {"a":(1+1*(100/20))}
+return $x

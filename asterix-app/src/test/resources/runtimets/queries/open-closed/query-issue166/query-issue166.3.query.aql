@@ -1,0 +1,9 @@
+/*
+ * Description  : This test case is to verify the fix for issue166
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=166
+ * Expected Res : Success
+ * Date         : 26th November 2012
+ */
+ 
+let $a := [[1,2,3],[4,5,6,7]]
+return $a[1]

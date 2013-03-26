@@ -1,0 +1,13 @@
+/*
+ * Test case name :  open-closed-19.aql
+ * Description    :  Insert into open type internal dataset by querying another internal dataset
+ *                :  In this case source dataset has (n+n) fields and the target dataset has only n fields
+ * Success        :  Yes
+ * Date           :  29 April 2012
+ */
+
+
+use dataverse test;
+
+for $l in dataset('dtst01')
+retunr $l 

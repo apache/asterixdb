@@ -1,0 +1,31 @@
+/* 
+ * Test case Name  : opentype-o2o.aql
+ * Description     : verify that the dynamic type cast from one open type to another compatible open type
+ *					 verify the bag-based fields
+ * Expected Result : Success
+ */
+
+
+use dataverse testdv2;
+ 
+insert into dataset testds (
+{ "name": "Person One",  "id": "001", "hobby": "music"}
+);
+
+insert into dataset testds (
+{ "hobby": "football", "city":"irvine", "name": "Person Two", "id": "002"}
+);
+
+insert into dataset testds (
+{ "name": "Person Three",  "id": "003",  "hobby": "movie"}
+);
+
+insert into dataset testds (
+{ "hobby": "swimming", "name": "Person Four", "id": "004", "phone":"102-304-506"}
+);
+
+insert into dataset testds2 (
+ for $d in dataset("testds") 
+	return $d
+);
+

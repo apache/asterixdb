@@ -61,7 +61,7 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
 
     // Key: Variable in the original plan. Value: Variable with which to replace original variable in the plan copy.
     private final Map<LogicalVariable, LogicalVariable> inVarMapping;
-    
+
     public LogicalOperatorDeepCopyVisitor(Counter counter) {
         this.counter = counter;
         this.inVarMapping = Collections.emptyMap();

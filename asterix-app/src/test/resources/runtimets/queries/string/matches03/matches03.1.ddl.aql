@@ -1,0 +1,9 @@
+/*
+ * Testcase Name  :  matches03.aql
+ * Description    :  Positive tests
+ *                :  Test matches functions with regular expressions as third input parameter
+ * Success        :  Yes
+ * Date           :  23th April 2012
+ */
+
+

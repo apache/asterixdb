@@ -1,0 +1,10 @@
+/*
+ * Description  : Pass value of type float to UDF
+ * Expected Res : Success
+ * Date         : Sep 4th 2012
+ */
+
+use dataverse test;
+
+let $b:=1234.1f
+return test.echo($b)

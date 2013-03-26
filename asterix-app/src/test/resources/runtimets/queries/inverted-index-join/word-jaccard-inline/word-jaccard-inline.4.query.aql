@@ -1,0 +1,15 @@
+/*
+ * Description    : Fuzzy joins two datasets, DBLP and CSX, based on the similarity-jaccard function of their titles' word tokens.
+ *                  DBLP has a keyword index on title, and we expect the join to be transformed into an indexed nested-loop join.
+ *                  We test the inlining of variables that enable the select to be pushed into the join for subsequent optimization with an index.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+for $a in dataset('DBLP')
+for $b in dataset('CSX')
+let $jacc := similarity-jaccard(word-tokens($a.title), word-tokens($b.title))
+where $jacc >= 0.5f and $a.id < $b.id
+order by $jacc, $a.id, $b.id
+return { "arec": $a, "brec": $b, "jacc": $jacc }

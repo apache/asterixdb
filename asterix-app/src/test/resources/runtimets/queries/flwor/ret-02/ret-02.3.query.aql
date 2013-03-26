@@ -1,0 +1,11 @@
+/*
+ * Description      :  Test return clause of the FLWOR expression
+ * Expected Result  :  Success
+ * Date             :  7th July 2012
+ */
+
+// Return a string
+
+
+for $x in [true]
+return "this is a test string"

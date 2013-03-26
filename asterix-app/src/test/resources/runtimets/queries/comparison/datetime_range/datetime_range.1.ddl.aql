@@ -1,0 +1,16 @@
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type Tweet as closed {
+        id: int32,
+        tweetid: int64,
+        loc: point,
+        time: datetime,
+        text: string
+}
+
+create dataset TwitterData(Tweet)
+  primary key id;
+

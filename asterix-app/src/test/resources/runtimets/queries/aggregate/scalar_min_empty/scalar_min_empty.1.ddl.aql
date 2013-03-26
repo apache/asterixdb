@@ -1,0 +1,11 @@
+/*
+ * Description    : Tests the scalar version of min with an empty list.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+min([ ])

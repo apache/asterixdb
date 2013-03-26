@@ -1,0 +1,8 @@
+/*
+ * Description    : Tests the scalar version of count with an empty list.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+

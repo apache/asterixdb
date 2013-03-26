@@ -1,0 +1,21 @@
+/*
+ * Test case name :  open-closed-22.aql
+ * Description    :  Insert into a closed type dataset which has nullable(optional) and non-nullable fields
+ * Success        :  Yes
+ * Date           :  30 April 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type Emp as closed {
+id:int32,
+name:string,
+age:int8?,
+dept:string?,
+sex:string,
+dob:date?
+}
+
+create dataset employee(Emp) primary key id;

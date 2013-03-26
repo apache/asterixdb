@@ -1,0 +1,25 @@
+/*
+ * Description  : Create a feed dataset that uses the feed simulator adapter. 
+                  Begin ingestion and verify contents of the dataset post completion.  
+ * Expected Res : Success
+ * Date         : 24th Dec 2012
+ */
+
+drop dataverse feeds if exists;
+create dataverse feeds;
+use dataverse feeds;
+
+create type TweetType as closed {
+  id: string,
+  username : string,
+  location : string,
+  text : string,
+  timestamp : string
+}      
+
+create feed dataset TweetFeed(TweetType)
+using "edu.uci.ics.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory"
+(("fs"="localfs"),("path"="nc1://data/twitter/obamatweets.adm"),("format"="adm"),("output-type-name"="TweetType"),("tuple-interval"="10"))
+primary key id;
+
+

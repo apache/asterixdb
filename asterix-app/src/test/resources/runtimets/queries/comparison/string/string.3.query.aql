@@ -1,0 +1,11 @@
+use dataverse test;
+
+let $c1 := "AA"
+let $c2 := "B"
+let $r1 := $c1 > $c2
+let $r2 := $c1 >= $c2
+let $r3 := $c1 < $c2
+let $r4 := $c1 <= $c2
+let $r5 := $c1 = $c2
+let $r6 := $c1 != $c2
+return {"result1": $r1,"result2": $r2,"result3": $r3,"result4": $r4,"result5": $r5, "result6": $r6}

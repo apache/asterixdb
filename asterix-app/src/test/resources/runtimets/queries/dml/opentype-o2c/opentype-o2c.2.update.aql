@@ -1,0 +1,34 @@
+/* 
+ * Test case Name  : opentype-o2c.aql
+ * Description     : verify that open records can be inserted into a closed dataset
+ *					 verify missing optional fields in the closed part of the target closed dataset are allowed
+ * Expected Result : Success
+ */
+
+use dataverse testdv2;
+ 
+insert into dataset testds (
+{ "id": "001",  "hobby": {{"music"}}, "name": "Person Three"}
+);
+
+insert into dataset testds (
+{ "id": "002", "name": "Person Three", "hobby": {{"football"}}}
+);
+
+insert into dataset testds (
+{ "id": "003", "name": "Person Three", "hobby": {{"movie", "coding", "debugging"}}}
+);
+
+insert into dataset testds (
+{ "name": "Person Three", "hobby": {{"swimming", "music"}}, "id": "004"}
+);
+
+insert into dataset testds (
+{ "id": "005", "name": "Person Five"}
+);
+
+insert into dataset testds2 (
+ for $d in dataset("testds") 
+	return $d
+);
+

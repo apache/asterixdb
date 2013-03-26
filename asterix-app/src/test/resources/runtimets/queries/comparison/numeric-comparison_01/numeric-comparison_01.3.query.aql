@@ -1,0 +1,6 @@
+use dataverse test;
+
+let $l := [1.1f, 1.0f, 1.2f, 0.9, 1.3, 1, 2]
+for $i in $l
+for $j in $l
+return [$i, $j, "=", $i = $j, "<", $i < $j, "<=", $i <= $j, ">", $i > $j, ">=", $i >= $j]

@@ -1,0 +1,15 @@
+/*
+ * Testcase Name  : open-closed-29.aql
+ * Description    : Query for undeclared data from an open type internal dataset
+ *                : use the some keyword in the where clause
+ * Status         : Yes
+ * Date           : 31st May 2012
+ */
+
+use dataverse testdv2;
+
+// select all hobbies where hiking is one of the hobbies
+for $d in dataset('testds01')
+where some $h in $d.hobbies satisfies $h='hiking' 
+order by $d.id
+return $d

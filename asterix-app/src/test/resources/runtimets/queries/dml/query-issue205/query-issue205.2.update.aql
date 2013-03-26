@@ -1,0 +1,14 @@
+/*
+ * Description  : This test case is to verify the fix for issue205
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=205
+ * Expected Res : Success
+ * Date         : 26th November 2012
+ */
+
+use dataverse test;
+
+insert into dataset Employees({"id":"1234", "stat":{ "age":50, "salary":120000}, "deptCode":32 });
+insert into dataset Employees({"id":"5678", "stat":{ "age":40, "salary":100000}, "deptCode":16 });
+
+delete $l from dataset Employees where $l.id = "1234";
+

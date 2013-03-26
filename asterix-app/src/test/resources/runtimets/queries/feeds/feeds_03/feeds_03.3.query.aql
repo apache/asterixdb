@@ -1,0 +1,9 @@
+/*
+ * Description  : Create a feed dataset with an associated function and verify contents in Metadata
+ * Expected Res : Success
+ * Date         : 24th Dec 2012
+ */
+
+for $x in dataset('Metadata.Dataset')
+where $x.DataverseName='feeds' and $x.DatasetName='TweetFeed'
+return $x

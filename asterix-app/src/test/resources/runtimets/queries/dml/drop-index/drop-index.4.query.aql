@@ -1,0 +1,12 @@
+/*
+ * Description     : Drop secondary index.
+ * Expected Result : Success
+ * Date            : 12th July 2012
+ *
+ */
+
+use dataverse test;
+
+for $a in dataset('t1')
+where $a.unique1 > 10 and $a.stringu1="DGAAAAXXXXXXXXXXXXXXXXXXX"
+return $a

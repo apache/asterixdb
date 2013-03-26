@@ -1,0 +1,21 @@
+/*
+ * Test case Name : toLowerCas03.aql
+ * Description    : Test lowercase(string) function 
+ *                : This test case covers Positive tests
+ * Success        : Yes
+ * Date           : 19th April 2012
+ */
+
+
+// Create internal dataset, insert string data and pass the string attribute to lowercase function, and verify results.
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type TestType as {
+name:string
+}
+
+create dataset testds(TestType) primary key name;

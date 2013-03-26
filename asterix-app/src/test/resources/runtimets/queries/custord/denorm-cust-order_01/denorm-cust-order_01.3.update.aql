@@ -1,0 +1,11 @@
+use dataverse test;
+
+write into dataset CustomerOrders1 (
+
+for $c in dataset('Customers1')
+for $o in dataset('Orders1')
+where $c.cid = $o.cid and $c.age < 21 and $c.total > 50.0
+group by $cid := $c.cid decor $cust := $c with $o
+return {"cid":$cid, "cust": $cust, "orders": $o} 
+
+);

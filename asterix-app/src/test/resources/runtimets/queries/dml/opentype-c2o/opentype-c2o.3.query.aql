@@ -1,0 +1,12 @@
+/* 
+ * Test case Name  : opentype-c2o.aql
+ * Description     : read data from a closed type dataset into a open type dataset and verify if
+ *					records can be casted to the target open type 
+ * Expected Result : Success
+ */
+
+use dataverse testdv2;
+
+for $d in dataset("testds2") 
+order by $d.id
+return $d

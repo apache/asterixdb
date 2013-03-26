@@ -1,0 +1,36 @@
+/* 
+ * Test case Name  : opentype-o2c-recursive.aql
+ * Description     : verify the static casting of nest record constants 
+ * Expected Result : Success
+ */
+
+drop dataverse testdv2 if exists;
+create dataverse testdv2;
+
+use dataverse testdv2;
+
+create type AddressType as open{
+  street: string,
+  city: string
+}
+create type Dept as open{
+	name: string,
+	id: int32
+}
+
+create type testtype as closed {
+  name: string,
+  id: string,
+  address: AddressType?,
+  department: {{Dept}}?
+}
+
+create type testtype2 as open {
+  name: string,
+  id: string
+}
+
+create dataset testds(testtype) primary key id;
+
+create dataset testds2(testtype2) primary key id;
+

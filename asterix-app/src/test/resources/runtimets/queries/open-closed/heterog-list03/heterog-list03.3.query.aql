@@ -1,0 +1,13 @@
+/*
+ * Test case Name : heterog-list03.aql
+ * Description    : To test insertion of an array of arrays into internal dataset. 
+ *                : batters field is optional in this scenario.
+ *                : Heterogenous list construction.
+ * Success        : Yes
+ * Date           : 28th May 2012
+ */
+
+use dataverse test;
+
+for $l in dataset('T1')
+return $l

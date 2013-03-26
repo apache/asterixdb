@@ -1,0 +1,9 @@
+/*
+ * Description      :   Test spatial accessors
+ * Expected Result  :   Success
+ * Date             :   Oct 17, 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+

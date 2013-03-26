@@ -1,0 +1,22 @@
+/*
+ * Test case name :  open-closed-21.aql
+ * Description    :  Insert into open type internal dataset by querying another open type internal dataset
+ *                :  In this case source dataset has (n+n) fields and the target dataset has only 1 field, but has no intial records in it.
+ * Success        :  Yes
+ * Date           :  29 April 2012
+ */
+
+use dataverse test;
+
+insert into dataset employee({"id":201,"name":"John Doe","age":32,"sex":"M","dob":date("1975-01-11")});
+insert into dataset employee({"id":202,"name":"John Smith","age":30,"sex":"M","dob":date("1982-07-12")});
+insert into dataset employee({"id":203,"name":"John Wayne","age":62,"sex":"M","dob":date("1950-01-08")});
+insert into dataset employee({"id":204,"name":"Roger Sanders","age":48,"sex":"M","dob":date("1972-11-12")});
+insert into dataset employee({"id":205,"name":"Raj Singh","age":37,"sex":"M","dob":date("1978-05-06")});
+insert into dataset employee({"id":206,"name":"Mike Tyson","age":44,"sex":"M","dob":date("1965-09-03")});
+insert into dataset employee({"id":227,"name":"Mariam","age":30,"sex":"F","dob":date("1982-11-01")});
+
+insert into dataset employee({"id":228,"name":"Cathy","age":35,"sex":"F","dob":date("1976-06-11"),"desgination":{{"Department Manager"}}});
+
+insert into dataset dtst01(for $l in dataset('employee') return $l);
+

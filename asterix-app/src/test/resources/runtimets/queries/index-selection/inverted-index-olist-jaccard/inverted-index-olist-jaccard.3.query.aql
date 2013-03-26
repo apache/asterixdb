@@ -1,0 +1,6 @@
+use dataverse test;
+
+for $c in dataset('Customers')
+let $jacc := similarity-jaccard-check($c.interests, ["databases", "computers", "wine"], 0.7f)
+where $jacc[0]
+return $c

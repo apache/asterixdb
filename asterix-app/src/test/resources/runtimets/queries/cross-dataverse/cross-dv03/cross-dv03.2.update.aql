@@ -1,0 +1,10 @@
+/*
+ * Description  : Test cross dataverse functionality
+ *              : use dataverse statement is now optional.
+ *              : Use fully qualified names to create datasets, types.
+ *              : drop datasets using fully qualified names
+ *              : Query metadata to verify datasets are dropped.
+ * Expected Res : Success
+ * Date         : 28th Aug 2012
+ */
+// no inserts, deletes here

@@ -1,0 +1,11 @@
+use dataverse test;
+
+let $c1 := int8("+1")
+let $c2 := int16("2")
+let $c3 := int32("+3")
+let $c4 := int64("-4")
+let $c5 := float("-5.5f")
+let $c6 := double("-6.5d")
+let $c7 := [1]
+let $c8 := $c7[1]
+return {"result1": $c5*$c1,"result2": $c5*$c2,"result3": $c5*$c3,"result4": $c5*$c4,"result5": $c5*$c5, "result6": $c5*$c6, "result7": $c6*$c8}

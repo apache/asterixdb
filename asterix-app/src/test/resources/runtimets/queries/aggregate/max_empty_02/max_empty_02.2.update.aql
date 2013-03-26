@@ -1,0 +1,6 @@
+/*
+ * Description    : Tests that max aggregation correctly returns null for an empty stream,
+ *                  with an aggregate combiner.
+ * Success        : Yes
+ */
+

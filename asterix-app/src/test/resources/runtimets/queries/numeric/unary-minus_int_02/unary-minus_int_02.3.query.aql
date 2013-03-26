@@ -1,0 +1,7 @@
+use dataverse test;
+
+let $c1 := int8("+80")
+let $c2 := int16("160")
+let $c3 := int32("+320")
+let $c4 := int64("-640")
+return {"int8": -$c1,"int16": -$c2,"int32": -$c3,"int64": -$c4}

@@ -1,0 +1,10 @@
+/* 
+ * Test case Name  : opentype-insert.aql
+ * Description     : verify static type casting
+ * Expected Result : Success
+ */
+
+use dataverse testdv2;
+
+for $d in dataset("testds") 
+return $d

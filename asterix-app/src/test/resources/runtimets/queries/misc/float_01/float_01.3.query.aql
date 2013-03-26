@@ -1,0 +1,4 @@
+use dataverse test;
+
+for $f in [1f, 1F, 1.1f, 1.1F, .1f, .1F]
+return $f

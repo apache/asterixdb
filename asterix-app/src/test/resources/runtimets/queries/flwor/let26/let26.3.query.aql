@@ -1,0 +1,14 @@
+/*
+ * Description     : Test let clause 
+ * Expected Result : Success 
+ * Date            : 23rd July 2012
+ */
+
+/*
+ * Test let clause - let variable := relational expression
+ */
+
+let $a := 10 > 9
+let $b := ((100 * 100)/10 -1999) > 3900
+let $c := true != false
+return {"a":$a,"b":$b,"c":$c}

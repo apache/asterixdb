@@ -1,0 +1,6 @@
+/*
+ * Description     : Test quantified expressions; some variable in [ordered list] satisfies expression.
+ * Expected Result : Success
+ * Date            : 6th July 2012
+ */
+

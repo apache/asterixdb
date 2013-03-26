@@ -1,0 +1,37 @@
+/*
+ * Description  : Create two UDFs in two different dataverses and create datasets in tose dvs
+ *              : access the datasets from the UDF defined in the other dataverse and invoke one of the UDF
+ * Expected Res : Success
+ * Date         : Sep 7th 2012
+ */
+
+// dv1 - udf1 - dataset1
+// dv2 - udf2 - dataset2
+
+drop dataverse test if exists;
+drop dataverse fest if exists;
+
+create dataverse test;
+create dataverse fest;
+
+create type test.testtype as open {
+id : int32
+}
+
+create type fest.testtype as open {
+id : int32
+}
+
+create dataset test.t1(testtype) primary key id;
+create dataset fest.t1(testtype) primary key id;
+
+create function test.f1(){
+for $l in dataset('fest.t1')
+return $l
+}
+
+create function fest.f1(){
+for $m in dataset('test.t1')
+return $m
+}
+

@@ -1,0 +1,5 @@
+use dataverse test;
+
+let $x :=  [20013, 25991, 23383, 31526]
+let $c := codepoint-to-string($x)
+return {"result1": $c}

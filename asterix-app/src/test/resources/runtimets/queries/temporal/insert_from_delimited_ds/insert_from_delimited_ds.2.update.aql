@@ -1,0 +1,5 @@
+use dataverse testdvt;
+
+create external dataset testds(testtype)
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/temporal/temporalData.txt"),("format"="delimited-text"),("delimiter"="|"));

@@ -1,0 +1,4 @@
+use dataverse test;
+
+for $x in ["field1", "field2"] 
+return {$x: 1}
