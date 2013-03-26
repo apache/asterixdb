@@ -10,6 +10,7 @@ import edu.uci.ics.asterix.om.base.AMutableInt32;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
+import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.fuzzyjoin.similarity.SimilarityFiltersJaccard;
@@ -26,6 +27,11 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
+
+    // allowed input types
+    private final static byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
+    private final static byte SER_FLOAT_TYPE_TAG = ATypeTag.FLOAT.serialize();
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new PrefixLenJaccardDescriptor();
@@ -62,11 +68,17 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
                         // length
                         inputVal.reset();
                         evalLen.evaluate(tuple);
+                        if(inputVal.getByteArray()[0] != SER_INT32_TYPE_TAG){
+                            throw new AlgebricksException("Expects Int32 Type for the first argument of PrefixLenJaccard.");
+                        }
                         int length = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
                         // similarity threshold
                         inputVal.reset();
                         evalThreshold.evaluate(tuple);
+                        if(inputVal.getByteArray()[0] != SER_FLOAT_TYPE_TAG){
+                            throw new AlgebricksException("Expects Float Type for the second argument of PrefixLenJaccard.");
+                        }
                         float similarityThreshold = (float) AFloatSerializerDeserializer.getFloat(
                                 inputVal.getByteArray(), 1);
 

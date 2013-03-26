@@ -21,6 +21,11 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
+
+    // allowed input types
+    private static final byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
+    private static final byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SubstringDescriptor();
@@ -47,14 +52,28 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         argOut.reset();
                         evalStart.evaluate(tuple);
+                        if (argOut.getByteArray()[0] != SER_INT32_TYPE_TAG) {
+                            throw new AlgebricksException(
+                                    "Expects Types (String, Int32, Int32) for substring function. ");
+                        }
                         int start = IntegerSerializerDeserializer.getInt(argOut.getByteArray(), 1) - 1;
                         argOut.reset();
                         evalLen.evaluate(tuple);
+                        if (argOut.getByteArray()[0] != SER_INT32_TYPE_TAG) {
+                            throw new AlgebricksException(
+                                    "Expects Types (String, Int32, Int32) for substring function. ");
+                        }
                         int len = IntegerSerializerDeserializer.getInt(argOut.getByteArray(), 1);
+
                         argOut.reset();
                         evalString.evaluate(tuple);
 
                         byte[] bytes = argOut.getByteArray();
+
+                        if (bytes[0] != SER_STRING_TYPE_TAG) {
+                            throw new AlgebricksException(
+                                    "Expects Types (String, Int32, Int32) for substring function. ");
+                        }
                         int utflen = UTF8StringPointable.getUTFLength(bytes, 1);
                         int sStart = 3;
                         int c = 0;

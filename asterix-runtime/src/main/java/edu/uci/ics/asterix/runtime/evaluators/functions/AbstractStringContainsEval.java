@@ -4,6 +4,7 @@ import java.io.DataOutput;
 
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ABoolean;
+import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
@@ -16,6 +17,10 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public abstract class AbstractStringContainsEval implements ICopyEvaluator {
 
     private DataOutput dout;
+
+    // allowed input types
+    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
 
     private ArrayBackedValueStorage array0 = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage array1 = new ArrayBackedValueStorage();
@@ -39,6 +44,28 @@ public abstract class AbstractStringContainsEval implements ICopyEvaluator {
         evalPattern.evaluate(tuple);
         array0.reset();
         evalString.evaluate(tuple);
+
+        try {
+            if (array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG || array0.getByteArray()[0] == SER_STRING_TYPE_TAG) {
+                    boolSerde.serialize(ABoolean.TRUE, dout);
+                    return;
+                }
+            } else if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                if (array1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
+                    boolSerde.serialize(ABoolean.FALSE, dout);
+                    return;
+                }
+
+            }
+
+            if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG || array1.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+                throw new AlgebricksException("Expects String or NULL Type.");
+            }
+        } catch (HyracksDataException e) {
+            throw new AlgebricksException(e);
+        }
+
         byte[] b1 = array0.getByteArray();
         byte[] b2 = array1.getByteArray();
         ABoolean res = findMatch(b1, b2) ? ABoolean.TRUE : ABoolean.FALSE;

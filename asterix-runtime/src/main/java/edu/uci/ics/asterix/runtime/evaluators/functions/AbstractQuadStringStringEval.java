@@ -5,7 +5,6 @@
 package edu.uci.ics.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
@@ -74,18 +73,18 @@ public abstract class AbstractQuadStringStringEval implements ICopyEvaluator {
                 nullSerde.serialize(ANull.NULL, dout);
                 return;
             } else if (array0.getByteArray()[0] == SER_STRING_TYPE_TAG) {
-                if (array0.getByteArray()[1] == SER_NULL_TYPE_TAG) {
-                    dout.write(array0.getByteArray(), array0.getStartOffset(), array0.getLength());
-                    return;
+                if ((array1.getByteArray()[0] != SER_STRING_TYPE_TAG && array1.getByteArray()[0] != SER_NULL_TYPE_TAG)
+                        || (array2.getByteArray()[0] != SER_STRING_TYPE_TAG && array2.getByteArray()[0] != SER_NULL_TYPE_TAG)
+                        || (array3.getByteArray()[0] != SER_STRING_TYPE_TAG && array3.getByteArray()[0] != SER_NULL_TYPE_TAG)) {
+                    throw new AlgebricksException("Expects String or NULL Type (but got " + array1.getByteArray()[0]
+                            + ", " + array2.getByteArray()[0] + ", " + array3.getByteArray()[0] + ".");
                 }
 
             } else {
-                throw new AlgebricksException("Expects String Type.");
+                throw new AlgebricksException("Expects String or NULL Type.");
             }
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
-        } catch (IOException e) {
-            throw new AlgebricksException(e.getMessage());
         }
 
         byte[] b0 = array0.getByteArray();

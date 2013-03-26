@@ -44,6 +44,12 @@ public class DateFromUnixTimeInDaysDescriptor extends AbstractScalarFunctionDyna
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "date-from-unix-time-in-days", 1);
+    
+    // allowed input types
+    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+    private static final byte SER_INT8_TYPE_TAG = ATypeTag.INT8.serialize();
+    private static final byte SER_INT16_TYPE_TAG = ATypeTag.INT16.serialize();
+    private static final byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
@@ -67,12 +73,6 @@ public class DateFromUnixTimeInDaysDescriptor extends AbstractScalarFunctionDyna
                     private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(argOut);
 
-                    // allowed input types
-                    private byte serNullTypeTag = ATypeTag.NULL.serialize();
-                    private byte serInt8TypeTag = ATypeTag.INT8.serialize();
-                    private byte serInt16TypeTag = ATypeTag.INT16.serialize();
-                    private byte serInt32TypeTag = ATypeTag.INT32.serialize();
-
                     private AMutableDate aDate = new AMutableDate(0);
 
                     // possible returning types
@@ -88,14 +88,14 @@ public class DateFromUnixTimeInDaysDescriptor extends AbstractScalarFunctionDyna
                         argOut.reset();
                         eval.evaluate(tuple);
                         try {
-                            if (argOut.getByteArray()[0] == serNullTypeTag) {
+                            if (argOut.getByteArray()[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
-                                if (argOut.getByteArray()[0] == serInt8TypeTag) {
+                                if (argOut.getByteArray()[0] == SER_INT8_TYPE_TAG) {
                                     aDate.setValue(AInt8SerializerDeserializer.getByte(argOut.getByteArray(), 1));
-                                } else if (argOut.getByteArray()[0] == serInt16TypeTag) {
+                                } else if (argOut.getByteArray()[0] == SER_INT16_TYPE_TAG) {
                                     aDate.setValue(AInt16SerializerDeserializer.getShort(argOut.getByteArray(), 1));
-                                } else if (argOut.getByteArray()[0] == serInt32TypeTag) {
+                                } else if (argOut.getByteArray()[0] == SER_INT32_TYPE_TAG) {
                                     aDate.setValue(AInt32SerializerDeserializer.getInt(argOut.getByteArray(), 1));
                                 } else {
                                     throw new AlgebricksException(

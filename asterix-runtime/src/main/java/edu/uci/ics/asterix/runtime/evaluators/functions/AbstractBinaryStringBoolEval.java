@@ -2,8 +2,6 @@ package edu.uci.ics.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ABoolean;
@@ -21,7 +19,11 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
 
     private DataOutput dout;
+
+    // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
+
     private ArrayBackedValueStorage array0 = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage array1 = new ArrayBackedValueStorage();
     private ICopyEvaluator evalLeft;
@@ -47,15 +49,16 @@ public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
 
         try {
             if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG && array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
-                try {
-                    boolSerde.serialize(ABoolean.TRUE, dout);
-                } catch (HyracksDataException ex) {
-                    Logger.getLogger(AbstractBinaryStringBoolEval.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                boolSerde.serialize(ABoolean.TRUE, dout);
                 return;
-            } else if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG || array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+            } else if ((array0.getByteArray()[0] == SER_NULL_TYPE_TAG && array1.getByteArray()[0] == SER_STRING_TYPE_TAG)
+                    || (array0.getByteArray()[0] == SER_STRING_TYPE_TAG && array1.getByteArray()[0] == SER_NULL_TYPE_TAG)) {
                 boolSerde.serialize(ABoolean.FALSE, dout);
                 return;
+            } else if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG
+                    || array1.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+                throw new AlgebricksException("Expects String or NULL Type (got " + array0.getByteArray()[0] + " and "
+                        + array1.getByteArray()[0] + ")!");
             }
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);

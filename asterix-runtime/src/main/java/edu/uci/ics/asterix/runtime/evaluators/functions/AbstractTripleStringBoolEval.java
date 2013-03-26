@@ -24,6 +24,7 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
 
     private DataOutput dout;
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     private ArrayBackedValueStorage array0 = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage array1 = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage array2 = new ArrayBackedValueStorage();
@@ -53,13 +54,20 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
         eval2.evaluate(tuple);
 
         try {
-            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG && array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
-                boolSerde.serialize(ABoolean.TRUE, dout);
-                return;
-            } else if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG || array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+            if ((array0.getByteArray()[0] == SER_NULL_TYPE_TAG && array1.getByteArray()[0] == SER_STRING_TYPE_TAG)
+                    || (array1.getByteArray()[0] == SER_NULL_TYPE_TAG && array0.getByteArray()[0] == SER_STRING_TYPE_TAG)) {
                 boolSerde.serialize(ABoolean.FALSE, dout);
                 return;
+            } else if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG && array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                boolSerde.serialize(ABoolean.TRUE, dout);
+                return;
             }
+
+            if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG || array1.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+                throw new AlgebricksException(
+                        "Expects String or NULL Type for the first argument and String Type for the second argument.");
+            }
+
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }

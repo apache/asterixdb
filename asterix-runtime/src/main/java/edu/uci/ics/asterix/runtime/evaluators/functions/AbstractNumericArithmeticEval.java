@@ -130,7 +130,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                     default: {
                                         throw new NotImplementedException(i == 0 ? "Left"
                                                 : "Right"
-                                                        + " Operand of Division can not be "
+                                                        + " Operand can not be "
                                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
                                                                 .getByteArray()[0]));
                                     }

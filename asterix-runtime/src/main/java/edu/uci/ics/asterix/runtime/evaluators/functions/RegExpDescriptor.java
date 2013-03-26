@@ -38,7 +38,11 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
+    
+    // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
+    
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new RegExpDescriptor();
@@ -93,6 +97,9 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                 nullSerde.serialize(ANull.NULL, dout);
                                 return;
                             }
+                            if(array0.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+                                throw new AlgebricksException("Expects String/Null Type for RegExp function.");
+                            }
                             boolean newPattern = false;
                             if (first) {
                                 first = false;
@@ -119,6 +126,9 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, dout);
                                 return;
+                            }
+                            if(array0.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+                                throw new AlgebricksException("Expects String/Null Type for RegExp function.");
                             }
                             carSeq.reset(array0, 1);
                             if (newPattern) {

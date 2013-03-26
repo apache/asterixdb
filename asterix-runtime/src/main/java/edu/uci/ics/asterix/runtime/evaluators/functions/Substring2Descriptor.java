@@ -21,6 +21,11 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
+    
+    // allowed input types
+    private static final byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
+    private static final byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
+    
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new Substring2Descriptor();
@@ -46,11 +51,17 @@ public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescripto
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         argOut.reset();
                         evalStart.evaluate(tuple);
+                        if(argOut.getByteArray()[0] != SER_INT32_TYPE_TAG){
+                            throw new AlgebricksException("Expects Int32 Type for the first argument of Substring.");
+                        }
                         int start = IntegerSerializerDeserializer.getInt(argOut.getByteArray(), 1) - 1;
                         argOut.reset();
                         evalString.evaluate(tuple);
 
                         byte[] bytes = argOut.getByteArray();
+                        if(bytes[0] != SER_STRING_TYPE_TAG){
+                            throw new AlgebricksException("Expects String Type for the second argument of Substring.");
+                        }
                         int utflen = UTF8StringPointable.getUTFLength(bytes, 1);
                         int sStart = 3;
                         int c = 0;

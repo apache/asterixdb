@@ -20,6 +20,11 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class SubstringBeforeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
+
+    // allowed input types
+    private static final byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
+    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SubstringBeforeDescriptor();
@@ -51,6 +56,12 @@ public class SubstringBeforeDescriptor extends AbstractScalarFunctionDynamicDesc
                         array1.reset();
                         evalPattern.evaluate(tuple);
                         byte[] pattern = array1.getByteArray();
+
+                        if ((src[0] != SER_STRING_TYPE_TAG && src[0] != SER_NULL_TYPE_TAG)
+                                || (pattern[0] != SER_STRING_TYPE_TAG && pattern[0] != SER_NULL_TYPE_TAG)) {
+                            throw new AlgebricksException(
+                                    "Expects Types: (String, String) for substring-before function. ");
+                        }
 
                         int srcLen = UTF8StringPointable.getUTFLength(src, 1);
                         int patternLen = UTF8StringPointable.getUTFLength(pattern, 1);

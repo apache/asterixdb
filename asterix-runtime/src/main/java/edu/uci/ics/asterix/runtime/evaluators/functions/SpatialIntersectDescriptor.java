@@ -36,6 +36,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
+    
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SpatialIntersectDescriptor();
@@ -67,6 +68,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                     private final DoubleArray trianglesY1 = new DoubleArray();
 
                     private boolean pointOnLine(byte[] bytes0, byte[] bytes1) throws HyracksDataException {
+                        
                         double startX = ADoubleSerializerDeserializer.getDouble(bytes0,
                                 ALineSerializerDeserializer.getStartPointCoordinateOffset(Coordinate.X));
                         double startY = ADoubleSerializerDeserializer.getDouble(bytes0,

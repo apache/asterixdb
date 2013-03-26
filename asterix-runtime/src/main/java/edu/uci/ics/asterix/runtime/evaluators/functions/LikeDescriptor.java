@@ -39,7 +39,11 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class LikeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
+
+    // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new LikeDescriptor();
@@ -94,6 +98,9 @@ public class LikeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                 nullSerde.serialize(ANull.NULL, dout);
                                 return;
                             }
+                            if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+                                throw new AlgebricksException("Expects Types: String/Null, String/Null");
+                            }
                             boolean newPattern = false;
                             if (first) {
                                 first = false;
@@ -120,6 +127,9 @@ public class LikeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, dout);
                                 return;
+                            }
+                            if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+                                throw new AlgebricksException("Expects Types: String/Null, String/Null");
                             }
                             carSeq.reset(array0, 1);
                             if (newPattern) {
