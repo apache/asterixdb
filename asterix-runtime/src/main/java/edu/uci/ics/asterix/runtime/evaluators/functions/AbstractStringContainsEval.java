@@ -6,7 +6,9 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ABoolean;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -30,11 +32,14 @@ public abstract class AbstractStringContainsEval implements ICopyEvaluator {
     private ISerializerDeserializer boolSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
+    private final FunctionIdentifier funcID;
+
     public AbstractStringContainsEval(DataOutput dout, ICopyEvaluatorFactory evalStringFactory,
-            ICopyEvaluatorFactory evalPatternFactory) throws AlgebricksException {
+            ICopyEvaluatorFactory evalPatternFactory, FunctionIdentifier funcID) throws AlgebricksException {
         this.dout = dout;
         this.evalString = evalStringFactory.createEvaluator(array0);
         this.evalPattern = evalPatternFactory.createEvaluator(array1);
+        this.funcID = funcID;
     }
 
     @SuppressWarnings("unchecked")
@@ -60,7 +65,10 @@ public abstract class AbstractStringContainsEval implements ICopyEvaluator {
             }
 
             if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG || array1.getByteArray()[0] != SER_STRING_TYPE_TAG) {
-                throw new AlgebricksException("Expects String or NULL Type.");
+                throw new AlgebricksException(funcID.getName()
+                        + ": expects input type (STRING/NULL, STRING/NULL), but got ("
+                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]) + ", "
+                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array1.getByteArray()[0]) + ").");
             }
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);

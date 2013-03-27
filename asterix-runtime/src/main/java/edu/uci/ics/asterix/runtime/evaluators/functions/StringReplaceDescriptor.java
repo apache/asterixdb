@@ -50,7 +50,8 @@ public class StringReplaceDescriptor extends AbstractScalarFunctionDynamicDescri
 
                 DataOutput dout = output.getDataOutput();
 
-                return new AbstractTripleStringStringEval(dout, args[0], args[1], args[2]) {
+                return new AbstractTripleStringStringEval(dout, args[0], args[1], args[2],
+                        AsterixBuiltinFunctions.STRING_REPLACE) {
 
                     private Pattern pattern = null;
                     private Matcher matcher = null;

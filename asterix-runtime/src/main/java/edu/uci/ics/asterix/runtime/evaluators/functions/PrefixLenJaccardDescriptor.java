@@ -12,6 +12,7 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.fuzzyjoin.similarity.SimilarityFiltersJaccard;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -68,16 +69,20 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
                         // length
                         inputVal.reset();
                         evalLen.evaluate(tuple);
-                        if(inputVal.getByteArray()[0] != SER_INT32_TYPE_TAG){
-                            throw new AlgebricksException("Expects Int32 Type for the first argument of PrefixLenJaccard.");
+                        if (inputVal.getByteArray()[0] != SER_INT32_TYPE_TAG) {
+                            throw new AlgebricksException(AsterixBuiltinFunctions.PREFIX_LEN_JACCARD.getName()
+                                    + ": expects type Int32 the first argument but got "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]));
                         }
                         int length = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
                         // similarity threshold
                         inputVal.reset();
                         evalThreshold.evaluate(tuple);
-                        if(inputVal.getByteArray()[0] != SER_FLOAT_TYPE_TAG){
-                            throw new AlgebricksException("Expects Float Type for the second argument of PrefixLenJaccard.");
+                        if (inputVal.getByteArray()[0] != SER_FLOAT_TYPE_TAG) {
+                            throw new AlgebricksException(AsterixBuiltinFunctions.PREFIX_LEN_JACCARD.getName()
+                                    + ": expects type FLOAT the first argument but got "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]));
                         }
                         float similarityThreshold = (float) AFloatSerializerDeserializer.getFloat(
                                 inputVal.getByteArray(), 1);

@@ -33,6 +33,8 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
         }
     };
     private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
+    private final static byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
+
     private final static byte[] currentUTF8 = new byte[6];
     private final byte stringTypeTag = ATypeTag.STRING.serialize();
 
@@ -44,7 +46,7 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
 
             private int codePointToUTF8(int c) {
                 if (c < 0x80) {
-                    currentUTF8[0] = (byte) (c & 0x7F /*mask 7 lsb: 0b1111111 */);
+                    currentUTF8[0] = (byte) (c & 0x7F /* mask 7 lsb: 0b1111111 */);
                     return 1;
                 } else if (c < 0x0800) {
                     currentUTF8[0] = (byte) (c >> 6 & 0x1F | 0xC0);
@@ -95,8 +97,10 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                             outInputList.reset();
                             evalList.evaluate(tuple);
                             byte[] serOrderedList = outInputList.getByteArray();
-                            if (serOrderedList[0] != SER_ORDEREDLIST_TYPE_TAG) {
-                                throw new AlgebricksException("Expects an Integer List."
+                            if (serOrderedList[0] != SER_ORDEREDLIST_TYPE_TAG
+                                    && serOrderedList[1] != SER_INT32_TYPE_TAG) {
+                                throw new AlgebricksException(AsterixBuiltinFunctions.CODEPOINT_TO_STRING.getName()
+                                        + ": expects input type ORDEREDLIST but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[0]));
                             }
                             int size = AOrderedListSerializerDeserializer.getNumberOfItems(serOrderedList);

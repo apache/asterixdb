@@ -129,7 +129,8 @@ public class NumericAbsDescriptor extends AbstractScalarFunctionDynamicDescripto
                                 aDouble.setValue((val <= 0.0D) ? 0.0D - val : val);
                                 serde.serialize(aDouble, out);
                             } else {
-                                throw new NotImplementedException("Numeric Abs is not implemented for "
+                                throw new NotImplementedException(AsterixBuiltinFunctions.NUMERIC_ABS.getName()
+                                        + ": not implemented for "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
                             }
                         } catch (HyracksDataException e) {

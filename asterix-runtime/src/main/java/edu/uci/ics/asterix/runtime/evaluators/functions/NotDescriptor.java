@@ -53,7 +53,8 @@ public class NotDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(argOut);
 
-                    private String errorMessage = "Not() can only be applied on boolean";
+                    private String errorMessage = AsterixBuiltinFunctions.NOT.getName()
+                            + ": expects input type BOOLEAN/NULL";
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ABOOLEAN);

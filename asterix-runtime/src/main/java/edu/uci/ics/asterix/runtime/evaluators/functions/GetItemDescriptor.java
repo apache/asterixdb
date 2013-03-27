@@ -52,6 +52,7 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
         private ICopyEvaluatorFactory indexEvalFactory;
         private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
         private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+        private final static byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
         private byte serItemTypeTag;
         private ATypeTag itemTag;
         private boolean selfDescList = false;
@@ -92,9 +93,13 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             return;
                         }
 
-                        if (serOrderedList[0] != SER_ORDEREDLIST_TYPE_TAG) {
-                            throw new AlgebricksException("List's get-item can not be called on values of type"
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[0]));
+                        if (serOrderedList[0] != SER_ORDEREDLIST_TYPE_TAG
+                                || outInputIdx.getByteArray()[0] != SER_INT32_TYPE_TAG) {
+                            throw new AlgebricksException(AsterixBuiltinFunctions.GET_ITEM.getName()
+                                    + ": expects input type (NULL/ORDEREDLIST, INT32), but got ("
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[0]) + ", "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInputIdx.getByteArray()[0])
+                                    + ").");
                         }
 
                         itemIndex = IntegerSerializerDeserializer.getInt(outInputIdx.getByteArray(), 1);
@@ -103,7 +108,8 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             return;
                         }
                         if (itemIndex < 0)
-                            throw new AlgebricksException("Item index can be negative !!");
+                            throw new AlgebricksException(AsterixBuiltinFunctions.GET_ITEM.getName()
+                                    + ": item index can be negative!");
 
                         itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[1]);
                         if (itemTag == ATypeTag.ANY)

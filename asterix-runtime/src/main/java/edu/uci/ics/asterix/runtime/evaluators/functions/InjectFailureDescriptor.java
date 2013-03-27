@@ -58,7 +58,8 @@ public class InjectFailureDescriptor extends AbstractScalarFunctionDynamicDescri
                             if (typeTag == ATypeTag.BOOLEAN) {
                                 boolean argResult = ABooleanSerializerDeserializer.getBoolean(argOut.getByteArray(), 1);
                                 if (argResult)
-                                    throw new AlgebricksException("Injecting a intended failure");
+                                    throw new AlgebricksException(AsterixBuiltinFunctions.INJECT_FAILURE
+                                            + ": injecting a intended failure");
                             }
 
                             // evaluate the real evaluator

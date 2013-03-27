@@ -33,7 +33,7 @@ public class ContainsDescriptor extends AbstractScalarFunctionDynamicDescriptor 
 
                 DataOutput dout = output.getDataOutput();
 
-                return new AbstractStringContainsEval(dout, args[0], args[1]) {
+                return new AbstractStringContainsEval(dout, args[0], args[1], AsterixBuiltinFunctions.CONTAINS) {
 
                     @Override
                     protected boolean findMatch(byte[] strBytes, byte[] patternBytes) {

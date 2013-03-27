@@ -92,7 +92,8 @@ public class FieldAccessByNameDescriptor extends AbstractScalarFunctionDynamicDe
                         }
 
                         if (serRecord[0] != SER_RECORD_TYPE_TAG) {
-                            throw new AlgebricksException("Field accessor is not defined for values of type"
+                            throw new AlgebricksException(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME.getName()
+                                    + ": expects input type NULL or RECORD, but got "
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[0]));
                         }
 

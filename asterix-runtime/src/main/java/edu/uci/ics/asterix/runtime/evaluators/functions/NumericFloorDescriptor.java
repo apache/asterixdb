@@ -129,7 +129,7 @@ public class NumericFloorDescriptor extends AbstractScalarFunctionDynamicDescrip
                                 aDouble.setValue(Math.floor(val));
                                 serde.serialize(aDouble, out);
                             } else {
-                                throw new NotImplementedException("Numeric Floor is not implemented for "
+                                throw new NotImplementedException(AsterixBuiltinFunctions.NUMERIC_FLOOR.getName() + ": not implemented for "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
                             }
                         } catch (HyracksDataException e) {

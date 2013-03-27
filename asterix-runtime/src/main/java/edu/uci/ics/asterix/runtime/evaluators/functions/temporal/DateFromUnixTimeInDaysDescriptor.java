@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
@@ -24,10 +23,12 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADate;
 import edu.uci.ics.asterix.om.base.AMutableDate;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -42,9 +43,8 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class DateFromUnixTimeInDaysDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "date-from-unix-time-in-days", 1);
-    
+    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.DATE_FROM_UNIX_TIME_IN_DAYS;
+
     // allowed input types
     private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private static final byte SER_INT8_TYPE_TAG = ATypeTag.INT8.serialize();
@@ -99,8 +99,10 @@ public class DateFromUnixTimeInDaysDescriptor extends AbstractScalarFunctionDyna
                                     aDate.setValue(AInt32SerializerDeserializer.getInt(argOut.getByteArray(), 1));
                                 } else {
                                     throw new AlgebricksException(
-                                            "Inapplicable input type for function date-from-unix-time-in-days: expecting integer or null type, but got "
-                                                    + argOut.getByteArray()[0]);
+                                            FID.getName()
+                                                    + ": expects type INT8/INT16/INT32/INT64/NULL but got "
+                                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
+                                                            .getByteArray()[0]));
                                 }
                                 dateSerde.serialize(aDate, out);
                             }

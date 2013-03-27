@@ -10,6 +10,7 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -48,7 +49,7 @@ public class StringLowerCaseDescriptor extends AbstractScalarFunctionDynamicDesc
                     private DataOutput out = output.getDataOutput();
                     private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(outInput);
-                    private String errorMessage = "This is not an instance of string";
+
                     private final byte stt = ATypeTag.STRING.serialize();
 
                     @SuppressWarnings("unchecked")
@@ -80,9 +81,11 @@ public class StringLowerCaseDescriptor extends AbstractScalarFunctionDynamicDesc
                             } else if (serString[0] == SER_NULL_TYPE_TAG)
                                 nullSerde.serialize(ANull.NULL, out);
                             else
-                                throw new AlgebricksException(errorMessage);
+                                throw new AlgebricksException(AsterixBuiltinFunctions.STRING_LOWERCASE.getName()
+                                        + ": expects input type STRING/NULL but got "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serString[0]));
                         } catch (IOException e1) {
-                            throw new AlgebricksException(errorMessage);
+                            throw new AlgebricksException(e1);
                         }
                     }
                 };

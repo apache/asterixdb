@@ -15,6 +15,7 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -69,7 +70,12 @@ public class CreateLineDescriptor extends AbstractScalarFunctionDynamicDescripto
                         // type-check: (point, point)
                         if (outInput0.getByteArray()[0] != SER_POINT_TYPE_TAG
                                 || outInput1.getByteArray()[0] != SER_POINT_TYPE_TAG) {
-                            throw new AlgebricksException("Expects Types: (Point, Point).");
+                            throw new AlgebricksException(AsterixBuiltinFunctions.CREATE_LINE.getName()
+                                    + ": expects input type: (POINT, POINT) but got ("
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0.getByteArray()[0])
+                                    + ", "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput1.getByteArray()[0])
+                                    + ").");
                         }
 
                         try {

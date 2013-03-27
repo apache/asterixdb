@@ -22,6 +22,7 @@ import edu.uci.ics.asterix.om.base.ABoolean;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
@@ -84,14 +85,18 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
 
                             if (argOut0.getByteArray()[0] != SER_INTERVAL_TYPE_TAG
                                     || argOut1.getByteArray()[0] != SER_INTERVAL_TYPE_TAG) {
-                                throw new AlgebricksException("Inapplicable input type for parameters: ("
-                                        + argOut0.getByteArray()[0] + ", " + argOut1.getByteArray()[0] + ")");
+                                throw new AlgebricksException(getIdentifier().getName()
+                                        + ": expects input type (INTERVAL, INTERVAL) but got ("
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0])
+                                        + ", "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0])
+                                        + ")");
                             }
 
                             if (AIntervalSerializerDeserializer.getIntervalTimeType(argOut0.getByteArray(), 1) != AIntervalSerializerDeserializer
                                     .getIntervalTimeType(argOut1.getByteArray(), 1)) {
-                                throw new AlgebricksException(
-                                        "Failed to compare to intervals with different internal time type.");
+                                throw new AlgebricksException(getIdentifier().getName()
+                                        + ": failed to compare intervals with different internal time type.");
                             }
 
                             ABoolean res = (compareIntervals(

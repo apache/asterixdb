@@ -131,7 +131,8 @@ public class NumericRoundDescriptor extends AbstractScalarFunctionDynamicDescrip
                                 aDouble.setValue(val);
                                 serde.serialize(aDouble, out);
                             } else {
-                                throw new NotImplementedException("Numeric Round is not implemented for "
+                                throw new NotImplementedException(AsterixBuiltinFunctions.NUMERIC_ROUND.getName()
+                                        + ": not implemented for "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
                             }
                         } catch (HyracksDataException e) {

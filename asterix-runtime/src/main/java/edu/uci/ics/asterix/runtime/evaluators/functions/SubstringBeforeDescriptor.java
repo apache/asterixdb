@@ -7,6 +7,7 @@ import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -59,8 +60,10 @@ public class SubstringBeforeDescriptor extends AbstractScalarFunctionDynamicDesc
 
                         if ((src[0] != SER_STRING_TYPE_TAG && src[0] != SER_NULL_TYPE_TAG)
                                 || (pattern[0] != SER_STRING_TYPE_TAG && pattern[0] != SER_NULL_TYPE_TAG)) {
-                            throw new AlgebricksException(
-                                    "Expects Types: (String, String) for substring-before function. ");
+                            throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING_BEFORE.getName()
+                                    + ": expects input type (STRING/NULL, STRING/NULL) but got ("
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(src[0]) + ", "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(pattern[0]) + ").");
                         }
 
                         int srcLen = UTF8StringPointable.getUTFLength(src, 1);

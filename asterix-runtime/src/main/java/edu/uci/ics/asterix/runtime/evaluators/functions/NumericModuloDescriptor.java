@@ -142,8 +142,9 @@ public class NumericModuloDescriptor extends AbstractScalarFunctionDynamicDescri
                                         return;
                                     }
                                     default: {
-                                        throw new NotImplementedException(i == 0 ? "Left" : "Right"
-                                                + " Operand of Modulo can not be "
+                                        throw new NotImplementedException(AsterixBuiltinFunctions.NUMERIC_MOD.getName()
+                                                + (i == 0 ? ": left" : ": right")
+                                                + " operand can not be "
                                                 + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
                                                         .getByteArray()[0]));
                                     }

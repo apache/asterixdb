@@ -79,14 +79,17 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
                                             APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
                                     distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
                                 } else {
-                                    throw new NotImplementedException("spatial-distance does not support the type: "
-                                            + tag1 + " It is only implemented for POINT.");
+                                    throw new NotImplementedException(
+                                            AsterixBuiltinFunctions.SPATIAL_DISTANCE.getName()
+                                                    + ": does not support the type: " + tag1
+                                                    + "; it is only implemented for POINT.");
                                 }
                             } else if (tag0 == ATypeTag.NULL || tag1 == ATypeTag.NULL) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
-                                throw new NotImplementedException("spatial-distance does not support the type: " + tag0
-                                        + " It is only implemented for POINT.");
+                                throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_DISTANCE.getName()
+                                        + ": does not support the type: " + tag1
+                                        + "; it is only implemented for POINT.");
                             }
                             out.writeByte(ATypeTag.DOUBLE.serialize());
                             out.writeDouble(distance);

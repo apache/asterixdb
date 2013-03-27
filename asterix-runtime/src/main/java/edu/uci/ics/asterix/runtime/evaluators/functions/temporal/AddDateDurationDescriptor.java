@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -25,10 +24,12 @@ import edu.uci.ics.asterix.om.base.AMutableDate;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.temporal.DurationArithmeticOperations;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -43,8 +44,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class AddDateDurationDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "add-date-duration", 2);
+    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.ADD_DATE_DURATION;
 
     // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
@@ -100,17 +100,15 @@ public class AddDateDurationDescriptor extends AbstractScalarFunctionDynamicDesc
                             }
 
                             if (argOut0.getByteArray()[0] != SER_DATE_TYPE_TAG) {
-                                throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 0: expecting a Date ("
-                                                + SER_DATE_TYPE_TAG + ") or null (" + SER_NULL_TYPE_TAG
-                                                + "), but got: " + argOut0.getByteArray()[0]);
+                                throw new AlgebricksException(FID.getName()
+                                        + ": expects type DATE/NULL for parameter 0 but got "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]));
                             }
 
                             if (argOut1.getByteArray()[0] != SER_DURATION_TYPE_TAG) {
-                                throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 1: expecting a Duration ("
-                                                + SER_DURATION_TYPE_TAG + ") or null (" + SER_NULL_TYPE_TAG
-                                                + "), but got: " + argOut1.getByteArray()[0]);
+                                throw new AlgebricksException(FID.getName()
+                                        + ": expects type DURATION/NULL for parameter 1 but got "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0]));
                             }
 
                             // get duration fields: yearMonth field and dayTime field
