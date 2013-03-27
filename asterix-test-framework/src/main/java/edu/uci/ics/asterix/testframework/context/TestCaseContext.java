@@ -86,9 +86,19 @@ public class TestCaseContext {
 
         if (fileNames != null) {
             for (String fName : fileNames) {
+                if (fName.startsWith(".")) {
+                    continue;
+                }
+                
                 File testFile = new File(path, fName);
                 TestFileContext tfsc = new TestFileContext(testFile);
                 String[] nameSplits = fName.split("\\.");
+                
+                if (nameSplits.length < 3) {
+                    throw new IllegalArgumentException("Test file '" + cUnit.getName() + File.separatorChar
+                            + fName + "' does not have the proper test file name format.");
+                }
+                
                 tfsc.setSeqNum(nameSplits[nameSplits.length - 2]);
                 resultFileCtxs.add(tfsc);
             }
