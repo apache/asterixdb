@@ -467,7 +467,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             if (bActiveTxn) {
-                e.printStackTrace();
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             }
 
