@@ -63,7 +63,7 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                 outInput2.reset();
                 eval2.evaluate(tuple);
 
-                // type-check: (int32, int32, double)
+                // type-check: (Point/Line/Polygon/Circle/Rectangle/Null, Int32, Int32)
                 if (outInput1.getByteArray()[0] != SER_INT32_TYPE_TAG
                         || outInput2.getByteArray()[0] != SER_INT32_TYPE_TAG) {
                     throw new AlgebricksException("Expects Types: (Point/Line/Polygon/Circle/Rectangle/Null, Int32, Int32).");
