@@ -33,17 +33,17 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId> hyracks-storage-am-lsm-invertedindex </artifactId>
-			<version>0.2.3-SNAPSHOT</version>
+			<version>0.2.4-SNAPSHOT</version>
 		</dependency>
         <dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>algebricks-compiler</artifactId>
-			<version>0.2.3-SNAPSHOT</version>
+			<version>0.2.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-rtree</artifactId>
-			<version>0.2.3-SNAPSHOT</version>
+			<version>0.2.4-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 </project>
