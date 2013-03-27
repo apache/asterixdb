@@ -56,10 +56,9 @@ public class ExecutionTest {
         outdir.mkdirs();
 
         File log = new File("asterix_logs");
-        if (log.exists())
-            FileUtils.deleteDirectory(log);
-        File lsn = new File("last_checkpoint_lsn");
-        lsn.deleteOnExit();
+        if (log.exists()) {
+            FileUtils.deleteDirectory(log); 
+        }
 
         AsterixHyracksIntegrationUtil.init();
 
@@ -87,10 +86,9 @@ public class ExecutionTest {
         }
 
         File log = new File("asterix_logs");
-        if (log.exists())
-            FileUtils.deleteDirectory(log);
-        File lsn = new File("last_checkpoint_lsn");
-        lsn.deleteOnExit();
+        if (log.exists()) {
+            FileUtils.deleteDirectory(log); 
+        }
         HDFSCluster.getInstance().cleanup();
     }
 
@@ -234,6 +232,11 @@ public class ExecutionTest {
         List<CompilationUnit> cUnits = tcCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
             LOGGER.info("[TEST]: " + tcCtx.getTestCase().getFilePath() + "/" + cUnit.getName());
+            
+//            if (!tcCtx.getTestCase().getFilePath().contains("failure")) {
+//            	continue;
+//            }
+            
             testFileCtxs = tcCtx.getTestFiles(cUnit);
             expectedResultFileCtxs = tcCtx.getExpectedResultFiles(cUnit);
 

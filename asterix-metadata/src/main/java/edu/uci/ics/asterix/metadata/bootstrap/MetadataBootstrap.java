@@ -125,7 +125,7 @@ public class MetadataBootstrap {
                 MetadataSecondaryIndexes.DATATYPENAME_ON_DATATYPE_INDEX };
     }
 
-    public static void startUniverse(AsterixProperties asterixProperties, INCApplicationContext ncApplicationContext)
+    public static void startUniverse(AsterixProperties asterixProperties, INCApplicationContext ncApplicationContext, boolean isNewUniverse)
             throws Exception {
         runtimeContext = (AsterixAppRuntimeContext) ncApplicationContext.getApplicationObject();
 
@@ -138,7 +138,6 @@ public class MetadataBootstrap {
         MetadataSecondaryIndexes.init();
         initLocalIndexArrays();
 
-        boolean isNewUniverse = true;
         TransactionalResourceManagerRepository resourceRepository = runtimeContext.getTransactionSubsystem()
                 .getTransactionalResourceRepository();
         resourceRepository.registerTransactionalResourceManager(ResourceType.LSM_BTREE, new IndexResourceManager(
@@ -149,7 +148,6 @@ public class MetadataBootstrap {
                 new IndexResourceManager(ResourceType.LSM_INVERTED_INDEX, runtimeContext.getTransactionSubsystem()));
 
         metadataNodeName = asterixProperties.getMetadataNodeName();
-        isNewUniverse = asterixProperties.isNewUniverse();
         metadataStore = asterixProperties.getMetadataStore();
         nodeNames = asterixProperties.getNodeNames();
         // nodeStores = asterixProperity.getStores();
@@ -167,7 +165,7 @@ public class MetadataBootstrap {
 
         if (isNewUniverse) {
             //Do checkpoint only if it is new universe
-            runtimeContext.getTransactionSubsystem().getRecoveryManager().checkpoint(false);
+            //runtimeContext.getTransactionSubsystem().getRecoveryManager().checkpoint(false);
             MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             try {
                 // Begin a transaction against the metadata.

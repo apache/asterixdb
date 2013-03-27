@@ -9,6 +9,8 @@ import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMBTreeIOOperat
 import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
 import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTrackerFactory;
+import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepository;
+import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
 import edu.uci.ics.asterix.transaction.management.service.recovery.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
@@ -33,7 +35,6 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
-import edu.uci.ics.hyracks.storage.common.file.PersistentLocalResourceRepositoryFactory;
 import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactoryProvider;
 
@@ -53,7 +54,7 @@ public class AsterixAppRuntimeContext {
     private ILSMOperationTrackerFactory lsmRTreeOpTrackerFactory;
     private ILSMOperationTrackerFactory lsmInvertedIndexOpTrackerFactory;
     private ILSMIOOperationScheduler lsmIOScheduler;
-    private ILocalResourceRepository localResourceRepository;
+    private PersistentLocalResourceRepository localResourceRepository;
     private ResourceIdFactory resourceIdFactory;
     private IIOManager ioManager;
 
@@ -86,7 +87,8 @@ public class AsterixAppRuntimeContext {
 
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
                 ioManager);
-        localResourceRepository = persistentLocalResourceRepositoryFactory.createRepository();
+        localResourceRepository = (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory
+                .createRepository();
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
     }
 

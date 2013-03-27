@@ -141,6 +141,10 @@ public class RecoveryManager implements IRecoveryManager {
         ILogManager logManager = txnSubsystem.getLogManager();
         ILogRecordHelper logRecordHelper = logManager.getLogRecordHelper();
 
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("[RecoveryMgr] starting recovery ...");
+        }
+        
         //winnerTxnTable is used to add pairs, <committed TxnId, the most recent commit LSN of the TxnId>
         Map<TxnId, Long> winnerTxnTable = new HashMap<TxnId, Long>();
         TxnId tempKeyTxnId = new TxnId(-1, -1, -1);
@@ -149,6 +153,9 @@ public class RecoveryManager implements IRecoveryManager {
         //#. read checkpoint file and set lowWaterMark where anaylsis and redo start
         CheckpointObject checkpointObject = readCheckpoint();
         long lowWaterMarkLSN = checkpointObject.getMinMCTFirstLSN();
+        if (lowWaterMarkLSN == -1) {
+        	lowWaterMarkLSN = 0;
+        }
         int maxJobId = checkpointObject.getMaxJobId();
         int currentJobId;
 
@@ -158,7 +165,10 @@ public class RecoveryManager implements IRecoveryManager {
         //  - if there are duplicate commits for the same TxnId, 
         //    keep only the mostRecentCommitLSN among the duplicates.
         //-------------------------------------------------------------------------
-
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("[RecoveryMgr] in analysis phase");
+        }
+        
         //#. set log cursor to the lowWaterMarkLSN
         ILogCursor logCursor = logManager.readLog(new PhysicalLogLocator(lowWaterMarkLSN, logManager),
                 new ILogFilter() {
@@ -208,7 +218,9 @@ public class RecoveryManager implements IRecoveryManager {
         //      &&  
         //    2) the currentLSN > maxDiskLastLSN of the index --> guarantee idempotance
         //-------------------------------------------------------------------------
-
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("[RecoveryMgr] in redo phase");
+        }
         //#. set log cursor to the lowWaterMarkLSN again.
         logCursor = logManager.readLog(new PhysicalLogLocator(lowWaterMarkLSN, logManager), new ILogFilter() {
             public boolean accept(IBuffer logs, long startOffset, int endOffset) {
@@ -356,6 +368,10 @@ public class RecoveryManager implements IRecoveryManager {
         Set<Long> resourceIdList = resourceId2MaxLSNMap.keySet();
         for (long r : resourceIdList) {
             indexLifecycleManager.close(r);
+        }
+        
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("[RecoveryMgr] recovery is over");
         }
     }
 

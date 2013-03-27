@@ -60,10 +60,9 @@ public class OptimizerTest {
         outdir.mkdirs();
         
         File log = new File("asterix_logs");
-        if (log.exists())
-            FileUtils.deleteDirectory(log);
-        File lsn = new File("last_checkpoint_lsn");
-        lsn.deleteOnExit();
+        if (log.exists()) {
+            FileUtils.deleteDirectory(log); 
+        }
         
         AsterixHyracksIntegrationUtil.init();
         // Set the node resolver to be the identity resolver that expects node names 
@@ -79,6 +78,11 @@ public class OptimizerTest {
         File[] files = outdir.listFiles();
         if (files == null || files.length == 0) {
             outdir.delete();
+        }
+        
+        File log = new File("asterix_logs");
+        if (log.exists()) {
+            FileUtils.deleteDirectory(log); 
         }
     }
 

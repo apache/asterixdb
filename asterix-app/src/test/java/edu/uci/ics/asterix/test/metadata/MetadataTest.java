@@ -86,10 +86,9 @@ public class MetadataTest {
         outdir.mkdirs();
 
         File log = new File("asterix_logs");
-        if (log.exists())
-            FileUtils.deleteDirectory(log);
-        File lsn = new File("last_checkpoint_lsn");
-        lsn.deleteOnExit();
+        if (log.exists()) {
+            FileUtils.deleteDirectory(log); 
+        }
 
         AsterixHyracksIntegrationUtil.init();
 
@@ -110,10 +109,9 @@ public class MetadataTest {
         }
 
         File log = new File("asterix_logs");
-        if (log.exists())
-            FileUtils.deleteDirectory(log);
-        File lsn = new File("last_checkpoint_lsn");
-        lsn.deleteOnExit();
+        if (log.exists()) {
+            FileUtils.deleteDirectory(log); 
+        }
     }
 
     @Parameters
