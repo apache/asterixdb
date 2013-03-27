@@ -1,0 +1,11 @@
+/*
+ * Testcase Name  :  open-closed-17.aql
+ * Description    :  Test open type dataset by inserting additional data along with inserting data for existing fields.
+ * Success        :  Yes
+ * Date           :  March 30th 2012
+ */
+
+use dataverse test;
+
+for $l in dataset('tdtst')
+return $l

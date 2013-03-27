@@ -1,0 +1,5 @@
+use dataverse test;
+      
+for $c in dataset('Customers')
+let $nestedRec := $c.lastorder
+return { "id": $c.cid, "nestedRecord":$nestedRec, "order_id" : $nestedRec.oid}

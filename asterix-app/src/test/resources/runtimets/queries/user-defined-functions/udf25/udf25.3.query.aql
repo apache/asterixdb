@@ -1,0 +1,12 @@
+/*
+ * Description  : Create UDF and invoke with negative inputs.
+ * Expected Res : Failure
+ * Date         : 5th Sep 2012
+ */
+
+// This one returns NPE...
+
+use dataverse test;
+
+test.computeBonus(-1,-1)
+

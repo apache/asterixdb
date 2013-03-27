@@ -1,0 +1,14 @@
+/*
+ * Description     : Test nested for and return
+ * Expected Result : Success
+ * Date            : 21st Aug 2012
+ */
+
+
+for $a in (
+    for $b in (
+               for $c in (
+                         for $d in [1,2,3,4,5,6,7] return $d+1
+               ) return $c+1
+    ) return $b+1
+) return $a+1

@@ -1,0 +1,6 @@
+/*
+ * Description  : Create secondary index and drop the secondary index and query metadata to verify drop index.
+ * Expected Res : Success 
+ * Date         : Sep 17 2012
+ */
+

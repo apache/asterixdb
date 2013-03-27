@@ -1,0 +1,10 @@
+/* 
+ * Description  : Create two UDFs in two different dataverses
+ *              : Invoke one UDF from the body of the other UDF.
+ * Expected Res : Success
+ * Date         : 31st Aug 2012
+ */
+
+use dataverse testdv1;
+
+testdv1.fun01()

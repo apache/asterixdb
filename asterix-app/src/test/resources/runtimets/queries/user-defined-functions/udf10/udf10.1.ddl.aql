@@ -1,0 +1,15 @@
+/*
+ * Description  : Create UDF and pass an unordered list as input and return that list.
+ * Expected Res : Success
+ * Date         : 4th September 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create function test.echo($uolist){
+$uolist
+}
+

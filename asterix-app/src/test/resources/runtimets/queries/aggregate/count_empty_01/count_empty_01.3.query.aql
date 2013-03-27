@@ -1,0 +1,11 @@
+/*
+ * Description    : Tests that count aggregation correctly returns 0 for an empty stream,
+ *                  without an aggregate combiner.
+ * Success        : Yes
+ */
+
+count(
+ for $x in [1, 2, 3]
+ where $x > 10
+ return $x
+)

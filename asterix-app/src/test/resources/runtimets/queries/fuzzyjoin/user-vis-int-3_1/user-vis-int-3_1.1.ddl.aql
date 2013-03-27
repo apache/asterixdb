@@ -1,0 +1,23 @@
+drop dataverse fuzzyjoin if exists;
+
+create dataverse fuzzyjoin;
+
+use dataverse fuzzyjoin;
+
+create type UserType as open {
+  uid: int32, 
+  name: string,
+  lottery_numbers: [int32],
+  interests: {{string}}
+}
+
+create type VisitorType as open {
+  vid: int32, 
+  name: string,
+  lottery_numbers: [int32],
+  interests: {{string}}
+}
+
+create dataset Users(UserType) primary key uid;
+create dataset Visitors(VisitorType) primary key vid;
+

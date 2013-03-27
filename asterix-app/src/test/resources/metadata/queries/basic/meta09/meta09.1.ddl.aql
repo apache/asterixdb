@@ -1,0 +1,15 @@
+/*
+ * Description  : Create internal dataset, insert data and query metadata Dataset to verify entries for that dataset.
+ * Expected Res : Success
+ * Date         : Sep 17 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+create type test.testtype as open {
+id:int32
+}
+
+create dataset test.t1(testtype) primary key id;
+

@@ -1,0 +1,9 @@
+/*
+ * Description    : Tests syntax error for the changed dataset access syntax
+ * Expected Result: Syntax Error from parser
+ * Date: 			March 6th 2013
+ */
+use dataverse test;
+
+insert into dataset Office({"id": 1, "name": "clerk#1", "salary":120000});
+

@@ -1,0 +1,17 @@
+/* scan and print a delimited text file */
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type DBLPType as open {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create dataset DBLP1(DBLPType) 
+  primary key id;
+

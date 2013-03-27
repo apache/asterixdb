@@ -14,6 +14,9 @@
  */
 package edu.uci.ics.asterix.om.base;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -65,5 +68,17 @@ public class ARectangle implements IAObject {
     @Override
     public String toString() {
         return "ARectangle: { p1: " + p1 + ", p2: " + p2 + "}";
+    }
+
+    @Override
+    public JSONObject toJSON() throws JSONException {
+        JSONObject json = new JSONObject();
+
+        JSONObject rectangle = new JSONObject();
+        rectangle.put("p1", p1);
+        rectangle.put("p2", p2);
+        json.put("ARectangle", rectangle);
+
+        return json;
     }
 }

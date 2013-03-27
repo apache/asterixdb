@@ -1,0 +1,51 @@
+/*
+ * Description  : Test cross dataverse functionality
+ *              : use dataverse statement is now optional.
+ *              : Use fully qualified names to create datasets, types.
+ *              : drop datasets using fully qualified names
+ *              : re create the datasets 
+ *              : Query metadata to verify datasets are created.
+ * Expected Res : Success
+ * Date         : 28th Aug 2012
+ */
+
+drop dataverse student if exists;
+drop dataverse teacher if exists;
+
+create dataverse student;
+create dataverse teacher;
+
+use dataverse student;
+use dataverse teacher;
+
+create type student.stdType as open {
+id : int32,
+name : string,
+age : int32,
+sex : string,
+dept : string
+}
+
+create type teacher.tchrType as open {
+id : int32,
+name : string,
+age : int32,
+sex : string,
+dept : string
+}
+
+create dataset student.ugdstd(stdType) primary key id;
+create dataset student.gdstd(stdType) primary key id;
+create dataset teacher.prof(tchrType) primary key id;
+create dataset teacher.pstdoc(tchrType) primary key id;
+
+drop dataset student.ugdstd;
+drop dataset student.gdstd;
+drop dataset teacher.prof;
+drop dataset teacher.pstdoc;
+
+create dataset student.ugdstd(stdType) primary key id;
+create dataset student.gdstd(stdType) primary key id;
+create dataset teacher.prof(tchrType) primary key id;
+create dataset teacher.pstdoc(tchrType) primary key id;
+

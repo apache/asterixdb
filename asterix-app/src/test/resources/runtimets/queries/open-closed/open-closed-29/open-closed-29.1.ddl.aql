@@ -1,0 +1,25 @@
+/*
+ * Testcase Name  : open-closed-29.aql
+ * Description    : Query for undeclared data from an open type internal dataset
+ *                : use the some keyword in the where clause
+ * Status         : Yes
+ * Date           : 31st May 2012
+ */
+
+drop dataverse testdv2 if exists;
+create dataverse testdv2;
+use dataverse testdv2;
+
+create type testtype01 as open {
+  id: string,
+  name: string
+}
+
+create type testtype02 as open {
+id : string,
+name : string
+}
+
+create dataset testds01(testtype01) primary key id;
+
+create dataset testds02(testtype02) primary key id;

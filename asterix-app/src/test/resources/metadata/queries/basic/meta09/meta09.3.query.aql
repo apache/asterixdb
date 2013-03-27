@@ -1,0 +1,9 @@
+/*
+ * Description  : Create internal dataset, insert data and query metadata Dataset to verify entries for that dataset.
+ * Expected Res : Success
+ * Date         : Sep 17 2012
+ */
+
+for $l in dataset('Metadata.Dataset')
+where $l.DataverseName='test' and $l.DatasetName='t1'
+return $l

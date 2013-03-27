@@ -1,0 +1,12 @@
+/*
+ * Description    : Tests that min aggregation correctly returns null for an empty stream,
+ *                  with an aggregate combiner.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+min(
+ for $x in dataset('Test')
+ return $x.val
+)

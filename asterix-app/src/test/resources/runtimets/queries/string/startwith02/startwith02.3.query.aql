@@ -1,0 +1,24 @@
+/*
+ * Testcase Name : startwith02.aql
+ * Description   : Positive tests
+ * Success       : Yes
+ * Date          : 19th April 2012
+ */
+
+for $a in [start-with("Hello","H"),
+start-with("Hello",lowercase("He")),
+start-with("Hello",""),
+start-with("Hello"," "),
+start-with("Hello",null),
+start-with("abcdef",lowercase("ABCDEf")),
+start-with("abcdef","abcdef"),
+start-with("abcdef","abc "),
+start-with("abc\tdef","abc\t"),
+start-with(" abcdef","abc"),
+start-with("0x1FF","0"),
+start-with("<ID>","<"),
+start-with("aBCDEFghI",codepoint-to-string([0041])),
+start-with("AbCDEFghI",codepoint-to-string([0041]))]
+return $a
+
+

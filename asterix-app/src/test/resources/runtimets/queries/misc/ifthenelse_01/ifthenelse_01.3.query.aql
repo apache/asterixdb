@@ -1,0 +1,6 @@
+use dataverse test;
+
+if (2>1) then
+    20
+else
+    10

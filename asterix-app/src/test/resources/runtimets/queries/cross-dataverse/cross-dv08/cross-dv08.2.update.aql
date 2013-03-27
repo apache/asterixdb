@@ -1,0 +1,22 @@
+/*
+ * Description  : Create two UDFs in two different dataverses and create datasets in tose dvs
+ *              : access the datasets from the UDF defined in the other dataverse and invoke one of the UDF
+ * Expected Res : Success
+ * Date         : Sep 7th 2012
+ */
+
+// dv1 - udf1 - dataset1
+// dv2 - udf2 - dataset2
+
+insert into dataset test.t1({"id":24});
+insert into dataset test.t1({"id":23});
+insert into dataset test.t1({"id":21});
+insert into dataset test.t1({"id":44});
+insert into dataset test.t1({"id":64});
+
+insert into dataset fest.t1({"id":24});
+insert into dataset fest.t1({"id":23});
+insert into dataset fest.t1({"id":21});
+insert into dataset fest.t1({"id":44});
+insert into dataset fest.t1({"id":64});
+

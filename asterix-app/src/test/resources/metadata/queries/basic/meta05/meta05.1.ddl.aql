@@ -1,0 +1,18 @@
+/*
+ * Description  : Create primary & secondary indexes & query Metadata dataset to verify.
+ * Expected Res : Success
+ * Date         : 15 Sep 2012
+ */
+
+drop dataverse testdv if exists;
+create dataverse testdv;
+
+create type testdv.testtype as open {
+id : int32,
+name : string
+}
+
+create dataset testdv.t1(testtype) primary key id;
+
+create index idx1 on testdv.t1(name);
+

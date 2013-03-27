@@ -1,0 +1,12 @@
+/*
+ * Description  : Create and drop and recreate the same closed type, here type has optional fields.
+ *              : verify correctness by querying metadata.
+ * Date         : 11th Feb 2013
+ * Expected Res : Success
+ */
+
+use dataverse test;
+
+for $l in dataset('Metadata.Datatype')
+where $l.DatatypeName = 'TestType'
+return $l

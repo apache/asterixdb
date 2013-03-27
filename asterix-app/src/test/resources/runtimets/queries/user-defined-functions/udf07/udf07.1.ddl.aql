@@ -1,0 +1,15 @@
+/*
+ * Description  : Pass value of type float to UDF
+ * Expected Res : Success
+ * Date         : Sep 4th 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create function test.echo($a){
+$a
+}
+

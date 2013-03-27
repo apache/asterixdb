@@ -1,0 +1,20 @@
+/*
+ * Description  : create a dataset providing a valid hint and do not use any whitespace
+ * Expected Res : Success
+ * Date         : 29 Jan 2013
+ * Issue        : 251
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type LineType as open {
+  id:int32,
+  text: string
+}
+
+create dataset Book(LineType)
+primary key id
+hints(cardinality=2000);
+

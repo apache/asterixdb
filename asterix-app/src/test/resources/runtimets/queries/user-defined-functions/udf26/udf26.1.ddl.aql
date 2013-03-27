@@ -1,0 +1,15 @@
+/*
+ * Description  : Create UDF and define with missing references.
+ * Expected Res : Failure
+ * Date         : Sep 6th 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create function test.needs_f1($x){
+ $x + f1()
+}
+

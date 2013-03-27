@@ -1,0 +1,6 @@
+/*
+ * Description    : Test concat-string function with nulls in the list which is passed as an argument.
+ * Success        : Yes
+ */
+
+

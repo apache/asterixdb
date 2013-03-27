@@ -1,0 +1,10 @@
+use dataverse fuzzyjoin;
+
+set simthreshold '.5f';
+
+for $user in dataset('Users')
+for $user2 in dataset('Users')
+where $user.lottery_numbers ~= $user2.lottery_numbers and $user.uid < $user2.uid
+let $sim := similarity-jaccard($user.lottery_numbers, $user2.lottery_numbers)
+order by $sim desc, $user.uid, $user2.uid limit 3
+return { 'user': $user, 'user2': $user2, 'sim': $sim }

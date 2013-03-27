@@ -1,0 +1,16 @@
+/*
+ * Testcase Name  :  matches05.aql
+ * Description    :  Positive tests
+ *                :  Create two internal datasets and insert string data and perform match of fname using matches function.
+ * Success        :  Yes
+ * Date           :  25th April 2012
+ */
+
+use dataverse test;
+
+insert into dataset testds1({"fname":"Test","lname":"Test","id":123});
+insert into dataset testds1({"fname":"Testa","lname":"Test","id":124});
+insert into dataset testds1({"fname":"Test1","lname":"Test1","id":125});
+insert into dataset testds1({"fname":"Test","lname":"Testb","id":126});
+insert into dataset testds1({"fname":"Test2","lname":"Test2","id":127});
+

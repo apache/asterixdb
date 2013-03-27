@@ -1,0 +1,23 @@
+use dataverse test;
+
+let $a := [ ]
+let $b := ["abc", "bcd", "cde", "def", "efg"]
+let $c := ["abc", "bcd", "cde", "def", "efg", "hij", "ijk"]
+let $d := ["abc", "bcd", "cde", "def", "efg", "fgh", "ghi", "hij", "ijk", "jkl"]
+let $e := ["efg", "abc", "cde", "def", "hij", "ijk", "bcd"]
+let $f := ["abc", "ijk", "bcd", "efg", "fgh", "ghi", "def", "hij", "jkl", "cde"]
+let $g := ["Efg", "aBc", "cdE", "DEf", "hIJ", "IjK", "BCD"]
+let $h := ["abc", "ijk", "bcd", "efg", "fgh", "ghi", "def", "hij", "jkl", "cde"]
+let $results :=
+[
+  similarity-jaccard($a, $b),
+  similarity-jaccard($b, $a),
+  similarity-jaccard($c, $d),
+  similarity-jaccard($d, $c),
+  similarity-jaccard($e, $f),
+  similarity-jaccard($f, $e),
+  similarity-jaccard($g, $h),
+  similarity-jaccard($h, $g)
+]
+for $i in $results
+return $i

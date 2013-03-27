@@ -1,0 +1,12 @@
+use dataverse test;
+
+insert into dataset LineID (
+for $l in dataset('LineItem')
+	where $l.l_orderkey<10
+	return {
+		"l_orderkey": $l.l_orderkey,
+		"l_linenumber": $l.l_linenumber,
+		"l_suppkey": $l.l_partkey
+	}
+);
+

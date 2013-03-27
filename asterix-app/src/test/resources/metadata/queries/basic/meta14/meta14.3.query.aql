@@ -1,0 +1,11 @@
+/*
+ * Description      :  Test that a synthetically created content type is dropped with its parent type. 
+ *                     Guards against regression to issue 188.
+ * Expected Result  :  Success
+ */
+
+count(
+for $x in dataset('Metadata.Datatype')
+where $x.DataverseName='test'
+return $x
+)

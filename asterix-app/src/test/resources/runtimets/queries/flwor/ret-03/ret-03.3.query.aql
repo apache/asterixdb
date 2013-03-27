@@ -1,0 +1,9 @@
+/*
+ * Description      :  Test return clause of the FLWOR expression
+ *                  :  Tes if expression then expression else expression in the return clause 
+ * Expected Result  :  Success
+ * Date             :  26th July 2012
+ */
+
+for $x in [true]
+return (if(true) then "YES" else "NO") 

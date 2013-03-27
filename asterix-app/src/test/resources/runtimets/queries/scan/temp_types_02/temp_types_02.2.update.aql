@@ -1,0 +1,5 @@
+use dataverse test;
+
+load dataset Temp2 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/tempData.txt"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;

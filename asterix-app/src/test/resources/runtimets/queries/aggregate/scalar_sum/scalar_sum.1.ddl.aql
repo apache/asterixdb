@@ -1,0 +1,8 @@
+/*
+ * Description    : Tests the scalar version of sum without nulls.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+

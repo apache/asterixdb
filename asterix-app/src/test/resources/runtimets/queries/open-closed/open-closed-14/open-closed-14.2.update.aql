@@ -1,0 +1,35 @@
+/*
+ * Testcase name : open-closed-14.aql
+ * Description   : insert into target dataset - select * from source dataset
+ *               : in this case dataset1 and dataset2 are fo different schema.
+ * Success       : This test should succeed.
+ * Date          : March 27 2012
+ */
+
+use dataverse testdv2;
+
+insert into dataset testds01 (
+{ "id": "001" }
+);
+
+insert into dataset testds01 (
+{ "id": "002", "name": "John Doe" }
+);
+
+insert into dataset testds02 (
+{ "id": "003" }
+);
+
+insert into dataset testds02 (
+{ "id": "004" }
+);
+
+insert into dataset testds02 (
+{ "id": "005" }
+);
+
+insert into dataset testds01(
+for $d in dataset("testds02")
+return $d
+);
+

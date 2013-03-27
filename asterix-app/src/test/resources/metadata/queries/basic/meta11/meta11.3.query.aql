@@ -1,0 +1,12 @@
+/*
+ * Description  : Create dataset and drop that dataset and query Metadata Dataset to verify the drop.
+ * Expected Res : Success
+ * Date         : Sep 17 2012
+ */
+
+count(
+for $l in dataset('Metadata.Dataset')
+where $l.DataverseName='test' and $l.DatasetName='dst01'
+return $l
+)
+

@@ -1,0 +1,11 @@
+/*
+ * Description  : This test case is to verify the fix for issue236
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=236
+ * Expected Res : Success
+ * Date         : 20 Dec. 2012
+ */
+
+use dataverse SocialNetworkData;
+
+for $r in dataset('TweetMessages')
+return $r

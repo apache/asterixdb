@@ -1,0 +1,10 @@
+/*
+ * Description     :  Test let clause
+ * Expected Result :  Success
+ * Date            :  6th July 2012 
+ */
+
+let $x:=[1,2,3,4,5,6,7,8,9,10,11,14,15,17,19,24,35,56,67,77,89,60,35,25,60]
+for $y in $x
+where $y%5=0
+return $y

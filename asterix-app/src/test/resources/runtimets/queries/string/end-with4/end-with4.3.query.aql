@@ -1,0 +1,4 @@
+use dataverse test;
+
+let $c1 := end-with("ends","ss")
+return {"result1": $c1}

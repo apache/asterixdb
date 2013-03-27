@@ -1,0 +1,15 @@
+use dataverse test;
+
+set simthreshold '.5f';
+
+for $user in dataset('User')
+let $similar_users :=
+  for $similar_user in dataset('User')
+  where $user.name != $similar_user.name
+       and $user.interests ~= $similar_user.interests
+  let $sim := similarity-jaccard($user.interests, $similar_user.interests)
+  order by $sim desc
+  limit 10
+  return { "user_name": $similar_user.name }
+order by $user.name  
+return { "user_name" : $user.name, "similar_users" : $similar_users }

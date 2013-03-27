@@ -1,0 +1,6 @@
+use dataverse test;
+
+load dataset CustomerOrders
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/custord-tiny/custorder-tiny.adm"),("format"="adm")) pre-sorted;
+

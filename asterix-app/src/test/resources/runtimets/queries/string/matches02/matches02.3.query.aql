@@ -1,0 +1,21 @@
+/*
+ * Testcase Name  :  matches02.aql
+ * Description    :  Positive tests
+ * Success        :  Yes
+ * Date           :  23th April 2012
+ */
+
+let $c1:="Hello World"
+let $c2:="Hello World"
+let $c3:=matches($c1,$c2)
+let $c4:=matches("Asterix for Dummies","Asterix for Dummies")
+let $c5:=matches("semistructured data",lowercase("SEMISTRUCTURED DATA"))
+let $c6:=matches("Mega Living!","Mega")
+let $c7:=matches("Mega Living!","ving!")
+let $c8:=matches("Mega Living!"," ")
+let $c9:=matches("Mega Living!","a l")
+let $c10:=matches("Mega Living!","")
+let $c11:=matches(" "," ")
+let $c12:=matches("aaaa","aaaaa")
+return {"c3":$c3,"c4":$c4,"c5":$c5,"c6":$c6,"c7":$c7,"c8":$c8,"c9":$c9,"c10":$c10,"c11":$c11,"c12":$c12}
+

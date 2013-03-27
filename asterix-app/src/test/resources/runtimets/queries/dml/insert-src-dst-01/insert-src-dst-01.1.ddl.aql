@@ -1,0 +1,24 @@
+/*
+ * Description     : Insert from source dataset into target dataset
+ * Expected Result : Success
+ * Date            : 25th July 2012
+ * Issue #         : Issue 76
+ */
+
+drop dataverse testdv2 if exists;
+create dataverse testdv2;
+
+use dataverse testdv2;
+
+create type testtype01 as closed {
+  id: string,
+  name: string?
+}
+
+create type testtype02 as closed {
+  id: string
+}
+
+create dataset testds01(testtype01) primary key id;
+create dataset testds02(testtype02) primary key id;
+

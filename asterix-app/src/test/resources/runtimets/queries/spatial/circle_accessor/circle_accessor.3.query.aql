@@ -1,0 +1,10 @@
+/*
+ * Description      :   Test spatial accessors
+ * Expected Result  :   Success
+ * Date             :   Oct 17, 2012
+ */
+
+use dataverse test;
+
+let $circle := create-circle(create-point(6.0,3.0), 1.0)
+return {"circle-radius": get-radius($circle), "circle-center": get-center($circle)}

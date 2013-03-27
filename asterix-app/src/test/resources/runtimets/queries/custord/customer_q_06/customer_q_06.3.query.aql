@@ -1,0 +1,7 @@
+use dataverse test;
+
+for $c in dataset('Customers')
+let $rec := $c.lastorder
+let $m := [$c.cid, $rec.oid]
+let $n := [$m[?], $m[1], $m[4]]
+return { "customerid": $c.name, "orderedlist": $n}

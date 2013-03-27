@@ -1,0 +1,8 @@
+use dataverse test;
+
+set simfunction 'edit-distance';
+set simthreshold '2';
+
+for $paper in dataset('DBLP')
+where $paper.authors ~= "Amihay Motro"
+return $paper

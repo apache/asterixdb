@@ -1,0 +1,6 @@
+use dataverse test;
+
+for $o in dataset('Orders')
+let $c1 := []
+let $c2 := {{}}
+return { "orderid": $o.oid, "ordertot":$o.total, "emptyorderedlist": $c1, "emptyunorderedlist": $c2, "olist_item1": $c1[0], "olist_item5": $c1[4], "ulist_item1": $c2[?]}

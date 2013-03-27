@@ -16,6 +16,10 @@ package edu.uci.ics.asterix.om.base;
 
 import java.util.ArrayList;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -106,5 +110,18 @@ public class AUnorderedList implements IACollection {
         }
         sb.append(" ]");
         return sb.toString();
+    }
+
+    @Override
+    public JSONObject toJSON() throws JSONException {
+        JSONObject json = new JSONObject();
+
+        JSONArray list = new JSONArray();
+        for (IAObject v : values) {
+            list.put(v.toJSON());
+        }
+        json.put("AUnorderedList", list);
+
+        return json;
     }
 }

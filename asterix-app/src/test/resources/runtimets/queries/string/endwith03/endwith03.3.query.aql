@@ -1,0 +1,16 @@
+/*
+ * Testcase Name : endwith03.aql
+ * Description   : Positive tests
+ * Success       : Yes
+ * Date          : 20th April 2012
+ */
+
+// create internal dataset, insert string data into string field and pass the string filed as input to end-with function
+
+use dataverse test;
+
+for $l in dataset('testds')
+order by $l.name
+where end-with($l.name,"Jones")
+return $l
+

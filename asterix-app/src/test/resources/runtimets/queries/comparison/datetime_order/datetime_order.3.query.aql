@@ -1,0 +1,17 @@
+use dataverse test;
+
+let $dt1 := datetime("2011-12-31T14:00:00-10:00")
+let $dt2 := datetime("2012-01-01T00:00:00Z")
+let $dt3 := datetime("2005-01-01T00:00:00+04:00")
+let $dt4 := datetime("2011-12-31T13:00:00-11:00")
+let $dt5 := datetime("2012-04-06T00:00:00Z")
+let $dt6 := datetime("-1937-07-07T23:00:00+08:00")
+let $dt7 := datetime("-1600-03-01T00:00:00.384+06:00")
+let $dt8 := datetime("-1600-02-29T23:59:59.999Z")
+let $dt9 := datetime("2000-02-29T23:59:59.999Z")
+let $dt10 := datetime("2000-03-01T01:59:59.999+07:00")
+let $dt11 := datetime("-1600-03-01T00:00:00.384-06:00")
+
+for $dt in [$dt1, $dt2, $dt3, $dt4, $dt5, $dt6, $dt7, $dt8, $dt9, $dt10, $dt11]
+order by $dt
+return $dt

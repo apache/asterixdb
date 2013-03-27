@@ -1,0 +1,23 @@
+/*
+ * Description      : Test Quantified Expressions 
+ *                  : every <variable-name> in [ordered-list], <variable-name> in [ordered-list] satisfies expression
+ * Expected Result  : Success
+ * Date             : 5th July 2012
+ */
+
+let $a := [
+every $x in [1, 2] satisfies $x + $x = 3,
+every $x in [1, 1] satisfies $x + $x = 2,
+every $x in [1, 2] satisfies $x - 2 = 2,
+every $x in [2, 2] satisfies $x - 2 = 0,
+every $x in [1, 2] satisfies $x * 2 = 4,
+every $x in [1, 2] satisfies $x / 2 = 1,
+every $x in [1, 2] satisfies $x = 1 or $x = 2,
+every $x in [1, 2] satisfies $x = 1 and ($x +1) = 2,
+every $x in ["A","B","C"] satisfies $x = "A",
+every $x in [1,2,3], $y in [4,5,6] satisfies $x + $y = 5,
+every $x in [1,2,3], $y in [4,5,6] satisfies $x - $y = 5,
+every $x in [1,2,3], $y in [4,5,6] satisfies $x * $y = 10
+]
+for $i in $a
+return $i

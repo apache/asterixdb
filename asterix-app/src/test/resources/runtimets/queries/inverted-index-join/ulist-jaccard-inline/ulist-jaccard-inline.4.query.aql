@@ -1,0 +1,15 @@
+/*
+ * Description    : Fuzzy joins two datasets, Customers and Customers2, based on the Jaccard similarity of their interest sets.
+ *                  Customers has a keyword index on interests, and we expect the join to be transformed into an indexed nested-loop join.
+ *                  We test the inlining of variables that enable the select to be pushed into the join for subsequent optimization with an index.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+for $a in dataset('Customers')
+for $b in dataset('Customers2')
+let $jacc := /*+ indexnl */ similarity-jaccard($a.interests, $b.interests)
+where $jacc >= 0.9f and $a.cid < $b.cid and len($a.interests) > 1 and len($b.interests) > 1
+order by $jacc, $a.cid, $b.cid
+return { "a": $a, "b": $b, "jacc": $jacc }

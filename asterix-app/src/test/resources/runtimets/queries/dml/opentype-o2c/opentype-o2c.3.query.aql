@@ -1,0 +1,12 @@
+/* 
+ * Test case Name  : opentype-o2c.aql
+ * Description     : verify that open records can be inserted into a closed dataset
+ *					 verify missing optional fields in the closed part of the target closed dataset are allowed
+ * Expected Result : Success
+ */
+
+use dataverse testdv2;
+
+for $d in dataset("testds2") 
+order by $d.id
+return $d

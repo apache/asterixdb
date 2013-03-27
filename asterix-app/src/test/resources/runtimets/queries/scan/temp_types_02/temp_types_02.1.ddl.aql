@@ -1,0 +1,16 @@
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type TempType as closed {
+  id: int32,
+  date: date,
+  time: time,
+  datetime: datetime,
+  duration: duration
+}
+
+create dataset Temp2(TempType) 
+	primary key id;
+

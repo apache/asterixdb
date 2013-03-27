@@ -1,0 +1,15 @@
+/*
+ * Description    : Tests the scalar version of sum without nulls.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+let $i8 := sum([int8("1"), int8("2"), int8("3")])
+let $i16 := sum([int16("1"), int16("2"), int16("3")])
+let $i32 := sum([int32("1"), int32("2"), int32("3")])
+let $i64 := sum([int64("1"), int64("2"), int64("3")])
+let $f := sum([float("1"), float("2"), float("3")])
+let $d := sum([double("1"), double("2"), double("3")])
+for $i in [$i8, $i16, $i32, $i64, $f, $d]
+return $i

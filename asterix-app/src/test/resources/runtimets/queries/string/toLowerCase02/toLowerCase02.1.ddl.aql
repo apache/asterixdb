@@ -1,0 +1,8 @@
+/*
+ * Testcase Name : toLowerCas02.aql
+ * Description   : Test lowercase(string) function
+ *               : Positive tests
+ * Success       : Yes
+ * Date          : 19th April 2012
+ */
+

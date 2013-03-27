@@ -1,0 +1,8 @@
+/*
+ * Description  : This test case is to verify the fix for issue134
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=134
+ * Expected Res : Success
+ * Date         : 26th November 2012
+ */
+
+

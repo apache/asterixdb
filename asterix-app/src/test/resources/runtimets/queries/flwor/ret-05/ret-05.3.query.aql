@@ -1,0 +1,9 @@
+/*
+ * Description      :  Test return clause of the FLWOR expression
+ *                  :  For + Return within return clause
+ * Expected Result  :  Success
+ * Date             :  26th July 2012
+ */
+
+let $b := 12345
+return (for $a in [[1,2,3],[4,5,6,7],[8,9],[0,4,5],[6,7,1],[2,3,4],[5,6,7],[8,9,0]] return $a)

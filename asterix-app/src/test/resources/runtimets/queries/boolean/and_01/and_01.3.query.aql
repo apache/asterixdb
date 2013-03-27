@@ -1,0 +1,5 @@
+use dataverse test;
+
+for $x in ["true"]
+for $y in ["false"]
+return $x and $y

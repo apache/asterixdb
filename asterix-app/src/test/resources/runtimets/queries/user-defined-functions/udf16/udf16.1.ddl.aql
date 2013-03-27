@@ -1,0 +1,16 @@
+/*
+ * Description  : Create UDF that returns string
+ *              : compute the string lenght of the string
+ * Expected Res : Success
+ * Date         : Sep 5th 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create function test.fn02(){
+"Welcome to the world of Asterix"
+}
+

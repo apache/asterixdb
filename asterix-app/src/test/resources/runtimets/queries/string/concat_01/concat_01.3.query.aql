@@ -1,0 +1,8 @@
+use dataverse test;
+
+let $x :=  ["aa", "25991", "bb", "31526"]
+let $c := string-concat($x)
+
+let $x1 :=  []
+let $c1 := string-concat($x1)
+return {"result1": $c,"result2": $c1}

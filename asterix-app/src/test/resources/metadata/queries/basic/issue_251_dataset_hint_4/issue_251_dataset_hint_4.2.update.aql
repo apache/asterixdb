@@ -1,0 +1,8 @@
+/*
+ * Description  : create a dataset without providing any hints.
+ * Expected Res : Success
+ * Date         : 29 Jan 2013
+ * Issue        : 251
+ */
+
+// no inserts, deletes

@@ -1,0 +1,18 @@
+/*
+ * Description    : Test substring2(string,position) built in function.
+ * Success        : Yes
+ * Date           : 19th April 2012
+ */
+
+// To test substring function with string data stored in an internal dataset.
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type TestType as open {
+name : string
+}
+
+create dataset testdst(TestType) primary key name;

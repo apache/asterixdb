@@ -1,0 +1,8 @@
+use dataverse test;
+
+for $l in subset-collection([1], 0, 1)
+return $l
+/*
+output: 
+1
+*/

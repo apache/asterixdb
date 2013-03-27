@@ -1,0 +1,5 @@
+use dataverse test;
+
+let $c1 := circle("10.1234,11.1e-1 +10.2E-2")
+let $c2 := circle("0.1234,-1.00e-10 +10.5E-2")
+return {"circle1": $c1,"circle2": $c2}

@@ -1,0 +1,9 @@
+/*
+ * Description  : This test case is to verify the fix for issue55 query 2
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=55
+ * Expected Res : Success
+ * Date         : 26th November 2012
+ */
+
+for $x in [[1,3],[4,5,2],[-1,-3,0],["a"]]
+return $x

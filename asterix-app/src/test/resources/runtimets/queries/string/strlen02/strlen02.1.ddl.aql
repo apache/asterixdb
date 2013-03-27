@@ -1,0 +1,18 @@
+/*
+ * Description    : Test string-length(string) function 
+ * Success        : Yes
+ * Date           : 19th April 2012
+ */
+
+
+/*
+for $a in [ string-length("abcdefghijklmnopqrstu"),
+string-length("ABCDEFGHIJKLMNOPQRSTU"),
+string-length("abcdEFGHijklMNOPqrstu"),
+string-length("abcd EFGH ijkl MNOP qrstu"),
+string-length("   Hello World    !!!!....:-)"),
+string-length(string-concat(["test string to","concatenate"])),
+string-length("~!@#$%^&*()_+{}:?<>/.,';`][\")]
+return $a
+*/
+

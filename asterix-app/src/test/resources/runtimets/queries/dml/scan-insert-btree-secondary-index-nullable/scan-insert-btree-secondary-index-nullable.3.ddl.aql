@@ -1,0 +1,4 @@
+use dataverse test;
+
+create index age_index on CustomersMini(age);
+

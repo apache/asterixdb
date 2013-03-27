@@ -1,0 +1,18 @@
+/*
+ * Description    : Tests that a proper error messags is returned for this scenario.
+ *                  Since we cannot statically know the type of the field 'title', the FuzzyEqRule
+ *                  cannot auto-inject a tokenizer, and hence we expect an error saying that we cannot
+ *                  scan over a string as if it were a collection.
+ *                  Guards against regression to issue 207.
+ * Success        : Yes
+ */
+
+use dataverse fuzzyjoin;
+
+set simthreshold '.5f';
+
+for $dblp in dataset('DBLP')
+for $dblp2 in dataset('DBLP')
+where $dblp.title ~= $dblp2.title and $dblp.id < $dblp2.id
+order by $dblp.id, $dblp2.id
+return {'dblp': $dblp, 'dblp2': $dblp2}

@@ -1,0 +1,10 @@
+/*
+ * Description      :  Test return clause of the FLWOR expression
+ * Expected Result  :  Success
+ * Date             :  26th July 2012
+ */
+
+// Return record
+
+let $a := true
+return {"name":"John Doe", "age":26,"sex":"M","salary":50000,"dept":"HR"}

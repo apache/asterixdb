@@ -1,0 +1,10 @@
+/*
+ * Description    : Tries to partition a dataset by a non-existent field
+ * Expected Result: An error reporting that this is not allowed
+ * Author: zheilbron
+ */
+ 
+use dataverse test;
+
+insert into dataset testds({"name1":"John","name2":"Smith"});
+

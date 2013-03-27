@@ -1,0 +1,7 @@
+use dataverse test;
+
+let $polygonArea := spatial-area(create-polygon(create-point(1.0,1.0),create-point(1.0,4.0),create-point(3.0,4.0),create-point(3.0,1.0)))
+let $circleArea := spatial-area(create-circle(create-point(0.0,0.0), 1.0))
+let $rectangleArea := spatial-area(create-rectangle(create-point(0.0,5.0), create-point(8.0,8.0)))
+return {"polygonArea":$polygonArea, "circleArea":$circleArea, "rectangleArea":$rectangleArea}
+ 

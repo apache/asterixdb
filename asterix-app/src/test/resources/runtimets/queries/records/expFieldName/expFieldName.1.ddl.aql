@@ -1,0 +1,5 @@
+drop dataverse test if exists;
+create dataverse test;
+
+for $x in ["field1", "field2"] 
+return {$x: 1}

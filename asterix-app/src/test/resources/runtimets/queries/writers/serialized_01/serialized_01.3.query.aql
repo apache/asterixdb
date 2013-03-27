@@ -1,0 +1,4 @@
+use dataverse test;
+
+for $x in ["foo", "bar"]
+return $x

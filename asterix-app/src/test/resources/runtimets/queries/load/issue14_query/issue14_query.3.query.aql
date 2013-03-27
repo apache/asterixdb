@@ -1,0 +1,10 @@
+/*
+ * Description  : Create and load a dataset but with an unspecified data format.
+ * Expected Res : Failure
+ * Date         : 16 Jan 2012
+ */
+use dataverse test;
+
+for $l in dataset('onektup')
+return $l
+

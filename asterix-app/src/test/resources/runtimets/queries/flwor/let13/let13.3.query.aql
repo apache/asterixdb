@@ -1,0 +1,10 @@
+/*
+ * Description     :  Test let clause
+ * Expected Result :  Failure - Negative test
+ * Date            :  6th July 2012 
+ */
+
+// Bind an undefined variable.
+
+let $a := $b 
+return $a

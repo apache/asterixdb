@@ -1,0 +1,26 @@
+/*
+ * Test case name :  open-closed-22.aql
+ * Description    :  Insert into a closed type dataset which has nullable(optional) and non-nullable fields
+ * Success        :  Yes
+ * Date           :  30 April 2012
+ */
+
+use dataverse test;
+
+//date("YYYY-MM-DD")
+insert into dataset employee({"id":201,"name":"John Doe","age":37,"dept":"HR","sex":"M","dob":date("1975-11-02")});
+
+insert into dataset employee({"id":202,"name":"John Smith","age":30,"dept":"Sales","sex":"M","dob":date("1982-12-12")});
+
+// all optional fields missing
+insert into dataset employee({"id":201,"name":"John Wayne","age":62,"sex":"M"});
+
+// missing age field
+insert into dataset employee({"id":203,"name":"Roger Sanders","dept":"Technology","sex":"M","dob":date("1970-03-12")});
+
+// all optional fields missing!
+insert into dataset employee({"id":204,"name":"Raj Singh","sex":"M"});
+
+// missing dept field
+insert into dataset employee({"id":205,"name":"Mike Tyson","age":44,"sex":"M","dob":date("1970-12-22")});
+

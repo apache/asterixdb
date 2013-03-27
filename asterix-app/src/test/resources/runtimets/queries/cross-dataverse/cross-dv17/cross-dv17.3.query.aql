@@ -1,0 +1,12 @@
+/*
+ * Decription   : Create UDF to query two different datasets that are in tow different dataverses.
+ * Expected Res : Success
+ * Date         : Sep 7 2012
+ */
+
+// this test currently gives ParseException
+
+use dataverse fest;
+
+fest.f1();
+

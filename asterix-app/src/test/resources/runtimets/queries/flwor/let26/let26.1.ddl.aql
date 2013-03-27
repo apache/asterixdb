@@ -1,0 +1,10 @@
+/*
+ * Description     : Test let clause 
+ * Expected Result : Success 
+ * Date            : 23rd July 2012
+ */
+
+/*
+ * Test let clause - let variable := relational expression
+ */
+

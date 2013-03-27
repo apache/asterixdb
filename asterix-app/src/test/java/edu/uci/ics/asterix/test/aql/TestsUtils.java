@@ -7,10 +7,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.io.Reader;
 
-import edu.uci.ics.asterix.api.java.AsterixJavaClient;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import org.json.JSONArray;
+import org.json.JSONException;
+
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 
 public class TestsUtils {
@@ -31,54 +31,56 @@ public class TestsUtils {
         return path.delete();
     }
 
-    public static void runScriptAndCompareWithResult(IHyracksClientConnection hcc, File scriptFile, PrintWriter print,
-            File expectedFile, File actualFile) throws Exception {
-        Reader query = new BufferedReader(new InputStreamReader(new FileInputStream(scriptFile), "UTF-8"));
-        AsterixJavaClient asterix = new AsterixJavaClient(hcc, query, print);
-        try {
-            asterix.compile(true, false, true, true, false, true, false);
-        } catch (AsterixException e) {
-            throw new Exception("Compile ERROR for " + scriptFile + ": " + e.getMessage(), e);
-        } finally {
-            query.close();
+    public static String getNextResult(JSONArray jArray) throws JSONException {
+        String result = null;
+        for (int i = 0; i < jArray.length(); i++) {
+            JSONArray resultArray = jArray.getJSONArray(i);
+            for (int j = 0; j < resultArray.length(); j++) {
+                return resultArray.getString(j);
+            }
         }
-        asterix.execute();
+        return result;
+    }
+
+    public static void runScriptAndCompareWithResult(IHyracksClientConnection hcc, File scriptFile, PrintWriter print,
+            File expectedFile, JSONArray jArray) throws Exception {
         BufferedReader readerExpected = new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile),
                 "UTF-8"));
-        BufferedReader readerActual = new BufferedReader(
-                new InputStreamReader(new FileInputStream(actualFile), "UTF-8"));
-        String lineExpected, lineActual;
-        int num = 1;
-        try {
-            while ((lineExpected = readerExpected.readLine()) != null) {
-                lineActual = readerActual.readLine();
-                // Assert.assertEquals(lineExpected, lineActual);
-                if (lineActual == null) {
-                    throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected
-                            + "\n> ");
-                }
 
+        String lineExpected, lineActual;
+        int num = 0;
+        int chunkCounter = 0;
+        int recordCounter = 0;
+        try {
+
+            while ((lineExpected = readerExpected.readLine()) != null) {
+                JSONArray resultArray = jArray.getJSONArray(chunkCounter);
+
+                if ((lineActual = resultArray.getString(recordCounter)) == null) {
+                    throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n<" + lineExpected
+                            + "\n>");
+
+                }
                 if (!equalStrings(lineExpected.split("Timestamp")[0], lineActual.split("Timestamp")[0])) {
                     fail("Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected + "\n> "
                             + lineActual);
                 }
 
-                /*
-                 * if (!equalStrings(lineExpected, lineActual)) { throw new
-                 * Exception("Result for " + scriptFile + " changed at line " +
-                 * num + ":\n< " + lineExpected + "\n> " + lineActual); }
-                 */
-                ++num;
+                recordCounter++;
+                if (recordCounter >= resultArray.length()) {
+                    chunkCounter++;
+                    recordCounter = 0;
+                    if (chunkCounter >= jArray.length()) {
+                        break;
+                    }
+                }
             }
-            lineActual = readerActual.readLine();
-            // Assert.assertEquals(null, lineActual);
-            if (lineActual != null) {
-                throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n< \n> " + lineActual);
+
+            while ((lineExpected = readerExpected.readLine()) != null) {
+                // TODO(khurram): Print out the remaining expected file contents
             }
-            // actualFile.delete();
         } finally {
             readerExpected.close();
-            readerActual.close();
         }
 
     }

@@ -1,0 +1,16 @@
+/*
+ * Description    : Tests whether a conflict between an open and closed field name are detected
+ * Expected Result: An error reporting that there is a duplicate field name "name"
+ * Author: zheilbron
+ */
+ 
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type opentype as open {
+id:int32,
+fname:string
+}
+
+create dataset testds(opentype) primary key id; 

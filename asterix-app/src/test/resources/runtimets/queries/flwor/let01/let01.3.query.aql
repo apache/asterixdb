@@ -1,0 +1,8 @@
+/*
+ * Description     :  Test let clause
+ * Expected Result :  Success
+ * Date            :  6th July 2012 
+ */
+
+let $x := int64("92233720368547758")
+return $x

@@ -1,0 +1,24 @@
+/*
+ * Description    : Test string-length(string) function 
+ * Expected Res   : Success
+ * Date           : 19th April 2012
+ */
+
+
+// Create internal dataset, insert string data and pass the string attribute to string-length function, and verify results.
+
+use dataverse test;
+
+insert into dataset testds({"name":"Maradona"});
+insert into dataset testds({"name":"Pele"});
+insert into dataset testds({"name":"Roberto Baggio"});
+insert into dataset testds({"name":"Beckham David"});
+insert into dataset testds({"name":"Rooney"});
+insert into dataset testds({"name":"Ronaldinho"});
+insert into dataset testds({"name":"Ronaldo"});
+insert into dataset testds({"name":"Zinadine Zidane"});
+insert into dataset testds({"name":"Cristiano Ronaldo"});
+insert into dataset testds({"name":"Messi"});
+insert into dataset testds({"name":"Tevez"});
+insert into dataset testds({"name":"Henry"});
+

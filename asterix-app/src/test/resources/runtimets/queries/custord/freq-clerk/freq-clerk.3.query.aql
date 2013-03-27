@@ -1,0 +1,9 @@
+use dataverse test;
+
+for $c in dataset('CustomerOrders')
+for $o in $c.orders
+group by $clerk := $o.clerk with $o
+let $count := count($o)
+order by $count, $clerk desc
+return { "clerk": $clerk, "ordercount": $count }
+

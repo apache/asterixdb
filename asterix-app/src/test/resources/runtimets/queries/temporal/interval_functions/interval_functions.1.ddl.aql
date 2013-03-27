@@ -1,0 +1,8 @@
+/*
+ * Description      :   Check temporal functions for interval
+ * Expected Result  :   Success
+ * Date             :   2nd Nov, 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;

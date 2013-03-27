@@ -1,0 +1,5 @@
+use dataverse Metadata;
+
+for $c in dataset('Dataset')
+return $c
+

@@ -1,0 +1,6 @@
+use dataverse test;
+   
+for $c in dataset('LineID')
+where $c.l_suppkey = 3 and $c.l_linenumber=2
+order by $c.l_orderkey, $c.l_linenumber
+return $c 

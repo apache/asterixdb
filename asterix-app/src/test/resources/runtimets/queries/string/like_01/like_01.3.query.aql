@@ -1,0 +1,3 @@
+use dataverse test;
+
+[like("A6BBB", "_6%"), like("A8BBB", "_6%")]

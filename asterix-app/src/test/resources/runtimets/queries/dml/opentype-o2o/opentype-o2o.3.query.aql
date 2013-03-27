@@ -1,0 +1,13 @@
+/* 
+ * Test case Name  : opentype-o2o.aql
+ * Description     : verify that the dynamic type cast from one open type to another compatible open type
+ *					 verify the bag-based fields
+ * Expected Result : Success
+ */
+
+
+use dataverse testdv2;
+
+for $d in dataset("testds2") 
+order by $d.id
+return $d

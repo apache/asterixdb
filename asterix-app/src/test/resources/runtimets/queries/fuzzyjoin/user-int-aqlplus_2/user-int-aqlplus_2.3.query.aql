@@ -1,0 +1,9 @@
+use dataverse fuzzyjoin;
+
+set simthreshold '.5f';
+
+for $user2 in dataset('Users')
+for $user in dataset('Users')
+where $user.interests ~= $user2.interests and $user.uid < $user2.uid
+order by $user.uid, $user2.uid
+return { 'user': $user, 'user2': $user2 }

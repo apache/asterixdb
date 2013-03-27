@@ -1,0 +1,13 @@
+/*
+ * Description    : Tests that max aggregation correctly returns null for an empty stream,
+ *                  without an aggregate combiner.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+max(
+ for $x in [1, 2, 3]
+ where $x > 10
+ return $x
+)

@@ -1,0 +1,3 @@
+use dataverse test;
+
+year("1996-12-01")

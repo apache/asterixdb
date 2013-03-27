@@ -1,0 +1,7 @@
+/*
+ * Description    : Tests that sum aggregation correctly returns null for an empty stream,
+ *                  with an aggregate combiner.
+ * Success        : Yes
+ */
+
+// no inserts, deletes here

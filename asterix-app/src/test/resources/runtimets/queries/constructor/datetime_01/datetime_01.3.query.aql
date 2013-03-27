@@ -1,0 +1,17 @@
+use dataverse test;
+
+let $c1 := datetime("2010-10-30T10:50:56.999+05:45")
+let $c2 := datetime("2010-10-30T10:30:56.250-10:00")
+let $c3 := datetime("1987-11-19T09:20:00.200Z")
+let $c4 := datetime("1987-11-19T10:50:56Z")
+let $c5 := datetime("-1987-11-19T10:50:56.099-05:30")
+let $c6 := datetime("-0001-11-19T10:50:56.719Z")
+let $c7 := datetime("1951-12-27T12:20:15Z")
+let $c8 := datetime("2043-11-19T10:50:56.719Z")
+let $c9 := datetime("-19280329T174937374-0630")
+let $c10 := datetime("-19280329T174937374+0630")
+let $c11 := datetime("-19280329T174937374")
+let $c12 := datetime("-19280329T174937374+0630")
+let $c13 := datetime("-19280329T17493737+0630")
+let $c14 := datetime("-19280301T05493737+0630")
+return {"datetime1": $c1, "datetime2": $c2, "datetime3": $c3, "datetime4": $c4, "datetime5": $c5, "datetime6": $c6, "datetime7": $c7, "datetime8": $c8, "datetime9": $c9, "datetime10": $c10, "datetime11": $c11, "datetime12": $c12, "datetime13": $c13, "datetime14": $c14}

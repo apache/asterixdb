@@ -1,0 +1,14 @@
+use dataverse testdv2;
+
+insert into dataset testds (
+{ "id": 1, "name": "Person One", "hobbies": {{"Rock", "Metal"}}}
+);
+
+insert into dataset testds (
+{ "id": 2, "name": "Person Two", "hobbies": {{"Rock", "Jazz"}}}
+)
+
+insert into dataset testds { "id": 3, "name": "Person Three", "hobbies": {{"Blues"}}};
+
+insert into dataset testds { "id": 4, "name": "Person Four", "hobbies": {{"Metal", "Jazz"}}}
+

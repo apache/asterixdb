@@ -1,0 +1,10 @@
+/*
+ * Description  : Pass as input an ordered list of Records as input to UDF and return the list.
+ * Expected Res : Success
+ * Date         : 4th September 2012
+ */
+
+use dataverse test;
+
+for $a in [{"name":"John","age":45,"id":123},{"name":"Jim","age":55,"id":103},{"name":"Bill","age":35,"id":125}]
+return test.echo($a)

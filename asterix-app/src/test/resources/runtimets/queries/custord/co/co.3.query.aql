@@ -1,0 +1,19 @@
+use dataverse custord;
+
+/*
+for $co1 in dataset('CustomerOrders3')
+for $o1 in $co1.orders
+return {
+  "order": $o1, 
+  "ordcust": 
+    for $co2 in dataset('CustomerOrders3')
+    where some $o2 in $co2.orders 
+      satisfies $o2.oid = $o1.oid
+    return $co2.cust 
+}
+*/
+
+for $co1 in dataset('CustomerOrders3')
+where some $o1 in $co1.orders
+satisfies $o1.oid = 10
+return $co1

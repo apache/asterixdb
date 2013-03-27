@@ -1,0 +1,12 @@
+/*
+ * Description      :   Test spatial accessors
+ * Expected Result  :   Success
+ * Date             :   Oct 17, 2012
+ */
+
+use dataverse test;
+
+let $polygon := create-polygon(create-point(1.0,1.0), create-point(2.0,2.0), create-point(3.0,3.0), create-point(4.0,4.0))
+let $polygon_list := get-points($polygon)
+for $p in $polygon_list
+return $p
