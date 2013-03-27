@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.testframework.xml.TestCase;
 import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
@@ -13,8 +12,6 @@ import edu.uci.ics.asterix.testframework.xml.TestSuite;
 import edu.uci.ics.asterix.testframework.xml.TestSuiteParser;
 
 public class TestCaseContext {
-    private static final Logger LOGGER = Logger.getLogger(TestCaseContext.class.getName());
-
     public static final String DEFAULT_TESTSUITE_XML_NAME = "testsuite.xml";
 
     private File tsRoot;
@@ -61,13 +58,13 @@ public class TestCaseContext {
             if (fName.startsWith(".")) {
                 continue;
             }
+            
             File testFile = new File(path, fName);
             TestFileContext tfsc = new TestFileContext(testFile);
             String[] nameSplits = fName.split("\\.");
             if (nameSplits.length < 3) {
-                LOGGER.warning("Ignoring test file '" + cUnit.getName() + File.separatorChar + fName
-                        + "' since it does not have the proper test file name format.");
-                continue;
+                throw new IllegalArgumentException("Test file '" + cUnit.getName() + File.separatorChar
+                        + fName + "' does not have the proper test file name format.");
             }
             tfsc.setSeqNum(nameSplits[nameSplits.length - 3]);
             tfsc.setType(nameSplits[nameSplits.length - 2]);
