@@ -19,7 +19,7 @@ import java.util.List;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public interface ILocalResourceRepository {
-
+	
     public LocalResource getResourceById(long id) throws HyracksDataException;
 
     public LocalResource getResourceByName(String name) throws HyracksDataException;
