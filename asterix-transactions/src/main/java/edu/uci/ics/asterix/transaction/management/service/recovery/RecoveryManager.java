@@ -50,7 +50,6 @@ import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLoca
 import edu.uci.ics.asterix.transaction.management.service.logging.PhysicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
-import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManager;
@@ -136,6 +135,10 @@ public class RecoveryManager implements IRecoveryManager {
 
     public void startRecovery(boolean synchronous) throws IOException, ACIDException {
 
+        int updateLogCount = 0;
+        int commitLogCount = 0;
+        int redoCount = 0;
+
         state = SystemState.RECOVERING;
 
         ILogManager logManager = txnSubsystem.getLogManager();
@@ -144,7 +147,7 @@ public class RecoveryManager implements IRecoveryManager {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("[RecoveryMgr] starting recovery ...");
         }
-        
+
         //winnerTxnTable is used to add pairs, <committed TxnId, the most recent commit LSN of the TxnId>
         Map<TxnId, Long> winnerTxnTable = new HashMap<TxnId, Long>();
         TxnId tempKeyTxnId = new TxnId(-1, -1, -1);
@@ -154,7 +157,7 @@ public class RecoveryManager implements IRecoveryManager {
         CheckpointObject checkpointObject = readCheckpoint();
         long lowWaterMarkLSN = checkpointObject.getMinMCTFirstLSN();
         if (lowWaterMarkLSN == -1) {
-        	lowWaterMarkLSN = 0;
+            lowWaterMarkLSN = 0;
         }
         int maxJobId = checkpointObject.getMaxJobId();
         int currentJobId;
@@ -168,7 +171,7 @@ public class RecoveryManager implements IRecoveryManager {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("[RecoveryMgr] in analysis phase");
         }
-        
+
         //#. set log cursor to the lowWaterMarkLSN
         ILogCursor logCursor = logManager.readLog(new PhysicalLogLocator(lowWaterMarkLSN, logManager),
                 new ILogFilter() {
@@ -193,17 +196,23 @@ public class RecoveryManager implements IRecoveryManager {
                 maxJobId = currentJobId;
             }
 
+            TxnId commitTxnId = null;
             switch (logType) {
                 case LogType.UPDATE:
-                    //do nothing                    
+                    if (IS_DEBUG_MODE) {
+                        updateLogCount++;
+                    }
                     break;
 
                 case LogType.COMMIT:
                 case LogType.ENTITY_COMMIT:
-                    tempKeyTxnId.setTxnId(logRecordHelper.getJobId(currentLogLocator),
+                    commitTxnId = new TxnId(logRecordHelper.getJobId(currentLogLocator),
                             logRecordHelper.getDatasetId(currentLogLocator),
                             logRecordHelper.getPKHashValue(currentLogLocator));
-                    winnerTxnTable.put(tempKeyTxnId, currentLogLocator.getLsn());
+                    winnerTxnTable.put(commitTxnId, currentLogLocator.getLsn());
+                    if (IS_DEBUG_MODE) {
+                        commitLogCount++;
+                    }
                     break;
 
                 default:
@@ -350,6 +359,9 @@ public class RecoveryManager implements IRecoveryManager {
 
                             //redo finally.
                             resourceMgr.redo(logRecordHelper, currentLogLocator);
+                            if (IS_DEBUG_MODE) {
+                                redoCount++;
+                            }
                         }
                     }
                     break;
@@ -369,9 +381,13 @@ public class RecoveryManager implements IRecoveryManager {
         for (long r : resourceIdList) {
             indexLifecycleManager.close(r);
         }
-        
+
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("[RecoveryMgr] recovery is over");
+        }
+        if (IS_DEBUG_MODE) {
+            System.out.println("[RecoveryMgr] Count: Update/Commit/Redo = " + updateLogCount + "/" + commitLogCount
+                    + "/" + redoCount);
         }
     }
 

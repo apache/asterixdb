@@ -164,8 +164,6 @@ public class MetadataBootstrap {
         ioManager = ncApplicationContext.getRootContext().getIOManager();
 
         if (isNewUniverse) {
-            //Do checkpoint only if it is new universe
-            //runtimeContext.getTransactionSubsystem().getRecoveryManager().checkpoint(false);
             MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             try {
                 // Begin a transaction against the metadata.

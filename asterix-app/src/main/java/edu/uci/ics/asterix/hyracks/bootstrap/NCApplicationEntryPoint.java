@@ -16,7 +16,6 @@ import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryMana
 import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager.SystemState;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.application.INCApplicationEntryPoint;
-import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 
 public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(NCApplicationEntryPoint.class.getName());

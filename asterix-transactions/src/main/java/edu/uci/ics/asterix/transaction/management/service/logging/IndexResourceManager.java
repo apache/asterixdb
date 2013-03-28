@@ -50,15 +50,15 @@ public class IndexResourceManager implements IResourceManager {
                 .getIndex(resourceId);
 
         /* field count */
-        int fieldCount = logLocator.getBuffer().readInt(logLocator.getMemoryOffset() + offset);
+        int fieldCount = logLocator.getBuffer().readInt(offset);
         offset += 4;
 
         /* new operation */
-        byte newOperation = logLocator.getBuffer().getByte(logLocator.getMemoryOffset() + offset);
+        byte newOperation = logLocator.getBuffer().getByte(offset);
         offset += 1;
 
         /* new value size */
-        int newValueSize = logLocator.getBuffer().readInt(logLocator.getMemoryOffset() + offset);
+        int newValueSize = logLocator.getBuffer().readInt(offset);
         offset += 4;
 
         /* new value */
@@ -75,12 +75,12 @@ public class IndexResourceManager implements IResourceManager {
             if (resourceType == ResourceType.LSM_BTREE) {
 
                 /* old operation */
-                byte oldOperation = logLocator.getBuffer().getByte(logLocator.getMemoryOffset() + offset);
+                byte oldOperation = logLocator.getBuffer().getByte(offset);
                 offset += 1;
 
                 if (oldOperation != (byte) IndexOperation.NOOP.ordinal()) {
                     /* old value size */
-                    int oldValueSize = logLocator.getBuffer().readInt(logLocator.getMemoryOffset() + offset);
+                    int oldValueSize = logLocator.getBuffer().readInt(offset);
                     offset += 4;
 
                     /* old value */
@@ -117,15 +117,15 @@ public class IndexResourceManager implements IResourceManager {
                 .getIndex(resourceId);
 
         /* field count */
-        int fieldCount = logLocator.getBuffer().readInt(logLocator.getMemoryOffset() + offset);
+        int fieldCount = logLocator.getBuffer().readInt(offset);
         offset += 4;
 
         /* new operation */
-        byte newOperation = logLocator.getBuffer().getByte(logLocator.getMemoryOffset() + offset);
+        byte newOperation = logLocator.getBuffer().getByte(offset);
         offset += 1;
 
         /* new value size */
-        int newValueSize = logLocator.getBuffer().readInt(logLocator.getMemoryOffset() + offset);
+        int newValueSize = logLocator.getBuffer().readInt(offset);
         offset += 4;
 
         /* new value */
