@@ -160,8 +160,6 @@ public class MetadataTest {
         // Read the response body as String.
         String responseBody = method.getResponseBodyAsString();
 
-        System.out.println("DDL: " + responseBody);
-
         // Check if the method was executed successfully.
         if (statusCode != HttpStatus.SC_OK) {
             System.err.println("Method failed: " + method.getStatusLine());
@@ -189,8 +187,6 @@ public class MetadataTest {
 
         // Read the response body as String.
         String responseBody = method.getResponseBodyAsString();
-
-        System.out.println("Update: " + responseBody);
 
         // Check if the method was executed successfully.
         if (statusCode != HttpStatus.SC_OK) {
@@ -227,8 +223,6 @@ public class MetadataTest {
 
             // Read the response body as String.
             String responseBody = method.getResponseBodyAsString();
-
-            System.out.println(responseBody);
 
             result = new JSONObject(responseBody);
         } catch (Exception e) {
