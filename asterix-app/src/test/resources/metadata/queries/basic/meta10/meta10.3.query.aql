@@ -1,0 +1,12 @@
+/*
+ * Description  : Create dataverse and drop that dataverse and verify dataverse entries in metadata
+ * Expected Res : Success
+ * Date         : Sep 17 2012
+ */
+
+
+count(
+for $l in dataset('Metadata.Dataverse')
+where $l.DataverseName='test'
+return $l
+)

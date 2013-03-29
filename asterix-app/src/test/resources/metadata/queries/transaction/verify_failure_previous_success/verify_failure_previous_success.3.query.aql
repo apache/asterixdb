@@ -1,0 +1,11 @@
+/*
+ * Description  : Verify the state of the Metadata adter the failure caused in failure_previous_success.aql 
+ * Expected Res : Success
+ * Date         : 24 Nov 2012
+ */
+
+use dataverse custord;
+
+for $x in dataset('Metadata.Datatype')
+where $x.DataverseName='custord'
+return $x

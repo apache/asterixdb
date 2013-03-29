@@ -1,0 +1,12 @@
+/*
+ * Description  : create a dataset providingi an invalid value for a hint and an unknown hint
+ * Expected Res : Failure
+ * Date         : 29 Jan 2013
+ * Issue        : 251
+ */
+
+use dataverse Metadata;
+
+for $x in dataset('Metadata.Dataset')
+where $x.DataverseName='test'
+return $x
