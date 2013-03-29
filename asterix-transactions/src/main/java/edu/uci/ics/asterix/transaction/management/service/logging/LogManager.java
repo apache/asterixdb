@@ -697,6 +697,7 @@ public class LogManager implements ILogManager {
         closeLogPages();
         initLSN();
         openLogPages();
+        logPageFlusher.renew();
     }
 
     private PhysicalLogLocator initLSN() throws ACIDException {
@@ -858,8 +859,9 @@ class LogPageFlushThread extends Thread {
      */
     private final LinkedBlockingQueue<Object>[] flushRequestQueue;
     private final Object[] flushRequests;
-    private int lastFlushedPageIndex;
+    private int pageToFlush;
     private final long groupCommitWaitPeriod;
+    private boolean isRenewRequest;
 
     public LogPageFlushThread(LogManager logManager) {
         this.logManager = logManager;
@@ -871,8 +873,16 @@ class LogPageFlushThread extends Thread {
             flushRequestQueue[i] = new LinkedBlockingQueue<Object>(1);
             flushRequests[i] = new Object();
         }
-        this.lastFlushedPageIndex = -1;
+        this.pageToFlush = -1;
         groupCommitWaitPeriod = logManager.getLogManagerProperties().getGroupCommitWaitPeriod();
+        isRenewRequest = false;
+    }
+
+    public void renew() {
+        isRenewRequest = true;
+        pageToFlush = -1;
+        this.interrupt();
+        isRenewRequest = false;
     }
 
     public void requestFlush(int pageIndex, long lsn, boolean isSynchronous) {
@@ -908,12 +918,19 @@ class LogPageFlushThread extends Thread {
     public void run() {
         while (true) {
             try {
-                int pageToFlush = logManager.getNextPageInSequence(lastFlushedPageIndex);
+                pageToFlush = logManager.getNextPageInSequence(pageToFlush);
 
                 // A wait call on the linkedBLockingQueue. The flusher thread is
                 // notified when an object is added to the queue. Please note
                 // that each page has an associated blocking queue.
-                flushRequestQueue[pageToFlush].take();
+                try {
+                    flushRequestQueue[pageToFlush].take();
+                } catch (InterruptedException ie) {
+                    while (isRenewRequest) {
+                        sleep(1);
+                    }
+                    continue;
+                }
 
                 synchronized (logManager.getLogPage(pageToFlush)) {
 
@@ -954,7 +971,6 @@ class LogPageFlushThread extends Thread {
 
                     // increment the last flushed lsn and lastFlushedPage
                     logManager.incrementLastFlushedLsn(logManager.getLogManagerProperties().getLogPageSize());
-                    lastFlushedPageIndex = pageToFlush;
 
                     // decrement activeTxnCountOnIndexes
                     logManager.decrementActiveTxnCountOnIndexes(pageToFlush);

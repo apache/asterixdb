@@ -241,13 +241,15 @@ public class RecoveryManager implements IRecoveryManager {
         long resourceId;
         byte resourceMgrId;
         long maxDiskLastLSN;
-        long currentLSN;
+        long currentLSN = -1;
         int resourceType;
         ILSMIndex index = null;
         LocalResource localResource = null;
         ILocalResourceMetadata localResourceMetadata = null;
         Map<Long, Long> resourceId2MaxLSNMap = new HashMap<Long, Long>();
         List<ILSMComponent> immutableDiskIndexList = null;
+        TxnId jobLevelTxnId = new TxnId(-1, -1, -1);
+        boolean foundWinnerTxn;
 
         //#. get indexLifeCycleManager 
         IAsterixAppRuntimeContextProvider appRuntimeContext = txnSubsystem.getAsterixAppRuntimeContextProvider();
@@ -256,7 +258,7 @@ public class RecoveryManager implements IRecoveryManager {
 
         //#. redo
         while (logCursor.next(currentLogLocator)) {
-
+            foundWinnerTxn = false;
             if (LogManager.IS_DEBUG_MODE) {
                 System.out.println(logManager.getLogRecordHelper().getLogRecordForDisplay(currentLogLocator));
             }
@@ -268,9 +270,16 @@ public class RecoveryManager implements IRecoveryManager {
                     tempKeyTxnId.setTxnId(logRecordHelper.getJobId(currentLogLocator),
                             logRecordHelper.getDatasetId(currentLogLocator),
                             logRecordHelper.getPKHashValue(currentLogLocator));
-
+                    jobLevelTxnId.setTxnId(logRecordHelper.getJobId(currentLogLocator), -1, -1);
                     if (winnerTxnTable.containsKey(tempKeyTxnId)) {
                         currentLSN = winnerTxnTable.get(tempKeyTxnId);
+                        foundWinnerTxn = true;
+                    } else if (winnerTxnTable.containsKey(jobLevelTxnId)) {
+                        currentLSN = winnerTxnTable.get(jobLevelTxnId);
+                        foundWinnerTxn = true;
+                    }
+
+                    if (foundWinnerTxn) {
                         resourceId = logRecordHelper.getResourceId(currentLogLocator);
                         localResource = localResourceRepository.getResourceById(resourceId);
 

@@ -63,6 +63,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetIdF
 import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext.TransactionType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -71,6 +72,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
@@ -268,6 +270,9 @@ public class MetadataNode implements IMetadataNode {
                 lsmIndex, IndexOperation.INSERT);
 
         IIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
+
+        TransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+        txnCtx.setTransactionType(TransactionType.READ_WRITE);
 
         // TODO: fix exceptions once new BTree exception model is in hyracks.
         indexAccessor.insert(tuple);
@@ -567,6 +572,10 @@ public class MetadataNode implements IMetadataNode {
         IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID, metadataIndex,
                 lsmIndex, IndexOperation.DELETE);
         IIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
+
+        TransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+        txnCtx.setTransactionType(TransactionType.READ_WRITE);
+
         indexAccessor.delete(tuple);
         indexLifecycleManager.close(resourceID);
     }
@@ -590,6 +599,7 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public Dataverse getDataverse(JobId jobId, String dataverseName) throws MetadataException, RemoteException {
+
         try {
             ITupleReference searchKey = createTuple(dataverseName);
             DataverseTupleTranslator tupleReaderWriter = new DataverseTupleTranslator(false);
@@ -841,6 +851,86 @@ public class MetadataNode implements IMetadataNode {
         }
         // There should be exactly one result returned from the search.
         return results.get(0);
+    }
+
+    //Debugging Method
+    public String printMetadata() {
+
+        StringBuilder sb = new StringBuilder();
+        try {
+            IMetadataIndex index = MetadataPrimaryIndexes.DATAVERSE_DATASET;
+            long resourceID = index.getResourceID();
+            IIndex indexInstance = indexLifecycleManager.getIndex(resourceID);
+            indexLifecycleManager.open(resourceID);
+            IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
+                    NoOpOperationCallback.INSTANCE);
+            ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
+
+            RangePredicate rangePred = null;
+            rangePred = new RangePredicate(null, null, true, true, null, null);
+            indexAccessor.search(rangeCursor, rangePred);
+            try {
+                while (rangeCursor.hasNext()) {
+                    rangeCursor.next();
+                    sb.append(TupleUtils.printTuple(rangeCursor.getTuple(),
+                            new ISerializerDeserializer[] { AqlSerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.ASTRING) }));
+                }
+            } finally {
+                rangeCursor.close();
+            }
+            indexLifecycleManager.close(resourceID);
+
+            index = MetadataPrimaryIndexes.DATASET_DATASET;
+            resourceID = index.getResourceID();
+            indexInstance = indexLifecycleManager.getIndex(resourceID);
+            indexLifecycleManager.open(resourceID);
+            indexAccessor = indexInstance
+                    .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
+
+            rangePred = null;
+            rangePred = new RangePredicate(null, null, true, true, null, null);
+            indexAccessor.search(rangeCursor, rangePred);
+            try {
+                while (rangeCursor.hasNext()) {
+                    rangeCursor.next();
+                    sb.append(TupleUtils.printTuple(rangeCursor.getTuple(), new ISerializerDeserializer[] {
+                            AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING),
+                            AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING) }));
+                }
+            } finally {
+                rangeCursor.close();
+            }
+            indexLifecycleManager.close(resourceID);
+
+            index = MetadataPrimaryIndexes.INDEX_DATASET;
+            resourceID = index.getResourceID();
+            indexInstance = indexLifecycleManager.getIndex(resourceID);
+            indexLifecycleManager.open(resourceID);
+            indexAccessor = indexInstance
+                    .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
+
+            rangePred = null;
+            rangePred = new RangePredicate(null, null, true, true, null, null);
+            indexAccessor.search(rangeCursor, rangePred);
+            try {
+                while (rangeCursor.hasNext()) {
+                    rangeCursor.next();
+                    sb.append(TupleUtils.printTuple(rangeCursor.getTuple(), new ISerializerDeserializer[] {
+                            AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING),
+                            AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING),
+                            AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING) }));
+                }
+            } finally {
+                rangeCursor.close();
+            }
+            indexLifecycleManager.close(resourceID);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return sb.toString();
     }
 
     private <ResultType> void searchIndex(JobId jobId, IMetadataIndex index, ITupleReference searchKey,
