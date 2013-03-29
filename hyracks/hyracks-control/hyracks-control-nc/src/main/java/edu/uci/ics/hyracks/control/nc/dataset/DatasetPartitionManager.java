@@ -48,16 +48,22 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
             final int resultHistorySize) {
         this.ncs = ncs;
         this.executor = executor;
+        deallocatableRegistry = new DefaultDeallocatableRegistry();
+        fileFactory = new WorkspaceFileFactory(deallocatableRegistry, (IOManager) ncs.getRootContext().getIOManager());
+        datasetMemoryManager = new DatasetMemoryManager(availableMemory);
         partitionResultStateMap = new LinkedHashMap<JobId, ResultState[]>() {
             private static final long serialVersionUID = 1L;
 
             protected boolean removeEldestEntry(Map.Entry<JobId, ResultState[]> eldest) {
-                return size() > resultHistorySize;
+                if (size() > resultHistorySize) {
+                    for (ResultState state : eldest.getValue()) {
+                        state.deinit();
+                    }
+                    return true;
+                }
+                return false;
             }
         };
-        deallocatableRegistry = new DefaultDeallocatableRegistry();
-        fileFactory = new WorkspaceFileFactory(deallocatableRegistry, (IOManager) ncs.getRootContext().getIOManager());
-        datasetMemoryManager = new DatasetMemoryManager(availableMemory);
     }
 
     @Override

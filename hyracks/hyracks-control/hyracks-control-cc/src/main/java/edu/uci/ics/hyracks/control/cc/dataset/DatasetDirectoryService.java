@@ -26,6 +26,8 @@ import edu.uci.ics.hyracks.api.dataset.IDatasetDirectoryService;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.dataset.ResultSetMetaData;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.job.JobId;
 
 /**
@@ -46,13 +48,31 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
                 return size() > jobHistorySize;
             }
         };
-;
+    }
+
+    @Override
+    public void notifyJobCreation(JobId jobId, IActivityClusterGraphGeneratorFactory acggf) throws HyracksException {
+        DatasetJobRecord djr = jobResultLocations.get(jobId);
+        if (djr == null) {
+            djr = new DatasetJobRecord();
+            jobResultLocations.put(jobId, djr);
+        }
+    }
+
+    @Override
+    public void notifyJobStart(JobId jobId) throws HyracksException {
+        // Auto-generated method stub
+    }
+
+    @Override
+    public void notifyJobFinish(JobId jobId) throws HyracksException {
+        // Auto-generated method stub
     }
 
     @Override
     public synchronized void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult,
             int partition, int nPartitions, NetworkAddress networkAddress) {
-        DatasetJobRecord djr = getDatasetJobRecord(jobId);
+        DatasetJobRecord djr = jobResultLocations.get(jobId);
 
         ResultSetMetaData resultSetMetaData = djr.get(rsId);
         if (resultSetMetaData == null) {
@@ -91,14 +111,14 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
 
     @Override
     public synchronized void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition) {
-        DatasetJobRecord djr = getDatasetJobRecord(jobId);
+        DatasetJobRecord djr = jobResultLocations.get(jobId);
         djr.fail();
         notifyAll();
     }
 
     @Override
     public synchronized void reportJobFailure(JobId jobId) {
-        DatasetJobRecord djr = getDatasetJobRecord(jobId);
+        DatasetJobRecord djr = jobResultLocations.get(jobId);
         djr.fail();
         notifyAll();
     }
@@ -165,7 +185,11 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
      */
     private DatasetDirectoryRecord[] updatedRecords(JobId jobId, ResultSetId rsId, DatasetDirectoryRecord[] knownRecords)
             throws HyracksDataException {
-        DatasetJobRecord djr = getDatasetJobRecord(jobId);
+        DatasetJobRecord djr = jobResultLocations.get(jobId);
+
+        if (djr == null) {
+            throw new HyracksDataException("Requested JobId " + jobId + "doesn't exist");
+        }
 
         if (djr.getStatus() == Status.FAILED) {
             throw new HyracksDataException("Job failed.");
@@ -207,14 +231,5 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
             }
         }
         return null;
-    }
-
-    private DatasetJobRecord getDatasetJobRecord(JobId jobId) {
-        DatasetJobRecord djr = jobResultLocations.get(jobId);
-        if (djr == null) {
-            djr = new DatasetJobRecord();
-            jobResultLocations.put(jobId, djr);
-        }
-        return djr;
     }
 }
