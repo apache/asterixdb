@@ -132,16 +132,7 @@ public class ValidateCommand extends AbstractCommand {
 			}
 		}
 
-		if (valid) {
-			checkJavaVersion(cluster);
-		}
 		return valid;
-	}
-
-	private void checkJavaVersion(Cluster cluster) throws Exception {
-		PatternCreator pc = new PatternCreator();
-		Patterns patterns = pc.getClusterInfoPattern(cluster);
-		InstallerUtil.getEventrixClient(cluster).submit(patterns);
 	}
 
 	private void validateClusterProperties(Cluster cluster) {
