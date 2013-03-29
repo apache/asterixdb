@@ -1368,7 +1368,17 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     }
                     response.put("results", results);
                 }
-                out.print(response);
+                switch (pdf) {
+                    case HTML:
+                        out.println("<pre>");
+                        ResultUtils.prettyPrintHTML(out, response);
+                        out.println("</pre>");
+                        break;
+                    case TEXT:
+                    case JSON:
+                        out.print(response);
+                        break;
+                }
                 hcc.waitForCompletion(jobId);
             }
 

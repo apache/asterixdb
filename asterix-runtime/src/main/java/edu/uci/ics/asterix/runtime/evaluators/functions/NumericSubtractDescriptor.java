@@ -125,10 +125,12 @@ public class NumericSubtractDescriptor extends AbstractScalarFunctionDynamicDesc
                                         return;
                                     }
                                     default: {
-                                        throw new NotImplementedException(i == 0 ? "Left" : "Right"
-                                                + " Operand of Substraction can not be "
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
-                                                        .getByteArray()[0]));
+                                        throw new NotImplementedException(
+                                                AsterixBuiltinFunctions.NUMERIC_SUBTRACT.getName()
+                                                        + (i == 0 ? ": left" : ": right")
+                                                        + " operand can not be "
+                                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
+                                                                .getByteArray()[0]));
                                     }
                                 }
                             }

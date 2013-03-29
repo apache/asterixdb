@@ -64,6 +64,9 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 LOGGER.info("Stopping Asterix node controller: " + nodeId);
             }
 
+            IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
+            recoveryMgr.checkpoint(true);
+
             if (isMetadataNode) {
                 MetadataBootstrap.stopUniverse();
             }
@@ -82,7 +85,8 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (systemState == SystemState.NEW_UNIVERSE) {
             PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
                     .getLocalResourceRepository();
-            localResourceRepository.initialize(nodeId, proxy.getAsterixProperties().getStores().get(nodeId)[0], true, null);
+            localResourceRepository.initialize(nodeId, proxy.getAsterixProperties().getStores().get(nodeId)[0], true,
+                    null);
         }
 
         isMetadataNode = nodeId.equals(proxy.getAsterixProperties().getMetadataNodeName());

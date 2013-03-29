@@ -64,13 +64,16 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                             outInputSep.reset();
                             evalSep.evaluate(tuple);
                             byte[] serSep = outInputSep.getByteArray();
-                            if (serOrderedList[0] != SER_ORDEREDLIST_TYPE_TAG) {
-                                throw new AlgebricksException("Expects String List but got "
+                            if (serOrderedList[0] != SER_ORDEREDLIST_TYPE_TAG
+                                    && serOrderedList[1] != SER_STRING_TYPE_TAG) {
+                                throw new AlgebricksException(AsterixBuiltinFunctions.STRING_JOIN.getName()
+                                        + ": expects input type ORDEREDLIST but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[0]));
                             }
 
                             if (serSep[0] != SER_STRING_TYPE_TAG) {
-                                throw new AlgebricksException("Expects String as Seperator but got "
+                                throw new AlgebricksException(AsterixBuiltinFunctions.STRING_JOIN.getName()
+                                        + ": expects STRING type for the seperator but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serSep[0]));
                             }
 
@@ -83,6 +86,7 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                                 for (int i = 0; i < size; i++) {
                                     int itemOffset = AOrderedListSerializerDeserializer
                                             .getItemOffset(serOrderedList, i);
+
                                     int currentSize = UTF8StringPointable.getUTFLength(serOrderedList, itemOffset);
                                     if (i != size - 1 && currentSize != 0) {
                                         utf_8_len += sep_len;

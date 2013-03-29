@@ -1,0 +1,19 @@
+/*
+ * Description  : create a dataset providing invalid hints
+ * Expected Res : Failure
+ * Date         : 29 Jan 2013
+ * Issue        : 251
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type LineType as open {
+  id:int32,
+  text: string
+}
+
+create dataset Book(LineType)
+primary key id
+hints(size=2000,tuple_size=100);

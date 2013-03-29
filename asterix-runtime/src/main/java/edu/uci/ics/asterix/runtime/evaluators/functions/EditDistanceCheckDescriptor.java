@@ -92,8 +92,8 @@ public class EditDistanceCheckDescriptor extends AbstractScalarFunctionDynamicDe
                 }
 
                 default: {
-                    throw new AlgebricksException("Invalid type " + argType
-                            + " passed as argument to edit distance function.");
+                    throw new AlgebricksException(AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK.getName()
+                            + ": expects input type as STRING or ORDEREDLIST but got " + argType + ".");
                 }
 
             }

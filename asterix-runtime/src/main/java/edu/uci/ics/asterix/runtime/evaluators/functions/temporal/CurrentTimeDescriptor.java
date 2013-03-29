@@ -16,11 +16,11 @@ package edu.uci.ics.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AMutableTime;
 import edu.uci.ics.asterix.om.base.ATime;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.BuiltinType;
@@ -37,7 +37,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class CurrentTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "current-time", 0);
+    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.CURRENT_TIME;
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 

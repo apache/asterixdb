@@ -33,7 +33,7 @@ public class StartsWithDescriptor extends AbstractScalarFunctionDynamicDescripto
 
                 DataOutput dout = output.getDataOutput();
 
-                return new AbstractStringContainsEval(dout, args[0], args[1]) {
+                return new AbstractStringContainsEval(dout, args[0], args[1], AsterixBuiltinFunctions.STARTS_WITH) {
 
                     @Override
                     protected boolean findMatch(byte[] strBytes, byte[] patternBytes) {

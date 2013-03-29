@@ -18,6 +18,7 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -39,7 +40,11 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class LikeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
+
+    // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new LikeDescriptor();
@@ -94,6 +99,12 @@ public class LikeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                 nullSerde.serialize(ANull.NULL, dout);
                                 return;
                             }
+                            if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+                                throw new AlgebricksException(AsterixBuiltinFunctions.LIKE
+                                        + ": expects input type STRING/NULL for the first argument but got "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0])
+                                        + ".");
+                            }
                             boolean newPattern = false;
                             if (first) {
                                 first = false;
@@ -120,6 +131,12 @@ public class LikeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, dout);
                                 return;
+                            }
+                            if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+                                throw new AlgebricksException(AsterixBuiltinFunctions.LIKE
+                                        + ": expects input type (STRING/NULL, STRING/NULL) but got (STRING, "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0])
+                                        + ").");
                             }
                             carSeq.reset(array0, 1);
                             if (newPattern) {

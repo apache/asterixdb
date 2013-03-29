@@ -14,6 +14,7 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -78,7 +79,9 @@ public class LenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         }
 
                         if (serList[0] != SER_ORDEREDLIST_TYPE_TAG && serList[0] != SER_UNORDEREDLIST_TYPE_TAG) {
-                            throw new AlgebricksException("len() can only be called on ordered or unordered lists.");
+                            throw new AlgebricksException(AsterixBuiltinFunctions.LEN.getName()
+                                    + ": expects input type ORDEREDLIST/UNORDEREDLIST but got "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[0]));
                         }
 
                         int numberOfitems = 0;

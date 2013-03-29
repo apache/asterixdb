@@ -54,7 +54,8 @@ public class StringMatchesWithFlagDescriptor extends AbstractScalarFunctionDynam
 
                 DataOutput dout = output.getDataOutput();
 
-                return new AbstractTripleStringBoolEval(dout, args[0], args[1], args[2]) {
+                return new AbstractTripleStringBoolEval(dout, args[0], args[1], args[2],
+                        AsterixBuiltinFunctions.STRING_MATCHES_WITH_FLAG) {
 
                     private Pattern pattern = null;
                     private Matcher matcher = null;

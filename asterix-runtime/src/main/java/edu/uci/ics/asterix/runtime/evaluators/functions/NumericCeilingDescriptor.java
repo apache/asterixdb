@@ -130,7 +130,8 @@ public class NumericCeilingDescriptor extends AbstractScalarFunctionDynamicDescr
                                 aDouble.setValue(Math.ceil(val));
                                 serde.serialize(aDouble, out);
                             } else {
-                                throw new NotImplementedException("Numeric Ceiling is not implemented for "
+                                throw new NotImplementedException(AsterixBuiltinFunctions.NUMERIC_CEILING.getName()
+                                        + ": not implemented for "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
                             }
                         } catch (HyracksDataException e) {

@@ -13,7 +13,9 @@ import edu.uci.ics.asterix.om.base.AMutablePoint;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
+import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -27,6 +29,10 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class CreateLineDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
+
+    // allowed input type
+    private static final byte SER_POINT_TYPE_TAG = ATypeTag.POINT.serialize();
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new CreateLineDescriptor();
@@ -60,6 +66,17 @@ public class CreateLineDescriptor extends AbstractScalarFunctionDynamicDescripto
                         eval0.evaluate(tuple);
                         outInput1.reset();
                         eval1.evaluate(tuple);
+
+                        // type-check: (point, point)
+                        if (outInput0.getByteArray()[0] != SER_POINT_TYPE_TAG
+                                || outInput1.getByteArray()[0] != SER_POINT_TYPE_TAG) {
+                            throw new AlgebricksException(AsterixBuiltinFunctions.CREATE_LINE.getName()
+                                    + ": expects input type: (POINT, POINT) but got ("
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0.getByteArray()[0])
+                                    + ", "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput1.getByteArray()[0])
+                                    + ").");
+                        }
 
                         try {
                             aPoint[0].setValue(ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),

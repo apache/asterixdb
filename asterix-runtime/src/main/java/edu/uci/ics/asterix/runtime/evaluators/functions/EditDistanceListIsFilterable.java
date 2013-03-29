@@ -94,9 +94,9 @@ public class EditDistanceListIsFilterable extends AbstractScalarFunctionDynamicD
                     break;
                 }
                 default: {
-                    throw new AlgebricksException(
-                            "Expected type 'ORDEREDLIST' or 'UNORDEREDLIST' as first argument. Encountered '"
-                                    + typeTag.toString() + "'.");
+                    throw new AlgebricksException(AsterixBuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE.getName()
+                            + ": expects input type ORDEREDLIST or UNORDEREDLIST as the first argument, but got "
+                            + typeTag + ".");
                 }
             }
 
@@ -105,8 +105,8 @@ public class EditDistanceListIsFilterable extends AbstractScalarFunctionDynamicD
             edThreshEval.evaluate(tuple);
             typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
             if (!typeTag.equals(ATypeTag.INT32)) {
-                throw new AlgebricksException("Expected type 'INT32' as second argument. Encountered '"
-                        + typeTag.toString() + "'.");
+                throw new AlgebricksException(AsterixBuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE.getName()
+                        + ": expected type INT32 as the second argument, but got " + typeTag + ".");
             }
             int edThresh = IntegerSerializerDeserializer.getInt(argBuf.getByteArray(), 1);
 

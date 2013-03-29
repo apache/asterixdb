@@ -27,6 +27,8 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
 
+    private static final byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
+
     private ICopyEvaluatorFactory recordEvalFactory;
     private ICopyEvaluatorFactory dimensionEvalFactory;
     private ICopyEvaluatorFactory coordinateEvalFactory;
@@ -60,6 +62,12 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                 eval1.evaluate(tuple);
                 outInput2.reset();
                 eval2.evaluate(tuple);
+
+                // type-check: (Point/Line/Polygon/Circle/Rectangle/Null, Int32, Int32)
+                if (outInput1.getByteArray()[0] != SER_INT32_TYPE_TAG
+                        || outInput2.getByteArray()[0] != SER_INT32_TYPE_TAG) {
+                    throw new AlgebricksException("Expects Types: (Point/Line/Polygon/Circle/Rectangle/Null, Int32, Int32).");
+                }
 
                 try {
 
@@ -204,9 +212,9 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                                         double x = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ACircleSerializerDeserializer
                                                         .getCenterPointCoordinateOffset(Coordinate.X));
-                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
-                                                ACircleSerializerDeserializer
-                                                        .getCenterPointCoordinateOffset(Coordinate.X));
+                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0
+                                                .getByteArray(), ACircleSerializerDeserializer
+                                                .getCenterPointCoordinateOffset(Coordinate.X));
 
                                         value = x - radius;
                                     }
@@ -215,9 +223,9 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                                         double y = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ACircleSerializerDeserializer
                                                         .getCenterPointCoordinateOffset(Coordinate.Y));
-                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
-                                                ACircleSerializerDeserializer
-                                                        .getCenterPointCoordinateOffset(Coordinate.Y));
+                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0
+                                                .getByteArray(), ACircleSerializerDeserializer
+                                                .getCenterPointCoordinateOffset(Coordinate.Y));
 
                                         value = y - radius;
                                     }
@@ -226,9 +234,9 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                                         double x = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ACircleSerializerDeserializer
                                                         .getCenterPointCoordinateOffset(Coordinate.X));
-                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
-                                                ACircleSerializerDeserializer
-                                                        .getCenterPointCoordinateOffset(Coordinate.X));
+                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0
+                                                .getByteArray(), ACircleSerializerDeserializer
+                                                .getCenterPointCoordinateOffset(Coordinate.X));
 
                                         value = x + radius;
                                     }
@@ -237,9 +245,9 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                                         double y = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ACircleSerializerDeserializer
                                                         .getCenterPointCoordinateOffset(Coordinate.Y));
-                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
-                                                ACircleSerializerDeserializer
-                                                        .getCenterPointCoordinateOffset(Coordinate.Y));
+                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0
+                                                .getByteArray(), ACircleSerializerDeserializer
+                                                .getCenterPointCoordinateOffset(Coordinate.Y));
 
                                         value = y + radius;
                                     }
@@ -284,13 +292,13 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                                 }
                                 break;
                             case NULL: {
-                            	out.writeByte(ATypeTag.NULL.serialize());
-                            	return;
+                                out.writeByte(ATypeTag.NULL.serialize());
+                                return;
                             }
                             default:
                                 throw new NotImplementedException(
-									"create-mbr is only implemented for POINT, LINE, POLYGON, CIRCLE and RECTANGLE. Encountered type: "
-											+ tag + ".");
+                                        "create-mbr is only implemented for POINT, LINE, POLYGON, CIRCLE and RECTANGLE. Encountered type: "
+                                                + tag + ".");
 
                         }
                     } else {

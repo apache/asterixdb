@@ -103,8 +103,8 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                             } else if (tag == ATypeTag.NULL) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
-                                throw new NotImplementedException("spatial-cell does not support the type: " + tag
-                                        + " It is only implemented for POINT.");
+                                throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_CELL.getName()
+                                        + ": does not support the type: " + tag + "; it is only implemented for POINT.");
                             }
                         } catch (IOException e1) {
                             throw new AlgebricksException(e1);

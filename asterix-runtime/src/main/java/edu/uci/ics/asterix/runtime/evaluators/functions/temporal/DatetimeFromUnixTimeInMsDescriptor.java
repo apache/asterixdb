@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
@@ -25,10 +24,12 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADateTime;
 import edu.uci.ics.asterix.om.base.AMutableDateTime;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -43,8 +44,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class DatetimeFromUnixTimeInMsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "datetime-from-unix-time-in-ms", 1);
+    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.DATETIME_FROM_UNIX_TIME_IN_MS;
 
     // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
@@ -106,8 +106,10 @@ public class DatetimeFromUnixTimeInMsDescriptor extends AbstractScalarFunctionDy
                                     aDatetime.setValue(AInt64SerializerDeserializer.getLong(argOut.getByteArray(), 1));
                                 } else {
                                     throw new AlgebricksException(
-                                            "Inapplicable input type for function datetime-from-unix-time-in-ms: expecting integer or null type, but got "
-                                                    + argOut.getByteArray()[0]);
+                                            FID.getName()
+                                                    + ": expects type INT8/INT16/INT32/INT64/NULL but got "
+                                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
+                                                            .getByteArray()[0]));
                                 }
                                 datetimeSerde.serialize(aDatetime, out);
                             }

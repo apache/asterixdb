@@ -36,6 +36,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SpatialIntersectDescriptor();
@@ -97,7 +98,8 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                 APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
                         if (numOfPoints1 < 3) {
-                            throw new HyracksDataException("Polygon must have at least 3 points.");
+                            throw new HyracksDataException(AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
+                                    + ": polygon must have at least 3 points.");
                         }
 
                         int counter = 0;
@@ -204,7 +206,8 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                 APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
                         if (numOfPoints1 < 3) {
-                            throw new HyracksDataException("Polygon must have at least 3 points.");
+                            throw new HyracksDataException(AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
+                                    + ": polygon must have at least 3 points.");
                         }
                         for (int i = 0; i < numOfPoints1; i++) {
                             double startX2 = ADoubleSerializerDeserializer.getDouble(bytes1,
@@ -354,7 +357,8 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                         int v = middleVertex;
                         while (!foundEar) {
                             if (0 >= (nonSimplePolygonDetection--)) {
-                                throw new NotImplementedException("Non-simple polygons are not supported.");
+                                throw new HyracksDataException(AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
+                                        + ": non-simple polygons are not supported.");
                             }
                             int u = v;
                             if (numOfPoints <= u) {
@@ -638,7 +642,8 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                 APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
                         if (numOfPoints1 < 3) {
-                            throw new AlgebricksException("Polygon must have at least 3 points.");
+                            throw new HyracksDataException(AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
+                                    + ": polygon must have at least 3 points.");
                         }
 
                         getCounterClockWisePolygon(bytes1, pointsOffsets1, numOfPoints1);
@@ -689,7 +694,8 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                 APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
                         if (numOfPoints < 3) {
-                            throw new AlgebricksException("Polygon must have at least 3 points.");
+                            throw new HyracksDataException(AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
+                                    + ": polygon must have at least 3 points.");
                         }
 
                         getCounterClockWisePolygon(bytes0, pointsOffsets0, numOfPoints);
@@ -788,9 +794,10 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             break;
                                         default:
                                             throw new NotImplementedException(
-                                                    "spatial-intersection does not support the type: "
+                                                    AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
+                                                            + ": does not support the type: "
                                                             + tag1
-                                                            + " It is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
+                                                            + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
                                     }
                                     break;
                                 case LINE:
@@ -864,9 +871,10 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             break;
                                         default:
                                             throw new NotImplementedException(
-                                                    "spatial-intersection does not support the type: "
+                                                    AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
+                                                            + ": does not support the type: "
                                                             + tag1
-                                                            + " It is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
+                                                            + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
                                     }
                                     break;
                                 case POLYGON:
@@ -965,9 +973,10 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             break;
                                         default:
                                             throw new NotImplementedException(
-                                                    "spatial-intersection does not support the type: "
+                                                    AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
+                                                            + ": does not support the type: "
                                                             + tag1
-                                                            + " It is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
+                                                            + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
                                     }
                                     break;
                                 case CIRCLE:
@@ -996,9 +1005,10 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             break;
                                         default:
                                             throw new NotImplementedException(
-                                                    "spatial-intersection does not support the type: "
+                                                    AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
+                                                            + ": does not support the type: "
                                                             + tag1
-                                                            + " It is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
+                                                            + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
                                     }
                                     break;
                                 case RECTANGLE:
@@ -1050,9 +1060,10 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                             break;
                                         default:
                                             throw new NotImplementedException(
-                                                    "spatial-intersection does not support the type: "
+                                                    AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
+                                                            + ": does not support the type: "
                                                             + tag1
-                                                            + " It is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
+                                                            + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
                                     }
                                     break;
                                 case NULL:
@@ -1060,8 +1071,9 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                     break;
                                 default:
                                     throw new NotImplementedException(
-                                            "spatial-intersection does not support the type: " + tag0
-                                                    + " It is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
+                                            AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
+                                                    + ": does not support the type: " + tag1
+                                                    + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
                             }
 
                             ABoolean aResult = res ? (ABoolean.TRUE) : (ABoolean.FALSE);

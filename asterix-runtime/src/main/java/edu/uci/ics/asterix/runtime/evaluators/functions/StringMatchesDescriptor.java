@@ -49,7 +49,7 @@ public class StringMatchesDescriptor extends AbstractScalarFunctionDynamicDescri
 
                 DataOutput dout = output.getDataOutput();
 
-                return new AbstractBinaryStringBoolEval(dout, args[0], args[1]) {
+                return new AbstractBinaryStringBoolEval(dout, args[0], args[1], AsterixBuiltinFunctions.STRING_MATCHES) {
 
                     private Pattern pattern = null;
                     private Matcher matcher = null;

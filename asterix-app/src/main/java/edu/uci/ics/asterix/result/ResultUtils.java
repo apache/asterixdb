@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.result;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 
 import org.json.JSONArray;
@@ -61,5 +62,21 @@ public class ResultUtils {
             // TODO(madhusudancs): Figure out what to do when JSONException occurs while building the results.
         }
         return errorResp;
+    }
+
+    public static void prettyPrintHTML(PrintWriter out, JSONObject jsonResultObj) {
+        JSONArray resultsWrapper;
+        JSONArray resultsArray;
+        try {
+            resultsWrapper = jsonResultObj.getJSONArray("results");
+            for (int i = 0; i < resultsWrapper.length(); i++) {
+                resultsArray = resultsWrapper.getJSONArray(i);
+                for (int j = 0; j < resultsArray.length(); j++) {
+                    out.print(resultsArray.getString(j));
+                }
+            }
+        } catch (JSONException e) {
+            // TODO(madhusudancs): Figure out what to do when JSONException occurs while building the results.
+        }
     }
 }

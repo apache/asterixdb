@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
@@ -24,10 +23,12 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADate;
 import edu.uci.ics.asterix.om.base.AMutableDate;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -42,8 +43,13 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class DateFromUnixTimeInDaysDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "date-from-unix-time-in-days", 1);
+    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.DATE_FROM_UNIX_TIME_IN_DAYS;
+
+    // allowed input types
+    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+    private static final byte SER_INT8_TYPE_TAG = ATypeTag.INT8.serialize();
+    private static final byte SER_INT16_TYPE_TAG = ATypeTag.INT16.serialize();
+    private static final byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
@@ -67,12 +73,6 @@ public class DateFromUnixTimeInDaysDescriptor extends AbstractScalarFunctionDyna
                     private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(argOut);
 
-                    // allowed input types
-                    private byte serNullTypeTag = ATypeTag.NULL.serialize();
-                    private byte serInt8TypeTag = ATypeTag.INT8.serialize();
-                    private byte serInt16TypeTag = ATypeTag.INT16.serialize();
-                    private byte serInt32TypeTag = ATypeTag.INT32.serialize();
-
                     private AMutableDate aDate = new AMutableDate(0);
 
                     // possible returning types
@@ -88,19 +88,21 @@ public class DateFromUnixTimeInDaysDescriptor extends AbstractScalarFunctionDyna
                         argOut.reset();
                         eval.evaluate(tuple);
                         try {
-                            if (argOut.getByteArray()[0] == serNullTypeTag) {
+                            if (argOut.getByteArray()[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
-                                if (argOut.getByteArray()[0] == serInt8TypeTag) {
+                                if (argOut.getByteArray()[0] == SER_INT8_TYPE_TAG) {
                                     aDate.setValue(AInt8SerializerDeserializer.getByte(argOut.getByteArray(), 1));
-                                } else if (argOut.getByteArray()[0] == serInt16TypeTag) {
+                                } else if (argOut.getByteArray()[0] == SER_INT16_TYPE_TAG) {
                                     aDate.setValue(AInt16SerializerDeserializer.getShort(argOut.getByteArray(), 1));
-                                } else if (argOut.getByteArray()[0] == serInt32TypeTag) {
+                                } else if (argOut.getByteArray()[0] == SER_INT32_TYPE_TAG) {
                                     aDate.setValue(AInt32SerializerDeserializer.getInt(argOut.getByteArray(), 1));
                                 } else {
                                     throw new AlgebricksException(
-                                            "Inapplicable input type for function date-from-unix-time-in-days: expecting integer or null type, but got "
-                                                    + argOut.getByteArray()[0]);
+                                            FID.getName()
+                                                    + ": expects type INT8/INT16/INT32/INT64/NULL but got "
+                                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
+                                                            .getByteArray()[0]));
                                 }
                                 dateSerde.serialize(aDate, out);
                             }
