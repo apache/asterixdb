@@ -1,7 +1,6 @@
 package edu.uci.ics.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
@@ -11,7 +10,9 @@ import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -42,12 +43,15 @@ public abstract class AbstractTripleStringStringEval implements ICopyEvaluator {
     private ISerializerDeserializer strSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ASTRING);
 
+    private final FunctionIdentifier funcID;
+
     public AbstractTripleStringStringEval(DataOutput dout, ICopyEvaluatorFactory eval0, ICopyEvaluatorFactory eval1,
-            ICopyEvaluatorFactory eval2) throws AlgebricksException {
+            ICopyEvaluatorFactory eval2, FunctionIdentifier funcID) throws AlgebricksException {
         this.dout = dout;
         this.eval0 = eval0.createEvaluator(array0);
         this.eval1 = eval1.createEvaluator(array1);
         this.eval2 = eval2.createEvaluator(array2);
+        this.funcID = funcID;
     }
 
     @SuppressWarnings("unchecked")
@@ -61,22 +65,25 @@ public abstract class AbstractTripleStringStringEval implements ICopyEvaluator {
         eval2.evaluate(tuple);
 
         try {
+            // type-check: (string?, string, string)
+
             if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
-                nullSerde.serialize(ANull.NULL, dout);
-                return;
-            } else if (array0.getByteArray()[0] == SER_STRING_TYPE_TAG) {
-                if (array0.getByteArray()[1] == SER_NULL_TYPE_TAG) {
-                    dout.write(array0.getByteArray(), array0.getStartOffset(), array0.getLength());
+                if (array1.getByteArray()[0] == SER_STRING_TYPE_TAG && array2.getByteArray()[0] == SER_STRING_TYPE_TAG) {
+                    nullSerde.serialize(ANull.NULL, dout);
                     return;
                 }
+            }
 
-            } else {
-                throw new AlgebricksException("Expects String Type.");
+            if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG || array1.getByteArray()[0] != SER_STRING_TYPE_TAG
+                    || array2.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+                throw new AlgebricksException(funcID.getName()
+                        + ": expects input type (STRING/NULL, STRING, STRING), but got ("
+                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]) + ", "
+                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array1.getByteArray()[0]) + ", "
+                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array2.getByteArray()[0]) + ").");
             }
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
-        } catch (IOException e) {
-            throw new AlgebricksException(e.getMessage());
         }
 
         byte[] b0 = array0.getByteArray();

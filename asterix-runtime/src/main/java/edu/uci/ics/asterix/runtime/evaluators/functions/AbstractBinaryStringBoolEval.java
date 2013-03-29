@@ -2,15 +2,15 @@ package edu.uci.ics.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ABoolean;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -21,20 +21,26 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
 
     private DataOutput dout;
+
+    // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
+
     private ArrayBackedValueStorage array0 = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage array1 = new ArrayBackedValueStorage();
     private ICopyEvaluator evalLeft;
     private ICopyEvaluator evalRight;
+    private final FunctionIdentifier funcID;
     @SuppressWarnings({ "rawtypes" })
     private ISerializerDeserializer boolSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     public AbstractBinaryStringBoolEval(DataOutput dout, ICopyEvaluatorFactory evalLeftFactory,
-            ICopyEvaluatorFactory evalRightFactory) throws AlgebricksException {
+            ICopyEvaluatorFactory evalRightFactory, FunctionIdentifier funcID) throws AlgebricksException {
         this.dout = dout;
         this.evalLeft = evalLeftFactory.createEvaluator(array0);
         this.evalRight = evalRightFactory.createEvaluator(array1);
+        this.funcID = funcID;
     }
 
     @SuppressWarnings("unchecked")
@@ -47,15 +53,17 @@ public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
 
         try {
             if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG && array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
-                try {
-                    boolSerde.serialize(ABoolean.TRUE, dout);
-                } catch (HyracksDataException ex) {
-                    Logger.getLogger(AbstractBinaryStringBoolEval.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                boolSerde.serialize(ABoolean.TRUE, dout);
                 return;
-            } else if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG || array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+            } else if ((array0.getByteArray()[0] == SER_NULL_TYPE_TAG && array1.getByteArray()[0] == SER_STRING_TYPE_TAG)
+                    || (array0.getByteArray()[0] == SER_STRING_TYPE_TAG && array1.getByteArray()[0] == SER_NULL_TYPE_TAG)) {
                 boolSerde.serialize(ABoolean.FALSE, dout);
                 return;
+            } else if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG
+                    || array1.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+                throw new AlgebricksException(funcID.getName() + ": expects input type STRING or NULL, but got "
+                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]) + " and "
+                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array1.getByteArray()[0]) + ")!");
             }
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);

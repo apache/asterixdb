@@ -10,7 +10,9 @@ import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AMutableInt32;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
+import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.common.SimilarityFiltersCache;
 import edu.uci.ics.fuzzyjoin.similarity.SimilarityFilters;
@@ -27,7 +29,14 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 public class PrefixLenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "prefix-len@3", 3);
+
+    // allowed input types
+    private final static byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
+    private final static byte SER_DOUBLE_TYPE_TAG = ATypeTag.DOUBLE.serialize();
+    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
+
+    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "prefix-len@3",
+            3);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new PrefixLenDescriptor();
@@ -64,17 +73,32 @@ public class PrefixLenDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         // length
                         inputVal.reset();
                         evalLen.evaluate(tuple);
+                        if (inputVal.getByteArray()[0] != SER_INT32_TYPE_TAG) {
+                            throw new AlgebricksException(FID.getName()
+                                    + ": expects type Int32 for the first argument, but got "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]));
+                        }
                         int length = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
                         // similarity threshold
                         inputVal.reset();
                         evalThreshold.evaluate(tuple);
+                        if (inputVal.getByteArray()[0] != SER_DOUBLE_TYPE_TAG) {
+                            throw new AlgebricksException(FID.getName()
+                                    + ": expects type DOUBLE for the second argument, but got "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]));
+                        }
                         float similarityThreshold = (float) ADoubleSerializerDeserializer.getDouble(
                                 inputVal.getByteArray(), 1);
 
                         // similarity name
                         inputVal.reset();
                         evalSimilarity.evaluate(tuple);
+                        if (inputVal.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+                            throw new AlgebricksException(FID.getName()
+                                    + ": expects type STRING for the third argument, but got "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]));
+                        }
                         SimilarityFilters similarityFilters = similarityFiltersCache.get(similarityThreshold,
                                 inputVal.getByteArray());
 

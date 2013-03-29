@@ -114,7 +114,8 @@ public class NumericUnaryMinusDescriptor extends AbstractScalarFunctionDynamicDe
                                 aDouble.setValue(-ADoubleSerializerDeserializer.getDouble(argOut.getByteArray(), 1));
                                 serde.serialize(aDouble, out);
                             } else {
-                                throw new NotImplementedException("Unary minus is not implemented for "
+                                throw new NotImplementedException(AsterixBuiltinFunctions.NUMERIC_UNARY_MINUS.getName()
+                                        + ": not implemented for "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
                             }
                         } catch (HyracksDataException e) {

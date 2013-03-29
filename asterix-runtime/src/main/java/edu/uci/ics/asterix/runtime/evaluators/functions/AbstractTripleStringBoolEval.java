@@ -9,7 +9,9 @@ import edu.uci.ics.asterix.om.base.ABoolean;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -24,6 +26,7 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
 
     private DataOutput dout;
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     private ArrayBackedValueStorage array0 = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage array1 = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage array2 = new ArrayBackedValueStorage();
@@ -34,12 +37,15 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
     private ISerializerDeserializer boolSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
+    private final FunctionIdentifier funcID;
+
     public AbstractTripleStringBoolEval(DataOutput dout, ICopyEvaluatorFactory eval0, ICopyEvaluatorFactory eval1,
-            ICopyEvaluatorFactory eval2) throws AlgebricksException {
+            ICopyEvaluatorFactory eval2, FunctionIdentifier funcID) throws AlgebricksException {
         this.dout = dout;
         this.eval0 = eval0.createEvaluator(array0);
         this.eval1 = eval1.createEvaluator(array1);
         this.eval2 = eval2.createEvaluator(array2);
+        this.funcID = funcID;
     }
 
     @SuppressWarnings("unchecked")
@@ -53,13 +59,24 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
         eval2.evaluate(tuple);
 
         try {
-            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG && array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
-                boolSerde.serialize(ABoolean.TRUE, dout);
-                return;
-            } else if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG || array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+            if ((array0.getByteArray()[0] == SER_NULL_TYPE_TAG && array1.getByteArray()[0] == SER_STRING_TYPE_TAG)
+                    || (array1.getByteArray()[0] == SER_NULL_TYPE_TAG && array0.getByteArray()[0] == SER_STRING_TYPE_TAG)) {
                 boolSerde.serialize(ABoolean.FALSE, dout);
                 return;
+            } else if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG && array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                boolSerde.serialize(ABoolean.TRUE, dout);
+                return;
             }
+
+            if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG || array1.getByteArray()[0] != SER_STRING_TYPE_TAG
+                    || array2.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+                throw new AlgebricksException(funcID.getName()
+                        + ": expects iput type (STRING/NULL, STRING/NULL, STRING) but got ("
+                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]) + ", "
+                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array1.getByteArray()[0]) + ", "
+                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array2.getByteArray()[0]) + ")");
+            }
+
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }

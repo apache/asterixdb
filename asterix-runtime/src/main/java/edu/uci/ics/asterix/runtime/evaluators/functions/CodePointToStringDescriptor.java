@@ -6,20 +6,16 @@ import java.io.IOException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
-import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -36,8 +32,9 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
             return new CodePointToStringDescriptor();
         }
     };
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
+    private final static byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
+
     private final static byte[] currentUTF8 = new byte[6];
     private final byte stringTypeTag = ATypeTag.STRING.serialize();
 
@@ -49,7 +46,7 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
 
             private int codePointToUTF8(int c) {
                 if (c < 0x80) {
-                    currentUTF8[0] = (byte) (c & 0x7F /*mask 7 lsb: 0b1111111 */);
+                    currentUTF8[0] = (byte) (c & 0x7F /* mask 7 lsb: 0b1111111 */);
                     return 1;
                 } else if (c < 0x0800) {
                     currentUTF8[0] = (byte) (c >> 6 & 0x1F | 0xC0);
@@ -100,8 +97,10 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                             outInputList.reset();
                             evalList.evaluate(tuple);
                             byte[] serOrderedList = outInputList.getByteArray();
-                            if (serOrderedList[0] != SER_ORDEREDLIST_TYPE_TAG) {
-                                throw new AlgebricksException("Expects an Integer List."
+                            if (serOrderedList[0] != SER_ORDEREDLIST_TYPE_TAG
+                                    && serOrderedList[1] != SER_INT32_TYPE_TAG) {
+                                throw new AlgebricksException(AsterixBuiltinFunctions.CODEPOINT_TO_STRING.getName()
+                                        + ": expects input type ORDEREDLIST but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[0]));
                             }
                             int size = AOrderedListSerializerDeserializer.getNumberOfItems(serOrderedList);

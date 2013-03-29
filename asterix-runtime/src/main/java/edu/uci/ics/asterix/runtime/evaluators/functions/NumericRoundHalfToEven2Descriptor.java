@@ -99,8 +99,8 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
                         } else if (argOut.getByteArray()[0] == serInt64TypeTag) {
                             return (int) AInt64SerializerDeserializer.getLong(argOut.getByteArray(), 1);
                         } else {
-                            throw new AlgebricksException(
-                                    "The precision argument for round-half-to-even should be an integer.");
+                            throw new AlgebricksException(AsterixBuiltinFunctions.NUMERIC_ROUND_HALF_TO_EVEN2.getName()
+                                    + ": the precision argument should be an INT8/INT16/INT32/INT64.");
                         }
                     }
 
@@ -166,8 +166,11 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
                                     serde.serialize(aDouble, out);
                                 }
                             } else {
-                                throw new NotImplementedException("Numeric Round Half to Even is not implemented for "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
+                                throw new NotImplementedException(
+                                        AsterixBuiltinFunctions.NUMERIC_ROUND_HALF_TO_EVEN2.getName()
+                                                + ": not implemented for "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
+                                                        .getByteArray()[0]));
                             }
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);

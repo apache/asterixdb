@@ -70,7 +70,8 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
                                     int numOfPoints = AInt16SerializerDeserializer.getShort(argOut.getByteArray(), 1);
 
                                     if (numOfPoints < 3) {
-                                        throw new AlgebricksException("Polygon must have at least 3 points");
+                                        throw new AlgebricksException(AsterixBuiltinFunctions.SPATIAL_AREA.getName()
+                                                + ": polygon must have at least 3 points");
                                     }
                                     area = Math.abs(SpatialUtils.polygonArea(argOut.getByteArray(), numOfPoints));
                                     out.writeByte(ATypeTag.DOUBLE.serialize());
@@ -105,8 +106,9 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
                                     nullSerde.serialize(ANull.NULL, out);
                                     break;
                                 default:
-                                    throw new NotImplementedException("spatial-area does not support the type: " + tag
-                                            + " It is only implemented for POLYGON, CIRCLE and RECTANGLE.");
+                                    throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_AREA.getName()
+                                            + ": does not support the type: " + tag
+                                            + "; it is only implemented for POLYGON, CIRCLE and RECTANGLE.");
                             }
                         } catch (HyracksDataException hde) {
                             throw new AlgebricksException(hde);

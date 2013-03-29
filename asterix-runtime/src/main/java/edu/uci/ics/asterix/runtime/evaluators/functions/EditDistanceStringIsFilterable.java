@@ -88,8 +88,8 @@ public class EditDistanceStringIsFilterable extends AbstractScalarFunctionDynami
             stringEval.evaluate(tuple);
             typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
             if (!typeTag.equals(ATypeTag.STRING)) {
-                throw new AlgebricksException("Expected type 'STRING' as first argument. Encountered '"
-                        + typeTag.toString() + "'.");
+                throw new AlgebricksException(AsterixBuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE.getName()
+                        + ": expects input type STRING as first argument, but got " + typeTag + ".");
             }
             int utf8Length = UTF8StringPointable.getUTFLength(argBuf.getByteArray(), 1);
             int pos = 3;
@@ -105,8 +105,8 @@ public class EditDistanceStringIsFilterable extends AbstractScalarFunctionDynami
             edThreshEval.evaluate(tuple);
             typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
             if (!typeTag.equals(ATypeTag.INT32)) {
-                throw new AlgebricksException("Expected type 'INT32' as second argument. Encountered '"
-                        + typeTag.toString() + "'.");
+                throw new AlgebricksException(AsterixBuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE.getName()
+                        + ": expects input type INT32 as second argument, but got " + typeTag + ".");
             }
             int edThresh = IntegerSerializerDeserializer.getInt(argBuf.getByteArray(), 1);
 
@@ -115,8 +115,8 @@ public class EditDistanceStringIsFilterable extends AbstractScalarFunctionDynami
             gramLenEval.evaluate(tuple);
             typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
             if (!typeTag.equals(ATypeTag.INT32)) {
-                throw new AlgebricksException("Expected type 'INT32' as third argument. Encountered '"
-                        + typeTag.toString() + "'.");
+                throw new AlgebricksException(AsterixBuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE.getName()
+                        + ": expects input type INT32 as third argument, but got " + typeTag + ".");
             }
             int gramLen = IntegerSerializerDeserializer.getInt(argBuf.getByteArray(), 1);
 
@@ -125,8 +125,8 @@ public class EditDistanceStringIsFilterable extends AbstractScalarFunctionDynami
             usePrePostEval.evaluate(tuple);
             typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
             if (!typeTag.equals(ATypeTag.BOOLEAN)) {
-                throw new AlgebricksException("Expected type 'BOOLEAN' as fourth argument. Encountered '"
-                        + typeTag.toString() + "'.");
+                throw new AlgebricksException(AsterixBuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE.getName()
+                        + ": expects input type BOOLEAN as fourth argument, but got " + typeTag + ".");
             }
             boolean usePrePost = BooleanSerializerDeserializer.getBoolean(argBuf.getByteArray(), 1);
 

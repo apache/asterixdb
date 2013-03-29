@@ -57,7 +57,8 @@ public class NotNullDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     private DataOutput out = output.getDataOutput();
                     private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(outInput);
-                    private String errorMessage = "The input value cannot be null!";
+                    private String errorMessage = AsterixBuiltinFunctions.NOT_NULL
+                            + ": the input value cannot be NULL.";
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {

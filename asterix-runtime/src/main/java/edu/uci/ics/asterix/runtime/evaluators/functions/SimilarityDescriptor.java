@@ -35,10 +35,15 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "similarity@7", 7);
+    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "similarity@7",
+            7);
 
+    private final static byte SER_DOUBLE_TYPE_TAG = ATypeTag.DOUBLE.serialize();
+    private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
+    private final static byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
     private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
     private final static byte SER_UNORDEREDLIST_TYPE_TAG = ATypeTag.UNORDEREDLIST.serialize();
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SimilarityDescriptor();
@@ -83,21 +88,41 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                         // similarity threshold
                         inputVal.reset();
                         evalThreshold.evaluate(tuple);
+                        if (inputVal.getByteArray()[0] != SER_DOUBLE_TYPE_TAG) {
+                            throw new AlgebricksException(FID.getName()
+                                    + ": expects type DOUBLE for the first argument but got "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]));
+                        }
                         float similarityThreshold = (float) ADoubleSerializerDeserializer.getDouble(
                                 inputVal.getByteArray(), 1);
 
                         // similarity name
                         inputVal.reset();
                         evalSimilarity.evaluate(tuple);
+                        if (inputVal.getByteArray()[0] != SER_STRING_TYPE_TAG) {
+                            throw new AlgebricksException(FID.getName()
+                                    + ": expects type STRING for the second argument but got "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]));
+                        }
                         SimilarityFilters similarityFilters = similarityFiltersCache.get(similarityThreshold,
                                 inputVal.getByteArray());
 
                         inputVal.reset();
                         evalLen1.evaluate(tuple);
+                        if (inputVal.getByteArray()[0] != SER_INT32_TYPE_TAG) {
+                            throw new AlgebricksException(FID.getName()
+                                    + ": expects type INT32 for the thrid argument but got "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]));
+                        }
                         int length1 = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
                         inputVal.reset();
                         evalLen2.evaluate(tuple);
+                        if (inputVal.getByteArray()[0] != SER_INT32_TYPE_TAG) {
+                            throw new AlgebricksException(FID.getName()
+                                    + ": expects type INT32 for the fourth argument but got "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]));
+                        }
                         int length2 = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
                         float sim = 0;
@@ -115,7 +140,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
 
                             byte[] serList = inputVal.getByteArray();
                             if (serList[0] != SER_ORDEREDLIST_TYPE_TAG && serList[0] != SER_UNORDEREDLIST_TYPE_TAG) {
-                                throw new AlgebricksException("Scan collection is not defined for values of type"
+                                throw new AlgebricksException(FID.getName() + ": not defined for values of type"
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[0]));
                             }
 
@@ -159,7 +184,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
 
                             serList = inputVal.getByteArray();
                             if (serList[0] != SER_ORDEREDLIST_TYPE_TAG && serList[0] != SER_UNORDEREDLIST_TYPE_TAG) {
-                                throw new AlgebricksException("Scan collection is not defined for values of type"
+                                throw new AlgebricksException(FID.getName() + ": not defined for values of type"
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[0]));
                             }
 

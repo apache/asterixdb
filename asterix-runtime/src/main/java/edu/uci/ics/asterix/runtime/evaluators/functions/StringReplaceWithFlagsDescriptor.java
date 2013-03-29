@@ -50,7 +50,8 @@ public class StringReplaceWithFlagsDescriptor extends AbstractScalarFunctionDyna
 
                 DataOutput dout = output.getDataOutput();
 
-                return new AbstractQuadStringStringEval(dout, args[0], args[1], args[2], args[3]) {
+                return new AbstractQuadStringStringEval(dout, args[0], args[1], args[2], args[3],
+                        AsterixBuiltinFunctions.STRING_REPLACE_WITH_FLAG) {
 
                     private Pattern pattern = null;
                     private Matcher matcher = null;

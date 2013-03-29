@@ -130,8 +130,11 @@ public class NumericRoundHalfToEvenDescriptor extends AbstractScalarFunctionDyna
                                 aDouble.setValue(Math.rint(val));
                                 serde.serialize(aDouble, out);
                             } else {
-                                throw new NotImplementedException("Numeric Round Half to Even is not implemented for "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
+                                throw new NotImplementedException(
+                                        AsterixBuiltinFunctions.NUMERIC_ROUND_HALF_TO_EVEN.getName()
+                                                + ": not implemented for "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut
+                                                        .getByteArray()[0]));
                             }
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);

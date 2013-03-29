@@ -6,7 +6,6 @@ import java.io.DataOutput;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.common.utils.UTF8CharSequence;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -51,7 +50,8 @@ public class StringReplaceDescriptor extends AbstractScalarFunctionDynamicDescri
 
                 DataOutput dout = output.getDataOutput();
 
-                return new AbstractTripleStringStringEval(dout, args[0], args[1], args[2]) {
+                return new AbstractTripleStringStringEval(dout, args[0], args[1], args[2],
+                        AsterixBuiltinFunctions.STRING_REPLACE) {
 
                     private Pattern pattern = null;
                     private Matcher matcher = null;

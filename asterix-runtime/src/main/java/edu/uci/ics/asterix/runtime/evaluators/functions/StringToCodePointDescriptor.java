@@ -13,6 +13,7 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -119,7 +120,9 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
                                 }
                                 listBuilder.write(out, true);
                             } else
-                                throw new AlgebricksException("Expects String Type.");
+                                throw new AlgebricksException(AsterixBuiltinFunctions.STRING_TO_CODEPOINT.getName()
+                                        + ": expects input type STRING but got "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serString[0]));
                         } catch (IOException e1) {
                             throw new AlgebricksException(e1.getMessage());
                         }

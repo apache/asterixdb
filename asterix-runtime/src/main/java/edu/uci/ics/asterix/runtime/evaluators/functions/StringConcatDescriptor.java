@@ -11,6 +11,7 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.common.AsterixListAccessor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -30,6 +31,10 @@ import edu.uci.ics.hyracks.dataflow.common.data.util.StringUtils;
 public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
+
+    private static final byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
+    private static final byte SER_UNORDEREDLIST_TYPE_TAG = ATypeTag.UNORDEREDLIST.serialize();
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new StringConcatDescriptor();
@@ -61,6 +66,11 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                             outInputList.reset();
                             evalList.evaluate(tuple);
                             byte[] listBytes = outInputList.getByteArray();
+                            if (listBytes[0] != SER_ORDEREDLIST_TYPE_TAG && listBytes[0] != SER_UNORDEREDLIST_TYPE_TAG) {
+                                throw new AlgebricksException(AsterixBuiltinFunctions.STRING_CONCAT.getName()
+                                        + ": expects input type ORDEREDLIST/UNORDEREDLIST, but got "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(listBytes[0]));
+                            }
                             try {
                                 listAccessor.reset(listBytes, 0);
                             } catch (AsterixException e) {
@@ -77,8 +87,8 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                             nullSerde.serialize(ANull.NULL, out);
                                             return;
                                         }
-                                        throw new AlgebricksException("Unsupported type " + itemType
-                                                + " in list passed to string-concat function.");
+                                        throw new AlgebricksException(AsterixBuiltinFunctions.STRING_CONCAT.getName()
+                                                + ": expects type STRING/NULL for the list item but got " + itemType);
                                     }
                                     utf8Len += UTF8StringPointable.getUTFLength(listBytes, itemOffset);
                                 }

@@ -87,7 +87,8 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
                         }
 
                         if (serList[0] != SER_ORDEREDLIST_TYPE_TAG && serList[0] != SER_UNORDEREDLIST_TYPE_TAG) {
-                            throw new AlgebricksException("List's get-any-item is not defined for values of type"
+                            throw new AlgebricksException(AsterixBuiltinFunctions.ANY_COLLECTION_MEMBER.getName()
+                                    + ": expects input type ORDEREDLIST/UNORDEREDLIST, but got "
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[0]));
                         }
 

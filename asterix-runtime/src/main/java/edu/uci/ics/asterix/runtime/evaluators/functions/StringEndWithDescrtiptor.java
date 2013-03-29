@@ -41,7 +41,7 @@ public class StringEndWithDescrtiptor extends AbstractScalarFunctionDynamicDescr
 
                 DataOutput dout = output.getDataOutput();
 
-                return new AbstractBinaryStringBoolEval(dout, args[0], args[1]) {
+                return new AbstractBinaryStringBoolEval(dout, args[0], args[1], AsterixBuiltinFunctions.STRING_END_WITH) {
 
                     @Override
                     protected boolean compute(byte[] lBytes, int lLen, int lStart, byte[] rBytes, int rLen, int rStart,

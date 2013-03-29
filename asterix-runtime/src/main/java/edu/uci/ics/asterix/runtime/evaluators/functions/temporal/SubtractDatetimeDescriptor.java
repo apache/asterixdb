@@ -16,16 +16,17 @@ package edu.uci.ics.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADuration;
 import edu.uci.ics.asterix.om.base.AMutableDuration;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -40,8 +41,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class SubtractDatetimeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "subtract-datetime", 2);
+    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.SUBTRACT_DATETIME;
 
     // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
@@ -98,16 +98,14 @@ public class SubtractDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
                                 return;
                             }
 
-                            if (argOut0.getByteArray()[0] != SER_DATETIME_TYPE_TAG) {
-                                throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 0: expecting a DateTime, but got: "
-                                                + argOut0.getByteArray()[0]);
-                            }
-
-                            if (argOut1.getByteArray()[0] != SER_DATETIME_TYPE_TAG) {
-                                throw new AlgebricksException(
-                                        "Inapplicable input type for parameter 1: expecting a DateTime, but got: "
-                                                + argOut1.getByteArray()[0]);
+                            if (argOut0.getByteArray()[0] != SER_DATETIME_TYPE_TAG
+                                    && argOut1.getByteArray()[0] != SER_DATETIME_TYPE_TAG) {
+                                throw new AlgebricksException(FID.getName()
+                                        + ": expects input type (DATETIME/NULL, DATETIME/NULL) but got ("
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0])
+                                        + ", "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0])
+                                        + ").");
                             }
 
                             long durationChronon = ADateTimeSerializerDeserializer
