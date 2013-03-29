@@ -64,6 +64,10 @@ public class ResultState implements IStateObject {
         notifyAll();
     }
 
+    public synchronized void deinit() {
+        fileRef.delete();
+    }
+
     public ResultSetPartitionId getResultSetPartitionId() {
         return resultSetPartitionId;
     }

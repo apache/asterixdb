@@ -170,7 +170,7 @@ public class ClusterControllerService extends AbstractRemoteService {
             }
         };
         sweeper = new DeadNodeSweeper();
-        datasetDirectoryService = new DatasetDirectoryService();
+        datasetDirectoryService = new DatasetDirectoryService(ccConfig.jobHistorySize);
         jobCounter = 0;
     }
 
@@ -205,6 +205,7 @@ public class ClusterControllerService extends AbstractRemoteService {
 
     private void startApplication() throws Exception {
         appCtx = new CCApplicationContext(serverCtx, ccContext);
+        appCtx.addJobLifecycleListener(datasetDirectoryService);
         String className = ccConfig.appCCMainClass;
         if (className != null) {
             Class<?> c = Class.forName(className);
