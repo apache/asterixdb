@@ -176,8 +176,12 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 vertex.setOutputAppenders(appenders);
                 vertex.setOutputTupleBuilders(tbs);
 
-                if (!msgIterator.hasNext() && vertex.isHalted())
+                if (!msgIterator.hasNext() && vertex.isHalted()) {
                     return;
+                }
+                if (vertex.isHalted()) {
+                    vertex.activate();
+                }
 
                 try {
                     vertex.compute(msgIterator);
