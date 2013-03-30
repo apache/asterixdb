@@ -35,7 +35,6 @@ import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.asterix.result.ResultUtils;
-import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.client.dataset.HyracksDataset;
@@ -72,16 +71,8 @@ abstract class RESTAPIServlet extends HttpServlet {
         IHyracksDataset hds;
 
         try {
-            HyracksProperties hp = new HyracksProperties();
-            String strIP = hp.getHyracksIPAddress();
-            int port = hp.getHyracksPort();
-
             synchronized (context) {
                 hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
-                if (hcc == null) {
-                    hcc = new HyracksConnection(strIP, port);
-                    context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
-                }
 
                 hds = (IHyracksDataset) context.getAttribute(HYRACKS_DATASET_ATTR);
                 if (hds == null) {
@@ -95,7 +86,7 @@ abstract class RESTAPIServlet extends HttpServlet {
             if (checkForbiddenStatements(aqlStatements, out)) {
                 return;
             }
-            SessionConfig sessionConfig = new SessionConfig(port, true, false, false, false, false, false, true, false);
+            SessionConfig sessionConfig = new SessionConfig(true, false, false, false, false, false, true, false);
 
             MetadataManager.INSTANCE.init();
 

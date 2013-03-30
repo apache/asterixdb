@@ -20,7 +20,6 @@ import edu.uci.ics.asterix.aql.parser.ParseException;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.result.ResultReader;
-import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.client.dataset.HyracksDataset;
@@ -240,14 +239,6 @@ public class APIServlet extends HttpServlet {
             + "              <textarea rows=\"20\" name=\"query\" class=\"query\" value=\"%s\" placeholder=\"Type your AQL query ...\"></textarea>"
             + "            </div>"
             + "            <div>"
-            + "              <div class=\"host\">"
-            + "                <label>Host</label><input type=\"text\" name=\"hyracks-ip\" placeholder=\"IP Address or hostname\"/>"
-            + "              </div>"
-            + "              <div class=\"port\">"
-            + "                <label>Port</label><input type=\"text\" name=\"hyracks-port\" placeholder=\"Port number\"/>"
-            + "              </div>"
-            + "            </div>"
-            + "            <div>"
             + "              <div class=\"left\">"
             + "                <label class=\"checkbox\"><input type=\"checkbox\" name=\"print-expr-tree\" value=\"true\" /> Print parsed expressions</label>"
             + "              </div>"
@@ -324,10 +315,7 @@ public class APIServlet extends HttpServlet {
         String printLogicalPlanParam = request.getParameter("print-logical-plan");
         String printOptimizedLogicalPlanParam = request.getParameter("print-optimized-logical-plan");
         String printJob = request.getParameter("print-job");
-        String strIP = request.getParameter("hyracks-ip");
-        String strPort = request.getParameter("hyracks-port");
         String strDisplayResult = request.getParameter("display-result");
-        int port = Integer.parseInt(strPort);
         response.setCharacterEncoding("utf-8");
         response.setContentType("text/html");
         PrintWriter out = response.getWriter();
@@ -340,10 +328,6 @@ public class APIServlet extends HttpServlet {
         try {
             synchronized (context) {
                 hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
-                if (hcc == null) {
-                    hcc = new HyracksConnection(strIP, port);
-                    context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
-                }
 
                 hds = (IHyracksDataset) context.getAttribute(HYRACKS_DATASET_ATTR);
                 if (hds == null) {
@@ -353,7 +337,7 @@ public class APIServlet extends HttpServlet {
             }
             AQLParser parser = new AQLParser(query);
             List<Statement> aqlStatements = parser.Statement();
-            SessionConfig sessionConfig = new SessionConfig(port, true, isSet(printExprParam),
+            SessionConfig sessionConfig = new SessionConfig(true, isSet(printExprParam),
                     isSet(printRewrittenExprParam), isSet(printLogicalPlanParam),
                     isSet(printOptimizedLogicalPlanParam), false, true, isSet(printJob));
             MetadataManager.INSTANCE.init();
