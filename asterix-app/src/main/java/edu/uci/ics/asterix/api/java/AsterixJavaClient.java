@@ -6,7 +6,6 @@ import java.util.List;
 
 import edu.uci.ics.asterix.api.common.APIFramework;
 import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
-import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
 import edu.uci.ics.asterix.api.common.Job;
 import edu.uci.ics.asterix.api.common.SessionConfig;
 import edu.uci.ics.asterix.aql.base.Statement;
@@ -63,9 +62,8 @@ public class AsterixJavaClient {
         }
         MetadataManager.INSTANCE.init();
 
-        SessionConfig pc = new SessionConfig(AsterixHyracksIntegrationUtil.DEFAULT_HYRACKS_CC_CLIENT_PORT, optimize,
-                false, printRewrittenExpressions, printLogicalPlan, printOptimizedPlan, printPhysicalOpsOnly,
-                generateBinaryRuntime, printJob);
+        SessionConfig pc = new SessionConfig(optimize, false, printRewrittenExpressions, printLogicalPlan,
+                printOptimizedPlan, printPhysicalOpsOnly, generateBinaryRuntime, printJob);
 
         AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, writer, pc, DisplayFormat.TEXT);
         aqlTranslator.compileAndExecute(hcc, null, false);

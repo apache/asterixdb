@@ -26,7 +26,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import edu.uci.ics.asterix.result.ResultReader;
-import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
@@ -51,16 +50,8 @@ public class QueryStatusAPIServlet extends HttpServlet {
         IHyracksDataset hds;
 
         try {
-            HyracksProperties hp = new HyracksProperties();
-            String strIP = hp.getHyracksIPAddress();
-            int port = hp.getHyracksPort();
-
             synchronized (context) {
                 hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
-                if (hcc == null) {
-                    hcc = new HyracksConnection(strIP, port);
-                    context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
-                }
 
                 hds = (IHyracksDataset) context.getAttribute(HYRACKS_DATASET_ATTR);
                 if (hds == null) {
