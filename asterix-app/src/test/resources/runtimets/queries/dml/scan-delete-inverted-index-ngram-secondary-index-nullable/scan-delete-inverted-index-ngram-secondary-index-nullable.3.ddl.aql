@@ -1,0 +1,3 @@
+use dataverse test;
+
+create index ngram_index on DBLP(title) type ngram(3);

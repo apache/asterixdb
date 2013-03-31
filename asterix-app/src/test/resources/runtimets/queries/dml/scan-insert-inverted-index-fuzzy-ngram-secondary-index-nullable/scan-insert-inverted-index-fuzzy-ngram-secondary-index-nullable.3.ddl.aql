@@ -1,0 +1,4 @@
+use dataverse test;
+
+create index fuzzy_ngram_index on DBLP(title) type fuzzy ngram(3);
+create index fuzzy_ngram_index1 on DBLP1(title) type fuzzy ngram(3);

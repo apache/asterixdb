@@ -9,7 +9,7 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.optimizer.rules.am.InvertedIndexAccessMethod;
+import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.formats.FormatUtils;
 import edu.uci.ics.asterix.transaction.management.resource.ILocalResourceMetadata;
 import edu.uci.ics.asterix.transaction.management.resource.LSMInvertedIndexLocalResourceMetadata;
@@ -104,8 +104,8 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         int numTokenFields = (!isPartitioned) ? numSecondaryKeys : numSecondaryKeys + 1;
         tokenComparatorFactories = new IBinaryComparatorFactory[numTokenFields];
         tokenTypeTraits = new ITypeTraits[numTokenFields];
-        tokenComparatorFactories[0] = InvertedIndexAccessMethod.getTokenBinaryComparatorFactory(secondaryKeyType);
-        tokenTypeTraits[0] = InvertedIndexAccessMethod.getTokenTypeTrait(secondaryKeyType);
+        tokenComparatorFactories[0] = NonTaggedFormatUtil.getTokenBinaryComparatorFactory(secondaryKeyType);
+        tokenTypeTraits[0] = NonTaggedFormatUtil.getTokenTypeTrait(secondaryKeyType);
         if (isPartitioned) {
             // The partitioning field is hardcoded to be a short *without* an Asterix type tag.
             tokenComparatorFactories[1] = PointableBinaryComparatorFactory.of(ShortPointable.FACTORY);
@@ -114,7 +114,7 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         // Set tokenizer factory.
         // TODO: We might want to expose the hashing option at the AQL level,
         // and add the choice to the index metadata.
-        tokenizerFactory = InvertedIndexAccessMethod.getBinaryTokenizerFactory(secondaryKeyType.getTypeTag(),
+        tokenizerFactory = NonTaggedFormatUtil.getBinaryTokenizerFactory(secondaryKeyType.getTypeTag(),
                 createIndexStmt.getIndexType(), createIndexStmt.getGramLength());
         // Type traits for inverted-list elements. Inverted lists contain
         // primary keys.
@@ -130,8 +130,7 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         tokenKeyPairComparatorFactories = new IBinaryComparatorFactory[numTokenKeyPairFields];
         tokenKeyPairFields[0] = serdeProvider.getSerializerDeserializer(secondaryKeyType);
         tokenKeyPairTypeTraits[0] = tokenTypeTraits[0];
-        tokenKeyPairComparatorFactories[0] = InvertedIndexAccessMethod
-                .getTokenBinaryComparatorFactory(secondaryKeyType);
+        tokenKeyPairComparatorFactories[0] = NonTaggedFormatUtil.getTokenBinaryComparatorFactory(secondaryKeyType);
         int pkOff = 1;
         if (isPartitioned) {
             tokenKeyPairFields[1] = ShortSerializerDeserializer.INSTANCE;

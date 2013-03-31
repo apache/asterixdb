@@ -19,6 +19,7 @@ import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.optimizer.rules.am.InvertedIndexAccessMethod;
 import edu.uci.ics.asterix.optimizer.rules.am.InvertedIndexAccessMethod.SearchModifierType;
 import edu.uci.ics.asterix.optimizer.rules.am.InvertedIndexJobGenParams;
@@ -159,9 +160,8 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             ITypeTraits[] tokenTypeTraits = new ITypeTraits[numTokenKeys];
             IBinaryComparatorFactory[] tokenComparatorFactories = new IBinaryComparatorFactory[numTokenKeys];
             for (int i = 0; i < numSecondaryKeys; i++) {
-                tokenComparatorFactories[i] = InvertedIndexAccessMethod
-                        .getTokenBinaryComparatorFactory(secondaryKeyType);
-                tokenTypeTraits[i] = InvertedIndexAccessMethod.getTokenTypeTrait(secondaryKeyType);
+                tokenComparatorFactories[i] = NonTaggedFormatUtil.getTokenBinaryComparatorFactory(secondaryKeyType);
+                tokenTypeTraits[i] = NonTaggedFormatUtil.getTokenTypeTrait(secondaryKeyType);
             }
             if (isPartitioned) {
                 // The partitioning field is hardcoded to be a short *without* an Asterix type tag.

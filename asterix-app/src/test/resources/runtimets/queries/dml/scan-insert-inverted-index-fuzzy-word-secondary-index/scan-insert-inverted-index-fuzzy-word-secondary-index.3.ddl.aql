@@ -1,0 +1,4 @@
+use dataverse test;
+
+create index fuzzy_keyword_index on DBLP(title) type fuzzy keyword;
+create index fuzzy_keyword_index1 on DBLP1(title) type fuzzy keyword;

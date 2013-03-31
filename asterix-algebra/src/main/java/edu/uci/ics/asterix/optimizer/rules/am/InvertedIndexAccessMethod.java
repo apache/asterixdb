@@ -12,9 +12,7 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import edu.uci.ics.asterix.algebra.base.LogicalOperatorDeepCopyVisitor;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
-import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryTokenizerFactoryProvider;
-import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.om.base.AFloat;
@@ -25,11 +23,8 @@ import edu.uci.ics.asterix.om.base.IACollection;
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
-import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.AUnorderedListType;
-import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
@@ -57,8 +52,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOpera
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifierFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveSearchModifierFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.EditDistanceSearchModifierFactory;
@@ -519,37 +512,37 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             joinInputSubTreeVarMap.put(optFuncExpr.getLogicalVar(i), context.newVar());
             newProbeSubTreeVarMap.put(optFuncExpr.getLogicalVar(i), optFuncExpr.getLogicalVar(i));
         }
-        for (int i = 0; i < originalSubTreePKs.size(); i++) {            
+        for (int i = 0; i < originalSubTreePKs.size(); i++) {
             LogicalVariable newPKVar = context.newVar();
             surrogateSubTreePKs.add(newPKVar);
             joinInputSubTreeVarMap.put(originalSubTreePKs.get(i), newPKVar);
             newProbeSubTreeVarMap.put(originalSubTreePKs.get(i), originalSubTreePKs.get(i));
         }
-        
+
         // Create first copy.
         Counter firstCounter = new Counter(context.getVarCounter());
         LogicalOperatorDeepCopyVisitor firstDeepCopyVisitor = new LogicalOperatorDeepCopyVisitor(firstCounter,
                 newProbeSubTreeVarMap);
         ILogicalOperator newProbeSubTree = firstDeepCopyVisitor.deepCopy(probeSubTree.root, null);
         inferTypes(newProbeSubTree, context);
-        Mutable<ILogicalOperator> newProbeSubTreeRootRef = new MutableObject<ILogicalOperator>(newProbeSubTree);        
+        Mutable<ILogicalOperator> newProbeSubTreeRootRef = new MutableObject<ILogicalOperator>(newProbeSubTree);
         context.setVarCounter(firstCounter.get());
         // Create second copy.
         Counter secondCounter = new Counter(context.getVarCounter());
         LogicalOperatorDeepCopyVisitor secondDeepCopyVisitor = new LogicalOperatorDeepCopyVisitor(secondCounter,
-                joinInputSubTreeVarMap);        
+                joinInputSubTreeVarMap);
         ILogicalOperator joinInputSubTree = secondDeepCopyVisitor.deepCopy(probeSubTree.root, null);
         inferTypes(joinInputSubTree, context);
         probeSubTree.rootRef.setValue(joinInputSubTree);
         context.setVarCounter(secondCounter.get());
-        
+
         // Remember the original probe subtree reference so we can return it.
         Mutable<ILogicalOperator> originalProbeSubTreeRootRef = probeSubTree.rootRef;
 
         // Replace the original probe subtree with its copy.
         Dataset origDataset = probeSubTree.dataset;
         ARecordType origRecordType = probeSubTree.recordType;
-        probeSubTree.initFromSubTree(newProbeSubTreeRootRef);        
+        probeSubTree.initFromSubTree(newProbeSubTreeRootRef);
         probeSubTree.dataset = origDataset;
         probeSubTree.recordType = origRecordType;
 
@@ -571,7 +564,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         for (int i = 0; i < numPKVars; i++) {
             List<Mutable<ILogicalExpression>> args = new ArrayList<Mutable<ILogicalExpression>>();
             args.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(surrogateSubTreePKs.get(i))));
-            args.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(originalSubTreePKs.get(i))));                   
+            args.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(originalSubTreePKs.get(i))));
             ILogicalExpression eqFunc = new ScalarFunctionCallExpression(
                     FunctionUtils.getFunctionInfo(AlgebricksBuiltinFunctions.EQ), args);
             eqExprs.add(new MutableObject<ILogicalExpression>(eqFunc));
@@ -839,42 +832,6 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         return false;
     }
 
-    public static IBinaryComparatorFactory getTokenBinaryComparatorFactory(IAType keyType) throws AlgebricksException {
-        IAType type = keyType;
-        ATypeTag typeTag = keyType.getTypeTag();
-        // Extract item type from list.
-        if (typeTag == ATypeTag.UNORDEREDLIST || typeTag == ATypeTag.ORDEREDLIST) {
-            AbstractCollectionType listType = (AbstractCollectionType) keyType;
-            if (!listType.isTyped()) {
-                throw new AlgebricksException("Cannot build an inverted index on untyped lists.)");
-            }
-            type = listType.getItemType();
-        }
-        // Ignore case for string types.
-        return AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(type, true, true);
-    }
-
-    public static ITypeTraits getTokenTypeTrait(IAType keyType) throws AlgebricksException {
-        IAType type = keyType;
-        ATypeTag typeTag = keyType.getTypeTag();
-        // Extract item type from list.
-        if (typeTag == ATypeTag.UNORDEREDLIST) {
-            AUnorderedListType ulistType = (AUnorderedListType) keyType;
-            if (!ulistType.isTyped()) {
-                throw new AlgebricksException("Cannot build an inverted index on untyped lists.)");
-            }
-            type = ulistType.getItemType();
-        }
-        if (typeTag == ATypeTag.ORDEREDLIST) {
-            AOrderedListType olistType = (AOrderedListType) keyType;
-            if (!olistType.isTyped()) {
-                throw new AlgebricksException("Cannot build an inverted index on untyped lists.)");
-            }
-            type = olistType.getItemType();
-        }
-        return AqlTypeTraitProvider.INSTANCE.getTypeTrait(type);
-    }
-
     public static IBinaryTokenizerFactory getBinaryTokenizerFactory(SearchModifierType searchModifierType,
             ATypeTag searchKeyType, Index index) throws AlgebricksException {
         switch (index.getIndexType()) {
@@ -891,24 +848,6 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             }
             default: {
                 throw new AlgebricksException("Tokenizer not applicable to index kind '" + index.getIndexType() + "'.");
-            }
-        }
-    }
-
-    public static IBinaryTokenizerFactory getBinaryTokenizerFactory(ATypeTag keyType, IndexType indexType,
-            int gramLength) throws AlgebricksException {
-        switch (indexType) {
-            case WORD_INVIX:
-            case FUZZY_WORD_INVIX: {
-                return AqlBinaryTokenizerFactoryProvider.INSTANCE.getWordTokenizerFactory(keyType, false);
-            }
-            case NGRAM_INVIX:
-            case FUZZY_NGRAM_INVIX: {
-                return AqlBinaryTokenizerFactoryProvider.INSTANCE.getNGramTokenizerFactory(keyType, gramLength, true,
-                        false);
-            }
-            default: {
-                throw new AlgebricksException("Tokenizer not applicable to index type '" + indexType + "'.");
             }
         }
     }

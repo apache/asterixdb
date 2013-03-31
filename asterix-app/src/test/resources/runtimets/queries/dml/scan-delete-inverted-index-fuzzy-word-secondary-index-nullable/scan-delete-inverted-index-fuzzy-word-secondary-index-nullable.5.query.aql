@@ -1,0 +1,7 @@
+use dataverse test;
+
+for $o in dataset('DBLP')
+let $jacc := similarity-jaccard-check(word-tokens($o.title), word-tokens("Transactions for Cooperative Environments"), 0.5f)
+where $jacc[0]
+return $o
+

@@ -1,0 +1,3 @@
+use dataverse test;
+
+delete $o from dataset DBLP where $o.id<50;

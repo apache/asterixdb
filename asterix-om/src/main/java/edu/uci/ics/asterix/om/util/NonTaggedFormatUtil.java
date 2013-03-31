@@ -2,18 +2,29 @@ package edu.uci.ics.asterix.om.util;
 
 import java.util.List;
 
+import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
+import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
+import edu.uci.ics.asterix.formats.nontagged.AqlBinaryTokenizerFactoryProvider;
+import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
+import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
+import edu.uci.ics.asterix.om.types.AUnorderedListType;
+import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 
 public final class NonTaggedFormatUtil {
 
@@ -159,5 +170,59 @@ public final class NonTaggedFormatUtil {
             default:
                 throw new NotImplementedException(typeTag + " is not a supported spatial data type.");
         }
+    }
+
+    public static IBinaryTokenizerFactory getBinaryTokenizerFactory(ATypeTag keyType, IndexType indexType,
+            int gramLength) throws AlgebricksException {
+        switch (indexType) {
+            case WORD_INVIX:
+            case FUZZY_WORD_INVIX: {
+                return AqlBinaryTokenizerFactoryProvider.INSTANCE.getWordTokenizerFactory(keyType, false);
+            }
+            case NGRAM_INVIX:
+            case FUZZY_NGRAM_INVIX: {
+                return AqlBinaryTokenizerFactoryProvider.INSTANCE.getNGramTokenizerFactory(keyType, gramLength, true,
+                        false);
+            }
+            default: {
+                throw new AlgebricksException("Tokenizer not applicable to index type '" + indexType + "'.");
+            }
+        }
+    }
+
+    public static IBinaryComparatorFactory getTokenBinaryComparatorFactory(IAType keyType) throws AlgebricksException {
+        IAType type = keyType;
+        ATypeTag typeTag = keyType.getTypeTag();
+        // Extract item type from list.
+        if (typeTag == ATypeTag.UNORDEREDLIST || typeTag == ATypeTag.ORDEREDLIST) {
+            AbstractCollectionType listType = (AbstractCollectionType) keyType;
+            if (!listType.isTyped()) {
+                throw new AlgebricksException("Cannot build an inverted index on untyped lists.)");
+            }
+            type = listType.getItemType();
+        }
+        // Ignore case for string types.
+        return AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(type, true, true);
+    }
+
+    public static ITypeTraits getTokenTypeTrait(IAType keyType) throws AlgebricksException {
+        IAType type = keyType;
+        ATypeTag typeTag = keyType.getTypeTag();
+        // Extract item type from list.
+        if (typeTag == ATypeTag.UNORDEREDLIST) {
+            AUnorderedListType ulistType = (AUnorderedListType) keyType;
+            if (!ulistType.isTyped()) {
+                throw new AlgebricksException("Cannot build an inverted index on untyped lists.)");
+            }
+            type = ulistType.getItemType();
+        }
+        if (typeTag == ATypeTag.ORDEREDLIST) {
+            AOrderedListType olistType = (AOrderedListType) keyType;
+            if (!olistType.isTyped()) {
+                throw new AlgebricksException("Cannot build an inverted index on untyped lists.)");
+            }
+            type = olistType.getItemType();
+        }
+        return AqlTypeTraitProvider.INSTANCE.getTypeTrait(type);
     }
 }
