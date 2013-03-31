@@ -96,11 +96,22 @@ public class APIServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String resourcePath = null;
         response.setCharacterEncoding("utf-8");
         PrintWriter out = response.getWriter();
-        response.setContentType("text/html");
+        String requestURI = request.getRequestURI();
+        if (requestURI.equals("/")) {
+            response.setContentType("text/html");
+            resourcePath = "/webui/querytemplate.html";
+        } else {
+            resourcePath = requestURI;
+        }
 
-        InputStream is = APIServlet.class.getResourceAsStream("/webui/querytemplate.html");
+        InputStream is = APIServlet.class.getResourceAsStream(resourcePath);
+        if (is == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
         InputStreamReader isr = new InputStreamReader(is);
         StringBuilder sb = new StringBuilder();
         BufferedReader br = new BufferedReader(isr);
