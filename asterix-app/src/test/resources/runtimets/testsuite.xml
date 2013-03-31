@@ -925,6 +925,86 @@
         <output-dir compare="Text">scan-insert-rtree-secondary-index</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-ngram-secondary-index">
+        <output-dir compare="Text">scan-insert-inverted-index-ngram-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-word-secondary-index">
+        <output-dir compare="Text">scan-insert-inverted-index-word-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-fuzzy-ngram-secondary-index">
+        <output-dir compare="Text">scan-insert-inverted-index-fuzzy-ngram-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-fuzzy-word-secondary-index">
+        <output-dir compare="Text">scan-insert-inverted-index-fuzzy-word-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-ngram-secondary-index-nullable">
+        <output-dir compare="Text">scan-insert-inverted-index-ngram-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-word-secondary-index-nullable">
+        <output-dir compare="Text">scan-insert-inverted-index-word-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-fuzzy-ngram-secondary-index-nullable">
+        <output-dir compare="Text">scan-insert-inverted-index-fuzzy-ngram-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-fuzzy-word-secondary-index-nullable">
+        <output-dir compare="Text">scan-insert-inverted-index-fuzzy-word-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-ngram-secondary-index">
+        <output-dir compare="Text">scan-delete-inverted-index-ngram-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-word-secondary-index">
+        <output-dir compare="Text">scan-delete-inverted-index-word-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-fuzzy-ngram-secondary-index">
+        <output-dir compare="Text">scan-delete-inverted-index-fuzzy-ngram-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-fuzzy-word-secondary-index">
+        <output-dir compare="Text">scan-delete-inverted-index-fuzzy-word-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-ngram-secondary-index-nullable">
+        <output-dir compare="Text">scan-delete-inverted-index-ngram-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-word-secondary-index-nullable">
+        <output-dir compare="Text">scan-delete-inverted-index-word-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-fuzzy-ngram-secondary-index-nullable">
+        <output-dir compare="Text">scan-delete-inverted-index-fuzzy-ngram-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-fuzzy-word-secondary-index-nullable">
+        <output-dir compare="Text">scan-delete-inverted-index-fuzzy-word-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="employee">
     <test-case FilePath="employee">
